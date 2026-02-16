@@ -4,7 +4,7 @@
     "OrcaWave (.owd)",
     "OrcaWave (spec.yml)"
   ],
-  "comparison_date": "2026-02-15 21:56:33",
+  "comparison_date": "2026-02-15 22:19:44",
   "overall_consensus": "FULL",
   "pairwise_results": {
     "OrcaWave (.owd)-vs-OrcaWave (spec.yml)": {
@@ -29,21 +29,21 @@
         "heave": {
           "magnitude_correlation": 1.0,
           "magnitude_rms_error": 4.3731657224880824e-18,
-          "phase_correlation": 0.4799659974381923,
+          "phase_correlation": 1.0,
           "max_magnitude_diff": 2.4634277047053037e-17,
           "max_phase_diff": 354.64255858899935
         },
         "roll": {
           "magnitude_correlation": 1.0,
           "magnitude_rms_error": 8.468034532706396e-17,
-          "phase_correlation": 0.4206639889645681,
+          "phase_correlation": 1.0,
           "max_magnitude_diff": 3.9776341346405385e-16,
           "max_phase_diff": 273.5763343749974
         },
         "pitch": {
           "magnitude_correlation": 1.0,
           "magnitude_rms_error": 1.494191233899705e-16,
-          "phase_correlation": 0.4572377559771989,
+          "phase_correlation": 1.0,
           "max_magnitude_diff": 3.9820815549423936e-16,
           "max_phase_diff": 268.61306296747955
         },
