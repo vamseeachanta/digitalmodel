@@ -5,12 +5,13 @@
 API RP 1111 Wall Thickness — Moment-Tension Interaction Report
 
 Generates a professional HTML report presenting:
-1. Input data (geometry, material, design conditions, derived properties)
-2. Pressure-only checks (burst, collapse, propagation)
-3. Capacity limits by operating condition (API RP 1111 design factors)
-4. Combined loading Von Mises interaction contour (M vs T)
-5. Allowable bending envelope by operating condition
-6. Key engineering points summary table
+0. Executive Summary (PASS/FAIL verdict, governing check, margin)
+1. Pressure-only checks (burst, collapse, propagation)
+2. Capacity limits by operating condition (API RP 1111 design factors)
+3. Combined loading Von Mises interaction contour (M vs T)
+4. Allowable bending envelope by operating condition
+5. Key engineering points summary table (with margin %)
+6. Input data (geometry, material, design conditions, derived properties)
 
 Uses existing WallThicknessAnalyzer infrastructure and Plotly for the
 interactive contour chart and envelope plot.
@@ -230,6 +231,7 @@ def _point_row(
         "T_ratio": T / T_y if T_y > 0 else 0.0,
         "M_ratio": M / M_p if M_p > 0 else 0.0,
         "util": util,
+        "margin": max(0.0, (1.0 - util) * 100),
         "status": "PASS" if util <= 1.0 else "FAIL",
     }
 
@@ -831,7 +833,7 @@ def _build_html(
         "p_pr", "f_p", "p_pr_design", "p_e",
     )
 
-    # Key points rows
+    # Key points rows (with margin %)
     kp_rows = ""
     for pt in key_points:
         kp_rows += (
@@ -842,6 +844,7 @@ def _build_html(
             f"<td>{pt['T_ratio']:.3f}</td>"
             f"<td>{pt['M_ratio']:.3f}</td>"
             f"<td>{pt['util']:.3f}</td>"
+            f"<td>{pt['margin']:.1f}%</td>"
             f"<td>{_status_tag(pt['status'])}</td>"
             f"</tr>"
         )
@@ -936,6 +939,13 @@ def _build_html(
             governing = name
 
     overall_status = "PASS" if max_util <= 1.0 else "FAIL"
+    overall_margin = max(0.0, (1.0 - max_util) * 100)
+    governing_label = governing.replace('_', ' ').title()
+
+    # Executive summary: count pass/fail across pressure checks
+    n_checks = len(raw_results)
+    n_pass = sum(1 for _, (u, _) in raw_results.items() if u <= 1.0)
+    n_fail = n_checks - n_pass
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1007,6 +1017,23 @@ def _build_html(
         }}
         .tag.pass {{ background: #d4edda; color: #155724; }}
         .tag.fail {{ background: #f8d7da; color: #721c24; }}
+        .exec-summary {{
+            display: grid; grid-template-columns: auto 1fr; gap: 1.5em;
+            align-items: start;
+        }}
+        .verdict-badge {{
+            font-size: 2.5em; font-weight: 800; padding: 0.2em 0.5em;
+            border-radius: 10px; text-align: center; min-width: 140px;
+        }}
+        .verdict-badge.pass {{
+            background: #d4edda; color: #155724; border: 3px solid #28a745;
+        }}
+        .verdict-badge.fail {{
+            background: #f8d7da; color: #721c24; border: 3px solid #dc3545;
+        }}
+        .exec-details {{ font-size: 0.95em; }}
+        .exec-details table td:first-child {{ color: #666; width: 200px; }}
+        .exec-details table td:last-child {{ font-weight: 600; }}
         .chart-container {{ margin: 1em 0; }}
         .footer {{
             text-align: center; padding: 1.5em; color: #888; font-size: 0.82em;
@@ -1015,6 +1042,7 @@ def _build_html(
             .container {{ padding: 1em; }}
             .card {{ padding: 1em; }}
             .data-grid {{ grid-template-columns: 1fr; }}
+            .exec-summary {{ grid-template-columns: 1fr; }}
             table {{ font-size: 0.8em; }}
         }}
     </style>
@@ -1034,7 +1062,7 @@ def _build_html(
                 <strong>Grade</strong> {material.grade}
             </div>
             <div class="summary-item">
-                <strong>Governing</strong> {governing.replace('_', ' ').title()}
+                <strong>Governing</strong> {governing_label}
                 &mdash; {max_util:.3f}
                 {_status_tag(overall_status)}
             </div>
@@ -1043,9 +1071,154 @@ def _build_html(
 
     <div class="container">
 
-        <!-- Section 1: Input Data -->
+        <!-- Executive Summary -->
         <div class="card">
-            <h2>1. Input Data</h2>
+            <h2>Executive Summary</h2>
+            <div class="exec-summary">
+                <div class="verdict-badge {'pass' if overall_status == 'PASS' else 'fail'}">
+                    {overall_status}
+                </div>
+                <div class="exec-details">
+                    <table>
+                        <tr><td>Overall Verdict</td><td>{_status_tag(overall_status)} &mdash; {n_pass}/{n_checks} checks passed</td></tr>
+                        <tr><td>Governing Check</td><td>{governing_label}</td></tr>
+                        <tr><td>Governing Utilisation</td><td>{max_util:.3f}</td></tr>
+                        <tr><td>Margin</td><td>{overall_margin:.1f}%</td></tr>
+                        <tr><td>Design Code</td><td>API RP 1111</td></tr>
+                        <tr><td>Pipe</td><td>OD {_fmt_mm(D)} mm &times; WT {_fmt_mm(t)} mm, {material.grade}</td></tr>
+                        <tr><td>Pressure</td><td>P<sub>i</sub>&nbsp;=&nbsp;{_fmt_mpa(pi)}&nbsp;MPa, P<sub>e</sub>&nbsp;=&nbsp;{_fmt_mpa(pe)}&nbsp;MPa (P<sub>net</sub>&nbsp;=&nbsp;{_fmt_mpa(p_net)}&nbsp;MPa)</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Pressure-Only Checks -->
+        <div class="card">
+            <h2>1. Pressure-Only Checks (API RP 1111)</h2>
+            <p>Independent of bending moment and tension &mdash; these set the baseline utilisation.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Check</th>
+                        <th>Capacity (MPa)</th>
+                        <th>Design Factor</th>
+                        <th>Allowable (MPa)</th>
+                        <th>Demand (MPa)</th>
+                        <th>Utilisation</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {burst_row}
+                    {collapse_row}
+                    {propagation_row}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Capacity Limits by Operating Condition -->
+        <div class="card">
+            <h2>2. Capacity Limits by Operating Condition</h2>
+            <p>
+                Pure tension and pure bending limits at util&nbsp;=&nbsp;1.0 for each
+                API&nbsp;RP&nbsp;1111 operating condition. Tension limits are
+                <strong>asymmetric</strong> due to hoop stress interaction: positive
+                tension (pipe stretching) is more favourable than compression when
+                net internal pressure is positive.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Condition</th>
+                        <th>f<sub>d</sub></th>
+                        <th>T<sub>+</sub> (kN)</th>
+                        <th>T<sub>&minus;</sub> (kN)</th>
+                        <th>M<sub>allow</sub> (kN&middot;m)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {cl_rows}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2a: Pressure Sensitivity -->
+        <div class="card">
+            <h2>2a. Pressure Sensitivity &mdash; Effect of Internal Pressure</h2>
+            <p>
+                Capacity limits recomputed at baseline, +50%, and +100% internal pressure.
+                Higher hoop stress shrinks all envelopes and increases the asymmetry
+                between positive and negative tension limits.
+            </p>
+            {ps_table_html}
+            <div class="chart-container">
+                {pressure_chart_html if pressure_chart_html else ""}
+            </div>
+        </div>
+
+        <!-- Section 3: Combined Loading -->
+        <div class="card">
+            <h2>3. Combined Loading &mdash; Von Mises Interaction</h2>
+            <p>
+                The API RP 1111 combined check evaluates the Von Mises equivalent stress:
+                &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
+                &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
+                + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS
+            </p>
+            <p>
+                The contour plot below maps utilisation across the bending moment vs. tension
+                envelope. The <strong>bold black contour</strong> at util&nbsp;=&nbsp;1.0 is
+                the acceptance boundary; the <strong>dashed contour</strong> at 0.8 marks a
+                typical design target.
+            </p>
+            <div class="chart-container">
+                {contour_html}
+            </div>
+        </div>
+
+        <!-- Section 4: Allowable Bending Envelope -->
+        <div class="card">
+            <h2>4. Allowable Bending Envelope</h2>
+            <p>
+                Each curve traces the maximum allowable bending moment as a function of
+                applied tension, at util&nbsp;=&nbsp;1.0 for that operating condition.
+                The <strong>Normal Operating</strong> envelope (innermost) is the most
+                conservative; the <strong>Survival</strong> envelope (outermost) represents
+                the full yield limit.
+            </p>
+            <div class="chart-container">
+                {envelope_html if envelope_html else ""}
+            </div>
+            <h3>Envelope Data &mdash; Tension vs Allowable Bending Moment</h3>
+            {envelope_table_html}
+        </div>
+
+        <!-- Section 5: Key Points Summary -->
+        <div class="card">
+            <h2>5. Key Points Summary</h2>
+            <p>Utilisation at selected engineering reference points on the M&ndash;T plane.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Point</th>
+                        <th>T (kN)</th>
+                        <th>M (kN&middot;m)</th>
+                        <th>T / T<sub>y</sub></th>
+                        <th>M / M<sub>p</sub></th>
+                        <th>Utilisation</th>
+                        <th>Margin</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {kp_rows}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 6: Input Data -->
+        <div class="card">
+            <h2>6. Input Data</h2>
             <div class="data-grid">
                 <div class="data-group">
                     <h3>Pipe Geometry</h3>
@@ -1088,129 +1261,6 @@ def _build_html(
                     </table>
                 </div>
             </div>
-        </div>
-
-        <!-- Section 2: Pressure-Only Checks -->
-        <div class="card">
-            <h2>2. Pressure-Only Checks (API RP 1111)</h2>
-            <p>Independent of bending moment and tension &mdash; these set the baseline utilisation.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Check</th>
-                        <th>Capacity (MPa)</th>
-                        <th>Design Factor</th>
-                        <th>Allowable (MPa)</th>
-                        <th>Demand (MPa)</th>
-                        <th>Utilisation</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {burst_row}
-                    {collapse_row}
-                    {propagation_row}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Section 3: Capacity Limits by Operating Condition -->
-        <div class="card">
-            <h2>3. Capacity Limits by Operating Condition</h2>
-            <p>
-                Pure tension and pure bending limits at util&nbsp;=&nbsp;1.0 for each
-                API&nbsp;RP&nbsp;1111 operating condition. Tension limits are
-                <strong>asymmetric</strong> due to hoop stress interaction: positive
-                tension (pipe stretching) is more favourable than compression when
-                net internal pressure is positive.
-            </p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Condition</th>
-                        <th>f<sub>d</sub></th>
-                        <th>T<sub>+</sub> (kN)</th>
-                        <th>T<sub>&minus;</sub> (kN)</th>
-                        <th>M<sub>allow</sub> (kN&middot;m)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cl_rows}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Section 3a: Pressure Sensitivity -->
-        <div class="card">
-            <h2>3a. Pressure Sensitivity &mdash; Effect of Internal Pressure</h2>
-            <p>
-                Capacity limits recomputed at baseline, +50%, and +100% internal pressure.
-                Higher hoop stress shrinks all envelopes and increases the asymmetry
-                between positive and negative tension limits.
-            </p>
-            {ps_table_html}
-            <div class="chart-container">
-                {pressure_chart_html if pressure_chart_html else ""}
-            </div>
-        </div>
-
-        <!-- Section 4: Combined Loading -->
-        <div class="card">
-            <h2>4. Combined Loading &mdash; Von Mises Interaction</h2>
-            <p>
-                The API RP 1111 combined check evaluates the Von Mises equivalent stress:
-                &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
-                &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
-                + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS
-            </p>
-            <p>
-                The contour plot below maps utilisation across the bending moment vs. tension
-                envelope. The <strong>bold black contour</strong> at util&nbsp;=&nbsp;1.0 is
-                the acceptance boundary; the <strong>dashed contour</strong> at 0.8 marks a
-                typical design target.
-            </p>
-            <div class="chart-container">
-                {contour_html}
-            </div>
-        </div>
-
-        <!-- Section 5: Allowable Bending Envelope -->
-        <div class="card">
-            <h2>5. Allowable Bending Envelope</h2>
-            <p>
-                Each curve traces the maximum allowable bending moment as a function of
-                applied tension, at util&nbsp;=&nbsp;1.0 for that operating condition.
-                The <strong>Normal Operating</strong> envelope (innermost) is the most
-                conservative; the <strong>Survival</strong> envelope (outermost) represents
-                the full yield limit.
-            </p>
-            <div class="chart-container">
-                {envelope_html if envelope_html else ""}
-            </div>
-            <h3>Envelope Data &mdash; Tension vs Allowable Bending Moment</h3>
-            {envelope_table_html}
-        </div>
-
-        <!-- Section 6: Key Points Summary -->
-        <div class="card">
-            <h2>6. Key Points Summary</h2>
-            <p>Utilisation at selected engineering reference points on the M&ndash;T plane.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Point</th>
-                        <th>T (kN)</th>
-                        <th>M (kN&middot;m)</th>
-                        <th>T / T<sub>y</sub></th>
-                        <th>M / M<sub>p</sub></th>
-                        <th>Utilisation</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {kp_rows}
-                </tbody>
-            </table>
         </div>
 
     </div>
