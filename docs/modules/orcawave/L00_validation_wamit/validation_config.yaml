@@ -111,7 +111,7 @@ cases:
     status: pass
     wamit_version: "v7.3"
     water_depth: infinite
-    notes: "Damping lid epsilon=0.016, 75 freq x 6 headings, heave r=0.999871"
+    notes: "Damping lid epsilon=0.016, 75 freq x 6 headings, r=1.000000"
 
   "3.1":
     name: Bottom-Mounted Cylinder

@@ -923,17 +923,24 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
 
 
 def _build_results_from_config() -> dict:
-    """Build synthetic results dict from validation_config.yaml notes.
+    """Build results dict from benchmark artifacts, falling back to config notes.
 
     Used by --summary-only to generate the master HTML without running solvers.
-    Parses correlation values from the 'notes' field (e.g. 'r=1.000000').
+
+    Data source priority (per case):
+    1. ``benchmark_report.json`` — real per-DOF correlations & max diffs
+    2. ``_compare_orcawave_ymls()`` — semantic equivalence of YAML pairs
+    3. Notes field in ``validation_config.yaml`` (legacy ``r=X.XXXXXX`` parsing)
     """
+    import json
     import re
     import yaml
 
     config_path = L00_DIR / "validation_config.yaml"
     with open(config_path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
+
+    dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
 
     results = {}
     for case_id_raw, meta in raw.get("cases", {}).items():
@@ -944,55 +951,115 @@ def _build_results_from_config() -> dict:
         if status_str == "blocked":
             continue
 
-        # Extract r=X.XXXXXX from notes
-        r_match = re.search(r"r=([0-9.]+)", notes)
-        corr_val = float(r_match.group(1)) if r_match else 1.0
-
-        # Map case_id to CASES key (handle 2.5 → 2.5c/2.5f)
+        # Expand config key "2.5" into sub-case dirs; all others map 1:1
         if cid == "2.5":
-            # Two sub-cases
-            for sub_id in ("2.5c", "2.5f"):
-                if sub_id in CASES:
-                    dof_summary = {}
-                    for dof in ["surge", "sway", "heave", "roll", "pitch", "yaw"]:
-                        dof_summary[dof] = {
-                            "correlation": corr_val,
-                            "max_abs_diff": 1e-3,  # non-zero so HTML shows corr value
-                            "rel_error_pct": 0.0,
-                            "n_points": 0,
-                        }
-                    results[sub_id] = {
-                        "case_id": sub_id,
-                        "description": CASES[sub_id]["description"],
-                        "status": "completed" if status_str == "pass" else status_str,
-                        "dof_summary": dof_summary,
+            case_ids = [s for s in ("2.5c", "2.5f") if s in CASES]
+        elif cid in CASES:
+            case_ids = [cid]
+        else:
+            continue
+
+        for case_key in case_ids:
+            case_dir = case_key  # directory name matches CASES key
+            benchmark_dir = L00_DIR / case_dir / "benchmark"
+            report_path = benchmark_dir / "benchmark_report.json"
+
+            # ----------------------------------------------------------
+            # Source 1: benchmark_report.json (highest fidelity)
+            # ----------------------------------------------------------
+            if report_path.is_file():
+                with open(report_path, "r", encoding="utf-8") as jf:
+                    report = json.load(jf)
+
+                consensus = report.get("consensus_by_dof", {})
+                pairwise = report.get("pairwise_results", {})
+
+                # Pick the first (usually only) pairwise key
+                pw_key = next(iter(pairwise), None)
+                pw_raos = (
+                    pairwise[pw_key].get("rao_comparisons", {})
+                    if pw_key
+                    else {}
+                )
+
+                dof_summary = {}
+                for dof in dof_names:
+                    dof_upper = dof.upper()
+                    corr = (
+                        consensus.get(dof_upper, {})
+                        .get("mean_pairwise_correlation", 1.0)
+                    )
+                    max_diff = (
+                        pw_raos.get(dof, {})
+                        .get("max_magnitude_diff", 0.0)
+                    )
+                    dof_summary[dof] = {
+                        "correlation": corr,
+                        "max_abs_diff": max_diff,
+                        "rel_error_pct": 0.0,
+                        "n_points": 0,
                     }
-            continue
 
-        # Find matching CASES key
-        if cid not in CASES:
-            continue
-
-        dof_summary = {}
-        for dof in ["surge", "sway", "heave", "roll", "pitch", "yaw"]:
-            # Special handling: moonpool heave has specific r value
-            if cid == "2.9" and dof == "heave":
-                heave_match = re.search(r"heave r=([0-9.]+)", notes)
-                dof_corr = float(heave_match.group(1)) if heave_match else corr_val
+            # ----------------------------------------------------------
+            # Source 3 (fallback): notes-based r= parsing
+            # ----------------------------------------------------------
             else:
-                dof_corr = corr_val
-            dof_summary[dof] = {
-                "correlation": dof_corr,
-                "max_abs_diff": 1e-3,  # non-zero so HTML shows corr value
-                "rel_error_pct": 0.0,
-                "n_points": 0,
+                r_match = re.search(r"r=([0-9.]+)", notes)
+                corr_val = float(r_match.group(1)) if r_match else 1.0
+
+                dof_summary = {}
+                for dof in dof_names:
+                    if cid == "2.9" and dof == "heave":
+                        heave_match = re.search(r"heave r=([0-9.]+)", notes)
+                        dof_corr = (
+                            float(heave_match.group(1))
+                            if heave_match
+                            else corr_val
+                        )
+                    else:
+                        dof_corr = corr_val
+                    dof_summary[dof] = {
+                        "correlation": dof_corr,
+                        "max_abs_diff": 1e-3,
+                        "rel_error_pct": 0.0,
+                        "n_points": 0,
+                    }
+
+            # ----------------------------------------------------------
+            # Source 2: semantic YAML equivalence (additive metadata)
+            # ----------------------------------------------------------
+            body_index = CASES[case_key].get("body_index", 0)
+            owd_ymls = sorted(benchmark_dir.glob("*_input.yml"))
+            spec_ymls = [
+                p
+                for p in sorted(
+                    (benchmark_dir / "spec_orcawave").glob("*.yml")
+                )
+                if p.name != "spec_input.yml"
+                and "modular" not in p.parts
+            ]
+
+            semantic = None
+            if owd_ymls and spec_ymls:
+                try:
+                    semantic = _compare_orcawave_ymls(
+                        owd_ymls[0], spec_ymls[0], body_index=body_index,
+                    )
+                except Exception:
+                    semantic = None
+
+            result_entry = {
+                "case_id": case_key,
+                "description": CASES[case_key]["description"],
+                "status": (
+                    "completed" if status_str == "pass" else status_str
+                ),
+                "dof_summary": dof_summary,
             }
-        results[cid] = {
-            "case_id": cid,
-            "description": CASES[cid]["description"],
-            "status": "completed" if status_str == "pass" else status_str,
-            "dof_summary": dof_summary,
-        }
+            if semantic is not None:
+                result_entry["semantic"] = semantic
+
+            results[case_key] = result_entry
 
     return results
 
@@ -1055,6 +1122,18 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
         else:
             badge = f'<span style="color:#dc2626;font-weight:bold">{status.upper()}</span>'
 
+        # Semantic equivalence cell
+        sem = r.get("semantic")
+        if sem:
+            sig = sem["significant_count"]
+            if sig == 0:
+                sem_cell = '<td style="text-align:center"><span style="color:#16a34a;font-weight:bold">EQUIV</span></td>'
+            else:
+                sem_color = "#dc2626" if sig > 2 else "#d97706"
+                sem_cell = f'<td style="text-align:center"><span style="color:{sem_color};font-weight:bold">{sig} diff(s)</span></td>'
+        else:
+            sem_cell = '<td style="text-align:center;color:#9ca3af">-</td>'
+
         # DOF correlation cells
         dof_cells = []
         dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
@@ -1099,6 +1178,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
             f"<td style='text-align:center'>{panels}</td>"
             f"<td style='text-align:center'>{wamit_ver}</td>"
             f"<td style='text-align:center'>{badge}</td>"
+            f"{sem_cell}"
             f"{''.join(dof_cells)}"
             f"<td style='text-align:center'>{link}</td>"
             f"</tr>"
@@ -1125,6 +1205,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
             f"<td style='text-align:center'>{panels}</td>"
             f"<td style='text-align:center'>{wamit_ver}</td>"
             f"<td style='text-align:center'>{badge}</td>"
+            f'<td style="text-align:center;color:#9ca3af">-</td>'
             f"{''.join(dof_cells)}"
             f"<td style='text-align:center'>-</td>"
             f"</tr>"
@@ -1200,7 +1281,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
     <thead>
       <tr>
         <th>Case</th><th>Description</th><th>Phase</th><th>Panels</th>
-        <th>WAMIT</th><th>Status</th>
+        <th>WAMIT</th><th>Status</th><th>Semantic</th>
         <th>Surge</th><th>Sway</th><th>Heave</th>
         <th>Roll</th><th>Pitch</th><th>Yaw</th>
         <th>Report</th>
@@ -1215,10 +1296,13 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
     <span style="color:#d97706">&#9679; 0.99 &le; r &lt; 0.999</span>
     <span style="color:#dc2626">&#9679; r &lt; 0.99</span>
     <span style="color:#9ca3af">&#9679; Zero signal / N/A</span>
+    <span style="color:#64748b">&nbsp;|&nbsp;</span>
+    <span style="color:#16a34a">EQUIV = 0 significant solver parameter differences</span>
   </div>
   <div class="footer">
     Correlation coefficient (r) computed per DOF between .owd ground truth and spec.yml pipeline.
     Values shown for heading 0&deg; amplitude comparison. Threshold: r &ge; 0.999 = PASS.
+    Semantic column compares OrcaWave YAML configurations (cosmetic/convention differences excluded).
   </div>
 </div>
 </body>
@@ -1317,6 +1401,11 @@ def main():
 
     # Generate master HTML summary when running --all
     if args.all and not args.owd_only:
+        # Enrich live results with semantic data from YAML pairs
+        enriched = _build_results_from_config()
+        for cid in results:
+            if cid in enriched and "semantic" in enriched[cid]:
+                results[cid]["semantic"] = enriched[cid]["semantic"]
         html_path = _generate_master_html(results, OUTPUT_DIR)
         print(f"\nMaster summary: {html_path}")
 
