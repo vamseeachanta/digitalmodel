@@ -161,7 +161,75 @@ class PassingShipCalculator:
             environment=config.environment,
             calculation_config=config.calculation
         )
-    
+
+    @classmethod
+    def from_imperial(
+        cls,
+        moored_length_ft: float,
+        moored_beam_ft: float,
+        moored_draft_ft: float,
+        moored_cb: float,
+        passing_length_ft: float,
+        passing_beam_ft: float,
+        passing_draft_ft: float,
+        passing_cb: float,
+        water_depth_ft: Optional[float] = None,
+        water_density_slug_ft3: float = 1.9905,
+        **kwargs,
+    ) -> 'PassingShipCalculator':
+        """Create calculator from Imperial units with automatic SI conversion.
+
+        Uses TrackedQuantity for provenance-tracked unit conversions.
+        All values are converted to SI internally before creating configs.
+
+        Args:
+            moored_length_ft: Moored vessel LBP [ft]
+            moored_beam_ft: Moored vessel beam [ft]
+            moored_draft_ft: Moored vessel draft [ft]
+            moored_cb: Moored vessel block coefficient [-]
+            passing_length_ft: Passing vessel LBP [ft]
+            passing_beam_ft: Passing vessel beam [ft]
+            passing_draft_ft: Passing vessel draft [ft]
+            passing_cb: Passing vessel block coefficient [-]
+            water_depth_ft: Water depth [ft] (None for infinite)
+            water_density_slug_ft3: Water density [slug/ft³]
+            **kwargs: Passed through to CalculationConfig (SI units expected)
+        """
+        from assetutilities.units import TrackedQuantity
+
+        def _ft_to_m(value_ft):
+            return TrackedQuantity(
+                value_ft, 'ft', source='imperial_input'
+            ).to('m').magnitude
+
+        moored = VesselConfig(
+            length=_ft_to_m(moored_length_ft),
+            beam=_ft_to_m(moored_beam_ft),
+            draft=_ft_to_m(moored_draft_ft),
+            block_coefficient=moored_cb,
+        )
+        passing = VesselConfig(
+            length=_ft_to_m(passing_length_ft),
+            beam=_ft_to_m(passing_beam_ft),
+            draft=_ft_to_m(passing_draft_ft),
+            block_coefficient=passing_cb,
+        )
+
+        depth_m = _ft_to_m(water_depth_ft) if water_depth_ft is not None else None
+        density_kg_m3 = TrackedQuantity(
+            water_density_slug_ft3, 'slug/ft**3', source='imperial_input'
+        ).to('kg/m**3').magnitude
+
+        env = EnvironmentalConfig(water_depth=depth_m, water_density=density_kg_m3)
+        calc_config = CalculationConfig(**kwargs) if kwargs else None
+
+        return cls(
+            moored_vessel=moored,
+            passing_vessel=passing,
+            environment=env,
+            calculation_config=calc_config,
+        )
+
     def calculate_forces(
         self,
         separation: float,

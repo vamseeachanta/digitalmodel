@@ -19,6 +19,7 @@ See CONVENTIONS.md for sign convention and coordinate system documentation.
 import math
 import numpy as np
 import pytest
+from assetutilities.units import TrackedQuantity
 from digitalmodel.hydrodynamics.passing_ship.calculator import (
     PassingShipCalculator,
 )
@@ -39,14 +40,9 @@ from digitalmodel.hydrodynamics.passing_ship.formulations import (
 )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Unit Conversion Constants
-# ═══════════════════════════════════════════════════════════════════════════
-FT_TO_M = 0.3048
-FT2_TO_M2 = FT_TO_M**2
-SLUG_FT3_TO_KG_M3 = 515.379
-LBF_TO_N = 4.44822
-FT_LBF_TO_NM = 1.35582
+def _tq(value, unit, source='MathCAD_Doc1'):
+    """Create TrackedQuantity with standard provenance source."""
+    return TrackedQuantity(value, unit, source=source)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -64,13 +60,13 @@ REF1_U_FT = 11.2            # Passing ship velocity [ft/s]
 REF1_SEP_FT = 190.0         # Lateral separation [ft] (0.2*L)
 REF1_DEPTH_FT = 95.0        # Water depth [ft] (0.1*L)
 
-# Convert to SI for calculator
-REF1_L1_M = REF1_L1_FT * FT_TO_M
-REF1_L2_M = REF1_L2_FT * FT_TO_M
-REF1_U_MS = REF1_U_FT * FT_TO_M
-REF1_SEP_M = REF1_SEP_FT * FT_TO_M
-REF1_DEPTH_M = REF1_DEPTH_FT * FT_TO_M
-REF1_RHO_KG = REF1_RHO_SLUG * SLUG_FT3_TO_KG_M3
+# Convert to SI using TrackedQuantity (provenance-tracked conversions)
+REF1_L1_M = _tq(REF1_L1_FT, 'ft').to('m').magnitude
+REF1_L2_M = _tq(REF1_L2_FT, 'ft').to('m').magnitude
+REF1_U_MS = _tq(REF1_U_FT, 'ft/s').to('m/s').magnitude
+REF1_SEP_M = _tq(REF1_SEP_FT, 'ft').to('m').magnitude
+REF1_DEPTH_M = _tq(REF1_DEPTH_FT, 'ft').to('m').magnitude
+REF1_RHO_KG = _tq(REF1_RHO_SLUG, 'slug/ft**3').to('kg/m**3').magnitude
 
 # Back-compute beam, draft, Cb from known area and reasonable hull proportions
 # A1 = B1 * T1 * Cb1 = 3192 ft² → For a 950ft vessel: B~105ft, T~38ft, Cb~0.8
@@ -83,6 +79,12 @@ REF1_CB1 = REF1_A1_FT2 / (REF1_B1_FT * REF1_T1_FT)
 REF1_B2_FT = 100.0
 REF1_T2_FT = 70.0
 REF1_CB2 = REF1_A2_FT2 / (REF1_B2_FT * REF1_T2_FT)  # ≈ 0.916
+
+# Beam/draft SI conversions
+REF1_B1_M = _tq(REF1_B1_FT, 'ft').to('m').magnitude
+REF1_T1_M = _tq(REF1_T1_FT, 'ft').to('m').magnitude
+REF1_B2_M = _tq(REF1_B2_FT, 'ft').to('m').magnitude
+REF1_T2_M = _tq(REF1_T2_FT, 'ft').to('m').magnitude
 
 # Expected results (Imperial) — from MathCAD Document 1, finite depth (h=95ft)
 # At stagger = 0 (abeam), surge and yaw are zero by antisymmetry
@@ -100,14 +102,14 @@ def ref1_calculator():
     """Calculator configured with MathCAD Document 1 parameters."""
     moored = VesselConfig(
         length=REF1_L1_M,
-        beam=REF1_B1_FT * FT_TO_M,
-        draft=REF1_T1_FT * FT_TO_M,
+        beam=REF1_B1_M,
+        draft=REF1_T1_M,
         block_coefficient=REF1_CB1,
     )
     passing = VesselConfig(
         length=REF1_L2_M,
-        beam=REF1_B2_FT * FT_TO_M,
-        draft=REF1_T2_FT * FT_TO_M,
+        beam=REF1_B2_M,
+        draft=REF1_T2_M,
         block_coefficient=REF1_CB2,
     )
     env = EnvironmentalConfig(
@@ -145,7 +147,7 @@ class TestWangReferenceCase:
             velocity=REF1_U_MS,
         )
         sway_N = result["sway"]
-        sway_lbf = sway_N / LBF_TO_N
+        sway_lbf = _tq(sway_N, 'N').to('lbf').magnitude
 
         # Allow 5% tolerance — Python formulation uses simplified kernel
         # compared to VBA's exact Wang formulation
@@ -165,7 +167,7 @@ class TestWangReferenceCase:
             velocity=REF1_U_MS,
         )
         surge_N = result["surge"]
-        surge_lbf = abs(surge_N / LBF_TO_N)
+        surge_lbf = abs(_tq(surge_N, 'N').to('lbf').magnitude)
 
         # At stagger=0, surge must be negligible relative to sway
         assert surge_lbf < REF1_SWAY_LBF * 0.01, (
@@ -183,12 +185,12 @@ class TestWangReferenceCase:
             velocity=REF1_U_MS,
         )
         yaw_Nm = result["yaw"]
-        yaw_ft_lbf = abs(yaw_Nm / FT_LBF_TO_NM)
+        yaw_ft_lbf = abs(_tq(yaw_Nm, 'N * m').to('ft * lbf').magnitude)
 
         # At stagger=0, yaw must be negligible
         sway_N = abs(result["sway"])
         ref_moment = sway_N * REF1_L1_M  # rough scale
-        assert yaw_ft_lbf < ref_moment * 0.01 / FT_LBF_TO_NM, (
+        assert yaw_ft_lbf < _tq(ref_moment * 0.01, 'N * m').to('ft * lbf').magnitude, (
             f"Yaw moment at abeam should be ~0, got {yaw_ft_lbf:.3f} ft-lbf"
         )
 
@@ -593,7 +595,7 @@ class TestVBACrossValidation:
         stagger_fraction, expected_surge_lbf, expected_sway_lbf, expected_yaw_ft_lbf
     ):
         """Compare Python vs VBA at discrete stagger positions."""
-        stagger = stagger_fraction * REF1_L1_FT * FT_TO_M
+        stagger = stagger_fraction * REF1_L1_M
 
         result = ref1_calculator.calculate_forces(
             separation=REF1_SEP_M,
@@ -602,13 +604,13 @@ class TestVBACrossValidation:
         )
 
         if expected_surge_lbf is not None:
-            surge_lbf = result["surge"] / LBF_TO_N
+            surge_lbf = _tq(result["surge"], 'N').to('lbf').magnitude
             assert abs(surge_lbf - expected_surge_lbf) / max(abs(expected_surge_lbf), 1.0) < 0.05
 
         if expected_sway_lbf is not None:
-            sway_lbf = result["sway"] / LBF_TO_N
+            sway_lbf = _tq(result["sway"], 'N').to('lbf').magnitude
             assert abs(sway_lbf - expected_sway_lbf) / max(abs(expected_sway_lbf), 1.0) < 0.05
 
         if expected_yaw_ft_lbf is not None:
-            yaw_ft_lbf = result["yaw"] / FT_LBF_TO_NM
+            yaw_ft_lbf = _tq(result["yaw"], 'N * m').to('ft * lbf').magnitude
             assert abs(yaw_ft_lbf - expected_yaw_ft_lbf) / max(abs(expected_yaw_ft_lbf), 1.0) < 0.05
