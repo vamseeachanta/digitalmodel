@@ -174,6 +174,47 @@ class TestCompareRAOs:
                     0.0, abs=1e-6,
                 )
 
+    def test_compare_raos_zero_magnitude_phase_correlation_is_perfect(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        """Phase correlation should be 1.0 when RAO magnitude is near-zero.
+
+        Fixed DOFs (e.g. roll/pitch on a TLP) produce zero magnitudes.
+        Phase is undefined (atan2(0,0) noise), so phase correlation must
+        be overridden to 1.0 instead of computing meaningless noise correlation.
+        """
+        import numpy as np
+        from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+            RAOComponent,
+            DOF as DOFEnum,
+        )
+
+        # Arrange - zero out heave magnitude on both solvers, add noise phase
+        rng = np.random.default_rng(seed=777)
+        for results in two_identical_results.values():
+            heave: RAOComponent = results.raos.heave
+            heave.magnitude = np.zeros_like(heave.magnitude)
+            heave.phase = rng.uniform(-180.0, 180.0, size=heave.phase.shape)
+
+        comparator = MultiSolverComparator(two_identical_results)
+
+        # Act
+        rao_comparisons = comparator.compare_raos()
+
+        # Assert - heave phase correlation should be 1.0 (not noise)
+        for pair_key, comparisons in rao_comparisons.items():
+            heave_comp = comparisons["heave"]
+            assert heave_comp.phase_stats.correlation == pytest.approx(
+                1.0, abs=1e-6,
+            ), (
+                f"Zero-magnitude heave phase correlation for {pair_key} "
+                f"should be 1.0, got {heave_comp.phase_stats.correlation}"
+            )
+            # Magnitude correlation should also be 1.0 (both zero)
+            assert heave_comp.magnitude_stats.correlation == pytest.approx(
+                1.0, abs=1e-6,
+            )
+
 
 # ---------------------------------------------------------------------------
 # 3. Matrix comparison (added mass & damping)
