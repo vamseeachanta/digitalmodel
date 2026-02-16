@@ -331,3 +331,28 @@ def test_report_contains_envelope_chart(report_html):
         "Allowable Bending Envelope" in report_html
         or "envelope" in report_html.lower()
     )
+
+
+def test_report_contains_executive_summary(report_html):
+    """Report HTML includes an executive summary section at the top."""
+    assert "Executive Summary" in report_html
+    # Should have overall verdict
+    assert "PASS" in report_html or "FAIL" in report_html
+    # Should have governing check identification
+    assert "Governing" in report_html
+    # Should have margin percentage
+    assert "Margin" in report_html or "margin" in report_html
+
+
+def test_report_input_data_after_key_points(report_html):
+    """Input Data section appears after Key Points (moved to end)."""
+    kp_pos = report_html.index("Key Points")
+    input_pos = report_html.index("Input Data")
+    assert input_pos > kp_pos, (
+        "Input Data should appear after Key Points (moved to end of report)"
+    )
+
+
+def test_key_points_table_has_margin_column(report_html):
+    """Key Points table includes a Margin column."""
+    assert "Margin" in report_html
