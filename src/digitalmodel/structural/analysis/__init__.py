@@ -2,6 +2,7 @@
 # ABOUTME: Re-exports key symbols from wall_thickness, parametric, phases, codes, lookup, and report modules
 
 from .wall_thickness import (
+    CodeEdition,
     DesignCode,
     DesignFactors,
     DesignLoads,
@@ -41,6 +42,7 @@ from .wall_thickness_phases import (
 )
 
 __all__ = [
+    "CodeEdition",
     "DesignCode",
     "DesignFactors",
     "DesignLoads",
