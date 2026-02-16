@@ -21,6 +21,13 @@ from typing import Any, Optional
 
 import yaml
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    density_t_m3_to_kg_m3,
+    hz_to_rad_per_s,
+    inertia_t_m2_to_kg_m2,
+    period_s_to_rad_per_s,
+    tonnes_to_kg,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     AnalysisType,
     DiffractionSpec,
@@ -253,7 +260,7 @@ class AQWAInputParser:
                         freq_hz_list.append(freq_hz)
 
         # Convert Hz to rad/s
-        freq_rad_s = [f * 2.0 * math.pi for f in freq_hz_list]
+        freq_rad_s = [hz_to_rad_per_s(f) for f in freq_hz_list]
 
         if not freq_rad_s:
             freq_rad_s = [0.1]  # fallback
@@ -474,7 +481,7 @@ class OrcaWaveInputParser:
 
         # OrcaWave SI: density in t/m^3 -> spec uses kg/m^3
         water_density_raw = data.get("WaterDensity", 1.025)
-        water_density = float(water_density_raw) * 1000.0
+        water_density = density_t_m3_to_kg_m3(float(water_density_raw))
 
         return EnvironmentSpec(
             water_depth=water_depth,
@@ -504,7 +511,7 @@ class OrcaWaveInputParser:
         if "period" in referred_by.lower():
             # Convert periods (s) to frequencies (rad/s)
             freq_rad_s = [
-                2.0 * math.pi / float(t) for t in values if float(t) > 0
+                period_s_to_rad_per_s(float(t)) for t in values if float(t) > 0
             ]
             return FrequencySpec(
                 input_type=FrequencyInputType.FREQUENCY,
@@ -570,7 +577,7 @@ class OrcaWaveInputParser:
 
         # Mass: OrcaWave SI uses tonnes -> spec uses kg
         mass_tonnes = float(body_data.get("BodyMass", 0.0))
-        mass_kg = mass_tonnes * 1000.0
+        mass_kg = tonnes_to_kg(mass_tonnes)
 
         cog = body_data.get("BodyCentreOfMass", [0.0, 0.0, 0.0])
 
@@ -639,12 +646,12 @@ class OrcaWaveInputParser:
                 row2 = tensor_data[2]
 
                 # Convert t.m^2 to kg.m^2
-                ixx = float(row0[0]) * 1000.0 if len(row0) > 0 else 0.0
-                ixy = float(row0[1]) * 1000.0 if len(row0) > 1 else 0.0
-                ixz = float(row0[2]) * 1000.0 if len(row0) > 2 else 0.0
-                iyy = float(row1[1]) * 1000.0 if len(row1) > 1 else 0.0
-                iyz = float(row1[2]) * 1000.0 if len(row1) > 2 else 0.0
-                izz = float(row2[2]) * 1000.0 if len(row2) > 2 else 0.0
+                ixx = inertia_t_m2_to_kg_m2(float(row0[0])) if len(row0) > 0 else 0.0
+                ixy = inertia_t_m2_to_kg_m2(float(row0[1])) if len(row0) > 1 else 0.0
+                ixz = inertia_t_m2_to_kg_m2(float(row0[2])) if len(row0) > 2 else 0.0
+                iyy = inertia_t_m2_to_kg_m2(float(row1[1])) if len(row1) > 1 else 0.0
+                iyz = inertia_t_m2_to_kg_m2(float(row1[2])) if len(row1) > 2 else 0.0
+                izz = inertia_t_m2_to_kg_m2(float(row2[2])) if len(row2) > 2 else 0.0
 
                 return {
                     "Ixx": ixx,
@@ -656,7 +663,7 @@ class OrcaWaveInputParser:
                 }
 
         # Fallback: use mass with unit radii of gyration
-        mass_kg = mass_tonnes * 1000.0
+        mass_kg = tonnes_to_kg(mass_tonnes)
         return {
             "Ixx": mass_kg,
             "Iyy": mass_kg,

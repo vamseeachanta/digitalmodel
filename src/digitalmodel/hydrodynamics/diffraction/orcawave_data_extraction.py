@@ -17,6 +17,8 @@ Status: Data extraction implementation
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import complex_phase_degrees
+
 try:
     import OrcFxAPI
     ORCAFLEX_AVAILABLE = True
@@ -159,7 +161,7 @@ class OrcaWaveDataExtractor:
 
                         # Convert to magnitude and phase
                         mag = abs(rao_value)
-                        ph = np.degrees(np.angle(rao_value))
+                        ph = complex_phase_degrees(rao_value)
 
                         magnitude[i, j] = mag
                         phase[i, j] = ph

@@ -26,6 +26,14 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from pydantic import BaseModel, Field
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    complex_phase_degrees,
+    hz_to_rad_per_s,
+    period_s_to_rad_per_s,
+    rad_per_s_to_period_s,
+    radians_to_degrees,
+)
+
 DOF_NAMES = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
 DOF_UNITS = ["m/m", "m/m", "m/m", "deg/m", "deg/m", "deg/m"]
 LOAD_RAO_UNITS = ["N/m", "N/m", "N/m", "N.m/m", "N.m/m", "N.m/m"]
@@ -269,10 +277,10 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
     # --- Frequency/heading grids ---
     # CRITICAL: frequencies from OrcFxAPI are in Hz descending
     freq_hz = np.array(d.frequencies)
-    freq_rad_s = 2.0 * np.pi * freq_hz
+    freq_rad_s = hz_to_rad_per_s(freq_hz)
     sort_idx = np.argsort(freq_rad_s)
     freq_rad_s = freq_rad_s[sort_idx]
-    periods_s = 2.0 * np.pi / freq_rad_s
+    periods_s = rad_per_s_to_period_s(freq_rad_s)
     headings = np.array(d.headings)
 
     # --- Hydrostatics ---
@@ -310,7 +318,7 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
     raw_raos = raw_raos[sort_idx, :, :]
     roll_amp = np.abs(raw_raos[:, :, 3])  # roll DOF
     # Convert rotational RAOs from rad/m to deg/m
-    roll_amp_deg = np.degrees(roll_amp)
+    roll_amp_deg = radians_to_degrees(roll_amp)
 
     peak_idx = np.unravel_index(np.argmax(roll_amp_deg), roll_amp_deg.shape)
     peak_period = float(periods_s[peak_idx[0]]) if np.max(roll_amp_deg) > 1e-10 else None
@@ -337,7 +345,7 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
     load_phase: Dict[str, List[List[float]]] = {}
     for i, dof in enumerate(DOF_NAMES):
         amp = np.abs(raw_load[:, :, i])
-        phase = np.degrees(np.angle(raw_load[:, :, i]))
+        phase = complex_phase_degrees(raw_load[:, :, i])
         load_amp[dof] = _round_2d(amp)
         load_phase[dof] = _round_2d(phase)
 
@@ -537,7 +545,7 @@ def compute_natural_periods(
         best_idx = int(np.argmin(diff))
 
         if freq[best_idx] > 0:
-            t_n = 2.0 * np.pi / freq[best_idx]
+            t_n = rad_per_s_to_period_s(freq[best_idx])
             result[key] = float(t_n)
 
     return result
@@ -565,7 +573,7 @@ def compute_peak_responses(
         amp = np.abs(raw_raos[:, :, i])
         # Convert rotational RAOs from rad/m to deg/m
         if i >= 3:
-            amp = np.degrees(amp)
+            amp = radians_to_degrees(amp)
         if amp.size == 0 or np.max(amp) < 1e-12:
             continue
 
@@ -1650,7 +1658,7 @@ def _build_natural_periods_html(data: DiffractionReportData) -> str:
         tn = np_data.get(dof)
         if tn is not None:
             fn = 1.0 / tn if tn > 0 else 0
-            wn = 2.0 * math.pi / tn if tn > 0 else 0
+            wn = period_s_to_rad_per_s(tn) if tn > 0 else 0
             rows.append(
                 f"<tr><td>{dof.capitalize()}</td>"
                 f"<td>{tn:.3f}</td><td>{fn:.4f}</td><td>{wn:.4f}</td></tr>"
@@ -1943,7 +1951,7 @@ def build_report_data_from_solver_results(
     dr = solver_results[first_name]
 
     freq_rad_s = dr.added_mass.frequencies.values.tolist()
-    periods_s = (2.0 * np.pi / np.array(freq_rad_s)).tolist()
+    periods_s = rad_per_s_to_period_s(np.array(freq_rad_s)).tolist()
 
     added_mass_diag: Dict[str, List[float]] = {}
     damping_diag: Dict[str, List[float]] = {}

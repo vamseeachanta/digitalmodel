@@ -26,6 +26,12 @@ from typing import Any
 
 import yaml
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    density_kg_m3_to_t_m3,
+    inertia_kg_m2_to_t_m2,
+    kg_to_tonnes,
+    rad_per_s_to_period_s,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     BodySpec,
     DiffractionSpec,
@@ -153,7 +159,7 @@ def _periods_from_spec(spec: DiffractionSpec) -> list[float]:
                 ]
     else:
         freqs_rad_s = spec.frequencies.to_frequencies_rad_s()
-        periods = [2.0 * math.pi / float(w) for w in freqs_rad_s if w > 0]
+        periods = [rad_per_s_to_period_s(float(w)) for w in freqs_rad_s if w > 0]
 
     periods = sorted(round(t, 4) for t in periods)
     return periods
@@ -178,7 +184,7 @@ def _water_depth_value(spec: DiffractionSpec) -> float | str:
 
 def _water_density_tonnes(spec: DiffractionSpec) -> float:
     """Convert water density from kg/m^3 to tonnes/m^3 for OrcaWave SI."""
-    return spec.environment.water_density / 1000.0
+    return density_kg_m3_to_t_m3(spec.environment.water_density)
 
 
 def _build_inertia_tensor(body_spec: BodySpec) -> list[list[float]]:
@@ -193,12 +199,12 @@ def _build_inertia_tensor(body_spec: BodySpec) -> list[list[float]]:
     if inertia.inertia_tensor is not None:
         t = inertia.inertia_tensor
         # Convert from kg.m^2 to t.m^2
-        ixx = t.get("Ixx", 0.0) / 1000.0
-        iyy = t.get("Iyy", 0.0) / 1000.0
-        izz = t.get("Izz", 0.0) / 1000.0
-        ixy = t.get("Ixy", 0.0) / 1000.0
-        ixz = t.get("Ixz", 0.0) / 1000.0
-        iyz = t.get("Iyz", 0.0) / 1000.0
+        ixx = inertia_kg_m2_to_t_m2(t.get("Ixx", 0.0))
+        iyy = inertia_kg_m2_to_t_m2(t.get("Iyy", 0.0))
+        izz = inertia_kg_m2_to_t_m2(t.get("Izz", 0.0))
+        ixy = inertia_kg_m2_to_t_m2(t.get("Ixy", 0.0))
+        ixz = inertia_kg_m2_to_t_m2(t.get("Ixz", 0.0))
+        iyz = inertia_kg_m2_to_t_m2(t.get("Iyz", 0.0))
         return [
             [ixx, ixy, ixz],
             [ixy, iyy, iyz],
@@ -206,7 +212,7 @@ def _build_inertia_tensor(body_spec: BodySpec) -> list[list[float]]:
         ]
     else:
         rog = inertia.radii_of_gyration
-        mass_t = mass_kg / 1000.0
+        mass_t = kg_to_tonnes(mass_kg)
         ixx = mass_t * rog[0] ** 2
         iyy = mass_t * rog[1] ** 2
         izz = mass_t * rog[2] ** 2
@@ -284,7 +290,7 @@ def _build_body_dict(
         # Explicit mode: mass and inertia tensor specified directly
         body["BodyInertiaSpecifiedBy"] = "Matrix (for a general body)"
         body["BodyCentreOfMass"] = list(inertia.centre_of_gravity)
-        body["BodyMass"] = inertia.mass / 1000.0  # kg -> tonnes
+        body["BodyMass"] = kg_to_tonnes(inertia.mass)
 
         inertia_key = (
             "BodyInertiaTensorRx, "

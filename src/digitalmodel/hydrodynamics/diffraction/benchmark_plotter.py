@@ -20,6 +20,7 @@ from digitalmodel.hydrodynamics.diffraction.mesh_pipeline import MeshPipeline
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
 )
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_period_s
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
     DOF,
@@ -1967,7 +1968,7 @@ class BenchmarkPlotter:
 
         # Compute the (x, y) coordinates on the phase plot
         if self.x_axis == "period" and max_pd_freq > 0:
-            x_val = 2 * np.pi / max_pd_freq
+            x_val = rad_per_s_to_period_s(max_pd_freq)
         else:
             x_val = max_pd_freq
 

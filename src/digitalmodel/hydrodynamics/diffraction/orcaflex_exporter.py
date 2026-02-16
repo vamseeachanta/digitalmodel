@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Dict, Optional
 from datetime import datetime
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_period_s
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
     DOF, RAOComponent, HydrodynamicMatrix
@@ -184,7 +185,7 @@ class OrcaFlexExporter:
                 for j, dof_j in enumerate(dof_names):
                     rows.append({
                         'Frequency (rad/s)': freq,
-                        'Period (s)': 2 * np.pi / freq,
+                        'Period (s)': rad_per_s_to_period_s(freq),
                         'DOF_i': dof_i,
                         'DOF_j': dof_j,
                         'AddedMass': matrix.matrix[i, j],
@@ -219,7 +220,7 @@ class OrcaFlexExporter:
                 for j, dof_j in enumerate(dof_names):
                     rows.append({
                         'Frequency (rad/s)': freq,
-                        'Period (s)': 2 * np.pi / freq,
+                        'Period (s)': rad_per_s_to_period_s(freq),
                         'DOF_i': dof_i,
                         'DOF_j': dof_j,
                         'Damping': matrix.matrix[i, j],

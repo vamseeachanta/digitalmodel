@@ -21,6 +21,7 @@ from typing import Optional
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_hz
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     VesselInertia,
@@ -786,7 +787,7 @@ class AQWABackend:
 
         # Frequencies: convert rad/s -> Hz for AQWA HRTZ cards
         freqs_rad = spec.frequencies.to_frequencies_rad_s()
-        freqs_hz = [w / (2.0 * math.pi) for w in freqs_rad]
+        freqs_hz = [rad_per_s_to_hz(w) for w in freqs_rad]
 
         for i, freq_hz in enumerate(freqs_hz, start=1):
             freq_str = f"{freq_hz:>10g}"

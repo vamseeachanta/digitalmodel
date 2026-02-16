@@ -26,6 +26,13 @@ from typing import Optional
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    complex_phase_degrees,
+    hz_to_rad_per_s,
+    rad_per_s_to_period_s,
+    radians_to_degrees,
+)
+
 # Fix Windows console encoding
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -159,7 +166,7 @@ def _extract_from_diffraction(
 
     try:
         # OrcFxAPI returns frequencies in Hz; convert to rad/s
-        frequencies = 2.0 * np.pi * np.array(diff.frequencies)
+        frequencies = hz_to_rad_per_s(np.array(diff.frequencies))
         headings = np.array(diff.headings)
 
         # Extract displacement RAOs - shape (nheading, nfreq, ndof)
@@ -181,7 +188,7 @@ def _extract_from_diffraction(
 
         freq_data = FrequencyData(
             values=frequencies,
-            periods=2.0 * np.pi / frequencies,
+            periods=rad_per_s_to_period_s(frequencies),
             count=len(frequencies),
             min_freq=0.0,
             max_freq=0.0,
@@ -200,11 +207,11 @@ def _extract_from_diffraction(
             rao_complex = raw_raos[:, :, i]
             magnitude = np.abs(rao_complex)
             if dof in rotational_dofs:
-                magnitude = np.degrees(magnitude)
+                magnitude = radians_to_degrees(magnitude)
             components[dof.name.lower()] = RAOComponent(
                 dof=dof,
                 magnitude=magnitude,
-                phase=np.degrees(np.angle(rao_complex)),
+                phase=complex_phase_degrees(rao_complex),
                 frequencies=freq_data,
                 headings=head_data,
                 unit="deg/m" if dof in rotational_dofs else "m/m",
