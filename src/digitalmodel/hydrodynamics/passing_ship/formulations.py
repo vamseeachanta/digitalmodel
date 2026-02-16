@@ -98,227 +98,236 @@ def ds2_dx(x: float, L: float) -> float:
 
 
 # Kernel Functions for Force Calculations
-def f_kernel(xi: float, eta: float, x: float, y: float, L: float) -> float:
+def f_kernel(xi: float, eta: float, x: float, y: float, L1: float, L2: float = None) -> float:
     """
-    Calculate F kernel function for force integration.
-    
-    The F kernel represents the velocity potential interaction
-    between vessel sections.
-    
+    Calculate F kernel function for sway/yaw force integration.
+
+    Uses sectional area derivatives dS1/dx for both vessels with 3D
+    slender-body Green function (y/r^3).  Wang (1975) formulation.
+
     Args:
-        xi: Integration variable - position on passing vessel [m]
-        eta: Integration variable - position on moored vessel [m]
+        xi: Position on passing vessel (vessel 2) [m]
+        eta: Position on moored vessel (vessel 1) [m]
         x: Stagger distance between vessels [m]
         y: Lateral separation between vessels [m]
-        L: Vessel length [m]
-    
+        L1: Moored vessel length [m]
+        L2: Passing vessel length [m] (defaults to L1 if not given)
+
     Returns:
         F kernel value
     """
-    # Distance between points on the two vessels
+    if L2 is None:
+        L2 = L1
+
     dx = (x + xi) - eta
-    r = np.sqrt(dx**2 + y**2)
-    
-    # Avoid singularity at r=0
-    if r < 1e-6:
+    r_sq = dx**2 + y**2
+
+    if r_sq < 1e-12:
         return 0.0
-    
-    # F kernel formulation from Wang's paper
-    # Simplified form - actual implementation may need adjustment based on paper
-    s1_xi = s1_function(xi, L)
-    s1_eta = s1_function(eta, L)
-    
-    # Velocity potential kernel
-    kernel = s1_xi * s1_eta * y / (r**3)
-    
-    return kernel
+
+    r = np.sqrt(r_sq)
+    ds1_xi = ds1_dx(xi, L2)   # passing vessel derivative
+    ds1_eta = ds1_dx(eta, L1)  # moored vessel derivative
+
+    return ds1_xi * ds1_eta * y / (r**3)
 
 
-def g_kernel(xi: float, eta: float, x: float, y: float, L: float) -> float:
+def g_kernel(xi: float, eta: float, x: float, y: float, L1: float, L2: float = None) -> float:
     """
-    Calculate G kernel function for force integration.
-    
-    The G kernel represents the stream function interaction
-    between vessel sections.
-    
+    Calculate G kernel function for surge force integration.
+
+    Uses derivatives dS1/dx for BOTH vessels, which ensures the surge
+    integral is antisymmetric in stagger (zero at abeam, sign-reversal).
+    Wang (1975) formulation with 3D slender-body Green function (dx/r^3).
+
     Args:
-        xi: Integration variable - position on passing vessel [m]
-        eta: Integration variable - position on moored vessel [m]
+        xi: Position on passing vessel (vessel 2) [m]
+        eta: Position on moored vessel (vessel 1) [m]
         x: Stagger distance between vessels [m]
         y: Lateral separation between vessels [m]
-        L: Vessel length [m]
-    
+        L1: Moored vessel length [m]
+        L2: Passing vessel length [m] (defaults to L1 if not given)
+
     Returns:
         G kernel value
     """
-    # Distance between points
+    if L2 is None:
+        L2 = L1
+
     dx = (x + xi) - eta
-    r = np.sqrt(dx**2 + y**2)
-    
-    # Avoid singularity
-    if r < 1e-6:
+    r_sq = dx**2 + y**2
+
+    if r_sq < 1e-12:
         return 0.0
-    
-    # G kernel formulation
-    s1_xi = s1_function(xi, L)
-    ds1_eta = ds1_dx(eta, L)
-    
-    # Stream function kernel
-    kernel = s1_xi * ds1_eta * dx / (r**3)
-    
-    return kernel
+
+    r = np.sqrt(r_sq)
+    ds1_xi = ds1_dx(xi, L2)   # passing vessel derivative
+    ds1_eta = ds1_dx(eta, L1)  # moored vessel derivative
+
+    return ds1_xi * ds1_eta * dx / (r**3)
 
 
 # Force Calculations - Infinite Depth
 def calculate_surge_force_infinite(
-    L: float, B: float, T: float, Cb: float,
-    U: float, y: float, x: float, rho: float = 1025.0
+    L: float = None, B: float = None, T: float = None, Cb: float = None,
+    U: float = 0.0, y: float = 1.0, x: float = 0.0, rho: float = 1025.0,
+    *,
+    L1: float = None, A1: float = None,
+    L2: float = None, A2: float = None,
 ) -> float:
     """
     Calculate surge force on moored vessel (infinite depth).
-    
+
+    Accepts either legacy single-vessel params (L, B, T, Cb) for backward
+    compatibility, or separate two-vessel params (L1, A1, L2, A2) for the
+    correct Wang formulation.
+
     Args:
-        L: Vessel length [m]
-        B: Vessel beam [m]
-        T: Vessel draft [m]
-        Cb: Block coefficient [-]
+        L, B, T, Cb: Legacy single-vessel parameters (used when L1/L2 not given)
         U: Passing vessel velocity [m/s]
         y: Lateral separation [m]
         x: Stagger distance [m]
         rho: Water density [kg/m³]
-    
+        L1: Moored vessel length [m]
+        A1: Moored vessel midship area [m²]
+        L2: Passing vessel length [m]
+        A2: Passing vessel midship area [m²]
+
     Returns:
         Surge force [N]
     """
-    # Cross-sectional area at midship
-    A_midship = B * T * Cb
-    
-    # Integration limits
-    xi_min, xi_max = -L/2, L/2
-    eta_min, eta_max = -L/2, L/2
-    
-    # Define integrand for surge force
+    if L1 is None:
+        L1 = L
+        L2 = L if L2 is None else L2
+        A1 = B * T * Cb if A1 is None else A1
+        A2 = A1 if A2 is None else A2
+    else:
+        if L2 is None:
+            L2 = L1
+        if A2 is None:
+            A2 = A1
+
     def integrand(eta, xi):
-        return g_kernel(xi, eta, x, y, L)
-    
-    # Perform double integration
+        return g_kernel(xi, eta, x, y, L1, L2)
+
     try:
         result, error = integrate.dblquad(
             integrand,
-            xi_min, xi_max,
-            eta_min, eta_max,
+            -L2 / 2, L2 / 2,   # outer: xi over passing vessel
+            -L1 / 2, L1 / 2,   # inner: eta over moored vessel
             epsabs=1e-4,
-            epsrel=1e-4
+            epsrel=1e-4,
         )
     except Exception:
-        # If integration fails, return zero
         return 0.0
-    
-    # Force scaling
-    # F_surge = -rho * U^2 * A_midship * integral
-    force = -rho * U**2 * A_midship * result
-    
+
+    force = (2.0 / 3.0) * rho * U**2 * A1 * A2 * result
     return force
 
 
 def calculate_sway_force_infinite(
-    L: float, B: float, T: float, Cb: float,
-    U: float, y: float, x: float, rho: float = 1025.0
+    L: float = None, B: float = None, T: float = None, Cb: float = None,
+    U: float = 0.0, y: float = 1.0, x: float = 0.0, rho: float = 1025.0,
+    *,
+    L1: float = None, A1: float = None,
+    L2: float = None, A2: float = None,
 ) -> float:
     """
     Calculate sway force on moored vessel (infinite depth).
-    
+
     Args:
-        L: Vessel length [m]
-        B: Vessel beam [m]
-        T: Vessel draft [m]
-        Cb: Block coefficient [-]
+        L, B, T, Cb: Legacy single-vessel parameters
         U: Passing vessel velocity [m/s]
         y: Lateral separation [m]
         x: Stagger distance [m]
         rho: Water density [kg/m³]
-    
+        L1: Moored vessel length [m]
+        A1: Moored vessel midship area [m²]
+        L2: Passing vessel length [m]
+        A2: Passing vessel midship area [m²]
+
     Returns:
         Sway force [N]
     """
-    # Cross-sectional area
-    A_midship = B * T * Cb
-    
-    # Integration limits
-    xi_min, xi_max = -L/2, L/2
-    eta_min, eta_max = -L/2, L/2
-    
-    # Define integrand for sway force
+    if L1 is None:
+        L1 = L
+        L2 = L if L2 is None else L2
+        A1 = B * T * Cb if A1 is None else A1
+        A2 = A1 if A2 is None else A2
+    else:
+        if L2 is None:
+            L2 = L1
+        if A2 is None:
+            A2 = A1
+
     def integrand(eta, xi):
-        return f_kernel(xi, eta, x, y, L)
-    
-    # Perform double integration
+        return f_kernel(xi, eta, x, y, L1, L2)
+
     try:
         result, error = integrate.dblquad(
             integrand,
-            xi_min, xi_max,
-            eta_min, eta_max,
+            -L2 / 2, L2 / 2,
+            -L1 / 2, L1 / 2,
             epsabs=1e-4,
-            epsrel=1e-4
+            epsrel=1e-4,
         )
     except Exception:
         return 0.0
-    
-    # Force scaling
-    # F_sway = rho * U^2 * A_midship * integral
-    force = rho * U**2 * A_midship * result
-    
+
+    force = (2.0 / 3.0) * rho * U**2 * A1 * A2 * result
     return force
 
 
 def calculate_yaw_moment_infinite(
-    L: float, B: float, T: float, Cb: float,
-    U: float, y: float, x: float, rho: float = 1025.0
+    L: float = None, B: float = None, T: float = None, Cb: float = None,
+    U: float = 0.0, y: float = 1.0, x: float = 0.0, rho: float = 1025.0,
+    *,
+    L1: float = None, A1: float = None,
+    L2: float = None, A2: float = None,
 ) -> float:
     """
     Calculate yaw moment on moored vessel (infinite depth).
-    
+
     Args:
-        L: Vessel length [m]
-        B: Vessel beam [m]
-        T: Vessel draft [m]
-        Cb: Block coefficient [-]
+        L, B, T, Cb: Legacy single-vessel parameters
         U: Passing vessel velocity [m/s]
         y: Lateral separation [m]
         x: Stagger distance [m]
         rho: Water density [kg/m³]
-    
+        L1: Moored vessel length [m]
+        A1: Moored vessel midship area [m²]
+        L2: Passing vessel length [m]
+        A2: Passing vessel midship area [m²]
+
     Returns:
         Yaw moment [N·m]
     """
-    # Cross-sectional area
-    A_midship = B * T * Cb
-    
-    # Integration limits
-    xi_min, xi_max = -L/2, L/2
-    eta_min, eta_max = -L/2, L/2
-    
-    # Define integrand for yaw moment
+    if L1 is None:
+        L1 = L
+        L2 = L if L2 is None else L2
+        A1 = B * T * Cb if A1 is None else A1
+        A2 = A1 if A2 is None else A2
+    else:
+        if L2 is None:
+            L2 = L1
+        if A2 is None:
+            A2 = A1
+
     def integrand(eta, xi):
-        # Moment arm is eta (distance from midship)
-        return eta * f_kernel(xi, eta, x, y, L)
-    
-    # Perform double integration
+        return eta * f_kernel(xi, eta, x, y, L1, L2)
+
     try:
         result, error = integrate.dblquad(
             integrand,
-            xi_min, xi_max,
-            eta_min, eta_max,
+            -L2 / 2, L2 / 2,
+            -L1 / 2, L1 / 2,
             epsabs=1e-4,
-            epsrel=1e-4
+            epsrel=1e-4,
         )
     except Exception:
         return 0.0
-    
-    # Moment scaling
-    # M_yaw = rho * U^2 * A_midship * L * integral
-    moment = rho * U**2 * A_midship * L * result
-    
+
+    moment = (2.0 / 3.0) * rho * U**2 * A1 * A2 * result
     return moment
 
 

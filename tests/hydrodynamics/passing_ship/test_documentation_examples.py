@@ -221,11 +221,11 @@ def test_api_reference_examples():
     print("PASS: s1_function works")
 
     # Test kernel functions (f_kernel and g_kernel, lowercase)
-    F_val = f_kernel(xi=0.5, eta=1.0, x=1.0, y=1.0, L=50.0)
+    F_val = f_kernel(xi=0.5, eta=1.0, x=1.0, y=1.0, L1=50.0)
     assert isinstance(F_val, (int, float))
     print("PASS: f_kernel function works")
 
-    G_val = g_kernel(xi=0.5, eta=1.0, x=1.0, y=1.0, L=50.0)
+    G_val = g_kernel(xi=0.5, eta=1.0, x=1.0, y=1.0, L1=50.0)
     assert isinstance(G_val, (int, float))
     print("PASS: g_kernel function works")
 

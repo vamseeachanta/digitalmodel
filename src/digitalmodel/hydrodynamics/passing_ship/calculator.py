@@ -247,46 +247,30 @@ class PassingShipCalculator:
             raise
     
     def _calculate_infinite_depth(
-        self, 
+        self,
         separation: float,
-        stagger: float, 
+        stagger: float,
         velocity: float
     ) -> Dict[str, float]:
-        """Calculate forces for infinite water depth."""
-        # Use formulation functions with numerical integration
-        
-        # Note: The current formulations are simplified and use single vessel parameters
-        # In a full implementation, we would need separate functions for moored and passing vessels
-        # For now, we'll use the larger vessel dimensions for conservative estimates
-        
-        # Use larger vessel dimensions for calculations
-        L = max(self.moored_vessel.length, self.passing_vessel.length)
-        B = max(self.moored_vessel.beam, self.passing_vessel.beam)
-        T = max(self.moored_vessel.draft, self.passing_vessel.draft)
-        Cb = max(self.moored_vessel.block_coefficient, self.passing_vessel.block_coefficient)
+        """Calculate forces for infinite water depth.
+
+        Uses separate vessel parameters (L1/A1, L2/A2) per Wang (1975).
+        """
         rho = self.environment.water_density
-        
-        # Calculate surge force
-        surge = surge_force_infinite(
-            L=L, B=B, T=T, Cb=Cb,
-            U=velocity, y=separation, x=stagger,
-            rho=rho
+        L1 = self.moored_vessel.length
+        A1 = self.moored_vessel.midship_area
+        L2 = self.passing_vessel.length
+        A2 = self.passing_vessel.midship_area
+
+        common = dict(
+            U=velocity, y=separation, x=stagger, rho=rho,
+            L1=L1, A1=A1, L2=L2, A2=A2,
         )
-        
-        # Calculate sway force  
-        sway = sway_force_infinite(
-            L=L, B=B, T=T, Cb=Cb,
-            U=velocity, y=separation, x=stagger,
-            rho=rho
-        )
-        
-        # Calculate yaw moment
-        yaw = yaw_moment_infinite(
-            L=L, B=B, T=T, Cb=Cb,
-            U=velocity, y=separation, x=stagger,
-            rho=rho
-        )
-        
+
+        surge = surge_force_infinite(**common)
+        sway = sway_force_infinite(**common)
+        yaw = yaw_moment_infinite(**common)
+
         return {'surge': surge, 'sway': sway, 'yaw': yaw}
     
     def _calculate_finite_depth(

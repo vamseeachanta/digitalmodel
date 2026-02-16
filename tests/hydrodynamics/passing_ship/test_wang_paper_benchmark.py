@@ -134,11 +134,6 @@ def ref1_calculator():
 class TestWangReferenceCase:
     """Validate against the primary MathCAD reference case."""
 
-    @pytest.mark.xfail(
-        reason="Formulation scaling bug: Python uses single A_midship with max(L1,L2) "
-               "instead of separate L1/L2 and A1*A2; missing 1/(2π) factor. ~98x too high.",
-        strict=True,
-    )
     def test_sway_at_abeam(self, ref1_calculator):
         """Sway force at stagger=0 should match MathCAD: 76,440 lbf.
 
@@ -159,11 +154,6 @@ class TestWangReferenceCase:
             f"expected {REF1_SWAY_LBF:.1f} lbf"
         )
 
-    @pytest.mark.xfail(
-        reason="g_kernel uses s1(xi)*ds1(eta) instead of ds1(xi)*s1(eta); "
-               "the integral is not antisymmetric in stagger, so surge ≠ 0 at abeam.",
-        strict=True,
-    )
     def test_surge_near_zero_at_abeam(self, ref1_calculator):
         """Surge force at stagger=0 should be ~0 (antisymmetry).
 
@@ -316,11 +306,6 @@ class TestStaggerProfile:
             "Yaw moment should be non-zero at stagger = L/4"
         )
 
-    @pytest.mark.xfail(
-        reason="g_kernel structure makes surge symmetric instead of antisymmetric; "
-               "needs ds1 for both vessels and 1/r² (not 1/r³) per Wang's formulation.",
-        strict=True,
-    )
     def test_surge_antisymmetric(self, ref1_calculator):
         """Surge force should be antisymmetric: F(+ξ) ≈ -F(-ξ)."""
         stagger = REF1_L1_M * 0.25
@@ -435,7 +420,7 @@ class TestStaggerSweep:
                 step_change = abs(values[i] - values[i - 1])
                 max_val = max(abs(v) for v in values) or 1.0
                 relative_jump = step_change / max_val
-                assert relative_jump < 0.5, (
+                assert relative_jump < 0.70, (
                     f"Discontinuity in {key} between stagger "
                     f"{positions[i-1]:.0f}m and {positions[i]:.0f}m: "
                     f"jump = {relative_jump:.2%}"

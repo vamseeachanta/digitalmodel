@@ -116,13 +116,11 @@ class TestMathCADValidation:
             velocity=case['passing_vessel']['velocity']
         )
         
-        # For now, just check that forces are calculated and have reasonable magnitudes
-        # Full validation would require calibration of the kernel functions
-        # The simplified formulations produce values in the tens of millions range
-        assert forces['surge'] != 0.0
+        # With the corrected Wang formulation (ds1*ds1 kernels), surge and yaw
+        # are exactly zero at stagger=0 by antisymmetry. Sway should be non-zero.
+        assert abs(forces['surge']) < 1.0  # Essentially zero at abeam
         assert forces['sway'] != 0.0
-        assert abs(forces['surge']) < 1e8  # Reasonable magnitude for simplified formulation
-        assert abs(forces['sway']) < 1e8  # Reasonable magnitude for simplified formulation
+        assert abs(forces['sway']) < 1e8  # Reasonable magnitude
         
         # TODO: After calibration, validate within 0.1% tolerance
         # tolerance = 0.001  # 0.1%
@@ -193,12 +191,16 @@ class TestCalculatorCore:
         assert all(isinstance(v, (int, float)) for v in forces.values())
     
     def test_calculation_with_current(self, basic_calculator):
-        """Test calculation with current effects."""
+        """Test calculation with current effects.
+
+        Surge is zero at stagger=0 (antisymmetric kernel), so use
+        non-zero stagger to verify that current changes results.
+        """
         basic_calculator.environment.current_velocity = 1.0
-        
-        forces_no_current = basic_calculator.calculate_forces(100.0, 0.0, 5.0)
-        forces_with_current = basic_calculator.calculate_forces(100.0, 0.0, 4.0)  # Relative velocity
-        
+
+        forces_no_current = basic_calculator.calculate_forces(100.0, 50.0, 5.0)
+        forces_with_current = basic_calculator.calculate_forces(100.0, 50.0, 4.0)  # Relative velocity
+
         # Forces should be different but same order of magnitude
         assert abs(forces_no_current['surge']) > 0
         assert abs(forces_with_current['surge']) > 0
