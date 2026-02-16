@@ -28,15 +28,15 @@ Bodies:
   - 3.0
   BodyMass: 53066.4
   BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
-  - - 80201552000.0
+  - - 80201552.0
     - 0.0
     - 0.0
   - - 0.0
-    - 80201552000.0
+    - 80201552.0
     - 0.0
   - - 0.0
     - 0.0
-    - 95490673100.0
+    - 95490673.1
   BodyInertiaTensorOriginType: Body origin
   ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
   : - - 0
