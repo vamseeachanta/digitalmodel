@@ -198,28 +198,47 @@ class YAMLConfigParser:
         except Exception as e:
             raise ValueError(f"Error evaluating expression '{expression}': {e}")
     
+    def _extract_variables(self, raw_text: str) -> None:
+        """Extract variables from YAML text using safe_load (first pass)."""
+        # Strip custom tags so safe_load can parse the variables section
+        stripped = re.sub(r'![a-zA-Z_]+\s+', '', raw_text)
+        try:
+            pre_data = yaml.safe_load(stripped)
+        except yaml.YAMLError:
+            pre_data = None
+        if isinstance(pre_data, dict) and 'variables' in pre_data:
+            self.variables = pre_data['variables']
+
     def parse_file(self, filepath: str) -> PassingShipConfig:
         """Parse YAML configuration file."""
         with open(filepath, 'r') as f:
-            data = yaml.safe_load(f)
-        
-        # Extract variables if present
-        if 'variables' in data:
-            self.variables = data['variables']
-            del data['variables']  # Remove from main config
-        
+            raw_text = f.read()
+
+        # First pass: extract variables so !var and !eval can reference them
+        self._extract_variables(raw_text)
+
+        # Second pass: full parse with custom tag constructors
+        data = yaml.load(raw_text, Loader=yaml.Loader)
+
+        # Remove variables section from config data
+        if isinstance(data, dict) and 'variables' in data:
+            del data['variables']
+
         # Parse configuration
         return PassingShipConfig(**data)
-    
+
     def parse_string(self, yaml_string: str) -> PassingShipConfig:
         """Parse YAML configuration from string."""
-        data = yaml.safe_load(yaml_string)
-        
-        # Extract variables if present
-        if 'variables' in data:
-            self.variables = data['variables']
+        # First pass: extract variables so !var and !eval can reference them
+        self._extract_variables(yaml_string)
+
+        # Second pass: full parse with custom tag constructors
+        data = yaml.load(yaml_string, Loader=yaml.Loader)
+
+        # Remove variables section from config data
+        if isinstance(data, dict) and 'variables' in data:
             del data['variables']
-        
+
         return PassingShipConfig(**data)
 
 

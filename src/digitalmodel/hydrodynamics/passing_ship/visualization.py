@@ -355,14 +355,17 @@ class InteractivePlotManager:
     def enable_interactivity(self, fig: Figure) -> None:
         """
         Enable zoom, pan, and basic interactivity.
-        
+
         Args:
             fig: Figure to make interactive
         """
         # This is automatically enabled with matplotlib
         # Additional configuration can be added here
-        if hasattr(fig.canvas, 'toolbar'):
-            fig.canvas.toolbar.update()
+        # Note: In non-interactive backends (e.g., Agg), toolbar exists
+        # as an attribute but is None. Guard against that.
+        toolbar = getattr(fig.canvas, 'toolbar', None)
+        if toolbar is not None:
+            toolbar.update()
     
     def add_data_cursor(self, fig: Figure) -> Any:
         """

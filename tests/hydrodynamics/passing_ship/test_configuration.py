@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from pydantic import ValidationError
 
-from digitalmodel.marine_ops.marine_analysis.python_code_passing_ship.configuration import (
+from digitalmodel.hydrodynamics.passing_ship.configuration import (
     VesselConfig,
     EnvironmentalConfig,
     CalculationConfig,
@@ -104,7 +104,7 @@ class TestPydanticModels:
             lateral_separation=50.0,
             passing_velocity=10.0,
             num_points=100,
-            tolerance=1e-4,
+            integration_tolerance=1e-4,
             max_iterations=1000
         )
         assert config.stagger_distance == 100.0
@@ -121,7 +121,7 @@ class TestPydanticModels:
         )
         # Check defaults
         assert config.num_points == 50  # Default
-        assert config.tolerance == 1e-4  # Default
+        assert config.integration_tolerance == 1e-6  # Default
         assert config.max_iterations == 1000  # Default
     
     def test_passing_ship_config_complete(self):
@@ -542,7 +542,7 @@ class TestConfigurationTemplates:
     
     def test_load_basic_template(self):
         """Test loading basic vessel template."""
-        template_dir = Path(__file__).parent.parent.parent.parent.parent / "src" / "digitalmodel" / "modules" / "marine_analysis" / "python_code_passing_ship" / "templates"
+        template_dir = Path(__file__).parent.parent.parent.parent / "src" / "digitalmodel" / "hydrodynamics" / "passing_ship" / "templates"
         template_file = template_dir / "basic.yml"
         
         if template_file.exists():
@@ -555,7 +555,7 @@ class TestConfigurationTemplates:
     
     def test_load_tanker_template(self):
         """Test loading tanker vessel template."""
-        template_dir = Path(__file__).parent.parent.parent.parent.parent / "src" / "digitalmodel" / "modules" / "marine_analysis" / "python_code_passing_ship" / "templates"
+        template_dir = Path(__file__).parent.parent.parent.parent / "src" / "digitalmodel" / "hydrodynamics" / "passing_ship" / "templates"
         template_file = template_dir / "tanker.yml"
         
         if template_file.exists():
@@ -568,7 +568,7 @@ class TestConfigurationTemplates:
     
     def test_load_offshore_template(self):
         """Test loading offshore vessel template."""
-        template_dir = Path(__file__).parent.parent.parent.parent.parent / "src" / "digitalmodel" / "modules" / "marine_analysis" / "python_code_passing_ship" / "templates"
+        template_dir = Path(__file__).parent.parent.parent.parent / "src" / "digitalmodel" / "hydrodynamics" / "passing_ship" / "templates"
         template_file = template_dir / "offshore.yml"
         
         if template_file.exists():
@@ -612,8 +612,8 @@ class TestConfigurationIntegration:
           lateral_separation: 50.0
           passing_velocity: 10.0
           num_points: 100
-          tolerance: 1e-4
-        
+          integration_tolerance: 1e-4
+
         output_units: "SI"
         description: "FPSO and supply vessel passing scenario"
         """

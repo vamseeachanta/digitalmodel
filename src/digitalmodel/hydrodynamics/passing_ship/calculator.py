@@ -153,10 +153,8 @@ class PassingShipCalculator:
     def from_config_file(cls, config_path: Path) -> 'PassingShipCalculator':
         """Create calculator from YAML configuration file."""
         parser = YAMLConfigParser()
-        config_dict = parser.parse_file(config_path)
-        
-        config = PassingShipConfig(**config_dict)
-        
+        config = parser.parse_file(config_path)
+
         return cls(
             moored_vessel=config.moored_vessel,
             passing_vessel=config.passing_vessel,

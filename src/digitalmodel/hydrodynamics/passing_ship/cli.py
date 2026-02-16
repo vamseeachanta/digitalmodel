@@ -230,7 +230,7 @@ def process_single(
     
     try:
         # Create calculator from config
-        calculator = PassingShipCalculator.from_config(config_path)
+        calculator = PassingShipCalculator.from_config_file(config_path)
         
         # Parse stagger range if provided
         if stagger_range:
@@ -247,15 +247,31 @@ def process_single(
                 if verbose:
                     print(f"  Calculating for stagger distance: {stagger} m")
                 
-                result = calculator.calculate(stagger_distance=stagger)
+                calc_cfg = calculator.calculation_config
+                separation = getattr(calc_cfg, 'lateral_separation', None) or 50.0
+                velocity = getattr(calc_cfg, 'passing_velocity', None)
+                result = calculator.calculate_forces(
+                    separation=separation,
+                    stagger=stagger,
+                    velocity=velocity,
+                )
                 result['stagger_distance'] = stagger
                 results.append(result)
             
             return {'multiple': True, 'results': results}
         else:
-            # Single calculation
-            result = calculator.calculate()
-            
+            # Single calculation — use separation/stagger/velocity from config
+            calc_cfg = calculator.calculation_config
+            separation = getattr(calc_cfg, 'lateral_separation', None) or 50.0
+            stagger = getattr(calc_cfg, 'stagger_distance', None) or 0.0
+            velocity = getattr(calc_cfg, 'passing_velocity', None)
+
+            result = calculator.calculate_forces(
+                separation=separation,
+                stagger=stagger,
+                velocity=velocity,
+            )
+
             if verbose:
                 print(f"  Results: Surge={result['surge_force']:.1f} N, "
                       f"Sway={result['sway_force']:.1f} N, "

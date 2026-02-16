@@ -2,7 +2,7 @@
 Module entry point for running the passing ship forces calculator.
 
 This allows the module to be executed with:
-    python -m digitalmodel.marine_ops.marine_analysis.python_code_passing_ship
+    python -m digitalmodel.hydrodynamics.passing_ship
 """
 
 import sys

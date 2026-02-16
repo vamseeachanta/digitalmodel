@@ -25,7 +25,7 @@ calculation:
   lateral_separation: 40.0   # meters (transverse separation)
   passing_velocity: 5.0      # m/s (~10 knots)
   num_points: 50            # Integration points
-  tolerance: 1.0e-4         # Integration tolerance
+  integration_tolerance: 1.0e-4  # Integration tolerance
   max_iterations: 1000      # Maximum iterations for convergence
 
 output_units: "SI"  # Options: SI, Imperial

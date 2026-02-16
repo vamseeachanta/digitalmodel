@@ -32,7 +32,7 @@ calculation:
   lateral_separation: 100.0    # meters (safety zone)
   passing_velocity: 2.5        # m/s (~5 knots approach speed)
   num_points: 150             # High accuracy for critical operations
-  tolerance: 1.0e-5           # Very tight tolerance
+  integration_tolerance: 1.0e-5  # Very tight tolerance
   max_iterations: 3000        # Allow more iterations
 
 output_units: "SI"

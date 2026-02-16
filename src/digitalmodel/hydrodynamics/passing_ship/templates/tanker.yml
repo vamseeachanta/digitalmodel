@@ -30,7 +30,7 @@ calculation:
   lateral_separation: !eval "60.0 * 1.2"  # 1.2 times beam
   passing_velocity: 3.0     # m/s (~6 knots - slow for safety)
   num_points: 100          # More points for accuracy
-  tolerance: 5.0e-5        # Tighter tolerance for large forces
+  integration_tolerance: 5.0e-5  # Tighter tolerance for large forces
   max_iterations: 2000     # More iterations allowed
 
 output_units: "SI"
