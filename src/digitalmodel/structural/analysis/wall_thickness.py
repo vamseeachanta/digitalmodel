@@ -40,6 +40,19 @@ class DesignCode(Enum):
     ISO_13623 = "ISO-13623"
 
 
+@dataclass(frozen=True)
+class CodeEdition:
+    """Metadata for a specific edition/revision of a design code."""
+
+    code: DesignCode
+    edition_year: int
+    edition_label: str
+
+    @property
+    def display_label(self) -> str:
+        return f"{self.code.value}, {self.edition_label} ({self.edition_year})"
+
+
 class SafetyClass(Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -197,14 +210,17 @@ class WallThicknessAnalyzer:
         loads: DesignLoads,
         factors: DesignFactors,
         code: DesignCode = DesignCode.DNV_ST_F101,
+        edition: Optional[int] = None,
     ):
         self.geometry = geometry
         self.material = material
         self.loads = loads
         self.factors = factors
         self.code = code
+        self.edition = edition
+        edition_str = f", edition={edition}" if edition else ""
         logger.info(
-            f"WallThicknessAnalyzer initialised: code={code.value}, "
+            f"WallThicknessAnalyzer initialised: code={code.value}{edition_str}, "
             f"OD={geometry.outer_diameter:.4f} m, WT={geometry.wall_thickness:.4f} m, "
             f"grade={material.grade}"
         )
@@ -608,7 +624,14 @@ class WallThicknessAnalyzer:
         if strategy_cls is None:
             raise ValueError(f"No strategy registered for {self.code}")
 
-        strategy = strategy_cls()
+        if self.edition is not None:
+            try:
+                strategy = strategy_cls(edition=self.edition)
+            except TypeError:
+                # Strategy doesn't support edition parameter yet
+                strategy = strategy_cls()
+        else:
+            strategy = strategy_cls()
         raw_results = strategy.run_checks(self.geometry, self.material, self.loads, self.factors)
 
         checks: Dict[str, float] = {}

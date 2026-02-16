@@ -75,6 +75,7 @@ def generate_mt_report(
     external_pressure: float,
     code: DesignCode = DesignCode.API_RP_1111,
     output_path: Optional[str] = None,
+    edition: Optional[int] = None,
 ) -> str:
     """Generate a wall thickness M-T interaction HTML report.
 
@@ -89,6 +90,7 @@ def generate_mt_report(
         external_pressure: External pressure in Pa.
         code: Design code (default API RP 1111).
         output_path: If provided, write HTML to this path.
+        edition: Optional edition year (e.g. 2015 for API RP 1111 4th Ed).
 
     Returns:
         Complete HTML string.
@@ -96,7 +98,18 @@ def generate_mt_report(
     strategy_cls = CODE_REGISTRY.get(code)
     if strategy_cls is None:
         raise ValueError(f"No strategy registered for {code}")
-    strategy = strategy_cls()
+    if edition is not None:
+        try:
+            strategy = strategy_cls(edition=edition)
+        except TypeError:
+            strategy = strategy_cls()
+    else:
+        strategy = strategy_cls()
+
+    # Build edition label for report header
+    edition_label = ""
+    if hasattr(strategy, "edition_info"):
+        edition_label = f" — {strategy.edition_info.edition_label} ({strategy.edition_info.edition_year})"
 
     conditions = CONDITIONS_BY_CODE.get(code, API_RP_1111_CONDITIONS)
 
@@ -200,7 +213,7 @@ def generate_mt_report(
         code, raw_results, A, Z, I_val, T_y, M_p, sigma_h,
         key_points, contour_html, capacity_limits, envelope_html,
         envelopes, pressure_sensitivity, pressure_chart_html,
-        conditions,
+        conditions, edition_label=edition_label,
     )
 
     if output_path is not None:
@@ -1027,6 +1040,7 @@ def _build_html(
     pressure_sensitivity: Optional[List[Dict]] = None,
     pressure_chart_html: Optional[str] = None,
     conditions: Optional[List[Dict]] = None,
+    edition_label: str = "",
 ) -> str:
     """Assemble the complete HTML report."""
     if conditions is None:
@@ -1037,7 +1051,7 @@ def _build_html(
     d_i = D - 2 * t
     p_net = pi - pe
 
-    code_label = code.value
+    code_label = code.value + edition_label
 
     # Pressure check rows — build dynamically from available results
     pressure_rows = ""

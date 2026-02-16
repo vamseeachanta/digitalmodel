@@ -1,11 +1,12 @@
 # ABOUTME: API RP 1111 offshore hydrocarbon pipeline design code strategy implementation
-# ABOUTME: Burst (thick/thin wall), collapse (transition), propagation checks
+# ABOUTME: Edition-aware factors for 3rd Ed (1999) and 4th Ed (2015), burst/collapse/propagation
 
 import math
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from digitalmodel.structural.analysis.wall_thickness import (
+    CodeEdition,
     DesignCode,
     DesignFactors,
     DesignLoads,
@@ -16,13 +17,57 @@ from .base import register_code
 
 logger = logging.getLogger(__name__)
 
+# Edition-keyed design factor tables.
+# Keys are edition years; values are dicts of design factors.
+# 3rd Edition (1999, reaffirmed 2009): tighter propagation design factor (0.72)
+# 4th Edition (2015): relaxed propagation design factor to 0.80
+EDITION_FACTORS: Dict[int, Dict[str, float]] = {
+    1999: {"f_d": 0.72, "f_c": 0.80, "f_p": 0.72},
+    2015: {"f_d": 0.72, "f_c": 0.80, "f_p": 0.80},
+}
+
+EDITION_METADATA: Dict[int, CodeEdition] = {
+    1999: CodeEdition(DesignCode.API_RP_1111, 1999, "3rd Edition"),
+    2015: CodeEdition(DesignCode.API_RP_1111, 2015, "4th Edition"),
+}
+
+LATEST_EDITION = 2015
+
 
 @register_code(DesignCode.API_RP_1111)
 class ApiRp1111Strategy:
-    """API RP 1111 (2015) offshore hydrocarbon pipeline design checks."""
+    """API RP 1111 offshore hydrocarbon pipeline design checks.
+
+    Supports edition-aware factor lookup. When no edition is specified,
+    defaults to the latest edition (4th Ed, 2015).
+
+    Available editions:
+        - 1999: 3rd Edition (reaffirmed 2009)
+        - 2015: 4th Edition
+    """
 
     code_name = "API-RP-1111"
     check_names = ["burst", "collapse", "propagation"]
+
+    def __init__(self, edition: Optional[int] = None):
+        if edition is None:
+            edition = LATEST_EDITION
+        if edition not in EDITION_FACTORS:
+            available = sorted(EDITION_FACTORS.keys())
+            raise ValueError(
+                f"Unknown edition {edition} for API RP 1111. "
+                f"Available editions: {available}"
+            )
+        self.edition_year = edition
+        self._factors = EDITION_FACTORS[edition]
+        self.edition_info = EDITION_METADATA[edition]
+        logger.info(
+            "ApiRp1111Strategy: using %s", self.edition_info.display_label
+        )
+
+    def get_edition_factors(self) -> Dict[str, float]:
+        """Return the design factors for the current edition."""
+        return dict(self._factors)
 
     def run_checks(
         self,
@@ -63,7 +108,7 @@ class ApiRp1111Strategy:
         else:
             p_b = 0.90 * (smys + smts) * t / (D - t)
 
-        f_d = 0.72
+        f_d = self._factors["f_d"]
         p_b_design = f_d * p_b
 
         p_net = loads.internal_pressure - loads.external_pressure
@@ -97,7 +142,7 @@ class ApiRp1111Strategy:
 
         p_c = p_el * p_y / math.sqrt(p_el**2 + p_y**2)
 
-        f_c = 0.80
+        f_c = self._factors["f_c"]
         p_c_design = f_c * p_c
 
         p_e = loads.external_pressure
@@ -130,7 +175,7 @@ class ApiRp1111Strategy:
 
         p_pr = 24 * smys * (t / D) ** 2.4
 
-        f_p = 0.80
+        f_p = self._factors["f_p"]
         p_pr_design = f_p * p_pr
 
         p_e = loads.external_pressure
