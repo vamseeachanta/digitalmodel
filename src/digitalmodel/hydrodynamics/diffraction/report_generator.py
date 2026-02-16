@@ -664,10 +664,11 @@ def generate_executive_warnings(
     if report_data.mesh_quality:
         if report_data.mesh_quality.area_ratio > 10:
             warnings.append(
-                f"WARNING: High mesh area ratio "
-                f"({report_data.mesh_quality.area_ratio:.1f}) -- "
-                "panels should be roughly uniform. "
-                "Ratio > 10 may affect accuracy."
+                f"NOTE: Global mesh area ratio is "
+                f"{report_data.mesh_quality.area_ratio:.1f}. "
+                "Gradual size variation is acceptable; "
+                "only abrupt transitions between adjacent panels "
+                "affect BEM solver accuracy."
             )
         if report_data.mesh_quality.panel_count < 100:
             warnings.append(
@@ -1440,8 +1441,6 @@ def _build_hull_description_html(data: DiffractionReportData) -> str:
     # Mesh quality
     if data.mesh_quality:
         mq = data.mesh_quality
-        area_status = "PASS" if mq.area_ratio < 10 else "WARNING"
-        area_color = "#27ae60" if area_status == "PASS" else "#f39c12"
         count_status = "PASS" if mq.panel_count >= 100 else "WARNING"
         count_color = "#27ae60" if count_status == "PASS" else "#f39c12"
 
@@ -1460,13 +1459,16 @@ def _build_hull_description_html(data: DiffractionReportData) -> str:
     <tr><td>Mean Panel Area</td><td>{mq.mean_area:.6f} m2</td><td>-</td></tr>
     <tr><td>Min Panel Area</td><td>{mq.min_area:.6f} m2</td><td>-</td></tr>
     <tr><td>Max Panel Area</td><td>{mq.max_area:.6f} m2</td><td>-</td></tr>
-    <tr><td>Area Ratio (max/min)</td><td>{mq.area_ratio:.2f}</td>
-        <td style="color:{area_color};font-weight:bold">{area_status}</td></tr>
+    <tr><td>Area Ratio (max/min)</td><td>{mq.area_ratio:.2f}</td><td>-</td></tr>
   </tbody>
 </table>
 <p style="font-size:0.85em;color:#666;margin-top:0.5em;">
   Mesh quality directly affects accuracy of added mass, damping, and wave excitation forces.
-  Panels should be roughly square with smooth area transitions. Area ratio &gt; 10 warrants investigation.
+  The key metric is the <strong>adjacent panel ratio</strong> (size ratio between neighboring panels) —
+  gradual size variation is acceptable even with a large global min/max ratio.
+  Only abrupt transitions between adjacent panels degrade BEM solver accuracy.
+  Advanced mesh quality metrics (Jacobian, aspect ratio, skewness, orthogonality)
+  are available via the gmsh meshing tool.
 </p>""")
 
     parts.append("</div>")
