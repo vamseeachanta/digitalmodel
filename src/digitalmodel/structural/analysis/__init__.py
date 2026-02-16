@@ -32,6 +32,11 @@ from .wall_thickness_parametric import (
     generate_report,
     plot_utilisation_vs_wall_thickness,
 )
+from .wall_thickness_comparison import (
+    CodeComparisonResult,
+    compare_codes,
+    generate_comparison_report,
+)
 from .wall_thickness_phases import (
     PhaseAnalysisRunner,
     PhaseComparisonResult,
@@ -69,4 +74,7 @@ __all__ = [
     "PipelinePhase",
     "create_standard_phases",
     "generate_phase_report",
+    "CodeComparisonResult",
+    "compare_codes",
+    "generate_comparison_report",
 ]
