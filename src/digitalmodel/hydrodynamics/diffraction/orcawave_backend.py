@@ -257,6 +257,17 @@ def _build_body_dict(
     if add_interior:
         body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
 
+    # Control surface mesh (for mean drift loads)
+    cs = getattr(vessel, "control_surface", None)
+    if cs is not None and cs.mesh_file is not None:
+        body["BodyControlSurfaceType"] = "Defined by mesh file"
+        body["BodyControlSurfaceMeshFileName"] = Path(cs.mesh_file).name
+        cs_format = getattr(cs, "mesh_format", "csf")
+        body["BodyControlSurfaceMeshFormat"] = _MESH_FORMAT_MAP.get(
+            cs_format, "Wamit csf"
+        )
+        body["BodyControlSurfaceMeshLengthUnits"] = geom.length_units
+
     # OrcaFlex import settings
     body["BodyOrcaFlexImportSymmetry"] = (
         "Use global mesh symmetry"
@@ -381,9 +392,15 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     has_source = solve_type_key != "potential_only"
 
     section["LoadRAOCalculationMethod"] = method
-    section["PreferredLoadRAOCalculationMethod"] = (
-        "Haskind" if method in ("Both", "Haskind") else "Direct"
-    )
+    preferred = getattr(solver, "preferred_load_rao_method", None)
+    if preferred == "diffraction":
+        section["PreferredLoadRAOCalculationMethod"] = "Diffraction"
+    elif preferred == "haskind":
+        section["PreferredLoadRAOCalculationMethod"] = "Haskind"
+    else:
+        section["PreferredLoadRAOCalculationMethod"] = (
+            "Haskind" if method in ("Both", "Haskind") else "Direct"
+        )
     # QTF-specific settings — derive from solve_type
     is_qtf = solve_type_key in ("diagonal_qtf", "full_qtf")
     if has_source:
@@ -395,11 +412,23 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
             section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
                 solver.qtf_calculation
             )
+    # Check if any body has an explicit control surface defined
+    has_body_control_surface = False
+    bodies = getattr(spec, "bodies", None)
+    if bodies:
+        for b in bodies:
+            if getattr(b, "control_surface", None) is not None:
+                has_body_control_surface = True
+                break
+    elif getattr(spec, "vessel", None) is not None:
+        if getattr(spec.vessel, "control_surface", None) is not None:
+            has_body_control_surface = True
+
     if is_qtf:
         section["QuadraticLoadControlSurface"] = "No"
     else:
         section["QuadraticLoadControlSurface"] = _bool_to_yn(
-            solver.qtf_calculation
+            solver.qtf_calculation or has_body_control_surface
         )
     section["QuadraticLoadMomentumConservation"] = "No"
     if solver.qtf_calculation or is_qtf:
@@ -412,7 +441,9 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     section["LengthTolerance"] = 100e-9
     section["WaterlineZTolerance"] = 1e-6
     section["WaterlineGapTolerance"] = 1e-6
-    section["DivideNonPlanarPanels"] = "Yes"
+    section["DivideNonPlanarPanels"] = _bool_to_yn(
+        getattr(solver, "divide_non_planar_panels", True)
+    )
     section["LinearSolverMethod"] = "Direct LU"
     section["OutputPanelPressures"] = "No"
     if has_source:

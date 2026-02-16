@@ -267,6 +267,10 @@ class VesselSpec(BaseModel):
             "Fixed degrees of freedom: surge, sway, heave, roll, pitch, yaw"
         ),
     )
+    control_surface: Optional["ControlSurfaceSpec"] = Field(
+        None,
+        description="Control surface mesh for mean drift loads",
+    )
 
 
 class EnvironmentSpec(BaseModel):
@@ -448,6 +452,17 @@ class SolverOptions(BaseModel):
     precision: SolverPrecision = Field(
         default=SolverPrecision.DOUBLE,
         description="Numerical precision",
+    )
+    preferred_load_rao_method: Optional[str] = Field(
+        None,
+        description=(
+            "Preferred Load RAO method when load_rao_method='both'. "
+            "Options: 'haskind', 'diffraction'. Default: auto (Haskind)."
+        ),
+    )
+    divide_non_planar_panels: bool = Field(
+        default=True,
+        description="Divide non-planar panels into triangles",
     )
     output_ah1: bool = False
     """Generate .AH1 ASCII hydrodynamic database file (OPTIONS AHD1).

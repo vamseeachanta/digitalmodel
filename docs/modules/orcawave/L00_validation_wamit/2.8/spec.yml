@@ -11,6 +11,9 @@ vessel:
     reference_point: [0.0, 0.0, 0.0]
     waterline_z: 0.0
     length_units: m
+  control_surface:
+    type: mesh
+    mesh_file: ../../../../../data/hull_library/panels/primitives/ellipsoid_96p.csf
   inertia:
     mode: free_floating
     mass: 1.0

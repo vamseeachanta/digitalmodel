@@ -7,7 +7,7 @@ SolveType: Potential and source formulations
 LoadRAOCalculationMethod: Both
 PreferredLoadRAOCalculationMethod: Haskind
 QuadraticLoadPressureIntegration: No
-QuadraticLoadControlSurface: No
+QuadraticLoadControlSurface: Yes
 QuadraticLoadMomentumConservation: No
 HasResonanceDampingLid: No
 LengthTolerance: 1.0e-07
@@ -65,6 +65,10 @@ Bodies:
   BodyMeshLengthUnits: m
   BodyMeshSymmetry: xz and yz planes
   BodyAddInteriorSurfacePanels: No
+  BodyControlSurfaceType: Defined by mesh file
+  BodyControlSurfaceMeshFileName: ellipsoid_96p.csf
+  BodyControlSurfaceMeshFormat: Wamit csf
+  BodyControlSurfaceMeshLengthUnits: m
   BodyOrcaFlexImportSymmetry: Use global mesh symmetry
   BodyHydrostaticIntegralMethod: Standard
   BodyHydrostaticStiffnessMethod: Displacement

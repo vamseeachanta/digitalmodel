@@ -20,7 +20,7 @@ vessel:
 
 environment:
   water_depth: infinite
-  water_density: 1.0
+  water_density: 1000.0
   gravity: 9.80665
 
 frequencies:
@@ -110,6 +110,8 @@ solver_options:
   remove_irregular_frequencies: false
   qtf_calculation: false
   precision: double
+  preferred_load_rao_method: diffraction
+  divide_non_planar_panels: false
 
 damping_lid:
   mesh_file: ../../../../../data/hull_library/panels/primitives/val_moonpool_lid.gdf

@@ -5,14 +5,14 @@
 UnitsSystem: SI
 SolveType: Potential formulation only
 LoadRAOCalculationMethod: Both
-PreferredLoadRAOCalculationMethod: Haskind
+PreferredLoadRAOCalculationMethod: Diffraction
 QuadraticLoadControlSurface: No
 QuadraticLoadMomentumConservation: No
 HasResonanceDampingLid: Yes
 LengthTolerance: 1.0e-07
 WaterlineZTolerance: 1.0e-06
 WaterlineGapTolerance: 1.0e-06
-DivideNonPlanarPanels: Yes
+DivideNonPlanarPanels: No
 LinearSolverMethod: Direct LU
 OutputPanelPressures: No
 OutputBodyWireFrames: Yes
@@ -22,7 +22,7 @@ BodyVolumeWarningLevel: 1.0e-12
 PanelAspectRatioWarningLevel: 25
 PanelsPerWavelengthWarningLevel: 5
 WaterDepth: Infinity
-WaterDensity: 0.001
+WaterDensity: 1.0
 WavesReferredToBy: period (s)
 HasWaveSpectrumForDragLinearisation: No
 MorisonFluidVelocity: Undisturbed incident wave

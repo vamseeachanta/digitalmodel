@@ -498,6 +498,19 @@ class OrcaWaveRunner:
                     shutil.copy2(lid_source, dest)
                 copied.append(dest)
 
+        # Copy control surface mesh if present
+        for body in bodies:
+            cs = getattr(body.vessel, "control_surface", None)
+            if cs is not None and cs.mesh_file:
+                cs_source = Path(cs.mesh_file)
+                if not cs_source.is_absolute() and spec_dir is not None:
+                    cs_source = (spec_dir / cs.mesh_file).resolve()
+                if cs_source.exists():
+                    dest = output_dir / cs_source.name
+                    if not dest.exists() or not dest.samefile(cs_source):
+                        shutil.copy2(cs_source, dest)
+                    copied.append(dest)
+
         # Copy free surface zone mesh if present
         fsz = getattr(spec, "free_surface_zone", None)
         if fsz is not None and fsz.mesh_file:
