@@ -120,17 +120,29 @@ def generate_mt_report(
         T_pos = lim["T_pos_kN"] * 1e3
         T_vals, M_vals = _trace_envelope(
             A, Z, sigma_h, material.smys, cond["f_d"],
-            T_neg, T_pos, M_p,
+            T_neg, T_pos, M_p, n_points=200,
         )
         envelopes[cond["name"]] = (T_vals, M_vals)
 
     envelope_html = _build_envelope_chart(envelopes, T_y, M_p)
+
+    # Pressure sensitivity: baseline, +50%, +100%
+    pressure_factors = [1.0, 1.5, 2.0]
+    pressure_sensitivity = _compute_pressure_sensitivity(
+        A, Z, d_i, t, internal_pressure, external_pressure,
+        material.smys, T_y, M_p, API_RP_1111_CONDITIONS,
+        pressure_factors,
+    )
+    pressure_chart_html = _build_pressure_sensitivity_chart(
+        pressure_sensitivity, T_y, M_p, internal_pressure,
+    )
 
     # Build full HTML
     html = _build_html(
         geometry, material, internal_pressure, external_pressure,
         code, raw_results, A, Z, I_val, T_y, M_p, sigma_h,
         key_points, contour_html, capacity_limits, envelope_html,
+        envelopes, pressure_sensitivity, pressure_chart_html,
     )
 
     if output_path is not None:
@@ -349,6 +361,124 @@ def _trace_envelope(
         M_values.append(abs(M_allow))
 
     return T_values, M_values
+
+
+def _compute_pressure_sensitivity(
+    A: float, Z: float, d_i: float, t: float,
+    pi_base: float, pe: float, smys: float,
+    T_y: float, M_p: float,
+    conditions: List[Dict],
+    pressure_factors: List[float],
+) -> List[Dict]:
+    """Compute capacity limits at multiple internal pressure levels.
+
+    Returns:
+        List of dicts with keys: pi_factor, pi_MPa, sigma_h_MPa,
+        limits (list of per-condition dicts), envelopes (dict of
+        condition_name -> (T_vals, M_vals)).
+    """
+    results = []
+    for pf in pressure_factors:
+        pi = pi_base * pf
+        p_net = pi - pe
+        sigma_h = p_net * d_i / (2 * t) if t > 0 else 0.0
+
+        limits = _compute_capacity_limits(
+            A, Z, sigma_h, smys, T_y, M_p, conditions,
+        )
+
+        # Trace envelope for Normal Operating only (f_d=0.72) to keep chart readable
+        envelopes = {}
+        for cond in conditions:
+            lim = next(c for c in limits if c["name"] == cond["name"])
+            T_neg = lim["T_neg_kN"] * 1e3
+            T_pos = lim["T_pos_kN"] * 1e3
+            T_vals, M_vals = _trace_envelope(
+                A, Z, sigma_h, smys, cond["f_d"],
+                T_neg, T_pos, M_p, n_points=200,
+            )
+            envelopes[cond["name"]] = (T_vals, M_vals)
+
+        results.append({
+            "pi_factor": pf,
+            "pi_MPa": pi / 1e6,
+            "sigma_h_MPa": sigma_h / 1e6,
+            "limits": limits,
+            "envelopes": envelopes,
+        })
+
+    return results
+
+
+def _build_pressure_sensitivity_chart(
+    sensitivity: List[Dict],
+    T_y: float, M_p: float,
+    pi_base: float,
+) -> str:
+    """Build Plotly chart comparing envelopes across pressure levels.
+
+    Shows Normal Operating (f_d=0.72) envelope at each pressure level.
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        return (
+            '<div class="card" style="padding:2em;color:#888;">'
+            "Plotly not available — pressure sensitivity chart skipped.</div>"
+        )
+
+    fig = go.Figure()
+
+    # Colors for pressure levels: blue (baseline), orange (+50%), red (+100%)
+    pressure_colors = ["#1f77b4", "#ff7f0e", "#d62728"]
+    pressure_dashes = ["solid", "dash", "dot"]
+
+    for i, case in enumerate(sensitivity):
+        pf = case["pi_factor"]
+        label_suffix = "" if pf == 1.0 else f" (+{(pf - 1) * 100:.0f}%)"
+        pi_label = f"P_i = {case['pi_MPa']:.0f} MPa{label_suffix}"
+
+        # Show Normal Operating envelope for each pressure level
+        env = case["envelopes"].get("Normal Operating")
+        if env:
+            T_kN = [v / 1e3 for v in env[0]]
+            M_kNm = [v / 1e3 for v in env[1]]
+            fig.add_trace(go.Scatter(
+                x=T_kN, y=M_kNm,
+                mode="lines",
+                name=pi_label,
+                line=dict(
+                    color=pressure_colors[i % len(pressure_colors)],
+                    dash=pressure_dashes[i % len(pressure_dashes)],
+                    width=2.5,
+                ),
+                hovertemplate=(
+                    f"{pi_label}<br>"
+                    "T = %{x:.0f} kN<br>"
+                    "M_allow = %{y:.0f} kN·m<extra></extra>"
+                ),
+            ))
+
+    fig.update_layout(
+        title=(
+            "Pressure Sensitivity — Normal Operating Envelope (f<sub>d</sub> = 0.72)"
+        ),
+        xaxis_title="Effective Tension (kN)",
+        yaxis_title="Allowable Bending Moment (kN·m)",
+        template="plotly_white",
+        hovermode="closest",
+        showlegend=True,
+        legend=dict(
+            x=0.01, y=0.99,
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="#ccc", borderwidth=1,
+        ),
+        width=900,
+        height=600,
+        margin=dict(l=60, r=40, t=80, b=60),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
 
 # ---------------------------------------------------------------------------
@@ -673,6 +803,9 @@ def _build_html(
     contour_html: str,
     capacity_limits: Optional[List[Dict]] = None,
     envelope_html: Optional[str] = None,
+    envelopes: Optional[Dict[str, Tuple[List[float], List[float]]]] = None,
+    pressure_sensitivity: Optional[List[Dict]] = None,
+    pressure_chart_html: Optional[str] = None,
 ) -> str:
     """Assemble the complete HTML report."""
     D = geometry.outer_diameter
@@ -726,6 +859,73 @@ def _build_html(
                 f"<td>{cl['M_allow_kNm']:.1f}</td>"
                 f"</tr>"
             )
+
+    # Envelope data table (sample every N-th point for readability)
+    envelope_table_html = ""
+    if envelopes:
+        cond_names = [c["name"] for c in API_RP_1111_CONDITIONS]
+        # Use ~20 rows: sample every 10th point from the 201-point envelope
+        first_key = cond_names[0]
+        n_total = len(envelopes[first_key][0])
+        step = max(1, n_total // 20)
+        indices = list(range(0, n_total, step))
+        if indices[-1] != n_total - 1:
+            indices.append(n_total - 1)
+
+        # Header row
+        hdr_cells = "<th>Tension (kN)</th>"
+        for name in cond_names:
+            hdr_cells += f"<th>{name}<br>M<sub>allow</sub> (kN&middot;m)</th>"
+        envelope_table_html += (
+            f"<table><thead><tr>{hdr_cells}</tr></thead><tbody>"
+        )
+
+        # Use the first condition's T values as the common T axis
+        T_ref = envelopes[first_key][0]
+        for idx in indices:
+            T_kN = T_ref[idx] / 1e3
+            row = f"<td>{T_kN:.0f}</td>"
+            for name in cond_names:
+                M_kNm = envelopes[name][1][idx] / 1e3
+                row += f"<td>{M_kNm:.1f}</td>"
+            envelope_table_html += f"<tr>{row}</tr>"
+        envelope_table_html += "</tbody></table>"
+
+    # Pressure sensitivity table
+    ps_table_html = ""
+    if pressure_sensitivity:
+        ps_table_html = (
+            "<table><thead><tr>"
+            "<th>P<sub>i</sub> (MPa)</th>"
+            "<th>&sigma;<sub>h</sub> (MPa)</th>"
+            "<th>Condition</th>"
+            "<th>f<sub>d</sub></th>"
+            "<th>T<sub>+</sub> (kN)</th>"
+            "<th>T<sub>&minus;</sub> (kN)</th>"
+            "<th>M<sub>allow</sub> (kN&middot;m)</th>"
+            "</tr></thead><tbody>"
+        )
+        for case in pressure_sensitivity:
+            pf = case["pi_factor"]
+            label = f"{case['pi_MPa']:.0f}"
+            if pf != 1.0:
+                label += f" (+{(pf - 1) * 100:.0f}%)"
+            for j, lim in enumerate(case["limits"]):
+                first_col = (
+                    f"<td rowspan=\"{len(case['limits'])}\">{label}</td>"
+                    f"<td rowspan=\"{len(case['limits'])}\">{case['sigma_h_MPa']:.1f}</td>"
+                    if j == 0 else ""
+                )
+                ps_table_html += (
+                    f"<tr>{first_col}"
+                    f"<td>{lim['name']}</td>"
+                    f"<td>{lim['f_d']:.2f}</td>"
+                    f"<td>{lim['T_pos_kN']:.1f}</td>"
+                    f"<td>{lim['T_neg_kN']:.1f}</td>"
+                    f"<td>{lim['M_allow_kNm']:.1f}</td>"
+                    f"</tr>"
+                )
+        ps_table_html += "</tbody></table>"
 
     # Governing check
     max_util = 0.0
@@ -940,6 +1140,20 @@ def _build_html(
             </table>
         </div>
 
+        <!-- Section 3a: Pressure Sensitivity -->
+        <div class="card">
+            <h2>3a. Pressure Sensitivity &mdash; Effect of Internal Pressure</h2>
+            <p>
+                Capacity limits recomputed at baseline, +50%, and +100% internal pressure.
+                Higher hoop stress shrinks all envelopes and increases the asymmetry
+                between positive and negative tension limits.
+            </p>
+            {ps_table_html}
+            <div class="chart-container">
+                {pressure_chart_html if pressure_chart_html else ""}
+            </div>
+        </div>
+
         <!-- Section 4: Combined Loading -->
         <div class="card">
             <h2>4. Combined Loading &mdash; Von Mises Interaction</h2>
@@ -973,6 +1187,8 @@ def _build_html(
             <div class="chart-container">
                 {envelope_html if envelope_html else ""}
             </div>
+            <h3>Envelope Data &mdash; Tension vs Allowable Bending Moment</h3>
+            {envelope_table_html}
         </div>
 
         <!-- Section 6: Key Points Summary -->
