@@ -237,6 +237,12 @@ class DiffractionReportData(BaseModel):
     # Mode control
     mode: str = "full"  # "full" or "compact"
 
+    # Multi-solver benchmark sections (pre-built HTML from BenchmarkPlotter)
+    benchmark_html_sections: Optional[Dict[str, str]] = None
+
+    # Notes (from benchmark or standalone analysis)
+    notes: List[str] = Field(default_factory=list)
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -721,6 +727,7 @@ def generate_diffraction_report(
     effective_mode = mode if mode != "full" else report_data.mode
     compact = effective_mode == "compact"
 
+    bm = report_data.benchmark_html_sections or {}
     sections = []
 
     # S0: Table of Contents
@@ -736,7 +743,17 @@ def generate_diffraction_report(
         # S3: Hull Description & Mesh Quality
         sections.append(_build_hull_description_html(report_data))
 
-    # S5: Hydrostatic Properties & Stability (replaces old _build_hydrostatics_html)
+    # S3b: Mesh schematic (BENCHMARK ONLY)
+    if bm.get("mesh_schematic"):
+        sections.append(f'<div class="section">{bm["mesh_schematic"]}</div>')
+
+    # S4: Input Configuration (BENCHMARK ONLY)
+    if bm.get("input_comparison"):
+        sections.append(f'<div class="section">{bm["input_comparison"]}</div>')
+    if bm.get("input_files"):
+        sections.append(f'<div class="section">{bm["input_files"]}</div>')
+
+    # S5: Hydrostatic Properties & Stability
     if report_data.hydrostatics:
         sections.append(_build_stability_html(report_data))
 
@@ -756,14 +773,22 @@ def generate_diffraction_report(
                 _build_infinite_added_mass_html(report_data.infinite_freq_added_mass)
             )
 
+    # S7e: Solver correlation heatmaps (BENCHMARK ONLY)
+    if bm.get("hydro_coefficients"):
+        sections.append(f'<div class="section">{bm["hydro_coefficients"]}</div>')
+
+    if not compact:
         # S8: Wave Excitation Forces (Load RAOs)
         if report_data.load_raos:
             sections.append(
                 _build_load_raos_html(report_data.load_raos, include_plotlyjs)
             )
 
-    # S9: Displacement RAOs placeholder (populated by benchmark_runner for multi-solver)
-    # For single-solver standalone, this section is skipped here
+    # S9: Displacement RAOs — consensus + per-DOF (BENCHMARK ONLY)
+    if bm.get("consensus_summary"):
+        sections.append(f'<div class="section">{bm["consensus_summary"]}</div>')
+    if bm.get("dof_sections"):
+        sections.append(f'<div class="section">{bm["dof_sections"]}</div>')
 
     # S10: Roll Damping
     if report_data.roll_damping:
@@ -771,11 +796,24 @@ def generate_diffraction_report(
             _build_roll_damping_html(report_data.roll_damping, include_plotlyjs)
         )
 
+    # S11: Raw Data & Overlay Plots (BENCHMARK ONLY)
+    if bm.get("raw_rao_data"):
+        sections.append(f'<div class="section">{bm["raw_rao_data"]}</div>')
+    if bm.get("overlay_plots"):
+        sections.append(f'<div class="section">{bm["overlay_plots"]}</div>')
+
+    # S11b: Notes (benchmark or standalone)
+    if report_data.notes:
+        notes_items = "\n".join(f"<li>{n}</li>" for n in report_data.notes)
+        sections.append(
+            f'<div class="section"><h2>Notes</h2><ul>{notes_items}</ul></div>'
+        )
+
     if not compact:
-        # S11: Phase interpretation guide
+        # S12: Phase interpretation guide
         sections.append(_build_phase_guide_html())
 
-        # S12: Appendices
+        # S13: Appendices
         sections.append(_build_appendices_html())
 
     plotly_src = (
@@ -783,6 +821,93 @@ def generate_diffraction_report(
         if include_plotlyjs == "cdn"
         else ""
     )
+
+    benchmark_css = ""
+    if bm:
+        benchmark_css = """
+  /* Benchmark-specific styles */
+  .report-header .consensus-overall {
+    display: inline-block; padding: 4px 12px; border-radius: 4px;
+    font-weight: 700; margin-left: 1em; font-size: 0.85em;
+  }
+  .input-table .param-label { font-weight: 600; }
+  .section-row td {
+    background: #2c3e50 !important; color: #fff;
+    font-weight: 700; font-size: 0.8em; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0.5em 0.7em;
+  }
+  .file-viewer { margin-bottom: 1.5em; }
+  .file-viewer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #34495e; color: #fff; padding: 0.5em 1em;
+    border-radius: 4px 4px 0 0; font-size: 0.85em;
+  }
+  .file-viewer-header .file-path {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em; word-break: break-all;
+  }
+  .file-viewer-header .solver-label {
+    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
+  }
+  .file-viewer-header button {
+    background: #3498db; color: #fff; border: none; padding: 4px 12px;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em; white-space: nowrap;
+  }
+  .file-viewer-header button:hover { background: #2980b9; }
+  .file-content {
+    max-height: 400px; overflow-y: auto; overflow-x: auto;
+    border: 1px solid #ddd; border-top: none;
+    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
+  }
+  .file-content pre {
+    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    counter-reset: line;
+  }
+  .file-content pre .line { display: block; }
+  .file-content pre .line::before {
+    counter-increment: line; content: counter(line);
+    display: inline-block; width: 3.5em; text-align: right;
+    margin-right: 1em; color: #999; font-size: 0.85em;
+    border-right: 1px solid #ddd; padding-right: 0.5em;
+    -webkit-user-select: none; user-select: none;
+  }
+  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em; margin-top: 1em; }
+  .dof-section:first-child { border-top: none; margin-top: 0; }
+  .dof-title { font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }
+  .dof-grid { display: grid; grid-template-columns: 45% 55%; gap: 1em; align-items: start; }
+  .dof-text { font-size: 0.85em; }
+  .dof-plot { min-height: 340px; }
+  .consensus-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 3px;
+    color: #fff; font-size: 0.8em; font-weight: 700; margin-bottom: 0.5em;
+  }
+  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', 'Fira Code', monospace; }
+  .stats-table { width: 100%; margin-bottom: 0.6em; }
+  .stats-table td:last-child {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .solver-table { width: 100%; margin-bottom: 0.5em; }
+  .solver-table th { font-size: 0.75em; text-align: center; padding: 0.3em 0.4em; }
+  .solver-table td {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8em; padding: 0.25em 0.4em;
+  }
+  .solver-table td:first-child { text-align: left; font-family: inherit; font-weight: 600; }
+  .dof-text h4 {
+    margin: 0.7em 0 0.3em; font-size: 0.9em; color: #2c3e50;
+    border-bottom: 1px solid #ddd; padding-bottom: 0.15em;
+  }
+  .observations p { margin: 0.3em 0; line-height: 1.4; }
+  .skipped-note {
+    font-size: 0.8em; color: #888; font-style: italic; margin-top: 0.5em;
+    padding: 0.3em 0.5em; background: #fef9e7;
+    border-left: 3px solid #f0c674; border-radius: 2px;
+  }
+  .plot-links { column-count: 2; font-size: 0.85em; }
+  .plot-links li { margin-bottom: 0.3em; }
+  @media (max-width: 900px) { .dof-grid { grid-template-columns: 1fr; } }
+"""
 
     html = f"""\
 <!DOCTYPE html>
@@ -833,7 +958,7 @@ def generate_diffraction_report(
   .matrix-table th {{ text-align: center; padding: 0.3em 0.5em; font-size: 0.8em; }}
   .highlight {{ background: #ffeaa7 !important; font-weight: 600; }}
   .plot-container {{ margin: 1em 0; }}
-</style>
+{benchmark_css}</style>
 </head>
 <body>
 <div class="container">
@@ -1780,101 +1905,63 @@ def _get_hull_type_note(hull_type: Optional[str], section: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Inject sections into existing benchmark_report.html
+# Build DiffractionReportData from solver results (for benchmark integration)
 # ---------------------------------------------------------------------------
 
 
-def inject_into_benchmark_report(
-    benchmark_html_path: Path,
-    owr_path: Path,
-) -> Path:
-    """Inject hydrostatics, load RAOs, roll damping, mesh quality, and
-    infinite-frequency added mass sections into an existing benchmark report.
+def build_report_data_from_solver_results(
+    solver_results: Dict[str, Any],
+    owr_path: Optional[Path] = None,
+    vessel_name: Optional[str] = None,
+) -> DiffractionReportData:
+    """Build a DiffractionReportData from multi-solver results.
 
-    Finds the closing ``</div>\\n</body>`` and inserts new sections before it.
+    If *owr_path* is provided, delegates to ``extract_report_data_from_owr``
+    for full physics data (hydrostatics, load RAOs, roll damping, etc.).
+    Otherwise builds a minimal data model from the first solver's
+    ``DiffractionResults`` (frequencies, added-mass/damping diagonals only).
 
     Args:
-        benchmark_html_path: Path to existing benchmark_report.html.
-        owr_path: Path to .owr file for data extraction.
+        solver_results: Mapping of solver name to DiffractionResults.
+        owr_path: Optional path to OrcaWave .owr file for full extraction.
+        vessel_name: Override vessel name (falls back to first solver's).
 
     Returns:
-        Path to the updated benchmark_report.html.
+        Populated DiffractionReportData.
     """
-    benchmark_html_path = Path(benchmark_html_path)
-    owr_path = Path(owr_path)
+    if owr_path is not None:
+        data = extract_report_data_from_owr(Path(owr_path))
+        data.solver_names = list(solver_results.keys())
+        if vessel_name:
+            data.vessel_name = vessel_name
+        return data
 
-    data = extract_report_data_from_owr(owr_path)
+    # Minimal path: extract from first solver's DiffractionResults
+    first_name = next(iter(solver_results))
+    dr = solver_results[first_name]
 
-    # Build the new sections
-    new_sections: list[str] = []
+    freq_rad_s = dr.added_mass.frequencies.values.tolist()
+    periods_s = (2.0 * np.pi / np.array(freq_rad_s)).tolist()
 
-    # Add a visual separator
-    new_sections.append(
-        '<div class="section" style="background:#2c3e50;color:#fff;'
-        'text-align:center;padding:0.8em;">'
-        "<h2 style=\"border:none;color:#fff;margin:0;\">"
-        "Extended Diffraction Results</h2></div>"
+    added_mass_diag: Dict[str, List[float]] = {}
+    damping_diag: Dict[str, List[float]] = {}
+    for i, dof in enumerate(DOF_NAMES):
+        added_mass_diag[dof] = [
+            float(hm.matrix[i, i]) for hm in dr.added_mass.matrices
+        ]
+        damping_diag[dof] = [
+            float(hm.matrix[i, i]) for hm in dr.damping.matrices
+        ]
+
+    return DiffractionReportData(
+        vessel_name=vessel_name or dr.vessel_name,
+        solver_names=list(solver_results.keys()),
+        frequencies_rad_s=freq_rad_s,
+        periods_s=periods_s,
+        added_mass_diagonal=added_mass_diag,
+        damping_diagonal=damping_diag,
     )
 
-    if data.hydrostatics:
-        new_sections.append(_build_hydrostatics_html(data.hydrostatics))
-
-    if data.mesh_quality:
-        new_sections.append(_build_mesh_quality_html(data.mesh_quality))
-
-    if data.load_raos:
-        new_sections.append(_build_load_raos_html(data.load_raos, "cdn"))
-
-    if data.roll_damping:
-        new_sections.append(_build_roll_damping_html(data.roll_damping, "cdn"))
-
-    if data.infinite_freq_added_mass:
-        new_sections.append(
-            _build_infinite_added_mass_html(data.infinite_freq_added_mass)
-        )
-
-    injection_html = "\n".join(new_sections)
-
-    # Read existing report and inject before closing tags
-    html = benchmark_html_path.read_text(encoding="utf-8")
-
-    # Also inject CSS for matrix-table and highlight if not present
-    extra_css = ""
-    if ".matrix-table" not in html:
-        extra_css = (
-            "<style>"
-            ".matrix-table td { text-align: right; padding: 0.3em 0.5em; "
-            "font-size: 0.8em; font-family: 'Cascadia Code', 'Fira Code', monospace; }"
-            ".matrix-table th { text-align: center; padding: 0.3em 0.5em; "
-            "font-size: 0.8em; }"
-            ".highlight { background: #ffeaa7 !important; font-weight: 600; }"
-            ".plot-container { margin: 1em 0; }"
-            "</style>"
-        )
-
-    # Insert CSS before </head>
-    if extra_css:
-        html = html.replace("</head>", f"{extra_css}\n</head>", 1)
-
-    # Insert sections before the final </div></body></html>
-    # The pattern is: </div>\n</body>\n</html> at the end
-    close_marker = "\n</div>\n</body>"
-    if close_marker in html:
-        html = html.replace(
-            close_marker,
-            f"\n{injection_html}\n</div>\n</body>",
-            1,
-        )
-    else:
-        # Fallback: insert before </body>
-        html = html.replace(
-            "</body>",
-            f"{injection_html}\n</body>",
-            1,
-        )
-
-    benchmark_html_path.write_text(html, encoding="utf-8")
-    return benchmark_html_path
 
 
 # ---------------------------------------------------------------------------
