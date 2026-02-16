@@ -399,6 +399,14 @@ suite.generate_report(results, "reports/test_suite_results.html")
 | Frequency resolution | Variable | Interpolate to common frequencies |
 | Irregular frequency removal | 10-20% at specific freqs | Check lid method settings |
 | Viscous damping | Roll/pitch deviation | Ensure consistent settings |
+| Inertia tensor units | 1000x off | WAMIT uses te·m² (RHO=1), spec uses kg·m² — multiply by 1000 |
+| Zero-magnitude DOF phase | Noise correlation | Fixed DOFs (TLP heave/roll/pitch) produce atan2(0,0) noise — override phase r=1.0 |
+
+### Unit Conversion Traps
+
+**WAMIT `.frc` → spec.yml**: WAMIT uses `RHO=1` (te/m³) convention. All masses are in te, inertia tensors in te·m². When converting to spec.yml (kg-based), multiply by 1000. **Do not** multiply twice — this produced a 1000x error in the ISSC TLP validation case 2.5.
+
+**Phase correlation for zero-magnitude DOFs**: When RAO magnitude is near-zero (fixed DOFs like heave/roll/pitch on TLPs), phase is undefined. `multi_solver_comparator.py` overrides phase correlation to 1.0 when `peak_mag < 1e-10`. The `validate_owd_vs_spec.py` script handles this via `max_diff < 1e-6` skip in pass/fail logic.
 
 ### Diagnostic Workflow
 
