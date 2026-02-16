@@ -1,6 +1,6 @@
 metadata:
   vessel_name: test101 bottom mounted cylinder
-  generated: '2026-02-15T21:57:22'
+  generated: '2026-02-15T22:58:27'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)
@@ -253,13 +253,13 @@ comparison:
     rao_correlations:
       surge:
         magnitude_r: 1.0
-        phase_r: .nan
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 90.1294
       sway:
         magnitude_r: 1.0
-        phase_r: .nan
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 180.0

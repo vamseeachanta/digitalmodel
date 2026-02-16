@@ -2,7 +2,7 @@
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.5c\benchmark\spec_orcawave\spec_input.yml
-# Created: 9:54 PM on 2/15/2026
+# Created: 10:55 PM on 2/15/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -111,9 +111,9 @@ Bodies:
     BodyCentreOfMass: [0, 0, 3]
     BodyMass: 53.0664e3
     BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
-      - [80.201552e9, 0, 0]
-      - [0, 80.201552e9, 0]
-      - [0, 0, 95.4906731e9]
+      - [80.201552e6, 0, 0]
+      - [0, 80.201552e6, 0]
+      - [0, 0, 95.4906731e6]
     BodyInertiaTensorOriginType: Body origin
     BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
       - [0, 0, 0, 0, 0, 0]

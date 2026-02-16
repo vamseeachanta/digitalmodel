@@ -4,7 +4,7 @@
     "OrcaWave (.owd)",
     "OrcaWave (spec.yml)"
   ],
-  "comparison_date": "2026-02-15 22:19:44",
+  "comparison_date": "2026-02-15 22:57:37",
   "overall_consensus": "FULL",
   "pairwise_results": {
     "OrcaWave (.owd)-vs-OrcaWave (spec.yml)": {
@@ -14,45 +14,45 @@
       "rao_comparisons": {
         "surge": {
           "magnitude_correlation": 1.0,
-          "magnitude_rms_error": 7.414443398703824e-17,
+          "magnitude_rms_error": 0.0,
           "phase_correlation": 1.0,
-          "max_magnitude_diff": 1.6653345369377348e-16,
-          "max_phase_diff": 1.4210854715202004e-14
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         },
         "sway": {
           "magnitude_correlation": 1.0,
-          "magnitude_rms_error": 6.752195425081422e-17,
+          "magnitude_rms_error": 0.0,
           "phase_correlation": 1.0,
-          "max_magnitude_diff": 1.6653345369377348e-16,
-          "max_phase_diff": 4.263256414560601e-14
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         },
         "heave": {
           "magnitude_correlation": 1.0,
-          "magnitude_rms_error": 4.3731657224880824e-18,
+          "magnitude_rms_error": 0.0,
           "phase_correlation": 1.0,
-          "max_magnitude_diff": 2.4634277047053037e-17,
-          "max_phase_diff": 354.64255858899935
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         },
         "roll": {
           "magnitude_correlation": 1.0,
-          "magnitude_rms_error": 8.468034532706396e-17,
+          "magnitude_rms_error": 0.0,
           "phase_correlation": 1.0,
-          "max_magnitude_diff": 3.9776341346405385e-16,
-          "max_phase_diff": 273.5763343749974
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         },
         "pitch": {
           "magnitude_correlation": 1.0,
-          "magnitude_rms_error": 1.494191233899705e-16,
+          "magnitude_rms_error": 0.0,
           "phase_correlation": 1.0,
-          "max_magnitude_diff": 3.9820815549423936e-16,
-          "max_phase_diff": 268.61306296747955
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         },
         "yaw": {
-          "magnitude_correlation": 0.9997103590189411,
-          "magnitude_rms_error": 0.04262210400643247,
-          "phase_correlation": 0.9940937245714991,
-          "max_magnitude_diff": 0.08248453744846161,
-          "max_phase_diff": 1.0805613155452818
+          "magnitude_correlation": 1.0,
+          "magnitude_rms_error": 0.0,
+          "phase_correlation": 1.0,
+          "max_magnitude_diff": 0.0,
+          "max_phase_diff": 0.0
         }
       },
       "added_mass_correlations": {
@@ -191,7 +191,7 @@
     },
     "YAW": {
       "consensus_level": "FULL",
-      "mean_pairwise_correlation": 0.9997103590189411,
+      "mean_pairwise_correlation": 1.0,
       "outlier_solver": null,
       "agreement_pairs": [
         [

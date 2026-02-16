@@ -1,6 +1,6 @@
 metadata:
   vessel_name: Sphere_R5
-  generated: '2026-02-15T21:52:42'
+  generated: '2026-02-15T22:53:56'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)
@@ -429,7 +429,7 @@ comparison:
         max_phase_diff_deg: 0.0184
       sway:
         magnitude_r: 1.0
-        phase_r: -1.0
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 257.7076
@@ -441,7 +441,7 @@ comparison:
         max_phase_diff_deg: 0.1889
       roll:
         magnitude_r: 1.0
-        phase_r: -1.0
+        phase_r: 1.0
         magnitude_rms: 0.0
         max_magnitude_diff: 0.0
         max_phase_diff_deg: 148.297

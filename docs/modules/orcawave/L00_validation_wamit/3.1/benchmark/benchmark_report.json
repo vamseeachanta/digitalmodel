@@ -4,7 +4,7 @@
     "OrcaWave (.owd)",
     "OrcaWave (spec.yml)"
   ],
-  "comparison_date": "2026-02-15 21:57:22",
+  "comparison_date": "2026-02-15 22:58:27",
   "overall_consensus": "FULL",
   "pairwise_results": {
     "OrcaWave (.owd)-vs-OrcaWave (spec.yml)": {
@@ -15,14 +15,14 @@
         "surge": {
           "magnitude_correlation": 1.0,
           "magnitude_rms_error": 1.7763613690355096e-15,
-          "phase_correlation": NaN,
+          "phase_correlation": 1.0,
           "max_magnitude_diff": 1.7763613690355096e-15,
           "max_phase_diff": 90.12939088367585
         },
         "sway": {
           "magnitude_correlation": 1.0,
           "magnitude_rms_error": 3.944304526105059e-31,
-          "phase_correlation": NaN,
+          "phase_correlation": 1.0,
           "max_magnitude_diff": 3.944304526105059e-31,
           "max_phase_diff": 180.0
         },

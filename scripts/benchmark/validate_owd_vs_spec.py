@@ -555,6 +555,9 @@ def run_comparison(
     # Build enriched metadata from SaveData() YAML exports
     metadata: dict[str, dict[str, str]] = {}
 
+    # Resolve mesh_path from base_metadata (spec.yml → absolute path)
+    resolved_mesh_path = base_metadata.get("OrcaWave", {}).get("mesh_path")
+
     if owd_yml_path and owd_yml_path.exists():
         metadata["OrcaWave (.owd)"] = build_orcawave_metadata_from_yml(
             owd_yml_path, body_index=body_index,
@@ -568,6 +571,11 @@ def run_comparison(
         )
     else:
         metadata["OrcaWave (spec.yml)"] = base_metadata.get("OrcaWave", {})
+
+    # Propagate mesh_path so the benchmark plotter can render schematics
+    if resolved_mesh_path:
+        for key in metadata:
+            metadata[key].setdefault("mesh_path", resolved_mesh_path)
 
     # Solver results dict
     solver_results = {
