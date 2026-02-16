@@ -435,7 +435,9 @@ def _build_pressure_sensitivity_chart(
     pressure_colors = ["#1f77b4", "#ff7f0e", "#d62728"]
     pressure_dashes = ["solid", "dash", "dot"]
 
-    for i, case in enumerate(sensitivity):
+    # Plot from highest pressure (outermost shrinks) to baseline so fills layer
+    for i, case in enumerate(reversed(sensitivity)):
+        idx = len(sensitivity) - 1 - i  # original index for color/dash
         pf = case["pi_factor"]
         label_suffix = "" if pf == 1.0 else f" (+{(pf - 1) * 100:.0f}%)"
         pi_label = f"P_i = {case['pi_MPa']:.0f} MPa{label_suffix}"
@@ -443,21 +445,33 @@ def _build_pressure_sensitivity_chart(
         # Show Normal Operating envelope for each pressure level
         env = case["envelopes"].get("Normal Operating")
         if env:
-            T_kN = [v / 1e3 for v in env[0]]
-            M_kNm = [v / 1e3 for v in env[1]]
+            color = pressure_colors[idx % len(pressure_colors)]
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+
+            # Build closed polygon: +M forward, -M reversed
+            T_kN_fwd = [v / 1e3 for v in env[0]]
+            M_kNm_pos = [v / 1e3 for v in env[1]]
+            T_kN_rev = list(reversed(T_kN_fwd))
+            M_kNm_neg = [-v / 1e3 for v in reversed(env[1])]
+
+            poly_T = T_kN_fwd + T_kN_rev
+            poly_M = M_kNm_pos + M_kNm_neg
+
             fig.add_trace(go.Scatter(
-                x=T_kN, y=M_kNm,
+                x=poly_T, y=poly_M,
                 mode="lines",
                 name=pi_label,
                 line=dict(
-                    color=pressure_colors[i % len(pressure_colors)],
-                    dash=pressure_dashes[i % len(pressure_dashes)],
-                    width=2.5,
+                    color=color,
+                    dash=pressure_dashes[idx % len(pressure_dashes)],
+                    width=2,
                 ),
+                fill="toself",
+                fillcolor=f"rgba({r},{g},{b},0.10)",
                 hovertemplate=(
                     f"{pi_label}<br>"
                     "T = %{x:.0f} kN<br>"
-                    "M_allow = %{y:.0f} kN·m<extra></extra>"
+                    "M = %{y:.0f} kN·m<extra></extra>"
                 ),
             ))
 
@@ -466,7 +480,7 @@ def _build_pressure_sensitivity_chart(
             "Pressure Sensitivity — Normal Operating Envelope (f<sub>d</sub> = 0.72)"
         ),
         xaxis_title="Effective Tension (kN)",
-        yaxis_title="Allowable Bending Moment (kN·m)",
+        yaxis_title="Bending Moment (kN·m)",
         template="plotly_white",
         hovermode="closest",
         showlegend=True,
@@ -664,6 +678,10 @@ def _build_envelope_chart(
 ) -> str:
     """Build an embedded Plotly envelope chart as HTML div.
 
+    Each condition is shown as a closed symmetric polygon (lens shape)
+    spanning from +M_allow to -M_allow. Bending is symmetric about M=0
+    because flipping M sign just swaps which fibre governs.
+
     Args:
         envelopes: Dict mapping condition name to (T_values, M_values) in SI.
         T_y: Yield tension (N) for reference marker.
@@ -681,23 +699,44 @@ def _build_envelope_chart(
 
     cond_styles = {c["name"]: c for c in API_RP_1111_CONDITIONS}
 
-    for name, (T_vals, M_vals) in envelopes.items():
+    # Plot from outermost (Survival) to innermost (Normal Operating)
+    # so fills layer correctly with outermost behind
+    ordered_names = list(reversed([c["name"] for c in API_RP_1111_CONDITIONS]))
+
+    for name in ordered_names:
+        if name not in envelopes:
+            continue
+        T_vals, M_vals = envelopes[name]
         style = cond_styles.get(name, {})
-        T_kN = [v / 1e3 for v in T_vals]
-        M_kNm = [v / 1e3 for v in M_vals]
+        color = style.get("color", "#333")
+
+        # Build closed polygon: +M forward, then -M reversed
+        T_kN_fwd = [v / 1e3 for v in T_vals]
+        M_kNm_pos = [v / 1e3 for v in M_vals]
+        T_kN_rev = list(reversed(T_kN_fwd))
+        M_kNm_neg = [-v / 1e3 for v in reversed(M_vals)]
+
+        poly_T = T_kN_fwd + T_kN_rev
+        poly_M = M_kNm_pos + M_kNm_neg
+
+        # Parse hex color for semi-transparent fill
+        r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+
         fig.add_trace(go.Scatter(
-            x=T_kN, y=M_kNm,
+            x=poly_T, y=poly_M,
             mode="lines",
             name=f"{name} (f_d={style.get('f_d', '?')})",
             line=dict(
-                color=style.get("color", "#333"),
+                color=color,
                 dash=style.get("dash", "solid"),
-                width=2.5,
+                width=2,
             ),
+            fill="toself",
+            fillcolor=f"rgba({r},{g},{b},0.10)",
             hovertemplate=(
                 f"{name}<br>"
                 "T = %{x:.0f} kN<br>"
-                "M_allow = %{y:.0f} kN·m<extra></extra>"
+                "M = %{y:.0f} kN·m<extra></extra>"
             ),
         ))
 
@@ -707,17 +746,18 @@ def _build_envelope_chart(
         y=[0, 0],
         mode="markers+text",
         marker=dict(color="#D62728", size=8, symbol="diamond"),
-        text=[f"T_y", f"-T_y"],
+        text=["T_y", "-T_y"],
         textposition="bottom center",
         textfont=dict(size=9),
         showlegend=False,
     ))
     fig.add_trace(go.Scatter(
-        x=[0], y=[M_p / 1e3],
+        x=[0, 0],
+        y=[M_p / 1e3, -M_p / 1e3],
         mode="markers+text",
         marker=dict(color="#2CA02C", size=8, symbol="diamond"),
-        text=[f"M_p"],
-        textposition="middle right",
+        text=["M_p", "-M_p"],
+        textposition=["middle right", "middle right"],
         textfont=dict(size=9),
         showlegend=False,
     ))
@@ -725,7 +765,7 @@ def _build_envelope_chart(
     fig.update_layout(
         title="Allowable Bending Envelope by Operating Condition",
         xaxis_title="Effective Tension (kN)",
-        yaxis_title="Allowable Bending Moment (kN·m)",
+        yaxis_title="Bending Moment (kN·m)",
         template="plotly_white",
         hovermode="closest",
         showlegend=True,
@@ -735,7 +775,7 @@ def _build_envelope_chart(
             bordercolor="#ccc", borderwidth=1,
         ),
         width=900,
-        height=600,
+        height=700,
         margin=dict(l=60, r=40, t=80, b=60),
     )
 

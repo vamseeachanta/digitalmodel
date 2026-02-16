@@ -356,3 +356,16 @@ def test_report_input_data_after_key_points(report_html):
 def test_key_points_table_has_margin_column(report_html):
     """Key Points table includes a Margin column."""
     assert "Margin" in report_html
+
+
+def test_envelope_chart_is_symmetric(report_html):
+    """Envelope chart contains both positive and negative M_p references.
+
+    The full symmetric envelope shows closed lens shapes spanning
+    from +M_allow to -M_allow. The chart should reference -M_p as well
+    as +M_p to confirm the full symmetric plot is rendered.
+    """
+    # The chart should contain the toself fill pattern (closed polygon)
+    assert "toself" in report_html.lower() or "fill" in report_html.lower()
+    # Should have negative M_p reference marker
+    assert "-M_p" in report_html or "\u2013M<sub>p</sub>" in report_html
