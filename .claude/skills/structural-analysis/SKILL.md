@@ -1,9 +1,10 @@
 ---
 name: structural-analysis
 description: Perform structural analysis including stress calculations, buckling checks,
-  and capacity verification per DNV, API, and ISO standards. Covers Von Mises stress,
-  plate buckling, member capacity, and safety factor reporting.
-updated: '2026-01-07'
+  pipe capacity, M-T interaction, and capacity verification per DNV, API, and ISO
+  standards. Covers Von Mises stress, plate buckling, member capacity, pipeline
+  wall thickness assessment, and safety factor reporting.
+updated: '2026-02-15'
 ---
 # Structural Analysis Skill
 
@@ -804,8 +805,125 @@ print(f"Combined utilization: {result.utilization:.2%}")
 - Show detailed calculations
 - Include sensitivity checks
 
+## Pipeline Wall Thickness & M-T Interaction Assessment
+
+### Supported Pipeline/Riser Codes
+
+| Standard | Application | M-T Method |
+|----------|-------------|------------|
+| **API RP 1111** | Offshore hydrocarbon pipelines | Von Mises equivalent stress |
+| **API STD 2RD** | Dynamic risers for FPS | 4 methods (limit load, angle-based, DNV-equivalent, API-equivalent) |
+| **DNV-ST-F101** | Submarine pipeline systems | Local buckling (load-controlled & displacement-controlled) |
+| **DNV-OS-F201** | Dynamic risers | Combined loading criteria |
+| **PD 8010-2** | Subsea pipelines | Von Mises + buckling |
+
+### Report Structure for Pipeline Assessment
+
+Engineers expect **results first, inputs last**:
+
+1. **Executive Summary** — PASS/FAIL, governing check, margin, recommendations
+2. **Pressure-Only Checks** — burst, collapse, propagation (prerequisites)
+3. **Combined Loading Contour** — Von Mises utilisation heatmap across T-M plane
+4. **Allowable Bending Envelope** — capacity curves per operating condition
+5. **Capacity Limits Table** — T+, T-, M_allow per condition
+6. **Pressure Sensitivity** — parametric study at varying internal pressure
+7. **Key Points Summary** — utilisation at selected reference points
+8. **Input Data** — geometry, material, design basis (appendix / collapsible)
+
+### What a Structural Engineer Looks For
+
+1. Clear PASS/FAIL verdict at the top with governing check identified
+2. Pressure-only checks first — if any fail, M-T analysis is moot
+3. Combined loading interaction diagram showing the design space
+4. Allowable envelopes overlaid with design operating points
+5. Margin quantification — not just pass/fail, but how much margin
+6. Code clause references for every check performed
+7. Input data traceability — can the reviewer reproduce the results?
+8. Consistency checks — do T_y and M_p match hand calculations?
+9. Units clearly stated in every table header and axis label
+
+### Review Checklist
+
+#### Input Validation
+
+- D/t ratio in valid range (15-45 typical for offshore pipe; <15 is thick-walled, >50 very thin)
+- SMYS matches grade (X42:290, X52:359, X56:386, X60:414, X65:448, X70:483, X80:552 MPa)
+- SMTS > SMYS (ratio typically 1.08-1.20 for carbon steel)
+- Corrosion allowance reasonable (0-6 mm for 20+ year design life)
+- Young's modulus ~207 GPa, Poisson's ratio ~0.3 for steel
+
+#### Section Property Sanity
+
+- A = pi/4 * (OD^2 - ID^2)
+- I = pi/64 * (OD^4 - ID^4)
+- Z = I / (OD/2) for elastic section modulus
+- T_y = A * SMYS
+- M_p per code (API RP 1111 uses SMYS * (D^3 - d_i^3) / 6)
+
+#### Pressure Check Sanity
+
+- Hoop utilisation sigma_h / SMYS < 0.50 typical; >0.60 is concerning
+- If hoop utilisation > f_d * SMYS, pipe cannot satisfy combined check at any T,M
+- Burst: P_b = 0.45 * (SMYS + SMTS) * ln(OD/ID)
+- Propagation: P_pr = 24 * SMYS * (t/OD)^2.4
+
+#### Combined Loading Sanity
+
+- At origin (T=0, M=0), utilisation = sigma_h / sigma_allow (pressure-only baseline)
+- Envelopes properly nested: Survival > Extreme > Installation > Normal Operating
+- T_pos > |T_neg| when net internal pressure positive (hoop stress asymmetry)
+- M_allow decreases monotonically past peak as |T| increases
+
+### Red Flags
+
+- **D/t < 15**: Very thick-walled; thin-wall hoop formula may be inaccurate, consider Lame's equation
+- **D/t > 50**: Very thin-walled; susceptible to local buckling and ovality
+- **Hoop utilisation > 80%**: Very little capacity for tension and bending
+- **Propagation util > 0.8**: May need buckle arrestors
+- **Envelope curves crossing**: Calculation error (nested property violated)
+- **Utilisation at origin > 1.0**: Pressure alone exceeds capacity — fundamental design issue
+
+### API RP 1111 Design Factors
+
+| Condition | f_d | Application |
+|-----------|-----|-------------|
+| Normal Operating | 0.72 | Production, steady-state |
+| Installation | 0.80 | Lay operations, pre-commissioning |
+| Extreme | 0.96 | 100-year environmental |
+| Survival | 1.00 | Abnormal / accidental |
+
+### API STD 2RD vs API RP 1111
+
+| Aspect | API RP 1111 (Pipelines) | API STD 2RD (Risers) |
+|--------|-------------------------|----------------------|
+| Design philosophy | Limit state (WSD) | LRFD |
+| Combined loading | Von Mises equivalent stress | 4 methods available |
+| Stress components | Hoop + longitudinal (2D) | Full triaxial (3D) |
+| Yield exceedance | Not permitted | Permitted for displacement-controlled |
+| Additional checks | — | Fatigue, VIV, dynamic amplification |
+
+### Typical Follow-Up Analyses After M-T Interaction
+
+1. On-bottom stability (lateral/vertical under hydrodynamic loading)
+2. Free-span analysis (VIV and static bending at unsupported spans)
+3. Installation analysis (lay tension vs bending during S-lay/J-lay/reel-lay)
+4. Lateral buckling and walking under thermal/pressure cycling
+5. Fatigue at girth welds (especially for dynamic risers)
+6. Fracture mechanics / ECA per BS 7910
+7. Upheaval buckling for buried pipelines
+8. Tie-in spool M-T interaction at connections
+9. Riser touch-down zone combined loading (risers only)
+
+### Key Source Files
+
+- `src/digitalmodel/structural/analysis/wall_thickness.py` — Core dataclasses and analyzer
+- `src/digitalmodel/structural/analysis/wall_thickness_mt_report.py` — M-T interaction report
+- `src/digitalmodel/structural/analysis/wall_thickness_codes.py` — Code strategy registry
+- `tests/test_wall_thickness_mt_report.py` — 13 tests covering envelope, bisection, asymmetry
+
 ## Related Skills
 
 - [fatigue-analysis](../fatigue-analysis/SKILL.md) - Fatigue assessment
 - [mooring-design](../mooring-design/SKILL.md) - Mooring structures
-- [engineering-report-generator](../../.claude/skills/development/engineering-report-generator/SKILL.md) - Analysis reports
+- [viv-analysis](../viv-analysis/SKILL.md) - Vortex-induced vibration
+- [catenary-riser](../catenary-riser/SKILL.md) - Riser configuration analysis
