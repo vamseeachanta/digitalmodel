@@ -13,7 +13,7 @@ Generates a professional HTML report presenting:
 5. Key engineering points summary table (with margin %)
 6. Input data (geometry, material, design conditions, derived properties)
 
-Supports: API RP 1111, API RP 2RD, API STD 2RD.
+Supports: API RP 1111, API RP 2RD, API STD 2RD, DNV-ST-F101.
 API STD 2RD additionally traces Method 1 (linear) and Method 2 (cosine)
 M-T interaction envelopes.
 
@@ -61,10 +61,17 @@ API_STD_2RD_CONDITIONS = [
     {"name": "ALS (Accidental)", "f_d": 1.00, "color": "#d62728", "dash": "dot"},
 ]
 
+DNV_ST_F101_CONDITIONS = [
+    {"name": "Low Safety Class",    "f_d": 0.831, "color": "#2ca02c", "dash": "solid"},
+    {"name": "Medium Safety Class", "f_d": 0.764, "color": "#1f77b4", "dash": "dash"},
+    {"name": "High Safety Class",   "f_d": 0.665, "color": "#d62728", "dash": "dot"},
+]
+
 CONDITIONS_BY_CODE = {
     DesignCode.API_RP_1111: API_RP_1111_CONDITIONS,
     DesignCode.API_RP_2RD:  API_RP_2RD_CONDITIONS,
     DesignCode.API_STD_2RD: API_STD_2RD_CONDITIONS,
+    DesignCode.DNV_ST_F101: DNV_ST_F101_CONDITIONS,
 }
 
 

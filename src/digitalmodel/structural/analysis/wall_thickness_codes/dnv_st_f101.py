@@ -3,9 +3,10 @@
 
 import math
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from digitalmodel.structural.analysis.wall_thickness import (
+    CodeEdition,
     DesignCode,
     DesignFactors,
     DesignLoads,
@@ -16,13 +17,76 @@ from .base import register_code
 
 logger = logging.getLogger(__name__)
 
+# Edition-keyed design parameters for DNV-ST-F101.
+# 2007 = DNV-OS-F101 (2007/2010/2013 editions, same factors)
+# 2021 = DNV-ST-F101 (2017/2019/2021, renumbered gamma_SC)
+EDITION_FACTORS: Dict[int, Dict] = {
+    2007: {
+        "f_y": 0.96,       # Material strength factor for SMYS
+        "f_u": 0.96,       # Material strength factor for SMTS
+        "f_0": 0.005,      # Default ovality (D_max-D_min)/D
+        "gamma_m": 1.15,   # Material resistance factor
+        "gamma_SC": {
+            "low": 1.04,
+            "medium": 1.14,
+            "high": 1.26,
+        },
+    },
+    2021: {
+        "f_y": 0.96,
+        "f_u": 0.96,
+        "f_0": 0.005,
+        "gamma_m": 1.15,
+        "gamma_SC": {
+            "low": 1.046,
+            "medium": 1.138,
+            "high": 1.308,
+        },
+    },
+}
+
+EDITION_METADATA: Dict[int, CodeEdition] = {
+    2007: CodeEdition(DesignCode.DNV_ST_F101, 2007, "DNV-OS-F101"),
+    2021: CodeEdition(DesignCode.DNV_ST_F101, 2021, "DNV-ST-F101"),
+}
+
+LATEST_EDITION = 2021
+
 
 @register_code(DesignCode.DNV_ST_F101)
 class DnvStF101Strategy:
-    """DNV-ST-F101 (2021) submarine pipeline design checks."""
+    """DNV-ST-F101 submarine pipeline design checks.
+
+    Supports edition-aware factor lookup. When no edition is specified,
+    defaults to the latest edition (2021).
+
+    Available editions:
+        - 2007: DNV-OS-F101 (2007/2010/2013)
+        - 2021: DNV-ST-F101 (2017/2019/2021)
+    """
 
     code_name = "DNV-ST-F101"
     check_names = ["pressure_containment", "collapse", "propagation_buckling", "combined_loading"]
+
+    def __init__(self, edition: Optional[int] = None):
+        if edition is None:
+            edition = LATEST_EDITION
+        if edition not in EDITION_FACTORS:
+            available = sorted(EDITION_FACTORS.keys())
+            raise ValueError(
+                f"Unknown edition {edition} for DNV-ST-F101. "
+                f"Available editions: {available}"
+            )
+        self.edition_year = edition
+        self._factors = EDITION_FACTORS[edition]
+        self.edition_info = EDITION_METADATA[edition]
+        logger.info(
+            "DnvStF101Strategy: using %s", self.edition_info.display_label
+        )
+
+    def get_edition_factors(self) -> Dict:
+        """Return the design parameters for the current edition."""
+        return dict(self._factors)
 
     def run_checks(
         self,
@@ -55,8 +119,8 @@ class DnvStF101Strategy:
         smts = material.smts
 
         # Material strength factors per DNV-ST-F101 Table 5-4
-        f_y = 0.96
-        f_u = 0.96
+        f_y = self._factors["f_y"]
+        f_u = self._factors["f_u"]
 
         # Characteristic burst pressure
         f_cb = min(f_y * smys, f_u * smts / 1.15)
@@ -102,7 +166,7 @@ class DnvStF101Strategy:
         f_y = material.smys
         alpha_fab = material.alpha_fab
 
-        f_0 = 0.005
+        f_0 = self._factors["f_0"]
 
         p_el = 2 * E * (t2 / D) ** 3 / (1 - nu**2)
         p_p = f_y * alpha_fab * 2 * t2 / D
