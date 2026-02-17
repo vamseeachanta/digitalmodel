@@ -550,3 +550,29 @@ def generate_report(
         logger.info(f"Report written to {output_path}")
 
     return html
+
+
+def export_to_excel(
+    df: pd.DataFrame,
+    output_path: str,
+    sheet_name: str = "Parametric Results",
+) -> str:
+    """Export parametric sweep results to an Excel workbook.
+
+    Args:
+        df: Sweep results DataFrame from ParametricSweep.run().
+        output_path: File path for the .xlsx output.
+        sheet_name: Worksheet name.
+
+    Returns:
+        The output_path written to.
+    """
+    from pathlib import Path
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    logger.info(f"Excel export written to {output_path} ({len(df)} rows)")
+    return output_path

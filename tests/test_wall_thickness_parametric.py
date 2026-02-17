@@ -17,6 +17,7 @@ from digitalmodel.structural.analysis.wall_thickness_parametric import (
     API_5L_GRADES,
     ParametricSweep,
     SweepConfig,
+    export_to_excel,
     generate_report,
     plot_governing_check,
     plot_utilisation_heatmap,
@@ -242,3 +243,49 @@ class TestHTMLReport:
         html = generate_report(df)
         assert "max_utilisation" in html
         assert "governing_check" in html
+
+
+# ===================================================================
+# Excel export
+# ===================================================================
+
+class TestExcelExport:
+    def test_export_creates_file(self):
+        cfg = make_basic_sweep_config()
+        df = ParametricSweep(cfg).run()
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            path = f.name
+
+        result = export_to_excel(df, path)
+        assert result == path
+
+        import os
+        assert os.path.exists(path)
+        assert os.path.getsize(path) > 0
+
+    def test_export_roundtrip(self):
+        cfg = make_basic_sweep_config()
+        df = ParametricSweep(cfg).run()
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            path = f.name
+
+        export_to_excel(df, path)
+
+        df_read = pd.read_excel(path)
+        assert len(df_read) == len(df)
+        assert "max_utilisation" in df_read.columns
+        assert "is_safe" in df_read.columns
+
+    def test_export_multi_od_sweep(self):
+        cfg = make_multi_od_config()
+        df = ParametricSweep(cfg).run()
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            path = f.name
+
+        export_to_excel(df, path, sheet_name="Multi-OD Sweep")
+
+        df_read = pd.read_excel(path, sheet_name="Multi-OD Sweep")
+        assert len(df_read) == 12
