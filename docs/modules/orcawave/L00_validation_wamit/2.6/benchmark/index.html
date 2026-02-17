@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Validation Case 2.6: Multi-body Cylinder+Spheroid shallow water — Multi-Body Overview</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, Arial, sans-serif;
+    margin: 0; padding: 0; color: #333; background: #f8f9fa;
+    font-size: 14px; line-height: 1.5;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 1.5em 2em; }
+  .header {
+    background: #2c3e50; color: #fff; padding: 1.2em 2em;
+    margin-bottom: 1.5em; border-radius: 6px;
+  }
+  .header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
+  .header .subtitle { font-size: 1.1em; opacity: 0.9; font-weight: 300; }
+  .nav-bar {
+    margin-top: 1em; padding-top: 0.8em;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.9em;
+  }
+  .nav-bar a { color: #fff; text-decoration: none; opacity: 0.8; }
+  .nav-bar a:hover { opacity: 1; text-decoration: underline; }
+  .section {
+    background: #fff; padding: 1.5em; margin-bottom: 1.5em;
+    border-radius: 6px; border: 1px solid #e2e8f0;
+  }
+  .section h2 {
+    margin-top: 0; font-size: 1.3em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #ddd; padding: 8px; font-size: 0.9em; }
+  th { background: #f2f2f2; text-align: center; }
+  .solver-table { width: auto; max-width: 600px; }
+  .solver-table td { padding: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Validation Case 2.6: Multi-body Cylinder+Spheroid shallow water</h1>
+    <div class="subtitle">Multi-Body Overview &mdash; 2 bodies</div>
+    <div class="nav-bar"><a href="body_0/benchmark_report.html">Body 0: test05_cylinder</a> | <a href="body_1/benchmark_report.html">Body 1: test05_spheroid</a> | <a href="coupling/">Coupling Details</a> | <a href="../validation_summary.html">Master Summary</a></div>
+  </div>
+
+  <div class="section">
+    <h2>Per-Body RAO Correlation Summary</h2>
+    <p>Pearson correlation of displacement RAO magnitudes between .owd ground truth
+       and spec.yml pipeline, per DOF per body.</p>
+    <table>
+      <tr>
+        <th>Body</th>
+        <th>Surge</th><th>Sway</th><th>Heave</th><th>Roll</th><th>Pitch</th><th>Yaw</th>
+        <th>Verdict</th>
+        <th>Detail</th>
+      </tr>
+      <tr><td style="font-weight:600">test05_cylinder</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;font-weight:600">PASS</td><td style="text-align:center"><a href="body_0/benchmark_report.html">Full Report</a></td></tr>
+<tr><td style="font-weight:600">test05_spheroid</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;color:#16a34a">1.000000</td><td style="text-align:center;background:#d5f5e3;font-weight:600">PASS</td><td style="text-align:center"><a href="body_1/benchmark_report.html">Full Report</a></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Inter-Body Coupling</h2>
+    <p>Correlation of off-diagonal added mass and radiation damping coupling matrices
+       between .owd and spec.yml. Values near 1.000 indicate identical coupling
+       coefficients across all frequencies.</p>
+    
+<div style="margin-bottom:2em">
+  <h3>Body 0 (test05_cylinder) &harr; Body 1 (test05_spheroid)
+    <span style="background:#d5f5e3;padding:2px 8px;border-radius:4px;
+    font-size:0.8em;margin-left:0.5em">min r=1.000000</span>
+  </h3>
+  <div style="display:flex;gap:2em;flex-wrap:wrap">
+    <div>
+      <h4 style="color:#555;margin-bottom:0.3em">Added Mass Coupling</h4>
+      <table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table>
+    </div>
+    <div>
+      <h4 style="color:#555;margin-bottom:0.3em">Radiation Damping Coupling</h4>
+      <table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table>
+    </div>
+  </div>
+</div>
+
+<div style="margin-bottom:2em">
+  <h3>Body 1 (test05_spheroid) &harr; Body 0 (test05_cylinder)
+    <span style="background:#d5f5e3;padding:2px 8px;border-radius:4px;
+    font-size:0.8em;margin-left:0.5em">min r=1.000000</span>
+  </h3>
+  <div style="display:flex;gap:2em;flex-wrap:wrap">
+    <div>
+      <h4 style="color:#555;margin-bottom:0.3em">Added Mass Coupling</h4>
+      <table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table>
+    </div>
+    <div>
+      <h4 style="color:#555;margin-bottom:0.3em">Radiation Damping Coupling</h4>
+      <table class="solver-table" style="width:auto;max-width:600px;">
+<tr><th></th>
+<th>Su</th>
+<th>Sw</th>
+<th>He</th>
+<th>Ro</th>
+<th>Pi</th>
+<th>Ya</th>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Surge</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Sway</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Heave</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Roll</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Pitch</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+<tr><td style='font-weight:600;text-align:left;'>Yaw</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+<td style="background:#d5f5e3;text-align:center;">1.000000</td>
+</tr>
+</table>
+    </div>
+  </div>
+</div>
+  </div>
+</div>
+</body>
+</html>

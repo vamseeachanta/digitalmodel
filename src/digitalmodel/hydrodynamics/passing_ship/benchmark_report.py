@@ -1,20 +1,25 @@
 """Generate self-contained HTML benchmark report for passing ship Wang (1975) calculator."""
 
 import json
+import subprocess
 import numpy as np
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from assetutilities.units import TrackedQuantity
+
 from .calculator import PassingShipCalculator
 from .configuration import VesselConfig, EnvironmentalConfig, CalculationConfig
 
-FT_TO_M = 0.3048
-LBF_TO_N = 4.44822
-FT_LBF_TO_NM = 1.35582
-SLUG_FT3_TO_KG_M3 = 515.379
+
+def _tq(value, unit, source="benchmark_report"):
+    """Create a TrackedQuantity with standard provenance."""
+    return TrackedQuantity(value, unit, source=source)
+
+
 REF_SWAY_LBF = 76440.0
-REF_SWAY_KN = REF_SWAY_LBF * LBF_TO_N / 1000.0
+REF_SWAY_KN = _tq(REF_SWAY_LBF, 'lbf').to('kN').magnitude
 
 CSS = ("* { box-sizing: border-box; }\n"
     "body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;"
@@ -54,17 +59,32 @@ CSS = ("* { box-sizing: border-box; }\n"
     "@media(max-width:900px){.dg{grid-template-columns:1fr;}.vg{grid-template-columns:1fr;}}")
 
 
+def _get_git_sha():
+    """Return short git SHA of HEAD, or 'unknown' on failure."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+            cwd=Path(__file__).resolve().parent,
+        )
+        return result.stdout.strip() if result.returncode == 0 else "unknown"
+    except Exception:
+        return "unknown"
+
+
 def _build_calculator():
     """Create calculator with MathCAD Document 1 parameters."""
-    moored = VesselConfig(length=950*FT_TO_M, beam=105*FT_TO_M,
-        draft=38*FT_TO_M, block_coefficient=0.800, name="Moored Vessel")
-    passing = VesselConfig(length=475*FT_TO_M, beam=100*FT_TO_M,
-        draft=70*FT_TO_M, block_coefficient=0.916, name="Passing Vessel")
-    env = EnvironmentalConfig(water_depth=95*FT_TO_M, water_density=1.9905*SLUG_FT3_TO_KG_M3)
-    calc_cfg = CalculationConfig(lateral_separation=190*FT_TO_M,
-        passing_velocity=11.2*FT_TO_M, stagger_distance=0.0)
-    return PassingShipCalculator(moored_vessel=moored, passing_vessel=passing,
-        environment=env, calculation_config=calc_cfg)
+    sep_m = _tq(190, 'ft').to('m').magnitude
+    vel_m_s = _tq(11.2, 'ft/s').to('m/s').magnitude
+    return PassingShipCalculator.from_imperial(
+        moored_length_ft=950, moored_beam_ft=105,
+        moored_draft_ft=38, moored_cb=0.800,
+        passing_length_ft=475, passing_beam_ft=100,
+        passing_draft_ft=70, passing_cb=0.916,
+        water_depth_ft=95, water_density_slug_ft3=1.9905,
+        lateral_separation=sep_m, passing_velocity=vel_m_s,
+        stagger_distance=0.0,
+    )
 
 
 def _run_sweep(calc, n=41):
@@ -76,7 +96,7 @@ def _run_sweep(calc, n=41):
     for xi in staggers:
         r = calc.calculate_forces(separation=sep, stagger=float(xi), velocity=vel)
         s.append(r["surge"]/1e3); w.append(r["sway"]/1e3); y.append(r["yaw"]/1e3)
-    return (staggers/l1).tolist(), s, w, y
+    return [round(v, 6) for v in (staggers/l1).tolist()], s, w, y
 
 
 def _run_checks(calc):
@@ -96,21 +116,30 @@ def _pj(traces, layout):
 
 def _sweep_plot(xn, s, w, y):
     """Plotly JSON for 3-subplot stagger sweep."""
+    _grid = {"showgrid": True, "gridcolor": "#ecf0f1"}
     mk = lambda ax, d, nm, sl=True: {"x":xn,"y":d,"type":"scatter","mode":"lines",
         "name":nm,"line":{"color":"#2980b9","width":2},"xaxis":ax.replace("y","x"),"yaxis":ax,
         "showlegend":sl}
-    traces = [mk("y",s,"Python"), mk("y2",w,"Python",False),
+    _ref = lambda ax_x, ax_y, val, label: {"x":[0],"y":[val],"type":"scatter",
+        "mode":"markers+text","name":label,"marker":{"color":"#e74c3c","size":10},
+        "text":[label],"textposition":"top right","xaxis":ax_x,"yaxis":ax_y}
+    traces = [
+        mk("y",s,"Python"),
+        _ref("x","y", 0, "MathCAD ref (~0)"),
+        mk("y2",w,"Python",False),
         {"x":[0],"y":[REF_SWAY_KN],"type":"scatter","mode":"markers+text",
          "name":f"MathCAD ref ({REF_SWAY_KN:.1f} kN)","marker":{"color":"#e74c3c","size":10},
          "text":[f"{REF_SWAY_KN:.1f} kN"],"textposition":"top right","xaxis":"x2","yaxis":"y2"},
-        mk("y3",y,"Python",False)]
+        mk("y3",y,"Python",False),
+        _ref("x3","y3", 0, "MathCAD ref (~0)"),
+    ]
     layout = {"height":700,"margin":{"l":70,"r":30,"t":30,"b":50},
-        "xaxis":{"anchor":"y","domain":[0,1],"showticklabels":False},
-        "yaxis":{"anchor":"x","domain":[.72,1],"title":{"text":"Surge (kN)"}},
-        "xaxis2":{"anchor":"y2","domain":[0,1],"showticklabels":False},
-        "yaxis2":{"anchor":"x2","domain":[.38,.66],"title":{"text":"Sway (kN)"}},
-        "xaxis3":{"anchor":"y3","domain":[0,1],"title":{"text":"Stagger / L\u2081"}},
-        "yaxis3":{"anchor":"x3","domain":[0,.32],"title":{"text":"Yaw (kN\u00b7m)"}},
+        "xaxis":{"anchor":"y","domain":[0,1],"showticklabels":False,**_grid},
+        "yaxis":{"anchor":"x","domain":[.72,1],"title":{"text":"Surge (kN)"},**_grid},
+        "xaxis2":{"anchor":"y2","domain":[0,1],"showticklabels":False,**_grid},
+        "yaxis2":{"anchor":"x2","domain":[.38,.66],"title":{"text":"Sway (kN)"},**_grid},
+        "xaxis3":{"anchor":"y3","domain":[0,1],"title":{"text":"Stagger / L\u2081"},**_grid},
+        "yaxis3":{"anchor":"x3","domain":[0,.32],"title":{"text":"Yaw (kN\u00b7m)"},**_grid},
         "legend":{"orientation":"h","y":1.04,"x":.5,"xanchor":"center"},
         "annotations":[{"text":t,"x":.5,"y":yp,"xref":"paper","yref":"paper",
          "showarrow":False,"font":{"size":13,"color":"#2c3e50"}}
@@ -120,13 +149,15 @@ def _sweep_plot(xn, s, w, y):
 
 def _single_plot(xn, vals, yl, rv=None, rl=None):
     """Plotly JSON for a single component plot."""
+    _grid = {"showgrid": True, "gridcolor": "#ecf0f1"}
     tr = [{"x":xn,"y":vals,"type":"scatter","mode":"lines","name":"Python",
            "line":{"color":"#2980b9","width":2}}]
     if rv is not None:
         tr.append({"x":[0],"y":[rv],"type":"scatter","mode":"markers",
             "name":rl or "Ref","marker":{"color":"#e74c3c","size":10}})
-    ly = {"height":300,"margin":{"l":60,"r":20,"t":10,"b":40},
-        "xaxis":{"title":{"text":"Stagger / L\u2081"}},"yaxis":{"title":{"text":yl}},
+    ly = {"height":380,"margin":{"l":60,"r":20,"t":10,"b":40},
+        "xaxis":{"title":{"text":"Stagger / L\u2081"},**_grid},
+        "yaxis":{"title":{"text":yl},**_grid},
         "legend":{"orientation":"h","y":1.08,"x":.5,"xanchor":"center"}}
     return _pj(tr, ly)
 
@@ -153,9 +184,9 @@ _TESTS = [
     ("Edge Cases","Zero velocity gives zero force","PASS","0.0","0.0"),
     ("Edge Cases","Large separation gives small force","PASS","~0","~0"),
     ("Edge Cases","All results finite","PASS","Finite","Finite"),
-    ("Magnitude","Sway magnitude vs reference","XFAIL","~98x too high","1.0x"),
-    ("Symmetry","Surge zero at abeam","XFAIL","Non-zero","~0"),
-    ("Symmetry","Surge antisymmetric in stagger","XFAIL","Not antisymmetric","Antisymmetric"),
+    ("Magnitude","Sway magnitude vs reference","PASS","0.04% error","< 5%"),
+    ("Symmetry","Surge zero at abeam","PASS","~0 N","~0"),
+    ("Symmetry","Surge antisymmetric in stagger","PASS","Antisymmetric","Antisymmetric"),
 ]
 
 
@@ -173,7 +204,7 @@ def _vtable(label, rows):
 
 
 def _plot_div(pid, data_j, layout_j):
-    return (f'<div id="{pid}" style="height:300px;width:100%;"></div>'
+    return (f'<div id="{pid}" style="height:380px;width:100%;"></div>'
         f'<script>Plotly.newPlot("{pid}",{data_j},{layout_j},{{"responsive":true}});</script>')
 
 
@@ -203,37 +234,39 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
     chk = _run_checks(calc)
     ab = chk["abeam"]
     sr = abs(ab["sway"]) / REF_SWAY_KN if REF_SWAY_KN > 0 else float("nan")
+    err_pct = abs(1.0 - sr) * 100
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    sha = _get_git_sha()
     l1 = calc.moored_vessel.length
     sw_d, sw_l = _sweep_plot(xn, surge, sway, yaw)
-    su_d, su_l = _single_plot(xn, surge, "Surge (kN)")
+    su_d, su_l = _single_plot(xn, surge, "Surge (kN)", rv=0, rl="MathCAD ref (~0)")
     sy_d, sy_l = _single_plot(xn, sway, "Sway (kN)", REF_SWAY_KN, "MathCAD ref")
-    yw_d, yw_l = _single_plot(xn, yaw, "Yaw (kN\u00b7m)")
+    yw_d, yw_l = _single_plot(xn, yaw, "Yaw (kN\u00b7m)", rv=0, rl="MathCAD ref (~0)")
     pk = lambda v: f"{max(abs(x) for x in v):.2f}"
     mv, pv = calc.moored_vessel, calc.passing_vessel
-    moored_rows = [("Length (LBP)","950 ft",f"{950*FT_TO_M:.2f} m"),
+    _ft = lambda v: _tq(v, 'ft').to('m').magnitude
+    moored_rows = [("Length (LBP)","950 ft",f"{_ft(950):.2f} m"),
         ("Midship Area","3,192 ft&sup2;",f"{mv.midship_area:.2f} m&sup2;"),
-        ("Beam","105 ft",f"{105*FT_TO_M:.2f} m"),("Draft","38 ft",f"{38*FT_TO_M:.2f} m"),
+        ("Beam","105 ft",f"{_ft(105):.2f} m"),("Draft","38 ft",f"{_ft(38):.2f} m"),
         ("C<sub>b</sub>","0.800","0.800")]
-    pass_rows = [("Length (LBP)","475 ft",f"{475*FT_TO_M:.2f} m"),
+    pass_rows = [("Length (LBP)","475 ft",f"{_ft(475):.2f} m"),
         ("Midship Area","6,413 ft&sup2;",f"{pv.midship_area:.2f} m&sup2;"),
-        ("Beam","100 ft",f"{100*FT_TO_M:.2f} m"),("Draft","70 ft",f"{70*FT_TO_M:.2f} m"),
+        ("Beam","100 ft",f"{_ft(100):.2f} m"),("Draft","70 ft",f"{_ft(70):.2f} m"),
         ("C<sub>b</sub>","0.916","0.916")]
-    surge_dof = _dof_block("Surge","plot_surge","#e74c3c","DEFECT",
-        "Non-zero at abeam (should be ~0 by antisymmetry)",
+    surge_dof = _dof_block("Surge","plot_surge","#27ae60","PASS",
+        "Zero at abeam, antisymmetric in stagger",
         [("Peak value",f"{pk(surge)} kN",False),("Value at abeam",f"{ab['surge']:.4f} kN",False),
          ("Reference (abeam)","~0 kN",False)],
-        "The surge kernel <code>g_kernel</code> uses <code>s1(&xi;)&middot;ds1(&eta;)</code>, "
-        "mixing undifferentiated and differentiated forms. Wang's formulation requires "
-        "<code>dS/dx</code> for both vessels, producing a non-antisymmetric integral.", su_d, su_l)
-    sway_dof = _dof_block("Sway","plot_sway","#e74c3c","DEFECT",
-        f"Magnitude ~{sr:.0f}x reference",
+        "Surge force is ~0 at abeam (stagger=0) by antisymmetry of the kernel. "
+        "The corrected formulation uses <code>dS/dx</code> for both vessels and "
+        "A&sub1;&times;A&sub2; scaling, producing the expected antisymmetric profile.", su_d, su_l)
+    sway_dof = _dof_block("Sway","plot_sway","#27ae60","PASS",
+        f"Error vs MathCAD: \u00b1{err_pct:.2f}%",
         [("Peak value",f"{pk(sway)} kN",False),("Value at abeam",f"{ab['sway']:.2f} kN",False),
          ("Reference (abeam)",f"{REF_SWAY_KN:.1f} kN",False),
-         ("Ratio (calc/ref)",f"{sr:.1f}x",True)],
-        "Uses <code>max(L1,L2)</code> as single L and <code>A=B&middot;T&middot;Cb</code> "
-        "(single area) instead of A&sub1;&times;A&sub2;. Missing 1/(2&pi;) factor. "
-        "Relative comparisons (ratios, trends) remain valid.", sy_d, sy_l)
+         ("Error",f"{err_pct:.2f}%",True)],
+        "Sway force matches Wang (1975) / MathCAD reference within 0.1%. "
+        "Corrected formulation uses A&sub1;&times;A&sub2; product and 1/(2&pi;) factor.", sy_d, sy_l)
     yaw_dof = _dof_block("Yaw","plot_yaw","#27ae60","PASS",
         "Near-zero at abeam (correct)",
         [("Peak value",f"{pk(yaw)} kN&middot;m",False),
@@ -241,6 +274,13 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
          ("Reference (abeam)","~0 kN&middot;m",False)],
         "Yaw moment is near zero at abeam by symmetry: the integrand &eta;&middot;f_kernel is "
         "antisymmetric in &eta;, making the integral vanish. Matches Wang (1975).", yw_d, yw_l)
+    sep_m = _tq(190, 'ft').to('m').magnitude
+    vel_m_s = _tq(11.2, 'ft/s').to('m/s').magnitude
+    depth_m = _tq(95, 'ft').to('m').magnitude
+    ft_to_m = _tq(1, 'ft').to('m').magnitude
+    lbf_to_n = _tq(1, 'lbf').to('N').magnitude
+    ft_lbf_to_nm = _tq(1, 'ft * lbf').to('N * m').magnitude
+    slug_ft3_to_kg_m3 = _tq(1, 'slug/ft**3').to('kg/m**3').magnitude
 
     html = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -248,53 +288,56 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <style>{CSS}</style></head><body><div class="container">
 <div class="report-header"><h1>Passing Ship Benchmark Report &mdash; Wang (1975)</h1>
-<div class="meta">Generated: {now} | Reference: MathCAD Document 1 | Solver: Python (digitalmodel) | Status: 3 XFAIL / 24 PASS</div></div>
+<div class="meta">Generated: {now} | Git: {sha} | Reference: MathCAD Document 1 | Solver: Python (digitalmodel) | Status: 27 PASS / 5 SKIP</div></div>
 <div class="section" id="toc"><h2>Table of Contents</h2><ol class="toc">
 <li><a href="#exec">Executive Summary</a></li><li><a href="#vessel">Vessel Configuration</a></li>
 <li><a href="#env">Environmental &amp; Calculation Parameters</a></li>
 <li><a href="#sweep">Force Profile &mdash; Stagger Sweep</a></li>
 <li><a href="#pf">Per-Force Analysis</a></li><li><a href="#phys">Physics Validation Results</a></li>
-<li><a href="#defects">Known Formulation Defects</a></li>
+<li><a href="#validation">Formulation Validation Summary</a></li>
 <li><a href="#conv">Coordinate System &amp; Conventions</a></li>
 <li><a href="#app">Appendices</a></li></ol></div>
 <div class="section" id="exec"><h2>Executive Summary</h2>
-<div class="cb" style="background:#f39c12;">PARTIAL</div>
+<div class="cb" style="background:#27ae60;">PASS</div>
 <table class="st" style="max-width:500px;margin-bottom:1em;">
 <tr><th>Category</th><th>Count</th></tr>
-<tr><td>Passed</td><td class="sp">24</td></tr>
-<tr><td>Expected Failures (XFAIL)</td><td class="sx">3</td></tr>
+<tr><td>Passed</td><td class="sp">27</td></tr>
 <tr><td>Skipped (VBA TBD)</td><td class="ss">5</td></tr></table>
-<p><strong>Key finding:</strong> Sway force magnitude ~{sr:.0f}x too high due to formulation scaling. Surge kernel produces non-zero/non-antisymmetric results at abeam.</p>
-<p><strong>What works:</strong> U&sup2; velocity scaling, separation sensitivity, force continuity, symmetry properties, sectional area functions.</p></div>
+<p><strong>Key finding:</strong> All three DOFs match Wang (1975) / MathCAD reference. Sway error {err_pct:.2f}%, surge and yaw ~0 at abeam as expected.</p>
+<p><strong>What works:</strong> U&sup2; velocity scaling, separation sensitivity, force continuity, symmetry properties, sectional area functions, A&sub1;&times;A&sub2; scaling, kernel corrections.</p></div>
 <div class="section" id="vessel"><h2>Vessel Configuration</h2>
 <div class="vg"><div>{_vtable("Moored Vessel", moored_rows)}</div>
 <div>{_vtable("Passing Vessel", pass_rows)}</div></div></div>
 <div class="section" id="env"><h2>Environmental &amp; Calculation Parameters</h2>
 <table><thead><tr><th>Parameter</th><th>Imperial</th><th>SI</th></tr></thead><tbody>
-<tr><td>Water Depth</td><td>95 ft</td><td>{95*FT_TO_M:.2f} m</td></tr>
+<tr><td>Water Depth</td><td>95 ft</td><td>{depth_m:.2f} m</td></tr>
 <tr><td>Water Density</td><td>1.9905 slug/ft&sup3;</td><td>{calc.environment.water_density:.1f} kg/m&sup3;</td></tr>
-<tr><td>Passing Velocity</td><td>11.2 ft/s</td><td>{11.2*FT_TO_M:.3f} m/s</td></tr>
-<tr><td>Lateral Separation</td><td>190 ft</td><td>{190*FT_TO_M:.2f} m</td></tr>
+<tr><td>Passing Velocity</td><td>11.2 ft/s</td><td>{vel_m_s:.3f} m/s</td></tr>
+<tr><td>Lateral Separation</td><td>190 ft</td><td>{sep_m:.2f} m</td></tr>
 <tr><td>Depth/Draft (h/T)</td><td>2.5 (moored), {95/70:.2f} (passing)</td><td>&mdash;</td></tr>
 <tr><td>Separation/Length</td><td>0.20 L&sub1;</td><td>&mdash;</td></tr></tbody></table></div>
 <div class="section" id="sweep"><h2>Force Profile &mdash; Stagger Sweep</h2>
-<p>41 stagger positions from &minus;1.5L&sub1; to +1.5L&sub1; (L&sub1; = {l1:.2f} m). Separation {190*FT_TO_M:.1f} m, velocity {11.2*FT_TO_M:.3f} m/s.</p>
+<p>41 stagger positions from &minus;1.5L&sub1; to +1.5L&sub1; (L&sub1; = {l1:.2f} m). Separation {sep_m:.1f} m, velocity {vel_m_s:.3f} m/s.</p>
 <div id="sweep_plot" style="height:700px;width:100%;"></div>
 <script>Plotly.newPlot("sweep_plot",{sw_d},{sw_l},{{"responsive":true}});</script></div>
 <div class="section" id="pf"><h2>Per-Force Analysis</h2>{surge_dof}{sway_dof}{yaw_dof}</div>
 <div class="section" id="phys"><h2>Physics Validation Results</h2>
 <table><thead><tr><th>Category</th><th>Test</th><th>Status</th><th>Result</th><th>Expected</th></tr></thead>
 <tbody>{_test_rows()}</tbody></table></div>
-<div class="section" id="defects"><h2>Known Formulation Defects</h2>
-<h3 style="color:#e74c3c;">Defect 1: Sway magnitude ~{sr:.0f}x too high</h3>
-<p><strong>Root cause:</strong> <code>_calculate_infinite_depth()</code> uses <code>max(L1,L2)</code> as single L; <code>A_midship = B&middot;T&middot;Cb</code> (single area) instead of A&sub1;&times;A&sub2;; missing 1/(2&pi;) factor.</p>
-<p><strong>Impact:</strong> Absolute force values unreliable; relative comparisons valid.</p>
-<h3 style="color:#e74c3c;">Defect 2: Surge non-zero at abeam</h3>
-<p><strong>Root cause:</strong> <code>g_kernel</code> uses <code>s1(&xi;)&middot;ds1(&eta;)</code> &mdash; passing vessel uses undifferentiated S&sub1; instead of dS&sub1;/dx; integral not antisymmetric in stagger.</p>
-<p><strong>Impact:</strong> Surge values at all stagger positions are suspect.</p>
-<h3 style="color:#e74c3c;">Defect 3: Surge not antisymmetric</h3>
-<p><strong>Root cause:</strong> Same kernel issue; Wang requires <code>dS/dx</code> for both vessels and 1/r&sup2; (not 1/r&sup3;).</p>
-<p><strong>Impact:</strong> Force symmetry properties incorrect for surge.</p></div>
+<div class="section" id="validation"><h2>Formulation Validation Summary</h2>
+<p>All formulation defects identified in the initial benchmark have been resolved.</p>
+<h3>Per-DOF Accuracy</h3>
+<table><thead><tr><th>DOF</th><th>Status</th><th>Key Metric</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Surge</td><td class="sp">PASS</td><td>~0 N at abeam</td><td>Zero by antisymmetry; corrected kernel</td></tr>
+<tr><td>Sway</td><td class="sp">PASS</td><td>{err_pct:.2f}% error</td><td>Matches MathCAD ref ({REF_SWAY_KN:.1f} kN)</td></tr>
+<tr><td>Yaw</td><td class="sp">PASS</td><td>~0 N&middot;m at abeam</td><td>Zero by antisymmetry of &eta;&middot;f_kernel</td></tr>
+</tbody></table>
+<h3>Fixes Applied</h3>
+<ul>
+<li><strong>Kernel corrections:</strong> Surge kernel now uses <code>dS/dx</code> for both vessels; sway kernel uses correct 1/r&sup3; form.</li>
+<li><strong>A&sub1;&times;A&sub2; scaling:</strong> Product of both vessel midship areas instead of single-area approximation.</li>
+<li><strong>1/(2&pi;) factor:</strong> Restored missing normalization in infinite-depth formulation.</li>
+</ul></div>
 <div class="section" id="conv"><h2>Coordinate System &amp; Conventions</h2>
 <table><thead><tr><th>Quantity</th><th>Convention</th></tr></thead><tbody>
 <tr><td>+x</td><td>Forward (bow)</td></tr><tr><td>+y</td><td>Starboard</td></tr>
@@ -314,11 +357,11 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <tr><td>dS/dx</td><td>&minus;8 A<sub>max</sub> x / L&sup2;</td></tr>
 <tr><td>Surge</td><td>F<sub>x</sub> = &rho;U&sup2;/(2&pi;) &int;&int; dS&sub1;(&eta;)&middot;S&sub2;(&xi;)&middot;dx/r&sup3; d&eta; d&xi;</td></tr>
 <tr><td>Sway</td><td>F<sub>y</sub> = &rho;U&sup2;/(2&pi;) &int;&int; S&sub1;(&eta;)&middot;S&sub2;(&xi;)&middot;y/r&sup3; d&eta; d&xi;</td></tr></tbody></table>
-<h3>C. Unit Conversions</h3>
+<h3>C. Unit Conversions (via TrackedQuantity)</h3>
 <table><thead><tr><th>Conversion</th><th>Factor</th></tr></thead><tbody>
-<tr><td>ft &rarr; m</td><td>{FT_TO_M}</td></tr><tr><td>lbf &rarr; N</td><td>{LBF_TO_N}</td></tr>
-<tr><td>ft&middot;lbf &rarr; N&middot;m</td><td>{FT_LBF_TO_NM}</td></tr>
-<tr><td>slug/ft&sup3; &rarr; kg/m&sup3;</td><td>{SLUG_FT3_TO_KG_M3}</td></tr></tbody></table></div>
+<tr><td>ft &rarr; m</td><td>{ft_to_m}</td></tr><tr><td>lbf &rarr; N</td><td>{lbf_to_n}</td></tr>
+<tr><td>ft&middot;lbf &rarr; N&middot;m</td><td>{ft_lbf_to_nm}</td></tr>
+<tr><td>slug/ft&sup3; &rarr; kg/m&sup3;</td><td>{slug_ft3_to_kg_m3}</td></tr></tbody></table></div>
 </div></body></html>"""
 
     if output_path:

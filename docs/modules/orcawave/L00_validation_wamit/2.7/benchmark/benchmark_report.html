@@ -142,7 +142,7 @@
 <div class="report-header">
   <h1>Diffraction Analysis Report &mdash; Pyramid_ZC08</h1>
   <div class="meta">
-    Generated: 2026-02-15 22:53:42 |
+    Generated: 2026-02-17 04:53:45 |
     Frequencies: 41 |
     Headings: 0 (&deg;) |
     Solver(s): OrcaWave (.owd), OrcaWave (spec.yml) |
@@ -154,6 +154,7 @@
   
   
   
+  <div style="background:#eafaf1;border-left:4px solid #27ae60;padding:0.8em 1em;margin:0.8em 0;border-radius:4px;"><span style="font-size:1.3em;font-weight:700;color:#27ae60;">EXCELLENT</span><span style="margin-left:1em;color:#555;">OrcaWave (.owd) vs OrcaWave (spec.yml)</span></div><h3 style="margin-top:1em;">RAO Comparison</h3><table style="width:100%;max-width:800px;"><thead><tr><th>DOF</th><th>Mag r</th><th>Phase r</th><th>Max |diff|</th><th>Max Phase Diff</th><th>Signal</th></tr></thead><tbody><tr><td>Surge</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Sway</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Heave</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Roll</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Pitch</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Yaw</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>0</td><td>0.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr></tbody></table><h3 style="margin-top:1em;">Hydrodynamic Coefficients</h3><table style="width:100%;max-width:700px;"><thead><tr><th>Matrix</th><th>Min Diagonal r</th><th>Min Off-Diag r</th><th>Min Overall r</th></tr></thead><tbody><tr><td>Added Mass</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr><tr><td>Radiation Damping</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr></tbody></table><p style="font-size:0.85em;color:#777;">See <a href="#hydro-coefficients">full 6&times;6 heatmaps</a> below.</p><h3 style="margin-top:1em;">Semantic Equivalence</h3><p style="margin:0.3em 0;">56/71 match, <span style="color:#e74c3c;font-weight:600;">6 significant</span>, 0 convention, 9 cosmetic</p><ul style="margin:0.3em 0 0 1em;font-size:0.9em;"><li><code>DivideNonPlanarPanels</code>: False vs True</li><li><code>QuadraticLoadControlSurface</code>: True vs False</li><li><code>Bodies[0].BodyControlSurfaceMeshFileName</code>: PyramidZC08.csf vs MISSING</li><li><code>Bodies[0].BodyControlSurfaceMeshFormat</code>: Wamit csf vs MISSING</li><li><code>Bodies[0].BodyControlSurfaceMeshLengthUnits</code>: m vs MISSING</li><li><code>Bodies[0].BodyControlSurfaceType</code>: Defined by mesh file vs MISSING</li></ul><details style="margin-top:0.5em;font-size:0.85em;color:#777;"><summary>9 cosmetic + 0 convention diffs (no solver effect)</summary><ul style="margin:0.3em 0 0 1em;"><li><code>FreeSurfaceMeshPen</code>: [1, 'Solid', 'Aqua'] vs MISSING</li><li><code>InteriorSurfacePanelsPen</code>: [1, 'Solid', 'Red'] vs MISSING</li><li><code>PreferredQuadraticLoadCalculationMethod</code>: Pressure integration vs MISSING</li><li><code>QTFMaxCrossingAngle</code>: 180 vs MISSING</li><li><code>QTFMinCrossingAngle</code>: 0 vs MISSING</li><li><code>QuadraticLoadPressureIntegration</code>: True vs False</li><li><code>Bodies[0].BodyMeshFileName</code>: PyramidZC08.gdf vs pyramid_zc08.gdf</li><li><code>Bodies[0].BodyName</code>: Body1 vs Pyramid_ZC08</li><li><code>Bodies[0].BodyOrcaFlexImportSymmetry</code>: Use global mesh symmetry vs None</li></ul><p style='margin:0.3em 0 0 0.5em;font-style:italic;'>Cosmetic: GUI pens, naming, output flags. Convention: same physics, different representation (e.g. freq vs period). QTF-related settings are dormant when QTF is disabled.</p></details>
 </div>
 <div class="section" id="hull-mesh">
 <h2>Hull Description & Mesh Quality</h2>
@@ -350,8 +351,8 @@
 <tr><td>Total keys compared</td><td>71</td></tr>
 </table>
 <div style='display:inline-block;padding:4px 16px;border-radius:4px;color:white;font-weight:bold;background:#e74c3c;margin-bottom:1em;'>6 SIGNIFICANT DIFF(S)</div>
-<h4>Significant Differences</h4><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td></tr><tr><td><code>QuadraticLoadControlSurface</code></td><td>True</td><td>False</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshFileName</code></td><td>PyramidZC08.csf</td><td>MISSING</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshFormat</code></td><td>Wamit csf</td><td>MISSING</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshLengthUnits</code></td><td>m</td><td>MISSING</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceType</code></td><td>Defined by mesh file</td><td>MISSING</td></tr></table>
-<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (9)</summary><table style='max-width:800px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td></tr><tr><td><code>Bodies[0].BodyMeshFileName</code></td><td>PyramidZC08.gdf</td><td>pyramid_zc08.gdf</td></tr><tr><td><code>Bodies[0].BodyName</code></td><td>Body1</td><td>Pyramid_ZC08</td></tr><tr><td><code>Bodies[0].BodyOrcaFlexImportSymmetry</code></td><td>Use global mesh symmetry</td><td>None</td></tr></table></details>
+<h4>Significant Differences</h4><table style='max-width:1000px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th><th style='text-align:left'>Comment</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td><td style='color:#777;font-style:italic;'>Splits non-planar panels into triangles; no effect on planar meshes but matters for curved geometry</td></tr><tr><td><code>QuadraticLoadControlSurface</code></td><td>True</td><td>False</td><td style='color:#777;font-style:italic;'>Solver parameter difference</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshFileName</code></td><td>PyramidZC08.csf</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Solver parameter difference</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshFormat</code></td><td>Wamit csf</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Solver parameter difference</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceMeshLengthUnits</code></td><td>m</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Solver parameter difference</td></tr><tr><td><code>Bodies[0].BodyControlSurfaceType</code></td><td>Defined by mesh file</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Solver parameter difference</td></tr></table>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (9)</summary><table style='max-width:1000px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th><th style='text-align:left'>Comment</th></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>Bodies[0].BodyMeshFileName</code></td><td>PyramidZC08.gdf</td><td>pyramid_zc08.gdf</td><td style='color:#777;font-style:italic;'>Different filename, same mesh geometry</td></tr><tr><td><code>Bodies[0].BodyName</code></td><td>Body1</td><td>Pyramid_ZC08</td><td style='color:#777;font-style:italic;'>Label only; no solver effect</td></tr><tr><td><code>Bodies[0].BodyOrcaFlexImportSymmetry</code></td><td>Use global mesh symmetry</td><td>None</td><td style='color:#777;font-style:italic;'>OrcaFlex import setting; not a solver parameter</td></tr></table></details>
 <h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (.owd)</h3>
 <p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the original .owd project via SaveData(). This is the ground truth — the exact parameters used by the manually-configured OrcaWave project.</p>
 <div class="file-viewer">
@@ -367,7 +368,7 @@
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
 <span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.7\benchmark\Pyramid_input.yml</span>
-<span class="line"># Created: 10:53 PM on 2/15/2026</span>
+<span class="line"># Created: 4:53 AM on 2/17/2026</span>
 <span class="line"># User: ansystech</span>
 <span class="line"># Machine: ACMA-ANSYS05</span>
 <span class="line">---</span>
@@ -531,7 +532,7 @@
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.7\benchmark\Pyramid_input.yml
-# Created: 10:53 PM on 2/15/2026
+# Created: 4:53 AM on 2/17/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -720,7 +721,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
 <span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.7\benchmark\spec_orcawave\spec_input.yml</span>
-<span class="line"># Created: 10:53 PM on 2/15/2026</span>
+<span class="line"># Created: 4:53 AM on 2/17/2026</span>
 <span class="line"># User: ansystech</span>
 <span class="line"># Machine: ACMA-ANSYS05</span>
 <span class="line">---</span>
@@ -874,7 +875,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.7\benchmark\spec_orcawave\spec_input.yml
-# Created: 10:53 PM on 2/15/2026
+# Created: 4:53 AM on 2/17/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---

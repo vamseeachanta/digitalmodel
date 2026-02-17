@@ -1,6 +1,6 @@
 metadata:
   vessel_name: Body1
-  generated: '2026-02-15T22:55:55'
+  generated: '2026-02-17T04:55:55'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)

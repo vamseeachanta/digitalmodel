@@ -189,6 +189,8 @@ class DiffractionReportData(BaseModel):
     report_date: str = Field(
         default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )
+    report_title: Optional[str] = None
+    report_subtitle: Optional[str] = None
 
     # Hydrostatics
     hydrostatics: Optional[HydrostaticData] = None
@@ -939,7 +941,15 @@ def generate_diffraction_report(
     margin-bottom: 1.5em; border-radius: 6px;
   }}
   .report-header h1 {{ margin: 0 0 0.3em; font-size: 1.6em; }}
+  .report-header .subtitle {{ font-size: 1.1em; opacity: 0.9; margin-bottom: 0.5em; font-weight: 300; }}
   .report-header .meta {{ font-size: 0.9em; opacity: 0.85; }}
+  .nav-bar {{
+    margin-top: 1.2em; padding-top: 1em; border-top: 1px solid rgba(255,255,255,0.15);
+    display: flex; gap: 1.5em; font-size: 0.9em;
+  }}
+  .nav-bar a {{ color: #fff; text-decoration: none; opacity: 0.8; }}
+  .nav-bar a:hover {{ opacity: 1; text-decoration: underline; }}
+  .nav-bar .active {{ opacity: 1; font-weight: 600; border-bottom: 2px solid #3498db; }}
   .section {{
     background: #fff; border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -991,9 +1001,20 @@ def _build_header_html(data: DiffractionReportData) -> str:
     headings_str = ", ".join(f"{h:.1f}" for h in data.headings_deg)
     solvers_str = ", ".join(data.solver_names) if data.solver_names else "N/A"
 
+    title = data.report_title or f"Diffraction Analysis Report &mdash; {data.vessel_name}"
+    subtitle_html = (
+        f'<div class="subtitle">{data.report_subtitle}</div>'
+        if data.report_subtitle else ""
+    )
+
+    nav_html = ""
+    if data.benchmark_html_sections and "navigation" in data.benchmark_html_sections:
+        nav_html = data.benchmark_html_sections["navigation"]
+
     return f"""\
 <div class="report-header">
-  <h1>Diffraction Analysis Report &mdash; {data.vessel_name}</h1>
+  <h1>{title}</h1>
+  {subtitle_html}
   <div class="meta">
     Generated: {data.report_date} |
     Frequencies: {n_freq} |
@@ -1001,6 +1022,7 @@ def _build_header_html(data: DiffractionReportData) -> str:
     Solver(s): {solvers_str} |
     Source: {data.source_file or 'N/A'}
   </div>
+  {nav_html}
 </div>
 """
 
@@ -1417,12 +1439,19 @@ def _build_executive_summary_html(data: DiffractionReportData) -> str:
             f'<strong>Warnings & Alerts</strong><ul style="margin:0.3em 0;">{items}</ul></div>'
         )
 
+    benchmark_exec = ""
+    if data.benchmark_html_sections and data.benchmark_html_sections.get(
+        "benchmark_executive",
+    ):
+        benchmark_exec = data.benchmark_html_sections["benchmark_executive"]
+
     return f"""\
 <div class="section" id="executive-summary">
   <h2>Executive Summary</h2>
   {status_table}
   {peak_table}
   {warnings_html}
+  {benchmark_exec}
 </div>
 """
 
@@ -1952,6 +1981,8 @@ def build_report_data_from_solver_results(
 
     freq_rad_s = dr.added_mass.frequencies.values.tolist()
     periods_s = rad_per_s_to_period_s(np.array(freq_rad_s)).tolist()
+    # Extract headings from first solver (available in RAO structure)
+    headings_list = dr.raos.surge.headings.values.tolist()
 
     added_mass_diag: Dict[str, List[float]] = {}
     damping_diag: Dict[str, List[float]] = {}
@@ -1968,6 +1999,7 @@ def build_report_data_from_solver_results(
         solver_names=list(solver_results.keys()),
         frequencies_rad_s=freq_rad_s,
         periods_s=periods_s,
+        headings_deg=headings_list,
         added_mass_diagonal=added_mass_diag,
         damping_diagonal=damping_diag,
     )
