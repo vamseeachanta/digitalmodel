@@ -1,3 +1,7 @@
+> **DEPRECATED (2026-02-18)**: This document describes the agent-os / claude-flow framework which has been fully removed from the ecosystem. Content is preserved for historical reference only. Do not follow these instructions.
+
+---
+
 # Intelligent Agent Selection System
 
 ## Overview
