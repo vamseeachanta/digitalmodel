@@ -1,4 +1,4 @@
-&id001 !!python/object/new:pyintegrity.common.update_deep.AttributeDict
+&id001 !!python/object/new:digitalmodel.asset_integrity.common.update_deep.AttributeDict
 dictitems:
   API579Parameters:
     Age: 15
@@ -74,16 +74,16 @@ dictitems:
         Spherical: []
     RSFa: 0.9
   Analysis:
-    CustomInputFile: test_data/API579/12in_oil_cml31_b314.yml
-    DefaultInputFile: null
-    analysis_root_folder: test_data/API579
+    CustomInputFile: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579/12in_oil_cml31_b314.yml
+    DefaultInputFile: ~
+    analysis_root_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579
     basename: API579
-    cfg_array_file_names: null
+    cfg_array_file_names: ~
     file_name: app_API579_12in_oil_cml31_b314
     file_name_for_overwrite: app_API579_12in_oil_cml31_b314
-    log_folder: test_data/API579\logs\
-    result_folder: test_data/API579\results\
-    start_time: 2023-10-16 23:44:53.450764
+    log_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579\logs\
+    result_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579\results\
+    start_time: 2026-02-18 04:23:09.287540
   Default:
     Analysis:
       GML:
@@ -110,14 +110,14 @@ dictitems:
     Temperature:
       Ambient:
         Outer_Pipe: 50
-      Maximum: null
+      Maximum: ~
       Operating:
         Outer_Pipe: 82
     Torsion: 0
     Water_Depth: 2460.63
   DesignFactors:
     30 CFR Part 250:
-      2019: null
+      2019: ~
       release_date: 2019
       internal_pressure:
         Fd: 0.6
@@ -134,15 +134,15 @@ dictitems:
       internal_pressure:
         Fd: 0.6
     API RP 16Q:
-      1993: null
+      1993: ~
       release_date: 1993
       external_pressure:
-        Fd: null
+        Fd: ~
         cross_reference: API TR 5C3-2018
         section: 5.5
     API RP 16Q-1993:
       external_pressure:
-        Fd: null
+        Fd: ~
         cross_reference: API TR 5C3-2018
         section: 5.5
     API RP 16Q-2017:
@@ -196,20 +196,20 @@ dictitems:
     Pressure: 0.6
     TemperatureDerating: 1.0
   Geometry:
-    AssessmentLengthCeilingFactor_Circumference: null
+    AssessmentLengthCeilingFactor_Circumference: ~
     AssessmentLengthCeilingFactor_Length: 0.5
     CorrosionAllowance: 0.0
     DesignWT: 0.35
-    NominalID: null
+    NominalID: ~
     NominalOD: 12.75
     StartWTFactor: 1
     tmin: 0.1
-  Inner_Pipe: null
+  Inner_Pipe: ~
   LML:
     LTA:
     - Contour:
-        xlim: null
-        ylim: null
+        xlim: ~
+        ylim: ~
         zlim:
         - 0.538
         - 0.75
@@ -220,18 +220,18 @@ dictitems:
       - 0.04
       - 0.06
       FCANonFlawRatio: 0.25
-      FCAc: null
-      FCAs: null
+      FCAc: ~
+      FCAs: ~
       Label: cml28
       Lmsd: 1.45
       MtType: Cylindrical
-      c: null
+      c: ~
       cIndex:
       - 4
       - 8
       index_col: 0
       io: tests/test_data/API579/12in_oil_cml31.xlsx
-      s: null
+      s: ~
       sIndex:
       - 4
       - 8
@@ -241,18 +241,18 @@ dictitems:
   Material:
     E: 30000000.0
     Poissionsratio: 0.3
-    SMUS: null
+    SMUS: ~
     SMYS: 30000
     Steel:
       E: 30000000.0
       Grades:
         API 5L X65:
-          Reference: null
+          Reference: ~
           SMUS: 77500
           SMYS: 65300
         API 5L X70:
-          Reference: null
-          SMUS: null
+          Reference: ~
+          SMUS: ~
           SMYS: 70300
       Poissionsratio: 0.3
       Rho: 0.2817929
@@ -267,14 +267,14 @@ dictitems:
     Geometry:
       Corrosion_Allowance: 0
       Design_WT: 1.28
-      Nominal_ID: 5.130000000000001
+      Nominal_ID: ~
       Nominal_OD: 7.69
       tmin: 0.97
     Manufacturing:
       Coupling Mass Ratio: 0.0
     Material:
-      Buoyancy: null
-      Insulation: null
+      Buoyancy: ~
+      Insulation: ~
       Material: Steel
       Material_Grade: API 5L X65
       WeldFactor:
@@ -303,8 +303,8 @@ dictitems:
       - 20000
   ReadingSets:
   - Contour:
-      xlim: null
-      ylim: null
+      xlim: ~
+      ylim: ~
       zlim:
       - 0.0
       - 0.3
@@ -322,7 +322,7 @@ dictitems:
     skipfooter: 0
     skiprows: 0
   Result:
-    Exception: LML Level 1 and 2 are failed.
+    Exception: ''
   basename: API579
   default:
     Analysis:
@@ -343,7 +343,7 @@ dictitems:
         output: true
     log_level: DEBUG
     settings:
-      AssessmentLengthCeilingFactor_Circumference: null
+      AssessmentLengthCeilingFactor_Circumference: ~
       AssessmentLengthCeilingFactor_Length: 1.0
       CorrosionAllowance: 0.0
       StartWTFactor: 1

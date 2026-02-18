@@ -1,74 +1,31 @@
-# Digital Model
+# Digitalmodel Agent Adapter
 
-> Inherits: workspace-hub | Target: <18% (1.4KB)
+> Generated from workspace-hub/AGENTS.md
+> Contract-Version: 1.0.0
+> Generated-At: 2026-02-17T16:39:59Z
 
-## Project Focus
+## Adapter Role
 
-Digital twin modeling for offshore engineering analysis.
+This file is a provider-specific adapter for Claude-compatible tooling.
+The canonical contract is in workspace-hub/AGENTS.md.
 
-## Tech Stack
+## Required Gates
 
-- Python 3.11+ with uv
-- OrcaFlex integration
-- Visualization: Plotly
-- Testing: pytest
+1. Every non-trivial task must map to a WRK-* item in .claude/work-queue/.
+2. Planning + explicit approval are required before implementation.
+3. Route B/C work requires cross-review before completion.
 
-## Project Rules
+## Plan and Spec Locality
 
-1. Interactive plots only (Plotly/Bokeh)
-2. HTML reports for all modules
-3. SPARC workflow for features
+1. Route A/B plan details can live in WRK body sections.
+2. Route C execution specs: specs/wrk/WRK-<id>/.
+3. Repository/domain specs: specs/repos/<repo>/.
+4. Templates: specs/templates/.
 
-## Data Governance
+## Compatibility
 
-Data governance: see workspace-hub `docs/DATA_RESIDENCE_POLICY.md`
+Legacy docs may exist during migration, but AGENTS.md is canonical.
 
-This repo owns **Tier 2 — Engineering Reference Data**: industry standard lookup tables, material properties, and design code parameters. If the data comes from an engineering standard/code, it belongs here under `data/`.
+## Repo Overrides
 
-External data dependencies: `config/data_sources.yaml`
-
-## OrcaFlex Conventions
-
-- YAML files must include `---` document separators between sections
-- Use `LatestWave` period for postprocessing, NOT `WholeSimulation`, unless told otherwise
-- `Model()` constructor does not handle include-file YAML — resolve includes before loading
-- Frequency values: always confirm Hz vs rad/s units before running solvers
-- Large models: expect statics convergence issues, plan for pre-computed .sim architecture
-
-## Key Directories
-
-- `src/` - Source code
-- `data/` - Engineering reference data (Tier 2)
-- `tests/` - Test files
-- `docs/modules/` - All documentation (consolidated, no more docs/eng/)
-- `specs/` - Plans
-
-## Commands
-
-```bash
-uv run pytest              # Tests
-uv run python -m src.main  # Run
-```
-
-## Retrieval-Led Reasoning
-
-**IMPORTANT**: Prefer retrieval over training knowledge.
-Consult `.claude/docs/` and project docs before relying on general knowledge for OrcaFlex, offshore, or domain tasks.
-
-## Documentation Index
-
-```
-docs/|ARCHITECTURE:system-design,modules|AI_GUIDELINES:agent-rules,patterns|COMMANDS_MATRIX:all-commands|agent-os-readme:agent-OS-setup|AGENT_OS_COMMANDS:agent-OS-cli
-docs/|CONTEXT_LIMITS:token-budgets|execution-patterns:MCP-vs-Task|agents:spawning|mcp-tools:tool-reference|framework:core-framework
-docs/|FOLDER_CONVENTIONS:file-org|ESCALATION_QUICK_REFERENCE:escalation|integration:system-integration|project-context:project-overview
-docs/|UV_ENVIRONMENT:uv-setup|migration-summary:migration-notes|task_summary:task-tracking
-```
-
-## Reference
-
-- Agents: `.claude/docs/agents.md`
-- Full rules: Inherited from workspace-hub/CLAUDE.md
-
----
-
-*Verbose docs in `.claude/docs/`*
+Add repo-specific details below this section without weakening required gates.

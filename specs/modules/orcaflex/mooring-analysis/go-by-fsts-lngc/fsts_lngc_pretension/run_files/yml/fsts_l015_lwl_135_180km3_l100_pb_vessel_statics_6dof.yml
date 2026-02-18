@@ -1,7 +1,0 @@
-﻿BaseFile: ../../../fsts_l015_lwl_180km3_l100_pb_20_lines.yml
-
-includefile: includefile_general_short_run.yml
-includefile: includefile_vessel_statics_6dof.yml
-
-includefile: includefile_fsts_l015_lwl_135_180km3_l100_pb_vessel_statics_6dof_mooring_line_length.yml
-includefile: ../../../env/env_005yr_135deg.yml
