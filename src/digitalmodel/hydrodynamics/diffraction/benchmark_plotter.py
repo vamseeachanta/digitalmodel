@@ -1012,6 +1012,113 @@ class BenchmarkPlotter:
             conv_diffs = [d for d in diffs if d["level"] == "convention"]
             cos_diffs = [d for d in diffs if d["level"] == "cosmetic"]
 
+            # Comments explaining why each key is classified this way
+            _KEY_COMMENTS: Dict[str, str] = {
+                # Significant
+                "DivideNonPlanarPanels": (
+                    "Splits non-planar panels into triangles; "
+                    "no effect on planar meshes but matters "
+                    "for curved geometry"
+                ),
+                # Convention
+                "WavesReferredToBy": (
+                    "Same frequencies, different unit label"
+                ),
+                "PeriodOrFrequency": (
+                    "Same frequency grid expressed as "
+                    "rad/s vs period (s)"
+                ),
+                # Cosmetic — QTF dormant
+                "PreferredQuadraticLoadCalculationMethod": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "QTFMinCrossingAngle": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "QTFMaxCrossingAngle": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "QuadraticLoadPressureIntegration": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "QTFCalculationMethod": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "QTFFrequencyTypes": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                "IncludeMeanDriftFullQTFs": (
+                    "QTF setting; dormant when QTF disabled"
+                ),
+                # Cosmetic — output flags
+                "OutputPanelPressures": (
+                    "Output flag; no effect on RAO results"
+                ),
+                "OutputPanelVelocities": (
+                    "Output flag; no effect on RAO results"
+                ),
+                # Cosmetic — field points
+                "FieldPointX, FieldPointY, FieldPointZ": (
+                    "Pressure monitoring points; "
+                    "not used in RAO calculation"
+                ),
+                # Cosmetic — GUI pens
+                "FreeSurfaceMeshPen": "GUI display color only",
+                "InteriorSurfacePanelsPen": "GUI display color only",
+                "BodyMeshPen": "GUI display color only",
+                "WaterlinePen": "GUI display color only",
+                "DampingLidMeshPen": "GUI display color only",
+                # Cosmetic — naming / identity
+                "BodyName": "Label only; no solver effect",
+                "BodyMeshFileName": (
+                    "Different filename, same mesh geometry"
+                ),
+                "BodyOrcaFlexImportLength": (
+                    "OrcaFlex GUI import hint; "
+                    "not used by OrcaWave solver"
+                ),
+                "BodyOrcaFlexImportSymmetry": (
+                    "OrcaFlex import setting; "
+                    "not a solver parameter"
+                ),
+                "DampingLidMeshFileName": (
+                    "Different filename; same lid geometry"
+                ),
+                # Cosmetic — OrcaWave internal defaults
+                "ComputationStrategy": (
+                    "OrcaWave internal default; "
+                    "not configurable via spec"
+                ),
+                "EnableMultibodyConstraints": (
+                    "OrcaWave internal default; "
+                    "not configurable via spec"
+                ),
+                "BodyOriginType": (
+                    "OrcaWave internal default; "
+                    "not configurable via spec"
+                ),
+                "BodyVolumeWarningLevel": (
+                    "OrcaWave internal default; "
+                    "not configurable via spec"
+                ),
+            }
+
+            # Default comments by level
+            _LEVEL_DEFAULTS: Dict[str, str] = {
+                "significant": "Solver parameter difference",
+                "convention": "Same physics, different representation",
+                "cosmetic": "No solver effect",
+            }
+
+            def _comment_for(d: Dict[str, Any]) -> str:
+                # Strip Bodies[N]. prefix for lookup
+                key = d["key"]
+                bare = key.split(".")[-1] if "." in key else key
+                return _KEY_COMMENTS.get(
+                    bare,
+                    _LEVEL_DEFAULTS.get(d["level"], ""),
+                )
+
             def _render_diff_table(
                 items: List[Dict[str, Any]], title: str,
                 collapsed: bool = False,
@@ -1019,20 +1126,24 @@ class BenchmarkPlotter:
                 if not items:
                     return
                 header = (
-                    "<table style='max-width:800px;font-size:12px;"
+                    "<table style='max-width:1000px;font-size:12px;"
                     "margin-top:0.5em;'>"
                     "<tr><th style='text-align:left'>Key</th>"
                     "<th style='text-align:left'>OrcaWave (.owd)</th>"
                     "<th style='text-align:left'>OrcaWave (spec.yml)</th>"
+                    "<th style='text-align:left'>Comment</th>"
                     "</tr>"
                 )
                 rows = ""
                 for d in items:
+                    comment = html_mod.escape(_comment_for(d))
                     rows += (
                         f"<tr>"
                         f"<td><code>{html_mod.escape(d['key'])}</code></td>"
                         f"<td>{html_mod.escape(d['owd'])}</td>"
                         f"<td>{html_mod.escape(d['spec'])}</td>"
+                        f"<td style='color:#777;font-style:italic;'>"
+                        f"{comment}</td>"
                         f"</tr>"
                     )
                 if collapsed:
@@ -1498,6 +1609,74 @@ class BenchmarkPlotter:
                 ))
 
         return "\n".join(parts)
+
+    @staticmethod
+    def build_coupling_heatmap_html(
+        output_dir: Path,
+        am_corr: list[list[float]],
+        damp_corr: list[list[float]],
+        body_i_name: str,
+        body_j_name: str,
+    ) -> Path:
+        """Render 6x6 correlation heatmaps for coupling matrices (AM & Damp)."""
+        import html as html_mod
+
+        dof_labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+
+        # Convert list of lists to dict for _render_6x6_matrix
+        def _to_dict(matrix):
+            d = {}
+            for i in range(6):
+                for j in range(6):
+                    d[(i + 1, j + 1)] = matrix[i][j]
+            return d
+
+        am_dict = _to_dict(am_corr)
+        damp_dict = _to_dict(damp_corr)
+
+        am_table = BenchmarkPlotter._render_6x6_matrix(am_dict, dof_labels)
+        damp_table = BenchmarkPlotter._render_6x6_matrix(damp_dict, dof_labels)
+
+        title = f"Coupling: {body_i_name} \u2194 {body_j_name}"
+        # Sanitize filename
+        safe_i = "".join(c for c in body_i_name if c.isalnum() or c in "_-")
+        safe_j = "".join(c for c in body_j_name if c.isalnum() or c in "_-")
+        filename = f"coupling_{safe_i}_{safe_j}".lower()
+
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{html_mod.escape(title)}</title>
+<style>
+  body {{ margin:20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+  h1 {{ font-size: 1.5em; margin-bottom: 0.5em; }}
+  h2 {{ font-size: 1.2em; margin-top: 1.5em; color: #555; }}
+  .container {{ max-width: 800px; margin: 0 auto; }}
+  table {{ border-collapse: collapse; width: 100%; max-width: 600px; margin-bottom: 20px; }}
+  th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 0.9em; }}
+  th {{ background-color: #f2f2f2; }}
+  .solver-table td {{ padding: 6px; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>{html_mod.escape(title)}</h1>
+  <p>Correlation of frequency-dependent coupling coefficients between .owd and spec.yml results.
+     Values near 1.000 indicate identical coefficients.</p>
+
+  <h2>Added Mass Coupling</h2>
+  {am_table}
+
+  <h2>Radiation Damping Coupling</h2>
+  {damp_table}
+</div>
+</body>
+</html>"""
+
+        path = output_dir / f"{filename}.html"
+        path.write_text(html, encoding="utf-8")
+        return path
 
     @staticmethod
     def _render_6x6_matrix(
