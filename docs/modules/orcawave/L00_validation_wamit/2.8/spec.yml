@@ -37,6 +37,7 @@ solver_options:
   remove_irregular_frequencies: false
   qtf_calculation: false
   precision: double
+  divide_non_planar_panels: false
 
 metadata:
   project: OrcaWave WAMIT Validation

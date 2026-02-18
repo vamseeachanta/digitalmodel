@@ -6,13 +6,13 @@ SolveType: Potential and source formulations
 LoadRAOCalculationMethod: Both
 PreferredLoadRAOCalculationMethod: Haskind
 QuadraticLoadPressureIntegration: No
-QuadraticLoadControlSurface: No
+QuadraticLoadControlSurface: Yes
 QuadraticLoadMomentumConservation: No
 HasResonanceDampingLid: No
 LengthTolerance: 1.0e-07
 WaterlineZTolerance: 1.0e-06
 WaterlineGapTolerance: 1.0e-06
-DivideNonPlanarPanels: Yes
+DivideNonPlanarPanels: No
 LinearSolverMethod: Direct LU
 OutputPanelPressures: No
 OutputPanelVelocities: No

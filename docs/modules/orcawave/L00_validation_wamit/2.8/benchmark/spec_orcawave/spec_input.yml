@@ -2,7 +2,7 @@
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.8\benchmark\spec_orcawave\spec_input.yml
-# Created: 4:53 AM on 2/17/2026
+# Created: 10:40 PM on 2/17/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -25,7 +25,7 @@ PreferredQuadraticLoadCalculationMethod: Control surface
 LengthTolerance: 100e-9
 WaterlineZTolerance: 1e-6
 WaterlineGapTolerance: 1e-6
-DivideNonPlanarPanels: Yes
+DivideNonPlanarPanels: No
 LinearSolverMethod: Direct LU
 ValidatePanelArrangement: No
 BodyVolumeWarningLevel: 1e-12
