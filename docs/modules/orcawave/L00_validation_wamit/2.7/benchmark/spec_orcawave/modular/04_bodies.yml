@@ -18,6 +18,10 @@ Bodies:
   BodyMeshLengthUnits: m
   BodyMeshSymmetry: None
   BodyAddInteriorSurfacePanels: No
+  BodyControlSurfaceType: Defined by mesh file
+  BodyControlSurfaceMeshFileName: pyramid_zc08.csf
+  BodyControlSurfaceMeshFormat: Wamit csf
+  BodyControlSurfaceMeshLengthUnits: m
   BodyOrcaFlexImportSymmetry: None
   BodyHydrostaticIntegralMethod: Standard
   BodyHydrostaticStiffnessMethod: Displacement

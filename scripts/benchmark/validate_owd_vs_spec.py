@@ -353,12 +353,13 @@ def _extract_from_diffraction(
 
 def solve_owd(
     case_id: str,
-) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path]]:
+) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict]]:
     """Load .owd file, run Calculate(), and extract results.
 
     Returns
     -------
-    Tuple of (results_by_body, coupling_matrices, Path to input .yml or None).
+    Tuple of (results_by_body, coupling_matrices, Path to input .yml or None,
+    panel_geometry_data list from OrcFxAPI panelGeometry).
     """
     import OrcFxAPI
 
@@ -421,7 +422,20 @@ def solve_owd(
     except Exception as e:
         print(f"  [WARN] Coupling extraction failed: {e}")
 
-    return results_by_body, coupling, owd_yml_path
+    # Extract panel geometry (symmetry-expanded, full mesh)
+    panel_geometry_data: list[dict] = []
+    try:
+        for p in diff.panelGeometry:
+            panel_geometry_data.append({
+                "area": p["area"],
+                "centroid": list(p["centroid"]),
+                "objectName": p["objectName"],
+            })
+        print(f"  panelGeometry: {len(panel_geometry_data)} panels")
+    except Exception as exc:
+        print(f"  [WARN] panelGeometry extraction failed: {exc}")
+
+    return results_by_body, coupling, owd_yml_path, panel_geometry_data
 
 
 def solve_spec(
@@ -635,6 +649,7 @@ def run_comparison(
     case_id: str,
     owd_yml_path: Optional[Path] = None,
     spec_yml_path: Optional[Path] = None,
+    panel_geometry_data: Optional[list] = None,
 ) -> dict:
     """Compare .owd ground truth against spec.yml results for all bodies."""
     import json
@@ -747,6 +762,10 @@ def run_comparison(
         if sem:
             first_key = next(iter(metadata))
             metadata[first_key]["_semantic_equivalence"] = sem
+
+        # Attach panel geometry for mesh schematic (OrcFxAPI symmetry-expanded)
+        if panel_geometry_data and "OrcaWave (.owd)" in metadata:
+            metadata["OrcaWave (.owd)"]["panel_geometry"] = panel_geometry_data
 
         solver_results = {
             "OrcaWave (.owd)": owd_r,
@@ -868,6 +887,7 @@ def run_comparison(
         index_path = _build_multibody_index_html(
             out_dir, case_id, case, bodies,
             dof_summary_by_body, coupling_report,
+            panel_geometry_data=panel_geometry_data,
         )
         print(f"\n  Combined overview: {index_path}")
 
@@ -885,6 +905,7 @@ def _build_multibody_index_html(
     bodies: list[dict],
     dof_summary_by_body: dict,
     coupling_report: dict,
+    panel_geometry_data: Optional[list] = None,
 ) -> Path:
     """Build a combined multi-body overview page at benchmark/index.html."""
     import html as html_mod
@@ -994,6 +1015,30 @@ def _build_multibody_index_html(
         '<p style="color:#888">No coupling data available.</p>'
     )
 
+    # --- Panel geometry scatter (OrcFxAPI panelGeometry) ---
+    geometry_section_html = ""
+    if panel_geometry_data:
+        try:
+            scatter = BenchmarkPlotter._build_panel_scatter_html(
+                panel_geometry_data,
+                title="Multi-Body Panel Geometry (all bodies)",
+                height=500,
+            )
+            geometry_section_html = f"""
+  <div class="section">
+    <h2>Panel Geometry</h2>
+    <p style="color:#555;font-size:0.9em">
+      OrcFxAPI panelGeometry &mdash; symmetry-expanded, {len(panel_geometry_data)} panels total.
+      Colour-coded by body. Hover for panel area.
+    </p>
+    {scatter}
+  </div>"""
+        except Exception as exc:
+            geometry_section_html = (
+                f'<div class="section"><h2>Panel Geometry</h2>'
+                f'<p style="color:#c0392b">Could not render panel geometry: {exc}</p></div>'
+            )
+
     # --- Navigation ---
     nav_links = []
     for b in bodies:
@@ -1078,6 +1123,7 @@ def _build_multibody_index_html(
        coefficients across all frequencies.</p>
     {coupling_html}
   </div>
+{geometry_section_html}
 </div>
 </body>
 </html>"""
@@ -1145,6 +1191,8 @@ def _compare_orcawave_ymls(
         "BodyMeshFileName",
         # Damping lid mesh — different file for same lid geometry
         "DampingLidMeshFileName", "DampingLidMeshFormat", "DampingLidMeshLengthUnits",
+        # Control surface mesh — different file naming for same geometry (e.g. Ellipsoid0096.csf vs ellipsoid_96p.csf)
+        "BodyControlSurfaceMeshFileName", "BodyControlSurfaceMeshFormat", "BodyControlSurfaceMeshLengthUnits",
         # OrcaFlex import hints — only used when importing to OrcaFlex,
         # not during the OrcaWave solve itself
         "BodyOrcaFlexImportLength", "BodyOrcaFlexImportSymmetry",
@@ -1164,6 +1212,9 @@ def _compare_orcawave_ymls(
         "QuadraticLoadPressureIntegration",
         "QTFCalculationMethod", "QTFFrequencyTypes",
         "IncludeMeanDriftFullQTFs",
+        # Momentum conservation is a quadratic load method choice — inactive when
+        # no quadratic loads are computed (potential-only or non-QTF solves)
+        "QuadraticLoadMomentumConservation",
     }
 
     # Convention: keys where both sides hold equivalent data expressed
@@ -1361,7 +1412,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
 
     # Step 1: Solve .owd
     print("\n[Step 1] Solving .owd ground truth...")
-    owd_by_body, coupling_owd, owd_yml_path = solve_owd(case_id)
+    owd_by_body, coupling_owd, owd_yml_path, panel_geometry_data = solve_owd(case_id)
     if not owd_by_body:
         result["status"] = "owd_failed"
         return result
@@ -1400,6 +1451,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
             case_id,
             owd_yml_path=owd_yml_path,
             spec_yml_path=spec_yml_path,
+            panel_geometry_data=panel_geometry_data,
         )
         result.update(comp_result)
         result["status"] = "completed"

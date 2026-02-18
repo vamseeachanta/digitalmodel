@@ -11,6 +11,9 @@ vessel:
     reference_point: [0.0, 0.0, 0.0]
     waterline_z: 0.0
     length_units: m
+  control_surface:
+    type: mesh
+    mesh_file: ../../../../../data/hull_library/panels/primitives/pyramid_zc08.csf
   inertia:
     mode: free_floating
     mass: 1.0
@@ -34,6 +37,7 @@ solver_options:
   remove_irregular_frequencies: false
   qtf_calculation: false
   precision: double
+  divide_non_planar_panels: false
 
 metadata:
   project: OrcaWave WAMIT Validation
