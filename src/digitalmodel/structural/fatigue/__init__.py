@@ -124,6 +124,12 @@ try:
 except ImportError:
     FREQUENCY_DOMAIN_AVAILABLE = False
 
+from .parametric_sweep import (
+    run_sweep,
+    compute_sensitivity,
+    generate_sweep_report,
+)
+
 from .analysis import (
     # Main analysis engine
     FatigueAnalysisEngine,
@@ -149,6 +155,9 @@ __all__ = [
     'StandardSNCurves', 'get_dnv_curve', 'get_api_curve', 'get_bs_curve',
     'MaterialProperties', 'MeanStressCorrection', 'ThicknessCorrection',
     'SNDataFitting', 'plot_sn_curve',
+
+    # Parametric Sweep (Phase 3)
+    'run_sweep', 'compute_sensitivity', 'generate_sweep_report',
 
     # Damage Accumulation
     'DamageAccumulationBase', 'LinearDamageAccumulation', 'ModifiedMinersRule',
