@@ -46,7 +46,7 @@ data/test_hash.txt
 data/tracker_state.json
 data/workflows/checkpoints/test_bug_fix/checkpoint_latest.json
 data/workflows/checkpoints/test_bug_fix/checkpoint_test_20260107_003435.json
-modules/automation/agent_orchestrator.sh.backup
+scripts/automation/agent_orchestrator.sh.backup
 reports/TEST_SUMMARY.md
 reports/cache_stats.json
 reports/code_audit/CLI_TESTING_FRAMEWORK_STATUS.md

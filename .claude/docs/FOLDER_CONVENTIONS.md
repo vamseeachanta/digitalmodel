@@ -52,7 +52,7 @@ src/.../modules/    = HOW to implement (code level)
 |----------|----------|--------------|
 | `agents/orcaflex/` | `modules/orcaflex/` | Complementary (AI + utilities) |
 | `agents/` | `.claude/agents/` | Hierarchical (domain + framework) |
-| `skills/automation/` | `modules/automation/` | Orthogonal (docs + scripts) |
+| `skills/automation/` | `scripts/automation/` | Orthogonal (docs + scripts) |
 | `modules/orcaflex/` | `src/.../orcaflex/` | Different layers (config + code) |
 
 ## Runtime Folders (Not Tracked in Git)
