@@ -1,3 +1,8 @@
+---
+name: orcaflex-jumper-analysis
+description: Analyze OrcaFlex jumper configurations for static and dynamic response, loads, and acceptance checks. Use when assessing subsea jumper behavior, sensitivities, and design compliance.
+---
+
 # OrcaFlex Jumper Analysis Skill
 
 ## Description

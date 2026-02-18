@@ -1,3 +1,8 @@
+---
+name: model-selection
+description: Optimize AI model selection by matching task complexity, cost, latency, and quality targets. Use when choosing the most appropriate model tier for planning, coding, or review tasks.
+---
+
 # Model Selection Skill
 
 > Version: 1.0.0

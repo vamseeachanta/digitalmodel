@@ -1,3 +1,8 @@
+---
+name: legal-sanity-scan
+description: Run legal/compliance sanity checks on files and outputs to flag obvious policy, IP, and regulatory risks. Use when reviewing deliverables for legal red flags before sharing or publishing.
+---
+
 # Legal Sanity Scan Skill
 
 ## Description

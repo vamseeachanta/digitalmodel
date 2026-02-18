@@ -1,3 +1,8 @@
+---
+name: product-roadmap
+description: Build and maintain product roadmaps with priorities, milestones, dependencies, and delivery sequencing. Use when planning feature releases, aligning stakeholders, or updating strategic execution plans.
+---
+
 # Product Roadmap Skill
 
 > Version: 1.0.0

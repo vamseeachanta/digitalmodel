@@ -1,3 +1,8 @@
+---
+name: orcaflex-model-sanitization
+description: Sanitize and normalize OrcaFlex model files by fixing structural issues, inconsistent settings, and schema mismatches. Use when preparing models for reliable batch execution and downstream tooling.
+---
+
 # OrcaFlex Model Sanitization Skill
 
 ## Description

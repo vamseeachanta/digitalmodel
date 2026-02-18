@@ -1,3 +1,8 @@
+---
+name: usage-optimization
+description: Optimize AI usage patterns to reduce token cost, latency, and context waste while preserving output quality. Use when tuning prompts, workflows, and session-level efficiency.
+---
+
 # Usage Optimization Skill
 
 > Version: 1.0.0

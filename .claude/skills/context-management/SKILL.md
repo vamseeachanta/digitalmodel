@@ -1,3 +1,8 @@
+---
+name: context-management
+description: Manage CLAUDE/context files, runtime context limits, and context hygiene workflows. Use when validating context size budgets, archiving verbose state, or improving instruction quality across sessions.
+---
+
 # Context Management Skill
 
 > Version: 2.0.0
