@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -42,6 +43,31 @@ def test_yml_read_stream_merges_multiple_docs(tmp_path: Path) -> None:
     assert cfg["b"] == 2
     assert cfg["nested"]["x"] == 1
     assert cfg["nested"]["y"] == 3
+
+
+def test_yml_read_stream_raises_stopping_program_on_bad_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def raise_os_error(*_args, **_kwargs):
+        raise OSError("boom")
+
+    monkeypatch.setattr(builtins, "open", raise_os_error)
+    with pytest.raises(Exception, match="Stopping Program"):
+        yu.yml_read_stream("bad.yml")
+
+
+def test_ymlinput_ignores_bad_update_file_and_keeps_defaults(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    default_yml = tmp_path / "default.yml"
+    update_yml = tmp_path / "update.yml"
+    default_yml.write_text(yaml.safe_dump({"keep": 1, "nested": {"x": 2}}))
+    update_yml.write_text(":\n  - bad-yaml")
+
+    cfg = yu.ymlInput(str(default_yml), str(update_yml))
+    assert cfg["keep"] == 1
+    assert cfg["nested"]["x"] == 2
+    assert "Update Input file could not be loaded successfully" in capsys.readouterr().out
 
 
 def test_get_library_filename_returns_direct_existing_file(tmp_path: Path) -> None:
