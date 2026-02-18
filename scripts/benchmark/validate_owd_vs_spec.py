@@ -353,7 +353,7 @@ def _extract_from_diffraction(
 
 def solve_owd(
     case_id: str,
-) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict]]:
+) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict], Optional[Path]]:
     """Load .owd file, run Calculate(), and extract results.
 
     Returns
@@ -394,6 +394,7 @@ def solve_owd(
         print(f"  Saved: {owr_path.name}")
     except Exception as exc:
         print(f"  Could not save .owr: {exc}")
+        owr_path = None
 
     # Extract per-body results
     bodies = _get_bodies(case)
@@ -435,7 +436,7 @@ def solve_owd(
     except Exception as exc:
         print(f"  [WARN] panelGeometry extraction failed: {exc}")
 
-    return results_by_body, coupling, owd_yml_path, panel_geometry_data
+    return results_by_body, coupling, owd_yml_path, panel_geometry_data, owr_path
 
 
 def solve_spec(
@@ -650,6 +651,7 @@ def run_comparison(
     owd_yml_path: Optional[Path] = None,
     spec_yml_path: Optional[Path] = None,
     panel_geometry_data: Optional[list] = None,
+    owr_path: Optional[Path] = None,
 ) -> dict:
     """Compare .owd ground truth against spec.yml results for all bodies."""
     import json
@@ -766,6 +768,10 @@ def run_comparison(
         # Attach panel geometry for mesh schematic (OrcFxAPI symmetry-expanded)
         if panel_geometry_data and "OrcaWave (.owd)" in metadata:
             metadata["OrcaWave (.owd)"]["panel_geometry"] = panel_geometry_data
+
+        # Attach .owr path so report generator uses LoadResults() for correct headings
+        if owr_path and owr_path.exists() and "OrcaWave (.owd)" in metadata:
+            metadata["OrcaWave (.owd)"]["owr_path"] = str(owr_path)
 
         solver_results = {
             "OrcaWave (.owd)": owd_r,
@@ -1412,7 +1418,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
 
     # Step 1: Solve .owd
     print("\n[Step 1] Solving .owd ground truth...")
-    owd_by_body, coupling_owd, owd_yml_path, panel_geometry_data = solve_owd(case_id)
+    owd_by_body, coupling_owd, owd_yml_path, panel_geometry_data, owr_path = solve_owd(case_id)
     if not owd_by_body:
         result["status"] = "owd_failed"
         return result
@@ -1452,6 +1458,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
             owd_yml_path=owd_yml_path,
             spec_yml_path=spec_yml_path,
             panel_geometry_data=panel_geometry_data,
+            owr_path=owr_path,
         )
         result.update(comp_result)
         result["status"] = "completed"
