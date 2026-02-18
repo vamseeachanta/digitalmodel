@@ -262,6 +262,9 @@ hive-mind-prompt-*.txt
 # Project-Specific: OrcaFlex/OrcaWave
 # ==========================================
 
+# Projects directory (large cached simulation project files)
+projects/
+
 # Simulation files in projects
 projects/**/*.sim
 
@@ -329,3 +332,7 @@ benchmarks/results/
 benchmark_output/
 # OrcaFlex simulation files (large binary)
 docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim
+# .claude-flow state files — ecosystem removed 2026-02-18
+.claude-flow/
+.hive-mind/
+.swarm/
