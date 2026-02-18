@@ -1327,14 +1327,32 @@ class BenchmarkPlotter:
     def build_mesh_schematic_html(self) -> str:
         """Build 3D mesh schematic section for the benchmark report.
 
-        Loads mesh files from solver_metadata["mesh_path"] and creates
-        an interactive Plotly 3D visualization showing the panel mesh
-        with a waterline plane.
+        Primary: uses OrcFxAPI panelGeometry if available in solver_metadata
+        (symmetry-expanded, eliminates GDF path resolution issues).
+        Fallback: loads mesh files from solver_metadata["mesh_path"].
 
         Returns:
             HTML string with the mesh schematic section, or empty string
-            if no mesh paths are available.
+            if no mesh source is available.
         """
+        # --- Primary: OrcFxAPI panelGeometry (symmetry-expanded) ---
+        for solver in self._solver_names:
+            meta = self._solver_metadata.get(solver, {})
+            panel_geometry_data = meta.get("panel_geometry")
+            if panel_geometry_data:
+                scatter_html = self._build_panel_scatter_html(
+                    panel_geometry_data,
+                    title=f"Panel Geometry ({solver})",
+                )
+                n_panels = len(panel_geometry_data)
+                return (
+                    f"<h2>Panel Mesh Geometry</h2>\n"
+                    f'<p style="color:#555;font-size:0.9em">Source: OrcFxAPI panelGeometry '
+                    f'({n_panels} panels, symmetry-expanded)</p>\n'
+                    f"{scatter_html}"
+                )
+
+        # --- Fallback: GDF file loading ---
         # Collect mesh paths from solver metadata
         mesh_entries: List[tuple] = []  # (solver_name, mesh_path_str)
         for solver in self._solver_names:
@@ -1714,6 +1732,79 @@ class BenchmarkPlotter:
             rows.append("</tr>")
         rows.append("</table>")
         return "\n".join(rows)
+
+    @staticmethod
+    def _build_panel_scatter_html(
+        panel_geometry_data: list,
+        title: str = "Panel Geometry",
+        height: int = 400,
+    ) -> str:
+        """Build interactive 3D scatter of panel centroids from panelGeometry data.
+
+        Groups panels by objectName (body name), uses one colour per body.
+        Marker size scales with sqrt(area). Adds a semi-transparent waterplane at z=0.
+
+        Args:
+            panel_geometry_data: List of dicts with 'area', 'centroid', 'objectName'
+            title: Plot title
+            height: Figure height in pixels
+
+        Returns:
+            HTML div string (Plotly figure, no full_html wrapper)
+        """
+        import numpy as np
+        import plotly.graph_objects as go
+
+        # Group panels by body name
+        bodies_data: dict = {}
+        for p in panel_geometry_data:
+            name = p.get("objectName", "Body")
+            if name not in bodies_data:
+                bodies_data[name] = {"x": [], "y": [], "z": [], "area": []}
+            c = p["centroid"]
+            bodies_data[name]["x"].append(c[0])
+            bodies_data[name]["y"].append(c[1])
+            bodies_data[name]["z"].append(c[2])
+            bodies_data[name]["area"].append(p["area"])
+
+        colours = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+        traces: List[Any] = []
+        for i, (name, pts) in enumerate(bodies_data.items()):
+            sizes = [max(4.0, 12.0 * (a ** 0.5)) for a in pts["area"]]
+            traces.append(go.Scatter3d(
+                x=pts["x"], y=pts["y"], z=pts["z"],
+                mode="markers",
+                marker=dict(size=sizes, color=colours[i % len(colours)], opacity=0.7),
+                name=name,
+                text=[f"Area: {a:.3f} m\u00b2" for a in pts["area"]],
+                hovertemplate="%{text}<extra>%{fullData.name}</extra>",
+            ))
+
+        # Waterplane reference at z=0
+        all_x = [v for b in bodies_data.values() for v in b["x"]]
+        all_y = [v for b in bodies_data.values() for v in b["y"]]
+        if all_x and all_y:
+            xr = [min(all_x) * 1.1, max(all_x) * 1.1]
+            yr = [min(all_y) * 1.1, max(all_y) * 1.1]
+            traces.append(go.Surface(
+                x=[[xr[0], xr[1]], [xr[0], xr[1]]],
+                y=[[yr[0], yr[0]], [yr[1], yr[1]]],
+                z=[[0.0, 0.0], [0.0, 0.0]],
+                showscale=False, opacity=0.15,
+                colorscale=[[0, "#4fc3f7"], [1, "#4fc3f7"]],
+                name="Waterplane", showlegend=False,
+            ))
+
+        fig = go.Figure(data=traces)
+        fig.update_layout(
+            title=title, height=height,
+            scene=dict(
+                xaxis_title="X (m)", yaxis_title="Y (m)", zaxis_title="Z (m)",
+                aspectmode="data",
+            ),
+            margin=dict(l=0, r=0, t=40, b=0),
+        )
+        return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
     # ------------------------------------------------------------------
     # Raw RAO data tables (collapsible)

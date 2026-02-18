@@ -1772,9 +1772,14 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                         tip_parts.append(f"Phase r: {ph_corr:.8f}")
                     tip_parts.append(f"Max |diff|: {max_diff:.2e}")
                     tip_parts.append(f"Max phase diff: {ph_diff:.2f}°")
+                    if max_diff < 1e-6:
+                        tip_parts[0] += " [identical — Δ<1e-6]"
                     tooltip = "&#10;".join(tip_parts)
                     if max_diff < 1e-6:
-                        dof_cells.append(f'<td style="text-align:center;color:#9ca3af" title="{tooltip}">0.0</td>')
+                        # Trivially identical results: show correlation in green,
+                        # not "0.0" which is ambiguous and looks like zero correlation.
+                        corr_display = f"{corr:.6f}" if isinstance(corr, float) else "1.000000"
+                        dof_cells.append(f'<td style="text-align:center;color:#16a34a" title="{tooltip}">{corr_display}</td>')
                     elif isinstance(corr, float):
                         if corr >= 0.999:
                             color = "#16a34a"
