@@ -137,6 +137,10 @@ from .worked_examples import (
     generate_example_report,
     ExampleResult,
 )
+from .design_code_report import (
+    DesignCodeReport,
+    generate_design_code_report,
+)
 
 from .analysis import (
     # Main analysis engine
@@ -170,6 +174,9 @@ __all__ = [
     # Worked Examples (Phase 4)
     'pipeline_girth_weld', 'scr_touchdown', 'mooring_chain',
     'generate_example_report', 'ExampleResult',
+
+    # Design-Code Report Templates (Phase 5)
+    'DesignCodeReport', 'generate_design_code_report',
 
     # Damage Accumulation
     'DamageAccumulationBase', 'LinearDamageAccumulation', 'ModifiedMinersRule',
