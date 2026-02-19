@@ -1,6 +1,6 @@
 metadata:
   vessel_name: cylinder with moonpool
-  generated: '2026-02-17T22:42:09'
+  generated: '2026-02-18T16:41:02'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)

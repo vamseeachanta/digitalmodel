@@ -89,6 +89,14 @@ class BenchmarkPlotter:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self.x_axis = x_axis
         self._solver_metadata = solver_metadata or {}
+        # Auto-detect axis orientation: when headings outnumber frequencies,
+        # plot RAO vs heading with period as legend (prevents empty plots when
+        # nfreqs == 1 but nheadings is large, e.g. OrcaWave validation 2.8).
+        _first = self._solver_names[0]
+        _first_comp = self._solver_results[_first].raos.get_component(DOF_ORDER[0])
+        self._heading_x_axis: bool = _first_comp.headings.count > len(
+            _first_comp.frequencies.values
+        )
 
     # ------------------------------------------------------------------
     # Public API
@@ -373,37 +381,72 @@ class BenchmarkPlotter:
             else self._get_heading_indices(first_comp, headings)
         )
 
-        # Iterate headings first, then solvers — legend groups by heading
-        for hi in h_indices:
-            heading_label = f"{first_comp.headings.values[hi]:.0f}"
+        if self._heading_x_axis:
+            # Heading on x-axis; one trace per solver×period.
+            # mode=lines+markers so even a single-period case is visible.
             for si, solver in enumerate(self._solver_names):
                 style = self._get_solver_style(si)
                 comp: RAOComponent = getattr(
                     self._solver_results[solver].raos, dof_name,
                 )
-                x_vals = self._get_x_values(comp)
-                y_vals = (
-                    comp.magnitude[:, hi]
-                    if value_type == "amplitude"
-                    else comp.phase[:, hi]
-                )
-                trace_name = f"{solver} H{heading_label}"
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals,
-                        y=y_vals,
-                        mode="lines",
-                        name=trace_name,
-                        legendgroup=f"{solver}_{heading_label}",
-                        showlegend=show_legend,
-                        line=dict(
-                            dash=style["dash"],
-                            color=style["color_base"],
+                x_vals = comp.headings.values
+                nfreqs = len(comp.frequencies.values)
+                for fi in range(nfreqs):
+                    period_s = comp.frequencies.periods[fi]
+                    trace_name = f"{solver} {period_s:.2f}s"
+                    y_vals = (
+                        comp.magnitude[fi, :]
+                        if value_type == "amplitude"
+                        else comp.phase[fi, :]
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x_vals,
+                            y=y_vals,
+                            mode="lines+markers",
+                            name=trace_name,
+                            legendgroup=f"{solver}_{fi}",
+                            showlegend=show_legend,
+                            line=dict(
+                                dash=style["dash"],
+                                color=style["color_base"],
+                            ),
                         ),
-                    ),
-                    row=row,
-                    col=col,
-                )
+                        row=row,
+                        col=col,
+                    )
+        else:
+            # Iterate headings first, then solvers — legend groups by heading
+            for hi in h_indices:
+                heading_label = f"{first_comp.headings.values[hi]:.0f}"
+                for si, solver in enumerate(self._solver_names):
+                    style = self._get_solver_style(si)
+                    comp = getattr(
+                        self._solver_results[solver].raos, dof_name,
+                    )
+                    x_vals = self._get_x_values(comp)
+                    y_vals = (
+                        comp.magnitude[:, hi]
+                        if value_type == "amplitude"
+                        else comp.phase[:, hi]
+                    )
+                    trace_name = f"{solver} H{heading_label}"
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x_vals,
+                            y=y_vals,
+                            mode="lines",
+                            name=trace_name,
+                            legendgroup=f"{solver}_{heading_label}",
+                            showlegend=show_legend,
+                            line=dict(
+                                dash=style["dash"],
+                                color=style["color_base"],
+                            ),
+                        ),
+                        row=row,
+                        col=col,
+                    )
 
     # ------------------------------------------------------------------
     # Internal utilities
@@ -417,6 +460,8 @@ class BenchmarkPlotter:
 
     def _x_axis_label(self) -> str:
         """Human-readable label for the x-axis."""
+        if self._heading_x_axis:
+            return "Heading (deg)"
         if self.x_axis == "frequency":
             return "Frequency (rad/s)"
         return "Period (s)"
