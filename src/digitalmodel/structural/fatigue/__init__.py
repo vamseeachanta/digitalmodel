@@ -130,6 +130,18 @@ from .parametric_sweep import (
     generate_sweep_report,
 )
 
+from .worked_examples import (
+    pipeline_girth_weld,
+    scr_touchdown,
+    mooring_chain,
+    generate_example_report,
+    ExampleResult,
+)
+from .design_code_report import (
+    DesignCodeReport,
+    generate_design_code_report,
+)
+
 from .analysis import (
     # Main analysis engine
     FatigueAnalysisEngine,
@@ -158,6 +170,13 @@ __all__ = [
 
     # Parametric Sweep (Phase 3)
     'run_sweep', 'compute_sensitivity', 'generate_sweep_report',
+
+    # Worked Examples (Phase 4)
+    'pipeline_girth_weld', 'scr_touchdown', 'mooring_chain',
+    'generate_example_report', 'ExampleResult',
+
+    # Design-Code Report Templates (Phase 5)
+    'DesignCodeReport', 'generate_design_code_report',
 
     # Damage Accumulation
     'DamageAccumulationBase', 'LinearDamageAccumulation', 'ModifiedMinersRule',
