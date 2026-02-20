@@ -1,6 +1,6 @@
 metadata:
   vessel_name: test05_spheroid
-  generated: '2026-02-18T16:40:34'
+  generated: '2026-02-19T14:50:56'
   solver_names:
   - OrcaWave (.owd)
   - OrcaWave (spec.yml)

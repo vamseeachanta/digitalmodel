@@ -2,7 +2,7 @@
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
 # File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml
-# Created: 8:13 PM on 2/18/2026
+# Created: 10:02 PM on 2/19/2026
 # User: ansystech
 # Machine: ACMA-ANSYS05
 ---
@@ -37,8 +37,16 @@ WavesReferredToBy: frequency (rad/s)
 HasWaveSpectrumForDragLinearisation: No
 MorisonFluidVelocity: Undisturbed incident wave
 PeriodOrFrequency:
+  - 0.5
   - 1
+  - 1.5
+  - 2
+  - 2.5
+  - 3
   - 3.5
+  - 4
+  - 4.5
+  - 5
 WaveHeading:
   - 0
   - 30
@@ -58,7 +66,7 @@ Bodies:
     BodyMeshPosition: [0, 1.25, 0]
     BodyMeshAttitude: [0, 0, 0]
     BodyIncludedInAnalysis: Yes
-    BodyMeshFileName: Cylinder.gdf
+    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf
     BodyMeshFormat: Wamit gdf
     BodyMeshLengthUnits: m
     BodyMeshSymmetry: xz and yz planes
@@ -103,7 +111,7 @@ Bodies:
     BodyMeshPosition: [0, -0.5, 0]
     BodyMeshAttitude: [0, 0, 0]
     BodyIncludedInAnalysis: Yes
-    BodyMeshFileName: Ellipsoid.gdf
+    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Ellipsoid.gdf
     BodyMeshFormat: Wamit gdf
     BodyMeshLengthUnits: m
     BodyMeshSymmetry: xz and yz planes
@@ -152,7 +160,8 @@ DetectAndSkipFieldPointsInsideBodies: Yes
 QTFCalculationMethod: Both
 PreferredQTFCalculationMethod: Direct method
 FreeSurfacePanelledZoneType: Defined by mesh file
-FreeSurfacePanelledZoneMeshFileName: PanelledZoneHalf.fdf
+FreeSurfacePanelledZoneMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave
+  v11.0 files/PanelledZoneHalf.fdf
 FreeSurfacePanelledZoneMeshFormat: Wamit fdf
 FreeSurfacePanelledZoneMeshLengthUnits: m
 FreeSurfacePanelledZoneInnerRadius: 5
