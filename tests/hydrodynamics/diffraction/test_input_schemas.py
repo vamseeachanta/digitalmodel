@@ -86,6 +86,30 @@ class TestDiffractionSpecValidation:
         env = EnvironmentSpec(water_depth="infinite")
         assert env.water_depth == "infinite"
 
+    def test_water_density_rejects_air_density(self):
+        """1.0 kg/m³ (air) must be rejected — likely a t/m³ unit error."""
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
+        with pytest.raises(Exception, match="kg/m³"):
+            EnvironmentSpec(water_depth=100.0, water_density=1.0)
+
+    def test_water_density_rejects_tonnes_per_m3(self):
+        """1.025 (seawater in t/m³) must be rejected — unit error."""
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
+        with pytest.raises(Exception, match="kg/m³"):
+            EnvironmentSpec(water_depth=100.0, water_density=1.025)
+
+    def test_water_density_accepts_fresh_water(self):
+        """1000.0 kg/m³ (fresh water) must be accepted."""
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
+        env = EnvironmentSpec(water_depth=100.0, water_density=1000.0)
+        assert env.water_density == 1000.0
+
+    def test_water_density_accepts_seawater(self):
+        """1025.0 kg/m³ (standard seawater) must be accepted."""
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
+        env = EnvironmentSpec(water_depth=100.0, water_density=1025.0)
+        assert env.water_density == 1025.0
+
     def test_missing_mass_raises(self):
         """Vessel inertia must include mass."""
         from digitalmodel.hydrodynamics.diffraction.input_schemas import VesselInertia
