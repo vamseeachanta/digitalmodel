@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import base64
 import cmath
 import math
 from pathlib import Path
@@ -69,20 +68,6 @@ CASES: dict[str, dict] = {
         "label": "Multi-body Cylinder + Ellipsoid",
         "qtf_type": "diff_freq",
         "dofs": list(range(6)),  # All DOFs
-    },
-}
-
-# Reference screenshots from WAMIT validation paper — embedded side-by-side in HTML
-_REFERENCE_IMAGES: dict[str, dict] = {
-    "3.1": {
-        0: L00_DIR / "3.1/QTF_plot.png",
-    },
-    "3.2": {
-        0: L00_DIR / "3.2/comparison_1.png",
-        2: L00_DIR / "3.2/comparison_2.png",
-    },
-    "3.3": {
-        "global": L00_DIR / "3.3/Comparison_1.png",
     },
 }
 
@@ -660,43 +645,12 @@ def plot_diff_freq_all_dofs(
 # HTML embedding helpers
 # ---------------------------------------------------------------------------
 
-def _img_to_base64(path: Path | None) -> str | None:
-    """Encode an image file as a base64 data URI for self-contained HTML."""
-    if path is None or not path.exists():
-        return None
-    suffix = path.suffix.lower().lstrip(".")
-    mime = {
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-    }.get(suffix, "image/png")
-    data = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:{mime};base64,{data}"
+def _make_figure_section(title: str, fig_html: str) -> str:
+    """Wrap a Plotly inline figure in a styled card.
 
-
-def _make_figure_section(title: str, fig_html: str, ref_b64: str | None) -> str:
-    """Wrap a Plotly inline figure in a styled card with optional reference screenshot."""
-    _label_style = (
-        "font-size:0.72em;font-weight:700;letter-spacing:0.08em;"
-        "text-transform:uppercase;color:#7f8c9a;margin:0 0 8px 0;"
-    )
-    orcawave_col = (
-        f'<div style="flex:1;min-width:380px;padding:1.2em 1.4em;">'
-        f'<p style="{_label_style}">OrcaWave Output</p>'
-        f"{fig_html}"
-        f"</div>"
-    )
-    ref_col = ""
-    if ref_b64:
-        ref_col = (
-            '<div style="flex:0 0 auto;max-width:460px;min-width:200px;'
-            'padding:1.2em 1.4em;border-left:1px solid #e8ecf0;background:#f8f9fb;">'
-            f'<p style="{_label_style}">Reference (WAMIT paper)</p>'
-            f'<img src="{ref_b64}" style="max-width:100%;display:block;'
-            'border:1px solid #dde3ea;border-radius:4px;'
-            'box-shadow:0 1px 6px rgba(0,0,0,0.07);"/>'
-            "</div>"
-        )
+    WAMIT reference data is now overlaid directly on each Plotly figure as
+    × markers, so a separate reference screenshot column is not needed.
+    """
     return (
         '<div class="qtf-figure" style="'
         "background:#fff;border:1px solid #dde3ea;border-radius:7px;"
@@ -708,9 +662,9 @@ def _make_figure_section(title: str, fig_html: str, ref_b64: str | None) -> str:
         f'<h3 style="margin:0;font-size:0.95em;color:#1a3a5c;font-weight:600;">'
         f"{title}</h3>"
         "</div>"
-        # Card body — side-by-side columns
-        f'<div style="display:flex;align-items:stretch;flex-wrap:wrap;">'
-        f"{orcawave_col}{ref_col}"
+        # Card body
+        f'<div style="padding:1.2em 1.4em;">'
+        f"{fig_html}"
         "</div>"
         "</div>"
     )
@@ -930,7 +884,6 @@ def build_inline_html(
     case = CASES[case_id]
     owr_path: Path = case["owr"]
     label: str = case["label"]
-    ref_imgs = _REFERENCE_IMAGES.get(case_id, {})
 
     if not owr_path.exists():
         return (
@@ -960,10 +913,9 @@ def build_inline_html(
         for dof in case["dofs"]:
             fig = _build_sum_freq_figure(xdata, dof, label, wamit_ref=wamit_ref_31)
             fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-            ref_b64 = _img_to_base64(ref_imgs.get(dof))
             sections.append(_make_figure_section(
                 f"QTF Sum-Frequency — {DOF_NAMES[dof]}",
-                fig_html, ref_b64,
+                fig_html,
             ))
 
     else:  # diff_freq
@@ -990,10 +942,9 @@ def build_inline_html(
                     xdata, dof, dw, label, wamit_ref=wamit_ref_dof
                 )
                 fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-                ref_b64 = _img_to_base64(ref_imgs.get(dof))
                 sections.append(_make_figure_section(
                     f"QTF Diff-Frequency — {DOF_NAMES[dof]} (Δω = {dw_str} rad/s)",
-                    fig_html, ref_b64,
+                    fig_html,
                 ))
 
             if case_id == "3.3":
@@ -1006,10 +957,9 @@ def build_inline_html(
                     )
                     if fig is not None:
                         fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-                        ref_b64 = _img_to_base64(ref_imgs.get("global"))
                         sections.append(_make_figure_section(
                             f"QTF {key} — All DOFs (Δω = {dw_str} rad/s)",
-                            fig_html, ref_b64,
+                            fig_html,
                         ))
 
     # CDN script ensures Plotly is available even if parent HTML doesn't include it

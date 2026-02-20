@@ -1647,8 +1647,12 @@ def _inject_qtf_into_html(html_path: Path, qtf_html: str) -> None:
         content,
         flags=re.DOTALL,
     )
-    if "</body>" in content:
-        content = content.replace("</body>", qtf_html + "\n</body>", 1)
+    # Use rfind to target the LAST </body> — the real closing tag.
+    # Benchmark HTML contains </body> inside JavaScript "view source" popup
+    # strings; replace(..., 1) would hit those instead of the real tag.
+    body_pos = content.rfind("</body>")
+    if body_pos != -1:
+        content = content[:body_pos] + qtf_html + "\n</body>" + content[body_pos + len("</body>"):]
     else:
         content += "\n" + qtf_html
     html_path.write_text(content, encoding="utf-8")
