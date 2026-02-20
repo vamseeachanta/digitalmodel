@@ -1,7 +1,7 @@
 # OrcaFlex Hybrid Templates Validation Report
 
 **Validation Date:** 2026-01-19
-**Test Suite:** `tests/modules/orcaflex/test_hybrid_templates.py`
+**Test Suite:** `tests/domains/orcaflex/test_hybrid_templates.py`
 
 ---
 

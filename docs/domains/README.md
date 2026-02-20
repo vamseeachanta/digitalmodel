@@ -24,7 +24,7 @@ digitalmodel/
 │   └── ...                # Additional domain modules
 ├── specs/modules/         # Module-based specifications
 ├── src/modules/           # Module source code
-└── tests/modules/         # Module tests
+└── tests/domains/         # Module tests
 ```
 
 Note: The former `docs/eng/` directory was consolidated into `docs/domains/` (Feb 2026).

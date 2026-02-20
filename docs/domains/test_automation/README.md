@@ -53,7 +53,7 @@ The system uses `test_automation_settings.yml` for configuration:
 ```yaml
 paths:
   base_dir: "tests"
-  modules_dir: "tests/modules"
+  modules_dir: "tests/domains"
 
 execution:
   parallel: true

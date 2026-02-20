@@ -38,7 +38,7 @@ Documentation files:
   - `MANDATORY_SLASH_COMMAND_ECOSYSTEM.md`
   - `COMMANDS.md`
 
-### `/tests/modules/orcaflex/batch_processing/`
+### `/tests/domains/orcaflex/batch_processing/`
 Test files and configurations:
 - `/test_configs/` - YAML test configurations
 - `/test_scripts/` - Python test scripts

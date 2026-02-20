@@ -131,12 +131,12 @@ manual_verification:
 example_usage:
   # Example AQWA file import
   aqwa_example:
-    file_path: "tests/modules/rao_analysis/NO_DAMP_FST1_L015.LIS"
+    file_path: "tests/domains/rao_analysis/NO_DAMP_FST1_L015.LIS"
     output_format: "dataframe"
     
   # Example OrcaFlex file import
   orcaflex_example:
-    file_path: "tests/modules/rao_analysis/SS_Off_0_8P.yml"
+    file_path: "tests/domains/rao_analysis/SS_Off_0_8P.yml"
     output_format: "dataframe"
     
   # Example interpolation

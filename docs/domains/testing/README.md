@@ -51,7 +51,7 @@ tests/
 - Test individual functions and classes in isolation
 - Fast execution (<10ms per test)
 - Mock external dependencies
-- Example: `tests/modules/automation/test_analyzer.py`
+- Example: `tests/domains/automation/test_analyzer.py`
 
 ### 2. Integration Tests (`@pytest.mark.integration`)
 - Test module interactions and workflows

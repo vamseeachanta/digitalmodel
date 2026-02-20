@@ -50,58 +50,58 @@ Reduction in errors: 80% improvement
 ###  Newly Unblocked Test Suites (36 files)
 
 **AQWA Tests (11 files):**
-- ✅ `tests/modules/aqwa/test_aqwa_anl_raos.py`
-- ✅ `tests/modules/aqwa/test_aqwa_aqr.py`
-- ✅ `tests/modules/aqwa/test_aqwa_aqr_raos.py`
-- ✅ `tests/modules/aqwa/test_aqwa_dat.py` - 2 tests passing
-- ✅ `tests/modules/aqwa/test_aqwa_ef_server.py`
-- ✅ `tests/modules/aqwa/test_aqwa_lis.py` - passing
-- ✅ `tests/modules/aqwa/test_aqwa_mes_files.py`
-- ✅ `tests/modules/aqwa/test_aqwa_no_mes_files.py`
-- ✅ `tests/modules/aqwa/test_aqwa_preproces_deck.py`
-- ✅ `tests/modules/aqwa/test_damping.py`
-- ✅ `tests/modules/aqwa/test_preproces_deck_10.py`
+- ✅ `tests/domains/aqwa/test_aqwa_anl_raos.py`
+- ✅ `tests/domains/aqwa/test_aqwa_aqr.py`
+- ✅ `tests/domains/aqwa/test_aqwa_aqr_raos.py`
+- ✅ `tests/domains/aqwa/test_aqwa_dat.py` - 2 tests passing
+- ✅ `tests/domains/aqwa/test_aqwa_ef_server.py`
+- ✅ `tests/domains/aqwa/test_aqwa_lis.py` - passing
+- ✅ `tests/domains/aqwa/test_aqwa_mes_files.py`
+- ✅ `tests/domains/aqwa/test_aqwa_no_mes_files.py`
+- ✅ `tests/domains/aqwa/test_aqwa_preproces_deck.py`
+- ✅ `tests/domains/aqwa/test_damping.py`
+- ✅ `tests/domains/aqwa/test_preproces_deck_10.py`
 
 **Pipeline Tests (4 files):**
-- ✅ `tests/modules/pipeline/test_pipeline.py` - passing
-- ✅ `tests/modules/pipeline/test_pipeline_lateral_buckling.py` - passing
-- ✅ `tests/modules/pipeline/test_pipeline_pressure_loss.py` - passing
-- ✅ `tests/modules/pipeline/test_pipeline_upheaval_buckling.py` - passing
+- ✅ `tests/domains/pipeline/test_pipeline.py` - passing
+- ✅ `tests/domains/pipeline/test_pipeline_lateral_buckling.py` - passing
+- ✅ `tests/domains/pipeline/test_pipeline_pressure_loss.py` - passing
+- ✅ `tests/domains/pipeline/test_pipeline_upheaval_buckling.py` - passing
 
 **Code Standards Tests (2 files):**
-- ✅ `tests/modules/code_dnvrph103/test_code_dnvrph103_circular.py` - passing
-- ✅ `tests/modules/code_dnvrph103/test_code_dnvrph103_rectangular.py` - passing
+- ✅ `tests/domains/code_dnvrph103/test_code_dnvrph103_circular.py` - passing
+- ✅ `tests/domains/code_dnvrph103/test_code_dnvrph103_rectangular.py` - passing
 
 **Catenary Tests (2 files):**
-- ✅ `tests/modules/catenary_riser/test_catenary.py`
-- ✅ `tests/modules/catenary_riser/test_catenary_riser.py`
+- ✅ `tests/domains/catenary_riser/test_catenary.py`
+- ✅ `tests/domains/catenary_riser/test_catenary_riser.py`
 
 **Other Modules (17 files):**
-- ✅ `tests/modules/cathodic_protection/test_cathodic_protection_basic.py`
-- ✅ `tests/modules/fatigue_analysis/test_fatigue_analysis_sn.py`
-- ✅ `tests/modules/fatigue_analysis/test_fatigue_analysis_timetrace.py`
-- ✅ `tests/modules/installation/test_installation_structure.py`
-- ✅ `tests/modules/orcaflex/analysis/test_dat_analysis.py`
-- ✅ `tests/modules/orcaflex/file_preparation/test_load_vessel_aqwa.py`
-- ✅ `tests/modules/orcaflex/file_preparation/test_orcaflex_file_preparation.py`
-- ✅ `tests/modules/orcaflex/mooring-tension-iteration/mooring_tension_iteration_test.py`
-- ✅ `tests/modules/orcaflex/test_opp_summary_fix.py`
-- ✅ `tests/modules/rao_analysis/test_rao_analysis.py`
-- ✅ `tests/modules/ship_design/test_ship_design_seasam_combined_fatigue_by_file.py`
-- ✅ `tests/modules/time_series/test_csv_window_fft.py`
-- ✅ `tests/modules/time_series/test_sample_fft.py`
-- ✅ `tests/modules/time_series/test_window_fft.py`
-- ✅ `tests/modules/umbilical_analysis/test_umbilical_analysis_installation.py`
-- ✅ `tests/modules/umbilical_analysis/test_umbilical_analysis_line_properties.py`
-- ✅ `tests/modules/viv_analysis/test_viv_analysis.py`
+- ✅ `tests/domains/cathodic_protection/test_cathodic_protection_basic.py`
+- ✅ `tests/domains/fatigue_analysis/test_fatigue_analysis_sn.py`
+- ✅ `tests/domains/fatigue_analysis/test_fatigue_analysis_timetrace.py`
+- ✅ `tests/domains/installation/test_installation_structure.py`
+- ✅ `tests/domains/orcaflex/analysis/test_dat_analysis.py`
+- ✅ `tests/domains/orcaflex/file_preparation/test_load_vessel_aqwa.py`
+- ✅ `tests/domains/orcaflex/file_preparation/test_orcaflex_file_preparation.py`
+- ✅ `tests/domains/orcaflex/mooring-tension-iteration/mooring_tension_iteration_test.py`
+- ✅ `tests/domains/orcaflex/test_opp_summary_fix.py`
+- ✅ `tests/domains/rao_analysis/test_rao_analysis.py`
+- ✅ `tests/domains/ship_design/test_ship_design_seasam_combined_fatigue_by_file.py`
+- ✅ `tests/domains/time_series/test_csv_window_fft.py`
+- ✅ `tests/domains/time_series/test_sample_fft.py`
+- ✅ `tests/domains/time_series/test_window_fft.py`
+- ✅ `tests/domains/umbilical_analysis/test_umbilical_analysis_installation.py`
+- ✅ `tests/domains/umbilical_analysis/test_umbilical_analysis_line_properties.py`
+- ✅ `tests/domains/viv_analysis/test_viv_analysis.py`
 
 ## Remaining Collection Errors (9 files)
 
 1. **tests/factories** - Faker provider issue
 2. **tests/fatigue/test_fatigue_migration.py** - Syntax error
 3. **tests/integration/test_performance_benchmarks.py** - Import error
-4. **tests/modules/fatigue_analysis/test_reference_seastate_scaling.py** - Missing `production_data_handler`
-5. **tests/modules/orcaflex/test_examples_downloader.py** - Missing `tqdm`
+4. **tests/domains/fatigue_analysis/test_reference_seastate_scaling.py** - Missing `production_data_handler`
+5. **tests/domains/orcaflex/test_examples_downloader.py** - Missing `tqdm`
 6. **tests/performance/test_load_testing.py** - Missing `load_test` marker
 7. **tests/test_apistd2rd_migration.py** - Missing `digitalmodel.analysis.apistd2rd`
 8. **tests/test_integration_phase1.py** - Missing `marine_engineering.mooring`

@@ -628,7 +628,7 @@ No direct imports found! (Good news - minimal breaking changes)
 
 **Tools/examples to update:**
 - `tools/doc_tools/modules/catenary_*.py` - Reference implementations
-- `tests/modules/catenary_riser/` - Test suite
+- `tests/domains/catenary_riser/` - Test suite
 
 ---
 
@@ -889,8 +889,8 @@ If consolidation fails:
 - `src/digitalmodel/modules/catenary/catenary_equation.py` (82 lines)
 - `src/digitalmodel/modules/catenary/catenaryMethods.py` (471 lines)
 - `src/digitalmodel/modules/catenary/catenary_riser.py` (168 lines)
-- `tests/modules/catenary_riser/test_catenary.py`
-- `tests/modules/catenary_riser/test_catenary_riser.py`
+- `tests/domains/catenary_riser/test_catenary.py`
+- `tests/domains/catenary_riser/test_catenary_riser.py`
 
 ### Reference/Examples
 - `tools/doc_tools/modules/catenary_solver.py` (143 lines)

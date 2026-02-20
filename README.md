@@ -345,7 +345,7 @@ digitalmodel/
 │       ├── pipe_capacity/          # Pipe stress calculations
 │       ├── reporting/              # Interactive HTML reports
 │       └── ...                     # 35+ more modules
-├── tests/modules/                  # Test suites (mirrors src structure)
+├── tests/domains/                  # Test suites (mirrors src structure)
 ├── specs/modules/                  # Module specifications (39 specs)
 ├── docs/domains/                   # Module documentation
 ├── examples/domains/               # Working examples per module

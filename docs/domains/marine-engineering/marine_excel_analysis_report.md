@@ -1002,7 +1002,7 @@ def extract_ocimf_coefficients(filepath):
 
 ### 8.1 Unit Tests
 
-**Test File:** `tests/modules/marine_analysis/test_rao_processing.py`
+**Test File:** `tests/domains/marine_analysis/test_rao_processing.py`
 
 ```python
 import pytest
@@ -1040,7 +1040,7 @@ class TestRAOProcessor:
 
 ### 8.2 Integration Tests
 
-**Test File:** `tests/modules/marine_analysis/test_motion_integration.py`
+**Test File:** `tests/domains/marine_analysis/test_motion_integration.py`
 
 ```python
 def test_rao_to_motion_pipeline():

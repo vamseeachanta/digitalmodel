@@ -169,7 +169,7 @@ mkdir -p .agent-os/{instructions,templates,context,cache}
 mkdir -p specs/modules
 mkdir -p docs/domains
 mkdir -p src/modules
-mkdir -p tests/modules
+mkdir -p tests/domains
 
 # Verify structure
 tree .agent-os specs docs src tests  # or use ls -la if tree not available
@@ -518,7 +518,7 @@ jobs:
       - name: Run Enhanced Tests
         run: |
           # Run spec validation tests
-          python -m pytest tests/modules/agent-os/enhanced-create-specs/ -v
+          python -m pytest tests/domains/agent-os/enhanced-create-specs/ -v
 ```
 
 ### Team Configuration

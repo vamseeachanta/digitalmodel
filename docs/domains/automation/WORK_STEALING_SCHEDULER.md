@@ -244,7 +244,7 @@ for sample in samples:
 Run comprehensive test suite:
 
 ```bash
-PYTHONPATH=src python -m pytest tests/modules/automation/test_work_stealing.py -v
+PYTHONPATH=src python -m pytest tests/domains/automation/test_work_stealing.py -v
 ```
 
 ### Test Coverage
@@ -461,5 +461,5 @@ if not any(agent.can_execute(task) for agent in agents):
 
 - Configuration: `config/load-balancing-config.yaml`
 - Implementation: `src/digitalmodel/modules/automation/work_stealing_scheduler.py`
-- Tests: `tests/modules/automation/test_work_stealing.py`
+- Tests: `tests/domains/automation/test_work_stealing.py`
 - Demo: `examples/work_stealing_demo.py`

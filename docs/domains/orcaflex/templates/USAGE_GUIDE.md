@@ -713,7 +713,7 @@ All new templates must pass:
 
 Run the full test suite:
 ```bash
-uv run pytest tests/modules/orcaflex/test_hybrid_templates.py -v
+uv run pytest tests/domains/orcaflex/test_hybrid_templates.py -v
 ```
 
 ---
@@ -907,7 +907,7 @@ Lines:
 2. Review similar working templates for patterns
 3. Run the test suite to identify issues:
    ```bash
-   uv run pytest tests/modules/orcaflex/test_hybrid_templates.py -v --tb=short
+   uv run pytest tests/domains/orcaflex/test_hybrid_templates.py -v --tb=short
    ```
 4. Check OrcaFlex documentation for YAML format details
 
@@ -918,7 +918,7 @@ Lines:
 - [Template Overview](README.md) - Quick reference for all templates
 - [Library Index](../library/index.yml) - All library components
 - [OrcaFlex YAML Reference](https://www.orcina.com/resources/documentation/) - Official OrcaFlex docs
-- [Test Suite](../../../../tests/modules/orcaflex/test_hybrid_templates.py) - Automated validation tests
+- [Test Suite](../../../../tests/domains/orcaflex/test_hybrid_templates.py) - Automated validation tests
 
 ---
 

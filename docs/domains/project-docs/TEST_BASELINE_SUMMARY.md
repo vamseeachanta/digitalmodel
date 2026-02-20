@@ -67,9 +67,9 @@ Errors: 3 tests (fixture/setup issues)
 - ✅ `tests/contracts/` - 10/11 passed
 
 ### Module Tests
-- ✅ `tests/modules/marine_analysis/python_code_passing_ship/` - Partial passes
-- ✅ `tests/modules/signal_analysis/` - 57 passed in fatigue_analysis suite
-- ✅ `tests/modules/fatigue_analysis/` - Multiple tests passing
+- ✅ `tests/domains/marine_analysis/python_code_passing_ship/` - Partial passes
+- ✅ `tests/domains/signal_analysis/` - 57 passed in fatigue_analysis suite
+- ✅ `tests/domains/fatigue_analysis/` - Multiple tests passing
 
 ### Engineering Validation
 - ✅ `tests/engineering_validation/pipe_sizing/` - Majority passing
@@ -190,7 +190,7 @@ Errors: 3 tests (fixture/setup issues)
 2. `src/digitalmodel/modules/aqwa/ef_server/AqwaServerMgr.py` - stdout/stderr fix
 3. `src/digitalmodel/modules/marine_analysis/extraction/run_extraction.py` - conditional wrapper
 4. `src/digitalmodel/modules/marine_analysis/analysis/hydro_usage_example.py` - conditional wrapper
-5. `tests/modules/marine_analysis/python_code_passing_ship/test_cli.py` - sys.executable, pytest.importorskip
+5. `tests/domains/marine_analysis/python_code_passing_ship/test_cli.py` - sys.executable, pytest.importorskip
 6. `src/digitalmodel/custom/PipeSizing.py` - copied for test imports
 7. `src/assetutilities/common/` - 15+ stub files created
 

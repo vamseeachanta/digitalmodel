@@ -26,7 +26,7 @@ python test_stability_analysis.py
 ### ✅ **1.2 Current Success Rate Validation**
 ```bash
 # Confirm current success rate matches expectations
-python -m pytest tests/no_license/ tests/in_progress/ tests/modules/transformation/ tests/modules/pipeline/ tests/modules/aqwa/ tests/modules/time_series/ tests/modules/viv_analysis/ tests/modules/catenary_riser/ tests/modules/code_dnvrph103/ tests/core/ --tb=no | grep -E "passed|failed"
+python -m pytest tests/no_license/ tests/in_progress/ tests/domains/transformation/ tests/domains/pipeline/ tests/domains/aqwa/ tests/domains/time_series/ tests/domains/viv_analysis/ tests/domains/catenary_riser/ tests/domains/code_dnvrph103/ tests/core/ --tb=no | grep -E "passed|failed"
 ```
 **Success Criteria:**
 - [ ] Success rate ≥ 70% (current: 72.8%)
@@ -57,8 +57,8 @@ import subprocess
 
 # Key performance-critical test groups
 test_groups = [
-    'tests/modules/aqwa/',
-    'tests/modules/pipeline/', 
+    'tests/domains/aqwa/',
+    'tests/domains/pipeline/', 
     'tests/no_license/',
     'tests/core/'
 ]
@@ -199,7 +199,7 @@ cat > .git/hooks/pre-commit << 'EOF'
 echo "🧪 Running pre-commit tests..."
 
 # Run fast critical tests only
-python -m pytest tests/no_license/test_histogram.py tests/no_license/test_cathodic_protection_basic.py tests/modules/transformation/test_transformation_fixed.py --tb=short
+python -m pytest tests/no_license/test_histogram.py tests/no_license/test_cathodic_protection_basic.py tests/domains/transformation/test_transformation_fixed.py --tb=short
 
 if [ $? -ne 0 ]; then
     echo "❌ Pre-commit tests failed! Fix tests before committing."

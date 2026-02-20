@@ -66,7 +66,7 @@ docs/domains/<domain>/ ← reference docs for each src domain
 data/modules/<domain>/ ← input data for each src domain
 ```
 
-**Not** `tests/modules/<domain>/` — the `modules/` wrapper in tests is redundant.
+**Not** `tests/domains/<domain>/` — the `modules/` wrapper in tests is redundant.
 **Not** `results/` or `outputs/` inside `tests/` — test output belongs in `reports/coverage/`.
 
 ---
@@ -250,8 +250,8 @@ done
 | Issue | Action | Priority |
 |-------|--------|----------|
 | **DUAL module structure**: `src/assetutilities/base_configs/modules/` AND `src/assetutilities/modules/` both exist with overlapping content (csv_utilities, yml_utilities etc.) | Audit both — determine if one is legacy. Merge into single `src/assetutilities/modules/`; update all imports | CRITICAL |
-| TYPO: `tests/modules/yaml_utlities/` (should be `yml_utilities`) | Rename directory; update any test discovery config | HIGH |
-| `tests/modules/agent-os/` AND `tests/modules/agent_os/` (both exist) | Merge into `tests/modules/agent_os/` (snake_case matches src/) | HIGH |
+| TYPO: `tests/domains/yaml_utlities/` (should be `yml_utilities`) | Rename directory; update any test discovery config | HIGH |
+| `tests/domains/agent-os/` AND `tests/domains/agent_os/` (both exist) | Merge into `tests/domains/agent_os/` (snake_case matches src/) | HIGH |
 | `tests/unit/` AND `tests/units/` (redundant) | Merge into `tests/unit/`; delete `tests/units/` | MEDIUM |
 | `CLAUDE.md.backup-20251023-081047`, `pyproject.toml.backup` | Delete; add `*.backup*` to `.gitignore` | MEDIUM |
 | Loose root files: `AGENT_OS_COMMANDS.md`, `CLAUDE_CLI_COMMANDS.md`, `COMMANDS.md` | Move to `docs/commands/` | MEDIUM |

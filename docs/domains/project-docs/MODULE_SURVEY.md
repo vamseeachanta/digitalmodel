@@ -241,7 +241,7 @@ Based on diffraction module success, standardize new modules with:
 
 3. **Testing**:
    ```
-   tests/modules/<module>/
+   tests/domains/<module>/
    ├── test_<module>_unit.py
    ├── test_<module>_integration.py
    └── test_data/

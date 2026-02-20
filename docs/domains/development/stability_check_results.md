@@ -32,10 +32,10 @@
 #### **1.1 Test Stability Analysis**
 **Methodology**: Ran core test groups twice to detect flaky tests
 ```bash
-# Run 1: python -m pytest tests/no_license/ tests/modules/transformation/ --tb=no -q
+# Run 1: python -m pytest tests/no_license/ tests/domains/transformation/ --tb=no -q
 # Result: 18 passed, 1 failed
 
-# Run 2: python -m pytest tests/no_license/ tests/modules/transformation/ --tb=no -q  
+# Run 2: python -m pytest tests/no_license/ tests/domains/transformation/ --tb=no -q  
 # Result: 18 passed, 1 failed
 ```
 
@@ -84,11 +84,11 @@
 #### **2.1 Module Performance Baselines**
 | **Test Module** | **Duration** | **Test Count** | **Performance** | **Status** |
 |-----------------|--------------|----------------|-----------------|------------|
-| `tests/modules/aqwa/` | 16.3s | 11 tests | 1.5s/test | ✅ **NORMAL** |
+| `tests/domains/aqwa/` | 16.3s | 11 tests | 1.5s/test | ✅ **NORMAL** |
 | `tests/core/` | 16.3s | 65 tests | 0.25s/test | ✅ **EXCELLENT** |
 | `tests/no_license/` | ~12.5s | 13 tests | 1.0s/test | ✅ **FAST** |
-| `tests/modules/transformation/` | ~1.2s | 5 tests | 0.24s/test | ✅ **VERY FAST** |
-| `tests/modules/pipeline/` | ~7.7s | 5 tests | 1.5s/test | ✅ **FAST** |
+| `tests/domains/transformation/` | ~1.2s | 5 tests | 0.24s/test | ✅ **VERY FAST** |
+| `tests/domains/pipeline/` | ~7.7s | 5 tests | 1.5s/test | ✅ **FAST** |
 
 **✅ PERFORMANCE ASSESSMENT**: **EXCELLENT**
 - **All modules under 60s threshold**

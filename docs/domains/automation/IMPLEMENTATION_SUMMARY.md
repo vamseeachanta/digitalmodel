@@ -39,7 +39,7 @@ Implemented a comprehensive intelligent agent selection system that uses multi-f
 
 ### Testing
 
-5. **`tests/modules/automation/test_agent_selector.py`** (674 lines)
+5. **`tests/domains/automation/test_agent_selector.py`** (674 lines)
    - 26 unit tests covering all functionality
    - Mock fixtures for database, config, registry
    - Test scenarios:
@@ -366,7 +366,7 @@ digitalmodel/
 │   └── agent_orchestrator.sh                # Enhanced orchestrator
 ├── config/
 │   └── agent-selection-weights.yaml         # Configuration
-├── tests/modules/automation/
+├── tests/domains/automation/
 │   └── test_agent_selector.py               # Unit tests
 ├── docs/domains/automation/
 │   ├── INTELLIGENT_AGENT_SELECTION.md       # User guide

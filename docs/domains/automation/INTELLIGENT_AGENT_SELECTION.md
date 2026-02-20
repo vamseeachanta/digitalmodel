@@ -345,13 +345,13 @@ Future integration:
 
 ```bash
 # All tests
-uv run python -m pytest tests/modules/automation/test_agent_selector.py -v
+uv run python -m pytest tests/domains/automation/test_agent_selector.py -v
 
 # Specific test class
-uv run python -m pytest tests/modules/automation/test_agent_selector.py::TestIntelligentAgentSelector -v
+uv run python -m pytest tests/domains/automation/test_agent_selector.py::TestIntelligentAgentSelector -v
 
 # With coverage
-uv run python -m pytest tests/modules/automation/test_agent_selector.py --cov=src/digitalmodel/modules/automation
+uv run python -m pytest tests/domains/automation/test_agent_selector.py --cov=src/digitalmodel/modules/automation
 ```
 
 ### Run Demo
@@ -434,7 +434,7 @@ cost:
 - **Agent Registry**: `modules/config/ai-agents-registry.json`
 - **Weights Config**: `config/agent-selection-weights.yaml`
 - **Orchestrator**: `modules/automation/agent_orchestrator.sh`
-- **Tests**: `tests/modules/automation/test_agent_selector.py`
+- **Tests**: `tests/domains/automation/test_agent_selector.py`
 - **Demo**: `examples/agent_selection_demo.py`
 
 ## Support

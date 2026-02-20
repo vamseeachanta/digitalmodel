@@ -244,10 +244,10 @@ results = runner.run(
 ### Run Tests
 ```bash
 # Run all tests
-python tests/modules/orcaflex/universal/test_universal_runner.py
+python tests/domains/orcaflex/universal/test_universal_runner.py
 
 # Run with real .dat files
-python tests/modules/orcaflex/universal/test_real_orcaflex.py
+python tests/domains/orcaflex/universal/test_real_orcaflex.py
 ```
 
 ### Mock Mode Testing

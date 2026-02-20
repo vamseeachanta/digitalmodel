@@ -68,8 +68,8 @@ Signal Analysis Module - Basic Integration Test
 ### 3. Migration Tools
 - `scripts/migrate_to_signal_analysis.py` - Code migration script
 - `scripts/migrate_yaml_configs.py` - Configuration migration
-- `tests/modules/signal_analysis/test_migration_validation.py` - Validation tests
-- `tests/modules/signal_analysis/test_integration_simple.py` - Integration tests
+- `tests/domains/signal_analysis/test_migration_validation.py` - Validation tests
+- `tests/domains/signal_analysis/test_integration_simple.py` - Integration tests
 
 ### 4. Examples
 - `examples/signal_analysis_usage_example.py` - Comprehensive usage examples

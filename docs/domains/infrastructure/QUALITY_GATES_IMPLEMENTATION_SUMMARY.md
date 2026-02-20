@@ -37,7 +37,7 @@ Successfully implemented a comprehensive quality gate validation system with lin
 - Exit code handling for CI/CD
 
 ### 4. Comprehensive Tests
-**File**: `tests/modules/automation/test_quality_gates.py` (510 lines)
+**File**: `tests/domains/automation/test_quality_gates.py` (510 lines)
 - **20 test cases** covering all functionality
 - Test classes:
   - `TestQualityGateValidator` (19 tests)
@@ -131,26 +131,26 @@ Successfully implemented a comprehensive quality gate validation system with lin
 platform win32 -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0
 collected 20 items
 
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_init PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_init_strict_mode PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_get_ordered_gates PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_no_deps PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_met PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_not_met PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_tests_gate_pass PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_tests_gate_failure PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_pass PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_warning PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_failure PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_quality_gate_pass PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_security_gate_pass PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_security_gate_high_severity PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_documentation_gate_pass PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_count_docstrings PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_build_report PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_build_report_strict_mode PASSED
-tests/modules/automation/test_quality_gates.py::TestQualityGateValidator::test_export_results PASSED
-tests/modules/automation/test_quality_gates.py::TestGateIntegration::test_linear_execution_order PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_init PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_init_strict_mode PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_get_ordered_gates PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_no_deps PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_met PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_check_dependencies_not_met PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_tests_gate_pass PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_tests_gate_failure PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_pass PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_warning PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_coverage_gate_failure PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_quality_gate_pass PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_security_gate_pass PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_security_gate_high_severity PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_execute_documentation_gate_pass PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_count_docstrings PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_build_report PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_build_report_strict_mode PASSED
+tests/domains/automation/test_quality_gates.py::TestQualityGateValidator::test_export_results PASSED
+tests/domains/automation/test_quality_gates.py::TestGateIntegration::test_linear_execution_order PASSED
 
 ============================= 20 passed in 45.63s =============================
 ```
@@ -257,7 +257,7 @@ src/digitalmodel/modules/automation/
 ├── quality_gates.py                      # Core validator (750 lines)
 └── quality_gates_cli.py                  # CLI interface (85 lines)
 
-tests/modules/automation/
+tests/domains/automation/
 └── test_quality_gates.py                 # Tests (510 lines, 20 tests)
 
 .pre-commit-config.yaml                   # Pre-commit integration

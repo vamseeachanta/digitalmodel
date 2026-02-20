@@ -16,7 +16,7 @@
 - `dm_fsts_lngc_backup_20250825.yml` - Original configuration preserved
 
 ##### Code Updates
-- **test configuration**: `tests/modules/orcaflex/orcaflex_analysis/run_parallel_analysis.yml` - Updated to 15 threads
+- **test configuration**: `tests/domains/orcaflex/orcaflex_analysis/run_parallel_analysis.yml` - Updated to 15 threads
 - **ResourceManager**: Dynamic thread allocation logic optimized for file sizes
 - **Performance Monitor**: Added comprehensive monitoring and reporting
 

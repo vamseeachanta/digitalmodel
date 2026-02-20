@@ -50,7 +50,7 @@ class ModuleBoundaryChecker:
     # Paths that should NEVER be propagated
     RESTRICTED_PATHS = [
         'src/modules/',
-        'tests/modules/',
+        'tests/domains/',
         'configs/modules/',
         'docs/domains/'
     ]

@@ -160,7 +160,7 @@ def validate_file_location(filepath: str) -> bool:
             f"❌ Cannot create '{filepath}' in root directory.\n"
             f"Please specify appropriate subdirectory:\n"
             f"  - User inputs: inputs/user_provided/\n"
-            f"  - Tests: tests/modules/<module>/\n"
+            f"  - Tests: tests/domains/<module>/\n"
             f"  - Tools: tools/\n"
             f"  - Docs: docs/domains/<module>/"
         )
@@ -239,7 +239,7 @@ if [ ! -z "$violations" ]; then
     echo "$violations"
     echo ""
     echo "Please move these files to appropriate directories:"
-    echo "  - Tests → tests/modules/<module>/"
+    echo "  - Tests → tests/domains/<module>/"
     echo "  - Data → inputs/user_provided/"
     echo "  - Temp → Delete or move to inputs/temporary/"
     exit 1

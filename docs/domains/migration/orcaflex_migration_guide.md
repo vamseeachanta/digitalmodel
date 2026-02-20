@@ -292,7 +292,7 @@ cycles = adapter.get_rainflow_count_from_time_series(signal)
 - **Migration Script**: `scripts/migrate_to_signal_analysis.py`
 - **Examples**: `examples/orcaflex_signal_analysis_example.py`
 - **Documentation**: `src/digitalmodel/modules/signal_analysis/README.md`
-- **Tests**: `tests/modules/signal_analysis/test_integration.py`
+- **Tests**: `tests/domains/signal_analysis/test_integration.py`
 
 ## Next Steps
 

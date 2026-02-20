@@ -836,7 +836,7 @@ The modular architecture, comprehensive validation, and extensive documentation 
 
 **Tests:**
 - `tests/fatigue/test_fatigue_migration.py`
-- `tests/modules/fatigue_analysis/test_fatigue_analysis_sn.py`
+- `tests/domains/fatigue_analysis/test_fatigue_analysis_sn.py`
 
 ### Appendix B: References
 

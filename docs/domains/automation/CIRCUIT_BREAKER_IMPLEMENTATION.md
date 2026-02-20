@@ -184,13 +184,13 @@ All state transitions logged to `.claude-flow/circuit-breaker.log`:
 
 ```bash
 # Run all automation tests
-uv run python -m pytest tests/modules/automation/ -v
+uv run python -m pytest tests/domains/automation/ -v
 
 # Run circuit breaker tests only
-uv run python -m pytest tests/modules/automation/test_circuit_breaker.py -v
+uv run python -m pytest tests/domains/automation/test_circuit_breaker.py -v
 
 # Run rollback manager tests only
-uv run python -m pytest tests/modules/automation/test_rollback_manager.py -v
+uv run python -m pytest tests/domains/automation/test_rollback_manager.py -v
 ```
 
 ## Integration Example
@@ -350,8 +350,8 @@ CircuitBreakerConfig(
 - **Agent Definition**: `.claude/agents/fault-tolerance/circuit-breaker.md`
 - **Implementation**: `src/digitalmodel/modules/automation/circuit_breaker.py`
 - **Rollback Manager**: `src/digitalmodel/modules/automation/rollback_manager.py`
-- **Tests**: `tests/modules/automation/test_circuit_breaker.py`
-- **Tests**: `tests/modules/automation/test_rollback_manager.py`
+- **Tests**: `tests/domains/automation/test_circuit_breaker.py`
+- **Tests**: `tests/domains/automation/test_rollback_manager.py`
 
 ## Version History
 

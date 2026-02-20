@@ -131,7 +131,7 @@ All templates are validated with:
 
 Run validation:
 ```bash
-uv run pytest tests/modules/orcaflex/test_hybrid_templates.py -v
+uv run pytest tests/domains/orcaflex/test_hybrid_templates.py -v
 ```
 
 ### Test Coverage
@@ -195,7 +195,7 @@ templates/
 
 - [Library Components](../library/)
 - [OrcaFlex Skills](../../../../.claude/skills/)
-- [Template Tests](../../../../tests/modules/orcaflex/test_hybrid_templates.py)
+- [Template Tests](../../../../tests/domains/orcaflex/test_hybrid_templates.py)
 
 ---
 

@@ -224,7 +224,7 @@ availability:
 ## Next Steps
 
 1. **Read Full Documentation**: `docs/domains/automation/INTELLIGENT_AGENT_SELECTION.md`
-2. **Explore Tests**: `tests/modules/automation/test_agent_selector.py`
+2. **Explore Tests**: `tests/domains/automation/test_agent_selector.py`
 3. **Customize Weights**: `config/agent-selection-weights.yaml`
 4. **View Implementation**: `src/digitalmodel/modules/automation/intelligent_agent_selector.py`
 

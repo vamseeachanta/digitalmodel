@@ -32,7 +32,7 @@
 - Metrics collection settings
 
 ### 3. Comprehensive Tests
-**File**: `tests/modules/automation/test_work_stealing.py` (495 lines)
+**File**: `tests/domains/automation/test_work_stealing.py` (495 lines)
 
 **Test Classes** (17 tests total):
 - `TestBasicOperations`: Registration, submission, capability matching
@@ -223,7 +223,7 @@ python examples/work_stealing_demo.py
 
 ### Running Tests
 ```bash
-PYTHONPATH=src python -m pytest tests/modules/automation/test_work_stealing.py -v
+PYTHONPATH=src python -m pytest tests/domains/automation/test_work_stealing.py -v
 ```
 
 ## Validation Results
@@ -266,7 +266,7 @@ digitalmodel/
 ├── src/digitalmodel/modules/automation/
 │   ├── __init__.py                          # Module exports
 │   └── work_stealing_scheduler.py           # Implementation
-├── tests/modules/automation/
+├── tests/domains/automation/
 │   ├── __init__.py
 │   └── test_work_stealing.py                # Comprehensive tests
 ├── examples/

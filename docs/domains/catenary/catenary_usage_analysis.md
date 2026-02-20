@@ -56,7 +56,7 @@ result = catenaryEquation(data)
 3. `src/digitalmodel/modules/catenary/catenaryMethods.py` - Core equations
 4. `tools/doc_tools/modules/catenary_equation.py` - Documentation examples
 5. `tools/doc_tools/modules/pycatenary_simple.py` - Simple examples
-6. `tests/modules/catenary_riser/test_catenary.py` - Unit tests (mocked)
+6. `tests/domains/catenary_riser/test_catenary.py` - Unit tests (mocked)
 7. Engine integration in `src/digitalmodel/engine.py`
 
 **Common Patterns:**
@@ -326,7 +326,7 @@ result = solver.solve(params)
 
 ### Legacy Module Tests
 
-**Test File:** `tests/modules/catenary_riser/test_catenary.py`
+**Test File:** `tests/domains/catenary_riser/test_catenary.py`
 ```python
 def test_catenary_riser():
     with patch('digitalmodel.engine.engine') as mock_engine:

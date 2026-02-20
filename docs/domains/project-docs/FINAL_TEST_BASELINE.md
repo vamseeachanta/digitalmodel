@@ -97,7 +97,7 @@ Total Tests: 1210
 3. `src/digitalmodel/modules/aqwa/ef_server/AqwaServerMgr.py` - Logging fix
 4. `src/digitalmodel/modules/marine_analysis/extraction/run_extraction.py` - Conditional wrapper
 5. `src/digitalmodel/modules/marine_analysis/analysis/hydro_usage_example.py` - Conditional wrapper
-6. `tests/modules/marine_analysis/python_code_passing_ship/test_cli.py` - sys.executable
+6. `tests/domains/marine_analysis/python_code_passing_ship/test_cli.py` - sys.executable
 7. `src/digitalmodel/custom/PipeSizing.py` - Copied from pipe_capacity module
 8. `tests/fatigue/test_fatigue_migration.py` - Fixed class name syntax
 9. `tests/factories/simulation_factories.py` - Fixed Faker API usage

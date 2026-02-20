@@ -83,7 +83,7 @@ Manual conversion of these complex structures is error-prone.
 
 The repository already has validated CALM Buoy models in:
 ```
-tests/modules/orcaflex/analysis/moorings/pretension/validation/
+tests/domains/orcaflex/analysis/moorings/pretension/validation/
 ```
 
 These files are proven to work. Copy their structure.

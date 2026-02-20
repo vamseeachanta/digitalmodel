@@ -47,7 +47,7 @@ When ANY non-whitelisted file is found in root:
 
 ```python
 if file.is_test():
-    move_to("tests/modules/<appropriate_module>/")
+    move_to("tests/domains/<appropriate_module>/")
 elif file.is_config():
     move_to("config/" or "tests/.../test_configs/")
 elif file.is_backup():
@@ -66,7 +66,7 @@ else:
 
 ### Test Files
 - **Pattern**: `test_*.py`, `*_test.py`, `test_*.yml`
-- **Destination**: `/tests/modules/<module>/`
+- **Destination**: `/tests/domains/<module>/`
 - **Subdirs**: `test_scripts/`, `test_configs/`, `test_data/`
 
 ### Configuration Files

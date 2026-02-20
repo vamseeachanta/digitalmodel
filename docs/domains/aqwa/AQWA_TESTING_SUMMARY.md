@@ -31,7 +31,7 @@ Successfully implemented comprehensive testing infrastructure for the AQWA modul
 
 ### Phase 2: Unit Test Creation ✅
 
-**Created**: `tests/modules/aqwa/test_aqwa_lis_parser_real_data.py`
+**Created**: `tests/domains/aqwa/test_aqwa_lis_parser_real_data.py`
 
 **Features**:
 - Real AQWA .LIS file testing (same data as diffraction: `001_SHIP_RAOS.LIS`)
@@ -51,7 +51,7 @@ Successfully implemented comprehensive testing infrastructure for the AQWA modul
 
 ### Phase 3: CLI Integration Tests ✅
 
-**Created**: `tests/modules/aqwa/test_aqwa_cli_integration.py`
+**Created**: `tests/domains/aqwa/test_aqwa_cli_integration.py`
 
 **Features**:
 - CLI help and list-methods commands
@@ -135,8 +135,8 @@ aqwa --method raos --folder /path/to/analysis --name vessel
 ## Files Created
 
 ### Tests
-1. `tests/modules/aqwa/test_aqwa_lis_parser_real_data.py` - 260 lines
-2. `tests/modules/aqwa/test_aqwa_cli_integration.py` - 240 lines
+1. `tests/domains/aqwa/test_aqwa_lis_parser_real_data.py` - 260 lines
+2. `tests/domains/aqwa/test_aqwa_cli_integration.py` - 240 lines
 
 ### CI/CD
 3. `.github/workflows/aqwa-tests.yml` - 97 lines
@@ -153,20 +153,20 @@ aqwa --method raos --folder /path/to/analysis --name vessel
 ### Local Testing
 ```bash
 # Unit tests
-pytest tests/modules/aqwa/test_aqwa_lis_parser_real_data.py -v
+pytest tests/domains/aqwa/test_aqwa_lis_parser_real_data.py -v
 
 # CLI integration tests
-pytest tests/modules/aqwa/test_aqwa_cli_integration.py -v
+pytest tests/domains/aqwa/test_aqwa_cli_integration.py -v
 
 # All AQWA tests
-pytest tests/modules/aqwa/ -v --cov=src/digitalmodel/modules/aqwa
+pytest tests/domains/aqwa/ -v --cov=src/digitalmodel/modules/aqwa
 ```
 
 ### GitHub Actions
 - Automated on push to `main` or `develop`
 - Triggered by changes to:
   - `src/digitalmodel/modules/aqwa/**`
-  - `tests/modules/aqwa/**`
+  - `tests/domains/aqwa/**`
   - `.github/workflows/aqwa-tests.yml`
 
 ---

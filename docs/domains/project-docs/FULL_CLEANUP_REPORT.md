@@ -170,7 +170,7 @@ To keep the root directory clean:
 
 1. **Always use appropriate directories:**
    - Specs → `specs/modules/<module>/`
-   - Tests → `tests/modules/<module>/`
+   - Tests → `tests/domains/<module>/`
    - Tools → `tools/`
    - Docs → `docs/domains/<module>/`
 

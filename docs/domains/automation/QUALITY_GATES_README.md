@@ -535,7 +535,7 @@ src/digitalmodel/modules/automation/
   ├── quality_gates.py                      # Core validator
   └── quality_gates_cli.py                  # CLI interface
 
-tests/modules/automation/
+tests/domains/automation/
   └── test_quality_gates.py                 # Comprehensive tests
 
 .pre-commit-config.yaml                     # Pre-commit integration
@@ -561,4 +561,4 @@ For issues or questions about quality gates:
 1. Check configuration in `.claude/quality-gates.yaml`
 2. Review gate-specific documentation above
 3. Run with `--verbose` flag for detailed logging
-4. Check test output in `tests/modules/automation/test_quality_gates.py`
+4. Check test output in `tests/domains/automation/test_quality_gates.py`

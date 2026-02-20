@@ -444,8 +444,8 @@ if stress_range['max'] > STEEL_S355.yield_strength:
 6. `src/digitalmodel/modules/structural_analysis/cli.py`
 
 ### Test Files Created (2)
-7. `tests/modules/structural_analysis/test_structural_analysis_unit.py`
-8. `tests/modules/structural_analysis/test_structural_analysis_cli.py`
+7. `tests/domains/structural_analysis/test_structural_analysis_unit.py`
+8. `tests/domains/structural_analysis/test_structural_analysis_cli.py`
 
 ### CI/CD Created (1)
 9. `.github/workflows/structural-analysis-tests.yml`

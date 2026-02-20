@@ -584,7 +584,7 @@ pip install -e .
 viv-analysis --version
 
 # Run tests
-pytest tests/modules/viv_analysis/ -v
+pytest tests/domains/viv_analysis/ -v
 ```
 
 ---

@@ -8,7 +8,7 @@ Analysis conducted on: 2025-09-28
 ### Test Structure
 - **Total test files**: 148 Python test files
 - **Active test collection**: 55 tests in automation module (working baseline)
-- **Test directories**: Organized by module structure under `/tests/modules/`
+- **Test directories**: Organized by module structure under `/tests/domains/`
 - **Coverage**: 33.42% overall (automation module baseline)
 
 ### Test Framework Configuration
@@ -53,7 +53,7 @@ Analysis conducted on: 2025-09-28
 ## Test Module Analysis
 
 ### Working Modules
-- `tests/modules/automation/go_by_folder/`: 55 tests (34 failing, 21 passing)
+- `tests/domains/automation/go_by_folder/`: 55 tests (34 failing, 21 passing)
   - Pattern analyzer tests
   - Integration tests
   - Performance tests
@@ -61,7 +61,7 @@ Analysis conducted on: 2025-09-28
   - Minimizer tests
 
 ### Problematic Modules
-- `tests/modules/marine_analysis/`: Import errors due to missing scipy
+- `tests/domains/marine_analysis/`: Import errors due to missing scipy
 - Various CLI modules: Configuration issues
 - Cross-module integration tests: Not present
 

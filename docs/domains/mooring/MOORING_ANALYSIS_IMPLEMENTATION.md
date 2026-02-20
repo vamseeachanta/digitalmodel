@@ -36,7 +36,7 @@ src/digitalmodel/modules/mooring_analysis/
 ├── cli.py               (330 lines) - Command-line interface
 └── README.md            (580 lines) - User documentation
 
-tests/modules/mooring_analysis/
+tests/domains/mooring_analysis/
 ├── test_mooring_analysis_unit.py (630 lines) - Comprehensive unit tests
 └── test_mooring_analysis_cli.py  (280 lines) - CLI integration tests
 

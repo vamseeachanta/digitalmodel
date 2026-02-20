@@ -58,7 +58,7 @@ class FileOrganizationChecker:
             'specs': r'^specs/modules/[^/]+/?',
             'src': r'^src/modules/[^/]+/?', 
             'docs': r'^docs/domains/[^/]+/?',
-            'tests': r'^tests/modules/[^/]+/?',
+            'tests': r'^tests/domains/[^/]+/?',
             'configs': r'^configs/modules/[^/]+/?'
         }
         

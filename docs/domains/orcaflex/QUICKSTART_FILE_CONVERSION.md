@@ -192,13 +192,13 @@ Generated: 2026-01-02 10:30:45
 
 ```bash
 # Run all converter tests
-pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py -v
+pytest tests/domains/orcaflex/test_orcaflex_converter_enhanced.py -v
 
 # Run specific test
-pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py::TestOrcaFlexConverterEnhanced::test_single_dat_to_yml -v
+pytest tests/domains/orcaflex/test_orcaflex_converter_enhanced.py::TestOrcaFlexConverterEnhanced::test_single_dat_to_yml -v
 
 # Run with coverage
-pytest tests/modules/orcaflex/test_orcaflex_converter_enhanced.py --cov=digitalmodel.orcaflex
+pytest tests/domains/orcaflex/test_orcaflex_converter_enhanced.py --cov=digitalmodel.orcaflex
 ```
 
 ### Round-Trip Validation
@@ -266,7 +266,7 @@ Options:
 
 Detailed examples in:
 - **Python**: `docs/domains/orcaflex/examples/conversion_examples.py`
-- **Tests**: `tests/modules/orcaflex/test_orcaflex_converter_enhanced.py`
+- **Tests**: `tests/domains/orcaflex/test_orcaflex_converter_enhanced.py`
 
 Run examples:
 
@@ -313,7 +313,7 @@ Files are automatically skipped if output exists. To force reconversion, delete 
 - **Skill**: `.claude/skills/orcaflex-file-conversion/SKILL.md`
 - **Source Code**: `src/digitalmodel/modules/orcaflex/orcaflex_converter_enhanced.py`
 - **CLI**: `src/digitalmodel/modules/orcaflex/convert_cli.py`
-- **Tests**: `tests/modules/orcaflex/test_orcaflex_converter_enhanced.py`
+- **Tests**: `tests/domains/orcaflex/test_orcaflex_converter_enhanced.py`
 - **Examples**: `docs/domains/orcaflex/examples/conversion_examples.py`
 
 ---

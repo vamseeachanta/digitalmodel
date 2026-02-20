@@ -37,7 +37,7 @@
 //             "request": "launch",
 //             "module": "digitalmodel",
 //             "args": [
-//                 "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
+//                 "tests/domains/orcaflex/orcaflex_post_process/test_orcaflex_license.py"
 //             ],
 //             "cwd": "${workspaceFolder}",
 //             "console": "integratedTerminal",
@@ -56,7 +56,7 @@
 //             "name": "exec-test-orca-flex",
 //             "type": "python",
 //             "request": "launch",
-//             "program": "tests/modules/orcaflex/orcaflex_post_process/test_orcaflex.py",
+//             "program": "tests/domains/orcaflex/orcaflex_post_process/test_orcaflex.py",
 //             "args": [],
 //             "cwd": "${workspaceFolder}",
 //             "console": "integratedTerminal",

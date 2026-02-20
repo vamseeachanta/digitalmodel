@@ -23,7 +23,7 @@ except Exception as e:
 def create_flattened_model():
     """
     Create a single-directory version of the model with all includes.
-    This matches the working pattern from tests/modules/orcaflex/analysis/moorings/pretension
+    This matches the working pattern from tests/domains/orcaflex/analysis/moorings/pretension
     """
     project_dir = Path(__file__).parent
     base_dir = project_dir / "base_files"
