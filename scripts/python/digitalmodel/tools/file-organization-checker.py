@@ -57,7 +57,7 @@ class FileOrganizationChecker:
         self.mandatory_patterns = {
             'specs': r'^specs/modules/[^/]+/?',
             'src': r'^src/modules/[^/]+/?', 
-            'docs': r'^docs/modules/[^/]+/?',
+            'docs': r'^docs/domains/[^/]+/?',
             'tests': r'^tests/modules/[^/]+/?',
             'configs': r'^configs/modules/[^/]+/?'
         }

@@ -19,8 +19,8 @@ def test_mock_conversion():
     
     # Set up paths - use absolute paths
     base_dir = Path(__file__).parent.parent.parent.parent.parent.parent
-    input_dir = base_dir / "docs/modules/orcaflex/examples/raw"
-    output_dir = base_dir / "docs/modules/orcaflex/examples/yaml_mock_test"
+    input_dir = base_dir / "docs/domains/orcaflex/examples/raw"
+    output_dir = base_dir / "docs/domains/orcaflex/examples/yaml_mock_test"
     
     # Create converter in mock mode
     converter = OrcaFlexBatchConverter(
@@ -62,8 +62,8 @@ def test_real_conversion():
     
     # Set up paths - use absolute paths
     base_dir = Path(__file__).parent.parent.parent.parent.parent.parent
-    input_dir = base_dir / "docs/modules/orcaflex/examples/raw"
-    output_dir = base_dir / "docs/modules/orcaflex/examples/yaml"
+    input_dir = base_dir / "docs/domains/orcaflex/examples/raw"
+    output_dir = base_dir / "docs/domains/orcaflex/examples/yaml"
     
     # Create converter (will auto-detect if OrcFxAPI is available)
     converter = OrcaFlexBatchConverter(

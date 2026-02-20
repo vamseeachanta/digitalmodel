@@ -142,7 +142,7 @@ def main():
     print('='*80)
 
     # Input file
-    lis_file = Path('docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
+    lis_file = Path('docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
     print(f'\nInput file: {lis_file}')
 
     # Parse

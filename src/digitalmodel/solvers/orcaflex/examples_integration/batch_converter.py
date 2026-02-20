@@ -367,8 +367,8 @@ class OrcaFlexBatchConverter:
 def main():
     """Run batch conversion of OrcaFlex examples."""
     # Set up paths
-    input_dir = Path("docs/modules/orcaflex/examples/raw")
-    output_dir = Path("docs/modules/orcaflex/examples/yaml")
+    input_dir = Path("docs/domains/orcaflex/examples/raw")
+    output_dir = Path("docs/domains/orcaflex/examples/yaml")
     
     # Check if input directory exists
     if not input_dir.exists():
