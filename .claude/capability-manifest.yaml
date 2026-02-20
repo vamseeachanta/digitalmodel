@@ -1,0 +1,468 @@
+# digitalmodel capability manifest
+# Machine-readable index for agent discovery
+# Generated: 2026-02-20 | WRK-247
+# Usage: agents query this to find modules by domain or capability
+#
+# Query examples:
+#   domain: fatigue       -> structural.fatigue
+#   domain: mooring       -> subsea.mooring_analysis
+#   domain: hydrodynamics -> hydrodynamics.* (aqwa, diffraction, rao_analysis)
+#   domain: orcaflex      -> solvers.orcaflex
+#   domain: production    -> production_engineering
+
+version: "1.0"
+generated: "2026-02-20"
+source_package: "digitalmodel==0.0.9"
+source_path: "digitalmodel/src/digitalmodel/"
+total_modules: 17
+
+# Top-level domain groups (from digitalmodel.__init__ docstring)
+domain_groups:
+  - structural         # Strength, fatigue, pipe capacity
+  - hydrodynamics      # Wave & vessel dynamics (AQWA, OrcaWave, BEMRosetta)
+  - subsea             # Riser, mooring, pipeline
+  - solvers            # OrcaFlex, GMSH, Blender integrations
+  - signal_processing  # Signal analysis & time series
+  - asset_integrity    # Fitness-for-service (formerly pyintegrity)
+  - production_engineering  # Nodal analysis & well test QC
+  - marine_ops         # Marine operations & offshore engineering
+  - data_systems       # Data acquisition & validation
+  - infrastructure     # Core framework & shared utilities
+  - workflows          # Automation & agent orchestration
+
+modules:
+  # ── STRUCTURAL ─────────────────────────────────────────────────────────────
+
+  - name: fatigue
+    import_path: digitalmodel.structural.fatigue
+    domain: fatigue
+    description: >-
+      S-N curve fatigue analysis with rainflow counting (ASTM E1049-85), linear
+      and nonlinear damage accumulation, frequency-domain methods (Dirlik,
+      Tovo-Benasciutti), parametric sweeps, worked examples, and design-code
+      report generation per DNV-RP-C203, API RP 2A, BS 7608, and AWS D1.1.
+    key_inputs:
+      - stress_time_series   # array-like stress or strain history
+      - sn_curve             # standard + class (e.g. DNV-D, API-X)
+      - design_code          # DesignCode enum: DNV | API | BS | AWS
+      - gate_value           # minimum stress range filter (relative)
+    key_outputs:
+      - total_damage         # Palmgren-Miner damage sum
+      - fatigue_life_years   # estimated remaining life
+      - safety_factor        # 1/total_damage
+      - utilisation_ratio    # life_fraction_used
+      - design_code_report   # DesignCodeReport HTML/PDF artifact
+    test_count: 531          # tests/structural/fatigue/ (10 files)
+    status: active
+    standards: [DNV-RP-C203, API-RP-2A, BS-7608, AWS-D1.1]
+    related_skills:
+      - engineering/marine-offshore/fatigue-analysis
+      - engineering/marine-offshore/signal-analysis
+    wrk_items: [WRK-157, WRK-245]
+    notes: "531 tests in structural/fatigue; 62 additional in structural/fatigue_analysis (FatigueAnalysisEngine)"
+
+  - name: fatigue_analysis
+    import_path: digitalmodel.structural.fatigue_analysis
+    domain: fatigue
+    description: >-
+      Higher-level fatigue analysis engine (FatigueAnalysisEngine) with CLI,
+      reference sea-state processor and scaling, and time-trace integration
+      workflows built on top of the structural.fatigue module.
+    key_inputs:
+      - config_yaml          # YAML-driven analysis config
+      - time_trace_file      # OrcaFlex or CSV stress time trace
+      - reference_seastate   # scatter diagram / sea-state definition
+    key_outputs:
+      - fatigue_report       # structured fatigue result per location
+      - cli_exit_code        # 0 = pass, non-zero = failure
+    test_count: 62           # tests/structural/fatigue_analysis/ (6 files)
+    status: active
+    standards: [DNV-RP-C203]
+    related_skills:
+      - engineering/marine-offshore/fatigue-analysis
+    wrk_items: [WRK-157, WRK-245]
+
+  - name: wall_thickness
+    import_path: digitalmodel.structural.analysis
+    domain: wall_thickness
+    description: >-
+      Pipeline wall thickness design per DNV-OS-F101, API RP 2RD, API Std 2RD,
+      and ASME B31.8 with parametric sweeps, M-T interaction lookup tables,
+      multi-phase design code support via DesignCode enum + @register_code,
+      and interactive HTML reports.
+    key_inputs:
+      - design_pressure      # MPa internal design pressure
+      - pipe_geometry        # PipeGeometry: OD, WT, grade
+      - design_code          # DesignCode enum
+      - safety_class         # SafetyClass enum (LOW/MEDIUM/HIGH)
+      - design_factors       # DesignFactors dataclass
+    key_outputs:
+      - minimum_wall_thickness   # mm
+      - utilisation_ratio        # demand / capacity
+      - mt_lookup_table          # M-T interaction PDF/HTML
+      - interactive_report       # InteractiveReportBuilder HTML artifact
+    test_count: 273          # tests/test_wall_thickness*.py (11 files)
+    status: active
+    standards: [DNV-OS-F101, API-RP-2RD, API-Std-2RD, ASME-B31.8]
+    related_skills:
+      - engineering/marine-offshore/structural-analysis
+    wrk_items: [WRK-144, WRK-155, WRK-206]
+
+  - name: pipe_capacity
+    import_path: digitalmodel.structural.pipe_capacity
+    domain: structural
+    description: >-
+      Pipe capacity checks including burst, collapse, combined loading (M-T
+      interaction), and bending per DNV and API standards with CLI interface
+      and custom code extension points.
+    key_inputs:
+      - pipe_geometry        # OD, WT, material grade
+      - loads                # pressure, bending moment, axial tension
+      - design_code          # DNV / API
+    key_outputs:
+      - utilisation_ratio    # combined load utilisation
+      - governing_limit_state  # burst | collapse | combined
+    test_count: 211          # tests/structural/pipe_capacity/ (2 files)
+    status: active
+    standards: [DNV-OS-F101, API-RP-2A]
+    related_skills:
+      - engineering/marine-offshore/structural-analysis
+    wrk_items: [WRK-144, WRK-155]
+
+  - name: structural_analysis
+    import_path: digitalmodel.structural.structural_analysis
+    domain: structural
+    description: >-
+      Structural capacity checks: plate buckling, member capacity, Von Mises
+      stress, and section modulus calculations per DNV and ISO standards with
+      CLI and unit test coverage.
+    key_inputs:
+      - section_geometry     # plate dimensions, member cross-section
+      - applied_loads        # axial, shear, bending, torsion
+    key_outputs:
+      - buckling_utilisation  # Euler/DNV plate buckling ratio
+      - capacity_ratio        # member capacity utilisation
+    test_count: 42           # tests/structural/structural_analysis/ (2 files)
+    status: active
+    standards: [DNV-RP-C201, ISO-19902]
+    related_skills:
+      - engineering/marine-offshore/structural-analysis
+    wrk_items: []
+
+  - name: stress
+    import_path: digitalmodel.structural.stress
+    domain: structural
+    description: >-
+      Stress calculations including Von Mises stress, nonlinear stress-strain
+      curves, and stress-strain integration for metallic structural components.
+    key_inputs:
+      - stress_tensor        # 6-component stress state (σx, σy, σz, τxy, τyz, τxz)
+      - material_properties  # yield strength, elastic modulus
+    key_outputs:
+      - von_mises_stress     # equivalent stress (MPa)
+      - strain_energy        # nonlinear stress-strain result
+    test_count: 68           # tests/structural/stress/ (3 files)
+    status: active
+    standards: [DNV-RP-C203]
+    related_skills: []
+    wrk_items: []
+
+  # ── HYDRODYNAMICS ──────────────────────────────────────────────────────────
+
+  - name: hydrodynamics
+    import_path: digitalmodel.hydrodynamics
+    domain: hydrodynamics
+    description: >-
+      Hydrodynamic coefficient management: 6x6 added-mass and damping matrices,
+      JONSWAP/PM wave spectra, OCIMF wind/current/wave loading, and RAO
+      interpolation for offshore vessel response analysis.
+    key_inputs:
+      - vessel_properties    # VesselProperties: LBP, B, T, CB, displacement
+      - wave_parameters      # WaveParameters: Hs, Tp, gamma, heading
+      - environmental_conditions  # EnvironmentalConditions dataclass
+    key_outputs:
+      - hydrodynamic_matrix  # HydrodynamicMatrix 6x6 (added mass + damping)
+      - wave_spectrum        # discretised spectral density array
+      - ocimf_loads          # OCIMFLoading: wind, current, wave forces
+      - interpolated_raos    # CoefficientsInterpolator output per DOF
+    test_count: 40           # tests/hydrodynamics/ unit+cli (2 files)
+    status: active
+    standards: [OCIMF, DNV-RP-C205]
+    related_skills:
+      - engineering/marine-offshore/hydrodynamics
+      - engineering/marine-offshore/hydrodynamic-analysis
+    wrk_items: []
+
+  - name: diffraction
+    import_path: digitalmodel.hydrodynamics.diffraction
+    domain: hydrodynamics
+    description: >-
+      Unified diffraction analysis: AQWA and OrcaWave backends with standardised
+      RAO/added-mass/damping schemas, batch processing, AQWA-vs-OrcaWave
+      comparison framework, mesh pipeline, OrcaFlex export, and geometry
+      quality validation (Phase 3 complete).
+    key_inputs:
+      - aqwa_result_files    # .AQR, .LIS, ANL parser inputs
+      - orcawave_config      # OrcaWave run spec (YAML)
+      - mesh_geometry        # panel mesh for diffraction computation
+    key_outputs:
+      - unified_rao_schema   # standardised RAO (amplitude + phase) per DOF
+      - added_mass_matrix    # frequency-dependent 6x6
+      - damping_matrix       # radiation + viscous damping
+      - orcaflex_export      # .yaml / .csv hydrodynamic database
+      - comparison_report    # AQWA vs OrcaWave delta report
+    test_count: 566          # tests/hydrodynamics/diffraction/ (26 files)
+    status: active
+    standards: [DNV-RP-C205, AQWA, OrcaWave]
+    related_skills:
+      - engineering/marine-offshore/diffraction-analysis
+      - engineering/marine-offshore/aqwa-analysis
+      - engineering/marine-offshore/orcawave-analysis
+      - engineering/marine-offshore/orcawave-aqwa-benchmark
+    wrk_items: []
+
+  - name: aqwa
+    import_path: digitalmodel.hydrodynamics.aqwa
+    domain: hydrodynamics
+    description: >-
+      AQWA hydrodynamics solver integration: pre/post processing, .AQR/.LIS/.ANL
+      file parsing, RAO extraction, viscous damping determination, and batch
+      runner via ef_server or local execution.
+    key_inputs:
+      - aqwa_dat_file        # AQWA deck (.DAT) definition
+      - aqwa_result_files    # .AQR, .LIS, .ANL, .MES output files
+    key_outputs:
+      - raos                 # 6-DOF RAO amplitude and phase arrays
+      - damping_coefficients # added mass and radiation damping
+      - viscous_damping      # roll damping from forced oscillation
+    test_count: 33           # tests/hydrodynamics/aqwa/ (14 files)
+    status: active
+    standards: [AQWA-11.0+]
+    related_skills:
+      - engineering/marine-offshore/aqwa-analysis
+      - engineering/marine-offshore/diffraction-analysis
+    wrk_items: []
+
+  # ── SUBSEA ─────────────────────────────────────────────────────────────────
+
+  - name: mooring_analysis
+    import_path: digitalmodel.subsea.mooring_analysis
+    domain: mooring
+    description: >-
+      Mooring system design and analysis: CALM/SALM buoys, spread mooring,
+      catenary static analysis, stiffness matrix, environmental load estimation,
+      safety factor checks, OrcaFlex model generation, and material library
+      (R3/R4 chain, wire, polyester) per DNV-OS-E301 and API RP 2SK.
+    key_inputs:
+      - mooring_system       # MooringSystem: vessel, lines, anchors
+      - environmental_conditions  # wave, wind, current
+      - condition_type       # ConditionType: INTACT | DAMAGED | SURVIVAL
+    key_outputs:
+      - catenary_result      # CatenaryResult: tensions, angles, touchdown
+      - stiffness_matrix     # 6x6 mooring stiffness
+      - design_load_case     # DesignLoadCase: governing loads
+      - mooring_design_result  # utilisation + safety factors
+      - orcaflex_model       # OrcaFlexModelGenerator .yml output
+    test_count: 45           # tests/subsea/mooring_analysis/ (2 files)
+    status: active
+    standards: [DNV-OS-E301, API-RP-2SK, ABS]
+    related_skills:
+      - engineering/marine-offshore/mooring-analysis
+      - engineering/marine-offshore/mooring-design
+      - engineering/marine-offshore/orcaflex-mooring-iteration
+    wrk_items: [WRK-220, WRK-244]
+
+  - name: viv_analysis
+    import_path: digitalmodel.subsea.viv_analysis
+    domain: viv
+    description: >-
+      Vortex-induced vibration (VIV) analysis for risers and tubular members:
+      natural frequency calculation (pinned/fixed/free boundary conditions),
+      vortex shedding assessment, reduced velocity screening, VIV susceptibility
+      per DNV-RP-C205 and DNV-RP-F105, and VIV fatigue damage estimation.
+    key_inputs:
+      - tubular_member       # TubularMember: OD, WT, length, BC
+      - current_profile      # CurrentProfile: depth-velocity array
+      - material_properties  # MaterialProperties: E, rho
+      - fluid_properties     # FluidProperties: seawater density, viscosity
+    key_outputs:
+      - natural_frequencies  # NaturalFrequencyResult: fn per mode
+      - vortex_shedding      # VortexSheddingResult: fs vs fn comparison
+      - reduced_velocity     # ReducedVelocityResult: Vr per mode
+      - viv_screening        # VIVScreeningResult: susceptible Y/N + rationale
+      - viv_fatigue          # VIVFatigueResult: damage rate
+    test_count: 63           # tests/subsea/viv_analysis/ (3 files)
+    status: active
+    standards: [DNV-RP-C205, DNV-RP-F105]
+    related_skills:
+      - engineering/marine-offshore/viv-analysis
+    wrk_items: [WRK-216]
+
+  - name: catenary_riser
+    import_path: digitalmodel.subsea.catenary_riser
+    domain: riser
+    description: >-
+      Simple and lazy wave catenary riser static analysis: effective weight
+      calculation, hang-off angle and top tension derivation, lazy wave
+      buoyancy module sizing, and OrcaFlex model generation per DNV-OS-F201
+      and API RP 1111.
+    key_inputs:
+      - riser_configuration  # RiserConfiguration: water depth, pipe props
+      - fluid_contents       # FluidProperties: production fluid or mud
+      - lazy_wave_config     # LazyWaveConfiguration: buoyancy section
+    key_outputs:
+      - catenary_result      # CatenaryRiserResult: tension, angle, geometry
+      - effective_weight     # EffectiveWeightResult: submerged weight
+      - lazy_wave_result     # LazyWaveResult: buoyancy arc shape
+      - orcaflex_model       # OrcaFlex .yml model file
+    test_count: 39           # tests/subsea/catenary_riser/ (4 files)
+    status: active
+    standards: [DNV-OS-F201, API-RP-1111]
+    related_skills:
+      - engineering/marine-offshore/catenary-riser
+    wrk_items: []
+
+  # ── SOLVERS ────────────────────────────────────────────────────────────────
+
+  - name: orcaflex
+    import_path: digitalmodel.solvers.orcaflex
+    domain: orcaflex
+    description: >-
+      Comprehensive OrcaFlex integration: model generation (monolithic and
+      modular/spec-driven), universal runner, format converter (.dat/.yml/.sim),
+      OPP post-processing (summary stats, linked statistics, range graphs, time
+      series), mooring tension iteration, modal analysis, installation sequences,
+      line setup wizard, and batch/parallel execution.
+    key_inputs:
+      - orcaflex_model       # .dat or .yml model definition
+      - spec_yml             # modular spec for OrcaFlexModelGenerator
+      - opp_config           # OPP extraction config (summary, range graph)
+    key_outputs:
+      - sim_file             # .sim result file
+      - opp_summary          # pandas DataFrame of result statistics
+      - linked_statistics    # co-occurring extremes table
+      - range_graph          # response envelope over arc length
+      - time_series          # variable vs time array
+      - modular_spec         # extracted .yml spec from monolithic .dat
+    test_count: 818          # tests/solvers/orcaflex/ (51 files)
+    status: active
+    standards: [OrcaFlex-11.3+, DNV, API, ISO]
+    related_skills:
+      - engineering/marine-offshore/orcaflex-modeling
+      - engineering/marine-offshore/orcaflex-post-processing
+      - engineering/marine-offshore/orcaflex-model-generator
+      - engineering/marine-offshore/orcaflex-monolithic-to-modular
+      - engineering/marine-offshore/orcaflex-batch-manager
+      - engineering/marine-offshore/orcaflex-file-conversion
+      - engineering/marine-offshore/orcaflex-mooring-iteration
+      - engineering/marine-offshore/orcaflex-modal-analysis
+      - engineering/marine-offshore/orcaflex-installation-analysis
+      - engineering/marine-offshore/orcaflex-vessel-setup
+      - engineering/marine-offshore/orcaflex-code-check
+      - engineering/marine-offshore/orcaflex-operability
+      - engineering/marine-offshore/orcaflex-results-comparison
+      - engineering/marine-offshore/orcaflex-line-wizard
+      - engineering/marine-offshore/orcaflex-static-debug
+      - engineering/marine-offshore/orcaflex-visualization
+      - engineering/marine-offshore/orcaflex-yaml-gotchas
+      - engineering/marine-offshore/orcaflex-extreme-analysis
+    wrk_items: [WRK-240, WRK-255]
+
+  - name: gmsh_meshing
+    import_path: digitalmodel.solvers.gmsh_meshing
+    domain: meshing
+    description: >-
+      GMSH finite element mesh generation: 1D/2D/3D geometry processing,
+      mesh quality assessment (aspect ratio, skewness, Jacobian), multi-format
+      export (ANSYS, OpenFOAM, Abaqus, VTK), and CLI interface.
+    key_inputs:
+      - geometry_type        # GeometryType enum: BOX | CYLINDER | SPHERE | CUSTOM
+      - element_type         # ElementType: TRI | QUAD | TET | HEX
+      - mesh_algorithm       # MeshAlgorithm: FRONTAL | DELAUNAY | PACKING
+      - dimensions           # geometry dimensions dict
+    key_outputs:
+      - mesh_statistics      # MeshStatistics: n_nodes, n_elements, quality
+      - mesh_quality         # MeshQuality: min/max/avg aspect ratio
+      - mesh_file            # .msh / .inp / .med export
+    test_count: 15           # tests/solvers/gmsh_meshing/ (2 files)
+    status: active
+    standards: [GMSH-4.x]
+    related_skills:
+      - engineering/cad/gmsh-meshing
+    wrk_items: []
+
+  # ── SIGNAL PROCESSING ──────────────────────────────────────────────────────
+
+  - name: signal_analysis
+    import_path: digitalmodel.signal_processing.signal_analysis
+    domain: signal_processing
+    description: >-
+      Comprehensive signal processing: rainflow cycle counting (ASTM E1049-85),
+      FFT and PSD spectral analysis, frequency/time-domain filtering, OrcaFlex
+      time series integration, and fatigue signal post-processing utilities.
+    key_inputs:
+      - time_series          # numpy array: time + signal (stress, tension, etc.)
+      - sampling_rate        # Hz
+      - gate_value           # minimum cycle amplitude filter
+    key_outputs:
+      - rainflow_cycles      # DataFrame: range, mean, count per cycle bin
+      - power_spectral_density  # PSD array vs frequency
+      - spectral_moments     # m0, m1, m2, m4 for bandwidth calculations
+      - filtered_signal      # bandpass/highpass/lowpass filtered output
+    test_count: 84           # tests/signal_processing/ (8 files)
+    status: active
+    standards: [ASTM-E1049-85]
+    related_skills:
+      - engineering/marine-offshore/signal-analysis
+    wrk_items: []
+
+  # ── ASSET INTEGRITY ────────────────────────────────────────────────────────
+
+  - name: asset_integrity
+    import_path: digitalmodel.asset_integrity
+    domain: asset_integrity
+    description: >-
+      Fitness-for-service assessment for metallic structures (formerly
+      pyintegrity): fracture assessment diagram (FAD), API 579 Level 2 FFS,
+      remaining strength factor (RSF) calculations, pipe sizing, and math
+      solvers for structural integrity engineering.
+    key_inputs:
+      - flaw_characterisation  # depth, length, location (surface/embedded)
+      - material_properties  # yield, UTS, fracture toughness KIC
+      - applied_loads        # pressure, bending, axial stress
+    key_outputs:
+      - fad_result           # FAD assessment point (Kr, Lr) vs locus
+      - rsf                  # Remaining Strength Factor (0-1)
+      - acceptance           # ACCEPTABLE | UNACCEPTABLE | MARGINAL
+    test_count: 100          # tests/asset_integrity/ (4 files)
+    status: active
+    standards: [API-579-1, BS-7910, DNV-RP-F101]
+    related_skills:
+      - engineering/asset-integrity/fitness-for-service
+    wrk_items: []
+
+  # ── PRODUCTION ENGINEERING ─────────────────────────────────────────────────
+
+  - name: production_engineering
+    import_path: digitalmodel.production_engineering
+    domain: production_engineering
+    description: >-
+      Well test quality scoring, nodal analysis (IPR/VLP intersection), GIGO
+      detection, and reconciliation workflow. Core insight: reliable nodal
+      analysis starts with production test data quality (WRK-164). Supports
+      Vogel, Fetkovich, and Composite IPR; Hagedorn-Brown and Beggs-Brill VLP.
+    key_inputs:
+      - production_test_record  # wellhead pressure, rate, GOR, WC
+      - reservoir_conditions  # Pr, PI, fluid PVT
+      - completion_data      # tubing ID, length, GLR
+    key_outputs:
+      - quality_score        # 0-100 production test quality + flags
+      - nodal_operating_point  # NodalOperatingPoint: Pwf, q at intersection
+      - confidence_bounds    # ConfidenceBound: P10/P50/P90 production
+      - gigo_flags           # model-vs-test divergence diagnostics
+    test_count: 93           # tests/production_engineering/ (7 files)
+    status: active
+    standards: [API-RP-19D]
+    related_skills:
+      - engineering/marine-offshore/production-engineering
+    wrk_items: [WRK-164]
