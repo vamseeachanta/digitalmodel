@@ -29,14 +29,14 @@ Examples for FPSO (Floating Production Storage and Offloading) mooring analysis.
 
 ```bash
 # From repository root
-python examples/modules/fpso/fpso_mooring_analysis.py
+python examples/domains/fpso/fpso_mooring_analysis.py
 ```
 
 ### Run Jupyter Notebook
 
 ```bash
 # Start Jupyter
-jupyter notebook examples/modules/fpso/fpso_mooring_analysis.ipynb
+jupyter notebook examples/domains/fpso/fpso_mooring_analysis.ipynb
 ```
 
 ## Features

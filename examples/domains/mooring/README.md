@@ -19,7 +19,7 @@ Examples for mooring line design, catenary analysis, and mooring system configur
 ### Run Lazy Wave Example
 
 ```bash
-python examples/modules/mooring/lazy_wave_example.py
+python examples/domains/mooring/lazy_wave_example.py
 ```
 
 ## Features

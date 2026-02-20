@@ -28,19 +28,19 @@ Examples for structural stress analysis, von Mises stress calculations, and plat
 ### Plate Capacity Analysis
 
 ```bash
-python examples/modules/stress/plate_capacity_examples.py
+python examples/domains/stress/plate_capacity_examples.py
 ```
 
 ### Von Mises Stress Example
 
 ```bash
-python examples/modules/stress/stress_examples/vm_stress_example.py
+python examples/domains/stress/stress_examples/vm_stress_example.py
 ```
 
 ### Nonlinear Analysis
 
 ```bash
-python examples/modules/stress/stress_examples/nonlinear_example.py
+python examples/domains/stress/stress_examples/nonlinear_example.py
 ```
 
 ## Features

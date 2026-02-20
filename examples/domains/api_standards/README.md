@@ -20,7 +20,7 @@ Examples implementing API (American Petroleum Institute) standards for offshore 
 ### Run API 2RD Demo
 
 ```bash
-python examples/modules/api_standards/apistd2rd_demo.py
+python examples/domains/api_standards/apistd2rd_demo.py
 ```
 
 ## Input Files

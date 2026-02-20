@@ -27,13 +27,13 @@ Examples for hydrodynamic analysis, wave loads, and hydrodynamic coefficient cal
 ### Generate Hydrodynamic Charts
 
 ```bash
-python examples/modules/hydrodynamics/generate_hydro_charts.py
+python examples/domains/hydrodynamics/generate_hydro_charts.py
 ```
 
 ### Run Interactive Notebook
 
 ```bash
-jupyter notebook examples/modules/hydrodynamics/hydro_coefficients_example.ipynb
+jupyter notebook examples/domains/hydrodynamics/hydro_coefficients_example.ipynb
 ```
 
 ## Features

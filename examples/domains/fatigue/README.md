@@ -32,19 +32,19 @@ Examples for fatigue life assessment of offshore structures, mooring lines, and 
 ### Basic Fatigue Analysis
 
 ```bash
-python examples/modules/fatigue/fatigue_analysis_examples.py
+python examples/domains/fatigue/fatigue_analysis_examples.py
 ```
 
 ### Advanced Complete Analysis
 
 ```bash
-python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py
+python examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py
 ```
 
 ### Plot S-N Curves
 
 ```bash
-python examples/modules/fatigue/advanced_examples/plot_sn_curves_cli.py --material steel --environment seawater
+python examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py --material steel --environment seawater
 ```
 
 ## Features

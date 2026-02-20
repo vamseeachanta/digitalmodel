@@ -22,7 +22,7 @@ Examples for CALM (Catenary Anchor Leg Mooring) buoy offshore mooring systems.
 ```bash
 # From repository root
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project.yml \
   --fidelity preliminary \
   --validate
 ```
@@ -31,7 +31,7 @@ python scripts/generate_calm_buoy_project.py \
 
 ```bash
 # Copy to projects directory
-cp examples/modules/calm_buoy/north_sea_calm_project.yml projects/my_calm_project.yml
+cp examples/domains/calm_buoy/north_sea_calm_project.yml projects/my_calm_project.yml
 
 # Edit parameters
 vim projects/my_calm_project.yml

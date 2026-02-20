@@ -25,7 +25,7 @@ Examples for reservoir engineering, production analysis, and field development.
 ### Run Reservoir Analysis
 
 ```bash
-python examples/modules/reservoir/reservoir_analysis_examples.py
+python examples/domains/reservoir/reservoir_analysis_examples.py
 ```
 
 ## Features

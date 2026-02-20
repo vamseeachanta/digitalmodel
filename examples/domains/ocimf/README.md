@@ -27,13 +27,13 @@ Examples for OCIMF (Oil Companies International Marine Forum) standards and guid
 ### Run OCIMF Demo
 
 ```bash
-python examples/modules/ocimf/ocimf_demo.py
+python examples/domains/ocimf/ocimf_demo.py
 ```
 
 ### Run Interactive Notebook
 
 ```bash
-jupyter notebook examples/modules/ocimf/ocimf_visualization_example.ipynb
+jupyter notebook examples/domains/ocimf/ocimf_visualization_example.ipynb
 ```
 
 ## Features
