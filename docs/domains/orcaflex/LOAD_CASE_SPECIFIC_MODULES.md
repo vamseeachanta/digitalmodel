@@ -131,7 +131,7 @@ for load_case in load_cases:
 ```bash
 # Generate project with 12 operability load cases (30° spacing)
 python scripts/generate_calm_buoy_project.py \
-    --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+    --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
     --output-dir projects/MY_OPERABILITY_STUDY \
     --operability-directions 12 \
     --operability-return-period design_1yr \

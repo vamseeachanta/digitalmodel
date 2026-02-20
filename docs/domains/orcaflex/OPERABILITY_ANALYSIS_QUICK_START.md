@@ -22,7 +22,7 @@ Generate a CALM Buoy project with 12 operability load cases using 1-year return 
 cd D:/workspace-hub/digitalmodel
 
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
   --output projects/QUICKSTART_OPERABILITY \
   --operability-directions 12 \
   --operability-return-period design_1yr \
@@ -216,7 +216,7 @@ results.to_csv("projects/QUICKSTART_OPERABILITY/results/operability_results.csv"
 **24 directions (15° spacing):**
 ```bash
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
   --operability-directions 24 \
   --operability-return-period design_1yr
 ```
@@ -397,14 +397,14 @@ Include in project documentation:
 
 **Step 1:** Configure project with North Sea 1-year data
 ```bash
-# Edit: examples/modules/calm_buoy/north_sea_calm_project_human.yml
+# Edit: examples/domains/calm_buoy/north_sea_calm_project_human.yml
 # Set: Operability limit Hs = 2.5m (1-year return period)
 ```
 
 **Step 2:** Generate 24-direction operability analysis
 ```bash
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
   --output projects/NORTH_SEA_OPERABILITY \
   --operability-directions 24 \
   --operability-return-period design_1yr
@@ -447,7 +447,7 @@ python scripts/analyze_operability_results.py \
 - **Metocean Data Sources**: `docs/domains/orcaflex/NORTH_SEA_METOCEAN_DATA_SOURCES.md`
 
 ### Example Files:
-- **North Sea Example**: `examples/modules/calm_buoy/north_sea_calm_project_human.yml`
+- **North Sea Example**: `examples/domains/calm_buoy/north_sea_calm_project_human.yml`
 - **Template**: `templates/calm_buoy/project_template_human_friendly.yml`
 
 ### Scripts:

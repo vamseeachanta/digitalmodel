@@ -70,5 +70,5 @@ Notes and Limitations
 - Annular hydraulic diameter assumes concentric geometry unless overridden.
 
 Reference Data
-The example input file `examples/modules/input_files/ct_hydraulics/ga_drilling_antech_hydraulics.yml`
+The example input file `examples/domains/input_files/ct_hydraulics/ga_drilling_antech_hydraulics.yml`
 is derived from the AnTech Cerberus report for GA Drilling Modelling (v0.6).

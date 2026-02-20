@@ -285,7 +285,7 @@ Human Input:
 
 ```bash
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
   --output projects/NSE_OPERABILITY \
   --operability-directions 12 \
   --operability-return-period design_1yr \
@@ -367,7 +367,7 @@ python scripts/analyze_operability_results.py \
    - Added module population (Phase 3)
    - Added CLI options
 
-2. **`examples/modules/calm_buoy/north_sea_calm_project_human.yml`**
+2. **`examples/domains/calm_buoy/north_sea_calm_project_human.yml`**
    - Added operability analysis section
    - Updated load cases to use design_1yr
    - Added configuration examples
@@ -420,7 +420,7 @@ python scripts/analyze_operability_results.py \
 ### Test 1: Operability Generation
 ```bash
 python scripts/generate_calm_buoy_project.py \
-  --config examples/modules/calm_buoy/north_sea_calm_project_human.yml \
+  --config examples/domains/calm_buoy/north_sea_calm_project_human.yml \
   --output projects/TEST_OPERABILITY \
   --operability-directions 12 \
   --validate
