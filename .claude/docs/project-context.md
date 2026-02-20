@@ -20,7 +20,7 @@ DigitalModel is a Python library for engineering asset digital models focused on
 
 ## Development Workflow
 1. **Specification First**: All features start with specs in `specs/` directory
-2. **Configuration Templates**: Create/modify YAML configs in `base_configs/modules/`
+2. **Configuration Templates**: Create/modify YAML configs in `base_configs/domains/`
 3. **Module Implementation**: Implement analysis logic in `modules/`
 4. **Testing**: Create comprehensive tests with mock APIs where needed
 5. **Documentation**: Update relevant docs in `docs/` directory

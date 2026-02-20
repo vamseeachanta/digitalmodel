@@ -8,7 +8,7 @@ Configuration Registry
 Auto-discovering YAML configuration management system with advanced features.
 
 Features:
-- Recursive auto-discovery of YAML configs from base_configs/modules/
+- Recursive auto-discovery of YAML configs from base_configs/domains/
 - Environment variable overrides with DM_ prefix (double underscore for nesting)
 - Config inheritance via YAML extends and preset loading
 - Pydantic-based validation (permissive - warns on unknown keys)
@@ -51,7 +51,7 @@ class ConfigRegistry:
     Auto-discovering YAML configuration registry with advanced features.
     
     Automatically discovers and manages YAML configuration files from
-    base_configs/modules/ directory with support for inheritance, validation,
+    base_configs/domains/ directory with support for inheritance, validation,
     caching, and environment variable overrides.
     
     Args:
@@ -85,7 +85,7 @@ class ConfigRegistry:
         else:
             self.base_path = Path(config_base_path)
             
-        self.modules_path = self.base_path / "modules"
+        self.modules_path = self.base_path / "domains"
         self.presets_path = self.base_path / "presets"
         
         # Validate path exists

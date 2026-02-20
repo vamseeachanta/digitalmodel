@@ -67,7 +67,7 @@ data = catalog.load("mooring_analysis", validate=True)
 **Test Coverage**: 33/41 tests passing (80%)
 
 **Key Features:**
-- Auto-discovery from `base_configs/modules/`
+- Auto-discovery from `base_configs/domains/`
 - Environment variable overrides (`DM_*`)
 - Config inheritance (YAML extends, presets)
 - Hot-reload support

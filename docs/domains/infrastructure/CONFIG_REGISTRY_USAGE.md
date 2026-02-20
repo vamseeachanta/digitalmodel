@@ -54,7 +54,7 @@ All core features working:
 ## Features Implemented
 
 ### Auto-discovery
-- Recursive search in base_configs/modules/
+- Recursive search in base_configs/domains/
 - Excludes *_template, *_example, *_test files
 - Both .yml and .yaml extensions
 
