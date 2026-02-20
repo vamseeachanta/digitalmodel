@@ -446,21 +446,19 @@ def _build_sum_freq_figure(
         rows=3, cols=2,
         specs=[[{"colspan": 2}, None], [{}, {}], [{}, {}]],
         subplot_titles=[
-            f"Diffraction load RAO [{uf}]",
+            f"Diffraction load RAO — real &amp; imag [{uf}]",
             f"Mean drift load (PI) [{ud}]", f"Quadratic load (PI) [{ud}]",
             f"Direct potential load [{ud}]", f"Indirect potential load [{ud}]",
         ],
         vertical_spacing=0.13, horizontal_spacing=0.10,
     )
 
-    # Panel 1 — Diffraction load RAO (amplitude only, not complex)
+    # Panel 1 — Diffraction load RAO (real + imag, matching WAMIT reference)
+    # show_legend=True for OrcaWave here; all subsequent panels suppress legend
     rao = xdata.get("load_rao_diffraction", {})
     if rao:
-        fig.add_trace(go.Scatter(
-            x=rao["omega"], y=np.abs(rao["values"][:, dof]),
-            mode="lines+markers", name="OrcaWave (amplitude)",
-            line=_cline(_C_REAL), marker=dict(size=5),
-        ), row=1, col=1)
+        _add(fig, _traces(rao["omega"], rao["values"][:, dof], "OrcaWave",
+                          show_legend=True), 1, 1)
     ref = _wref("load_rao_diffraction")
     if ref:
         _add(fig, _wamit_traces(ref, show_legend=True), 1, 1)
@@ -472,6 +470,7 @@ def _build_sum_freq_figure(
             x=drift["omega"], y=np.real(drift["values"][:, dof]),
             mode="lines+markers", name="OrcaWave",
             line=_cline(_C_REAL), marker=dict(size=5),
+            showlegend=False,
         ), row=2, col=1)
     ref = _wref("mean_drift_pi")
     if ref:
@@ -483,7 +482,8 @@ def _build_sum_freq_figure(
         o1, o2 = qpi["omega1"], qpi["omega2"]
         diag = np.abs(o1 - o2) < 1e-6
         sel = diag if diag.any() else np.ones(len(o1), dtype=bool)
-        _add(fig, _traces(o1[sel], qpi["values"][sel, dof], "OrcaWave"), 2, 2)
+        _add(fig, _traces(o1[sel], qpi["values"][sel, dof], "OrcaWave",
+                          show_legend=False), 2, 2)
     ref = _wref("quadratic_pi")
     if ref:
         _add(fig, _wamit_traces(ref, show_legend=False), 2, 2)
