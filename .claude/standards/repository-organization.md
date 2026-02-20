@@ -20,8 +20,8 @@ specs/modules/marine-engineering/
 specs/modules/test-suite-automation/
 src/modules/hydrodynamics/
 src/modules/orcaflex-integration/
-docs/modules/installation/
-docs/modules/user-guides/
+docs/domains/installation/
+docs/domains/user-guides/
 tests/modules/unit-tests/
 tests/modules/integration-tests/
 configs/modules/development/
@@ -49,7 +49,7 @@ agent-os-docs/              # Not following pattern
 |-------|---------|---------|---------|
 | `specs/modules/<module>/` | All specifications | Module-specific specs | `specs/modules/agent-os/foundation/spec.md` |
 | `src/modules/<module>/` | All source code | Module-specific implementation | `src/modules/marine-engineering/hydrodynamics.py` |
-| `docs/modules/<module>/` | All documentation | Module-specific docs | `docs/modules/installation/setup-guide.md` |
+| `docs/domains/<module>/` | All documentation | Module-specific docs | `docs/domains/installation/setup-guide.md` |
 | `tests/modules/<module>/` | All test files | Module-specific tests | `tests/modules/agent-os/test_framework.py` |
 | `configs/modules/<module>/` | All configurations | Module-specific configs | `configs/modules/development/settings.yaml` |
 

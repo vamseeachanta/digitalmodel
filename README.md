@@ -317,9 +317,9 @@ print(f"Buckling Capacity: {capacity:.2f} kN")
 
 ### Module Documentation
 - [Fatigue Analysis](data/fatigue/README.md) ⭐
-- [Stress Analysis](docs/modules/stress/README.md)
-- [OrcaFlex Integration](docs/modules/orcaflex/README.md)
-- [Marine Engineering](docs/modules/marine-engineering/README.md)
+- [Stress Analysis](docs/domains/stress/README.md)
+- [OrcaFlex Integration](docs/domains/orcaflex/README.md)
+- [Marine Engineering](docs/domains/marine-engineering/README.md)
 
 ### API Reference
 - [Core API](docs/api/core.md)
@@ -347,8 +347,8 @@ digitalmodel/
 │       └── ...                     # 35+ more modules
 ├── tests/modules/                  # Test suites (mirrors src structure)
 ├── specs/modules/                  # Module specifications (39 specs)
-├── docs/modules/                   # Module documentation
-├── examples/modules/               # Working examples per module
+├── docs/domains/                   # Module documentation
+├── examples/domains/               # Working examples per module
 ├── config/                         # Configuration files
 │   └── templates/                  # Project templates
 ├── data/                           # Engineering databases

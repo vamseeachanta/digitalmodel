@@ -52,7 +52,7 @@ class ModuleBoundaryChecker:
         'src/modules/',
         'tests/modules/',
         'configs/modules/',
-        'docs/modules/'
+        'docs/domains/'
     ]
     
     def __init__(self, repo_path: Path = None):

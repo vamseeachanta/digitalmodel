@@ -228,7 +228,7 @@ def main():
     """Run the benchmark comparison."""
 
     # Paths
-    benchmark_dir = Path("docs/modules/orcawave/L01_aqwa_benchmark")
+    benchmark_dir = Path("docs/domains/orcawave/L01_aqwa_benchmark")
     data_dir = benchmark_dir / "data"
     output_dir = benchmark_dir / "benchmark_results"
 

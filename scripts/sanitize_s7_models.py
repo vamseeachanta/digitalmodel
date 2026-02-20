@@ -4,7 +4,7 @@ digitalmodel library.
 
 Walks the s7 directory, deduplicates by content hash, applies client-name
 sanitization, strips metadata headers, and writes sanitized .yml files into
-an organized category-based folder structure under docs/modules/orcaflex/.
+an organized category-based folder structure under docs/domains/orcaflex/.
 
 Usage:
     uv run python scripts/sanitize_s7_models.py
@@ -36,7 +36,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 DEFAULT_S7_ROOT = Path(r"D:\workspace-hub\rock-oil-field\s7")
-DEFAULT_OUTPUT_ROOT = Path("docs/modules/orcaflex")
+DEFAULT_OUTPUT_ROOT = Path("docs/domains/orcaflex")
 
 # Longest-first ordering is enforced at runtime; this dict is the canonical
 # source of all sanitization replacements.

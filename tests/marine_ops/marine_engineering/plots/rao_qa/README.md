@@ -185,7 +185,7 @@ Edit `src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py` to:
 ## References
 
 - **RAO Theory**: [Wikipedia - Response Amplitude Operator](https://en.wikipedia.org/wiki/Response_amplitude_operator)
-- **AQWA Documentation**: `docs/modules/aqwa/reference-manuals/`
+- **AQWA Documentation**: `docs/domains/aqwa/reference-manuals/`
 - **Parser Code**: `src/digitalmodel/modules/marine_analysis/parsers/aqwa_lis_parser.py`
 - **Plotting Module**: `src/digitalmodel/modules/marine_analysis/visualization/rao_plotter.py`
 - **Verification Report**: `docs/marine_engineering/RAO_EXTRACTION_VERIFICATION.md`

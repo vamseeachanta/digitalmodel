@@ -12,8 +12,8 @@ Reorganize a repository from flat structure to module-based 5-layer architecture
 src/<package>/modules/<module_name>/
 tests/modules/<module_name>/
 specs/modules/<module_name>/
-docs/modules/<module_name>/
-examples/modules/<module_name>/
+docs/domains/<module_name>/
+examples/domains/<module_name>/
 ```
 
 ### Quick Commands

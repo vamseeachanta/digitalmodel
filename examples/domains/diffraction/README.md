@@ -126,6 +126,6 @@ project/
 
 ## See Also
 
-- [CLI Guide](../../docs/modules/diffraction/CLI_GUIDE.md) - Complete CLI documentation
-- [Module Documentation](../../docs/modules/diffraction/) - Technical reference
-- [API Documentation](../../docs/modules/diffraction/API_REFERENCE.md) - Programmatic usage
+- [CLI Guide](../../docs/domains/diffraction/CLI_GUIDE.md) - Complete CLI documentation
+- [Module Documentation](../../docs/domains/diffraction/) - Technical reference
+- [API Documentation](../../docs/domains/diffraction/API_REFERENCE.md) - Programmatic usage

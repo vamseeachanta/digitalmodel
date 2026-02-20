@@ -162,7 +162,7 @@ def validate_file_location(filepath: str) -> bool:
             f"  - User inputs: inputs/user_provided/\n"
             f"  - Tests: tests/modules/<module>/\n"
             f"  - Tools: tools/\n"
-            f"  - Docs: docs/modules/<module>/"
+            f"  - Docs: docs/domains/<module>/"
         )
     
     # Check for user input files

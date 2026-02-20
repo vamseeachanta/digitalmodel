@@ -17,10 +17,10 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder impo
 
 
 SLAY_SPEC_DIR = Path(__file__).parent.parent.parent.parent.parent / (
-    "docs/modules/orcaflex/pipeline/installation/s-lay"
+    "docs/domains/orcaflex/pipeline/installation/s-lay"
 )
 FLOATING_SPEC_FILE = Path(__file__).parent.parent.parent.parent.parent / (
-    "docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
+    "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
 )
 
 

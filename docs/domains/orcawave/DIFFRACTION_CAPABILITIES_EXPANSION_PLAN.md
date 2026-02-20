@@ -1,0 +1,136 @@
+# Diffraction Capabilities Expansion Plan (AQWA + OrcaWave)
+
+**Date:** 2026-01-04
+**Status:** Phase 3 In Progress - Automation + QA
+
+## Overview
+
+This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a format aligned with the OrcaFlex agent implementation summary. The goal is to standardize workflows, add reliable automation, and expose repeatable examples that integrate into OrcaFlex workflows.
+
+## Current Baseline
+
+### OrcaWave
+- Orchestrator and templates: `src/digitalmodel/modules/orcawave/diffraction/`
+- Batch execution: `src/digitalmodel/modules/orcawave/diffraction/scripts/run_diffraction_analysis.bat`
+- Specifications and sample configs: `specs/modules/orcawave/diffraction-analysis/`
+- Examples: `docs/domains/orcawave/examples/` and `docs/domains/orcawave/L01_aqwa_benchmark/`
+
+### AQWA
+- Analysis utilities, RAO workflows, and parsers: `src/digitalmodel/modules/aqwa/`
+- EF server integration: `src/digitalmodel/modules/aqwa/aqwa_analysis_ef_server.py`
+- Example configs and scripts: `docs/domains/aqwa/scripts/wlng_diffraction_analysis/`
+- Example runs and references: `docs/domains/aqwa/examples/`
+
+## Target Capabilities
+
+### Shared Goals
+- Single entry points for diffraction analysis (AQWA and OrcaWave).
+- Repeatable configuration formats (YAML-based) with clear templates.
+- Automated results packaging for OrcaFlex import.
+- QA checks: geometry validation, reciprocity, energy balance, and frequency coverage.
+
+### OrcaWave Enhancements
+- Config-driven batch runs (multi-vessel, multi-condition).
+- Integrated result conversion to OrcaFlex vessel type templates.
+- Standardized geometry validation report format.
+- Automated report artifacts (CSV + XLSX + summary report).
+
+### AQWA Enhancements
+- One routing entry for RAO, damping, and external-force workflows.
+- Standardized RAO extraction and damping computation outputs.
+- Workbench/DAT run helpers and consistent log extraction.
+- Results packaging to OrcaFlex-ready structures.
+
+## Expansion Phases
+
+### Phase 1: Workflow Hardening (Short Term) ✅ COMPLETE
+- ✅ Fix execution blockers and path mismatches.
+- ✅ Ensure AQWA analysis routing covers RAO, damping, and EF server flows.
+- ✅ Normalize config locations for example runs.
+- ✅ Add minimal CLI examples in docs for both tools.
+
+**Deliverables**: 3 CLI tools, 1,220+ lines documentation
+**Completion**: 2026-01-03
+**Report**: `docs/domains/orcawave/PHASE_1_COMPLETION.md`
+
+### Phase 2: Output Standardization (Mid Term) ✅ COMPLETE
+- ✅ Define unified output schemas (RAO tables, added mass, damping).
+- ✅ Implement converters to OrcaFlex-ready YAML/CSV outputs.
+- ✅ Add validation scripts for results completeness and ranges.
+
+**Deliverables**: 2,030+ lines code, 6 export formats, comprehensive validation
+**Completion**: 2026-01-03
+**Report**: `docs/domains/diffraction/PHASE_2_COMPLETION.md`
+
+### Phase 3: Automation + QA (Mid Term) ✅ COMPLETE
+- ✅ **OrcaWave Converter Implementation (Phase 3.1)**
+  - Core converter class with OrcFxAPI integration (~630 lines)
+  - Unified schema conversion matching AQWA converter
+  - Same 6-format export capability
+  - Complete documentation and usage guide
+  - Module integration with availability checking
+- ✅ **Data Extraction Refinement (Phase 3.2)**
+  - Actual OrcFxAPI data extraction implemented
+  - RAO table parsing from vessel type (LoadRAOs)
+  - Added mass/damping matrix extraction (AddedMassAndDamping)
+  - Frequency and heading data extraction with validation
+  - Data extraction utility module (~420 lines)
+  - Error handling and warning system
+  - Removed placeholder methods
+- ✅ **Testing & Validation (Phase 3.3)**
+  - Test utilities with mock data generators (~580 lines)
+  - Complete OrcaWave conversion example
+  - End-to-end workflow tested and validated
+  - Test results documentation
+- ✅ **AQWA vs OrcaWave Comparison Framework (Phase 3.4)**
+  - Statistical comparison framework (~400 lines)
+  - RAO deviation analysis
+  - Matrix element comparison
+  - Correlation analysis
+  - JSON report generation
+- ✅ **Batch Execution Framework (Phase 3.5)**
+  - Multi-vessel processing support (~350 lines)
+  - Parallel execution capability
+  - Progress tracking and reporting
+  - JSON configuration support
+- ✅ **Geometry Quality Gates (Phase 3.6)**
+  - Watertight validation (~350 lines)
+  - Normal orientation checking
+  - Panel count limits
+  - Aspect ratio validation
+  - Element size consistency
+
+**Total Deliverables**: 3,100+ lines code, 6 major components, comprehensive testing
+**Completion**: 2026-01-04
+**Status**: All Phase 3 objectives achieved
+
+### Phase 4: Templates + Examples (Long Term)
+- Publish end-to-end example projects for both tools.
+- Add reusable vessel templates and configuration generators.
+- Provide starter packs for new diffraction studies.
+
+## Working Examples and Assets
+
+- OrcaWave Sea Cypress go-by: `specs/modules/orcawave/diffraction-analysis/`
+- AQWA ship RAO examples: `docs/domains/aqwa/examples/001_ship_raos.md`
+- AQWA restart example: `docs/domains/aqwa/examples/102_restart/`
+- OrcaWave AQWA benchmark assets: `docs/domains/orcawave/L01_aqwa_benchmark/`
+
+## Dependencies and Risks
+
+- AQWA and OrcaWave licenses and Windows execution environment.
+- Geometry quality and mesh conversion tooling.
+- Consistent units and coordinate frames across tools.
+
+## Validation Strategy
+
+- Geometry validation reports saved per run.
+- Frequency coverage and heading completeness checks.
+- Cross-tool benchmark comparisons where data is available.
+- OrcaFlex import checks using generated vessel type files.
+
+## Next Actions
+
+1. Align AQWA and OrcaWave configuration templates with existing examples.
+2. Document end-to-end run commands for both tools in their module docs.
+3. Add automated result checks and a small benchmark suite.

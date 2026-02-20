@@ -7,7 +7,7 @@ import pytest
 import yaml
 
 SPEC_DIR = Path(__file__).parent.parent.parent.parent.parent / (
-    "docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline"
+    "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline"
 )
 SPEC_FILE = SPEC_DIR / "spec.yml"
 

@@ -43,16 +43,16 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
 )
 
 # --- Configuration ---
-BENCHMARK_DIR = Path("docs/modules/orcawave/L04_spar_benchmark")
+BENCHMARK_DIR = Path("docs/domains/orcawave/L04_spar_benchmark")
 ORCAWAVE_YML = BENCHMARK_DIR / "source_data" / "orcawave" / "spar_benchmark.yml"
-AQWA_DAT = Path("docs/modules/aqwa/examples/spar-example/simple.dat")
+AQWA_DAT = Path("docs/domains/aqwa/examples/spar-example/simple.dat")
 AQWA_DIR = AQWA_DAT.parent  # AQWA runs from the .dat directory
 MESH_SRC = AQWA_DAT  # Same file (AQWA .dat contains geometry)
 LIS_FILE = AQWA_DIR / "SIMPLE.LIS"
 VESSEL_NAME = "Spar_Benchmark"
 WATER_DEPTH = 200.0
 
-# Output directory — canonical location in docs/modules/
+# Output directory — canonical location in docs/domains/
 OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 
