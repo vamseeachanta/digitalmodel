@@ -964,7 +964,7 @@ def build_inline_html(
         '<span style="font-size:1.6em;line-height:1;">&#127754;</span>'
         '<div>'
         '<h2 style="margin:0;color:#fff;font-size:1.15em;font-weight:700;'
-        'letter-spacing:0.02em;">QTF Analysis</h2>'
+        'letter-spacing:0.02em;">12. QTF Analysis</h2>'
         '<p style="margin:0.2em 0 0;color:rgba(255,255,255,0.72);font-size:0.82em;">'
         "Quadratic Transfer Functions — OrcaWave vs. WAMIT reference</p>"
         "</div>"
