@@ -54,14 +54,14 @@ class CathodicProtection:
 
     def DNV_RP_F103_2010(self, cfg):
         """
-        Calculate cathodic protection for submarine pipelines using DNV Recommended Practice F103.
+        Calculate cathodic protection for submarine pipelines per DNV-RP-F103 (2010 edition).
 
-        DNV-RP-F103: Cathodic Protection of Submarine Pipelines by Galvanic Anodes
+        DNV-RP-F103 (October 2010): Cathodic Protection of Submarine Pipelines by Galvanic Anodes
 
-        This method implements comprehensive pipeline CP design including:
+        Implements DNV-RP-F103 (2010 edition) including:
         - Pipeline surface area calculations based on geometry
-        - Coating breakdown factors for buried pipeline conditions
-        - Current density requirements for pipeline protection
+        - Coating breakdown factors per Annex 1 linear formula (Eq.2 / Eq.4)
+        - Current density requirements from Table 5-1 (burial x internal fluid temperature)
         - Distributed anode spacing optimization
         - Pipeline attenuation analysis for current distribution
         - Anode mass and quantity requirements
@@ -125,11 +125,15 @@ class CathodicProtection:
         """
         Calculate pipeline geometry and surface areas for CP design.
 
-        DNV RP-F103 requires accurate surface area calculations for current demand.
+        DNV-RP-F103 (2010) requires accurate surface area calculations for current demand.
         Calculates bare, coated, and wetted surface areas based on pipeline dimensions.
 
-        Enhanced to support longitudinal resistance (DNV RP-F103 2016 / Saipem approach):
-        RL = ρMe / As (metal resistivity / steel cross-sectional area)
+        Longitudinal metallic resistance per DNV-RP-F103 (2010) Eq.11:
+        R_Me = L * rho_Me / (pi * d * (D - d))
+        where D = outer diameter (m), d = wall thickness (m), rho_Me = steel resistivity (ohm-m)
+
+        Giving resistance per unit length:
+        R_Me_per_m = rho_Me / (pi * d * (D - d))
 
         Args:
             inputs (dict): Configuration inputs with pipeline geometry parameters
@@ -146,14 +150,14 @@ class CathodicProtection:
         coating_thickness_m = pipeline.get("coating_thickness_m", 0.0)
 
         # Metal resistivity for longitudinal resistance calculation
-        # Default: 2e-7 Ω·m for carbon steel (DNV RP-F103 2016)
-        pipe_resistivity_ohm_m = pipeline.get("resistivity_ohm_m", 2e-7)
+        # Default: 0.2e-6 Ω·m for CMn-steel (DNV-RP-F103 2010 Sec.5.6.10)
+        pipe_resistivity_ohm_m = pipeline.get("resistivity_ohm_m", 0.2e-6)
 
         # Calculate diameters
         inner_diameter_m = outer_diameter_m - (2.0 * wall_thickness_m)
         coated_diameter_m = outer_diameter_m + (2.0 * coating_thickness_m)
 
-        # Calculate surface areas (cylinder surface area = π * D * L)
+        # Calculate surface areas (cylinder surface area = pi * D * L)
         import math
 
         bare_surface_area_m2 = math.pi * outer_diameter_m * length_m
@@ -170,11 +174,13 @@ class CathodicProtection:
         inner_cross_section_m2 = math.pi * (inner_diameter_m / 2.0) ** 2
         steel_cross_section_m2 = outer_cross_section_m2 - inner_cross_section_m2
 
-        # Calculate longitudinal resistance (DNV RP-F103 2016 / Saipem approach)
-        # RL = ρMe / As (metal resistivity / steel cross-sectional area)
-        # Used in enhanced attenuation formula
-        if steel_cross_section_m2 > 0:
-            longitudinal_resistance_ohm_per_m = pipe_resistivity_ohm_m / steel_cross_section_m2
+        # Calculate longitudinal metallic resistance per unit length
+        # DNV-RP-F103 (2010) Eq.11: R_Me = L * rho_Me / (pi * d * (D - d))
+        # Per unit length: R_Me_per_m = rho_Me / (pi * d * (D - d))
+        # where D = outer diameter, d = wall thickness
+        denom = math.pi * wall_thickness_m * (outer_diameter_m - wall_thickness_m)
+        if denom > 0:
+            longitudinal_resistance_ohm_per_m = pipe_resistivity_ohm_m / denom
         else:
             longitudinal_resistance_ohm_per_m = 0.0
 
@@ -196,166 +202,167 @@ class CathodicProtection:
             "longitudinal_resistance_ohm_per_m": round(longitudinal_resistance_ohm_per_m, 10),
         }
 
+    # F103-2010 Annex 1 Table A.1: linepipe coating breakdown constants a and b.
+    # Values from PDF Table A.1 (x100 column headers mean table values must be divided by 100).
+    # a = initial breakdown factor (dimensionless), b = degradation constant (per year, dimensionless)
+    _F103_2010_TABLE_A1 = {
+        "glass_fibre_reinforced_asphalt_enamel": (0.003, 0.0001),
+        "glass_fibre_reinforced_coal_tar_enamel": (0.003, 0.0001),
+        "single_layer_FBE": (0.010, 0.0003),
+        "dual_layer_FBE": (0.010, 0.0003),
+        "3LPE": (0.001, 0.00003),   # 3-layer FBE/PE
+        "3LPP": (0.001, 0.00003),   # 3-layer FBE/PP
+        "multi_layer_FBE_PP": (0.0003, 0.00001),
+        "polychloroprene": (0.001, 0.0001),
+        # Common aliases
+        "FBE": (0.010, 0.0003),     # Single or Dual Layer FBE (default for FBE)
+        "3layer_FBE_PE": (0.001, 0.00003),
+        "bare": (1.0, 0.0),         # No linepipe coating — bare steel
+    }
+
     def _dnv_coating_breakdown(self, inputs, design_life):
         """
         Calculate time-dependent coating breakdown factors for buried pipelines.
 
-        DNV RP-F103 accounts for coating deterioration over time in buried conditions.
-        Breakdown rates differ from marine structures due to soil environment effects.
+        DNV-RP-F103 (2010) Annex 1 linear formula (Eq.2 and Eq.4):
+          f_ci = a                          (initial breakdown factor)
+          f_cm = a + 0.5 * b * t_f         (mean breakdown factor, Eq.2)
+          f_cf = a + b * t_f               (final breakdown factor, Eq.4)
 
-        Enhanced to support wet storage period (DNV RP-F103 2016 / Saipem approach):
-        Total coating degradation = design_life + wet_storage_years
+        Constants a and b come from F103-2010 Annex 1 Tables A.1 (linepipe) and A.2 (FJC).
+        The user may also supply a and b directly via pipeline.coating_breakdown_a
+        and pipeline.coating_breakdown_b to override the table look-up.
 
         Args:
             inputs (dict): Configuration inputs with pipeline coating parameters
-            design_life (float): Design life in years
+            design_life (float): Design life t_f in years
 
         Returns:
-            dict: Coating breakdown factors over pipeline lifetime
+            dict: Coating breakdown factors f_ci, f_cm, f_cf
         """
         pipeline = inputs.get("pipeline", {})
 
-        # Extract coating breakdown parameters for buried pipeline
         burial_condition = pipeline.get("burial_condition", "buried")
-        coating_type = pipeline.get("coating_type", "FBE")  # Fusion Bonded Epoxy default
+        coating_type = pipeline.get("coating_type", "FBE")
 
-        # DNV RP-F103 coating breakdown rates (different from ABS ship coating)
-        # Buried pipelines typically have lower initial breakdown than marine structures
-        initial_breakdown_pct = pipeline.get("coating_initial_breakdown_pct", 0.5)
-        initial_duration_years = pipeline.get("coating_initial_breakdown_duration", 1.0)
-        yearly_breakdown_pct = pipeline.get("coating_yearly_breakdown_pct", 1.5)
+        # Allow direct override of a/b constants; otherwise look up from table
+        if "coating_breakdown_a" in pipeline and "coating_breakdown_b" in pipeline:
+            a = float(pipeline["coating_breakdown_a"])
+            b = float(pipeline["coating_breakdown_b"])
+        else:
+            # Look up constants from F103-2010 Annex 1 Table A.1
+            defaults = self._F103_2010_TABLE_A1.get(coating_type)
+            if defaults is None:
+                # Fall back to FBE if coating type not recognised
+                defaults = self._F103_2010_TABLE_A1["FBE"]
+            a, b = defaults
 
-        # Wet storage period (DNV RP-F103 2016 enhancement)
-        # Accounts for coating degradation during wet storage before installation
-        wet_storage_years = pipeline.get("wet_storage_years", 0.0)
+        t_f = design_life  # design life in years
 
-        # Maximum coating breakdown factor
-        max_breakdown_factor = pipeline.get("coating_breakdown_factor_max", 3.0)
+        # F103-2010 Annex 1 formulas
+        f_ci = a                        # Eq. initial (from Sec.5.2.7 and Annex 1)
+        f_cm = a + 0.5 * b * t_f       # Eq.2
+        f_cf = a + b * t_f             # Eq.4
 
-        # Calculate breakdown periods including wet storage
-        # Total degradation time = design life + wet storage period
-        total_degradation_years = design_life + wet_storage_years
-        initial_years = min(total_degradation_years, initial_duration_years)
-        remaining_years = max(0.0, total_degradation_years - initial_duration_years)
-
-        # Calculate breakdown factors
-        initial_factor = 1.0 + (initial_breakdown_pct / 100.0)
-        yearly_factor = 1.0 + (yearly_breakdown_pct / 100.0)
-
-        # Compound breakdown over time (includes wet storage period)
-        fcf_raw = (initial_factor**initial_years) * (yearly_factor**remaining_years)
-        final_factor = min(max_breakdown_factor, fcf_raw)
-
-        # Mean coating breakdown factor (average over design life)
-        mean_factor = (yearly_factor + final_factor) / 2.0
+        # Clamp: breakdown factor must be <= 1.0 (100% bare steel is the maximum)
+        f_ci = min(f_ci, 1.0)
+        f_cm = min(f_cm, 1.0)
+        f_cf = min(f_cf, 1.0)
 
         return {
             "burial_condition": burial_condition,
             "coating_type": coating_type,
-            "initial_factor": round(initial_factor, 6),
-            "yearly_factor": round(yearly_factor, 6),
-            "final_factor_raw": round(fcf_raw, 6),
-            "final_factor": round(final_factor, 6),
-            "mean_factor": round(mean_factor, 6),
-            "initial_breakdown_pct": round(initial_breakdown_pct, 3),
-            "yearly_breakdown_pct": round(yearly_breakdown_pct, 3),
-            "wet_storage_years": round(wet_storage_years, 1),
-            "total_degradation_years": round(total_degradation_years, 1),
-            "max_breakdown_factor": round(max_breakdown_factor, 3),
+            "a": round(a, 6),
+            "b": round(b, 7),
+            "design_life_years": round(t_f, 3),
+            "initial_factor": round(f_ci, 6),
+            "mean_factor": round(f_cm, 6),
+            "final_factor": round(f_cf, 6),
         }
+
+    # F103-2010 Table 5-1: Recommended design mean current densities (A/m²)
+    # as a function of internal fluid temperature (°C) and burial condition.
+    # Rows: burial condition.  Columns: internal fluid temperature bands.
+    # Temperature bands: <=50, >50-80, >80-120, >120
+    _F103_2010_TABLE_5_1 = {
+        "non_buried": {
+            "<=50":    0.050,
+            ">50-80":  0.060,
+            ">80-120": 0.070,
+            ">120":    0.100,
+        },
+        "buried": {
+            "<=50":    0.020,
+            ">50-80":  0.025,
+            ">80-120": 0.030,
+            ">120":    0.040,
+        },
+    }
 
     def _dnv_current_densities(self, inputs):
         """
-        Calculate cathodic protection current densities for buried pipelines.
+        Return mean design current density for buried pipelines per F103-2010 Table 5-1.
 
-        DNV RP-F103 provides current density requirements based on coating quality,
-        burial condition, and environmental factors. Current densities differ significantly
-        from marine structures due to soil environment effects.
+        DNV-RP-F103 (2010) Table 5-1 tabulates design mean current densities (A/m²)
+        as a function of:
+          - burial condition: "buried" or "non_buried"
+          - internal fluid temperature (°C): <=50 / >50-80 / >80-120 / >120
+
+        The table value is the mean design current density i_cm used in Eq.1:
+          I_cm = A_c * f_cm * i_cm
+
+        There is no coating-quality lookup and no Arrhenius temperature correction
+        in F103-2010; those concepts are absent from this standard.
 
         Args:
-            inputs (dict): Configuration inputs with environment and pipeline parameters
+            inputs (dict): Configuration inputs.
+                pipeline.burial_condition: "buried" (default) or "non_buried"
+                pipeline.internal_fluid_temperature_C: float, default 20.0
 
         Returns:
-            dict: Initial, final, and mean current densities (A/m²)
+            dict: mean_current_density_A_m2, burial_condition, temperature_band,
+                  internal_fluid_temperature_C
         """
-        environment = inputs.get("environment", {})
         pipeline = inputs.get("pipeline", {})
 
-        # Extract environmental parameters
-        seawater_temp_C = environment.get("seawater_temperature_C", 10.0)
-        soil_resistivity_ohm_m = environment.get("soil_resistivity_ohm_m", 50.0)
-
-        # Extract pipeline coating parameters
-        coating_quality = pipeline.get("coating_quality", "good")  # good, average, poor
         burial_condition = pipeline.get("burial_condition", "buried")
+        internal_fluid_temp_c = float(
+            pipeline.get("internal_fluid_temperature_C", 20.0)
+        )
 
-        # DNV RP-F103 Table 4-1: Initial current densities for buried pipelines (A/m²)
-        # These are significantly lower than marine structures due to soil protection
-        initial_densities = {
-            "excellent": 0.05,  # Very high quality coating, well protected
-            "good": 0.10,       # Standard good coating practice
-            "average": 0.15,    # Average coating with some defects
-            "poor": 0.25,       # Degraded or poor quality coating
-        }
-
-        # DNV RP-F103 Table 4-2: Final/maintenance current densities (A/m²)
-        # Final densities are lower once protective layer forms
-        final_densities = {
-            "excellent": 0.02,
-            "good": 0.05,
-            "average": 0.08,
-            "poor": 0.12,
-        }
-
-        # Get base current densities
-        initial_base = initial_densities.get(coating_quality, initial_densities["good"])
-        final_base = final_densities.get(coating_quality, final_densities["good"])
-
-        # Temperature correction factor (Arrhenius relationship)
-        # Higher temperatures reduce current requirements due to increased reaction rates
-        # Reference temperature: 20°C
-        temp_ref_C = 20.0
-        if seawater_temp_C != temp_ref_C:
-            # Approximate 3% reduction per degree above reference
-            temp_correction = 1.0 - 0.03 * (seawater_temp_C - temp_ref_C)
-            temp_correction = max(0.7, min(1.3, temp_correction))  # Limit to ±30%
+        # Resolve temperature band per Table 5-1 column headers
+        if internal_fluid_temp_c <= 50.0:
+            temp_band = "<=50"
+        elif internal_fluid_temp_c <= 80.0:
+            temp_band = ">50-80"
+        elif internal_fluid_temp_c <= 120.0:
+            temp_band = ">80-120"
         else:
-            temp_correction = 1.0
+            temp_band = ">120"
 
-        # Soil resistivity effect (high resistivity may require higher current density)
-        # Reference: 50 ohm-m (typical marine sediment)
-        if soil_resistivity_ohm_m > 100.0:
-            resistivity_factor = 1.1  # 10% increase for high resistivity soil
-        elif soil_resistivity_ohm_m < 20.0:
-            resistivity_factor = 0.9  # 10% decrease for low resistivity soil
-        else:
-            resistivity_factor = 1.0
-
-        # Apply correction factors
-        initial_ic = initial_base * temp_correction * resistivity_factor
-        final_ic = final_base * temp_correction * resistivity_factor
-
-        # Mean current density (average for design purposes)
-        mean_ic = (initial_ic + final_ic) / 2.0
+        # Resolve burial condition key; treat unrecognised values as "non_buried"
+        condition_key = burial_condition if burial_condition in self._F103_2010_TABLE_5_1 else "non_buried"
+        i_cm = self._F103_2010_TABLE_5_1[condition_key][temp_band]
 
         return {
-            "initial_current_density_A_m2": round(initial_ic, 6),
-            "final_current_density_A_m2": round(final_ic, 6),
-            "mean_current_density_A_m2": round(mean_ic, 6),
-            "coating_quality": coating_quality,
+            "mean_current_density_A_m2": round(i_cm, 6),
             "burial_condition": burial_condition,
-            "temperature_correction_factor": round(temp_correction, 6),
-            "resistivity_factor": round(resistivity_factor, 6),
-            "soil_resistivity_ohm_m": round(soil_resistivity_ohm_m, 3),
+            "temperature_band": temp_band,
+            "internal_fluid_temperature_C": round(internal_fluid_temp_c, 3),
+            "table_reference": "DNV-RP-F103 (2010) Table 5-1",
         }
 
     def _dnv_current_demand(self, inputs, geometry, current_densities, coating_breakdown):
         """
         Calculate total cathodic protection current demand for buried pipeline.
 
-        DNV RP-F103 current demand is calculated by multiplying pipeline surface area
-        by current density and coating breakdown factor. The calculation considers
-        different operational stages (initial, final) and includes design margin.
+        DNV-RP-F103 (2010) Eq.1 / Eq.3:
+          I_cm = A_c * f_cm * i_cm    (mean current demand)
+          I_cf = A_c * f_cf * i_cm    (final current demand)
+
+        The table value i_cm (from Table 5-1) is the MEAN design current density.
+        The same i_cm is used for both mean and final calculations; only the coating
+        breakdown factor differs between the two (f_cm vs f_cf).
 
         Args:
             inputs (dict): Configuration inputs with design parameters
@@ -364,54 +371,47 @@ class CathodicProtection:
             coating_breakdown (dict): Coating factors from _dnv_coating_breakdown()
 
         Returns:
-            dict: Current demands at different stages (initial, final, mean, design) in amperes
+            dict: Current demands (mean, final, design) in amperes and total charge
         """
         design = inputs.get("design", {})
-        design_margin = design.get("design_margin", 1.15)  # 15% default safety margin
+        design_margin = design.get("design_margin", 1.0)  # F103-2010 has no built-in k factor
 
         # Extract outer surface area (main protected surface for buried pipeline)
         outer_area = geometry["outer_surface_area_m2"]
 
-        # Extract current densities at different stages
-        initial_ic = current_densities["initial_current_density_A_m2"]
-        final_ic = current_densities["final_current_density_A_m2"]
-        mean_ic = current_densities["mean_current_density_A_m2"]
+        # F103-2010 uses a single mean design current density i_cm from Table 5-1
+        i_cm = current_densities["mean_current_density_A_m2"]
 
-        # Extract coating breakdown factors
-        initial_factor = coating_breakdown["initial_factor"]
-        final_factor = coating_breakdown["final_factor"]
-        mean_factor = coating_breakdown["mean_factor"]
+        # Extract coating breakdown factors (Annex 1 linear model)
+        f_cm = coating_breakdown["mean_factor"]
+        f_cf = coating_breakdown["final_factor"]
+        f_ci = coating_breakdown["initial_factor"]
 
-        # Calculate current demands: Area × Current Density × Coating Factor
-        # Initial demand (bare steel, startup condition)
-        initial_demand = outer_area * initial_ic * initial_factor
+        # F103-2010 Eq.1: I_cm(tot) = A_c * f_cm * i_cm
+        mean_demand = outer_area * f_cm * i_cm
 
-        # Final demand (after protective layer formation)
-        final_demand = outer_area * final_ic * final_factor
+        # F103-2010 Eq.3: I_cf(tot) = A_c * f_cf * i_cm
+        final_demand = outer_area * f_cf * i_cm
 
-        # Mean demand (average for design calculations)
-        mean_demand = outer_area * mean_ic * mean_factor
+        # Initial demand (using f_ci — not explicitly in F103-2010 but consistent with Annex 1)
+        initial_demand = outer_area * f_ci * i_cm
 
-        # Apply design margin to mean demand
-        # Design margin accounts for uncertainties in coating quality, environment, and aging
-        # Note: Utilization factor is applied in _dnv_anode_requirements() from anode config, not here
+        # Apply optional design margin (not in F103-2010; set design_margin=1.0 for standard)
         design_demand = mean_demand * design_margin
 
-        # Calculate total anode mass required based on design demand
-        # This will be used by subsequent helper methods for anode sizing
-        # Extract design life from design_data (user input) - Bug fix: was using wrong dict key
+        # Extract design life from design_data
         design_data = inputs.get("design_data", {})
         design_life_years = design_data.get("design_life", 25)
         hours_per_year = 8760.0
         design_life_hours = design_life_years * hours_per_year
 
-        # Total charge required over design life (Ampere-hours)
+        # Total charge required over design life (Ampere-hours) — basis for anode mass (Eq.5)
         total_charge_Ah = design_demand * design_life_hours
 
         return {
             "initial_current_demand_A": round(initial_demand, 3),
-            "final_current_demand_A": round(final_demand, 3),
             "mean_current_demand_A": round(mean_demand, 3),
+            "final_current_demand_A": round(final_demand, 3),
             "design_current_demand_A": round(design_demand, 3),
             "design_margin": round(design_margin, 6),
             "design_life_years": design_life_years,
