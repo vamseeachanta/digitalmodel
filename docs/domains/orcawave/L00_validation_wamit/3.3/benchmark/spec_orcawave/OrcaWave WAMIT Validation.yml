@@ -29,8 +29,16 @@ WavesReferredToBy: period (s)
 HasWaveSpectrumForDragLinearisation: No
 MorisonFluidVelocity: Undisturbed incident wave
 PeriodOrFrequency:
+- 1.2566
+- 1.3963
+- 1.5708
 - 1.7952
+- 2.0944
+- 2.5133
+- 3.1416
+- 4.1888
 - 6.2832
+- 12.5664
 WaveHeading:
 - 0.0
 - 30.0

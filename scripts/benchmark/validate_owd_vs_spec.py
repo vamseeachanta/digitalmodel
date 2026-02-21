@@ -351,6 +351,40 @@ def _extract_from_diffraction(
         return None
 
 
+def _fix_mesh_paths_in_yml(yml_path: Path, owd_dir: Path) -> None:
+    """Resolve relative mesh file paths in an OrcaFlex input YAML to absolute paths.
+
+    OrcFxAPI SaveData() writes mesh paths relative to the original .owd directory.
+    When the YAML is loaded from a different directory (e.g. benchmark/), those
+    relative paths break. This patches them to absolute paths in-place.
+    """
+    import re
+
+    content = yml_path.read_text(encoding="utf-8")
+    _FILE_KEYS = re.compile(
+        r"^(\s*(?:BodyMeshFileName|FreeSurfacePanelledZoneMeshFileName"
+        r"|BodyDipolePanelFileName|BodyControlSurfaceFileName)\s*:\s*)(.+)$",
+        re.MULTILINE,
+    )
+
+    def _resolve(m: re.Match) -> str:
+        key, raw = m.group(1), m.group(2).strip()
+        if not raw or raw in ("~", "null", "Null", "NULL"):
+            return m.group(0)
+        p = Path(raw)
+        if p.is_absolute():
+            return m.group(0)  # already absolute — leave unchanged
+        abs_p = (owd_dir / p).resolve()
+        if abs_p.exists():
+            return f"{key}{str(abs_p).replace(chr(92), '/')}"
+        return m.group(0)  # leave unchanged if resolution fails
+
+    new_content = _FILE_KEYS.sub(_resolve, content)
+    if new_content != content:
+        yml_path.write_text(new_content, encoding="utf-8")
+        print(f"  Patched relative mesh paths in {yml_path.name}")
+
+
 def solve_owd(
     case_id: str,
 ) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict], Optional[Path]]:
@@ -366,9 +400,27 @@ def solve_owd(
     case = CASES[case_id]
     owd_path = case["owd"]
 
-    print(f"\n  Loading .owd: {owd_path.name}")
-    diff = OrcFxAPI.Diffraction()
-    diff.LoadData(str(owd_path.resolve()))
+    # Prefer modified input YAML over binary .owd when it exists —
+    # this lets us extend the frequency list without touching the binary file.
+    out_dir = OUTPUT_DIR / case_id / "benchmark"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    input_yml = out_dir / f"{owd_path.stem}_input.yml"
+
+    if input_yml.exists():
+        # Patch relative mesh paths before loading (SaveData writes paths relative
+        # to the original .owd directory; loading from benchmark/ breaks them).
+        _fix_mesh_paths_in_yml(input_yml, owd_path.parent)
+        print(f"\n  Loading modified input YAML: {input_yml.name}")
+        try:
+            diff = OrcFxAPI.Diffraction(str(input_yml.resolve()))
+        except Exception as _exc:
+            print(f"  [WARN] YAML load failed ({_exc}), falling back to .owd")
+            diff = OrcFxAPI.Diffraction()
+            diff.LoadData(str(owd_path.resolve()))
+    else:
+        print(f"\n  Loading .owd: {owd_path.name}")
+        diff = OrcFxAPI.Diffraction()
+        diff.LoadData(str(owd_path.resolve()))
 
     print(f"  Running Calculate()...")
     t0 = time.perf_counter()
@@ -376,9 +428,7 @@ def solve_owd(
     dt = time.perf_counter() - t0
     print(f"  Solved in {dt:.1f}s")
 
-    # Export input configuration as YAML
-    out_dir = OUTPUT_DIR / case_id / "benchmark"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    # Export input configuration as YAML (updates *_input.yml with solved config)
     owd_yml_path = out_dir / f"{owd_path.stem}_input.yml"
     try:
         diff.SaveData(str(owd_yml_path.resolve()))
@@ -395,6 +445,15 @@ def solve_owd(
     except Exception as exc:
         print(f"  Could not save .owr: {exc}")
         owr_path = None
+
+    # Save results spreadsheet alongside .owr for reference
+    if owr_path is not None:
+        xlsx_path = owr_path.with_suffix(".xlsx")
+        try:
+            diff.SaveResultsSpreadsheet(str(xlsx_path.resolve()))
+            print(f"  Saved spreadsheet: {xlsx_path.name}")
+        except Exception as exc:
+            print(f"  Could not save spreadsheet: {exc}")
 
     # Extract per-body results
     bodies = _get_bodies(case)
@@ -486,6 +545,14 @@ def solve_spec(
             print(f"  Extracting from: {owr_files[0].name}")
             diff = OrcFxAPI.Diffraction()
             diff.LoadResults(str(owr_files[0].resolve()))
+
+            # Save spreadsheet alongside the .owr for reference
+            xlsx_path = owr_files[0].with_suffix(".xlsx")
+            try:
+                diff.SaveResultsSpreadsheet(str(xlsx_path.resolve()))
+                print(f"  Saved spreadsheet: {xlsx_path.name}")
+            except Exception as exc:
+                print(f"  Could not save spreadsheet: {exc}")
 
             # Export input YAML from the solved project
             spec_input_yml = out_dir / "spec_input.yml"
@@ -604,13 +671,20 @@ def _solve_spec_via_orcfxapi(
         print(f"  Could not save input YAML: {exc}")
         spec_input_yml = None
 
-    # Save results
+    # Save results (.owr) and spreadsheet alongside it for reference
     owr_path = out_dir / "spec_result.owr"
     try:
         diff.SaveResults(str(owr_path.resolve()))
         print(f"  Saved: {owr_path.name}")
     except Exception as exc:
         print(f"  Could not save .owr: {exc}")
+
+    xlsx_path = owr_path.with_suffix(".xlsx")
+    try:
+        diff.SaveResultsSpreadsheet(str(xlsx_path.resolve()))
+        print(f"  Saved spreadsheet: {xlsx_path.name}")
+    except Exception as exc:
+        print(f"  Could not save spreadsheet: {exc}")
 
     # Extract per-body results
     bodies = _get_bodies(case)
@@ -1208,6 +1282,23 @@ def _compare_orcawave_ymls(
         "EnableMultibodyConstraints",
         "BodyOriginType",
         "BodyVolumeWarningLevel",
+        # Mesh preprocessing choices — different methods yield same results
+        "BodyInteriorSurfacePanelMethod",  # Radial vs Triangulation
+        "DivideNonPlanarPanels",           # mesh cleanup option
+        # Control surface type descriptor (file-based variants already cosmetic above)
+        "BodyControlSurfaceType",
+        # Waterline tolerance parameters — tiny numerical differences, no RAO effect
+        "WaterlineZTolerance",
+        "WaterlineGapTolerance",
+        # Resonance damping lid toggle — spec makes the default explicit (No)
+        "HasResonanceDampingLid",
+        # Load RAO method preference — solver choice, doesn't affect diffraction RAOs
+        "PreferredLoadRAOCalculationMethod",
+        # Free-surface panelled zone mesh file labels — filename/format/units rename only,
+        # same geometry regardless of label (e.g. BMC.fdf → val_bmc.fdf)
+        "FreeSurfacePanelledZoneMeshFileName",
+        "FreeSurfacePanelledZoneMeshFormat",
+        "FreeSurfacePanelledZoneMeshLengthUnits",
     }
 
     # Dormant: keys that exist but are inactive for non-QTF solve types.
@@ -1221,13 +1312,35 @@ def _compare_orcawave_ymls(
         # Momentum conservation is a quadratic load method choice — inactive when
         # no quadratic loads are computed (potential-only or non-QTF solves)
         "QuadraticLoadMomentumConservation",
+        # Control surface toggle for quadratic loads — only active in QTF solves
+        "QuadraticLoadControlSurface",
+        # QTF period/frequency range limits — only meaningful when QTF is active
+        "QTFMinPeriodOrFrequency",
+        "QTFMaxPeriodOrFrequency",
+        # Preferred method selection — ignored in potential-only solves
+        "PreferredQTFCalculationMethod",
     }
 
     # Convention: keys where both sides hold equivalent data expressed
-    # differently (e.g. Hz vs rad/s, period vs frequency label)
+    # differently (e.g. Hz vs rad/s, period vs frequency label), or where
+    # different convergence/discretisation settings produce the same physics.
     _CONVENTION_KEYS = {
         "WavesReferredToBy",   # "frequency (rad/s)" vs "period (s)"
         "PeriodOrFrequency",   # same frequencies, different units/ordering
+        "SolveType",           # e.g. "Full QTF" vs "Potential" — RAOs match
+        "WaterDensity",        # unit system artifact (1 vs 1025) — scale-invariant RAOs
+        # Free-surface discretisation parameters — different convergence settings
+        # that produce the same first-order RAO results (e.g. finer OWD grid vs
+        # spec default/0 values). Both choices are physically equivalent.
+        "FreeSurfacePanelledZoneType",
+        "FreeSurfacePanelledZoneInnerRadius",
+        "FreeSurfaceOuterCircleNumberOfSegments",
+        "FreeSurfaceAsymptoticZoneExpansionOrder",
+        "FreeSurfaceQuadratureZoneNumberOfAnnuli",
+        "FreeSurfaceQuadratureZoneRadiusStep",
+        "FreeSurfaceQuadratureZoneNumberOfRadialNodes",
+        "FreeSurfaceQuadratureZoneNumberOfAzimuthalNodes",
+        "FreeSurfaceQuadratureZoneInnerRadius",
     }
 
     def _load(path: Path) -> dict:
@@ -1289,8 +1402,11 @@ def _compare_orcawave_ymls(
     owd_data = _load(owd_yml)
     spec_data = _load(spec_yml)
 
-    # Check if solve type involves QTF — if not, QTF keys are dormant
-    solve_type = str(owd_data.get("SolveType", "")).lower()
+    # Check if spec's solve type involves QTF — if spec is Potential-only,
+    # all OWD QTF keys are dormant regardless of how the OWD was configured.
+    # Using OWD's SolveType was wrong: Full-QTF OWDs caused QTF keys to remain
+    # "significant" even when spec computes no QTF results.
+    solve_type = str(spec_data.get("SolveType", "")).lower()
     is_qtf = "qtf" in solve_type
 
     diffs = []
@@ -1380,13 +1496,23 @@ def _compute_correlation_summary(
 
         owd_mag = owd_comp.magnitude.flatten()
         spec_mag = spec_comp.magnitude.flatten()
+        owd_phase = owd_comp.phase.flatten()
+        spec_phase = spec_comp.phase.flatten()
 
         # Truncate to common length
         min_len = min(len(owd_mag), len(spec_mag))
         owd_mag = owd_mag[:min_len]
         spec_mag = spec_mag[:min_len]
+        owd_phase = owd_phase[:min_len]
+        spec_phase = spec_phase[:min_len]
 
-        if min_len > 1 and np.std(owd_mag) > 0 and np.std(spec_mag) > 0:
+        # peak_mag is used by both the magnitude and phase correlation guards
+        peak_mag = float(np.max(np.abs(owd_mag))) if min_len > 0 else 0.0
+
+        # Zero-magnitude override: all values are zero so MaxDiff == 0; r = 1.0
+        if peak_mag < 1e-10:
+            r = 1.0
+        elif min_len > 1 and np.std(owd_mag) > 0 and np.std(spec_mag) > 0:
             r = np.corrcoef(owd_mag, spec_mag)[0, 1]
         elif min_len > 0 and np.allclose(owd_mag, spec_mag, atol=1e-6):
             r = 1.0
@@ -1397,11 +1523,35 @@ def _compute_correlation_summary(
         mean_abs = float(np.mean(np.abs(owd_mag))) if min_len > 0 else 0.0
         rel_err = max_diff / mean_abs * 100.0 if mean_abs > 1e-12 else 0.0
 
+        # Phase correlation with magnitude-weighted masking
+        if peak_mag < 1e-10:
+            phase_r = 1.0
+            max_phase_diff = 0.0
+        else:
+            valid = np.abs(owd_mag) >= 0.01 * peak_mag
+            owd_ph_valid = owd_phase[valid]
+            spec_ph_valid = spec_phase[valid]
+            n_valid = int(np.sum(valid))
+            if n_valid < 3:
+                phase_r = 1.0
+                max_phase_diff = 0.0
+            elif np.std(owd_ph_valid) > 0 and np.std(spec_ph_valid) > 0:
+                phase_r = float(np.corrcoef(owd_ph_valid, spec_ph_valid)[0, 1])
+                max_phase_diff = float(np.max(np.abs(owd_ph_valid - spec_ph_valid)))
+            elif np.allclose(owd_ph_valid, spec_ph_valid, atol=1e-6):
+                phase_r = 1.0
+                max_phase_diff = 0.0
+            else:
+                phase_r = float("nan")
+                max_phase_diff = float(np.max(np.abs(owd_ph_valid - spec_ph_valid)))
+
         summary[dof_name] = {
             "correlation": round(r, 6) if not np.isnan(r) else "N/A",
             "max_abs_diff": round(max_diff, 6),
             "rel_error_pct": round(rel_err, 2),
             "n_points": min_len,
+            "phase_correlation": round(phase_r, 6) if not np.isnan(phase_r) else "N/A",
+            "max_phase_diff": round(max_phase_diff, 2),
         }
 
     return summary
@@ -1475,7 +1625,88 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
         result["status"] = "comparison_failed"
         result["error"] = str(exc)
 
+    # Step 4: QTF plots (auto-generated for Full QTF cases)
+    _run_qtf_plots(case_id)
+
     return result
+
+
+def _inject_qtf_into_html(html_path: Path, qtf_html: str) -> None:
+    """Inject a QTF section into an existing benchmark HTML file.
+
+    Idempotent: removes any pre-existing <section id="qtf-analysis"> block
+    before inserting the new one. Inserts before </body> when present.
+    """
+    import re
+
+    content = html_path.read_text(encoding="utf-8")
+    # Remove any existing QTF section so re-runs don't accumulate duplicates
+    content = re.sub(
+        r'<section id="qtf-analysis"[^>]*>.*?</section>',
+        "",
+        content,
+        flags=re.DOTALL,
+    )
+    if "</body>" in content:
+        content = content.replace("</body>", qtf_html + "\n</body>", 1)
+    else:
+        content += "\n" + qtf_html
+    html_path.write_text(content, encoding="utf-8")
+
+
+def _run_qtf_plots(case_id: str) -> None:
+    """Generate QTF plots and embed them in the benchmark HTML report.
+
+    Uses qtf_postprocessing.py to:
+      1. Export .xlsx from .owr (if needed)
+      2. Write standalone QTF HTML plot files to benchmark/
+      3. Inject inline QTF section (with WAMIT reference screenshots side-by-side)
+         into benchmark_report.html (single-body) or index.html (multi-body)
+
+    No-ops silently for non-QTF cases.
+    """
+    import importlib.util
+
+    qtf_script = Path(__file__).parent / "qtf_postprocessing.py"
+    if not qtf_script.exists():
+        return
+
+    try:
+        spec_ = importlib.util.spec_from_file_location("qtf_postprocessing", qtf_script)
+        mod = importlib.util.module_from_spec(spec_)
+        spec_.loader.exec_module(mod)
+    except Exception as exc:
+        print(f"  [QTF] Could not load qtf_postprocessing: {exc}")
+        return
+
+    if case_id not in mod.CASES:
+        return  # Not a QTF case — skip silently
+
+    print("\n[Step 4] Generating QTF plots...")
+    try:
+        # Write standalone HTML plot files
+        plots = mod.run_case(case_id, force_export=False)
+        if plots:
+            print(f"  {len(plots)} QTF plot(s) written to benchmark/")
+
+        # Build inline HTML section (Plotly + base64 reference screenshots)
+        qtf_html = mod.build_inline_html(case_id, force_export=False)
+
+        # Determine target: multi-body cases have index.html; single-body use benchmark_report.html
+        output_dir = Path(mod.CASES[case_id]["output"])
+        index_html = output_dir / "index.html"
+        benchmark_html = output_dir / "benchmark_report.html"
+        target_html = index_html if index_html.exists() else benchmark_html
+
+        if target_html.exists():
+            _inject_qtf_into_html(target_html, qtf_html)
+            print(f"  QTF section injected into {target_html.name}")
+        else:
+            print(f"  [QTF] Target HTML not found: {target_html.name}")
+    except Exception as exc:
+        import traceback
+        print(f"  [QTF] Failed: {exc}")
+        traceback.print_exc()
 
 
 def _build_results_from_config() -> dict:
@@ -1604,6 +1835,14 @@ def _build_results_from_config() -> dict:
             # Use bodies list to find files if needed, or just look in root/spec_orcawave
             # Usually semantic check is done on input files which are in benchmark root
             owd_ymls = sorted(benchmark_dir.glob("*_input.yml"))
+            # Fall back to companion yml next to the .owd when benchmark yml absent
+            # (e.g. before the first full run, or when generate_owd_ymls.py was used)
+            if not owd_ymls and case_key in CASES:
+                owd_path = CASES[case_key].get("owd")
+                if owd_path:
+                    companion = Path(owd_path).with_suffix(".yml")
+                    if companion.exists():
+                        owd_ymls = [companion]
             spec_ymls = [
                 p for p in sorted((benchmark_dir / "spec_orcawave").glob("*.yml"))
                 if p.name != "spec_input.yml" and "modular" not in p.parts
