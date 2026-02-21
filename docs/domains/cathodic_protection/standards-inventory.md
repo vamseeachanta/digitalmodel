@@ -219,7 +219,7 @@ Note: These standalone methods are NOT called from `router()`. They appear to be
 
 | Standard | Scope | Status |
 |----------|-------|--------|
-| DNV-RP-B401 (any edition) | Offshore structures SACP | Not implemented — no `_b401_*` methods exist |
+| DNV-RP-B401-2021 | Offshore structures SACP | **Implemented** — `DNV_RP_B401_offshore` route in `cathodic_protection.py`; helper functions in `cp_DNV_RP_B401_2021.py` |
 | ABS GN Offshore Dec 2018 | FPSOs, TLPs, DDCVs, fixed jackets | Not implemented |
 | ISO 15589-2:2004 | Offshore pipeline CP | Not implemented |
 | DNV-RP-F112:2008 | HISC check for duplex stainless | Not implemented |
@@ -273,3 +273,23 @@ Before Phase 2 work on the DNV route:
 | NACE SP0176 | Low | Offshore platform CP; provides NACE perspective vs DNV/ABS |
 | NORSOK M-501 | Low | Surface preparation and coating; referenced in B401-2005 coating categories |
 | ISO 15589-2:2012 (2nd ed.) | Low | Updated edition of the standard that F103-2010 was based on; relevant if ISO compliance is required |
+
+---
+
+## 7. F103-2016/2019 Assessment — Implementation Deferred
+
+**F103-2016 standalone PDF:** Not available locally. Proxied via EMX GP 56-01-04U V4 only — table numbers, formula numbering, and specific section text not verifiable without the original PDF.
+
+**F103-2019 amended 2021 edition:** Present at `doris/codes/DNV-RP-F103 2019 amended 2021...pdf` (filename to be confirmed).
+
+**Key deltas from F103-2010 (based on proxy via EMX GP and B401 changelog):**
+- Wet storage period concept — CP design accounts for pre-installation storage time
+- Maximum anode spacing reduced 300 m → 200 m
+- Polarization resistance attenuation model (enhanced α formula)
+- Safety factor k = 1.1 introduced (mandatory in ExxonMobil GP)
+
+**Recommendation:** Create a separate WRK item for `DNV_RP_F103_2019` route once:
+1. DNVGL-RP-F103 July 2016 PDF is obtained (required for formula verification), OR
+2. F103-2019 amended 2021 PDF at `doris/codes/` is confirmed as the applicable edition
+
+**Status:** Deferred — WRK-272 (2026-02-20). No code implemented for 2016/2019 route.
