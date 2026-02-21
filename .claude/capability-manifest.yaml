@@ -1,6 +1,6 @@
 # digitalmodel capability manifest
 # Machine-readable index for agent discovery
-# Generated: 2026-02-20 | WRK-247
+# Generated: 2026-02-20 | WRK-247 (updated WRK-240)
 # Usage: agents query this to find modules by domain or capability
 #
 # Query examples:
@@ -9,12 +9,14 @@
 #   domain: hydrodynamics -> hydrodynamics.* (aqwa, diffraction, rao_analysis)
 #   domain: orcaflex      -> solvers.orcaflex
 #   domain: production    -> production_engineering
+#   domain: diffraction   -> hydrodynamics.diffraction (skill: diffraction_spec_converter)
 
-version: "1.0"
+version: "1.1"
 generated: "2026-02-20"
 source_package: "digitalmodel==0.0.9"
 source_path: "digitalmodel/src/digitalmodel/"
-total_modules: 17
+total_modules: 22
+total_test_files: 404
 
 # Top-level domain groups (from digitalmodel.__init__ docstring)
 domain_groups:
@@ -197,29 +199,48 @@ modules:
     import_path: digitalmodel.hydrodynamics.diffraction
     domain: hydrodynamics
     description: >-
-      Unified diffraction analysis: AQWA and OrcaWave backends with standardised
-      RAO/added-mass/damping schemas, batch processing, AQWA-vs-OrcaWave
-      comparison framework, mesh pipeline, OrcaFlex export, and geometry
-      quality validation (Phase 3 complete).
+      Unified diffraction analysis: canonical DiffractionSpec (spec.yml) drives
+      AQWA and OrcaWave backends via SpecConverter; reverse parsers reconstruct
+      spec.yml from legacy AQWA .dat / OrcaWave .yml inputs; AQWA .lis parser
+      extracts results to unified DiffractionResults schema; OrcaFlexExporter
+      produces VesselType YAML, RAO/added-mass/damping CSVs, and Excel workbooks;
+      comparison framework, batch processing, mesh pipeline, and geometry quality
+      validation (Phase 3 complete).
     key_inputs:
-      - aqwa_result_files    # .AQR, .LIS, ANL parser inputs
-      - orcawave_config      # OrcaWave run spec (YAML)
-      - mesh_geometry        # panel mesh for diffraction computation
+      - spec_yml             # DiffractionSpec YAML (solver-agnostic canonical input)
+      - aqwa_lis_file        # AQWA .lis result file (reverse workflow)
+      - aqwa_dat_file        # AQWA .dat input (reverse workflow: legacy import)
+      - orcawave_yml         # OrcaWave input (reverse workflow: legacy import)
+      - mesh_file            # panel mesh (.gdf / .dat / .stl)
     key_outputs:
-      - unified_rao_schema   # standardised RAO (amplitude + phase) per DOF
+      - aqwa_dat             # AQWA deck input file (forward)
+      - orcawave_yml_out     # OrcaWave run configuration (forward)
+      - unified_rao_schema   # DiffractionResults: RAO amplitude + phase per DOF
       - added_mass_matrix    # frequency-dependent 6x6
-      - damping_matrix       # radiation + viscous damping
-      - orcaflex_export      # .yaml / .csv hydrodynamic database
+      - damping_matrix       # radiation + viscous damping 6x6
+      - orcaflex_export      # VesselType YAML + RAO/added-mass/damping CSVs + Excel
       - comparison_report    # AQWA vs OrcaWave delta report
     test_count: 566          # tests/hydrodynamics/diffraction/ (26 files)
-    status: active
+    test_files: 26
+    status: production
     standards: [DNV-RP-C205, AQWA, OrcaWave]
+    skill: diffraction_spec_converter   # .claude/skills/eng/diffraction-spec-converter.md (WRK-240)
     related_skills:
       - engineering/marine-offshore/diffraction-analysis
       - engineering/marine-offshore/aqwa-analysis
       - engineering/marine-offshore/orcawave-analysis
       - engineering/marine-offshore/orcawave-aqwa-benchmark
-    wrk_items: []
+    key_classes:
+      - SpecConverter: spec_converter.py           # spec.yml -> AQWA / OrcaWave (forward)
+      - AQWABackend: aqwa_backend.py               # AQWA deck generator
+      - AQWALISParser: aqwa_lis_parser.py          # .lis result parser
+      - AQWAInputParser: reverse_parsers.py        # .dat -> DiffractionSpec
+      - OrcaWaveInputParser: reverse_parsers.py    # OrcaWave .yml -> DiffractionSpec
+      - OrcaFlexExporter: orcaflex_exporter.py     # results -> OrcaFlex formats
+      - AQWAConverter: aqwa_converter.py           # results -> unified DiffractionResults
+      - DiffractionSpec: input_schemas.py          # canonical input schema (Pydantic)
+      - DiffractionResults: output_schemas.py      # unified result schema (dataclass)
+    wrk_items: [WRK-240]
 
   - name: aqwa
     import_path: digitalmodel.hydrodynamics.aqwa
@@ -466,3 +487,116 @@ modules:
     related_skills:
       - engineering/marine-offshore/production-engineering
     wrk_items: [WRK-164]
+
+  # ── ADDITIONAL HYDRODYNAMICS ────────────────────────────────────────────────
+
+  - name: hull_library
+    import_path: digitalmodel.hydrodynamics.hull_library
+    domain: hydrodynamics
+    description: >-
+      Panel mesh catalog and generator: hull mesh inventory, mesh refinement,
+      coarsening, scaling, schematic generation, and RAO registry for
+      standard hull forms. Feeds mesh files to diffraction backends.
+    key_inputs:
+      - hull_profile         # profile_schema: hull dimensions and type
+      - panel_catalog_id     # reference to stored panel inventory
+    key_outputs:
+      - panel_mesh           # mesh geometry (.gdf) for diffraction solver
+      - rao_registry_entry   # stored RAO set for standard hull form
+    test_files: 14
+    status: production
+    module_path: src/digitalmodel/hydrodynamics/hull_library/
+
+  - name: bemrosetta
+    import_path: digitalmodel.hydrodynamics.bemrosetta
+    domain: hydrodynamics
+    description: >-
+      BEMRosetta-based format conversion: AQWA -> OrcaFlex workflow, mesh format
+      conversion (GDF/DAT/STL), QTF (second-order force) parsing, coefficient
+      validation (symmetry, positive definiteness), and Kramers-Kronig causality
+      checking.
+    key_inputs:
+      - aqwa_lis_file        # AQWA .LIS results
+      - qtf_file             # AQWA .QTF second-order forces
+      - mesh_file            # GDF, DAT, or STL format
+    key_outputs:
+      - orcaflex_model       # OrcaFlex VesselType + RAO export
+      - converted_mesh       # mesh in target format
+      - validation_report    # coefficient symmetry + KK causality report
+    test_files: 10
+    status: production
+    module_path: src/digitalmodel/hydrodynamics/bemrosetta/
+
+  - name: rao_analysis
+    import_path: digitalmodel.hydrodynamics.rao_analysis
+    domain: hydrodynamics
+    description: >-
+      RAO analysis tools: frequency-domain response computation from RAOs and
+      wave spectra, legacy RAO processing, and response spectrum calculations.
+    key_inputs:
+      - rao_data             # RAO amplitude + phase per DOF and heading
+      - wave_spectrum        # wave energy spectrum (JONSWAP/PM/Bretschneider)
+    key_outputs:
+      - response_spectrum    # response energy spectrum per DOF
+      - significant_response # Hs equivalent per DOF
+    test_files: 1
+    status: active
+    module_path: src/digitalmodel/hydrodynamics/rao_analysis/
+
+  - name: fatigue_analysis
+    import_path: digitalmodel.structural.fatigue_analysis
+    domain: structural
+    description: >-
+      Higher-level fatigue analysis engine (FatigueAnalysisEngine) with CLI,
+      reference sea-state processor and scaling, and time-trace integration
+      workflows built on top of structural.fatigue.
+    key_inputs:
+      - config_yaml          # YAML-driven analysis config
+      - time_trace_file      # OrcaFlex or CSV stress time trace
+      - reference_seastate   # scatter diagram / sea-state definition
+    key_outputs:
+      - fatigue_report       # structured fatigue result per location
+      - cli_exit_code        # 0 = pass, non-zero = failure
+    test_files: 6
+    status: production
+    standards: [DNV-RP-C203]
+    module_path: src/digitalmodel/structural/fatigue_analysis/
+    wrk_items: [WRK-157, WRK-245]
+
+  # ── MARINE OPS ───────────────────────────────────────────────────────────────
+
+  - name: marine_ops.marine_engineering
+    import_path: digitalmodel.marine_ops.marine_engineering
+    domain: marine_ops
+    description: >-
+      Marine operations engineering: vessel stability, ballasting, towing, load-out,
+      and offshore installation load analysis.
+    test_files: 22
+    status: active
+    module_path: src/digitalmodel/marine_ops/marine_engineering/
+
+  - name: marine_ops.artificial_lift
+    import_path: digitalmodel.marine_ops.artificial_lift
+    domain: marine_ops
+    description: >-
+      Artificial lift system design and analysis: ESP, gas lift, and rod pump
+      sizing for production optimization.
+    test_files: 21
+    status: active
+    module_path: src/digitalmodel/marine_ops/artificial_lift/
+
+  # ── INFRASTRUCTURE ───────────────────────────────────────────────────────────
+
+  - name: infrastructure.base_configs
+    import_path: digitalmodel.infrastructure.base_configs
+    domain: infrastructure
+    description: >-
+      Core configuration framework: typed config models, domain config registry,
+      and shared configuration utilities used across all digitalmodel modules.
+    key_inputs:
+      - config_dict          # raw configuration dictionary
+    key_outputs:
+      - validated_config     # typed and validated config object
+    test_files: 23
+    status: production
+    module_path: src/digitalmodel/infrastructure/base_configs/
