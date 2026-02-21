@@ -10,6 +10,8 @@ class CathodicProtection:
             self.ABS_gn_ships_2018(cfg)
         elif cfg["inputs"]["calculation_type"] == "DNV_RP_F103_2010":
             self.DNV_RP_F103_2010(cfg)
+        elif cfg["inputs"]["calculation_type"] == "ABS_gn_offshore_2018":
+            self.ABS_gn_offshore_2018(cfg)
         else:
             raise (
                 Exception(
@@ -712,6 +714,278 @@ class CathodicProtection:
             "free_corrosion_potential_V": round(free_corrosion_potential_V, 3),
             "anode_potential_V": round(anode_potential_V, 3),
         }
+
+    # -----------------------------------------------------------------------
+    # ABS Guidance Notes on Cathodic Protection of Offshore Structures (Dec 2018)
+    # -----------------------------------------------------------------------
+
+    # Section 2 / 11.7.2 Table 1 (p.12): Recommended Initial Design Current
+    # Densities for Bare Metal Surfaces Exposed to Seawater (mA/m²).
+    # Layout: {climatic_region: {depth_band: i_ci}}
+    # Depth bands (m): "0-30", ">30-100", ">100-300", ">300"
+    _ABS_OFFSHORE_2018_TABLE_1 = {
+        "tropical": {          # > 20°C (68°F)
+            "0-30":     150.0,
+            ">30-100":  120.0,
+            ">100-300": 140.0,
+            ">300":     180.0,
+        },
+        "sub_tropical": {      # > 12–20°C (54–68°F)
+            "0-30":     170.0,
+            ">30-100":  140.0,
+            ">100-300": 160.0,
+            ">300":     200.0,
+        },
+        "temperate": {         # > 7–12°C (45–54°F)
+            "0-30":     200.0,
+            ">30-100":  170.0,
+            ">100-300": 190.0,
+            ">300":     220.0,
+        },
+        "arctic": {            # ≤ 7°C (≤ 45°F)
+            "0-30":     250.0,
+            ">30-100":  200.0,
+            ">100-300": 220.0,
+            ">300":     220.0,
+        },
+    }
+
+    # Section 2 / 11.7.2 (p.12): Saline mud current densities (mA/m²).
+    # Fixed values — not dependent on climatic region or depth.
+    _ABS_OFFSHORE_2018_MUD_DENSITIES = {
+        "initial": 25.0,
+        "mean":    20.0,
+        "final":   20.0,
+    }
+
+    # Valid zone identifiers
+    _ABS_OFFSHORE_2018_VALID_ZONES = {"submerged", "saline_mud"}
+
+    def ABS_gn_offshore_2018(self, cfg):
+        """
+        ABS Guidance Notes on Cathodic Protection of Offshore Structures (Dec 2018).
+
+        Covers floating offshore structures such as FPSOs, semi-submersibles,
+        jack-ups, barges, storage tankers, and buoys.
+
+        Implements:
+        - Section 2 Table 1 (p.12): initial current densities by climatic region
+          and water-depth band for submerged bare steel surfaces.
+        - Section 2/11.7.2 (p.12): saline mud fixed current densities.
+        - Section 2/11.7.3 (p.13): I_c = A_c × i_c × f_c.
+        - Section 2/11.7.4 (p.13): coating breakdown factor f_c = α + βt.
+          Shallow (≤30 m): α=0.01, β_mean=0.006, β_final=0.012.
+          Deep   (>30 m):  α=0.01, β_mean=0.004, β_final=0.008.
+        - Mean i_cm = 1/2 × i_ci; Final i_cf = 2/3 × i_ci.
+        - Anode mass: M = I_cm × t × 8760 / (acc × u).
+
+        Args:
+            cfg (dict): Configuration with inputs sub-keys:
+                design_data.design_life  (years)
+                structure.surface_area_m2
+                structure.water_depth_m
+                structure.climatic_region  ("tropical"|"sub_tropical"|"temperate"|"arctic")
+                structure.zone             ("submerged"|"saline_mud")
+                anode.material             ("aluminium"|"zinc")
+                anode.utilisation_factor   (default 0.80)
+
+        Returns:
+            dict: cfg updated with cfg["results"] containing current densities,
+                  coating breakdown, current demand, and anode mass.
+        """
+        inputs = cfg["inputs"]
+        design_data = inputs.get("design_data", {})
+        design_life = float(design_data.get("design_life", 25.0))
+
+        structure = inputs.get("structure", {})
+        surface_area_m2 = float(structure.get("surface_area_m2", 0.0))
+        water_depth_m = float(structure.get("water_depth_m", 50.0))
+        climatic_region = structure.get("climatic_region", "tropical").lower()
+        zone = structure.get("zone", "submerged").lower()
+
+        # Validate inputs
+        if zone not in self._ABS_OFFSHORE_2018_VALID_ZONES:
+            raise ValueError(
+                f"ABS GN Offshore 2018: unrecognised zone='{zone}'. "
+                f"Valid values: {sorted(self._ABS_OFFSHORE_2018_VALID_ZONES)}"
+            )
+        if zone == "submerged" and climatic_region not in self._ABS_OFFSHORE_2018_TABLE_1:
+            raise ValueError(
+                f"ABS GN Offshore 2018: unrecognised climatic_region='{climatic_region}'. "
+                f"Valid values: {sorted(self._ABS_OFFSHORE_2018_TABLE_1.keys())}"
+            )
+
+        # ---- current densities (mA/m²) ----
+        current_densities = self._abs_offshore_2018_current_densities(
+            zone, climatic_region, water_depth_m
+        )
+
+        # ---- coating breakdown factors ----
+        coating_breakdown = self._abs_offshore_2018_coating_breakdown(
+            zone, water_depth_m, design_life
+        )
+
+        # ---- current demand (A): I_c = A * i_c (A/m²) * f_c ----
+        current_demand = self._abs_offshore_2018_current_demand(
+            surface_area_m2, current_densities, coating_breakdown
+        )
+
+        # ---- anode current capacity ----
+        anode_current_capacity = self.get_anode_current_capacity(cfg)
+
+        # ---- anode mass (kg) ----
+        anode_cfg = inputs.get("anode", {})
+        utilisation = float(anode_cfg.get("utilisation_factor", 0.80))
+        anode_mass_kg = (
+            current_demand["mean"] * design_life * 8760.0
+            / (anode_current_capacity * utilisation)
+        )
+
+        cfg["results"] = {
+            "design_life_years": round(design_life, 3),
+            "surface_area_m2": round(surface_area_m2, 3),
+            "water_depth_m": round(water_depth_m, 3),
+            "climatic_region": climatic_region,
+            "zone": zone,
+            "current_densities_mA_m2": current_densities,
+            "coating_breakdown_factors": coating_breakdown,
+            "current_demand_A": current_demand,
+            "anode_current_capacity_Ah_kg": anode_current_capacity,
+            "anode_utilisation_factor": utilisation,
+            "anode_mass_kg": round(anode_mass_kg, 3),
+        }
+
+    def _abs_offshore_2018_current_densities(self, zone, climatic_region, water_depth_m):
+        """
+        Return initial, mean, and final current densities (mA/m²).
+
+        For submerged zones uses ABS GN Offshore 2018 Section 2 Table 1 (p.12):
+          i_cm = 1/2 * i_ci;  i_cf = 2/3 * i_ci.
+
+        For saline_mud uses the fixed values from Section 2/11.7.2 (p.12):
+          i_ci = 25, i_cm = i_cf = 20 mA/m².
+        """
+        if zone == "saline_mud":
+            mud = self._ABS_OFFSHORE_2018_MUD_DENSITIES
+            return {
+                "initial": mud["initial"],
+                "mean":    mud["mean"],
+                "final":   mud["final"],
+            }
+
+        # Determine depth band
+        depth_band = self._abs_offshore_2018_depth_band(water_depth_m)
+        i_ci = self._ABS_OFFSHORE_2018_TABLE_1[climatic_region][depth_band]
+        i_cm = i_ci / 2.0
+        i_cf = i_ci * 2.0 / 3.0
+
+        return {
+            "initial": round(i_ci, 4),
+            "mean":    round(i_cm, 4),
+            "final":   round(i_cf, 6),
+        }
+
+    def _abs_offshore_2018_depth_band(self, water_depth_m):
+        """
+        Map water depth (m) to the Table 1 depth-band key.
+
+        Bands per ABS GN Offshore 2018 Section 2 Table 1 (p.12):
+          0–30 m, >30–100 m, >100–300 m, >300 m.
+        """
+        if water_depth_m <= 30.0:
+            return "0-30"
+        elif water_depth_m <= 100.0:
+            return ">30-100"
+        elif water_depth_m <= 300.0:
+            return ">100-300"
+        else:
+            return ">300"
+
+    def _abs_offshore_2018_coating_breakdown(self, zone, water_depth_m, design_life):
+        """
+        Calculate coating breakdown factors per ABS GN Offshore 2018 Section 2/11.7.4 (p.13).
+
+        Formula: f_c = α + β*t
+          α = 0.01 (initial breakdown, both depth zones)
+          For depth ≤ 30 m: β_mean = 0.006, β_final = 0.012
+          For depth > 30 m: β_mean = 0.004, β_final = 0.008
+
+        For saline_mud: coating factor is 1.0 (bare — no coating benefit in mud contact).
+        """
+        if zone == "saline_mud":
+            return {
+                "depth_zone": "mud",
+                "alpha": 1.0,
+                "beta_mean": 0.0,
+                "beta_final": 0.0,
+                "design_life_years": round(design_life, 3),
+                "initial": 1.0,
+                "mean":    1.0,
+                "final":   1.0,
+            }
+
+        alpha = 0.01
+        if water_depth_m <= 30.0:
+            beta_mean = 0.006
+            beta_final = 0.012
+            depth_zone = "shallow"
+        else:
+            beta_mean = 0.004
+            beta_final = 0.008
+            depth_zone = "deep"
+
+        t = design_life
+        f_ci = alpha
+        f_cm = alpha + beta_mean * t
+        f_cf = alpha + beta_final * t
+
+        # Clamp at 1.0 (100% bare)
+        f_ci = min(f_ci, 1.0)
+        f_cm = min(f_cm, 1.0)
+        f_cf = min(f_cf, 1.0)
+
+        return {
+            "depth_zone": depth_zone,
+            "alpha": alpha,
+            "beta_mean": beta_mean,
+            "beta_final": beta_final,
+            "design_life_years": round(t, 3),
+            "initial": round(f_ci, 6),
+            "mean":    round(f_cm, 6),
+            "final":   round(f_cf, 6),
+        }
+
+    def _abs_offshore_2018_current_demand(
+        self, surface_area_m2, current_densities, coating_breakdown
+    ):
+        """
+        Calculate current demand (A) per ABS GN Offshore 2018 Section 2/11.7.3 (p.13).
+
+        I_c = A_c × i_c × f_c
+
+        current densities are in mA/m²; convert to A/m² by dividing by 1000.
+        """
+        f_ci = coating_breakdown["initial"]
+        f_cm = coating_breakdown["mean"]
+        f_cf = coating_breakdown["final"]
+
+        i_ci_A_m2 = current_densities["initial"] / 1000.0
+        i_cm_A_m2 = current_densities["mean"]    / 1000.0
+        i_cf_A_m2 = current_densities["final"]   / 1000.0
+
+        I_ci = surface_area_m2 * i_ci_A_m2 * f_ci
+        I_cm = surface_area_m2 * i_cm_A_m2 * f_cm
+        I_cf = surface_area_m2 * i_cf_A_m2 * f_cf
+
+        return {
+            "initial": round(I_ci, 6),
+            "mean":    round(I_cm, 6),
+            "final":   round(I_cf, 6),
+        }
+
+    # -----------------------------------------------------------------------
+    # ABS GN Ships (legacy helpers — shared by ABS_gn_ships_2018)
+    # -----------------------------------------------------------------------
 
     def _abs_breakdown_factors(self, inputs, design_life):
         structure = inputs.get("structure", {})
