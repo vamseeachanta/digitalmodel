@@ -85,11 +85,7 @@ CASES: dict[str, dict] = {
 _W = {
     "3.1": {
         # Figure 31 — surge sum-frequency QTF, ω 0.5–3.0 rad/s at 0.25 rad/s steps
-        "load_rao_diffraction": {
-            "omega": [0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00],
-            "real":  [0.5,  1.8,  5.0,  10.5, 17.0, 22.5, 27.5, 30.5, 31.0, 30.0, 28.5],
-            "imag":  [0.3,  0.5,  2.5,   5.5,  9.0, 11.5, 11.5, 10.5,  9.0,  7.5,  6.5],
-        },
+        # load_rao_diffraction removed: that sheet contains first-order RAO, not a QTF quantity.
         "mean_drift_pi": {
             "omega": [0.50, 0.75, 1.00, 1.25, 1.50, 1.75,  2.00,  2.25,  2.50,  2.75,  3.00],
             "real":  [0.5,  1.5,  3.5,  6.0,  8.5,  9.5,  10.0,  10.5,  10.5,  10.0,   9.5],
@@ -435,82 +431,75 @@ def _slice_delta(qtf_dict: dict, delta_omega: float, tol: float = 0.01) -> tuple
 def _build_sum_freq_figure(
     xdata: dict, dof: int, label: str, wamit_ref: dict | None = None
 ) -> go.Figure:
-    """5-panel sum-frequency QTF figure matching Figure 31 of WAMIT validation paper."""
+    """4-panel sum-frequency QTF figure (2×2 grid, QTF quantities only).
+
+    Panels: mean drift (PI), quadratic load (PI), direct potential, indirect potential.
+    The first-order diffraction load RAO is intentionally excluded — it comes from
+    a separate OrcaWave sheet and is not a QTF quantity.
+    """
     dname = DOF_NAMES[dof]
-    uf, ud = DOF_UNITS_FORCE[dof], DOF_UNITS_DRIFT[dof]
+    ud = DOF_UNITS_DRIFT[dof]
 
     def _wref(key):
         return (wamit_ref or {}).get(key)
 
     fig = make_subplots(
-        rows=3, cols=2,
-        specs=[[{"colspan": 2}, None], [{}, {}], [{}, {}]],
+        rows=2, cols=2,
         subplot_titles=[
-            f"Diffraction load RAO — real &amp; imag [{uf}]",
             f"Mean drift load (PI) [{ud}]", f"Quadratic load (PI) [{ud}]",
             f"Direct potential load [{ud}]", f"Indirect potential load [{ud}]",
         ],
-        vertical_spacing=0.13, horizontal_spacing=0.10,
+        vertical_spacing=0.15, horizontal_spacing=0.10,
     )
 
-    # Panel 1 — Diffraction load RAO (real + imag, matching WAMIT reference)
-    # show_legend=True for OrcaWave here; all subsequent panels suppress legend
-    rao = xdata.get("load_rao_diffraction", {})
-    if rao:
-        _add(fig, _traces(rao["omega"], rao["values"][:, dof], "OrcaWave",
-                          show_legend=True), 1, 1)
-    ref = _wref("load_rao_diffraction")
-    if ref:
-        _add(fig, _wamit_traces(ref, show_legend=True), 1, 1)
-
-    # Panel 2 — Mean drift PI (real scalar on diagonal)
+    # Panel (1,1) — Mean drift PI (real scalar on diagonal)
     drift = xdata.get("mean_drift_pi", {})
     if drift:
         fig.add_trace(go.Scatter(
             x=drift["omega"], y=np.real(drift["values"][:, dof]),
             mode="lines+markers", name="OrcaWave",
             line=_cline(_C_REAL), marker=dict(size=5),
-            showlegend=False,
-        ), row=2, col=1)
+            showlegend=True,
+        ), row=1, col=1)
     ref = _wref("mean_drift_pi")
     if ref:
-        _add(fig, _wamit_traces(ref, show_legend=False), 2, 1)
+        _add(fig, _wamit_traces(ref, show_legend=True), 1, 1)
 
-    # Panel 3 — Quadratic load PI: diagonal (ω₁==ω₂) or all points
+    # Panel (1,2) — Quadratic load PI: diagonal (ω₁==ω₂) or all points
     qpi = xdata.get("quadratic_pi", {})
     if qpi:
         o1, o2 = qpi["omega1"], qpi["omega2"]
         diag = np.abs(o1 - o2) < 1e-6
         sel = diag if diag.any() else np.ones(len(o1), dtype=bool)
         _add(fig, _traces(o1[sel], qpi["values"][sel, dof], "OrcaWave",
-                          show_legend=False), 2, 2)
+                          show_legend=False), 1, 2)
     ref = _wref("quadratic_pi")
     if ref:
-        _add(fig, _wamit_traces(ref, show_legend=False), 2, 2)
+        _add(fig, _wamit_traces(ref, show_legend=False), 1, 2)
 
-    # Panel 4 — Direct potential
+    # Panel (2,1) — Direct potential
     pd = xdata.get("potential_direct", {})
     if pd:
         _add(fig, _traces(pd["omega1"], pd["values"][:, dof], "OrcaWave",
-                          show_legend=False), 3, 1)
+                          show_legend=False), 2, 1)
     ref = _wref("potential_direct")
     if ref:
-        _add(fig, _wamit_traces(ref, show_legend=False), 3, 1)
+        _add(fig, _wamit_traces(ref, show_legend=False), 2, 1)
 
-    # Panel 5 — Indirect potential
+    # Panel (2,2) — Indirect potential
     pi_ = xdata.get("potential_indirect", {})
     if pi_:
         _add(fig, _traces(pi_["omega1"], pi_["values"][:, dof], "OrcaWave",
-                          show_legend=False), 3, 2)
+                          show_legend=False), 2, 2)
     ref = _wref("potential_indirect")
     if ref:
-        _add(fig, _wamit_traces(ref, show_legend=False), 3, 2)
+        _add(fig, _wamit_traces(ref, show_legend=False), 2, 2)
 
     fig.update_xaxes(title_text="ω (rad/s)")
     fig.update_layout(
         title=f"{label} — {dname} QTF components (sum-frequency)",
-        height=820, width=960,
-        legend=dict(orientation="h", x=0, y=-0.05),
+        height=700, width=960,
+        legend=dict(orientation="h", x=0, y=-0.07),
     )
     return fig
 
