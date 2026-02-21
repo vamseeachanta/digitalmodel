@@ -38,6 +38,7 @@ tmpclaude-*-cwd
 /*.yml
 /*.yaml
 !docker-compose.yml
+!.pre-commit-config.yaml
 /*.json
 !package.json
 /*.ini
