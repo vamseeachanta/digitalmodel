@@ -1299,6 +1299,9 @@ def _compare_orcawave_ymls(
         "FreeSurfacePanelledZoneMeshFileName",
         "FreeSurfacePanelledZoneMeshFormat",
         "FreeSurfacePanelledZoneMeshLengthUnits",
+        # Roll damping target toggle — spec makes the default explicit (No/False);
+        # OWD omits when at default. Disabled roll damping has no RAO effect.
+        "BodyIncreaseRollDampingToTarget",
     }
 
     # Dormant: keys that exist but are inactive for non-QTF solve types.
