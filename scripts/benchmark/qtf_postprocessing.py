@@ -197,6 +197,109 @@ _W = {
 }
 
 # ---------------------------------------------------------------------------
+# CSV-based WAMIT reference loader (supersedes hardcoded _W above)
+# ---------------------------------------------------------------------------
+
+
+def _load_wamit_csv(csv_path: Path) -> dict | None:
+    """Load WAMIT reference data from a digitized chart CSV file.
+
+    Reads omega_rad_s, Wamit_real, Wamit_imag columns.  Rows with no WAMIT
+    columns populated are skipped.  Missing individual columns fill with NaN
+    so that Plotly renders only the available component markers.
+
+    Returns {"omega": [...], "real": [...], "imag": [...]}, or None if the
+    file does not exist or contains no WAMIT data.
+    """
+    if not csv_path.exists():
+        return None
+    omega, real, imag = [], [], []
+    with csv_path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = [p.strip() for p in line.split(",")]
+            if parts[0] == "omega_rad_s":
+                continue  # header row
+            if len(parts) < 4:
+                continue
+            try:
+                w_val = float(parts[0])
+            except ValueError:
+                continue
+            r_str = parts[3] if len(parts) > 3 else ""
+            i_str = parts[4] if len(parts) > 4 else ""
+            has_r = r_str != ""
+            has_i = i_str != ""
+            if not (has_r or has_i):
+                continue
+            omega.append(w_val)
+            real.append(float(r_str) if has_r else float("nan"))
+            imag.append(float(i_str) if has_i else float("nan"))
+    if not omega:
+        return None
+    return {"omega": omega, "real": real, "imag": imag}
+
+
+def _build_wamit_refs() -> dict:
+    """Build WAMIT reference dict from digitized CSV files (mirrors _W structure).
+
+    CSV files live under docs/modules/orcawave/L00_validation_wamit/<case>/digitized/.
+    Returns an empty sub-dict for any case whose CSV files are missing, so the
+    existing figure builders degrade gracefully (no markers rendered).
+    """
+    def _csv(case_dir: str, filename: str) -> dict | None:
+        return _load_wamit_csv(L00_DIR / case_dir / "digitized" / filename)
+
+    return {
+        "3.1": {
+            k: v for k, v in {
+                "mean_drift_pi":      _csv("3.1", "surge_mean_drift_pi.csv"),
+                "quadratic_pi":       _csv("3.1", "surge_quadratic_load_pi.csv"),
+                "potential_direct":   _csv("3.1", "surge_direct_potential.csv"),
+                "potential_indirect": _csv("3.1", "surge_indirect_potential.csv"),
+            }.items() if v is not None
+        },
+        "3.2": {
+            0.1: {
+                0: {  # Surge
+                    k: v for k, v in {
+                        "quadratic_pi":      _csv("3.2", "surge_pi_quadratic.csv"),
+                        "quadratic_cs":      _csv("3.2", "surge_cs_quadratic.csv"),
+                        "potential_direct":  _csv("3.2", "surge_direct_potential.csv"),
+                        "potential_indirect": _csv("3.2", "surge_indirect_potential.csv"),
+                    }.items() if v is not None
+                },
+                2: {  # Heave
+                    k: v for k, v in {
+                        "quadratic_pi":      _csv("3.2", "heave_pi_quadratic.csv"),
+                        "quadratic_cs":      _csv("3.2", "heave_cs_quadratic.csv"),
+                        "potential_direct":  _csv("3.2", "heave_direct_potential.csv"),
+                        "potential_indirect": _csv("3.2", "heave_indirect_potential.csv"),
+                    }.items() if v is not None
+                },
+            },
+        },
+        "3.3": {
+            2.5: {
+                dof: v for dof, v in {
+                    0: _csv("3.3", "surge_full_qtf.csv"),
+                    1: _csv("3.3", "sway_full_qtf.csv"),
+                    2: _csv("3.3", "heave_full_qtf.csv"),
+                    3: _csv("3.3", "roll_full_qtf.csv"),
+                    4: _csv("3.3", "pitch_full_qtf.csv"),
+                    5: _csv("3.3", "yaw_full_qtf.csv"),
+                }.items() if v is not None
+            },
+        },
+    }
+
+
+# CSV-sourced reference — preferred over hardcoded _W (used in build_inline_html)
+_W_CSV: dict = _build_wamit_refs()
+
+# ---------------------------------------------------------------------------
 # Excel Export (OrcFxAPI)
 # ---------------------------------------------------------------------------
 
@@ -898,7 +1001,7 @@ def build_inline_html(
         return w_case[closest] if abs(closest - dw) < 0.5 else None
 
     if case["qtf_type"] == "sum_freq":
-        wamit_ref_31 = _W.get("3.1")
+        wamit_ref_31 = _W_CSV.get("3.1")
         for dof in case["dofs"]:
             fig = _build_sum_freq_figure(xdata, dof, label, wamit_ref=wamit_ref_31)
             fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
@@ -925,7 +1028,7 @@ def build_inline_html(
         for dw in delta_omegas:
             dw_str = f"{dw:.3f}".rstrip("0").rstrip(".")
             for dof in case["dofs"]:
-                dw_ref = _closest_dw_ref(_W.get(case_id, {}), dw)
+                dw_ref = _closest_dw_ref(_W_CSV.get(case_id, {}), dw)
                 wamit_ref_dof = (dw_ref or {}).get(dof)
                 fig = _build_diff_freq_dof_figure(
                     xdata, dof, dw, label, wamit_ref=wamit_ref_dof
@@ -937,7 +1040,7 @@ def build_inline_html(
                 ))
 
             if case_id == "3.3":
-                dw_ref = _closest_dw_ref(_W.get("3.3", {}), dw)
+                dw_ref = _closest_dw_ref(_W_CSV.get("3.3", {}), dw)
                 wamit_ref_alldofs = dw_ref  # dict keyed by dof int
                 for key in ("quadratic_pi", "potential_indirect"):
                     fig = _build_diff_freq_all_dofs_figure(
