@@ -387,13 +387,13 @@ def _fix_mesh_paths_in_yml(yml_path: Path, owd_dir: Path) -> None:
 
 def solve_owd(
     case_id: str,
-) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict], Optional[Path]]:
+) -> tuple[dict[int, Optional["DiffractionResults"]], dict, Optional[Path], list[dict], Optional[Path], Optional[Path]]:
     """Load .owd file, run Calculate(), and extract results.
 
     Returns
     -------
     Tuple of (results_by_body, coupling_matrices, Path to input .yml or None,
-    panel_geometry_data list from OrcFxAPI panelGeometry).
+    panel_geometry_data list from OrcFxAPI panelGeometry, owr_path, fdf_path).
     """
     import OrcFxAPI
 
@@ -490,12 +490,19 @@ def solve_owd(
                 "area": p["area"],
                 "centroid": list(p["centroid"]),
                 "objectName": p["objectName"],
+                "vertices": p["vertices"].tolist(),  # shape (4, 3)
             })
         print(f"  panelGeometry: {len(panel_geometry_data)} panels")
     except Exception as exc:
         print(f"  [WARN] panelGeometry extraction failed: {exc}")
 
-    return results_by_body, coupling, owd_yml_path, panel_geometry_data, owr_path
+    # Detect FDF file (free-surface zone mesh) in the same directory as the OWD
+    fdf_path: Optional[Path] = None
+    for candidate in owd_path.parent.glob("*.fdf"):
+        fdf_path = candidate
+        break
+
+    return results_by_body, coupling, owd_yml_path, panel_geometry_data, owr_path, fdf_path
 
 
 def solve_spec(
@@ -726,6 +733,7 @@ def run_comparison(
     spec_yml_path: Optional[Path] = None,
     panel_geometry_data: Optional[list] = None,
     owr_path: Optional[Path] = None,
+    fdf_path: Optional[Path] = None,
 ) -> dict:
     """Compare .owd ground truth against spec.yml results for all bodies."""
     import json
@@ -842,6 +850,8 @@ def run_comparison(
         # Attach panel geometry for mesh schematic (OrcFxAPI symmetry-expanded)
         if panel_geometry_data and "OrcaWave (.owd)" in metadata:
             metadata["OrcaWave (.owd)"]["panel_geometry"] = panel_geometry_data
+            if fdf_path and fdf_path.exists():
+                metadata["OrcaWave (.owd)"]["fdf_path"] = str(fdf_path)
 
         # Attach .owr path so report generator uses LoadResults() for correct headings
         if owr_path and owr_path.exists() and "OrcaWave (.owd)" in metadata:
@@ -1571,7 +1581,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
 
     # Step 1: Solve .owd
     print("\n[Step 1] Solving .owd ground truth...")
-    owd_by_body, coupling_owd, owd_yml_path, panel_geometry_data, owr_path = solve_owd(case_id)
+    owd_by_body, coupling_owd, owd_yml_path, panel_geometry_data, owr_path, fdf_path = solve_owd(case_id)
     if not owd_by_body:
         result["status"] = "owd_failed"
         return result
@@ -1612,6 +1622,7 @@ def run_case(case_id: str, owd_only: bool = False) -> dict:
             spec_yml_path=spec_yml_path,
             panel_geometry_data=panel_geometry_data,
             owr_path=owr_path,
+            fdf_path=fdf_path,
         )
         result.update(comp_result)
         result["status"] = "completed"
