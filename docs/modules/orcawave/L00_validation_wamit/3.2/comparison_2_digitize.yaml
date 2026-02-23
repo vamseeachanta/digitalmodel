@@ -1,0 +1,71 @@
+# comparison_2_digitize.yaml
+# Figure 34 — Heave QTF components: PI/CS quadratic + direct/indirect potential
+# Image: 600W x 636H  (ω₂ − ω₁ = 0.1 rad/s, β = 0°)
+
+image_title: "Heave QTF Components - comparison_2 (Fig 34)"
+
+series:
+  - name:     OrcaWave_real
+    hue_lo:   175
+    hue_hi:   230
+    sat_min:  0.25
+    val_min:  0.30
+    kind:     line
+
+  - name:     OrcaWave_imag
+    hue_lo:   340
+    hue_hi:   380
+    sat_min:  0.30
+    val_min:  0.30
+    kind:     line
+
+  - name:     Wamit_real
+    hue_lo:   175
+    hue_hi:   230
+    sat_min:  0.25
+    val_min:  0.30
+    kind:     marker
+
+  - name:     Wamit_imag
+    hue_lo:   340
+    hue_hi:   380
+    sat_min:  0.30
+    val_min:  0.30
+    kind:     marker
+
+subplots:
+  - title:       "PI quadratic load"
+    output_name: heave_pi_quadratic
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -5.0
+    y_max:  7.5
+    pixel_box: [73, 26, 270, 260]
+
+  - title:       "CS quadratic load"
+    output_name: heave_cs_quadratic
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -5.0
+    y_max:  7.5
+    pixel_box: [363, 26, 560, 260]
+
+  - title:       "Direct potential load"
+    output_name: heave_direct_potential
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -80.0
+    y_max:  0.0
+    pixel_box: [73, 270, 270, 472]
+
+  - title:       "Indirect potential load"
+    output_name: heave_indirect_potential
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -80.0
+    y_max:  0.0
+    pixel_box: [363, 270, 560, 472]
