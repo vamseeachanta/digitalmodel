@@ -274,6 +274,23 @@ def _extract_from_diffraction(
             source_file=source_file,
         )
 
+        # Extract hydrostatics
+        hydro = None
+        try:
+            hs = diff.hydrostaticResults[body_index]
+            from digitalmodel.hydrodynamics.diffraction.output_schemas import HydrostaticResults
+            hydro = HydrostaticResults(
+                vessel_name=vessel_name,
+                displacement_volume=float(hs["volume"]),
+                mass=float(hs["mass"]),
+                centre_of_gravity=hs["centreOfMass"].tolist(),
+                centre_of_buoyancy=hs["centreOfBuoyancy"].tolist(),
+                waterplane_area=float(hs["Awp"]),
+                stiffness_matrix=np.array(hs["restoringMatrix"]),
+            )
+        except (AttributeError, IndexError, KeyError) as e:
+            print(f"  [WARN] Hydrostatic extraction failed for body {body_index}: {e}")
+
         # Extract added mass - shape: (nfreq, N, N)
         am_raw_full = np.array(diff.addedMass)
         # For multi-body, extract target body's 6x6 block
@@ -338,6 +355,7 @@ def _extract_from_diffraction(
             raos=rao_set,
             added_mass=am_set,
             damping=damp_set,
+            hydrostatics=hydro,
             created_date=now_str,
             source_files=[source_file],
             phase_convention="orcina_lag",
@@ -896,7 +914,20 @@ def run_comparison(
 
         # Compute correlation
         summary = _compute_correlation_summary(owd_r, spec_r)
-        dof_summary_by_body[bi] = summary
+        
+        # Attach matrix and hydrostatic data from the advanced report
+        pairwise = result.report.pairwise_results
+        pw_key = "OrcaWave (.owd)-vs-OrcaWave (spec.yml)"
+        if pw_key in pairwise:
+            pw = pairwise[pw_key]
+            dof_summary_by_body[bi] = {
+                **summary,
+                "hydro": pw.hydrostatic_comparison,
+                "am_correlations": pw.added_mass_correlations,
+                "damp_correlations": pw.damping_correlations,
+            }
+        else:
+            dof_summary_by_body[bi] = summary
 
     # Clean up stale flat-directory reports for multi-body cases
     if len(bodies) > 1:
@@ -1774,6 +1805,7 @@ def _build_results_from_config() -> dict:
                     pw_raos = pw_entry.get("rao_comparisons", {})
                     pw_am = pw_entry.get("added_mass_correlations", {})
                     pw_damp = pw_entry.get("damping_correlations", {})
+                    pw_hydro = pw_entry.get("hydrostatic_comparison")
 
                     dof_stats = {}
                     for dof in dof_names:
@@ -1796,8 +1828,34 @@ def _build_results_from_config() -> dict:
                                 "max_phase_diff", 0.0
                             ),
                         }
-                    dof_summary_by_body[bi] = dof_stats
-                    
+                    dof_stats = {}
+                    for dof in dof_names:
+                        dof_upper = dof.upper()
+                        corr = (
+                            consensus.get(dof_upper, {})
+                            .get("mean_pairwise_correlation", 1.0)
+                        )
+                        dof_rao = pw_raos.get(dof, {})
+                        max_diff = dof_rao.get("max_magnitude_diff", 0.0)
+                        dof_stats[dof] = {
+                            "correlation": corr,
+                            "max_abs_diff": max_diff,
+                            "rel_error_pct": 0.0,
+                            "n_points": 0,
+                            "phase_correlation": dof_rao.get(
+                                "phase_correlation", float("nan")
+                            ),
+                            "max_phase_diff": dof_rao.get(
+                                "max_phase_diff", 0.0
+                            ),
+                        }
+                    dof_summary_by_body[bi] = {
+                        **dof_stats,
+                        "hydro": pw_hydro,
+                        "am_correlations": pw_am,
+                        "damp_correlations": pw_damp,
+                    }
+
                     # Store AM/Damp from body 0 (or last body) as summary
                     if bi == 0 or math.isnan(am_min_diag):
                         am_min_diag = _min_diag(pw_am)
@@ -1906,9 +1964,25 @@ def _min_diag(matrix_corr: dict) -> float:
     vals = []
     for i in range(1, 7):
         v = matrix_corr.get(f"{i},{i}")
+        if v is None:
+            # handle tuple keys from live run
+            v = matrix_corr.get((i, i))
         if isinstance(v, (int, float)) and not math.isnan(v):
             vals.append(v)
     return min(vals) if vals else float("nan")
+
+
+def _mean_diag(matrix_corr: dict) -> float:
+    """Mean of 6 diagonal elements (i,i for i=1..6), skipping NaN."""
+    vals = []
+    for i in range(1, 7):
+        v = matrix_corr.get(f"{i},{i}")
+        if v is None:
+            # handle tuple keys from live run
+            v = matrix_corr.get((i, i))
+        if isinstance(v, (int, float)) and not math.isnan(v):
+            vals.append(v)
+    return float(np.mean(vals)) if vals else float("nan")
 
 
 def _generate_master_html(results: dict, output_dir: Path) -> Path:
@@ -2050,6 +2124,54 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                     if isinstance(ph, (int, float)) and not math.isnan(ph):
                         ph_vals.append(ph)
             min_ph = min(ph_vals) if ph_vals else float("nan")
+
+            # Matrix tooltips
+            am_corrs = summary.get("am_correlations", {})
+            damp_corrs = summary.get("damp_correlations", {})
+            def _matrix_tip(corrs: dict) -> str:
+                if not corrs: return ""
+                diag = [corrs.get(f"{i},{i}", corrs.get((i,i), float("nan"))) for i in range(1, 7)]
+                diag_str = ", ".join([f"{v:.6f}" if isinstance(v, float) else str(v) for v in diag])
+                mean_v = _mean_diag(corrs)
+                return f"Mean diagonal r: {mean_v:.8f}&#10;Diagonal correlations (1-6):&#10;{diag_str}"
+
+            am_tip = _matrix_tip(am_corrs)
+            damp_tip = _matrix_tip(damp_corrs)
+
+            def _fmt_min_mean(min_v: float, corrs: dict) -> str:
+                """Format min/mean correlation as colored HTML."""
+                if not isinstance(min_v, (int, float)) or math.isnan(min_v):
+                    return '<span style="color:#9ca3af">N/A</span>'
+                mean_v = _mean_diag(corrs)
+                m_str = f"{min_v:.6f}"
+                mn_str = f"{mean_v:.6f}"
+                return f'<span style="color:{_corr_color(min_v)}">{m_str}</span> / <span style="color:{_corr_color(mean_v)};font-size:0.85em">{mn_str}</span>'
+
+            # Hydrostatic column
+            h = summary.get("hydro")
+            if h:
+                # Handle both object (live run) and dict (from JSON)
+                def _get(obj, key, default=None):
+                    if hasattr(obj, key): return getattr(obj, key)
+                    if isinstance(obj, dict): return obj.get(key, default)
+                    return default
+
+                h_corr = _get(h, "stiffness_matrix_correlation", float("nan"))
+                cog_d = _get(h, "cog_diff", [0,0,0])
+                cob_d = _get(h, "cob_diff", [0,0,0])
+                awp_d = _get(h, "waterplane_area_diff", 0.0)
+                mass_d = _get(h, "mass_diff", 0.0)
+
+                h_tip_parts = [
+                    f"Stiffness r: {h_corr:.8f}",
+                    f"CoG diff: ({', '.join([f'{v:.4f}' for v in cog_d])}) m",
+                    f"CoB diff: ({', '.join([f'{v:.4f}' for v in cob_d])}) m",
+                    f"Awp diff: {awp_d:.4f} m2",
+                    f"Mass diff: {mass_d:.1f} kg"
+                ]
+                h_cell = f'<td style="text-align:center" title="{"&#10;".join(h_tip_parts)}">{_fmt_val(h_corr)}</td>'
+            else:
+                h_cell = '<td style="text-align:center;color:#9ca3af">-</td>'
             
             def _fmt_val(v: float) -> str:
                 """Format a correlation value as colored HTML (no <td> wrapper)."""
@@ -2103,11 +2225,12 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                 am_val = r.get("am_min_diag", float("nan"))
                 damp_val = r.get("damp_min_diag", float("nan"))
                 row += _fmt_td(min_ph)
-                row += f"<td rowspan='{rowspan}' style='text-align:center'>{_fmt_val(am_val)}</td>"
-                row += f"<td rowspan='{rowspan}' style='text-align:center'>{_fmt_val(damp_val)}</td>"
+                row += f"<td rowspan='{rowspan}' style='text-align:center' title='{am_tip}'>{_fmt_min_mean(am_val, am_corrs)}</td>"
+                row += f"<td rowspan='{rowspan}' style='text-align:center' title='{damp_tip}'>{_fmt_min_mean(damp_val, damp_corrs)}</td>"
             else:
                 row += _fmt_td(min_ph)
 
+            row += f"{h_cell}"
             row += f"<td style='text-align:center'>{link}</td></tr>"
             rows_html.append(row)
 
@@ -2138,6 +2261,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
             f'<td style="text-align:center;color:#9ca3af">-</td>'
             f'<td style="text-align:center;color:#9ca3af">-</td>'
             f'<td style="text-align:center;color:#9ca3af">-</td>'
+            f'<td style="text-align:center;color:#9ca3af">-</td>' # Hydro
             f"<td style='text-align:center'>-</td>"
             f"</tr>"
         )
@@ -2223,6 +2347,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
         <th title="Min phase correlation across non-trivial DOFs">Ph.r</th>
         <th title="Min diagonal added mass correlation (6 self-coupling terms)">AM</th>
         <th title="Min diagonal damping correlation (6 self-coupling terms)">Damp</th>
+        <th title="Hydrostatic stiffness matrix correlation (6x6)">Hydro</th>
         <th>Report</th>
       </tr>
     </thead>

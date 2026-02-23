@@ -1,51 +1,57 @@
 ---
 standard: ABS-CATHODIC-PROTECTION-SHIPS
 edition: "2017"
-structure_type: floating_storage_terminal
+structure_type: floating_storage_terminal_hull
 source_type: abstracted_client_calculation
 discipline: cathodic_protection
 ---
 
-# Floating Storage Terminal Hull — ABS Ships 2017 Cathodic Protection Specification (Two-Unit Fleet)
+# Floating Storage Terminal Hull — ABS GN Ships 2017 Cathodic Protection Specification
 
 ## Source
-Standard: ABS, Guidance Notes on Cathodic Protection of Ships, December 2017 (primary)
-           DNV-RP-B401, October 2010 amended April 2011 (used for resistivity chart only)
-Structure type: Two Floating Storage Terminal (FST) hulls — external hull only
-                (Internal tanks, associated foundation structures not in scope)
+Standard: ABS, Guidance Notes on Cathodic Protection of Ships, December 2017 (primary);
+           DNV-RP-B401, October 2010 amended April 2011 (used for resistivity chart, Annex A
+           Figure 10-1 only)
+Structure type: Floating Storage Terminal (FST) hull — external hull, submerged zone only
+                (Internal tanks and foundation structures not in scope)
 Document type: CP specification — anode material, manufacture, installation, and sizing
+Document reference: CP-CALC-11
 Design life: 5 years
 Classification: ABS (American Bureau of Shipping)
 
-## Scope
-Sacrificial anode cathodic protection for the submerged external hull of two FST vessels
-(referred to as Terminal_1 and Terminal_2 in this abstracted document).
-Both vessels are LNG Carrier hulls converted to FSTs by modification of bow and stern sections.
-Each FST is permanently moored via four mooring jacket structures.
+## Notes on E5 source
+This document is a CP specification covering the external hull sacrificial anode system for
+two FST hulls (referred to as FST Hull 1 and FST Hull 2 in this abstracted document) at a
+coastal LNG facility. The vessels are sister LNG Carrier hulls converted to FSTs by
+modification of bow and stern sections. Each FST is permanently moored via four mooring
+jacket structures.
 
-The two FSTs are sister vessels and are assumed to have identical hull geometry, wetted
-surface area, and CP design. The anode specification applies identically to both.
+The primary calculation is in Section 4.4 (anode calculations, ABS method) and Section 4.5
+(anode dimensions, weight, arrangement, and quantity). The design resistivity is derived
+from DNV-RP-B401 (Oct 2010 amended Apr 2011) Annex A Figure 10-1 (seawater resistivity vs
+temperature for 30–40 ppt salinity) — this cross-standard usage is noted in Gaps Found.
 
-## Design Basis
-- CP system type: Sacrificial anode only (SACP); no ICCP in this specification scope
-- Anode material: Aluminium alloy (preferred over zinc for environmental reasons and superior
-  performance in brackish/low-resistivity water)
-- Anode installation: Bolt-on type with stainless steel M15 studs, 35 mm long with S.S. hex
-  nut; anodes NOT welded to hull
-- Anode spacing: 6 to 8 m (ABS GN Ships 2017, Section 3, Subsection 5.2)
-- Anodes uniformly distributed over underwater surface for good current distribution
-- Anodes placed away from areas likely to sustain mechanical damage (docking blocks, fenders)
+Appendix D of the source document is titled "CTR2-CP Calculation RB1" and contains the
+same ABS calculation spreadsheet (4 pages). This is the same calculation as E1/E2 Excel
+workbooks already abstracted in calc-001-abs-gn-ships-2017-fst-hull.md. The Appendix D
+values are identical to Section 4.4 results. Do not re-abstract Appendix D; see calc-001
+for the full E1/E2 cross-reference.
+
+Key difference from calc-001: calc-001 uses psw = 0.2547 ohm.m (25 ppt, 5-yr design),
+while this specification uses psw = 0.325 ohm.m (24.5 ppt at 14°C max temperature per
+DNV B401 Fig 10-1). The surface area used here is 10 778 m² (average draft), which matches
+calc-001. The coating durability in this document is "High" (1%/yr initial, 1%/yr annual).
 
 ## Input Parameters
 | Parameter | Symbol | Value | Unit | Notes |
 |-----------|--------|-------|------|-------|
-| Design life | tf | 5 | years | Primary design case |
-| Max seawater temperature | T_max | 14 | °C | From site survey, max observed |
+| Design life | tf | 5 | yr | Primary design case |
+| Max seawater temperature | T_max | 14 | °C | From site survey; used for resistivity |
 | Min seawater temperature | T_min | 8 | °C | From site survey |
-| Average seawater temperature | T_avg | 11 | °C | Used for design |
-| Min salinity | S_min | 15 | ppt | From site survey depth profile |
-| Max salinity | S_max | 30 | ppt | From site survey depth profile |
-| Average salinity | S_avg | 24.5 | ppt | Used for design |
+| Average seawater temperature | T_avg | 11 | °C | — |
+| Min salinity | S_min | 15 | ppt | From site depth profile |
+| Max salinity | S_max | 30 | ppt | From site depth profile |
+| Average salinity | S_avg | 24.5 | ppt | Design salinity |
 | Salinity as fraction | — | 2.45 | % | ppt / 10 |
 | Seawater resistivity | psw | 0.325 | ohm.m | At 24.5 ppt, 14°C per DNV-RP-B401 Fig 10-1 |
 | Anode material density | rho_a | 2750 | kg/m³ | Aluminium alloy (range 2640–2810 kg/m³) |
@@ -53,18 +59,18 @@ surface area, and CP design. The anode specification applies identically to both
 ## Structure Data
 | Parameter | Symbol | Value | Unit | Notes |
 |-----------|--------|-------|------|-------|
-| Minimum draft | — | 4.8 | m | Light load condition |
+| Minimum draft | — | 4.8 | m | Light load (light load calcs) |
 | Maximum draft (scantling) | — | 11.532 | m | Full load condition |
 | Average draft | — | 8.166 | m | Calculated |
 | Average submerged wetted area | Ac | 10 778 | m² | From hydrostatics at average draft |
 
 Note: Anodes are predominantly on the bottom shell. Water depth at hull ranges from
 approximately 4.79 m (minimum draft) to 11.53 m (full draft). Temperature and salinity
-are read at 5 m and 10 m depths from site survey data.
+read at 5 m and 10 m depths from site survey data.
 
 ## Environment — Site Survey Data Summary
-| Location | Depth (m) | Temperature (°C) | Salinity (ppt) |
-|----------|-----------|-----------------|----------------|
+| Station | Depth (m) | Temperature (°C) | Salinity (ppt) |
+|---------|-----------|-----------------|----------------|
 | Station A | 5 | 14 | 15 |
 | Station A | 10 | 10 | 30 |
 | Station B | 5 | 12 | 24 |
@@ -73,158 +79,267 @@ are read at 5 m and 10 m depths from site survey data.
 | Max | — | 14 | 30 |
 | Average | — | 11 | 24.5 |
 
-Salinity range 27–32 ppt at depth, dependable on season and depth.
-Near-surface salinity can drop significantly in summer months.
-
 ## Resistivity Derivation
 Method: DNV-RP-B401 (Oct 2010 amended Apr 2011), Annex A, Figure 10-1
         "Seawater resistivity as a function of temperature for salinity 30 to 40 ppt"
 At 24.5 ppt salinity and 14°C maximum temperature: psw = 0.325 ohm.m
-This is the design resistivity used in the anode calculations.
+This is the design resistivity used in all anode calculations.
 
-## Anode Specification
+## Coating Breakdown Data (ABS GN Ships 2017, Section 2, Table 4)
 | Parameter | Value | Unit | Notes |
 |-----------|-------|------|-------|
-| Anode material | Aluminium-zinc-indium-cadmium alloy | — | Sacrificial, bolt-on |
-| Anode size | 650 × (115+135) × 130 | mm | L × (W_core + W_total) × H |
-| Anode gross weight per unit | 30.0 | kg | Per supplier datasheet |
-| Anode net weight per unit | 29.0 | kg | Approx. (without insert) |
-| Installation | Bolt-on, stainless steel studs | — | M15 STL weld stud × 35 mm, S.S. hex nut |
-| Anode current capacity | — | A·h/kg | Per ABS GN Ships 2017 |
-| Coating compatibility | No inert coating formation | — | Must function in wet/dry cycling |
+| Coating system durability | High | — | Selected |
+| Initial coating breakdown factor (fci) | 1 | % | ABS Table 4, High durability |
+| Initial breakdown duration (di) | 2 | yr | ABS Table 4 |
+| Yearly coating breakdown factor (fc) | 1 | %/yr | ABS Table 4, High durability |
+| Annual multiplier (fca = 1 + fc) | 1.01 | 1/yr | — |
+| Mean coating breakdown factor (fcm) | 1.53 | % | avg(fca, fcf) |
+| Final coating breakdown factor (fcf) | 2.05 | % | (1 + fci/100)^di × (1+fc/100)^(tf-di) |
 
-## Anode Calculations (Section 4.4 — ABS GN Ships 2017)
+Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈ 2.05%
 
-### Calculation Methodology
-The calculation follows ABS Guidance Notes on Cathodic Protection of Ships, 2017:
-1. Coating breakdown factors computed (deterioration assumption, not disbonding)
-2. Initial, mean, and final current demand calculated
-3. Total anode weight computed
-4. Anode quantity determined from ABS max spacing requirement (6–8 m)
-5. Anode life checked per ABS Section 7, Subsection 2, Clause 7.4
-6. Anode current capacity checked for initial geometry
-7. Anode current capacity checked for final (depleted) geometry
-8. Summary results: number of anode locations and total anode weight
+## Current Density (ABS GN Ships 2017, Section 2, Table 3 and Table 5)
+| Parameter | Value | Unit | Notes |
+|-----------|-------|------|-------|
+| Design current density for coated steel, ici (avg Table 7, 20) | 13.5 | mA/m² | ABS §2, Table 3 |
+| Design current density for uncoated steel, icdu (avg 150, 250) | 200 | mA/m² | ABS §2, Table 3 |
+| Design current density (icdcd) assuming deterioration | 27.7 | mA/m² | icdc × fcf |
+| Design current density assuming disbonding | 210 | mA/m² | fcfl × icdu |
+| Assumption | Deterioration (not disbonding) | — | — |
+| Mean current density (icm) | 20.6 | mA/m² | avg(ici, icf) |
 
-### Basic Design Data
-| Description | Symbol | Value | Unit |
-|-------------|--------|-------|------|
-| Max seawater temperature | T | 14 | °C |
-| Design life | tf | 5 | yr |
-| Average salinity | S | 24.5 | ppt |
-| Salinity as fraction | — | 2.45 | % |
-| Seawater resistivity | psw | 0.325 | ohm.m |
-| Anode density | rho_a | 2750 | kg/m³ |
+## Calculation Results (from source — Section 4.4 / Appendix D, 5-yr, 0.325 ohm.m)
 
-### Calculation Results Summary
-| Description | Value | Unit | Notes |
-|-------------|-------|------|-------|
-| Total net anode weight required | 4 713 | kg | Per ABS §7, Sect 2, Cl 7.3 |
-| Number of anode locations (ABS max 6–8 m spacing) | 230 | — | — |
-| Quantity per location | 1 initially; 2 for final demand | qty/loc | — |
-| Anode net weight per unit | 29 | kg | Selected anode |
-| Total net anode weight (based on selection) | 6 681 | kg | 230 loc × 1 qty × 29 kg |
-| Design life input | 5 | yr | Input |
-| Anode life (calculated per ABS §7, §2, Cl 7.4) | 7.1 | yr | > 5 yr: pass |
-| Anode qty per location for initial current demand | 1 | qty/loc | Check |
-| Anode qty per location for final current demand | 2 | qty/loc | Check |
-| Governing anode qty per location | 2 | qty/loc | Final demand governs |
-| Total number of anodes | 460 | — | 230 loc × 2 qty |
+### Current Demand for Structure
+| Stage | Formula | Value | Unit |
+|-------|---------|-------|------|
+| Initial current demand (Ici) | Ac × ici | 146 | A |
+| Mean current demand (Icm) | Ac × icm | 222 | A |
+| Final current demand (Icf) | Ac × icf | 298 | A |
+
+### Anode Weight Calculation
+| Parameter | Value | Unit | Reference |
+|-----------|-------|------|-----------|
+| Anode current capacity, Q | 2 500 | A·h/kg | ABS §2, Table 4 |
+| Anode utilisation factor (u) | 0.825 | — | ABS §2, §7.3 |
+| Total net anode weight required (NWm, based on Icm) | 4 713 | kg | Icm × tf × 8760 / (Q × u) |
+| Total net anode weight required | 4.7 | mt | — |
+
+### Number of Anode Locations
+| Parameter | Value | Unit | Reference |
+|-----------|-------|------|-----------|
+| Number of locations (ABS max spacing 6–8 m) | 230 | — | ABS §3, §5.2 |
+| Anode net weight required per location | 20.5 | kg | NWm / No.Loc |
+| Quantity provided per location (initial) | 1 | qty/loc | — |
+
+### Anode Provided (Selected Anode)
+| Parameter | Symbol | Value | Unit | Notes |
+|-----------|--------|-------|------|-------|
+| Anode length | L | 0.65 | m | — |
+| Anode width | W | 0.125 | m | — |
+| Anode height | H | 0.13 | m | — |
+| Anode volume | V = L×W×H | 0.0106 | m³ | — |
+| Anode net weight each | wN | 29 | kg | V × rho_a |
+| Insert weight estimate per anode | Wi | 2.26 | kg | — |
+| Anode gross weight each | wG | 31.3 | kg | — |
+| Gross to net ratio | wG/wN | 1.08 | — | — |
+
+### Anode Life Check (ABS §2, §7.4)
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Anode consumption rate (E) | 3.5 | kg/(A·yr) |
+| Anode average current output during lifetime (Is) | 0.9649 | A |
+| Anode life (Tanode) | 7.1 | yr |
+| Design life | 5 | yr |
+| Check (Tanode > tf) | Pass | — |
+
+### Anode Weight at End of Life (ABS §2, §7.5)
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Anode net weight initial (wNi) | 29 | kg |
+| Anode utilisation factor | 0.825 | — |
+| Anode net weight final (wNf = wNi × (1-u)) | 5.1 | kg |
+
+### Anode End of Life Shape — Slender Anode (ABS §2, §7.5.2a)
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Anode length initial (Li) | 0.65 | m |
+| Anode length final (Lf = Li - 0.1×u×Li) | 0.60 | m |
+| Anode core cross-sectional area (Xcore) | 0.0163 | m² |
+| Anode cross-sectional area final (Xfinal) | 0.026 | m² |
+| End-of-life radius (rfinal, long flush mounted §7.5.2b) | 0.1286 | m |
+
+### Anode Current Capacity Check — Initial (ABS §2, §6.2)
+| Parameter | Value | Unit | Notes |
+|-----------|-------|------|-------|
+| Mild steel protection potential | -0.80 | V | ABS §2, Table 1 |
+| Maximum negative potential | -1.10 | V | ABS §2, Table 1 |
+| Potential difference ΔE | 0.30 | V | Vs - Va |
+| Length / Width (L/W) | 5.2 | — | — |
+| Arithmetic mean of length and width (Si) | 0.40 | m | avg(Li, Wi) |
+| Anode resistance Rai (long flush L ≥ 4W) | 0.419 | ohm | Rai = psw / (2 × Si) |
+| Individual anode current output initial (Iaoi) | 0.72 | A | ΔE / Rai |
+| Quantity per location for initial demand | 1 | qty/loc | — |
+| Total anodes (initial) | 230 | — | — |
+| Total anode current output initial (Icoi) | 165 | A | qty × Iaoi |
+| Initial current demand (Ici) | 146 | A | — |
+| Check (Icoi ≥ Ici) | Pass | — | — |
+
+### Anode Current Capacity Check — Final (ABS §2, §6.2)
+| Parameter | Value | Unit | Notes |
+|-----------|-------|------|-------|
+| Arithmetic mean of length and width final (Sf) | 0.4268 | m | avg(Lf, 2×rfinal) |
+| Anode resistance Raf (long flush L ≥ 4W) | 0.3807 | ohm | Raf = psw / (2 × Sf) |
+| Individual anode current output final (Iaof) | 0.788 | A | ΔE / Raf |
+| Quantity per location for final demand | 2 | qty/loc | — |
+| Total anodes (final) | 460 | — | 230 loc × 2 qty |
+| Total anode current output final (Icof) | 329 | A | qty × Iaof |
+| Final current demand (Icf) | 298 | A | — |
+| Check (Icof ≥ Icf) | Pass | — | — |
+
+### Summary — Number of Anodes Selected
+| Parameter | Value | Unit | Notes |
+|-----------|-------|------|-------|
+| Total net weight required | 4 713 | kg | — |
+| Number of anode locations | 230 | — | ABS 6–8 m spacing |
+| Governing qty per location | 2 | qty/loc | Final current demand governs |
+| Total number of anodes | 460 | — | 230 × 2 |
 | Total net weight of anodes | 13 362 | kg | 460 × 29 kg |
 | Total net weight of anodes | 13.4 | mt | — |
 | Total gross weight of anodes | 14 400 | kg | 460 × 30 kg |
 | Total gross weight of anodes | 14.4 | mt | — |
+| Anode life (calculated) | 7.1 | yr | > 5 yr design life: pass |
 
-### Final Anode Bill of Materials
+## Anode Bill of Materials (Section 4.5)
 ```
-QTY    DESCRIPTION                                          TOTAL WEIGHT
- 460   ALUMINIUM-ZINC INDIUM-CADMIUM ALLOY SACRIFICIAL      14.40 mt
-       ANODE, SIZE: 650×(115+135)×130 mm, 30.0 KG/PC
+QTY    DESCRIPTION                                             TOTAL WEIGHT
+ 460   ALUMINIUM-ZINC INDIUM-CADMIUM ALLOY SACRIFICIAL          14.40 mt
+       ANODE, SIZE: 650×(115+135)×130 mm, WEIGHT: 30.0 KG/PC
 ```
+
+## Anode Installation Requirements
+- Anode spacing: 6 to 8 m (ABS GN Ships 2017, Section 3, Subsection 5.2)
+- Anodes uniformly distributed over underwater surface
+- Bolt-on type with M15 STL weld stud × 35 mm with S.S. hex nut
+- Anodes NOT welded to the hull
+- Placed away from areas likely to sustain mechanical damage (docking blocks, fenders)
 
 ## Monitoring
 - Method: Periodic diver inspection
 - Monitoring requirements per ABS GN Ships 2017 guidelines
+
+## Linkage to calc-001
+Appendix D of the source document ("CTR2-CP Calculation RB1") contains the same ABS
+aluminium anode spreadsheet. The basic design data (T=14°C, S=24.5 ppt, psw=0.325 ohm.m,
+Ac=10 778 m², tf=5 yr) matches this section 4.4 exactly. calc-001 was abstracted from the
+same underlying Excel workbook (E1/E2 pair). The only numeric difference between calc-001
+and this document is seawater resistivity: calc-001 uses 0.2547 ohm.m (25 ppt), while
+here the design resistivity is 0.325 ohm.m (24.5 ppt at 14°C from DNV B401 Fig 10-1).
 
 ## Python cfg dict
 
 ```python
 cfg = {
     "inputs": {
-        "calculation_type": "ABS_CP_SHIPS_2017",
+        "calculation_type": "ABS_gn_ships_2018",
+        # ABS_gn_ships_2018 is the existing route in cathodic_protection.py.
+        # Source standard is ABS GN Ships December 2017; route name reflects 2018 offshore
+        # publication which uses the same methodology.
         "design_data": {
             "design_life": 5,                    # years
-        },
-        "structure": {
-            "structure_type": "floating_storage_terminal",
-            "num_terminals": 2,                  # Two identical FST hulls
-            "draft_min": 4.8,                    # m
-            "draft_max": 11.532,                 # m (scantling draft)
-            "draft_avg": 8.166,                  # m
-            "surface_area": 10778,               # m², average submerged wetted area
-            "coating_type": "deterioration",     # not disbonding
-            "coating_coverage": 1.0,             # 100% coated
+            "seawater_max_temperature": 14,      # deg C (max observed)
         },
         "environment": {
-            "temperature_max": 14,               # deg C
-            "temperature_min": 8,                # deg C
-            "temperature_avg": 11,               # deg C
-            "salinity_min": 15,                  # ppt
-            "salinity_max": 30,                  # ppt
-            "salinity_avg": 24.5,                # ppt
-            "seawater_resistivity": 0.325,       # ohm.m (at 24.5 ppt, 14 deg C)
+            "seawater": {
+                "resistivity": {"input": 0.325},   # ohm.m (24.5 ppt, 14 deg C)
+            },
+        },
+        "structure": {
+            "steel_total_area": 10778.0,           # m², average submerged wetted area
+            "area_coverage": 100.0,                # % coated
+            "coating_initial_breakdown_factor": 1.0,    # % (High durability, ABS Table 4)
+            "coating_initial_breakdown_duration": 2.0,  # years
+            "coating_yearly_breakdown_factor": 1.0,     # %/yr (High durability)
+            "coating_breakdown_factor_max": 2.05,  # % final (5-yr, High durability)
+        },
+        "design_current": {
+            "coated_steel_mA_m2": 13.5,            # mA/m² (ABS §2, Table 3)
+            "uncoated_steel_mA_m2": 200.0,         # mA/m²
         },
         "anode": {
-            "material": "aluminium_zinc_indium_cadmium_alloy",
-            "type": "bolt_on_flush_mount",
-            "length": 0.650,                     # m
-            "width_core": 0.115,                 # m (core section)
-            "width_total": 0.135,                # m (total including shoulders)
-            "height": 0.130,                     # m
-            "gross_weight": 30.0,                # kg per unit
-            "net_weight": 29.0,                  # kg per unit
-            "density": 2750,                     # kg/m³
-            "installation": "bolt_on_ss_studs",
-            "stud_spec": "M15_STL_35mm_SS_hex_nut",
-        },
-        "layout": {
-            "anode_spacing_max": 8,              # m (ABS §3, §5.2 max spacing)
-            "anode_spacing_min": 6,              # m
-            "number_of_locations": 230,          # from hull geometry + spacing rule
+            "material": "aluminium",
+            "protection_potential": 0.8,           # V (magnitude, Ag/AgCl)
+            "closed_circuit_anode_potential": -1.09, # V vs Ag/AgCl
+            "anode_Utilisation_factor": 0.825,
+            "physical_properties": {
+                "net_weight": 29.0,                # kg
+            },
+            "geometry": {
+                "type": "long_flush",
+                "length_m": 0.65,                  # m
+                "width_m": 0.125,                  # m
+            },
         },
     }
 }
+```
+
+## Code Validation
+
+```python
 # Run: CathodicProtection().router(cfg)
+# Route: ABS_gn_ships_2018 (existing)
 #
-# Expected results (5-yr design, 0.325 ohm.m, 10 778 m²):
-#   Total net anode mass required:     4 713 kg
-#   Anode locations (6-8 m spacing):    230
-#   Anode life (calculated):            7.1 yr  (> 5 yr design life: pass)
-#   Governing qty per location:         2       (final current demand governs)
-#   Total anode count:                  460
-#   Total net mass:                    13 362 kg (13.4 mt)
-#   Total gross mass:                  14 400 kg (14.4 mt)
-#   Anode type: Al-Zn-In-Cd alloy, 650×(115+135)×130 mm, 30.0 kg/pc
+# Expected results (5-yr, 0.325 ohm.m, 10 778 m², High durability coating):
+#   Initial coating breakdown factor (fci):     1.0%
+#   Final coating breakdown factor (fcf):       2.05%
+#   Mean coating breakdown factor (fcm):        ~1.53%
+#   Design current density ici:                13.5 mA/m²  (coated, tidal)
+#   Mean current density icm:                  20.6 mA/m²
+#   Final current density icf:                 27.7 mA/m²
+#   Initial current demand (Ici):               146 A
+#   Mean current demand (Icm):                  222 A
+#   Final current demand (Icf):                 298 A
+#   Total net anode mass required:            4 713 kg
+#   Number of anode locations (6-8 m):          230
+#   Anode life calculated:                      7.1 yr  (> 5 yr: pass)
+#   Governing qty per location:                 2       (final current governs)
+#   Total anode count:                          460
+#   Total net anode mass:                    13 362 kg (13.4 mt)
+#   Total gross anode mass:                  14 400 kg (14.4 mt)
+#   Anode resistance (initial, Rai):            0.419 ohm
+#   Individual anode output initial (Iaoi):     0.72 A
+#   Total initial current output (230 anodes):  165 A  (> 146 A: pass)
+#   Anode resistance (final, Raf):              0.3807 ohm
+#   Individual anode output final (Iaof):       0.788 A
+#   Total final current output (460 anodes):    329 A  (> 298 A: pass)
+#
+# NOTE: The cfg key names above must match the ABS_gn_ships_2018() method signature
+# in cathodic_protection.py. Cross-check against test_abs_cathodic_protection_calcs.py.
 ```
 
 ## Gaps Found
-- The ABS GN Ships 2017 current density tables (for brackish water) are not explicitly
-  tabulated in this specification; the source document references the ABS standard directly
-  for current density values. cathodic_protection.py must implement ABS Table values for
-  tidal/submerged hull zones in brackish water.
-- The ABS coating breakdown model (multiplicative annual-rate per Table 4, Section 2.4.4)
-  must be confirmed as distinct from DNV linear model; source applies ABS method.
-- Anode current capacity (A·h/kg) for the specific aluminium-zinc-indium-cadmium alloy
-  is not stated numerically in this specification — it is referenced to ABS guidelines.
-  A value of 2500 A·h/kg (standard Al alloy per ABS) is expected but should be confirmed
-  from ABS Table 3.
-- The resistivity derivation uses DNV-RP-B401 (2010) Figure 10-1 for the resistivity look-up,
-  not the ABS standard's own resistivity data. This cross-standard usage must be handled in
-  the cathodic_protection.py router.
-- This specification covers the external hull only. Mooring structure (jacket) CP is not in
-  scope and would require a separate calculation under DNV-RP-B401 or DNV-RP-F103.
-- The two FST hulls are sister vessels treated as identical; if hull geometry differs
-  (e.g., different scantling drafts), the calculation would require separate runs per vessel.
-- Anode placement drawings (referenced as separate deliverables) contain the final anode
-  distribution map; the spacing rule (6–8 m) from ABS §3 §5.2 is applied but the exact
-  anode positions are not reproduced in this abstracted document.
+- The design resistivity (0.325 ohm.m) is derived from DNV-RP-B401 (2010) Annex A Figure
+  10-1, not from an ABS-specific resistivity table. This cross-standard usage must be handled
+  in the router — the ABS route currently expects resistivity as a direct input, which is
+  correct here.
+- The anode current capacity (A·h/kg) for the specific aluminium-zinc-indium-cadmium alloy
+  is 2 500 A·h/kg per ABS Section 7, Subsection 2, Table 4. The existing test uses an
+  implicit value via the ABS table look-up; confirm cathodic_protection.py uses 2 500 A·h/kg
+  for aluminium alloy (not 2 000 A·h/kg used in the DNV B401 example calc).
+- The ABS coating breakdown model (multiplicative annual-rate per ABS §2, Table 4) is
+  distinct from the DNV linear model. Confirm cathodic_protection.py implements the
+  ABS multiplicative formula: fcf = (1 + fci/100)^di × (1 + fc/100)^(tf - di).
+- Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §2, Table 4, but the
+  exact alloy composition (Al-Zn-In-Cd) is not in the ABS table — it matches the generic
+  aluminium alloy capacity. Confirm with supplier datasheet if a non-standard value applies.
+- The specification covers the external hull only. Mooring jacket CP is not in scope and
+  would require a separate calculation under DNV-RP-B401 or DNV-RP-F103.
+- The two FST hulls are sister vessels treated as identical. If hull geometry were to differ
+  (e.g., different scantling drafts post-conversion), separate calculations per vessel would
+  be required.
+- Anode placement drawings (separate deliverables) contain the final anode distribution map;
+  the 6–8 m spacing rule from ABS §3 §5.2 is applied but exact positions are not reproduced
+  here.
+- Appendix D (CTR2-CP Calculation RB1) is identical to the E1/E2 Excel workbooks abstracted
+  in calc-001. No additional engineering values found in Appendix D beyond Section 4.4.
