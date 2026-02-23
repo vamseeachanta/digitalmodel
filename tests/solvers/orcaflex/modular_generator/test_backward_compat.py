@@ -150,7 +150,7 @@ class TestGeneratorBackwardCompat:
         )
 
         spec_file = Path(__file__).parent.parent.parent.parent.parent / (
-            "docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
+            "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
         )
 
         dir1 = tmp_path / "gen1"

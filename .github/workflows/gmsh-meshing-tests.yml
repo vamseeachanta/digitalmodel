@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/gmsh_meshing/**'
-      - 'tests/modules/gmsh_meshing/**'
+      - 'tests/domains/gmsh_meshing/**'
       - '.github/workflows/gmsh-meshing-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/gmsh_meshing/**'
-      - 'tests/modules/gmsh_meshing/**'
+      - 'tests/domains/gmsh_meshing/**'
   workflow_dispatch:
 
 jobs:
@@ -42,11 +42,11 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest tests/modules/gmsh_meshing/test_gmsh_unit.py -v --cov=src/digitalmodel/modules/gmsh_meshing --cov-report=term-missing --cov-report=xml
+        pytest tests/domains/gmsh_meshing/test_gmsh_unit.py -v --cov=src/digitalmodel/modules/gmsh_meshing --cov-report=term-missing --cov-report=xml
 
     - name: Run CLI tests
       run: |
-        pytest tests/modules/gmsh_meshing/test_gmsh_cli.py -v
+        pytest tests/domains/gmsh_meshing/test_gmsh_cli.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -81,11 +81,11 @@ jobs:
 
     - name: Run black
       run: |
-        black --check src/digitalmodel/modules/gmsh_meshing tests/modules/gmsh_meshing
+        black --check src/digitalmodel/modules/gmsh_meshing tests/domains/gmsh_meshing
 
     - name: Run isort
       run: |
-        isort --check-only src/digitalmodel/modules/gmsh_meshing tests/modules/gmsh_meshing
+        isort --check-only src/digitalmodel/modules/gmsh_meshing tests/domains/gmsh_meshing
 
   cli-validation:
     name: CLI Command Validation

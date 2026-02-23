@@ -1,7 +1,7 @@
 """Tests for 24in pipeline spec validation and generation.
 
 Validates the 24-inch pipeline floating installation spec at:
-    docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/spec.yml
+    docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/spec.yml
 
 NOTE: The directory is named '24in_pipeline' but the actual steel pipe OD is
 0.762m (30-inch NPS per API 5L). This is a legacy naming discrepancy in the
@@ -16,7 +16,7 @@ import pytest
 import yaml
 
 SPEC_DIR = Path(__file__).parent.parent.parent.parent.parent / (
-    "docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline"
+    "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline"
 )
 SPEC_FILE = SPEC_DIR / "spec.yml"
 

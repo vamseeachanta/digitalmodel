@@ -50,9 +50,9 @@ class ModuleBoundaryChecker:
     # Paths that should NEVER be propagated
     RESTRICTED_PATHS = [
         'src/modules/',
-        'tests/modules/',
+        'tests/domains/',
         'configs/modules/',
-        'docs/modules/'
+        'docs/domains/'
     ]
     
     def __init__(self, repo_path: Path = None):

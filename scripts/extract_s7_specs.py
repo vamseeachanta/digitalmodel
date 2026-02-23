@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Batch spec.yml extraction from monolithic OrcaFlex YAML directories.
 
-Walks all ``monolithic/`` directories under ``docs/modules/orcaflex/`` and
+Walks all ``monolithic/`` directories under ``docs/domains/orcaflex/`` and
 extracts spec.yml files using the existing MonolithicExtractor.  Each
 extracted spec is validated against the ProjectInputSpec schema and saved
 as a sibling to the ``monolithic/`` directory.
@@ -11,7 +11,7 @@ Usage::
     uv run python scripts/extract_s7_specs.py
     uv run python scripts/extract_s7_specs.py --dry-run
     uv run python scripts/extract_s7_specs.py --force
-    uv run python scripts/extract_s7_specs.py --docs-root docs/modules/orcaflex
+    uv run python scripts/extract_s7_specs.py --docs-root docs/domains/orcaflex
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def find_monolithic_dirs(docs_root: Path) -> list[Path]:
 
     Args:
         docs_root: The root directory to search (typically
-            ``docs/modules/orcaflex``).
+            ``docs/domains/orcaflex``).
 
     Returns:
         Sorted list of absolute paths to ``monolithic/`` directories that
@@ -270,7 +270,7 @@ def resolve_docs_root(cli_value: str | None) -> Path:
         cli_value: Explicit path from ``--docs-root``, or ``None``.
 
     Returns:
-        Absolute path to the ``docs/modules/orcaflex`` directory.
+        Absolute path to the ``docs/domains/orcaflex`` directory.
 
     Raises:
         SystemExit: If the resolved path does not exist.
@@ -300,7 +300,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--docs-root",
         default=None,
         help=(
-            "Path to docs/modules/orcaflex/ directory. "
+            "Path to docs/domains/orcaflex/ directory. "
             "Default: auto-detect from script location."
         ),
     )

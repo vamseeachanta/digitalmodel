@@ -21,7 +21,7 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema import (
 
 
 SLAY_SPEC_DIR = Path(__file__).parent.parent.parent.parent.parent / (
-    "docs/modules/orcaflex/pipeline/installation/s-lay"
+    "docs/domains/orcaflex/pipeline/installation/s-lay"
 )
 
 

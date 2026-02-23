@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/viv_analysis/**'
-      - 'tests/modules/viv_analysis/**'
+      - 'tests/domains/viv_analysis/**'
       - '.github/workflows/viv-analysis-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/viv_analysis/**'
-      - 'tests/modules/viv_analysis/**'
+      - 'tests/domains/viv_analysis/**'
   workflow_dispatch:
 
 jobs:
@@ -42,11 +42,11 @@ jobs:
 
     - name: Run VIV Analysis unit tests
       run: |
-        pytest tests/modules/viv_analysis/test_viv_analysis_unit.py -v --cov=src/digitalmodel/modules/viv_analysis --cov-report=term-missing --cov-report=xml
+        pytest tests/domains/viv_analysis/test_viv_analysis_unit.py -v --cov=src/digitalmodel/modules/viv_analysis --cov-report=term-missing --cov-report=xml
 
     - name: Run VIV Analysis CLI tests
       run: |
-        pytest tests/modules/viv_analysis/test_viv_analysis_cli.py -v
+        pytest tests/domains/viv_analysis/test_viv_analysis_cli.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -81,11 +81,11 @@ jobs:
 
     - name: Run black
       run: |
-        black --check src/digitalmodel/modules/viv_analysis tests/modules/viv_analysis
+        black --check src/digitalmodel/modules/viv_analysis tests/domains/viv_analysis
 
     - name: Run isort
       run: |
-        isort --check-only src/digitalmodel/modules/viv_analysis tests/modules/viv_analysis
+        isort --check-only src/digitalmodel/modules/viv_analysis tests/domains/viv_analysis
 
     - name: Run mypy
       run: |

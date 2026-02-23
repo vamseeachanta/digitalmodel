@@ -125,7 +125,7 @@ def list_tools():
                 'Both Workbench and DAT file workflows'
             ],
             'methods': ['raos', 'damping', 'ef_server'],
-            'quick_start': 'docs/modules/aqwa/QUICK_START.md'
+            'quick_start': 'docs/domains/aqwa/QUICK_START.md'
         },
         'OrcaWave': {
             'description': 'Orcina OrcaWave panel method diffraction analysis',

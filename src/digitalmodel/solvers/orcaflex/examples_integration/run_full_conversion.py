@@ -32,8 +32,8 @@ def main():
     
     # Set up paths
     base_dir = Path(__file__).parent.parent.parent.parent.parent.parent
-    input_dir = base_dir / "docs/modules/orcaflex/examples/raw"
-    output_dir = base_dir / "docs/modules/orcaflex/examples/yaml"
+    input_dir = base_dir / "docs/domains/orcaflex/examples/raw"
+    output_dir = base_dir / "docs/domains/orcaflex/examples/yaml"
     
     # Check if input directory exists
     if not input_dir.exists():

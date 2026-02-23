@@ -175,17 +175,17 @@ fft_result = adapter.window_average_fft(config, signal, time_step)
 
 Complete working examples are available in:
 - `examples/signal_analysis_usage_example.py` - Comprehensive feature demonstration
-- `tests/modules/signal_analysis/test_integration.py` - Integration test scenarios
+- `tests/domains/signal_analysis/test_integration.py` - Integration test scenarios
 
 ## Testing
 
 Run tests with:
 ```bash
 # Unit tests
-python -m pytest tests/modules/signal_analysis/
+python -m pytest tests/domains/signal_analysis/
 
 # Integration tests
-python tests/modules/signal_analysis/test_integration.py
+python tests/domains/signal_analysis/test_integration.py
 
 # Usage examples
 python examples/signal_analysis_usage_example.py

@@ -30,9 +30,9 @@ class TestStabilityAnalyzer:
         test_commands = [
             # Core validated test directories  
             "python -m pytest tests/no_license/ tests/in_progress/ --tb=no --quiet",
-            "python -m pytest tests/modules/transformation/ tests/modules/pipeline/ --tb=no --quiet", 
-            "python -m pytest tests/modules/aqwa/ tests/modules/time_series/ --tb=no --quiet",
-            "python -m pytest tests/modules/viv_analysis/ tests/modules/catenary_riser/ --tb=no --quiet",
+            "python -m pytest tests/domains/transformation/ tests/domains/pipeline/ --tb=no --quiet", 
+            "python -m pytest tests/domains/aqwa/ tests/domains/time_series/ --tb=no --quiet",
+            "python -m pytest tests/domains/viv_analysis/ tests/domains/catenary_riser/ --tb=no --quiet",
             "python -m pytest tests/core/ --tb=no --quiet"
         ]
         

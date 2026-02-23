@@ -101,7 +101,7 @@
 python src/modules/orcawave/diffraction/test_setup.py
 
 # Run integration tests
-python tests/modules/orcawave/test_diffraction_integration.py
+python tests/domains/orcawave/test_diffraction_integration.py
 
 # Validate geometry
 python src/modules/orcawave/diffraction/scripts/validate_geometry.py \

@@ -390,7 +390,7 @@ create_fatigue_report(
 - GitHub: https://github.com/vamseeachanta/digitalmodel
 
 **Documentation**
-- Module Guide: `/docs/modules/fatigue/README.md`
+- Module Guide: `/docs/domains/fatigue/README.md`
 - API Reference: `/docs/api/fatigue.md`
 - Examples: `/examples/fatigue/`
 - S-N Database: `/data/fatigue/README.md`

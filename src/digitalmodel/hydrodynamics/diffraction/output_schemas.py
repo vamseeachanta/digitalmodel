@@ -281,6 +281,30 @@ class DampingSet:
 
 
 @dataclass
+class HydrostaticResults:
+    """Hydrostatic properties of a vessel."""
+    vessel_name: str
+    displacement_volume: float        # m^3
+    mass: float                       # kg
+    centre_of_gravity: List[float]    # [x, y, z] in meters
+    centre_of_buoyancy: List[float]   # [x, y, z] in meters
+    waterplane_area: float            # m^2
+    stiffness_matrix: np.ndarray      # 6x6 matrix
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for serialization"""
+        return {
+            'vessel_name': self.vessel_name,
+            'displacement_volume': self.displacement_volume,
+            'mass': self.mass,
+            'centre_of_gravity': self.centre_of_gravity,
+            'centre_of_buoyancy': self.centre_of_buoyancy,
+            'waterplane_area': self.waterplane_area,
+            'stiffness_matrix': self.stiffness_matrix.tolist()
+        }
+
+
+@dataclass
 class DiffractionResults:
     """Complete diffraction analysis results"""
     vessel_name: str
@@ -291,6 +315,7 @@ class DiffractionResults:
     raos: RAOSet
     added_mass: AddedMassSet
     damping: DampingSet
+    hydrostatics: Optional[HydrostaticResults] = None
 
     # Metadata
     created_date: str
@@ -302,7 +327,7 @@ class DiffractionResults:
 
     def to_dict(self) -> Dict:
         """Convert complete results to dictionary"""
-        return {
+        res = {
             'vessel_name': self.vessel_name,
             'analysis_tool': self.analysis_tool,
             'water_depth': self.water_depth,
@@ -316,6 +341,9 @@ class DiffractionResults:
             'added_mass': self.added_mass.to_dict(),
             'damping': self.damping.to_dict()
         }
+        if self.hydrostatics:
+            res['hydrostatics'] = self.hydrostatics.to_dict()
+        return res
 
 
 # Schema validation utilities

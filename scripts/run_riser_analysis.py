@@ -13,7 +13,7 @@ models from YAML specifications. The workflow is:
 
 Usage:
     # Analyze a single spec
-    uv run python scripts/run_riser_analysis.py docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml
+    uv run python scripts/run_riser_analysis.py docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml
 
     # Specify output directory
     uv run python scripts/run_riser_analysis.py spec.yml --output results/my_run
@@ -45,7 +45,7 @@ import yaml
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 
-LIBRARY_ROOT = Path("docs/modules/orcaflex/library/tier2_fast")
+LIBRARY_ROOT = Path("docs/domains/orcaflex/library/tier2_fast")
 
 
 # ---------------------------------------------------------------------------

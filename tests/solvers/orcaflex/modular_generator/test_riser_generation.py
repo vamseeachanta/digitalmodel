@@ -29,7 +29,7 @@ from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerato
 
 
 # Test data paths
-RISER_LIBRARY = Path("docs/modules/orcaflex/library/tier2_fast")
+RISER_LIBRARY = Path("docs/domains/orcaflex/library/tier2_fast")
 A01_CATENARY_SPEC = RISER_LIBRARY / "a01_catenary_riser" / "spec.yml"
 A01_PLIANT_SPEC = RISER_LIBRARY / "a01_pliant_wave_riser" / "spec.yml"
 

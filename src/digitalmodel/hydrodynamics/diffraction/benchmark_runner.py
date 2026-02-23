@@ -159,7 +159,9 @@ class BenchmarkRunner:
                 result.plot_paths = plot_paths
 
             # 3. Generate JSON report file
-            result.report_json_path = self._generate_json_report(report)
+            result.report_json_path = self._generate_json_report(
+                report, solver_metadata=solver_metadata,
+            )
 
             # 3b. Generate hydro data YAML
             result.hydro_data_yaml_path = self._generate_hydro_data_yaml(
@@ -233,13 +235,17 @@ class BenchmarkRunner:
     # Internal: JSON report
     # ------------------------------------------------------------------
 
-    def _generate_json_report(self, report: BenchmarkReport) -> Path:
+    def _generate_json_report(
+        self,
+        report: BenchmarkReport,
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> Path:
         """Serialize BenchmarkReport to a JSON file."""
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / "benchmark_report.json"
 
-        data = self._report_to_dict(report)
+        data = self._report_to_dict(report, solver_metadata=solver_metadata)
 
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(data, fh, indent=2, default=_json_default)
@@ -402,7 +408,11 @@ class BenchmarkRunner:
         return yaml_path
 
     @staticmethod
-    def _report_to_dict(report: BenchmarkReport) -> Dict[str, Any]:
+    def _report_to_dict(
+        self,
+        report: BenchmarkReport,
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> Dict[str, Any]:
         """Convert a BenchmarkReport dataclass to a JSON-safe dict."""
         pairwise_data: Dict[str, Any] = {}
         for pair_key, pr in report.pairwise_results.items():
@@ -431,6 +441,20 @@ class BenchmarkRunner:
                 for k, v in pr.damping_correlations.items()
             }
 
+            hc_dict = None
+            if pr.hydrostatic_comparison:
+                hc = pr.hydrostatic_comparison
+                hc_dict = {
+                    "displacement_volume_diff": float(hc.displacement_volume_diff),
+                    "mass_diff": float(hc.mass_diff),
+                    "cog_diff": [float(v) for v in hc.cog_diff],
+                    "cob_diff": [float(v) for v in hc.cob_diff],
+                    "waterplane_area_diff": float(hc.waterplane_area_diff),
+                    "stiffness_matrix_correlation": float(
+                        hc.stiffness_matrix_correlation,
+                    ),
+                }
+
             pairwise_data[pair_key] = {
                 "solver_a": pr.solver_a,
                 "solver_b": pr.solver_b,
@@ -438,6 +462,7 @@ class BenchmarkRunner:
                 "rao_comparisons": rao_dict,
                 "added_mass_correlations": am_corrs,
                 "damping_correlations": damp_corrs,
+                "hydrostatic_comparison": hc_dict,
             }
 
         consensus_data: Dict[str, Any] = {}
@@ -453,7 +478,7 @@ class BenchmarkRunner:
                 ],
             }
 
-        return {
+        data = {
             "vessel_name": report.vessel_name,
             "solver_names": report.solver_names,
             "comparison_date": report.comparison_date,
@@ -462,6 +487,17 @@ class BenchmarkRunner:
             "consensus_by_dof": consensus_data,
             "notes": report.notes,
         }
+
+        if solver_metadata:
+            # Extract semantic equivalence if present in any of the metadata dicts
+            for meta in solver_metadata.values():
+                if "_semantic_equivalence" in meta:
+                    data["semantic_equivalence"] = meta[
+                        "_semantic_equivalence"
+                    ]
+                    break
+
+        return data
 
     # ------------------------------------------------------------------
     # Internal: HTML report

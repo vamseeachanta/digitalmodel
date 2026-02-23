@@ -9,8 +9,8 @@
 #   warn  — flag but allow to proceed
 # =============================================================================
 
-version: "1.0"
-updated: "2026-02-11"
+version: "1.1"
+updated: "2026-02-20"
 
 # Client project names and codenames
 client_references:
@@ -94,6 +94,54 @@ client_references:
     case_sensitive: false
     severity: block
     description: "Pipeline/flowline name"
+
+  # --- Saipem Yellowtail (GYYT) CP calculation sources ---
+  - pattern: "Yellowtail"
+    case_sensitive: false
+    severity: block
+    description: "Client deepwater field name (Guyana Yellowtail)"
+  - pattern: "GYYT"
+    case_sensitive: true
+    severity: block
+    description: "Project document prefix — Guyana Yellowtail"
+  - pattern: "GYFI"
+    case_sensitive: true
+    severity: block
+    description: "Project document prefix — Guyana Fifteen field"
+  - pattern: "TQ-YT"
+    case_sensitive: false
+    severity: block
+    description: "Technical query prefix — Yellowtail project"
+  - pattern: "ExxonMobil"
+    case_sensitive: false
+    severity: block
+    description: "Client operator name"
+  - pattern: "SBM Offshore"
+    case_sensitive: false
+    severity: block
+    description: "FPSO owner/operator name"
+
+  # --- ACMA B1522 (Woodfiber LNG / SLHR) CP calculation sources ---
+  - pattern: "Woodfiber"
+    case_sensitive: false
+    severity: block
+    description: "Client LNG project name"
+  - pattern: "WoodFiber"
+    case_sensitive: false
+    severity: block
+    description: "Client LNG project name variant"
+  - pattern: "WLNG"
+    case_sensitive: true
+    severity: block
+    description: "Project abbreviation — Woodfiber LNG"
+  - pattern: "350106"
+    case_sensitive: false
+    severity: block
+    description: "Client project document number prefix (B1522)"
+  - pattern: "B1522"
+    case_sensitive: true
+    severity: block
+    description: "ACMA internal project reference number"
 
 # Files/paths excluded from scanning (glob patterns)
 exclusions:

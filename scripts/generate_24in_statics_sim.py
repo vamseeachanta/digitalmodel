@@ -14,7 +14,7 @@ from pathlib import Path
 import time
 
 MONOLITHIC_YML = Path(
-    "docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/"
+    "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/"
     "monolithic/basefile/D24inL4900mBuoy7kNSpacing1500mm.yml"
 )
 OUTPUT_SIM = MONOLITHIC_YML.parent / "statics.sim"

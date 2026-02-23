@@ -14,7 +14,7 @@ print("\n[TEST 1] Parallel Processing - Multiple Directories")
 print("-"*70)
 
 converter_parallel = OrcaFlexConverterEnhanced(
-    input_dir=Path("docs/modules/orcaflex/examples/raw"),
+    input_dir=Path("docs/domains/orcaflex/examples/raw"),
     output_dir=Path("temp_test_conversion/parallel_yml"),
     output_format='yml',
     use_mock=True,
@@ -39,7 +39,7 @@ print("\n[TEST 2] Sequential Processing - Same Files")
 print("-"*70)
 
 converter_sequential = OrcaFlexConverterEnhanced(
-    input_dir=Path("docs/modules/orcaflex/examples/raw"),
+    input_dir=Path("docs/domains/orcaflex/examples/raw"),
     output_dir=Path("temp_test_conversion/sequential_yml"),
     output_format='yml',
     use_mock=True,
@@ -65,8 +65,8 @@ if elapsed > 0 and elapsed_seq > 0:
 print("\n[TEST 3] Count All Example Files")
 print("-"*70)
 
-all_dats = list(Path("docs/modules/orcaflex/examples/raw").glob("**/*.dat"))
-all_sims = list(Path("docs/modules/orcaflex/examples/raw").glob("**/*.sim"))
+all_dats = list(Path("docs/domains/orcaflex/examples/raw").glob("**/*.dat"))
+all_sims = list(Path("docs/domains/orcaflex/examples/raw").glob("**/*.sim"))
 
 print(f"Total .dat files available: {len(all_dats)}")
 print(f"Total .sim files available: {len(all_sims)}")

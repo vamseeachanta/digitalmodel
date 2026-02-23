@@ -373,6 +373,6 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 
 if __name__ == "__main__":
     out = Path(__file__).resolve().parents[4] / (
-        "docs/modules/passing_ship/wang_benchmark/benchmark_report.html")
+        "docs/domains/passing_ship/wang_benchmark/benchmark_report.html")
     generate_benchmark_report(str(out))
     print(f"Report written to {out}")

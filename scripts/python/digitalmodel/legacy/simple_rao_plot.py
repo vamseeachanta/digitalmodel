@@ -46,7 +46,7 @@ spec.loader.exec_module(parser_module)
 AQWALISParser = parser_module.AQWALISParser
 
 # Test
-lis_file = Path('docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
+lis_file = Path('docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
 
 if __name__ == '__main__':
     import matplotlib

@@ -381,7 +381,7 @@ cfg = pc.router(cfg)
 - GitHub: https://github.com/vamseeachanta/digitalmodel
 
 **Documentation**
-- Module Guide: `/docs/modules/ffs/README.md`
+- Module Guide: `/docs/domains/ffs/README.md`
 - API Reference: `/docs/api/ffs.md`
 - Examples: `/examples/ffs/`
 

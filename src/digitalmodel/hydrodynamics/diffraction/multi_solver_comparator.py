@@ -61,6 +61,21 @@ class PairwiseRAOComparison:
 
 
 @dataclass
+class HydrostaticComparison:
+    """Comparison of hydrostatic properties between two solvers."""
+
+    solver_a: str
+    solver_b: str
+    displacement_volume_diff: float
+    mass_diff: float
+    cog_diff: List[float]             # [dx, dy, dz]
+    cob_diff: List[float]             # [dx, dy, dz]
+    waterplane_area_diff: float
+    stiffness_matrix_diff: np.ndarray  # 6x6 matrix of absolute differences
+    stiffness_matrix_correlation: float
+
+
+@dataclass
 class PairwiseResult:
     """Aggregate pairwise comparison between two solvers."""
 
@@ -70,6 +85,7 @@ class PairwiseResult:
     added_mass_correlations: Dict[Tuple[int, int], float]
     damping_correlations: Dict[Tuple[int, int], float]
     overall_agreement: str  # EXCELLENT, GOOD, FAIR, POOR
+    hydrostatic_comparison: Optional[HydrostaticComparison] = None
 
 
 @dataclass
@@ -329,6 +345,54 @@ class MultiSolverComparator:
         """Compare damping matrices across all solver pairs."""
         return self._compare_matrix_set("damping")
 
+    def compare_hydrostatics(self) -> Dict[str, HydrostaticComparison]:
+        """Compare hydrostatic results across all solver pairs."""
+        result: Dict[str, HydrostaticComparison] = {}
+
+        for solver_a, solver_b in self._all_pairs():
+            key = self._pair_key(solver_a, solver_b)
+
+            res_a = self._results[solver_a]
+            res_b = self._results[solver_b]
+
+            h_a = getattr(res_a, "hydrostatics", None)
+            h_b = getattr(res_b, "hydrostatics", None)
+
+            if not h_a or not h_b:
+                continue
+
+            vol_diff = h_b.displacement_volume - h_a.displacement_volume
+            mass_diff = h_b.mass - h_a.mass
+            cog_diff = [b - a for a, b in zip(h_a.centre_of_gravity, h_b.centre_of_gravity)]
+            cob_diff = [b - a for a, b in zip(h_a.centre_of_buoyancy, h_b.centre_of_buoyancy)]
+            awp_diff = h_b.waterplane_area - h_a.waterplane_area
+
+            stiff_diff = h_b.stiffness_matrix - h_a.stiffness_matrix
+
+            # Correlation for stiffness matrix (flat)
+            flat_a = h_a.stiffness_matrix.flatten()
+            flat_b = h_b.stiffness_matrix.flatten()
+            if np.allclose(flat_a, flat_b):
+                corr = 1.0
+            else:
+                with np.errstate(invalid='ignore'):
+                    c = np.corrcoef(flat_a, flat_b)[0, 1]
+                    corr = float(c) if not np.isnan(c) else 1.0
+
+            result[key] = HydrostaticComparison(
+                solver_a=solver_a,
+                solver_b=solver_b,
+                displacement_volume_diff=vol_diff,
+                mass_diff=mass_diff,
+                cog_diff=cog_diff,
+                cob_diff=cob_diff,
+                waterplane_area_diff=awp_diff,
+                stiffness_matrix_diff=stiff_diff,
+                stiffness_matrix_correlation=corr,
+            )
+
+        return result
+
     # ------------------------------------------------------------------
     # Consensus
     # ------------------------------------------------------------------
@@ -457,6 +521,7 @@ class MultiSolverComparator:
         rao_comparisons = self.compare_raos()
         am_comparisons = self.compare_added_mass()
         damp_comparisons = self.compare_damping()
+        hydro_comparisons = self.compare_hydrostatics()
         consensus = self.compute_consensus()
 
         pairwise_results: Dict[str, PairwiseResult] = {}
@@ -481,6 +546,7 @@ class MultiSolverComparator:
                 added_mass_correlations=am_corrs,
                 damping_correlations=damp_corrs,
                 overall_agreement=agreement,
+                hydrostatic_comparison=hydro_comparisons.get(pk),
             )
 
         # Determine overall consensus from per-DOF levels
@@ -594,6 +660,18 @@ class MultiSolverComparator:
                 f"{k[0]},{k[1]}": float(v)
                 for k, v in pr.damping_correlations.items()
             }
+            hc_dict = None
+            if pr.hydrostatic_comparison:
+                hc = pr.hydrostatic_comparison
+                hc_dict = {
+                    "displacement_volume_diff": float(hc.displacement_volume_diff),
+                    "mass_diff": float(hc.mass_diff),
+                    "cog_diff": [float(v) for v in hc.cog_diff],
+                    "cob_diff": [float(v) for v in hc.cob_diff],
+                    "waterplane_area_diff": float(hc.waterplane_area_diff),
+                    "stiffness_matrix_correlation": float(hc.stiffness_matrix_correlation),
+                }
+
             out[pk] = {
                 "solver_a": pr.solver_a,
                 "solver_b": pr.solver_b,
@@ -601,6 +679,7 @@ class MultiSolverComparator:
                 "rao_comparisons": rao_dict,
                 "added_mass_correlations": am_corrs,
                 "damping_correlations": damp_corrs,
+                "hydrostatic_comparison": hc_dict,
             }
         return out
 

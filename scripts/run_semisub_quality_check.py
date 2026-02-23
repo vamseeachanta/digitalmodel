@@ -13,7 +13,7 @@ from digitalmodel.marine_analysis import (
 
 def main():
     # Load the FPSO model with RAO data
-    model_path = Path('docs/modules/orcaflex/examples/raw/A05/A05 Lazy wave with FPSO.yml')
+    model_path = Path('docs/domains/orcaflex/examples/raw/A05/A05 Lazy wave with FPSO.yml')
 
     output_lines = []
     output_lines.append(f'Loading: {model_path}')

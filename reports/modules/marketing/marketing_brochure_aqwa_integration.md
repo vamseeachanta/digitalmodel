@@ -419,10 +419,10 @@ All criteria satisfied per DNV-RP-H103
 
 **Documentation**
 - Module Guide: `/src/digitalmodel/modules/aqwa/`
-- AQWA Manuals: `/docs/modules/aqwa/reference-manuals/`
-- Workflows: `/docs/modules/aqwa/workflows/`
-- Examples: `/docs/modules/aqwa/examples/`
-- Scripts: `/docs/modules/aqwa/scripts/`
+- AQWA Manuals: `/docs/domains/aqwa/reference-manuals/`
+- Workflows: `/docs/domains/aqwa/workflows/`
+- Examples: `/docs/domains/aqwa/examples/`
+- Scripts: `/docs/domains/aqwa/scripts/`
 
 **Installation**
 ```bash

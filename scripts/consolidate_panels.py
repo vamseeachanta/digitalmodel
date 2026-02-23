@@ -39,22 +39,22 @@ CATALOG_DIR = REPO_ROOT / "data" / "hull_library" / "catalog"
 GDF_COPIES = [
     # Primitives from L00 validation
     (
-        "docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf",
+        "docs/domains/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf",
         "primitives",
         "cylinder_r10_d50.gdf",
     ),
     (
-        "docs/modules/orcawave/L00_validation_wamit/3.2/OrcaWave v11.0 files/SphereWithLid.gdf",
+        "docs/domains/orcawave/L00_validation_wamit/3.2/OrcaWave v11.0 files/SphereWithLid.gdf",
         "primitives",
         "sphere_r5.gdf",
     ),
     (
-        "docs/modules/orcawave/L00_validation_wamit/2.8/OrcaWave v11.0 files/Ellipsoid0096.gdf",
+        "docs/domains/orcawave/L00_validation_wamit/2.8/OrcaWave v11.0 files/Ellipsoid0096.gdf",
         "primitives",
         "ellipsoid_96p.gdf",
     ),
     (
-        "docs/modules/orcawave/L00_validation_wamit/2.7/OrcaWave v11.0 files/PyramidZC08.gdf",
+        "docs/domains/orcawave/L00_validation_wamit/2.7/OrcaWave v11.0 files/PyramidZC08.gdf",
         "primitives",
         "pyramid_zc08.gdf",
     ),
@@ -65,23 +65,23 @@ GDF_COPIES = [
         "barge_100x20x10.gdf",
     ),
     (
-        "docs/modules/orcawave/L01_aqwa_benchmark/benchmark_results/orcawave/unit_box_clean.gdf",
+        "docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/orcawave/unit_box_clean.gdf",
         "barges",
         "unit_box.gdf",
     ),
     # Semi-subs
     (
-        "docs/modules/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub mesh.gdf",
+        "docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub mesh.gdf",
         "semi_subs",
         "oc4_semisub.gdf",
     ),
     (
-        "docs/modules/orcawave/examples/L03 Semi-sub multibody analysis/L03 Centre column.gdf",
+        "docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Centre column.gdf",
         "semi_subs",
         "l03_centre_column.gdf",
     ),
     (
-        "docs/modules/orcawave/examples/L03 Semi-sub multibody analysis/L03 Outer column.gdf",
+        "docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Outer column.gdf",
         "semi_subs",
         "l03_outer_column.gdf",
     ),
@@ -93,7 +93,7 @@ GDF_COPIES = [
     ),
     # Ships
     (
-        "docs/modules/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf",
+        "docs/domains/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf",
         "ships",
         "l01_vessel_385p.gdf",
     ),

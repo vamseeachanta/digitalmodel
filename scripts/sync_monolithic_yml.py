@@ -15,9 +15,9 @@ The 5 library models:
   - A02 Lazy S detailed
 
 Output locations for each model:
-  1. docs/modules/orcaflex/examples/raw/<group>/<name>.yml  (alongside .dat)
-  2. docs/modules/orcaflex/library/model_library/<slug>/monolithic/<name>.yml
-  3. docs/modules/orcaflex/library/tier2_fast/<slug>/monolithic/<name>.yml (if dir exists)
+  1. docs/domains/orcaflex/examples/raw/<group>/<name>.yml  (alongside .dat)
+  2. docs/domains/orcaflex/library/model_library/<slug>/monolithic/<name>.yml
+  3. docs/domains/orcaflex/library/tier2_fast/<slug>/monolithic/<name>.yml (if dir exists)
 
 Usage:
     uv run python scripts/sync_monolithic_yml.py

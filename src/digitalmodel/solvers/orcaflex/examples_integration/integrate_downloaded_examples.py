@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class DownloadedExamplesIntegrator:
     """Process and integrate the downloaded OrcaFlex examples."""
     
-    def __init__(self, base_dir: str = "docs/modules/orcaflex/examples"):
+    def __init__(self, base_dir: str = "docs/domains/orcaflex/examples"):
         """Initialize the integrator with downloaded examples."""
         self.base_dir = Path(base_dir)
         self.raw_dir = self.base_dir / "raw"

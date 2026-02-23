@@ -5,13 +5,13 @@ on:
     branches: [main, develop]
     paths:
       - 'src/digitalmodel/modules/orcaflex/**'
-      - 'tests/modules/orcaflex/test_orcaflex_*.py'
+      - 'tests/domains/orcaflex/test_orcaflex_*.py'
       - '.github/workflows/orcaflex-tests.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'src/digitalmodel/modules/orcaflex/**'
-      - 'tests/modules/orcaflex/test_orcaflex_*.py'
+      - 'tests/domains/orcaflex/test_orcaflex_*.py'
 
 jobs:
   test:
@@ -41,11 +41,11 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests/modules/orcaflex/test_orcaflex_unit.py -v --cov=src/digitalmodel/modules/orcaflex --cov-report=xml --cov-report=term
+          pytest tests/domains/orcaflex/test_orcaflex_unit.py -v --cov=src/digitalmodel/modules/orcaflex --cov-report=xml --cov-report=term
 
       - name: Run CLI tests
         run: |
-          pytest tests/modules/orcaflex/test_orcaflex_cli.py -v
+          pytest tests/domains/orcaflex/test_orcaflex_cli.py -v
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

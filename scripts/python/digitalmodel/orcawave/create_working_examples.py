@@ -408,7 +408,7 @@ def main():
     print("   - Check OrcaWave version compatibility")
     print("   - Verify GDF files are not corrupted")
     print("   - Try opening example files directly from")
-    print("     docs/modules/orcawave/examples/")
+    print("     docs/domains/orcawave/examples/")
     
     return 0
 

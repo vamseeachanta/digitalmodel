@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """Audit and classify the OrcaFlex spec library.
 
-Walks docs/modules/orcaflex/ for spec.yml files, scores quality,
+Walks docs/domains/orcaflex/ for spec.yml files, scores quality,
 infers structural category, and produces YAML + HTML reports.
 
 Usage:
     uv run python scripts/audit_spec_library.py
     uv run python scripts/audit_spec_library.py --html audit_report.html
-    uv run python scripts/audit_spec_library.py --root docs/modules/orcaflex/library
+    uv run python scripts/audit_spec_library.py --root docs/domains/orcaflex/library
 """
 from __future__ import annotations
 
@@ -26,8 +26,8 @@ try:
 except ImportError:
     HAS_SCHEMA = False
 
-LIBRARY_ROOT = Path("docs/modules/orcaflex")
-OUTPUT_DIR = Path("docs/modules/orcaflex/library/templates")
+LIBRARY_ROOT = Path("docs/domains/orcaflex")
+OUTPUT_DIR = Path("docs/domains/orcaflex/library/templates")
 
 # ── prefix-to-category mapping for model_library dirs ──────────────────────
 _PREFIX_CATEGORY = {

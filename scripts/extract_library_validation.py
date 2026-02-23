@@ -26,7 +26,7 @@ except ImportError:
     sys.exit(1)
 
 
-LIBRARY_ROOT = Path("docs/modules/orcaflex/library")
+LIBRARY_ROOT = Path("docs/domains/orcaflex/library")
 
 
 def extract_line_results(model: OrcFxAPI.Model, line_name: str) -> dict:

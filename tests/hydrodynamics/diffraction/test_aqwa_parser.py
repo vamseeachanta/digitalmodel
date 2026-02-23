@@ -16,7 +16,7 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import (
 
 
 # Test data path
-TEST_DATA_DIR = Path("docs/modules/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
 TEST_LIS_FILE = TEST_DATA_DIR / "001_SHIP_RAOS.LIS"
 
 

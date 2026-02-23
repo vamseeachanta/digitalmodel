@@ -35,15 +35,15 @@ fsts-l015-test-cases/
 ```bash
 # Run comparative analysis on test data
 python -m digitalmodel.orcaflex.analysis \
-    --input-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv \
-    --output-directory tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
+    --input-directory tests/domains/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/.csv \
+    --output-directory tests/domains/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output
 ```
 
 ### Using Configuration Files
 ```bash
 # Run with specific test configuration
 python -m digitalmodel.orcaflex.mooring \
-    --config tests/modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
+    --config tests/domains/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/dm_ofx_anal_mooring_fsts_l015_125km3_pb.yml
 ```
 
 ## Test Scripts Documentation

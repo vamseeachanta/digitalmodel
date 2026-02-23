@@ -13,7 +13,7 @@ def test_aqwa_parser():
     """Test AQWA parser with real .LIS file"""
 
     # Use the real .LIS file we found
-    lis_file = Path("docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS")
+    lis_file = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS")
 
     if not lis_file.exists():
         print(f"[ERROR] .LIS file not found: {lis_file}")

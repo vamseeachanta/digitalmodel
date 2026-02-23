@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """General-purpose OrcaFlex Model Library Benchmark.
 
-Discovers .dat files under docs/modules/orcaflex/examples/raw/, runs statics,
+Discovers .dat files under docs/domains/orcaflex/examples/raw/, runs statics,
 extracts line results, optionally performs mesh sensitivity, and produces a
 comprehensive HTML report.  Designed for overnight batch runs.
 
@@ -56,9 +56,9 @@ except ImportError:
     except ImportError:
         _HAS_SEMANTIC = False
 
-EXAMPLES_ROOT = Path("docs/modules/orcaflex/examples/raw")
+EXAMPLES_ROOT = Path("docs/domains/orcaflex/examples/raw")
 OUTPUT_ROOT = Path("benchmark_output")
-DOCS_OUTPUT = Path("docs/modules/orcaflex/examples")  # reports alongside models
+DOCS_OUTPUT = Path("docs/domains/orcaflex/examples")  # reports alongside models
 JSON_PATH = OUTPUT_ROOT / "model_library_benchmark.json"
 HTML_PATH = OUTPUT_ROOT / "model_library_report.html"
 DOCS_HTML_PATH = DOCS_OUTPUT / "model_library_report.html"
@@ -75,7 +75,7 @@ CONVERGENCE_THR = 1.0
 PLOTLY_CDN = "https://cdn.plot.ly/plotly-latest.min.js"
 LINE_COLORS = ["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd",
                "#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]
-LIBRARY_ROOT = Path("docs/modules/orcaflex/library")
+LIBRARY_ROOT = Path("docs/domains/orcaflex/library")
 THREE_WAY_COLORS = {
     "monolithic": "#e74c3c",    # Red
     "spec_driven": "#3498db",   # Blue

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Create GDF files in a consistent manner based on OrcaWave examples
-Uses the working GDF format from docs/modules/orcawave/examples
+Uses the working GDF format from docs/domains/orcawave/examples
 """
 
 import numpy as np
@@ -318,7 +318,7 @@ class GDFGenerator:
 def use_example_gdf_files():
     """Function to consistently use GDF files from OrcaWave examples"""
     
-    examples_dir = Path("D:/github/digitalmodel/docs/modules/orcawave/examples")
+    examples_dir = Path("D:/github/digitalmodel/docs/domains/orcawave/examples")
     
     available_gdf = {
         "vessel": examples_dir / "L01_default_vessel" / "L01 Vessel mesh.gdf",
@@ -454,7 +454,7 @@ def main():
     print("  - config_oc4_fixed.yml (if OC4 GDF exists)")
     
     print("\nThese files use consistent GDF format based on")
-    print("working examples from docs/modules/orcawave/examples")
+    print("working examples from docs/domains/orcawave/examples")
     
     return 0
 

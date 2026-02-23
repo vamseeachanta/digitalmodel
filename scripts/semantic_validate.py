@@ -11,24 +11,24 @@ discrepancies at the YAML level before any solver invocation.
 Usage:
     # Single model comparison (console)
     uv run python scripts/semantic_validate.py \\
-        "docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
-        "docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/modular"
+        "docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
+        "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/modular"
 
     # With HTML report
     uv run python scripts/semantic_validate.py \\
-        "docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
-        "docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/modular" \\
+        "docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
+        "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/modular" \\
         --html validation_report.html
 
     # JSON output
     uv run python scripts/semantic_validate.py \\
-        "docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
-        "docs/modules/orcaflex/library/tier2_fast/a01_catenary_riser/modular" \\
+        "docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml" \\
+        "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/modular" \\
         --json
 
     # Batch mode (all models in a directory)
     uv run python scripts/semantic_validate.py \\
-        --batch docs/modules/orcaflex/library/tier2_fast \\
+        --batch docs/domains/orcaflex/library/tier2_fast \\
         --batch-report validation_batch_report.html
 """
 

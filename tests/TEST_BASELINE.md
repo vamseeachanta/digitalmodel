@@ -52,7 +52,7 @@
 python -m pytest tests/ -v
 
 # Run working tests only (OrcaFlex mooring analysis)
-python -m pytest tests/modules/orcaflex/mooring_analysis/ -v
+python -m pytest tests/domains/orcaflex/mooring_analysis/ -v
 
 # Quick test run
 python -m pytest tests/ -q

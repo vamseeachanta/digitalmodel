@@ -179,7 +179,7 @@ for sim in sim_files:
 uv --version  # Should show 0.8.0 or higher
 
 # Run tests
-python -m pytest tests/modules/orcaflex/mooring_tension_iteration/batch_processing/test_batch_runner.py -v
+python -m pytest tests/domains/orcaflex/mooring_tension_iteration/batch_processing/test_batch_runner.py -v
 ```
 
 ### Key Success Factors

@@ -8,7 +8,7 @@
 |--------|---------|
 | `src/` | Source code (Python packages) |
 | `tests/` | Test files (pytest) |
-| `docs/` | Documentation (under `docs/modules/`) |
+| `docs/` | Documentation (under `docs/domains/`) |
 | `scripts/` | Utility scripts (including `scripts/testing/`) |
 | `config/` | Configuration files |
 | `data/` | Data files |

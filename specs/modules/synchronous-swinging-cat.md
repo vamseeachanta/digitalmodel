@@ -31,7 +31,7 @@ Three planning streams converged in the 2026-02-18 session:
 | `specs/wrk/WRK-NNN/` | Execution spec for a specific work item (Route C) | One dir per complex WRK |
 | `specs/repos/<repo>/` | Formal design decisions for a repo | Architecture ADRs live here |
 | `specs/modules/` | System-level module specs (auto-generated plan files go here) | Design before build |
-| `docs/modules/<domain>/` | Reference documentation — how something works | Written after build |
+| `docs/domains/<domain>/` | Reference documentation — how something works | Written after build |
 | `docs/guides/` | How-to guides for humans | Stable prose |
 | `.claude/work-queue/` | WRK item tracking only | No specs/docs here |
 
@@ -62,11 +62,11 @@ tests/
     integration/       ← component interaction tests
     fixtures/          ← test data for this domain
 
-docs/modules/<domain>/ ← reference docs for each src domain
+docs/domains/<domain>/ ← reference docs for each src domain
 data/modules/<domain>/ ← input data for each src domain
 ```
 
-**Not** `tests/modules/<domain>/` — the `modules/` wrapper in tests is redundant.
+**Not** `tests/domains/<domain>/` — the `modules/` wrapper in tests is redundant.
 **Not** `results/` or `outputs/` inside `tests/` — test output belongs in `reports/coverage/`.
 
 ---
@@ -250,8 +250,8 @@ done
 | Issue | Action | Priority |
 |-------|--------|----------|
 | **DUAL module structure**: `src/assetutilities/base_configs/modules/` AND `src/assetutilities/modules/` both exist with overlapping content (csv_utilities, yml_utilities etc.) | Audit both — determine if one is legacy. Merge into single `src/assetutilities/modules/`; update all imports | CRITICAL |
-| TYPO: `tests/modules/yaml_utlities/` (should be `yml_utilities`) | Rename directory; update any test discovery config | HIGH |
-| `tests/modules/agent-os/` AND `tests/modules/agent_os/` (both exist) | Merge into `tests/modules/agent_os/` (snake_case matches src/) | HIGH |
+| TYPO: `tests/domains/yaml_utlities/` (should be `yml_utilities`) | Rename directory; update any test discovery config | HIGH |
+| `tests/domains/agent-os/` AND `tests/domains/agent_os/` (both exist) | Merge into `tests/domains/agent_os/` (snake_case matches src/) | HIGH |
 | `tests/unit/` AND `tests/units/` (redundant) | Merge into `tests/unit/`; delete `tests/units/` | MEDIUM |
 | `CLAUDE.md.backup-20251023-081047`, `pyproject.toml.backup` | Delete; add `*.backup*` to `.gitignore` | MEDIUM |
 | Loose root files: `AGENT_OS_COMMANDS.md`, `CLAUDE_CLI_COMMANDS.md`, `COMMANDS.md` | Move to `docs/commands/` | MEDIUM |
@@ -269,12 +269,12 @@ done
 | Missing `AGENTS.md` | Create from workspace-hub template (1-line pointer to hub AGENTS.md) | HIGH |
 | Root `agents/` (14 items) vs `.claude/agents/` (16 items, canonical) | Merge active agents (drilling-expert, financial-analysis, oil-and-gas-expert) into `.claude/skills/` or `.claude/agents/`; delete root `agents/` | HIGH |
 | 4 output dirs: `output/` (1 file), `results/`, `reports/`, `test_output/` | Consolidate: `reports/` = structured HTML/MD output; `results/` = raw computation output; delete `output/` (move 1 file); delete empty `test_output/` | HIGH |
-| Loose root docs: `QUICK_START.md`, `QUICK_START_MARINE_REPORTS.md`, `PHASE_1_TEST_DEVELOPMENT_PLAN.md`, `user_prompt.md` | Move to `docs/guides/` or `docs/modules/<domain>/` | MEDIUM |
+| Loose root docs: `QUICK_START.md`, `QUICK_START_MARINE_REPORTS.md`, `PHASE_1_TEST_DEVELOPMENT_PLAN.md`, `user_prompt.md` | Move to `docs/guides/` or `docs/domains/<domain>/` | MEDIUM |
 | `archive/` (3 files) + `backups/` + `tests/_archived/` + `tests/_archived_tests/` + `tests/legacy_tests/` | Consolidate all stale content into `tests/_archived/` (tests) and `archive/` (non-test); document what's in each | MEDIUM |
 | Root `modules/` (shell scripts: automation, config, reporting) vs `src/worldenergydata/modules/` | Rename root `modules/` → `scripts/modules/` or inline into `scripts/` | MEDIUM |
 | `scripts/bsee/` AND `scripts/bsee_migration/` | Merge into `scripts/bsee/` | MEDIUM |
 | `docs/data/`, `docs/data_science/`, `docs/data-sources/` — 3 data doc locations | Consolidate into `docs/data-sources/`; migrate `docs/data_science/` content | MEDIUM |
-| `docs/modules/data_sodir/` AND `docs/data-sources/sodir/` — duplicate sodir docs | Merge into `docs/modules/sodir/`; delete duplicate | MEDIUM |
+| `docs/domains/data_sodir/` AND `docs/data-sources/sodir/` — duplicate sodir docs | Merge into `docs/domains/sodir/`; delete duplicate | MEDIUM |
 | `coverage.json`, `coverage.xml`, `COVERAGE_ANALYSIS.txt` at root | Move to `reports/coverage/`; add to `.gitignore` | LOW |
 | `test_export.json`, `.test_performance.db` at root | Move to `tests/data/` or delete | LOW |
 | `specs/` (empty) | Leave empty with `.gitkeep` for now; populate when route C specs are needed | LOW |
@@ -353,7 +353,7 @@ output. The question is never asked again.
 | **Cache / temp** | `cache/` (gitignored) | Ephemeral; never committed |
 | **Coverage** | `reports/coverage/` | HTML in htmlcov/; XML at reports/coverage/coverage.xml |
 | **Specs / design docs** | `specs/wrk/WRK-NNN/` or `specs/repos/<repo>/` | Pre-build design; Route C only |
-| **Reference docs** | `docs/modules/<domain>/` | Post-build; explains how something works |
+| **Reference docs** | `docs/domains/<domain>/` | Post-build; explains how something works |
 | **Guides** | `docs/guides/` | How-to for humans; stable prose |
 | **Config** | `config/` | Repo config; never output |
 
@@ -423,7 +423,7 @@ without checking the canonical map below.
 5. Is it only used by tests? → `tests/<domain>/fixtures/`
 6. Is it ephemeral / reproducible from source? → `cache/` (gitignored, never committed)
 7. Is it a design spec (pre-build)? → `specs/wrk/WRK-NNN/` or `specs/repos/<repo>/`
-8. Is it documentation of how something works? → `docs/modules/<domain>/`
+8. Is it documentation of how something works? → `docs/domains/<domain>/`
 9. Is it a how-to guide? → `docs/guides/`
 10. Is it config? → `config/`
 
