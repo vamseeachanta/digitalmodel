@@ -66,6 +66,40 @@ def _is_phase_at_negligible_amplitude(
     return mag_at_phase_diff / peak_mag < _NEGLIGIBLE_AMPLITUDE_RATIO
 
 
+def _parse_fdf_panels(fdf_path: Path) -> list[list[list[float]]]:
+    """Parse a WAMIT .fdf free-surface panel file.
+
+    Each data row contains 8 values encoding 4 panel corner coordinates in the
+    horizontal plane (z=0): x1,x2,x3,x4,y1,y2,y3,y4 (all x-coords then all
+    y-coords, for the XZ-symmetry quadrant y>=0).
+
+    Returns a list of panels; each panel is a list of 4 [x, y, 0.0] vertices.
+    Returns an empty list on any read failure.
+    """
+    try:
+        panels: list[list[list[float]]] = []
+        with fdf_path.open(encoding="utf-8", errors="replace") as fh:
+            lines = fh.readlines()
+        # First 4 lines are header (title, RINNER, NPF/NTCL, NAL params)
+        for raw in lines[4:]:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                vals = [float(v) for v in raw.split()]
+            except ValueError:
+                continue
+            if len(vals) != 8:
+                continue
+            # x1,x2,x3,x4 then y1,y2,y3,y4
+            xs = vals[:4]
+            ys = vals[4:]
+            panels.append([[xs[i], ys[i], 0.0] for i in range(4)])
+        return panels
+    except Exception:
+        return []
+
+
 class BenchmarkPlotter:
     """Generate interactive Plotly HTML overlay plots from multiple solvers.
 
@@ -1385,11 +1419,33 @@ class BenchmarkPlotter:
             meta = self._solver_metadata.get(solver, {})
             panel_geometry_data = meta.get("panel_geometry")
             if panel_geometry_data:
+                n_panels = len(panel_geometry_data)
+                has_vertices = bool(
+                    panel_geometry_data and "vertices" in panel_geometry_data[0]
+                )
+                fdf_path = meta.get("fdf_path")
+                if has_vertices:
+                    mesh_html = self._build_panel_mesh3d_html(
+                        panel_geometry_data,
+                        fdf_path=fdf_path,
+                        title=f"Panel Mesh & Free Surface Zone ({solver})",
+                    )
+                    fs_note = (
+                        " + free-surface zone from FDF"
+                        if fdf_path else ""
+                    )
+                    return (
+                        f"<h2>Panel Mesh Geometry</h2>\n"
+                        f'<p style="color:#555;font-size:0.9em">Source: OrcFxAPI panelGeometry '
+                        f'({n_panels} panels, symmetry-expanded{fs_note}). '
+                        f"Use the view buttons or drag to rotate.</p>\n"
+                        f"{mesh_html}"
+                    )
+                # fallback: scatter plot of centroids when vertices not available
                 scatter_html = self._build_panel_scatter_html(
                     panel_geometry_data,
                     title=f"Panel Geometry ({solver})",
                 )
-                n_panels = len(panel_geometry_data)
                 return (
                     f"<h2>Panel Mesh Geometry</h2>\n"
                     f'<p style="color:#555;font-size:0.9em">Source: OrcFxAPI panelGeometry '
@@ -1850,6 +1906,196 @@ class BenchmarkPlotter:
             margin=dict(l=0, r=0, t=40, b=0),
         )
         return fig.to_html(full_html=False, include_plotlyjs="cdn")
+
+    @staticmethod
+    def _build_panel_mesh3d_html(
+        panel_geometry_data: list,
+        fdf_path: Optional[str] = None,
+        title: str = "Panel Mesh & Free Surface Zone",
+        height: int = 560,
+    ) -> str:
+        """Build interactive Mesh3d figure from panelGeometry vertices.
+
+        Renders body panels as a semi-transparent coral surface with wireframe
+        edges.  If fdf_path is supplied, also renders the free-surface zone
+        panels as a cyan overlay.  Three camera-preset buttons are provided:
+        Perspective (default), Plan (top-down), and Elevation (side view).
+
+        Args:
+            panel_geometry_data: List of dicts with 'vertices' key (4×3 float).
+            fdf_path: Optional path to WAMIT .fdf free-surface panel file.
+            title: Figure title.
+            height: Figure height in pixels.
+
+        Returns:
+            HTML div string (no full_html wrapper, assumes Plotly already loaded).
+        """
+        # ---- body mesh --------------------------------------------------
+        vx: List[float] = []
+        vy: List[float] = []
+        vz: List[float] = []
+        tri_i: List[int] = []
+        tri_j: List[int] = []
+        tri_k: List[int] = []
+        ex: List[Optional[float]] = []
+        ey: List[Optional[float]] = []
+        ez: List[Optional[float]] = []
+
+        for panel in panel_geometry_data:
+            verts = panel.get("vertices")
+            if not verts or len(verts) < 3:
+                continue
+            n = len(vx)
+            for v in verts:
+                vx.append(float(v[0]))
+                vy.append(float(v[1]))
+                vz.append(float(v[2]))
+            tri_i.append(n); tri_j.append(n + 1); tri_k.append(n + 2)
+            if len(verts) == 4:
+                tri_i.append(n); tri_j.append(n + 2); tri_k.append(n + 3)
+            # wireframe — close the polygon
+            for v in verts:
+                ex.append(float(v[0]))
+                ey.append(float(v[1]))
+                ez.append(float(v[2]))
+            ex.append(float(verts[0][0]))
+            ey.append(float(verts[0][1]))
+            ez.append(float(verts[0][2]))
+            ex.append(None); ey.append(None); ez.append(None)
+
+        fig = go.Figure()
+        if vx:
+            fig.add_trace(go.Mesh3d(
+                x=vx, y=vy, z=vz,
+                i=tri_i, j=tri_j, k=tri_k,
+                color="#e05a5a",
+                opacity=0.45,
+                name="Body panels",
+                showlegend=True,
+                hoverinfo="skip",
+            ))
+            fig.add_trace(go.Scatter3d(
+                x=ex, y=ey, z=ez,
+                mode="lines",
+                line=dict(color="#c0392b", width=1),
+                name="Body edges",
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+
+        # ---- free-surface zone -----------------------------------------
+        if fdf_path:
+            fdf_panels = _parse_fdf_panels(Path(fdf_path))
+            if fdf_panels:
+                fvx: List[float] = []
+                fvy: List[float] = []
+                fvz: List[float] = []
+                fti: List[int] = []
+                ftj: List[int] = []
+                ftk: List[int] = []
+                fex: List[Optional[float]] = []
+                fey: List[Optional[float]] = []
+                fez: List[Optional[float]] = []
+                for pverts in fdf_panels:
+                    n = len(fvx)
+                    for v in pverts:
+                        fvx.append(float(v[0]))
+                        fvy.append(float(v[1]))
+                        fvz.append(float(v[2]))
+                    fti.append(n); ftj.append(n + 1); ftk.append(n + 2)
+                    if len(pverts) == 4:
+                        fti.append(n); ftj.append(n + 2); ftk.append(n + 3)
+                    for v in pverts:
+                        fex.append(float(v[0]))
+                        fey.append(float(v[1]))
+                        fez.append(float(v[2]))
+                    fex.append(float(pverts[0][0]))
+                    fey.append(float(pverts[0][1]))
+                    fez.append(float(pverts[0][2]))
+                    fex.append(None); fey.append(None); fez.append(None)
+                # also mirror y >= 0 panels to y <= 0 for XZ symmetry
+                n0 = len(fvx)
+                mirror_vx = list(fvx)
+                mirror_vy = [-y for y in fvy]
+                mirror_vz = list(fvz)
+                mirror_i = [i + n0 for i in fti]
+                mirror_j = [j + n0 for j in ftj]
+                mirror_k = [k + n0 for k in ftk]
+                fvx += mirror_vx
+                fvy += mirror_vy
+                fvz += mirror_vz
+                fti += mirror_i
+                ftj += mirror_j
+                ftk += mirror_k
+                fig.add_trace(go.Mesh3d(
+                    x=fvx, y=fvy, z=fvz,
+                    i=fti, j=ftj, k=ftk,
+                    color="#00bcd4",
+                    opacity=0.25,
+                    name="Free-surface zone",
+                    showlegend=True,
+                    hoverinfo="skip",
+                ))
+                # mirror wire edges too
+                mirror_ex = list(fex)
+                mirror_ey = [(-y if y is not None else None) for y in fey]
+                mirror_ez = list(fez)
+                fex += mirror_ex
+                fey += mirror_ey
+                fez += mirror_ez
+                fig.add_trace(go.Scatter3d(
+                    x=fex, y=fey, z=fez,
+                    mode="lines",
+                    line=dict(color="#0097a7", width=0.8),
+                    name="FS edges",
+                    showlegend=False,
+                    hoverinfo="skip",
+                ))
+
+        # ---- camera presets -------------------------------------------
+        cam_persp = dict(
+            eye=dict(x=1.6, y=1.2, z=0.9),
+            up=dict(x=0, y=0, z=1),
+        )
+        cam_plan = dict(
+            eye=dict(x=0, y=0, z=3.0),
+            up=dict(x=0, y=1, z=0),
+        )
+        cam_elev = dict(
+            eye=dict(x=3.0, y=0, z=0),
+            up=dict(x=0, y=0, z=1),
+        )
+        fig.update_layout(
+            title=dict(text=title, font=dict(size=13)),
+            height=height,
+            scene=dict(
+                aspectmode="data",
+                xaxis_title="X (m)",
+                yaxis_title="Y (m)",
+                zaxis_title="Z (m)",
+            ),
+            margin=dict(l=0, r=0, t=55, b=0),
+            legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.7)"),
+            updatemenus=[dict(
+                type="buttons",
+                direction="right",
+                x=0.0, y=1.10,
+                xanchor="left",
+                buttons=[
+                    dict(label="Perspective",
+                         method="relayout",
+                         args=[{"scene.camera": cam_persp}]),
+                    dict(label="Plan (top)",
+                         method="relayout",
+                         args=[{"scene.camera": cam_plan}]),
+                    dict(label="Elevation (side)",
+                         method="relayout",
+                         args=[{"scene.camera": cam_elev}]),
+                ],
+            )],
+        )
+        fig.update_layout(scene_camera=cam_persp)
+        return fig.to_html(full_html=False, include_plotlyjs=False)
 
     # ------------------------------------------------------------------
     # Raw RAO data tables (collapsible)
