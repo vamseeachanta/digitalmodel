@@ -67,9 +67,13 @@ logger = logging.getLogger(__name__)
 @click.option('--verbose', '-v',
               is_flag=True,
               help='Enable verbose output')
-@click.option('--report', 
+@click.option('--report',
               type=click.Path(),
               help='Save JSON report to specified file')
+@click.option('--html-report',
+              type=click.Path(),
+              default=None,
+              help='Generate structured HTML analysis report to this path')
 @click.option('--all',
               is_flag=True,
               help='Process all matching files in directory')
@@ -89,6 +93,7 @@ def main(pattern: str,
          exclude: tuple,
          verbose: bool,
          report: Optional[str],
+         html_report: Optional[str],
          all: bool,
          test: bool):
     """
@@ -167,12 +172,16 @@ def main(pattern: str,
         # Display summary
         status_reporter.display_summary()
         
-        # Save report if requested
+        # Save JSON report if requested
         if report:
             report_path = Path(report)
             status_reporter.save_report(report_path)
             click.echo(f"\nReport saved to: {report_path}")
-        
+
+        # Generate HTML analysis report if requested
+        if html_report:
+            _generate_html_report(results, html_report, mock, verbose)
+
         # Set final terminal status
         status_reporter.set_final_status()
         
@@ -199,6 +208,124 @@ def main(pattern: str,
             import traceback
             traceback.print_exc()
         return 1
+
+
+def _generate_html_report(results, html_report_path: str, mock: bool, verbose: bool) -> None:
+    """Generate a structured HTML analysis report from run results."""
+    from pathlib import Path as _Path
+
+    html_path = _Path(html_report_path)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        from digitalmodel.solvers.orcaflex.reporting import generate_orcaflex_report
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            build_report_from_model,
+        )
+    except ImportError as exc:
+        click.echo(click.style(f"\n[html-report] Import error: {exc}", fg='yellow'))
+        return
+
+    if mock:
+        # In mock mode produce a minimal synthetic report
+        _write_mock_html_report(html_path)
+        click.echo(f"\n[html-report] Mock HTML report: {html_path}")
+        return
+
+    # Locate first .sim file from run results
+    sim_path = _find_sim_file(results)
+    if sim_path is None:
+        click.echo(click.style(
+            "\n[html-report] No .sim files found in results; skipping HTML report.",
+            fg='yellow'
+        ))
+        return
+
+    try:
+        import OrcFxAPI as ofx
+        model = ofx.Model(str(sim_path))
+        report_data = build_report_from_model(
+            model,
+            project_name="OrcaFlex Analysis",
+            structure_type="riser",
+        )
+        generate_orcaflex_report(report_data, output_path=html_path)
+        click.echo(f"\n[html-report] HTML report written: {html_path}")
+    except Exception as exc:
+        click.echo(click.style(f"\n[html-report] Failed: {exc}", fg='red'))
+        if verbose:
+            import traceback
+            traceback.print_exc()
+
+
+def _find_sim_file(results):
+    """Return the first .sim file path from runner results, or None."""
+    try:
+        sim_files = getattr(results, "sim_files_created", None) or []
+        for f in sim_files:
+            p = Path(f)
+            if p.suffix.lower() == ".sim" and p.exists():
+                return p
+    except Exception:
+        pass
+    return None
+
+
+def _write_mock_html_report(html_path) -> None:
+    """Write a minimal synthetic HTML report for mock/test mode."""
+    import numpy as np
+    from digitalmodel.solvers.orcaflex.reporting import generate_orcaflex_report
+    from digitalmodel.solvers.orcaflex.reporting.models.report import OrcaFlexAnalysisReport
+    from digitalmodel.solvers.orcaflex.reporting.models.geometry import (
+        GeometryData, LineProfileData, KeyPointData,
+    )
+    from digitalmodel.solvers.orcaflex.reporting.models.results import (
+        DynamicResultsData, TimeSeriesData, EnvelopeData,
+    )
+
+    arc_lengths = list(np.linspace(0, 1000, 20))
+    geometry = GeometryData(
+        water_depth_m=500.0,
+        line_profile=LineProfileData(
+            arc_length=arc_lengths,
+            x=arc_lengths,
+            y=[0.0] * len(arc_lengths),
+            z=[-500.0 * s / 1000.0 for s in arc_lengths],
+        ),
+        key_points=[
+            KeyPointData(label="End A", arc_length_m=0.0, x=0.0, z=0.0),
+            KeyPointData(label="End B", arc_length_m=1000.0, x=1000.0, z=-500.0),
+        ],
+    )
+    times = list(np.linspace(0, 100, 10))
+    dynamic = DynamicResultsData(
+        ramp_end_time_s=20.0,
+        time_series=[
+            TimeSeriesData(
+                id="te_mock", label="Te @ mock",
+                t=times,
+                values=[1000 + 50 * np.sin(t / 10) for t in times],
+                units="kN",
+            )
+        ],
+        envelopes=[
+            EnvelopeData(
+                id="te_env", label="Effective Tension Envelope",
+                arc_length=arc_lengths,
+                max_values=[1100.0] * len(arc_lengths),
+                min_values=[900.0] * len(arc_lengths),
+                units="kN",
+            )
+        ],
+    )
+    report_data = OrcaFlexAnalysisReport(
+        project_name="Mock OrcaFlex Run",
+        structure_id="MOCK-001",
+        structure_type="riser",
+        geometry=geometry,
+        dynamic_results=dynamic,
+    )
+    generate_orcaflex_report(report_data, output_path=html_path)
 
 
 @click.command()
