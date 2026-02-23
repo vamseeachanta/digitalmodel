@@ -1330,6 +1330,9 @@ def _compare_orcawave_ymls(
         "FreeSurfacePanelledZoneMeshFileName",
         "FreeSurfacePanelledZoneMeshFormat",
         "FreeSurfacePanelledZoneMeshLengthUnits",
+        # Roll damping target toggle — spec makes the default explicit (No/False);
+        # OWD omits when at default. Disabled roll damping has no RAO effect.
+        "BodyIncreaseRollDampingToTarget",
     }
 
     # Dormant: keys that exist but are inactive for non-QTF solve types.
@@ -1666,7 +1669,9 @@ def _inject_qtf_into_html(html_path: Path, qtf_html: str) -> None:
     """Inject a QTF section into an existing benchmark HTML file.
 
     Idempotent: removes any pre-existing <section id="qtf-analysis"> block
-    before inserting the new one. Inserts before </body> when present.
+    and any existing QTF TOC link before inserting the updated ones.
+    Also adds a "12. QTF Analysis" entry to the report Table of Contents.
+    Inserts before </body> when present.
     """
     import re
 
@@ -1678,8 +1683,26 @@ def _inject_qtf_into_html(html_path: Path, qtf_html: str) -> None:
         content,
         flags=re.DOTALL,
     )
-    if "</body>" in content:
-        content = content.replace("</body>", qtf_html + "\n</body>", 1)
+    # Remove any existing QTF TOC entry (idempotent)
+    content = re.sub(
+        r'\s*<li><a href="#qtf-analysis">[^<]*</a></li>',
+        "",
+        content,
+    )
+    # Add QTF TOC entry after the Appendices link — the last numbered section.
+    # Handles both compact (same-line) and indented TOC layouts.
+    content = re.sub(
+        r'(<a href="#appendices">[^<]*</a></li>)',
+        r'\1<li><a href="#qtf-analysis">12. QTF Analysis</a></li>',
+        content,
+        count=1,
+    )
+    # Use rfind to target the LAST </body> — the real closing tag.
+    # Benchmark HTML contains </body> inside JavaScript "view source" popup
+    # strings; replace(..., 1) would hit those instead of the real tag.
+    body_pos = content.rfind("</body>")
+    if body_pos != -1:
+        content = content[:body_pos] + qtf_html + "\n</body>" + content[body_pos + len("</body>"):]
     else:
         content += "\n" + qtf_html
     html_path.write_text(content, encoding="utf-8")

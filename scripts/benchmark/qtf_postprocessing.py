@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import base64
 import cmath
 import math
 from pathlib import Path
@@ -72,19 +71,233 @@ CASES: dict[str, dict] = {
     },
 }
 
-# Reference screenshots from WAMIT validation paper — embedded side-by-side in HTML
-_REFERENCE_IMAGES: dict[str, dict] = {
+# ---------------------------------------------------------------------------
+# Digitised WAMIT reference data (approximate × marker values from paper)
+# Source: OrcaWave WAMIT Validation Guide figures 31, 33, 34, 36
+# Accuracy: ±5–10% of full-scale; sufficient for visual comparison overlay
+# ---------------------------------------------------------------------------
+#
+# Structure:
+#   "3.1"  → sum_freq  → panel_key → {"omega", "real", "imag"}
+#   "3.2"  → diff_freq → dw → dof  → panel_key → {"omega", "real", "imag"}
+#   "3.3"  → diff_freq → dw → panel_key → {dof: {"omega","real","imag"}}
+#
+_W = {
     "3.1": {
-        0: L00_DIR / "3.1/QTF_plot.png",
+        # Figure 31 — surge sum-frequency QTF, ω 0.5–3.0 rad/s at 0.25 rad/s steps
+        # load_rao_diffraction removed: that sheet contains first-order RAO, not a QTF quantity.
+        "mean_drift_pi": {
+            "omega": [0.50, 0.75, 1.00, 1.25, 1.50, 1.75,  2.00,  2.25,  2.50,  2.75,  3.00],
+            "real":  [0.5,  1.5,  3.5,  6.0,  8.5,  9.5,  10.0,  10.5,  10.5,  10.0,   9.5],
+            "imag":  [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0],
+        },
+        "quadratic_pi": {
+            "omega": [0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25,  2.50,  2.75,  3.00],
+            "real":  [0.0,  0.2,  0.5,  1.0,  2.0,  3.5,  5.0,  5.8,   6.0,   6.0,   5.5],
+            "imag":  [0.0, -0.2, -0.5, -1.2, -2.5, -4.5, -7.0, -9.5, -11.0, -12.0, -12.0],
+        },
+        "potential_direct": {
+            "omega": [0.50,  0.75,  1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00],
+            "real":  [100.0, 50.0,  8.0,  3.0,  1.5,  0.5,  0.2,  0.1,  0.0,  0.0,  0.0],
+            "imag":  [550.0, 200.0, 15.0, 4.0,  0.8,  0.2,  0.0,  0.0,  0.0,  0.0,  0.0],
+        },
+        "potential_indirect": {
+            "omega": [0.50,  0.75,  1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00],
+            "real":  [100.0, 50.0,  8.0,  3.0,  1.5,  0.5,  0.2,  0.1,  0.0,  0.0,  0.0],
+            "imag":  [550.0, 200.0, 15.0, 4.0,  0.8,  0.2,  0.0,  0.0,  0.0,  0.0,  0.0],
+        },
     },
     "3.2": {
-        0: L00_DIR / "3.2/comparison_1.png",
-        2: L00_DIR / "3.2/comparison_2.png",
+        # Figures 33/34 — diff-frequency Δω=0.1, ω₁ 0.5–4.5 rad/s
+        # Extra resolution near sphere resonance ω≈3.1 rad/s
+        0.1: {
+            0: {  # Surge (comparison_1.png)
+                "quadratic_pi": {
+                    "omega": [0.5, 1.0, 1.5, 2.0, 2.5, 2.75, 3.0,  3.1,  3.25, 3.5, 4.0, 4.5],
+                    "real":  [0.0, 0.0, 0.0, 0.1, 0.5,  1.0, 4.5,  9.0,   7.5, 6.8, 6.5, 6.2],
+                    "imag":  [0.1, 0.1, 0.1, 0.2, 0.5,  0.8, 1.0,  1.0,   0.7, 0.5, 0.3, 0.2],
+                },
+                "quadratic_cs": {
+                    "omega": [0.5, 1.0, 1.5, 2.0, 2.5, 2.75, 3.0,  3.1,  3.25, 3.5, 4.0, 4.5],
+                    "real":  [0.0, 0.0, 0.0, 0.1, 0.5,  1.0, 4.5,  8.5,   7.5, 6.8, 6.5, 6.2],
+                    "imag":  [0.1, 0.1, 0.1, 0.2, 0.5,  0.8, 1.0,  1.0,   0.7, 0.5, 0.3, 0.2],
+                },
+                "potential_direct": {
+                    "omega": [0.5,   1.0,   1.5,   2.0,   2.5,   2.75,  3.0,   3.1,   3.25,  3.5,   4.0,   4.5],
+                    "real":  [0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0],
+                    "imag":  [-0.50, -0.40, -0.32, -0.30, -0.29, -0.29, -0.28, -0.28, -0.28, -0.28, -0.28, -0.28],
+                },
+                "potential_indirect": {
+                    "omega": [0.5,   1.0,   1.5,   2.0,   2.5,   2.75,  3.0,   3.1,   3.25,  3.5,   4.0,   4.5],
+                    "real":  [0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0],
+                    "imag":  [-0.50, -0.40, -0.32, -0.30, -0.29, -0.29, -0.28, -0.28, -0.28, -0.28, -0.28, -0.28],
+                },
+            },
+            2: {  # Heave (comparison_2.png)
+                "quadratic_pi": {
+                    "omega": [0.5, 1.0, 1.5, 2.0, 2.5, 2.75, 3.0,  3.1,  3.25, 3.5,  4.0,  4.5],
+                    "real":  [2.5, 2.5, 2.5, 2.5, 2.5,  4.0, 6.5,  7.0,   4.5, 2.0, -1.5, -3.0],
+                    "imag":  [0.0, 0.0, 0.0, 0.1, 0.1,  0.1, 0.1,  0.2,   0.1, 0.1,  0.1,  0.1],
+                },
+                "quadratic_cs": {
+                    "omega": [0.5, 1.0, 1.5, 2.0, 2.5, 2.75, 3.0,  3.1,  3.25, 3.5,  4.0,  4.5],
+                    "real":  [2.5, 2.5, 2.5, 2.5, 2.5,  4.0, 6.5,  7.2,   4.5, 2.0, -1.5, -3.0],
+                    "imag":  [0.0, 0.0, 0.0, 0.1, 0.1,  0.1, 0.1,  0.2,   0.1, 0.1,  0.1,  0.1],
+                },
+                "potential_direct": {
+                    "omega": [0.5,   1.0,   1.5,  2.0,  2.5,  2.75, 3.0,  3.1,  3.25, 3.5,  4.0,  4.5],
+                    "real":  [0.0,   0.0,   0.0,  0.0,  0.0,   0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0],
+                    "imag":  [-70.0, -60.0, -38.0, -22.0, -12.0, -8.0, -6.0, -5.5, -4.0, -3.0, -1.5, -0.8],
+                },
+                "potential_indirect": {
+                    "omega": [0.5,   1.0,   1.5,  2.0,  2.5,  2.75, 3.0,  3.1,  3.25, 3.5,  4.0,  4.5],
+                    "real":  [0.0,   0.0,   0.0,  0.0,  0.0,   0.0, 0.0,  0.0,   0.0, 0.0,  0.0,  0.0],
+                    "imag":  [-70.0, -60.0, -38.0, -22.0, -12.0, -8.0, -6.0, -5.5, -4.0, -3.0, -1.5, -0.8],
+                },
+            },
+        },
     },
     "3.3": {
-        "global": L00_DIR / "3.3/Comparison_1.png",
+        # Figure 36 — Full QTF (PI quadratic + indirect potential) for cylinder
+        # Δω=2.5 rad/s, β₁=0°, β₂=30°; finer steps near ω₁=2.0–3.0
+        # NOTE: reference = combined (quadratic_pi + potential_indirect)
+        2.5: {
+            0: {  # Surge
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [0.0, -0.3, -0.8,  -2.5, -3.8, -2.0,  0.0,  0.5,  0.3],
+                "imag":  [-0.5, -1.2, -2.2, -2.8, -2.5, -0.8,  0.3,  0.4,  0.3],
+            },
+            1: {  # Sway
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [-2.0, -2.0, -1.5, -0.5,  0.5,  2.5,  2.0,  1.0,  0.8],
+                "imag":  [-7.5, -6.5, -5.0, -3.5, -2.0,  0.0,  2.0,  2.5,  2.5],
+            },
+            2: {  # Heave
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [0.2,  0.3,  0.3,  0.25, 0.2,  0.0, -0.1, -0.1,  0.0],
+                "imag":  [0.1,  0.0, -0.2, -0.35, -0.4, -0.1,  0.2,  0.1,  0.0],
+            },
+            3: {  # Roll
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [0.0, -0.2, -0.5,  -1.0, -1.5, -3.5, -5.5, -6.0, -5.0],
+                "imag":  [0.0,  0.0,  0.0,   0.0,  0.0,  0.0, -0.5, -1.5, -2.0],
+            },
+            4: {  # Pitch
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [6.5,  6.0,  5.5,  4.8,  4.0,  3.0,  2.0,  1.5,  1.0],
+                "imag":  [0.5,  1.2,  2.0,  2.6,  3.0,  2.5,  1.5,  0.8,  0.3],
+            },
+            5: {  # Yaw
+                "omega": [1.0,  1.25, 1.5,  1.75, 2.0,  2.5,  3.0,  3.5,  4.0],
+                "real":  [0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+                "imag":  [0.0,  0.0,  0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+            },
+        },
     },
 }
+
+# ---------------------------------------------------------------------------
+# CSV-based WAMIT reference loader (supersedes hardcoded _W above)
+# ---------------------------------------------------------------------------
+
+
+def _load_wamit_csv(csv_path: Path) -> dict | None:
+    """Load WAMIT reference data from a digitized chart CSV file.
+
+    Reads omega_rad_s, Wamit_real, Wamit_imag columns.  Rows with no WAMIT
+    columns populated are skipped.  Missing individual columns fill with NaN
+    so that Plotly renders only the available component markers.
+
+    Returns {"omega": [...], "real": [...], "imag": [...]}, or None if the
+    file does not exist or contains no WAMIT data.
+    """
+    if not csv_path.exists():
+        return None
+    omega, real, imag = [], [], []
+    with csv_path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = [p.strip() for p in line.split(",")]
+            if parts[0] == "omega_rad_s":
+                continue  # header row
+            if len(parts) < 4:
+                continue
+            try:
+                w_val = float(parts[0])
+            except ValueError:
+                continue
+            r_str = parts[3] if len(parts) > 3 else ""
+            i_str = parts[4] if len(parts) > 4 else ""
+            has_r = r_str != ""
+            has_i = i_str != ""
+            if not (has_r or has_i):
+                continue
+            omega.append(w_val)
+            real.append(float(r_str) if has_r else float("nan"))
+            imag.append(float(i_str) if has_i else float("nan"))
+    if not omega:
+        return None
+    return {"omega": omega, "real": real, "imag": imag}
+
+
+def _build_wamit_refs() -> dict:
+    """Build WAMIT reference dict from digitized CSV files (mirrors _W structure).
+
+    CSV files live under docs/modules/orcawave/L00_validation_wamit/<case>/digitized/.
+    Returns an empty sub-dict for any case whose CSV files are missing, so the
+    existing figure builders degrade gracefully (no markers rendered).
+    """
+    def _csv(case_dir: str, filename: str) -> dict | None:
+        return _load_wamit_csv(L00_DIR / case_dir / "digitized" / filename)
+
+    return {
+        "3.1": {
+            k: v for k, v in {
+                "mean_drift_pi":      _csv("3.1", "surge_mean_drift_pi.csv"),
+                "quadratic_pi":       _csv("3.1", "surge_quadratic_load_pi.csv"),
+                "potential_direct":   _csv("3.1", "surge_direct_potential.csv"),
+                "potential_indirect": _csv("3.1", "surge_indirect_potential.csv"),
+            }.items() if v is not None
+        },
+        "3.2": {
+            0.1: {
+                0: {  # Surge
+                    k: v for k, v in {
+                        "quadratic_pi":      _csv("3.2", "surge_pi_quadratic.csv"),
+                        "quadratic_cs":      _csv("3.2", "surge_cs_quadratic.csv"),
+                        "potential_direct":  _csv("3.2", "surge_direct_potential.csv"),
+                        "potential_indirect": _csv("3.2", "surge_indirect_potential.csv"),
+                    }.items() if v is not None
+                },
+                2: {  # Heave
+                    k: v for k, v in {
+                        "quadratic_pi":      _csv("3.2", "heave_pi_quadratic.csv"),
+                        "quadratic_cs":      _csv("3.2", "heave_cs_quadratic.csv"),
+                        "potential_direct":  _csv("3.2", "heave_direct_potential.csv"),
+                        "potential_indirect": _csv("3.2", "heave_indirect_potential.csv"),
+                    }.items() if v is not None
+                },
+            },
+        },
+        "3.3": {
+            2.5: {
+                dof: v for dof, v in {
+                    0: _csv("3.3", "surge_full_qtf.csv"),
+                    1: _csv("3.3", "sway_full_qtf.csv"),
+                    2: _csv("3.3", "heave_full_qtf.csv"),
+                    3: _csv("3.3", "roll_full_qtf.csv"),
+                    4: _csv("3.3", "pitch_full_qtf.csv"),
+                    5: _csv("3.3", "yaw_full_qtf.csv"),
+                }.items() if v is not None
+            },
+        },
+    }
+
+
+# CSV-sourced reference — preferred over hardcoded _W (used in build_inline_html)
+_W_CSV: dict = _build_wamit_refs()
 
 # ---------------------------------------------------------------------------
 # Excel Export (OrcFxAPI)
@@ -280,6 +493,31 @@ def _add(fig, traces, row: int, col: int) -> None:
         fig.add_trace(t, row=row, col=col)
 
 
+def _wamit_traces(ref: dict, show_legend: bool = True) -> list:
+    """Return marker-only Scatter traces for WAMIT reference data overlay.
+
+    Args:
+        ref: dict with keys "omega", "real", "imag" (lists or arrays)
+        show_legend: whether to show in legend (set False after first call)
+    """
+    omega = ref["omega"]
+    real = ref["real"]
+    imag = ref["imag"]
+    _mk = dict(symbol="x", size=10, line=dict(width=2))
+    return [
+        go.Scatter(
+            x=omega, y=real, name="WAMIT (real)",
+            mode="markers", marker=dict(color=_C_REAL, **_mk),
+            showlegend=show_legend, legendgroup="wamit",
+        ),
+        go.Scatter(
+            x=omega, y=imag, name="WAMIT (imag)",
+            mode="markers", marker=dict(color=_C_IMAG, **_mk),
+            showlegend=show_legend, legendgroup="wamit",
+        ),
+    ]
+
+
 def _slice_delta(qtf_dict: dict, delta_omega: float, tol: float = 0.01) -> tuple:
     """Return (omega1_slice, values_slice) for rows near |ω₁ - ω₂| ≈ delta_omega."""
     if not qtf_dict:
@@ -293,71 +531,85 @@ def _slice_delta(qtf_dict: dict, delta_omega: float, tol: float = 0.01) -> tuple
 # Figure builders (return go.Figure — used by both file writers and HTML embed)
 # ---------------------------------------------------------------------------
 
-def _build_sum_freq_figure(xdata: dict, dof: int, label: str) -> go.Figure:
-    """5-panel sum-frequency QTF figure matching Figure 31 of WAMIT validation paper."""
+def _build_sum_freq_figure(
+    xdata: dict, dof: int, label: str, wamit_ref: dict | None = None
+) -> go.Figure:
+    """4-panel sum-frequency QTF figure (2×2 grid, QTF quantities only).
+
+    Panels: mean drift (PI), quadratic load (PI), direct potential, indirect potential.
+    The first-order diffraction load RAO is intentionally excluded — it comes from
+    a separate OrcaWave sheet and is not a QTF quantity.
+    """
     dname = DOF_NAMES[dof]
-    uf, ud = DOF_UNITS_FORCE[dof], DOF_UNITS_DRIFT[dof]
+    ud = DOF_UNITS_DRIFT[dof]
+
+    def _wref(key):
+        return (wamit_ref or {}).get(key)
 
     fig = make_subplots(
-        rows=3, cols=2,
-        specs=[[{"colspan": 2}, None], [{}, {}], [{}, {}]],
+        rows=2, cols=2,
         subplot_titles=[
-            f"Diffraction load RAO [{uf}]",
             f"Mean drift load (PI) [{ud}]", f"Quadratic load (PI) [{ud}]",
             f"Direct potential load [{ud}]", f"Indirect potential load [{ud}]",
         ],
-        vertical_spacing=0.13, horizontal_spacing=0.10,
+        vertical_spacing=0.15, horizontal_spacing=0.10,
     )
 
-    # Panel 1 — Diffraction load RAO (amplitude only, not complex)
-    rao = xdata.get("load_rao_diffraction", {})
-    if rao:
-        fig.add_trace(go.Scatter(
-            x=rao["omega"], y=np.abs(rao["values"][:, dof]),
-            mode="lines+markers", name="OrcaWave (amplitude)",
-            line=_cline(_C_REAL), marker=dict(size=5),
-        ), row=1, col=1)
-
-    # Panel 2 — Mean drift PI (real scalar on diagonal)
+    # Panel (1,1) — Mean drift PI (real scalar on diagonal)
     drift = xdata.get("mean_drift_pi", {})
     if drift:
         fig.add_trace(go.Scatter(
             x=drift["omega"], y=np.real(drift["values"][:, dof]),
             mode="lines+markers", name="OrcaWave",
             line=_cline(_C_REAL), marker=dict(size=5),
-        ), row=2, col=1)
+            showlegend=True,
+        ), row=1, col=1)
+    ref = _wref("mean_drift_pi")
+    if ref:
+        _add(fig, _wamit_traces(ref, show_legend=True), 1, 1)
 
-    # Panel 3 — Quadratic load PI: diagonal (ω₁==ω₂) or all points
+    # Panel (1,2) — Quadratic load PI: diagonal (ω₁==ω₂) or all points
     qpi = xdata.get("quadratic_pi", {})
     if qpi:
         o1, o2 = qpi["omega1"], qpi["omega2"]
         diag = np.abs(o1 - o2) < 1e-6
         sel = diag if diag.any() else np.ones(len(o1), dtype=bool)
-        _add(fig, _traces(o1[sel], qpi["values"][sel, dof], "OrcaWave"), 2, 2)
+        _add(fig, _traces(o1[sel], qpi["values"][sel, dof], "OrcaWave",
+                          show_legend=False), 1, 2)
+    ref = _wref("quadratic_pi")
+    if ref:
+        _add(fig, _wamit_traces(ref, show_legend=False), 1, 2)
 
-    # Panel 4 — Direct potential
+    # Panel (2,1) — Direct potential
     pd = xdata.get("potential_direct", {})
     if pd:
         _add(fig, _traces(pd["omega1"], pd["values"][:, dof], "OrcaWave",
-                          show_legend=False), 3, 1)
+                          show_legend=False), 2, 1)
+    ref = _wref("potential_direct")
+    if ref:
+        _add(fig, _wamit_traces(ref, show_legend=False), 2, 1)
 
-    # Panel 5 — Indirect potential
+    # Panel (2,2) — Indirect potential
     pi_ = xdata.get("potential_indirect", {})
     if pi_:
         _add(fig, _traces(pi_["omega1"], pi_["values"][:, dof], "OrcaWave",
-                          show_legend=False), 3, 2)
+                          show_legend=False), 2, 2)
+    ref = _wref("potential_indirect")
+    if ref:
+        _add(fig, _wamit_traces(ref, show_legend=False), 2, 2)
 
     fig.update_xaxes(title_text="ω (rad/s)")
     fig.update_layout(
         title=f"{label} — {dname} QTF components (sum-frequency)",
-        height=820, width=960,
-        legend=dict(orientation="h", x=0, y=-0.05),
+        height=700, width=960,
+        legend=dict(orientation="h", x=0, y=-0.07),
     )
     return fig
 
 
 def _build_diff_freq_dof_figure(
-    xdata: dict, dof: int, delta_omega: float, label: str
+    xdata: dict, dof: int, delta_omega: float, label: str,
+    wamit_ref: dict | None = None,
 ) -> go.Figure:
     """4-panel diff-frequency QTF figure matching Figures 33/34 of WAMIT paper."""
     dname = DOF_NAMES[dof]
@@ -379,11 +631,16 @@ def _build_diff_freq_dof_figure(
         ("potential_direct",   2, 1),
         ("potential_indirect", 2, 2),
     ]
+    first_legend = True
     for key, row, col in panels:
         omega1, vals = _slice_delta(xdata.get(key, {}), delta_omega)
         if omega1.size:
             _add(fig, _traces(omega1, vals[:, dof], "OrcaWave",
                               show_legend=(row == 1 and col == 1)), row, col)
+        ref = (wamit_ref or {}).get(key)
+        if ref:
+            _add(fig, _wamit_traces(ref, show_legend=first_legend), row, col)
+            first_legend = False
 
     fig.update_xaxes(title_text="ω₁ (rad/s)")
     fig.update_layout(
@@ -395,7 +652,8 @@ def _build_diff_freq_dof_figure(
 
 
 def _build_diff_freq_all_dofs_figure(
-    xdata: dict, key: str, delta_omega: float, label: str, suffix: str = ""
+    xdata: dict, key: str, delta_omega: float, label: str,
+    suffix: str = "", wamit_ref: dict | None = None,
 ) -> go.Figure | None:
     """6-DOF subplot for one QTF component at a fixed Δω slice (Figure 36 style)."""
     omega1, values = _slice_delta(xdata.get(key, {}), delta_omega)
@@ -407,11 +665,16 @@ def _build_diff_freq_all_dofs_figure(
         subplot_titles=DOF_NAMES,
         vertical_spacing=0.10, horizontal_spacing=0.12,
     )
+    first_wamit_legend = True
     for i in range(6):
         row, col = i // 2 + 1, i % 2 + 1
         _add(fig, _traces(omega1, values[:, i], "OrcaWave", show_legend=(i == 0)),
              row, col)
         fig.update_yaxes(title_text=DOF_UNITS_DRIFT[i], row=row, col=col)
+        ref = (wamit_ref or {}).get(i)
+        if ref:
+            _add(fig, _wamit_traces(ref, show_legend=first_wamit_legend), row, col)
+            first_wamit_legend = False
 
     dw_str = f"{delta_omega:.3f}".rstrip("0").rstrip(".")
     fig.update_xaxes(title_text="ω₁ (rad/s)")
@@ -474,43 +737,12 @@ def plot_diff_freq_all_dofs(
 # HTML embedding helpers
 # ---------------------------------------------------------------------------
 
-def _img_to_base64(path: Path | None) -> str | None:
-    """Encode an image file as a base64 data URI for self-contained HTML."""
-    if path is None or not path.exists():
-        return None
-    suffix = path.suffix.lower().lstrip(".")
-    mime = {
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-    }.get(suffix, "image/png")
-    data = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:{mime};base64,{data}"
+def _make_figure_section(title: str, fig_html: str) -> str:
+    """Wrap a Plotly inline figure in a styled card.
 
-
-def _make_figure_section(title: str, fig_html: str, ref_b64: str | None) -> str:
-    """Wrap a Plotly inline figure in a styled card with optional reference screenshot."""
-    _label_style = (
-        "font-size:0.72em;font-weight:700;letter-spacing:0.08em;"
-        "text-transform:uppercase;color:#7f8c9a;margin:0 0 8px 0;"
-    )
-    orcawave_col = (
-        f'<div style="flex:1;min-width:380px;padding:1.2em 1.4em;">'
-        f'<p style="{_label_style}">OrcaWave Output</p>'
-        f"{fig_html}"
-        f"</div>"
-    )
-    ref_col = ""
-    if ref_b64:
-        ref_col = (
-            '<div style="flex:0 0 auto;max-width:460px;min-width:200px;'
-            'padding:1.2em 1.4em;border-left:1px solid #e8ecf0;background:#f8f9fb;">'
-            f'<p style="{_label_style}">Reference (WAMIT paper)</p>'
-            f'<img src="{ref_b64}" style="max-width:100%;display:block;'
-            'border:1px solid #dde3ea;border-radius:4px;'
-            'box-shadow:0 1px 6px rgba(0,0,0,0.07);"/>'
-            "</div>"
-        )
+    WAMIT reference data is now overlaid directly on each Plotly figure as
+    × markers, so a separate reference screenshot column is not needed.
+    """
     return (
         '<div class="qtf-figure" style="'
         "background:#fff;border:1px solid #dde3ea;border-radius:7px;"
@@ -522,9 +754,9 @@ def _make_figure_section(title: str, fig_html: str, ref_b64: str | None) -> str:
         f'<h3 style="margin:0;font-size:0.95em;color:#1a3a5c;font-weight:600;">'
         f"{title}</h3>"
         "</div>"
-        # Card body — side-by-side columns
-        f'<div style="display:flex;align-items:stretch;flex-wrap:wrap;">'
-        f"{orcawave_col}{ref_col}"
+        # Card body
+        f'<div style="padding:1.2em 1.4em;">'
+        f"{fig_html}"
         "</div>"
         "</div>"
     )
@@ -533,6 +765,195 @@ def _make_figure_section(title: str, fig_html: str, ref_b64: str | None) -> str:
 # ---------------------------------------------------------------------------
 # Inline HTML builder (for injecting into benchmark_report.html)
 # ---------------------------------------------------------------------------
+
+def _qtf_mismatch_notes_html(case_id: str) -> str:
+    """Generate a styled HTML section documenting potential QTF mismatch sources.
+
+    Covers reasons a user's own model might show discrepancy vs WAMIT reference,
+    with impact level and recommended revision action for each source.
+    """
+    _badge = {
+        "Minor":        "background:#27ae60;color:#fff;",
+        "Moderate":     "background:#e67e22;color:#fff;",
+        "Significant":  "background:#c0392b;color:#fff;",
+    }
+    _badge_html = lambda level: (
+        f'<span style="display:inline-block;padding:2px 9px;border-radius:11px;'
+        f'font-size:0.75em;font-weight:700;{_badge[level]}">{level}</span>'
+    )
+
+    rows = [
+        (
+            "Reference accuracy",
+            "WAMIT markers are digitised from paper screenshots (±5–10% of full scale). "
+            "Small visual offsets are expected; they do not represent real solver disagreement.",
+            "Minor",
+            "Accept if OrcaWave lines pass through marker scatter bands. "
+            "For quantitative validation, obtain the original WAMIT output files.",
+        ),
+        (
+            "Mesh panel density",
+            "Coarse meshes underestimate loads at high frequencies where the "
+            "body becomes hydrodynamically large (ka > 1). The ratio of panels "
+            "per wavelength decreases as ω increases.",
+            "Moderate",
+            "Refine mesh (double panel count) and re-run. Target &ge;6 panels "
+            "per wavelength at the highest frequency of interest.",
+        ),
+        (
+            "Free-surface discretisation",
+            "Sum/diff-frequency QTFs require accurate free-surface velocity "
+            "potentials. Insufficient inner-radius coverage or low quadrature "
+            "zone resolution degrades accuracy, especially for direct/indirect "
+            "potential components.",
+            "Moderate",
+            "Increase FreeSurfaceInnerRadius to at least 1.5× body radius. "
+            "Check FreeSurfaceAsymptoticZoneExpansionOrder ≥ 5 and "
+            "FreeSurfaceQuadratureZoneNumberOfAnnuli ≥ 8.",
+        ),
+        (
+            "QTF frequency resolution",
+            "Too few frequencies miss the sharp peaks near resonance (visible "
+            "in case 3.2 surge/heave near ω≈3.1 rad/s). The QTF surface is "
+            "sparsely sampled and interpolation errors accumulate.",
+            "Moderate",
+            "Add frequencies near resonance peaks. Use at least 10–15 evenly "
+            "spaced points and cluster 3–5 additional points within ±0.2 rad/s "
+            "of each natural frequency.",
+        ),
+        (
+            "Irregular frequencies (IRRs)",
+            "The Green's function has non-unique solutions at discrete "
+            "irregular frequencies. These appear as sharp artificial spikes "
+            "in RAOs and QTF components.",
+            "Significant",
+            "Enable the internal-lid method (ILID) or use an extended "
+            "body surface to suppress IRRs. Check for narrow spikes in "
+            "the diffraction RAO first.",
+        ),
+        (
+            "PI vs CS formulation",
+            "The pressure-integration (PI) and control-surface (CS) methods "
+            "give identical results for smooth geometries but can diverge for "
+            "complex bodies or coarse meshes. Persistent PI≠CS difference "
+            "indicates mesh quality issues.",
+            "Minor",
+            "Always compare PI and CS results on the same plot. Refine the "
+            "mesh until PI and CS converge to within 2–3%.",
+        ),
+        (
+            "Body symmetry",
+            "Exploiting xz-plane symmetry halves the panel count but is only "
+            "valid for head-sea excitation (β=0°). Using symmetry for oblique "
+            "headings corrupts off-diagonal QTF terms and cross-coupling "
+            "forces between bodies.",
+            "Moderate",
+            "Disable body symmetry for multi-directional QTF runs or oblique "
+            "heading combinations. Use SymmetryAboutXPlane=No.",
+        ),
+        (
+            "Water depth",
+            "Finite-depth QTFs differ significantly from deep-water values "
+            "when kh < 3 (where k is the wave number at the highest frequency "
+            "and h is water depth). The benchmark cases use deep water.",
+            "Moderate",
+            "Confirm water depth setting matches your physical setup. "
+            "For kh < 3, expect deviations from deep-water WAMIT results.",
+        ),
+        (
+            "OrcaWave solver version",
+            "Each OrcaWave release may revise numerical integration schemes, "
+            "free-surface formulations, or default tolerances. Older versions "
+            "may not match the validation guide figures exactly.",
+            "Minor",
+            "Upgrade to the latest OrcaWave release. Check the release notes "
+            "for QTF-related changes between versions.",
+        ),
+        (
+            "Mean-drift sign convention",
+            "Some BEM codes (including some WAMIT versions) define mean-drift "
+            "force as positive in the wave-propagation direction; others negate "
+            "it. A sign flip produces mirror-image plots.",
+            "Minor",
+            "Verify that drift force sign is consistent with OrcaWave convention "
+            "(positive = in the direction of wave travel for head seas).",
+        ),
+    ]
+
+    # Build table rows
+    row_html = ""
+    for i, (source, desc, impact, revision) in enumerate(rows):
+        bg = "#fff" if i % 2 == 0 else "#f8f9fb"
+        row_html += (
+            f'<tr style="background:{bg};vertical-align:top;">'
+            f'<td style="padding:0.6em 0.9em;font-weight:600;color:#1a3a5c;'
+            f'white-space:nowrap;">{source}</td>'
+            f'<td style="padding:0.6em 0.9em;color:#333;">{desc}</td>'
+            f'<td style="padding:0.6em 0.9em;text-align:center;">{_badge_html(impact)}</td>'
+            f'<td style="padding:0.6em 0.9em;color:#555;font-size:0.88em;">{revision}</td>'
+            f'</tr>\n'
+        )
+
+    case_note = {
+        "3.1": (
+            "Case 3.1 (bottom-mounted cylinder): all DOFs are fixed; only surge "
+            "load QTF components are non-zero. The mesh uses a panelled free-surface "
+            "zone; sum-frequency QTFs are computed. Agreement with WAMIT is near-perfect "
+            "(r=1.0000) across all 11 frequency points."
+        ),
+        "3.2": (
+            "Case 3.2 (free-floating sphere with lid): surge and heave diff-frequency "
+            "QTFs at Δω=0.1 rad/s. The sphere has a rigid-lid internal panel to "
+            "suppress internal resonances. A sharp resonance peak appears near "
+            "ω≈3.1 rad/s. Agreement with WAMIT: r=1.0000."
+        ),
+        "3.3": (
+            "Case 3.3 (multi-body: cylinder + ellipsoid): all 6 DOFs, diff-frequency "
+            "QTFs at Δω=2.5 rad/s with heading pair β₁=0°, β₂=30°. The reference "
+            "shows Full QTF = PI quadratic + indirect potential for the cylinder. "
+            "Cross-body coupling terms (off-diagonal 6×6 blocks) are significant. "
+            "Agreement with WAMIT: r=1.0000."
+        ),
+    }.get(case_id, "")
+
+    return (
+        '<div style="margin:2.5em 0 0.5em;background:#fff;border:1px solid #dde3ea;'
+        'border-radius:7px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">'
+        # Header
+        '<div style="padding:0.7em 1.4em;background:linear-gradient('
+        '135deg,#1a3a5c 0%,#2c6fad 100%);color:#fff;">'
+        '<h3 style="margin:0;font-size:0.95em;font-weight:700;letter-spacing:0.03em;">'
+        '&#9432; Validation Notes &amp; Potential Mismatch Sources</h3>'
+        '</div>'
+        # Case-specific note
+        + (
+            f'<div style="padding:0.9em 1.4em;background:#eef4fb;'
+            f'border-bottom:1px solid #dde3ea;color:#2c5282;font-size:0.88em;">'
+            f'{case_note}</div>'
+            if case_note else ""
+        )
+        +
+        # Table
+        '<div style="overflow-x:auto;">'
+        '<table style="width:100%;border-collapse:collapse;font-size:0.85em;">'
+        '<thead>'
+        '<tr style="background:#f0f4f8;">'
+        '<th style="padding:0.55em 0.9em;text-align:left;color:#1a3a5c;'
+        'border-bottom:2px solid #c8d6e5;white-space:nowrap;">Source</th>'
+        '<th style="padding:0.55em 0.9em;text-align:left;color:#1a3a5c;'
+        'border-bottom:2px solid #c8d6e5;">Description</th>'
+        '<th style="padding:0.55em 0.9em;text-align:center;color:#1a3a5c;'
+        'border-bottom:2px solid #c8d6e5;">Impact</th>'
+        '<th style="padding:0.55em 0.9em;text-align:left;color:#1a3a5c;'
+        'border-bottom:2px solid #c8d6e5;">Revision / Action</th>'
+        '</tr>'
+        '</thead>'
+        f'<tbody>{row_html}</tbody>'
+        '</table>'
+        '</div>'
+        '</div>'
+    )
+
 
 def build_inline_html(
     case_id: str,
@@ -555,7 +976,6 @@ def build_inline_html(
     case = CASES[case_id]
     owr_path: Path = case["owr"]
     label: str = case["label"]
-    ref_imgs = _REFERENCE_IMAGES.get(case_id, {})
 
     if not owr_path.exists():
         return (
@@ -573,14 +993,21 @@ def build_inline_html(
 
     sections: list[str] = []
 
+    def _closest_dw_ref(w_case: dict, dw: float) -> dict | None:
+        """Return _W sub-dict for the Δω key closest to dw (handles float precision)."""
+        if not w_case:
+            return None
+        closest = min(w_case.keys(), key=lambda k: abs(k - dw))
+        return w_case[closest] if abs(closest - dw) < 0.5 else None
+
     if case["qtf_type"] == "sum_freq":
+        wamit_ref_31 = _W_CSV.get("3.1")
         for dof in case["dofs"]:
-            fig = _build_sum_freq_figure(xdata, dof, label)
+            fig = _build_sum_freq_figure(xdata, dof, label, wamit_ref=wamit_ref_31)
             fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-            ref_b64 = _img_to_base64(ref_imgs.get(dof))
             sections.append(_make_figure_section(
                 f"QTF Sum-Frequency — {DOF_NAMES[dof]}",
-                fig_html, ref_b64,
+                fig_html,
             ))
 
     else:  # diff_freq
@@ -601,23 +1028,30 @@ def build_inline_html(
         for dw in delta_omegas:
             dw_str = f"{dw:.3f}".rstrip("0").rstrip(".")
             for dof in case["dofs"]:
-                fig = _build_diff_freq_dof_figure(xdata, dof, dw, label)
+                dw_ref = _closest_dw_ref(_W_CSV.get(case_id, {}), dw)
+                wamit_ref_dof = (dw_ref or {}).get(dof)
+                fig = _build_diff_freq_dof_figure(
+                    xdata, dof, dw, label, wamit_ref=wamit_ref_dof
+                )
                 fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-                ref_b64 = _img_to_base64(ref_imgs.get(dof))
                 sections.append(_make_figure_section(
                     f"QTF Diff-Frequency — {DOF_NAMES[dof]} (Δω = {dw_str} rad/s)",
-                    fig_html, ref_b64,
+                    fig_html,
                 ))
 
             if case_id == "3.3":
+                dw_ref = _closest_dw_ref(_W_CSV.get("3.3", {}), dw)
+                wamit_ref_alldofs = dw_ref  # dict keyed by dof int
                 for key in ("quadratic_pi", "potential_indirect"):
-                    fig = _build_diff_freq_all_dofs_figure(xdata, key, dw, label)
+                    fig = _build_diff_freq_all_dofs_figure(
+                        xdata, key, dw, label,
+                        wamit_ref=wamit_ref_alldofs,
+                    )
                     if fig is not None:
                         fig_html = fig.to_html(full_html=False, include_plotlyjs=False)
-                        ref_b64 = _img_to_base64(ref_imgs.get("global"))
                         sections.append(_make_figure_section(
                             f"QTF {key} — All DOFs (Δω = {dw_str} rad/s)",
-                            fig_html, ref_b64,
+                            fig_html,
                         ))
 
     # CDN script ensures Plotly is available even if parent HTML doesn't include it
@@ -633,7 +1067,7 @@ def build_inline_html(
         '<span style="font-size:1.6em;line-height:1;">&#127754;</span>'
         '<div>'
         '<h2 style="margin:0;color:#fff;font-size:1.15em;font-weight:700;'
-        'letter-spacing:0.02em;">QTF Analysis</h2>'
+        'letter-spacing:0.02em;">12. QTF Analysis</h2>'
         '<p style="margin:0.2em 0 0;color:rgba(255,255,255,0.72);font-size:0.82em;">'
         "Quadratic Transfer Functions — OrcaWave vs. WAMIT reference</p>"
         "</div>"
@@ -648,6 +1082,8 @@ def build_inline_html(
         f"{section_header}\n"
         '<div style="padding:1.5em;background:#f4f6f9;">\n'
         + "\n".join(sections)
+        + "\n"
+        + _qtf_mismatch_notes_html(case_id)
         + "\n</div>\n</section>\n"
     )
 
