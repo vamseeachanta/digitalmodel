@@ -36,10 +36,12 @@ def _mock_line(name="TestLine", n_segs=5, seg_length=10.0, lt_name="8in_Pipe"):
     # StaticResult returns a float
     line.StaticResult = MagicMock(return_value=1000.0)
 
-    # RangeGraph returns object with .Max and .Min
+    # RangeGraph returns object with .X, .Max, .Min, .Mean
     rg = MagicMock()
+    rg.X = [i * seg_length for i in range(n_segs + 1)]
     rg.Max = [1100.0] * (n_segs + 1)
     rg.Min = [900.0] * (n_segs + 1)
+    rg.Mean = [1000.0] * (n_segs + 1)
     line.RangeGraph = MagicMock(return_value=rg)
 
     # TimeHistory returns list of floats
@@ -454,3 +456,102 @@ class TestAggregator:
         ):
             with pytest.raises(ValueError, match="no Line objects"):
                 build_report_from_model(model)
+
+
+class TestExportRangegraphCsvs:
+    def test_export_rangegraph_csvs_basic(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        mock_ofx = MagicMock()
+        line = _mock_line(name="pipeline", n_segs=4, seg_length=10.0)
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            paths = export_rangegraph_csvs(
+                lines=[line],
+                variables=["Effective Tension", "Max Bending Stress"],
+                period=mock_ofx.pnDynamic,
+                output_dir=tmp_path,
+            )
+
+        assert len(paths) == 1
+        assert paths[0].name == "pipeline_rangegraph.csv"
+        assert paths[0].exists()
+
+        import csv
+        with open(paths[0]) as f:
+            reader = csv.DictReader(f)
+            headers = reader.fieldnames
+        assert "ArcLength_m" in headers
+        assert "Effective_Tension_Min" in headers
+        assert "Effective_Tension_Max" in headers
+        assert "Effective_Tension_Mean" in headers
+        assert "Max_Bending_Stress_Min" in headers
+
+    def test_export_rangegraph_csvs_raises_without_ofxapi(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            None,
+        ):
+            with pytest.raises(ImportError, match="OrcFxAPI"):
+                export_rangegraph_csvs(
+                    lines=[_mock_line()],
+                    variables=["Effective Tension"],
+                    period=None,
+                    output_dir=tmp_path,
+                )
+
+    def test_export_rangegraph_csvs_creates_output_dir(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        mock_ofx = MagicMock()
+        nested_dir = tmp_path / "sub" / "dir"
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            paths = export_rangegraph_csvs(
+                lines=[_mock_line(name="pipe")],
+                variables=["Effective Tension"],
+                period=mock_ofx.pnDynamic,
+                output_dir=nested_dir,
+            )
+
+        assert nested_dir.exists()
+        assert len(paths) == 1
+
+    def test_export_rangegraph_csvs_row_count_matches_arc_length(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        mock_ofx = MagicMock()
+        line = _mock_line(name="pipeline", n_segs=5, seg_length=10.0)
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            paths = export_rangegraph_csvs(
+                lines=[line],
+                variables=["Effective Tension"],
+                period=mock_ofx.pnDynamic,
+                output_dir=tmp_path,
+            )
+
+        import csv
+        with open(paths[0]) as f:
+            rows = list(csv.DictReader(f))
+        # _mock_line n_segs=5 -> RangeGraph returns 6 points (n_segs+1)
+        assert len(rows) == 6

@@ -137,6 +137,74 @@ def extract_mesh_all_lines(lines: list) -> MeshData:
     )
 
 
+def export_rangegraph_csvs(
+    lines: list,
+    variables: list,
+    period,
+    output_dir: 'Path',
+) -> list:
+    """Export arc-length distributed RangeGraph results as CSV per line.
+
+    For each line, calls ``line.RangeGraph(var, period)`` for every variable
+    and writes a single CSV with columns
+    ``ArcLength_m | {Var}_Min | {Var}_Max | {Var}_Mean``.
+
+    Args:
+        lines: OrcaFlex Line objects to extract from.
+        variables: OrcaFlex variable name strings (e.g. ``'Effective Tension'``).
+        period: OrcaFlex period constant (e.g. ``pnDynamic``).
+        output_dir: Directory in which to write CSV files.
+
+    Returns:
+        List of :class:`pathlib.Path` objects for written CSV files.
+
+    Raises:
+        ImportError: If OrcFxAPI is not installed.
+    """
+    if ofx is None:
+        raise ImportError("OrcFxAPI is required for RangeGraph extraction.")
+
+    from pathlib import Path
+    import csv
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    written: list = []
+
+    for line in lines:
+        line_name = _safe_attr(line, "Name") or "line"
+        rows: dict = {}
+        arc_x: list = []
+
+        for var in variables:
+            try:
+                rg = line.RangeGraph(var, period)
+                if not arc_x:
+                    arc_x = list(rg.X)
+                    rows["ArcLength_m"] = arc_x
+                var_safe = var.replace(" ", "_").replace("/", "_")
+                rows[f"{var_safe}_Min"] = list(rg.Min)
+                rows[f"{var_safe}_Max"] = list(rg.Max)
+                rows[f"{var_safe}_Mean"] = list(rg.Mean)
+            except Exception:
+                continue
+
+        if not arc_x:
+            continue
+
+        csv_path = output_dir / f"{line_name}_rangegraph.csv"
+        fieldnames = list(rows.keys())
+        with open(csv_path, "w", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=fieldnames)
+            writer.writeheader()
+            for i in range(len(arc_x)):
+                writer.writerow({k: rows[k][i] for k in fieldnames})
+
+        written.append(csv_path)
+
+    return written
+
+
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------

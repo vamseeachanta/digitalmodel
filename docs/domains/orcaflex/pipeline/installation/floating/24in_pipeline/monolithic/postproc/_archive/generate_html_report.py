@@ -4,8 +4,7 @@
 Processes OrcaFlex simulation results and generates:
 - Summary CSV with key metrics
 - Interactive HTML report with Plotly charts
-- Arc-length distributed CSV files (RangeGraphs) via Phase 4 extractor
-- Phase 4 summary HTML with design checks
+- Arc-length distributed CSV files (RangeGraphs)
 - Grouped chart pages by load condition and tension level
 """
 import OrcFxAPI
@@ -14,20 +13,6 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from pathlib import Path
-
-try:
-    from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
-        build_report_from_model,
-        export_rangegraph_csvs,
-    )
-    from digitalmodel.solvers.orcaflex.reporting import generate_orcaflex_report
-    from digitalmodel.solvers.orcaflex.reporting.models.design_checks import (
-        DesignCheckData,
-        UtilizationData,
-    )
-    PHASE4_AVAILABLE = True
-except ImportError:
-    PHASE4_AVAILABLE = False
 
 # X65 yield strength
 X65_YIELD_MPa = 65 * 6.89476  # 448.2 MPa
@@ -60,18 +45,6 @@ MS_SIMULATION_COMPLETE = 4
 # Store rangegraph data for chart generation
 rangegraph_data = []
 
-# Store Phase 4 report (built from base case sim)
-_phase4_report = None
-_worst_utils = []
-
-_RANGEGRAPH_VARS = [
-    'Effective Tension',
-    'Max Bending Stress',
-    'Direct Tensile Stress',
-    'Direct Tensile Strain',
-    'y',
-]
-
 for sim_file in sim_files:
     print(f'  Processing: {sim_file.name}')
     model = OrcFxAPI.Model(str(sim_file))
@@ -95,17 +68,7 @@ for sim_file in sim_files:
         end_a_min = end_a_static
         print(f'    (Static-only results)')
 
-    # Export RangeGraph CSVs via Phase 4 extractor (one CSV per line per sim)
-    if PHASE4_AVAILABLE:
-        sim_rg_dir = rangegraph_dir / sim_file.stem
-        export_rangegraph_csvs(
-            lines=[pipeline],
-            variables=_RANGEGRAPH_VARS,
-            period=period_rg,
-            output_dir=sim_rg_dir,
-        )
-
-    # Extract RangeGraphs for arc-length distributions (needed for charts/metrics)
+    # Extract RangeGraphs for arc-length distributions
     rg_tension = pipeline.RangeGraph('Effective Tension', period_rg)
     rg_y = pipeline.RangeGraph('y', period_rg)
     rg_strain = pipeline.RangeGraph('Direct Tensile Strain', period_rg)
@@ -150,7 +113,8 @@ for sim_file in sim_files:
     env = parts[2]
     heading = parts[3]
 
-    # Build arc-length DataFrame for chart generation
+    # Save arc-length distributed CSV
+    # For static state, use Mean as Min/Max contain invalid placeholders
     if has_dynamic:
         tension_min = np.array(rg_tension.Min) / 1000
         tension_max = np.array(rg_tension.Max) / 1000
@@ -188,6 +152,9 @@ for sim_file in sim_files:
     # Calculate combined utilization along arc length
     rg_df['CombinedUtil'] = (rg_df['BendStress_Max_MPa'] + rg_df['TensStress_Max_MPa']) / X65_YIELD_MPa
 
+    rg_csv_path = rangegraph_dir / f'{sim_file.stem}_rangegraph.csv'
+    rg_df.to_csv(rg_csv_path, index=False)
+
     # Store data for chart generation
     rangegraph_data.append({
         'filename': sim_file.stem,
@@ -197,24 +164,6 @@ for sim_file in sim_files:
         'df': rg_df,
         'has_dynamic': has_dynamic,
     })
-
-    # Track worst utilization per case for Phase 4 design check mapping
-    worst_arc_idx = int(np.argmax(rg_df['CombinedUtil'].values))
-    worst_arc = float(rg_df['ArcLength_m'].iloc[worst_arc_idx])
-    case_name = f"{tension_val}kN {env} {heading}"
-    _worst_utils.append((case_name, combined_util, worst_arc))
-
-    # Build Phase 4 report from base case sim
-    if PHASE4_AVAILABLE and tension_val == BASE_TENSION_kN and _phase4_report is None:
-        try:
-            _phase4_report = build_report_from_model(
-                model,
-                project_name="24in Pipeline Installation",
-                structure_type="installation",
-            )
-            print(f'    Phase 4 report built from base case: {sim_file.name}')
-        except Exception as exc:
-            print(f'    Phase 4 report build failed: {exc}')
 
     # Calculate max strain using appropriate source
     if has_dynamic:
@@ -237,32 +186,7 @@ for sim_file in sim_files:
         'HasDynamic': has_dynamic,
     })
 
-print(f'Saved rangegraph CSVs to: {rangegraph_dir}')
-
-# ============================================================================
-# PHASE 4 SUMMARY REPORT
-# ============================================================================
-
-if PHASE4_AVAILABLE and _phase4_report is not None:
-    try:
-        _phase4_report.design_checks = DesignCheckData(
-            code="DNV-OS-F101 (combined loading)",
-            checks=[
-                UtilizationData(
-                    name=f"Combined loading — {case_name}",
-                    uc=util,
-                    allowable=UTIL_LIMIT,
-                    load_case=case_name,
-                    location_arc_m=worst_arc,
-                )
-                for case_name, util, worst_arc in _worst_utils
-            ],
-        )
-        phase4_output = Path(__file__).parent / '24in_phase4_summary.html'
-        generate_orcaflex_report(_phase4_report, phase4_output)
-        print(f'Phase 4 summary saved to: {phase4_output}')
-    except Exception as exc:
-        print(f'Phase 4 summary generation failed: {exc}')
+print(f'Saved {len(rangegraph_data)} rangegraph CSVs to: {rangegraph_dir}')
 
 df = pd.DataFrame(results)
 

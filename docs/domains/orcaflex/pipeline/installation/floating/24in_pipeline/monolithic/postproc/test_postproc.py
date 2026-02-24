@@ -1,101 +1,150 @@
 #!/usr/bin/env python
 """
-Quick test script to verify postprocessing works with generated sim files.
-Run this after sim files are generated in ../runs/
+Tests for Phase 4 extraction layer used by pipeline postprocessing scripts.
+
+Tests the new export_rangegraph_csvs integration without requiring OrcFxAPI or sim files.
 """
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
-    print("OrcaFlex not available")
-    sys.exit(1)
+import pytest
 
 
-def test_single_sim_file(sim_path: Path):
-    """Test postprocessing on a single sim file."""
-    print(f"\nTesting: {sim_path.name}")
-    print("-" * 50)
+def _mock_pipeline(name="pipeline", n_segs=5, seg_length=10.0):
+    """Return a MagicMock mimicking an OrcaFlex Line (pipeline) object."""
+    line = MagicMock()
+    line.Name = name
+    line.NumberOfSegments = n_segs
+    line.SegmentLength = [seg_length] * n_segs
+    line.NodeArclengths = [i * seg_length for i in range(n_segs + 1)]
 
-    model = OrcFxAPI.Model(str(sim_path))
-    print(f"Model state: {model.state} (4=SimComplete, 2=Static)")
+    rg = MagicMock()
+    rg.X = [i * seg_length for i in range(n_segs + 1)]
+    rg.Max = [1100.0] * (n_segs + 1)
+    rg.Min = [900.0] * (n_segs + 1)
+    rg.Mean = [1000.0] * (n_segs + 1)
+    line.RangeGraph = MagicMock(return_value=rg)
+    line.TimeHistory = MagicMock(return_value=[1000.0] * 10)
 
-    # Find pipeline line
-    pipeline = None
-    for obj in model.objects:
-        if obj.type == OrcFxAPI.otLine:
-            if 'pipeline' in obj.name.lower():
-                pipeline = obj
-                break
-
-    if pipeline is None:
-        # Use first line if 'pipeline' not found
-        for obj in model.objects:
-            if obj.type == OrcFxAPI.otLine:
-                pipeline = obj
-                break
-
-    if pipeline is None:
-        print("ERROR: No line object found!")
-        return False
-
-    print(f"Line object: {pipeline.name}")
-
-    # Test End A/B Effective Tension (Static)
-    print("\n1. Effective Tension (StaticState):")
-    period = OrcFxAPI.pnStaticState
-    try:
-        end_a = pipeline.TimeHistory("Effective Tension", period, objectExtra=OrcFxAPI.oeEndA)
-        end_b = pipeline.TimeHistory("Effective Tension", period, objectExtra=OrcFxAPI.oeEndB)
-        print(f"   End A: {end_a[0]:.2f} kN")
-        print(f"   End B: {end_b[0]:.2f} kN")
-    except Exception as e:
-        print(f"   ERROR: {e}")
-
-    # Test RangeGraph for Global Y (if dynamic results available)
-    if model.state == 4:  # SimComplete
-        print("\n2. RangeGraph Global Y (WholeSimulation):")
-        period = OrcFxAPI.pnWholeSimulation
-        try:
-            rg = pipeline.RangeGraph('y', period)
-            print(f"   Arc Length: {len(rg.X)} points ({rg.X[0]:.1f} to {rg.X[-1]:.1f} m)")
-            print(f"   Min Y: {min(rg.Min):.3f} to {max(rg.Min):.3f} m")
-            print(f"   Max Y: {min(rg.Max):.3f} to {max(rg.Max):.3f} m")
-        except Exception as e:
-            print(f"   ERROR: {e}")
-    else:
-        print("\n2. RangeGraph: Skipped (no dynamic results)")
-
-    print("\nTest PASSED!")
-    return True
+    return line
 
 
-def main():
-    """Find and test sim files."""
-    runs_dir = Path(__file__).parent.parent / "runs"
+class TestExportRangegraphCsvsIntegration:
+    """Test export_rangegraph_csvs with mock OrcaFlex objects."""
 
-    if not runs_dir.exists():
-        print(f"Runs directory not found: {runs_dir}")
-        return
+    def test_csv_written_for_pipeline(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
 
-    sim_files = list(runs_dir.glob("*.sim"))
+        mock_ofx = MagicMock()
+        pipeline = _mock_pipeline()
 
-    if not sim_files:
-        print(f"No .sim files found in {runs_dir}")
-        print("Run OrcaFlex simulations first.")
-        return
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            paths = export_rangegraph_csvs(
+                lines=[pipeline],
+                variables=["Effective Tension", "Max Bending Stress"],
+                period=mock_ofx.pnLatestWave,
+                output_dir=tmp_path,
+            )
 
-    print(f"Found {len(sim_files)} sim files")
+        assert len(paths) == 1
+        assert paths[0].exists()
 
-    # Test first available sim file
-    success = test_single_sim_file(sim_files[0])
+    def test_csv_has_required_columns(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
 
-    if success and len(sim_files) > 1:
-        print(f"\n{len(sim_files) - 1} more sim files ready for postprocessing.")
+        mock_ofx = MagicMock()
+        pipeline = _mock_pipeline()
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            paths = export_rangegraph_csvs(
+                lines=[pipeline],
+                variables=["Effective Tension"],
+                period=mock_ofx.pnLatestWave,
+                output_dir=tmp_path,
+            )
+
+        import csv
+        with open(paths[0]) as f:
+            headers = csv.DictReader(f).fieldnames
+        assert "ArcLength_m" in headers
+        assert "Effective_Tension_Min" in headers
+        assert "Effective_Tension_Max" in headers
+        assert "Effective_Tension_Mean" in headers
+
+    def test_output_dir_created_if_missing(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        mock_ofx = MagicMock()
+        nested = tmp_path / "rangegraphs" / "sim_001"
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            mock_ofx,
+        ):
+            export_rangegraph_csvs(
+                lines=[_mock_pipeline()],
+                variables=["Effective Tension"],
+                period=mock_ofx.pnLatestWave,
+                output_dir=nested,
+            )
+
+        assert nested.exists()
+
+    def test_raises_without_orcfxapi(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.reporting.extractors.aggregator import (
+            export_rangegraph_csvs,
+        )
+
+        with patch(
+            "digitalmodel.solvers.orcaflex.reporting.extractors.aggregator.ofx",
+            None,
+        ):
+            with pytest.raises(ImportError, match="OrcFxAPI"):
+                export_rangegraph_csvs(
+                    lines=[_mock_pipeline()],
+                    variables=["Effective Tension"],
+                    period=None,
+                    output_dir=tmp_path,
+                )
 
 
-if __name__ == "__main__":
-    main()
+class TestPhase4ImportGuard:
+    """Verify scripts remain runnable when digitalmodel package is absent."""
+
+    def test_generate_html_report_handles_missing_phase4(self):
+        """PHASE4_AVAILABLE flag prevents ImportError when package not installed."""
+        import importlib
+        import importlib.util
+
+        script_path = (
+            Path(__file__).parent / "generate_html_report.py"
+        )
+        assert script_path.exists(), "generate_html_report.py not found"
+
+        src = script_path.read_text(encoding="utf-8")
+        assert "PHASE4_AVAILABLE" in src, "Script must guard Phase 4 imports"
+        assert "try:" in src, "Script must use try/except for Phase 4 imports"
+
+    def test_generate_env_case_report_handles_missing_phase4(self):
+        """PHASE4_AVAILABLE flag prevents ImportError when package not installed."""
+        script_path = (
+            Path(__file__).parent / "generate_env_case_report.py"
+        )
+        assert script_path.exists(), "generate_env_case_report.py not found"
+
+        src = script_path.read_text(encoding="utf-8")
+        assert "PHASE4_AVAILABLE" in src, "Script must guard Phase 4 imports"
+        assert "try:" in src, "Script must use try/except for Phase 4 imports"
