@@ -1,8 +1,0 @@
-test103c.frc
-0 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0                 IOPTN(1-16)
-0.0                                                   VCG
-1.0 0.0 0.0
-0.0 1.0 0.0
-0.0 0.0 1.0                                           XPRDCT
-0                                                     NBETAH
-0                                                     NFIELD
