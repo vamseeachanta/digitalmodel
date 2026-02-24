@@ -79,6 +79,14 @@ class TestBourgoineYoungROPConstruction:
                 bit_dia_in=8.5, overbalance_kpsi=0.5, bit_wear=0.0,
             )
 
+    def test_invalid_bit_dia_raises(self):
+        model = _by_default()
+        with pytest.raises(ValueError, match="bit_dia_in"):
+            model.predict(
+                depth_ft=5000.0, wob_klb=20.0, rpm=100.0,
+                bit_dia_in=0.0, overbalance_kpsi=0.5, bit_wear=0.0,
+            )
+
     def test_bit_wear_out_of_range_raises(self):
         model = _by_default()
         with pytest.raises(ValueError, match="bit_wear"):
@@ -247,6 +255,11 @@ class TestWarrenROPPhysics:
         model = _warren_default()
         with pytest.raises(ValueError, match="wob_klb"):
             model.predict(wob_klb=-5.0, rpm=100.0, bit_dia_in=8.5)
+
+    def test_invalid_rpm_raises(self):
+        model = _warren_default()
+        with pytest.raises(ValueError, match="rpm"):
+            model.predict(wob_klb=20.0, rpm=-10.0, bit_dia_in=8.5)
 
     def test_invalid_bit_dia_raises(self):
         model = _warren_default()
