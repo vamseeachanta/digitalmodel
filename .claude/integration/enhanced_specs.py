@@ -125,7 +125,7 @@ class EnhancedSpecsIntegration:
         if self.config.features.get("task_tracking"):
             config["task_tracking"] = {
                 "enabled": True,
-                "integration": "agent_os_tasks",
+                "integration": "task_tracking",
                 "auto_decompose": True,
                 "max_subtask_depth": 3
             }
@@ -218,7 +218,6 @@ class EnhancedSpecsIntegration:
                 {
                     "type": "file_change",
                     "paths": [
-                        f"src/assetutilities/agent_os/agents/{module_name}/",
                         f"specs/modules/{module_name}/"
                     ],
                     "debounce": 5  # seconds

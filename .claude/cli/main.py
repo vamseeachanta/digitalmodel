@@ -8,7 +8,6 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from agent_os.commands.create_module_agent import CreateModuleAgentCommand
 from .interactive import InteractiveMode
 from .progress import ProgressIndicator
 
@@ -18,9 +17,7 @@ class AgentOSCLI:
     
     def __init__(self):
         """Initialize CLI."""
-        self.commands = {
-            'create-module-agent': CreateModuleAgentCommand,
-        }
+        self.commands = {}
         self.interactive_mode = InteractiveMode()
         self.progress = ProgressIndicator()
         
@@ -222,26 +219,8 @@ Examples:
         # Build command arguments for CreateModuleAgentCommand
         command_args = ['/create-module-agent'] + args
         
-        # Execute command with progress indication
-        try:
-            self.progress.start("Creating module agent")
-            
-            command = CreateModuleAgentCommand()
-            result = command.execute(command_args)
-            
-            self.progress.stop()
-            
-            if result.success:
-                print(f"✅ {result.message}")
-                return 0
-            else:
-                print(f"❌ {result.message}")
-                return 1
-                
-        except Exception as e:
-            self.progress.stop()
-            print(f"❌ Error executing command: {e}")
-            return 1
+        print("❌ create-module-agent is not available")
+        return 1
     
     def run(self, args: Optional[List[str]] = None) -> int:
         """Run CLI with given arguments.
@@ -303,26 +282,8 @@ Examples:
         if args.templates:
             command_args.extend(['--templates', args.templates])
         
-        # Execute command
-        try:
-            self.progress.start("Creating module agent")
-            
-            command = CreateModuleAgentCommand(base_dir=args.output_dir)
-            result = command.execute(command_args)
-            
-            self.progress.stop()
-            
-            if result.success:
-                print(f"✅ {result.message}")
-                return 0
-            else:
-                print(f"❌ {result.message}")
-                return 1
-                
-        except Exception as e:
-            self.progress.stop()
-            print(f"❌ Error executing command: {e}")
-            return 1
+        print("❌ create-module-agent is not available")
+        return 1
 
 
 def main_cli() -> int:
