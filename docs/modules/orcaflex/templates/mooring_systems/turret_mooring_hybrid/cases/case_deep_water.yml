@@ -1,3 +1,0 @@
-# Case: Deep Water Turret Mooring (600m)
-BaseFile: ../base/turret_mooring_base.yml
-IncludeFile: ../variations/deep_water_600m.yml

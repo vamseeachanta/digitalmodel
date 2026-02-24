@@ -1,5 +1,0 @@
-VesselTypes:
-  includefile: _04_vessel_type_crowley650_atb.yml
-
-Vessels:
-  includefile: _06_vessel_crowley650_atb.yml

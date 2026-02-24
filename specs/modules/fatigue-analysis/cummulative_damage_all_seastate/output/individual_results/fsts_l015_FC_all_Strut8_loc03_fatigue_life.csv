@@ -1,5 +1,0 @@
-fatigue_condition,occurrence_percent,damage_rate_annual,weighted_damage_rate,contribution_percent
-FC001,7.76,0.0,0.0,0.0
-FC002,6.977,0.0,0.0,0.0
-TOTAL,100.0,,0.0,100.0
-FATIGUE_LIFE_YEARS,,,,inf

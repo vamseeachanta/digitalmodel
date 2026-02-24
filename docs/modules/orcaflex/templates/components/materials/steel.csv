@@ -1,7 +1,0 @@
-MaterialID,MaterialName,Grade,YieldStrength,UltimateTensile,YoungsModulus,Density,PoissonRatio,ThermalExpansion,Description
-X65_STEEL,API 5L X65 Steel,X65,448.0,531.0,207000.0,7850.0,0.30,1.17e-5,Standard pipeline grade steel
-X70_STEEL,API 5L X70 Steel,X70,483.0,565.0,207000.0,7850.0,0.30,1.17e-5,High strength pipeline steel
-X80_STEEL,API 5L X80 Steel,X80,552.0,621.0,207000.0,7850.0,0.30,1.17e-5,Extra high strength steel
-STEEL_316L,Stainless Steel 316L,316L,170.0,485.0,193000.0,8000.0,0.30,1.60e-5,Corrosion resistant stainless
-STEEL_DUPLEX,Duplex Stainless 2205,2205,450.0,655.0,200000.0,7800.0,0.30,1.30e-5,High strength duplex stainless
-STEEL_SUPERDUPLEX,Super Duplex 2507,2507,550.0,800.0,200000.0,7800.0,0.30,1.30e-5,Super duplex for harsh environments

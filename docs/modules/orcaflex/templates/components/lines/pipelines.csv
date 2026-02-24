@@ -1,6 +1,0 @@
-PipelineID,PipelineName,OD,ID,WallThickness,Material,Mass,EI,EA,PoissonRatio,MaxTension,MinBendRadius,CoatingThickness,Description
-PIPE_16inch_X65,16-inch Pipeline X65,0.4064,0.3734,0.0165,X65_STEEL,145.2,6.85e6,1.85e9,0.3,4500.0,25.0,0.050,Standard 16-inch export pipeline
-PIPE_20inch_X70,20-inch Pipeline X70,0.508,0.476,0.016,X70_STEEL,175.8,12.5e6,2.45e9,0.3,5500.0,30.0,0.060,Large 20-inch X70 export line
-PIPE_12inch_X65,12-inch Pipeline X65,0.3239,0.2909,0.0165,X65_STEEL,115.8,3.52e6,1.21e9,0.3,3500.0,20.0,0.045,12-inch flowline
-PIPE_24inch_X70,24-inch Pipeline X70,0.610,0.574,0.018,X70_STEEL,236.5,23.8e6,3.85e9,0.3,7000.0,35.0,0.070,Extra large 24-inch trunk line
-PIPE_10inch_BUNDLE,10-inch Pipe-in-Pipe,0.2731,0.2461,0.0135,X65_STEEL,120.5,2.15e6,8.25e8,0.3,2800.0,18.0,0.150,Pipe-in-pipe insulated bundle

@@ -1,2 +1,0 @@
-OrcFxAPI not available
-Updating default values with contents in file 10moor_l1.yml

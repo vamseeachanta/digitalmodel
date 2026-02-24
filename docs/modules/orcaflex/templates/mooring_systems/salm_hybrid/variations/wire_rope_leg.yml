@@ -1,9 +1,0 @@
-# Variation: Wire Rope Anchor Leg
-# Uses 76mm wire rope instead of chain for lighter weight
-# Note: Adds new LineType, reuses existing SALM_Chain name
-
-LineTypes:
-  # Override chain with wire rope properties (same name)
-  - Name: SALM_Chain
-    Category: General
-    IncludeFile: ../../../../library/line_types/wire_rope_76mm.yml

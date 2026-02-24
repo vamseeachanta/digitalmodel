@@ -1,1 +1,0 @@
-"""Catenary riser module tests."""

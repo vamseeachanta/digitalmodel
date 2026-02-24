@@ -1,52 +1,71 @@
 # Module: structural
 
+**Path**: `src/digitalmodel/structural/`
+**Status**: active
+**Last updated**: 2026-02-24
+
 ## Purpose
-Provides offshore structural strength, fatigue, and pipe capacity analysis
-covering jacket/topside joint and member checks, S-N curve fatigue damage
-accumulation, wall thickness sizing, and pipe cross-section stress calculations.
 
-## Key Classes / Functions
-- `FatigueAnalysis` (`fatigue/analysis.py`): Spectral and time-domain fatigue
-  damage accumulation using S-N curves and Miner's rule
-- `DamageAccumulation` (`fatigue/damage_accumulation.py`): Rainflow cycle
-  counting and partial damage summation per load case
-- `RainflowCounter` (`fatigue/rainflow.py`): ASTM E1049 rainflow counting
-  algorithm for stress time-series
-- `SNcurves` (`fatigue/sn_curves.py`): DNV-GL and BS7608 S-N curve definitions
-  with environment (air/seawater with CP) and weld class selection
-- `ParametricSweep` (`fatigue/parametric_sweep.py`): Multi-variable parametric
-  fatigue sensitivity studies
-- `JointChecks` (`jacket_topside/joint_checks.py`): API RP 2A tubular joint
-  unity-check calculations (K, T, Y, X joints)
-- `MemberChecks` (`jacket_topside/member_checks.py`): Combined axial, bending,
-  and shear member UC calculations per API RP 2A LRFD
-- `WallThickness` (`analysis/wall_thickness.py`): Pressure-containment wall
-  thickness per DNV-ST-F101, ISO 13623, and ASME B31.8
-- `PipeCapacity` (`pipe_capacity/PipeCapacity.py`): Combined loading capacity
-  (burst, collapse, axial, bending) for subsea pipes
-- `PipeSizing` (`pipe_capacity/PipeSizing.py`): Automated pipe size selection
-  given operating loads and code requirements
-- `VMStress` (`stress/vm_stress.py`): Von Mises equivalent stress from
-  six-component stress tensors
-- `StressStrain` (`stress/stress_strain.py`): Stress-strain curve generation
-  and material property lookups
-- `NonlinearAnalysis` (`stress/nonlinear.py`): Iterative plastic hinge and
-  nonlinear material response
+Offshore structural strength, fatigue, and pipe capacity analysis covering
+jacket/topside joint and member checks, S-N curve fatigue damage accumulation,
+wall-thickness pressure sizing, pipe cross-section stress, and resilience
+lifecycle planning for offshore facilities.
 
-## Data Sources
-- API RP 2A (LRFD/WSD): embedded code constants and interaction equations
-- DNV-GL RP-C203 / DNV-ST-F101: S-N curves and wall thickness tables
-- ISO 13623 / ASME B31.8: pipeline design pressure tables
-- Material databases: YAML config files at `infrastructure/base_configs/`
+## Key Packages
 
-## Integration Points
-- **Depends on**: `infrastructure.base_solvers` (BaseSolver, SolverStatus),
-  `infrastructure.config`, `infrastructure.calculations`
-- **Used by**: `subsea.pipeline` (pipe capacity checks),
-  `subsea.catenary_riser` (riser fatigue),
-  `field_development` (jacket design),
-  `asset_integrity` (in-service fatigue tracking),
-  `workflows` (multi-domain orchestration)
+| Package | Responsibility | Key Classes/Functions |
+|---------|---------------|-----------------------|
+| `fatigue/` | Spectral and time-domain fatigue | `FatigueAnalysis`, `DamageAccumulation`, `RainflowCounter`, `FrequencyDomainFatigue`, `ParametricSweep`, `DesignCodeReport`, `SNComparisonReport`; `skill.py` for orchestration |
+| `fatigue_apps/` | Applied fatigue workflow tooling | `FatigueDamageCalculator`, `IntegratedProcessor`, `FileNamer`; `INPUT_FILE_STRUCTURE.md` |
+| `analysis/` | Wall-thickness pressure design | `WallThickness` (DNV-ST-F101, ISO 13623, ASME B31.8); `WallThicknessComparison`, `WallThicknessParametric`, multi-table report generator; `cli.py` |
+| `pipe_capacity/` | Combined pipe loading capacity | `PipeCapacity`, `PipeSizing`; `common/` and `custom/` sub-dirs for code-specific extensions |
+| `pipe_cross_section/` | Pipe cross-section properties | (referenced from `infrastructure/common/pipe_properties.py`; stub in structural) |
+| `stress/` | Stress state and nonlinear material | `VMStress`, `StressStrain`, `NonlinearAnalysis`; `README.md` |
+| `jacket_topside/` | Jacket and topside checks | `JointChecks` (API RP 2A K/T/Y/X joints), `MemberChecks` (axial/bending/shear UC) |
+| `offshore_resilience/` | Facility lifecycle and resilience | `StructuralHealth`, `LifecyclePlanning`, `MinimumFacility`, `InstallationChecklist`, `_SensorTemplates` |
+| `structural_analysis/` | General FEM capacity | `capacity.py`, `buckling.py`, `StressCalculator`; `cli.py`, `models.py`; `legacy/` shim |
+| `parametric_coordinator.py` | Multi-domain parametric run orchestration | `ParametricCoordinator` |
+| `parametric_report.py` | Report aggregation for parametric studies | `ParametricReport` |
 
-## Status
-Active
+## Inputs / Outputs
+
+- **Inputs**: load case YAML/CSV files, stress time-series CSV, material
+  property YAML (from `infrastructure/base_configs/`), API/DNV code constants
+  (embedded), project-specific config overrides
+- **Outputs**: unity-check tables (CSV/HTML), fatigue life summaries, wall
+  thickness selection reports, parametric sensitivity plots, S-N comparison
+  reports
+
+## External Dependencies
+
+- `infrastructure.base_solvers` (`BaseSolver`, `SolverStatus`)
+- `infrastructure.config` (`ConfigRegistry`, `Settings`)
+- `infrastructure.calculations` (math utilities, interpolation)
+- `numpy`, `scipy` — numerical solvers and rainflow counting
+- `pandas` / `polars` — tabular result handling
+- API RP 2A (LRFD/WSD) — embedded interaction equations
+- DNV-GL RP-C203 / DNV-ST-F101 — S-N curves and wall thickness tables
+- ISO 13623 / ASME B31.8 — pipeline pressure design tables
+- BS 7608 — fatigue S-N curves (weld classification)
+
+## Known Gaps / Open Work
+
+- `plate_capacity/` lives in `infrastructure/domains/platecapacity/` as legacy
+  scripts (`PlateBuckling_212.py`, `plateBucklingCal_*.py`) — target move to
+  `structural/` in WRK-415 migration
+- `calculations/plate_buckling.py` in `infrastructure/` duplicates
+  `infrastructure/common/plate_buckling.py`; both should consolidate here
+  under `structural/analysis/`
+- `structural_analysis/legacy/` is a stub directory — no files beyond
+  `__init__.py`; migration from `infrastructure/common/` pending
+- `pipe_cross_section/` is referenced from `infrastructure/common/` but the
+  structural sub-package is a thin stub; full implementation lives in
+  `infrastructure/common/pipe_properties.py`
+- `fatigue_apps/` has no dedicated unit tests — only validated through
+  integration tests in `fatigue_validation/` sub-dir
+
+## Related WRK Items
+
+- WRK-415: Infrastructure refactor — `plate_capacity` migration to structural
+  is a Phase 2 deliverable
+- WRK-416: Architecture spec authoring (this file)

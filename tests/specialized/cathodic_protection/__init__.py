@@ -1,1 +1,0 @@
-"""Cathodic protection module tests."""

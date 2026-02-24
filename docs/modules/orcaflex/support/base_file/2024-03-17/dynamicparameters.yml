@@ -1,5 +1,0 @@
-﻿IncludeFile: staticmodel.yml
-
-General:
-  StaticsMinDamping: 3
-  StaticsMaxDamping: 30

@@ -1,7 +1,0 @@
-SpectrumID,SpectrumName,SpectrumType,Gamma,Sigma1,Sigma2,Peakedness,Description
-JONSWAP_DEFAULT,JONSWAP Default,JONSWAP,3.3,0.07,0.09,3.3,Standard JONSWAP with gamma=3.3
-JONSWAP_PEAKED,JONSWAP Peaked,JONSWAP,5.0,0.07,0.09,3.3,Peaked JONSWAP for swell-dominated
-JONSWAP_BROAD,JONSWAP Broad,JONSWAP,1.0,0.07,0.09,3.3,Broad spectrum for wind seas
-PM_SPECTRUM,Pierson-Moskowitz,PM,0.0,0.0,0.0,0.0,Fully developed sea state
-TORSETHAUGEN,Torsethaugen Double Peak,TORSETHAUGEN,0.0,0.0,0.0,0.0,Combined wind sea and swell
-OCHI_HUBBLE,Ochi-Hubble 6-parameter,OCHI,0.0,0.0,0.0,0.0,Six-parameter spectrum for complex seas

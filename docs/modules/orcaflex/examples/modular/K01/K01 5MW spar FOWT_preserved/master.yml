@@ -1,6 +1,0 @@
-%YAML 1.1
-# Type: Model
-# Program: OrcaFlex 11.5
----
-# Include files
-- includefile: includes/01_general.yml

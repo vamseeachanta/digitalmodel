@@ -1,5 +1,0 @@
-# conda environments:
-#
-pipeUtilization          C:\ProgramData\Anaconda3\envs\pipeUtilization
-root                  *  C:\ProgramData\Anaconda3
-

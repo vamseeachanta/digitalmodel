@@ -1,8 +1,0 @@
-Vessels:
-  FST2:
-    IncludedInStatics: 6 DOF
-  FST1:
-    IncludedInStatics: 6 DOF
-  LNGC:
-    IncludedInStatics: 6 DOF
-

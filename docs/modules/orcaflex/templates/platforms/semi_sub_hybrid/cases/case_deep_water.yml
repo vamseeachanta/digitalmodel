@@ -1,3 +1,0 @@
-# Case: Deep Water Semi-Submersible (1500m)
-BaseFile: ../base/semi_sub_base.yml
-IncludeFile: ../variations/deep_water_1500m.yml

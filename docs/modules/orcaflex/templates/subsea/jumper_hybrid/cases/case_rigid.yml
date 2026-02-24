@@ -1,4 +1,0 @@
-# Case: Rigid Steel Pipe Jumper
-BaseFile: ../base/jumper_base.yml
-IncludeFile: ../variations/rigid_jumper.yml
-

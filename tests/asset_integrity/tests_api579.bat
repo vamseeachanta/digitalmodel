@@ -1,4 +1,0 @@
-python src\asset_integrity\tests\test_pyintegrity_gml_lml_api1111_1.py
-python src\asset_integrity\tests\test_pyintegrity_gml_lml_b314_1.py
-python src\asset_integrity\tests\test_pyintegrity_gml_lml_b314_2.py
-python src\asset_integrity\tests\test_pyintegrity_gml_lml_b318_1.py

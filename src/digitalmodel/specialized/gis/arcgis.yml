@@ -1,9 +1,0 @@
-name: arcgis
-channels:
-  - defaults
-#  - esri arcgis
-dependencies:
-  - python=3.5
-  - pip:
-    - arcgis
-    

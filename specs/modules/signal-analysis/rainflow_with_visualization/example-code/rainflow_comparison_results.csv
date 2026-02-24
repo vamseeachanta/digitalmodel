@@ -1,5 +1,0 @@
-Signal,Algorithm,Total_Cycles,Full_Cycles,Half_Cycles,Expected_Range,Actual_Range
-Pure Sine (10 cycles),Custom,20.0,19,2,20.0,19.99957970343461
-Pure Sine (10 cycles),Library,10.5,9,3,20.0,19.99997527657195
-Variable Amplitude Sine,Custom,40.0,39,2,Variable,0.1-17.9
-Variable Amplitude Sine,Library,20.5,9,23,Variable,2.0-18.0

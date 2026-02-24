@@ -1,9 +1,0 @@
-Load Case ,environment_config_basename,FST1 ,FST2 ,LNGC-Partner (Small) ,LNCG-Excalibur (Large) ,Mooring Status ,Environment Condition ,Water Level ,Headings ,Mooring - Location ,Mooring - Component ,Wind Dir [deg],Vw [m/s],Wave Dir [deg],Hs [m],Tp [s],Hs [m],Tp [s],Wave Dir (fr. TN) [deg],Wave Dir (ship) [deg],Vw [m/s],Wind Dir (ship) [deg],Vc [m/s],Curr Dir (ship) [deg],env reference,config reference
-F001,fsts_l015_mwl_wave01,Light,Light,-,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,-,-,45,0.5,2.5,-,-,-,-,-,-,-,-,wave01,fsts_l015_mwl_
-F019,fsts_l095_mwl_wave01,Full,Full,-,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,-,-,45,0.5,2.5,-,-,-,-,-,-,-,-,wave01,fsts_l095_mwl_
-F037,fsts_l015_mwl_wind01,Light,Light,-,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,0,10,-,-,-,-,-,-,-,-,-,-,-,wind01,fsts_l015_mwl_
-F053,fsts_l015_mwl_wind01,Full,Full,-,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,0,10,-,-,-,-,-,-,-,-,-,-,-,wind01,fsts_l015_mwl_
-F069,fsts_l015_125km3_l100_pb_mwl_wave01,Light,Light,Full,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,-,-,45,0.5,2.5,-,-,-,-,-,-,-,-,wave01,fsts_l015_125km3_l100_pb_mwl_
-F087,fsts_l095_125km3_l100_pb_mwl_wave01,Full,Full,Ballast,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,-,-,45,0.5,2.5,-,-,-,-,-,-,-,-,wave01,fsts_l095_125km3_l100_pb_mwl_
-F105,fsts_l015_125km3_l100_pb_mwl_wind01,Light,Light,Full,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,0,10,-,-,-,-,-,-,-,-,-,-,-,wind01,fsts_l015_125km3_l100_pb_mwl_
-F121,fsts_l095_125km3_l100_pb_mwl_wind01,Full,Full,Ballast,-,Intact,Scatter Diagrams,MWL,See Columns V-Z,-,-,0,10,-,-,-,-,-,-,-,-,-,-,-,wind01,fsts_l095_125km3_l100_pb_mwl_

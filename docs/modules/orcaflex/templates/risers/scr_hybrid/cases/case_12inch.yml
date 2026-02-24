@@ -1,4 +1,0 @@
-# Case: 12-inch SCR (1200m)
-# Combines base model with 12-inch riser variation
-BaseFile: ../base/scr_base.yml
-IncludeFile: ../variations/scr_12inch.yml

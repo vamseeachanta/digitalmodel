@@ -1,7 +1,0 @@
-BaseFile: SZ.dat
-Environment: 
-  WaveDirection: 165
-  WaveGamma: 1.5
-  WaveTp: 9
-  WaveHs: 2.5
-  WaveSeed: 42864

@@ -1,52 +1,66 @@
 # Module: subsea
 
+**Path**: `src/digitalmodel/subsea/`
+**Status**: active
+**Last updated**: 2026-02-24
+
 ## Purpose
-Provides analysis for subsea pipeline systems, flexible risers, mooring systems,
-and VIV (vortex-induced vibration) screening, covering catenary geometry,
-lateral/upheaval buckling, pressure design, and fatigue of tubular members.
 
-## Key Classes / Functions
-- `CatenaryDesigner` (`catenary/designer.py`): Catenary equation solver for
-  mooring lines and flexible risers; computes tension, angle, and sag
-- `CatenaryModel` (`catenary/models.py`): Dataclass for catenary geometry and
-  material properties with validation
-- `OrcaFlexGenerator` (`catenary/orcaflex_generator.py`): Exports catenary
-  configurations to OrcaFlex `.dat` input files
-- `MooringAnalysis` (`mooring_analysis/`): Mooring system design checks
-  including line pretension, offset limits, and quasi-static load cases
-- `PipelinePressureDNV` (`pipeline/pipeline_pressure_dnv.py`): Pressure
-  containment and stability checks per DNV-ST-F101
-- `LateralBuckling` (`pipeline/lateral_buckling.py`): Lateral buckling
-  assessment following DNV-RP-F110 effective axial force method
-- `UpheavalBuckling` (`pipeline/upheaval_buckling.py`): Upheaval buckling
-  resistance checks with cover/trench burial scenarios
-- `ThermalBuckling` (`pipeline/thermal_buckling.py`): Temperature-driven axial
-  expansion and buckling interaction
-- `PressureLoss` (`pipeline/pressure_loss.py`): Steady-state hydraulic
-  pressure drop using Darcy-Weisbach and Colebrook-White
-- `VIVAnalysis` (`viv_analysis/viv_analysis.py`): Vortex-induced vibration
-  response amplitude and fatigue life per DNV-RP-F105
-- `VIVScreening` (`viv_analysis/screening.py`): Onset velocity and reduced
-  velocity screening for current-dominated regimes
-- `VortexShedding` (`viv_analysis/vortex_shedding.py`): Strouhal number and
-  lock-in frequency calculations
-- `CatenaryRiser` (`catenary_riser/`): Full flexible riser analysis combining
-  catenary geometry with fatigue damage accumulation
-- `VerticalRiser` (`vertical_riser/`): Top-tensioned riser stress and fatigue
+Subsea engineering analysis covering catenary geometry, flexible and vertical
+risers, mooring system design, pipeline pressure containment and buckling, and
+VIV (vortex-induced vibration) fatigue screening. Integrates with OrcaFlex for
+full nonlinear time-domain analysis.
 
-## Data Sources
-- DNV-ST-F101 / DNV-RP-F110 / DNV-RP-F105: embedded code tables
-- OrcaFlex: `.dat`, `.sim` files (external solver, local run)
-- Metocean current profiles: CSV or YAML inputs
-- Soil data: YAML/CSV for pipeline on-bottom stability
+## Key Packages
 
-## Integration Points
-- **Depends on**: `structural.pipe_capacity`, `structural.fatigue`,
-  `hydrodynamics` (wave loading), `infrastructure.base_solvers`,
-  `infrastructure.config`
-- **Used by**: `field_development` (pipeline routing and FEED sizing),
-  `asset_integrity` (riser inspection planning),
-  `workflows` (coupled riser-mooring analysis)
+| Package | Responsibility | Key Classes/Functions |
+|---------|---------------|-----------------------|
+| `catenary/` | Catenary equation solver and OrcaFlex export | `CatenaryDesigner`, `CatenaryModel`, `OrcaFlexGenerator`; `simple_catenary.py`, `lazy_wave.py`, `effective_weight.py`; `cli.py`; `legacy/` shim; `README.md` |
+| `catenary_riser/` | Flexible riser combined analysis | `CatenaryRiser`; integrates catenary geometry with fatigue from `structural.fatigue` |
+| `mooring_analysis/` | Quasi-static mooring system design | `MooringAnalysis`; line pretension, offset limits, load-case checks; `cli.py`, `models.py`, `fatigue.py`, `frequency_calculator.py`, `screening.py`; `README.md` |
+| `pipeline/` | Pipeline pressure, buckling, hydraulics | `PipelinePressureDNV`, `LateralBuckling`, `PressureLoss`, `PipeSizing`; `buckling_common.py`, `pipeline_pressure_workflow.py`; `pipeline.py` (entry), `cli.py` |
+| `viv_analysis/` | VIV response and fatigue screening | `VIVAnalysis`, `VIVScreening`, `viv_analysis_components.py`; `models.py`, `fatigue.py`, `frequency_calculator.py`; `viv_analysis_legacy.py`; `README.md` |
+| `vertical_riser/` | Top-tensioned riser stress and fatigue | `VerticalRiser` (`vertical_riser.py`), `vertical_riser_components.py`; `legacy/` shim |
 
-## Status
-Active
+## Inputs / Outputs
+
+- **Inputs**: metocean current profiles (CSV/YAML), pipeline route geometry
+  (YAML/CSV), soil data (YAML/CSV for on-bottom stability), OrcaFlex `.dat`
+  templates, mooring line material specs (YAML), project config overrides
+- **Outputs**: catenary tension/angle/sag tables, OrcaFlex `.dat` input files,
+  pipeline wall-thickness and buckling assessment reports, VIV onset screening
+  tables, fatigue life summaries (CSV/HTML), mooring offset envelopes
+
+## External Dependencies
+
+- `structural.pipe_capacity` (`PipeCapacity`, `PipeSizing`)
+- `structural.fatigue` (`FatigueAnalysis`, `DamageAccumulation`)
+- `hydrodynamics` (wave loading spectra for riser fatigue)
+- `infrastructure.base_solvers` (`BaseSolver`, `SolverStatus`)
+- `infrastructure.config` (`ConfigRegistry`, `Settings`)
+- OrcaFlex — external licensed time-domain solver
+- DNV-ST-F101 — pressure containment tables (embedded)
+- DNV-RP-F110 — lateral/upheaval buckling method (embedded)
+- DNV-RP-F105 — VIV response amplitude and fatigue (embedded)
+- `numpy`, `scipy` — structural and hydrodynamic calculations
+
+## Known Gaps / Open Work
+
+- `vertical_riser/legacy/` is a stub directory containing only `__init__.py`;
+  legacy content has not been migrated
+- `catenary_riser/` has no dedicated test suite; coverage comes only via
+  integration path through catenary and structural fatigue tests
+- `mooring_analysis/` fatigue and frequency-calculator modules (`fatigue.py`,
+  `frequency_calculator.py`) lack unit tests
+- Upheaval buckling and thermal buckling sub-modules referenced in the old spec
+  (`pipeline/upheaval_buckling.py`, `thermal_buckling.py`) were not found on
+  disk — either not yet implemented or merged into `lateral_buckling.py`
+- No VIV time-domain (SHEAR7 / VIVA) integration; `infrastructure/common/`
+  `shear7_model_components.py` is a candidate for migration here (WRK-415)
+
+## Related WRK Items
+
+- WRK-415: Infrastructure refactor — `shear7_model_components.py` and
+  `viv_analysis_components.py` from `infrastructure/common/` are candidates
+  for consolidation into `subsea/viv_analysis/`
+- WRK-416: Architecture spec authoring (this file)

@@ -1,7 +1,0 @@
-UmbilicalID,UmbilicalName,OD,Mass,MBR,EI,EA,MaxTension,NumHydraulic,NumElectrical,NumFiber,Description
-UMB_STEEL_TUBE,Steel Tube Umbilical,0.125,28.5,1.5,0.28e6,3.85e8,800.0,4,6,2,Standard steel tube umbilical
-UMB_FLEX_DYNAMIC,Dynamic Flexible Umbilical,0.150,35.2,2.0,0.42e6,4.25e8,1000.0,6,8,4,Heavy duty dynamic umbilical
-UMB_STATIC,Static Umbilical,0.100,18.5,1.2,0.18e6,2.85e8,600.0,2,4,1,Static umbilical for fixed connections
-UMB_BUNDLE_LARGE,Large Bundle Umbilical,0.180,52.8,2.5,0.68e6,5.85e8,1500.0,8,12,6,Large integrated bundle system
-UMB_HYBRID,Hybrid Power Umbilical,0.140,32.5,1.8,0.35e6,4.05e8,900.0,4,10,4,Hybrid with high power capacity
-UMB_FIBER_ONLY,Fiber Optic Umbilical,0.080,12.5,0.8,0.12e6,2.15e8,400.0,0,2,8,Fiber optic communication only

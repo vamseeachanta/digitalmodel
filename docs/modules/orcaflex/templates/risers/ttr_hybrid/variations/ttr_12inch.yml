@@ -1,8 +1,0 @@
-# Variation: 12-inch TTR
-# Uses larger diameter pipe for higher production capacity
-
-LineTypes:
-  # 12-inch pipe (using SCR line type as base)
-  - Name: TTR_Pipe
-    Category: General
-    IncludeFile: ../../../../library/line_types/scr_12inch_x65.yml

@@ -1,9 +1,0 @@
-General:
-  StaticsMaxIterations: 400
-  StaticsTolerance: 1e-6
-  StaticsMinDamping: 5
-  ImplicitUseVariableTimeStep: Yes
-  ImplicitVariableMaxTimeStep: 0.1
-  ImplicitVariableMaxNumOfIterations: 20
-  StageDuration[1]: 10
-  StageDuration[2]: 200

@@ -1,5 +1,0 @@
-MaterialID,MaterialName,Grade,YieldStrength,UltimateTensile,YoungsModulus,Density,PoissonRatio,ThermalExpansion,Description
-TITANIUM_GR2,Titanium Grade 2,GR2,275.0,345.0,103000.0,4510.0,0.34,8.60e-6,Commercial pure titanium
-TITANIUM_GR5,Titanium Grade 5 (Ti-6Al-4V),GR5,880.0,950.0,113800.0,4430.0,0.34,8.60e-6,Ti-6Al-4V aerospace grade
-TITANIUM_GR7,Titanium Grade 7,GR7,275.0,345.0,103000.0,4510.0,0.34,8.60e-6,Pd-enhanced corrosion resistance
-TITANIUM_GR23,Titanium Grade 23 (Ti-6Al-4V ELI),GR23,760.0,860.0,113800.0,4430.0,0.34,8.60e-6,Extra low interstitial grade

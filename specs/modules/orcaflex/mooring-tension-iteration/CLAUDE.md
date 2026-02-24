@@ -1,1 +1,0 @@
-- ensure /execute-tasks always uses the repo uv environment for executing all tasks.

@@ -1,3 +1,0 @@
-# Case: 12-Leg Spread Mooring
-BaseFile: ../base/spread_mooring_base.yml
-IncludeFile: ../variations/twelve_leg.yml

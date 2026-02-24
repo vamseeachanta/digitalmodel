@@ -1,5 +1,0 @@
-CALL python APISTD2RD.py 10_CA50.yml
-CALL python APISTD2RD.py 11_CA50.yml
-CALL python APISTD2RD.py 12_CA50.yml
-CALL python APISTD2RD.py 14_CA50.yml
-CALL python APISTD2RD.py 16_CA50.yml

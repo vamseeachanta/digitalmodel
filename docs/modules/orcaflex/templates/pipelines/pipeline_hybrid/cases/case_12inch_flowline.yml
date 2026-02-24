@@ -1,3 +1,0 @@
-# Case: 12-inch Flowline
-BaseFile: ../base/pipeline_base.yml
-IncludeFile: ../variations/pipe_12inch_flowline.yml

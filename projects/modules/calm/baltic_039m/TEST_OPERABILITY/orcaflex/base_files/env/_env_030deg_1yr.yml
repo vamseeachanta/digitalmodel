@@ -1,4 +1,0 @@
-Environment:
-  - includefile: ../base_files/env/waves_030deg_1yr.yml
-  - includefile: ../base_files/env/current_030deg_1yr.yml
-  - includefile: ../base_files/env/wind_030deg_1yr.yml

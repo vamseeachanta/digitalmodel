@@ -1,5 +1,0 @@
-VesselID,VesselName,LOA,Breadth,Depth,Draught,Displacement,LCG,VCG,WindArea,CurrentArea,MoonpoolDiameter,DrillDepthCapacity,Description
-DS_DP3_7GEN,7th Gen DP3 Drillship,228.0,42.0,25.0,12.0,90000.0,0.0,8.0,5000.0,4000.0,10.0,12000.0,Ultra-deepwater DP3 drillship
-DS_DP3_6GEN,6th Gen DP3 Drillship,220.0,40.0,24.0,11.5,85000.0,0.0,7.8,4800.0,3800.0,9.0,10000.0,Deepwater DP3 drillship
-DS_DP2,DP2 Drillship,200.0,38.0,22.0,11.0,75000.0,0.0,7.5,4500.0,3500.0,8.0,8000.0,Standard DP2 drillship
-DS_DUAL_DERRICK,Dual Derrick Drillship,235.0,43.0,26.0,12.5,95000.0,0.0,8.2,5200.0,4200.0,10.5,12000.0,High efficiency dual derrick system

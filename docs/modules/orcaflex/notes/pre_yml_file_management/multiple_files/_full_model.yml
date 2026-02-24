@@ -1,4 +1,0 @@
-﻿- IncludeFile: staticmodel.yml
-- IncludeFile: dynamicparameters_only.yml
-- IncludeFile: water_depth_500m.yml
-- IncludeFile: water_depth_200m.yml

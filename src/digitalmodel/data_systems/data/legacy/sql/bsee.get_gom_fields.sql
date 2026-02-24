@@ -1,1 +1,0 @@
-select distinct "Field NickName" from bsee.output_field_summary
