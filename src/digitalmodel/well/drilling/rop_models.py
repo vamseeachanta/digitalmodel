@@ -94,8 +94,6 @@ class BourgoineYoungROP:
             raise ValueError("wob_klb must be >= 0")
         if rpm < 0.0:
             raise ValueError("rpm must be >= 0")
-        if bit_dia_in <= 0.0:
-            raise ValueError("bit_dia_in must be > 0")
         if not 0.0 <= bit_wear <= 1.0:
             raise ValueError("bit_wear must be in [0, 1]")
 
@@ -214,8 +212,6 @@ class WarrenROP:
         """
         if wob_klb < 0.0:
             raise ValueError("wob_klb must be >= 0")
-        if rpm < 0.0:
-            raise ValueError("rpm must be >= 0")
         if bit_dia_in <= 0.0:
             raise ValueError("bit_dia_in must be > 0")
 
