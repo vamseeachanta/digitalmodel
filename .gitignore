@@ -38,6 +38,7 @@ tmpclaude-*-cwd
 /*.yml
 /*.yaml
 !docker-compose.yml
+!.pre-commit-config.yaml
 /*.json
 !package.json
 /*.ini
@@ -262,6 +263,9 @@ hive-mind-prompt-*.txt
 # Project-Specific: OrcaFlex/OrcaWave
 # ==========================================
 
+# Projects directory (large cached simulation project files)
+projects/
+
 # Simulation files in projects
 projects/**/*.sim
 
@@ -272,8 +276,8 @@ docs/**/*.sim
 docs/**/*.owr
 
 # Specific large YAML files
-docs/modules/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.yml
-docs/modules/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.yml
+docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.yml
+docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.yml
 
 # ==========================================
 # Project-Specific: AQWA Test Data
@@ -325,7 +329,16 @@ benchmarks/results/
 # Wind binary time series
 **/*.bts
 
-# Benchmark scratch directory (canonical results live in docs/modules/)
+# Benchmark scratch directory (canonical results live in docs/domains/)
 benchmark_output/
 # OrcaFlex simulation files (large binary)
-docs/modules/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim
+docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim
+# .claude-flow state files — ecosystem removed 2026-02-18
+.claude-flow/
+.hive-mind/
+.swarm/
+
+# Windows-path directory artifacts (cross-platform path bug — WRK-364)
+# Matches dirs like: D:\workspace-hub\... created on Windows and synced to Linux
+[A-Z]:\*
+tests/outputs/
