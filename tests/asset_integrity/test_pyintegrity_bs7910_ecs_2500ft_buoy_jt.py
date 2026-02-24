@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ..common.ymlInput import ymlInput
+from digitalmodel.asset_integrity.common.ymlInput import ymlInput
 
 
 def test_fracture_mechanics_fixture_is_loadable():

@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from ..core.converter import DocumentConverter
+from digitalmodel.workflows.mcp_server.standalone.markitdown.core.converter import DocumentConverter
 
 
 class TestDocumentConverter:

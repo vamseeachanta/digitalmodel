@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
 # Import from parent module
-from ..api.orcawave_com import OrcaWaveAPI, AnalysisType, VesselType, MeshStatistics
+from digitalmodel.workflows.mcp_server.orcawave.api.orcawave_com import OrcaWaveAPI, AnalysisType, VesselType, MeshStatistics
 
 
 class TestOrcaWaveConnection(unittest.TestCase):

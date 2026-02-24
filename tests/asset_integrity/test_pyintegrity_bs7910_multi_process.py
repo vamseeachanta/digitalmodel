@@ -4,8 +4,8 @@ import deepdiff
 import os
 import sys
 
-from ..engine import engine
-from ..common.yml_utilities import ymlInput
+from digitalmodel.asset_integrity.engine import engine
+from digitalmodel.asset_integrity.common.yml_utilities import ymlInput
 
 
 def run_bs7910(input_file, expected_result={}):
