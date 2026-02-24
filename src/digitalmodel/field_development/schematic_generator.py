@@ -43,6 +43,21 @@ from .schematics.renderer import render_figure
 _VALID_FORMATS = {"svg", "png"}
 _VALID_HOST_TYPES = {"FPSO", "TLP", "SPAR", "fixed"}
 
+# ---------------------------------------------------------------------------
+# Example configs (usable as templates or in tests)
+# ---------------------------------------------------------------------------
+
+#: Solveig Phase 2 archetype — subsea tieback, FPSO host, 120 m water depth
+SOLVEIG_PHASE2_CONFIG: dict = {
+    "name": "Solveig Phase 2",
+    "water_depth_m": 120,
+    "n_templates": 3,
+    "n_wells": 4,
+    "host_type": "FPSO",
+    "flowline_length_km": 12.0,
+    "output_format": "svg",
+}
+
 
 def generate_field_schematic(config: dict) -> str:
     """Generate a field development schematic SVG or PNG from field parameters.
