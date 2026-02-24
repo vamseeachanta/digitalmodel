@@ -19,7 +19,7 @@ def re_extract_all():
     downloader = EnhancedOrcaflexDownloader()
     
     # Get all downloaded ZIP files
-    zip_dir = Path("docs/domains/orcaflex/examples/downloads")
+    zip_dir = Path("docs/modules/orcaflex/examples/downloads")
     zip_files = list(zip_dir.glob("*.zip"))
     
     logger.info(f"Found {len(zip_files)} ZIP files to re-extract")
@@ -34,7 +34,7 @@ def re_extract_all():
         category_code = zip_path.name[:3] if zip_path.name[0] == 'A' else 'Unknown'
         
         # Create category directory
-        category_dir = Path("docs/domains/orcaflex/examples/raw") / category_code
+        category_dir = Path("docs/modules/orcaflex/examples/raw") / category_code
         category_dir.mkdir(parents=True, exist_ok=True)
         
         try:
@@ -89,7 +89,7 @@ def re_extract_all():
     logger.info(f"Total OrcaFlex files extracted: {total_extracted}")
     
     # List what we have now
-    raw_dir = Path("docs/domains/orcaflex/examples/raw")
+    raw_dir = Path("docs/modules/orcaflex/examples/raw")
     for category_dir in sorted(raw_dir.iterdir()):
         if category_dir.is_dir():
             files = list(category_dir.glob("*.sim")) + list(category_dir.glob("*.dat"))

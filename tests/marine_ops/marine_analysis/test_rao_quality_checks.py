@@ -432,7 +432,7 @@ class TestIntegrationWithRealData:
     def real_semi_rao_path(self):
         """Path to real semi-submersible RAO file."""
         path = Path(__file__).parent.parent.parent.parent / \
-               "docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml"
+               "docs/modules/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml"
         if path.exists():
             return path
         pytest.skip("Real RAO data file not found")
@@ -441,7 +441,7 @@ class TestIntegrationWithRealData:
     def real_ship_rao_path(self):
         """Path to real ship RAO file."""
         path = Path(__file__).parent.parent.parent.parent / \
-               "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml"
+               "docs/modules/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml"
         if path.exists():
             return path
         pytest.skip("Real ship RAO data file not found")

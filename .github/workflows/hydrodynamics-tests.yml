@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/hydrodynamics/**'
-      - 'tests/domains/hydrodynamics/**'
+      - 'tests/modules/hydrodynamics/**'
       - '.github/workflows/hydrodynamics-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/hydrodynamics/**'
-      - 'tests/domains/hydrodynamics/**'
+      - 'tests/modules/hydrodynamics/**'
   workflow_dispatch:
 
 jobs:
@@ -42,11 +42,11 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest tests/domains/hydrodynamics/test_hydrodynamics_unit.py -v --cov=src/digitalmodel/modules/hydrodynamics --cov-report=term-missing --cov-report=xml
+        pytest tests/modules/hydrodynamics/test_hydrodynamics_unit.py -v --cov=src/digitalmodel/modules/hydrodynamics --cov-report=term-missing --cov-report=xml
 
     - name: Run CLI tests
       run: |
-        pytest tests/domains/hydrodynamics/test_hydrodynamics_cli.py -v
+        pytest tests/modules/hydrodynamics/test_hydrodynamics_cli.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -81,11 +81,11 @@ jobs:
 
     - name: Run black
       run: |
-        black --check src/digitalmodel/modules/hydrodynamics tests/domains/hydrodynamics
+        black --check src/digitalmodel/modules/hydrodynamics tests/modules/hydrodynamics
 
     - name: Run isort
       run: |
-        isort --check-only src/digitalmodel/modules/hydrodynamics tests/domains/hydrodynamics
+        isort --check-only src/digitalmodel/modules/hydrodynamics tests/modules/hydrodynamics
 
   cli-validation:
     name: CLI Command Validation

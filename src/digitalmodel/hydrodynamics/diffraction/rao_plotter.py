@@ -54,13 +54,6 @@ class RAOPlotter:
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._x_axis = x_axis
-        # Auto-detect axis orientation: when headings outnumber frequencies,
-        # plot RAO vs heading (x-axis) with period as the legend. This prevents
-        # invisible single-point plots when nfreqs == 1 but nheadings is large.
-        first_comp = results.raos.get_component(DOF_ORDER[0])
-        self._heading_x_axis: bool = first_comp.headings.count > len(
-            first_comp.frequencies.values
-        )
 
     # ------------------------------------------------------------------
     # Public API
@@ -102,51 +95,32 @@ class RAOPlotter:
             vertical_spacing=0.10,
         )
 
-        if self._heading_x_axis:
-            nfreqs = len(comp.frequencies.values)
-            x_vals = comp.headings.values
-            colors = self._get_heading_colors(nfreqs)
-            for fi in range(nfreqs):
-                period_s = comp.frequencies.periods[fi]
-                trace_label = f"{period_s:.2f} s"
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals, y=comp.magnitude[fi, :],
-                        mode="lines+markers", name=trace_label,
-                        line=dict(color=colors[fi]), legendgroup=trace_label,
-                    ),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals, y=comp.phase[fi, :],
-                        mode="lines+markers", name=trace_label,
-                        line=dict(color=colors[fi]), legendgroup=trace_label,
-                        showlegend=False,
-                    ),
-                    row=2, col=1,
-                )
-        else:
-            x_vals = self._get_x_values(comp)
-            for ci, hi in enumerate(h_indices):
-                heading_label = f"{comp.headings.values[hi]:.0f}°"
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals, y=comp.magnitude[:, hi],
-                        mode="lines", name=heading_label,
-                        line=dict(color=colors[ci]), legendgroup=heading_label,
-                    ),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals, y=comp.phase[:, hi],
-                        mode="lines", name=heading_label,
-                        line=dict(color=colors[ci]), legendgroup=heading_label,
-                        showlegend=False,
-                    ),
-                    row=2, col=1,
-                )
+        x_vals = self._get_x_values(comp)
+        for ci, hi in enumerate(h_indices):
+            heading_label = f"{comp.headings.values[hi]:.0f}°"
+            fig.add_trace(
+                go.Scatter(
+                    x=x_vals,
+                    y=comp.magnitude[:, hi],
+                    mode="lines",
+                    name=heading_label,
+                    line=dict(color=colors[ci]),
+                    legendgroup=heading_label,
+                ),
+                row=1, col=1,
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=x_vals,
+                    y=comp.phase[:, hi],
+                    mode="lines",
+                    name=heading_label,
+                    line=dict(color=colors[ci]),
+                    legendgroup=heading_label,
+                    showlegend=False,
+                ),
+                row=2, col=1,
+            )
 
         x_label = self._x_axis_label()
         fig.update_xaxes(title_text=x_label, row=2, col=1)
@@ -239,55 +213,27 @@ class RAOPlotter:
         value_type: str,
         show_legend: bool,
     ) -> None:
-        if self._heading_x_axis:
-            # Heading on x-axis; one trace per period/frequency (legend).
-            # Use markers so a single-period case is still visible.
-            x_vals = component.headings.values
-            nfreqs = len(component.frequencies.values)
-            colors = self._get_heading_colors(nfreqs)
-            for fi in range(nfreqs):
-                period_s = component.frequencies.periods[fi]
-                trace_label = f"{period_s:.2f} s"
-                y_vals = (
-                    component.magnitude[fi, :]
-                    if value_type == "amplitude"
-                    else component.phase[fi, :]
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals,
-                        y=y_vals,
-                        mode="lines+markers",
-                        name=trace_label,
-                        legendgroup=trace_label,
-                        showlegend=show_legend,
-                        line=dict(color=colors[fi]),
-                    ),
-                    row=row, col=col,
-                )
-        else:
-            # Period/frequency on x-axis; one trace per heading (original).
-            colors = self._get_heading_colors(len(h_indices))
-            x_vals = self._get_x_values(component)
-            for ci, hi in enumerate(h_indices):
-                heading_label = f"{component.headings.values[hi]:.0f}°"
-                y_vals = (
-                    component.magnitude[:, hi]
-                    if value_type == "amplitude"
-                    else component.phase[:, hi]
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=x_vals,
-                        y=y_vals,
-                        mode="lines",
-                        name=heading_label,
-                        legendgroup=heading_label,
-                        showlegend=show_legend,
-                        line=dict(color=colors[ci]),
-                    ),
-                    row=row, col=col,
-                )
+        colors = self._get_heading_colors(len(h_indices))
+        x_vals = self._get_x_values(component)
+        for ci, hi in enumerate(h_indices):
+            heading_label = f"{component.headings.values[hi]:.0f}°"
+            y_vals = (
+                component.magnitude[:, hi]
+                if value_type == "amplitude"
+                else component.phase[:, hi]
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=x_vals,
+                    y=y_vals,
+                    mode="lines",
+                    name=heading_label,
+                    legendgroup=heading_label,
+                    showlegend=show_legend,
+                    line=dict(color=colors[ci]),
+                ),
+                row=row, col=col,
+            )
 
     # ------------------------------------------------------------------
     # Utilities
@@ -299,8 +245,6 @@ class RAOPlotter:
         return component.frequencies.periods
 
     def _x_axis_label(self) -> str:
-        if self._heading_x_axis:
-            return "Heading (deg)"
         if self._x_axis == "frequency":
             return "Frequency (rad/s)"
         return "Period (s)"

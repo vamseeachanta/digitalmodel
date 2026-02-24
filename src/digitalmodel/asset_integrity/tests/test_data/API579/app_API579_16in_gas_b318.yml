@@ -1,4 +1,4 @@
-&id001 !!python/object/new:digitalmodel.asset_integrity.common.update_deep.AttributeDict
+&id001 !!python/object/new:pyintegrity.common.data.AttributeDict
 dictitems:
   API579Parameters:
     Age: 15
@@ -74,16 +74,16 @@ dictitems:
         Spherical: []
     RSFa: 0.9
   Analysis:
-    CustomInputFile: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579/16in_gas_b318.yml
-    DefaultInputFile: ~
-    analysis_root_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579
+    CustomInputFile: test_data/API579/16in_gas_b318.yml
+    DefaultInputFile: null
+    analysis_root_folder: test_data/API579
     basename: API579
-    cfg_array_file_names: ~
+    cfg_array_file_names: null
     file_name: app_API579_16in_gas_b318
     file_name_for_overwrite: app_API579_16in_gas_b318
-    log_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579\logs\
-    result_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/API579\results\
-    start_time: 2026-02-18 04:23:09.478974
+    log_folder: test_data/API579\logs\
+    result_folder: test_data/API579\results\
+    start_time: 2023-10-16 23:44:36.902500
   Default:
     Analysis:
       GML:
@@ -110,14 +110,14 @@ dictitems:
     Temperature:
       Ambient:
         Outer_Pipe: 50
-      Maximum: ~
+      Maximum: null
       Operating:
         Outer_Pipe: 82
     Torsion: 0
     Water_Depth: 2460.63
   DesignFactors:
     30 CFR Part 250:
-      2019: ~
+      2019: null
       release_date: 2019
       internal_pressure:
         Fd: 0.6
@@ -134,15 +134,15 @@ dictitems:
       internal_pressure:
         Fd: 0.6
     API RP 16Q:
-      1993: ~
+      1993: null
       release_date: 1993
       external_pressure:
-        Fd: ~
+        Fd: null
         cross_reference: API TR 5C3-2018
         section: 5.5
     API RP 16Q-1993:
       external_pressure:
-        Fd: ~
+        Fd: null
         cross_reference: API TR 5C3-2018
         section: 5.5
     API RP 16Q-2017:
@@ -196,20 +196,20 @@ dictitems:
     Pressure: 0.5
     TemperatureDerating: 1.0
   Geometry:
-    AssessmentLengthCeilingFactor_Circumference: ~
+    AssessmentLengthCeilingFactor_Circumference: null
     AssessmentLengthCeilingFactor_Length: 0.5
     CorrosionAllowance: 0.0
     DesignWT: 0.625
-    NominalID: ~
+    NominalID: 14.75
     NominalOD: 16
     StartWTFactor: 1
     tmin: 0.526
-  Inner_Pipe: ~
+  Inner_Pipe: null
   LML:
     LTA:
     - Contour:
-        xlim: ~
-        ylim: ~
+        xlim: null
+        ylim: null
         zlim:
         - 0.538
         - 0.75
@@ -225,18 +225,18 @@ dictitems:
       - 0.14
       - 0.16
       FCANonFlawRatio: 0.25
-      FCAc: ~
-      FCAs: ~
+      FCAc: null
+      FCAs: null
       Label: Feature 3, Flaw Size1
       Lmsd: 15
       MtType: Cylindrical
-      c: ~
+      c: null
       cIndex:
       - 47
       - 52
       index_col: 0
       io: tests/test_data/API579/16in_gas_wt_grid.xlsx
-      s: ~
+      s: null
       sIndex:
       - 8
       - 14
@@ -244,8 +244,8 @@ dictitems:
       skipfooter: 0
       skiprows: 0
     - Contour:
-        xlim: ~
-        ylim: ~
+        xlim: null
+        ylim: null
         zlim:
         - 0.538
         - 0.75
@@ -261,18 +261,18 @@ dictitems:
       - 0.14
       - 0.16
       FCANonFlawRatio: 0.25
-      FCAc: ~
-      FCAs: ~
+      FCAc: null
+      FCAs: null
       Label: Feature 3, Flaw Size2
       Lmsd: 15
       MtType: Cylindrical
-      c: ~
+      c: null
       cIndex:
       - 48
       - 53
       index_col: 0
       io: tests/test_data/API579/16in_gas_wt_grid.xlsx
-      s: ~
+      s: null
       sIndex:
       - 7
       - 17
@@ -280,8 +280,8 @@ dictitems:
       skipfooter: 0
       skiprows: 0
     - Contour:
-        xlim: ~
-        ylim: ~
+        xlim: null
+        ylim: null
         zlim:
         - 0.538
         - 0.75
@@ -297,18 +297,18 @@ dictitems:
       - 0.14
       - 0.16
       FCANonFlawRatio: 1.0
-      FCAc: ~
-      FCAs: ~
+      FCAc: null
+      FCAs: null
       Label: Feature 3, Flaw Size1
       Lmsd: 15
       MtType: Cylindrical
-      c: ~
+      c: null
       cIndex:
       - 47
       - 52
       index_col: 0
       io: tests/test_data/API579/16in_gas_wt_grid.xlsx
-      s: ~
+      s: null
       sIndex:
       - 8
       - 14
@@ -316,8 +316,8 @@ dictitems:
       skipfooter: 0
       skiprows: 0
     - Contour:
-        xlim: ~
-        ylim: ~
+        xlim: null
+        ylim: null
         zlim:
         - 0.538
         - 0.75
@@ -333,18 +333,18 @@ dictitems:
       - 0.14
       - 0.16
       FCANonFlawRatio: 1.0
-      FCAc: ~
-      FCAs: ~
+      FCAc: null
+      FCAs: null
       Label: Feature 3, Flaw Size2
       Lmsd: 15
       MtType: Cylindrical
-      c: ~
+      c: null
       cIndex:
       - 48
       - 53
       index_col: 0
       io: tests/test_data/API579/16in_gas_wt_grid.xlsx
-      s: ~
+      s: null
       sIndex:
       - 7
       - 17
@@ -354,18 +354,18 @@ dictitems:
   Material:
     E: 30000000.0
     Poissionsratio: 0.3
-    SMUS: ~
+    SMUS: null
     SMYS: 65000
     Steel:
       E: 30000000.0
       Grades:
         API 5L X65:
-          Reference: ~
+          Reference: null
           SMUS: 77500
           SMYS: 65300
         API 5L X70:
-          Reference: ~
-          SMUS: ~
+          Reference: null
+          SMUS: null
           SMYS: 70300
       Poissionsratio: 0.3
       Rho: 0.2817929
@@ -380,14 +380,14 @@ dictitems:
     Geometry:
       Corrosion_Allowance: 0
       Design_WT: 1.28
-      Nominal_ID: ~
+      Nominal_ID: 5.130000000000001
       Nominal_OD: 7.69
       tmin: 0.97
     Manufacturing:
       Coupling Mass Ratio: 0.0
     Material:
-      Buoyancy: ~
-      Insulation: ~
+      Buoyancy: null
+      Insulation: null
       Material: Steel
       Material_Grade: API 5L X65
       WeldFactor:
@@ -416,8 +416,8 @@ dictitems:
       - 20000
   ReadingSets:
   - Contour:
-      xlim: ~
-      ylim: ~
+      xlim: null
+      ylim: null
       zlim:
       - 0.526
       - 0.625
@@ -442,7 +442,14 @@ dictitems:
     skipfooter: 0
     skiprows: 0
   Result:
-    Exception: ''
+    Circumference:
+    - Avg. WT (inch): 0.504
+      Corr. Rate (inch/year): 0.708
+      Description: UT, Feature 1
+      Len (inch): 0.647
+      Max WT (inch): 0.713
+      Min WT (inch): 0.488
+      Rem. Life (yrs): -9.007731958762886
   basename: API579
   default:
     Analysis:
@@ -463,7 +470,7 @@ dictitems:
         output: true
     log_level: DEBUG
     settings:
-      AssessmentLengthCeilingFactor_Circumference: ~
+      AssessmentLengthCeilingFactor_Circumference: null
       AssessmentLengthCeilingFactor_Length: 1.0
       CorrosionAllowance: 0.0
       StartWTFactor: 1

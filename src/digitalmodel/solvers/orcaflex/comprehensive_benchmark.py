@@ -81,7 +81,7 @@ class ComprehensiveBenchmark:
             Path("D:/github/digitalmodel/src/baseline_results"),
             Path("D:/github/digitalmodel/src/optimized_results"),
             Path("D:/github/digitalmodel/src/single_file_test_results"),
-            Path("D:/github/digitalmodel/tests/domains/orcaflex")
+            Path("D:/github/digitalmodel/tests/modules/orcaflex")
         ]
         
         for repo_dir in repo_dirs:

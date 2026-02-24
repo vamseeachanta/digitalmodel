@@ -273,9 +273,9 @@ def process_single(
             )
 
             if verbose:
-                print(f"  Results: Surge={result['surge']:.1f} N, "
-                      f"Sway={result['sway']:.1f} N, "
-                      f"Yaw={result['yaw']:.1f} N·m")
+                print(f"  Results: Surge={result['surge_force']:.1f} N, "
+                      f"Sway={result['sway_force']:.1f} N, "
+                      f"Yaw={result['yaw_moment']:.1f} N·m")
             
             return result
             

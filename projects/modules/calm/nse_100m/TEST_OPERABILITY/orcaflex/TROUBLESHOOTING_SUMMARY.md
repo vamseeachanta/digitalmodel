@@ -295,7 +295,7 @@ orcaflex/
    - Flattened structure is more reliable
 
 4. **Reference Structure Works**:
-   - `tests/domains/orcaflex/analysis/moorings/pretension/`
+   - `tests/modules/orcaflex/analysis/moorings/pretension/`
    - Uses single directory
    - Simple includefiles without ../
 
@@ -305,7 +305,7 @@ orcaflex/
 
 - **OrcaFlex Manual**: Section 5.2 (Model Data Files)
 - **Python API Guide**: Section 2.1 (Loading Models)
-- **Working Example**: `tests/domains/orcaflex/analysis/moorings/pretension/`
+- **Working Example**: `tests/modules/orcaflex/analysis/moorings/pretension/`
 - **Project Docs**: `STRUCTURE_SUMMARY.md`, `MIGRATION_COMPLETE.md`
 
 ---

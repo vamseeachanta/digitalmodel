@@ -1,0 +1,52 @@
+graph LR
+    subgraph "Current State (30 Threads Fixed)"
+        subgraph "Resource Usage"
+            CPU1[CPU: ~50%]
+            MEM1[Memory: Variable]
+            THR1[Threads: 30]
+        end
+        
+        subgraph "Performance"
+            TIME1[Runtime: Baseline]
+            EFF1[Efficiency: Low]
+            SCALE1[Scaling: Poor]
+        end
+        
+        subgraph "Issues"
+            ISS1[Memory pressure<br/>with large files]
+            ISS2[Underutilized<br/>with small files]
+            ISS3[No monitoring]
+        end
+    end
+    
+    subgraph "Optimized State (Dynamic 15-45 Threads)"
+        subgraph "Resource Usage"
+            CPU2[CPU: 80-90%]
+            MEM2[Memory: <80%]
+            THR2[Threads: Dynamic]
+        end
+        
+        subgraph "Performance"
+            TIME2[Runtime: -40-60%]
+            EFF2[Efficiency: High]
+            SCALE2[Scaling: Linear]
+        end
+        
+        subgraph "Features"
+            FEAT1[Auto-tuning]
+            FEAT2[Real-time monitoring]
+            FEAT3[Smart allocation]
+        end
+    end
+    
+    %% Comparison Arrows
+    TIME1 -.->|40-60%<br/>Improvement| TIME2
+    CPU1 -.->|+30-40%<br/>Utilization| CPU2
+    THR1 -.->|Adaptive<br/>15-45| THR2
+    
+    style TIME1 fill:#ffcccc
+    style TIME2 fill:#ccffcc
+    style CPU1 fill:#ffcccc
+    style CPU2 fill:#ccffcc
+    style EFF1 fill:#ffcccc
+    style EFF2 fill:#ccffcc

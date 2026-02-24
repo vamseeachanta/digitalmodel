@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class OrcaflexExampleDownloader:
     """Downloads OrcaFlex examples from Orcina portal with rate limiting and retry logic."""
     
-    def __init__(self, base_dir: str = "docs/domains/orcaflex/examples"):
+    def __init__(self, base_dir: str = "docs/modules/orcaflex/examples"):
         """
         Initialize the downloader.
         

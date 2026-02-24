@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def check_directories():
     """Check if required directories exist."""
-    base_dir = Path("docs/domains/orcaflex/examples")
+    base_dir = Path("docs/modules/orcaflex/examples")
     required_dirs = [
         base_dir / "raw",
         base_dir / "yaml", 

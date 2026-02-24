@@ -67,7 +67,7 @@ def load_config(config_path: Union[str, Path]) -> Dict[str, Any]:
         yaml.YAMLError: If YAML parsing fails
         
     Example:
-        >>> config = load_config("base_configs/domains/mooring/mooring.yml")
+        >>> config = load_config("base_configs/modules/mooring/mooring.yml")
         >>> log_level = config["default"]["log_level"]
     """
     config_path = Path(config_path)
@@ -79,7 +79,7 @@ def load_config(config_path: Union[str, Path]) -> Dict[str, Any]:
     config_name = config_path.stem
     
     # Determine base path from config file location
-    # Assume structure: .../base_configs/domains/module_name/config.yml
+    # Assume structure: .../base_configs/modules/module_name/config.yml
     try:
         # Find "base_configs" in path
         parts = config_path.parts

@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/catenary_riser/**'
-      - 'tests/domains/catenary_riser/**'
+      - 'tests/modules/catenary_riser/**'
       - '.github/workflows/catenary-riser-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/catenary_riser/**'
-      - 'tests/domains/catenary_riser/**'
+      - 'tests/modules/catenary_riser/**'
   workflow_dispatch:
 
 jobs:
@@ -42,11 +42,11 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest tests/domains/catenary_riser/test_catenary_riser_unit.py -v --cov=src/digitalmodel/modules/catenary_riser --cov-report=term-missing --cov-report=xml
+        pytest tests/modules/catenary_riser/test_catenary_riser_unit.py -v --cov=src/digitalmodel/modules/catenary_riser --cov-report=term-missing --cov-report=xml
 
     - name: Run CLI tests
       run: |
-        pytest tests/domains/catenary_riser/test_catenary_riser_cli.py -v
+        pytest tests/modules/catenary_riser/test_catenary_riser_cli.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -81,11 +81,11 @@ jobs:
 
     - name: Run black
       run: |
-        black --check src/digitalmodel/modules/catenary_riser tests/domains/catenary_riser
+        black --check src/digitalmodel/modules/catenary_riser tests/modules/catenary_riser
 
     - name: Run isort
       run: |
-        isort --check-only src/digitalmodel/modules/catenary_riser tests/domains/catenary_riser
+        isort --check-only src/digitalmodel/modules/catenary_riser tests/modules/catenary_riser
 
   cli-validation:
     name: CLI Command Validation

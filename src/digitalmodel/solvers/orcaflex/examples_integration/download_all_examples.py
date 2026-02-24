@@ -114,7 +114,7 @@ def download_all_examples(skip_large: bool = False):
     logger.info(f"📁 Total OrcaFlex files extracted: {total_extracted}")
     
     # Check what we have
-    raw_dir = Path("docs/domains/orcaflex/examples/raw")
+    raw_dir = Path("docs/modules/orcaflex/examples/raw")
     if raw_dir.exists():
         dat_files = list(raw_dir.glob("**/*.dat"))
         sim_files = list(raw_dir.glob("**/*.sim"))

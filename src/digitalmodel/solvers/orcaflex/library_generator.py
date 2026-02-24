@@ -8,7 +8,7 @@ for use with OrcaFlex's IncludeFile directive.
 Usage:
     from digitalmodel.solvers.orcaflex.library_generator import LibraryGenerator
 
-    generator = LibraryGenerator(library_path="docs/domains/orcaflex/library")
+    generator = LibraryGenerator(library_path="docs/modules/orcaflex/library")
     generator.generate_from_csv("equipment/buoys.csv", "buoy_types")
 """
 
@@ -371,7 +371,7 @@ def main():
     parser.add_argument("csv_file", help="Path to CSV equipment catalog")
     parser.add_argument("category", choices=["line_types", "buoy_types", "vessel_types"],
                         help="Library category to generate")
-    parser.add_argument("-o", "--output", default="docs/domains/orcaflex/library",
+    parser.add_argument("-o", "--output", default="docs/modules/orcaflex/library",
                         help="Library output directory")
     parser.add_argument("--name-column", help="CSV column for component names")
 

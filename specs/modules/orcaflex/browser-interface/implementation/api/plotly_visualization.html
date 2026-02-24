@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woodfibre LNG - Mooring Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .control-group {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .control-group label {
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        select, input {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .viz-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .viz-card h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .plot-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        
+        .comparison-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .case-selector {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .case-selector.active {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .legend-controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f7fafc;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        
+        @media (min-width: 1200px) {
+            .visualization-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 2px 16px rgba(237, 137, 54, 0.6);
+                transform: scale(1.02);
+            }
+            100% {
+                box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Woodfibre LNG - Mooring Analysis</h1>
+        
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div class="control-group" style="width: 100%; margin-bottom: 15px;">
+                <label>Data Folder:</label>
+                <input type="text" id="folder-path" value="D:/1522/ctr7/orcaflex/rev_a08/output/csv/03c_100yr" style="width: 50%;" readonly>
+                <button onclick="showFolderBrowser()">📁 Select Folder</button>
+                <button onclick="loadQuickFolder('01c_10yr')">10yr</button>
+                <button onclick="loadQuickFolder('03c_100yr')">100yr</button>
+                <button onclick="toggleHeatmap()" style="float: right;">Toggle Heatmap</button>
+            </div>
+            
+            <!-- Metadata Selection Controls -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: #4a5568; margin-bottom: 5px;">LNG Loading:</label>
+                    <div id="lng-radio-group">
+                        <label style="margin-right: 10px;"><input type="radio" name="lng" value="l015" onchange="updateCaseFromMetadata()"> 15%</label>
+                        <label><input type="radio" name="lng" value="l095" onchange="updateCaseFromMetadata()"> 95%</label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: #4a5568; margin-bottom: 5px;">Tide Level:</label>
+                    <select id="tide-selector" onchange="updateCaseFromMetadata()" style="width: 100%;">
+                        <option value="">All</option>
+                        <option value="hwl">HWL (High)</option>
+                        <option value="lwl">LWL (Low)</option>
+                        <option value="mwl">MWL (Mean)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: #4a5568; margin-bottom: 5px;">Environment:</label>
+                    <div id="env-radio-group">
+                        <label style="margin-right: 10px;"><input type="radio" name="env" value="cl" onchange="updateEnvironmentAndDirections()"> Colinear</label>
+                        <label><input type="radio" name="env" value="ncl" onchange="updateEnvironmentAndDirections()"> Non-col</label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: #4a5568; margin-bottom: 5px;">Wave Direction:</label>
+                    <select id="direction-selector" onchange="updateCaseFromMetadata()" style="width: 100%;">
+                        <option value="">All Directions</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Active Case Display with Metadata -->
+            <div style="padding: 10px; background: #ebf8ff; border: 2px solid #4299e1; border-radius: 8px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <label style="font-weight: 600; color: #2d3748;">Active Case:</label>
+                        <select id="case-selector" onchange="handleCaseSelection()" style="margin-left: 10px; min-width: 300px;">
+                            <option value="">Loading cases...</option>
+                        </select>
+                    </div>
+                    <div id="case-metadata" style="display: flex; gap: 15px; font-size: 12px; color: #4a5568;">
+                        <!-- Metadata will be displayed here -->
+                    </div>
+                </div>
+                <div id="case-details" style="margin-top: 10px; display: none;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12px;">
+                        <div><strong>Max Tension:</strong> <span id="case-max-tension">-</span></div>
+                        <div><strong>Critical Strut:</strong> <span id="case-critical-strut">-</span></div>
+                        <div><strong>Files:</strong> <span id="case-file-count">-</span></div>
+                        <div><strong>Status:</strong> <span id="case-status">-</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Time Range:</label>
+                <input type="number" id="time-start" placeholder="Start (s)" value="0" style="width: 100px;">
+                <input type="number" id="time-end" placeholder="End (s)" style="width: 100px;">
+            </div>
+            
+            <div class="control-group">
+                <button onclick="loadCase()">Load Case Data</button>
+                <button onclick="compareWithCritical()">Compare with Critical</button>
+                <button onclick="exportPlots()">Export Plots</button>
+                <button onclick="generatePDFReport()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    📄 Generate PDF Report
+                </button>
+            </div>
+        </div>
+        
+        <!-- Visualization Grid -->
+        <div class="visualization-grid">
+            
+            <!-- Time Series Plot -->
+            <div class="viz-card">
+                <h2>Strut Forces Time Series</h2>
+                <div class="legend-controls" id="strut-legend"></div>
+                <div id="timeseries-plot" class="plot-container"></div>
+            </div>
+            
+            <!-- 3D Surface Plot (Hidden by default) -->
+            <div class="viz-card" id="heatmap-card" style="display: none;">
+                <h2>Tension Distribution Heatmap 
+                    <button onclick="toggleHeatmap()" style="float: right; font-size: 12px; padding: 5px 10px;">Show/Hide</button>
+                </h2>
+                <div id="heatmap-plot" class="plot-container"></div>
+            </div>
+            
+            <!-- Statistical Distribution -->
+            <div class="viz-card">
+                <h2>Statistical Distribution</h2>
+                <div id="distribution-plot" class="plot-container"></div>
+            </div>
+            
+            <!-- Comparison Plot -->
+            <div class="viz-card">
+                <h2>Case Comparison</h2>
+                <div id="comparison-plot" class="plot-container"></div>
+            </div>
+            
+            <!-- Polar Plot for Directions -->
+            <div class="viz-card">
+                <h2>Directional Response</h2>
+                <div id="polar-plot" class="plot-container"></div>
+            </div>
+            
+            <!-- Time Period Spectrum Analysis -->
+            <div class="viz-card">
+                <h2>Time Period Spectrum</h2>
+                <div id="period-plot" class="plot-container"></div>
+            </div>
+            
+        </div>
+        
+        <!-- Statistics Panel -->
+        <div class="viz-card" style="margin-top: 20px;">
+            <h2>Statistical Summary</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Max Tension</div>
+                    <div class="stat-value" id="stat-max">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mean</div>
+                    <div class="stat-value" id="stat-mean">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Std Dev</div>
+                    <div class="stat-value" id="stat-std">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">RMS</div>
+                    <div class="stat-value" id="stat-rms">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Peak Time</div>
+                    <div class="stat-value" id="stat-peak-time">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cycles</div>
+                    <div class="stat-value" id="stat-cycles">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8001';
+        let currentCase = null;
+        let timeSeriesData = null;
+        let criticalCase = null;
+        let allCases = [];
+        
+        // Color palette for struts
+        const strutColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
+            '#98D8C8', '#6C5CE7', '#FDCB6E', '#00B894'
+        ];
+        
+        // Initialize
+        window.onload = async () => {
+            await loadCases();
+            await getCriticalCase();
+        };
+        
+        async function loadCases() {
+            try {
+                const response = await fetch(`${API_BASE}/api/cases/list?limit=100`);
+                const data = await response.json();
+                allCases = data.cases;
+                
+                const selector = document.getElementById('case-selector');
+                selector.innerHTML = '';
+                
+                // Populate direction selector with available directions
+                populateDirectionSelector();
+                
+                allCases.forEach(case_ => {
+                    const option = document.createElement('option');
+                    option.value = case_.case_id;
+                    option.textContent = `${case_.case_id} (${case_.max_tension?.toFixed(0) || 'N/A'} kN)`;
+                    if (case_.is_critical) {
+                        option.textContent += ' [CRITICAL]';
+                        option.style.fontWeight = 'bold';
+                        option.style.color = '#dc2626';
+                    }
+                    selector.appendChild(option);
+                });
+                
+                // Auto-select critical case
+                const criticalCaseObj = allCases.find(c => c.is_critical);
+                if (criticalCaseObj) {
+                    selector.value = criticalCaseObj.case_id;
+                    updateMetadataFromCase(criticalCaseObj);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load cases:', error);
+            }
+        }
+        
+        function populateDirectionSelector() {
+            const dirSelector = document.getElementById('direction-selector');
+            dirSelector.innerHTML = '<option value="">All Directions</option>';
+            
+            // Get unique directions from all cases
+            const directions = new Set();
+            allCases.forEach(case_ => {
+                const dir = case_.metadata?.parsed_components?.direction;
+                if (dir) {
+                    directions.add(dir);
+                }
+            });
+            
+            // Sort directions numerically
+            const sortedDirections = Array.from(directions).sort((a, b) => {
+                const numA = parseInt(a.replace('deg', ''));
+                const numB = parseInt(b.replace('deg', ''));
+                return numA - numB;
+            });
+            
+            sortedDirections.forEach(dir => {
+                const option = document.createElement('option');
+                option.value = dir;
+                option.textContent = dir.replace('deg', '°');
+                dirSelector.appendChild(option);
+            });
+        }
+        
+        function updateMetadataFromCase(caseObj) {
+            if (!caseObj || !caseObj.metadata) return;
+            
+            const metadata = caseObj.metadata;
+            const components = metadata.parsed_components || {};
+            
+            // Update LNG radio - extract just the l015/l095 part
+            const lngValue = components.lng ? components.lng.replace('fsts_', '') : '';
+            const lngRadios = document.querySelectorAll('input[name="lng"]');
+            lngRadios.forEach(radio => {
+                radio.checked = radio.value === lngValue;
+            });
+            
+            // Update Tide selector
+            document.getElementById('tide-selector').value = components.tide || '';
+            
+            // Update Environment radio FIRST
+            const envRadios = document.querySelectorAll('input[name="env"]');
+            envRadios.forEach(radio => {
+                radio.checked = radio.value === components.env;
+            });
+            
+            // Store the direction value to set after environment update
+            const directionValue = components.direction || '';
+            
+            // Trigger the environment change to populate correct directions
+            if (components.env) {
+                // Update environment and directions WITHOUT triggering case update
+                const env = components.env;
+                const dirSelector = document.getElementById('direction-selector');
+                
+                // Clear and repopulate direction selector
+                dirSelector.innerHTML = '<option value="">All Directions</option>';
+                
+                // Filter directions based on environment
+                const directions = new Set();
+                allCases.forEach(case_ => {
+                    const caseComponents = case_.metadata?.parsed_components || {};
+                    if (caseComponents.env === env && caseComponents.direction) {
+                        directions.add(caseComponents.direction);
+                    }
+                });
+                
+                // Sort directions numerically
+                const sortedDirections = Array.from(directions).sort((a, b) => {
+                    const numA = parseInt(a.replace('deg', ''));
+                    const numB = parseInt(b.replace('deg', ''));
+                    return numA - numB;
+                });
+                
+                sortedDirections.forEach(dir => {
+                    const option = document.createElement('option');
+                    option.value = dir;
+                    const degreeValue = dir.replace('deg', '');
+                    option.textContent = `${degreeValue}°`;
+                    dirSelector.appendChild(option);
+                });
+                
+                // NOW set the direction value after options are populated
+                dirSelector.value = directionValue;
+            }
+            
+            // Update case metadata display
+            updateCaseMetadataDisplay(caseObj);
+        }
+        
+        function updateCaseMetadataDisplay(caseObj) {
+            const metadataDiv = document.getElementById('case-metadata');
+            const detailsDiv = document.getElementById('case-details');
+            
+            if (!caseObj) {
+                metadataDiv.innerHTML = '';
+                detailsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Check if this is the critical case
+            const isCritical = criticalCase && caseObj.case_id === criticalCase.fe_filename_stem;
+            
+            // Display metadata badges
+            const metadata = caseObj.metadata || {};
+            metadataDiv.innerHTML = `
+                <span style="background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px;">
+                    ${metadata.lng_loading || 'N/A'}
+                </span>
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px;">
+                    ${metadata.tide_level || 'N/A'}
+                </span>
+                <span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px;">
+                    ${metadata.environment_type || 'N/A'}
+                </span>
+                <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px;">
+                    ${metadata.direction || 'N/A'}
+                </span>
+                ${isCritical ? `
+                    <span style="background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600; animation: pulse 2s infinite;">
+                        ⚠️ CRITICAL
+                    </span>
+                ` : ''}
+            `;
+            
+            // Display case details
+            document.getElementById('case-max-tension').textContent = 
+                caseObj.max_tension ? `${caseObj.max_tension.toFixed(1)} kN` : 'N/A';
+            document.getElementById('case-critical-strut').textContent = 
+                caseObj.critical_strut ? caseObj.critical_strut.toUpperCase() : 'N/A';
+            document.getElementById('case-file-count').textContent = '4'; // Default
+            
+            // Determine status
+            let status = 'NORMAL';
+            let statusColor = '#10b981';
+            if (caseObj.max_tension > 7000) {
+                status = 'CRITICAL';
+                statusColor = '#dc2626';
+            } else if (caseObj.max_tension > 5000) {
+                status = 'HIGH';
+                statusColor = '#f59e0b';
+            } else if (caseObj.max_tension > 3000) {
+                status = 'MODERATE';
+                statusColor = '#3b82f6';
+            }
+            
+            const statusSpan = document.getElementById('case-status');
+            statusSpan.textContent = status;
+            statusSpan.style.color = statusColor;
+            statusSpan.style.fontWeight = 'bold';
+            
+            detailsDiv.style.display = 'block';
+        }
+        
+        function updateEnvironmentAndDirections() {
+            // Update direction options based on environment selection
+            const env = document.querySelector('input[name="env"]:checked')?.value || '';
+            const dirSelector = document.getElementById('direction-selector');
+            const currentDirection = dirSelector.value;
+            
+            // Clear and repopulate direction selector
+            dirSelector.innerHTML = '<option value="">All Directions</option>';
+            
+            if (env) {
+                // Filter directions based on environment
+                const directions = new Set();
+                allCases.forEach(case_ => {
+                    const components = case_.metadata?.parsed_components || {};
+                    if (components.env === env && components.direction) {
+                        directions.add(components.direction);
+                    }
+                });
+                
+                // Sort directions numerically
+                const sortedDirections = Array.from(directions).sort((a, b) => {
+                    const numA = parseInt(a.replace('deg', ''));
+                    const numB = parseInt(b.replace('deg', ''));
+                    return numA - numB;
+                });
+                
+                sortedDirections.forEach(dir => {
+                    const option = document.createElement('option');
+                    option.value = dir;
+                    // Display with degree symbol but keep value as-is (e.g., "240deg")
+                    const degreeValue = dir.replace('deg', '');
+                    option.textContent = `${degreeValue}°`;
+                    dirSelector.appendChild(option);
+                });
+                
+                // Add info about direction spacing
+                if (env === 'ncl' && sortedDirections.length > 0) {
+                    const spacing = sortedDirections.length > 1 ? 
+                        parseInt(sortedDirections[1].replace('deg', '')) - parseInt(sortedDirections[0].replace('deg', '')) : 15;
+                    const infoOption = document.createElement('option');
+                    infoOption.value = '';
+                    infoOption.textContent = `--- Every ${spacing}° (${sortedDirections.length} directions) ---`;
+                    infoOption.disabled = true;
+                    dirSelector.insertBefore(infoOption, dirSelector.children[1]);
+                }
+                
+                // Try to restore previous direction if it exists
+                if (currentDirection && Array.from(dirSelector.options).some(opt => opt.value === currentDirection)) {
+                    dirSelector.value = currentDirection;
+                }
+            } else {
+                // No environment selected - show all directions
+                populateDirectionSelector();
+            }
+            
+            // Update cases based on new selection
+            updateCaseFromMetadata();
+        }
+        
+        function updateCaseFromMetadata() {
+            // Get selected metadata values
+            const lng = document.querySelector('input[name="lng"]:checked')?.value || '';
+            const tide = document.getElementById('tide-selector').value;
+            const env = document.querySelector('input[name="env"]:checked')?.value || '';
+            const direction = document.getElementById('direction-selector').value;
+            
+            console.log('Selected filters:', { lng, tide, env, direction });
+            
+            // Filter cases based on metadata
+            const filteredCases = allCases.filter(case_ => {
+                const components = case_.metadata?.parsed_components || {};
+                
+                // Log first few cases to debug
+                if (allCases.indexOf(case_) < 3) {
+                    console.log('Case components:', case_.case_id, components);
+                }
+                
+                // Fix: Extract just the l015/l095 part from fsts_l015 for comparison
+                const caseLng = components.lng ? components.lng.replace('fsts_', '') : '';
+                
+                if (lng && caseLng !== lng) return false;
+                if (tide && components.tide !== tide) return false;
+                if (env && components.env !== env) return false;
+                if (direction && components.direction !== direction) return false;
+                
+                return true;
+            });
+            
+            console.log(`Filtered cases: ${filteredCases.length} out of ${allCases.length}`);
+            
+            // Update case selector with filtered cases
+            const selector = document.getElementById('case-selector');
+            const currentValue = selector.value;
+            selector.innerHTML = '';
+            
+            if (filteredCases.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No cases match selected criteria';
+                selector.appendChild(option);
+            } else {
+                filteredCases.forEach(case_ => {
+                    const option = document.createElement('option');
+                    option.value = case_.case_id;
+                    option.textContent = `${case_.case_id} (${case_.max_tension?.toFixed(0) || 'N/A'} kN)`;
+                    if (case_.is_critical) {
+                        option.textContent += ' [CRITICAL]';
+                        option.style.fontWeight = 'bold';
+                        option.style.color = '#dc2626';
+                    }
+                    selector.appendChild(option);
+                });
+                
+                // Select first filtered case or maintain selection if still valid
+                if (filteredCases.find(c => c.case_id === currentValue)) {
+                    selector.value = currentValue;
+                } else if (filteredCases.length > 0) {
+                    // Auto-select highest tension case from filtered results
+                    const highestCase = filteredCases.reduce((max, case_) => 
+                        (case_.max_tension || 0) > (max.max_tension || 0) ? case_ : max
+                    );
+                    selector.value = highestCase.case_id;
+                    updateCaseMetadataDisplay(highestCase);
+                    
+                    // Show notification
+                    showNotification(`Selected: ${highestCase.case_id} (${filteredCases.length} cases match criteria)`);
+                }
+            }
+        }
+        
+        function handleCaseSelection() {
+            const selector = document.getElementById('case-selector');
+            const selectedCase = allCases.find(c => c.case_id === selector.value);
+            
+            if (selectedCase) {
+                currentCase = selectedCase;
+                updateMetadataFromCase(selectedCase);
+                updateCaseMetadataDisplay(selectedCase);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const colors = {
+                'info': '#4299e1',
+                'success': '#48bb78',
+                'error': '#fc8181'
+            };
+            
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed; 
+                top: 20px; 
+                right: 20px; 
+                background: ${colors[type]}; 
+                color: white; 
+                padding: 12px 20px; 
+                border-radius: 8px; 
+                z-index: 9999; 
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => document.body.removeChild(notif), 300);
+            }, 3000);
+        }
+        
+        async function getCriticalCase() {
+            try {
+                const response = await fetch(`${API_BASE}/api/critical`);
+                criticalCase = await response.json();
+                
+                // Automatically select and highlight critical case
+                if (criticalCase && criticalCase.fe_filename_stem && allCases.length > 0) {
+                    const matchingCase = allCases.find(c => c.case_id === criticalCase.fe_filename_stem);
+                    if (matchingCase) {
+                        // Update metadata selectors to match the critical case
+                        updateMetadataFromCase(matchingCase);
+                        
+                        // Select the critical case in the dropdown
+                        const selector = document.getElementById('case-selector');
+                        selector.value = criticalCase.fe_filename_stem;
+                        
+                        // Update case display to show it's critical
+                        const metadataDiv = document.getElementById('case-metadata');
+                        if (metadataDiv) {
+                            // Clear and rebuild metadata display with critical badge
+                            updateCaseMetadataDisplay(matchingCase);
+                        }
+                        
+                        // Set as current case
+                        currentCase = matchingCase;
+                        
+                        // Auto-load the critical case data
+                        setTimeout(() => loadCase(), 500);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to get critical case:', error);
+            }
+        }
+        
+        async function loadCase() {
+            const caseId = document.getElementById('case-selector').value;
+            if (!caseId) return;
+            
+            currentCase = allCases.find(c => c.case_id === caseId);
+            
+            // Show loading state
+            document.querySelectorAll('.plot-container').forEach(container => {
+                container.innerHTML = '<div class="loading">Loading data...</div>';
+            });
+            
+            try {
+                // Load time series data
+                const startTime = parseFloat(document.getElementById('time-start').value) || 0;
+                const endTime = parseFloat(document.getElementById('time-end').value) || null;
+                
+                const response = await fetch(
+                    `${API_BASE}/api/v2/timeseries/struts/${currentCase.fe_filename_stem}.sim/all?` +
+                    `start_time=${startTime}${endTime ? '&end_time=' + endTime : ''}&downsample=200`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                timeSeriesData = await response.json();
+                
+                // Create all visualizations
+                createTimeSeriesPlot();
+                // createHeatmapPlot(); // Commented out - minimize by default
+                createDistributionPlot();
+                createPolarPlot();
+                createPeriodSpectrum();
+                updateStatistics();
+                
+                // Load comparison if critical case exists
+                if (criticalCase && currentCase.case_id !== criticalCase.fe_filename_stem) {
+                    createComparisonPlot();
+                }
+                
+            } catch (error) {
+                console.error('Failed to load case data:', error);
+                alert('Failed to load case data: ' + error.message);
+            }
+        }
+        
+        function createTimeSeriesPlot() {
+            if (!timeSeriesData || !timeSeriesData.struts) return;
+            
+            const traces = [];
+            const legendContainer = document.getElementById('strut-legend');
+            legendContainer.innerHTML = '';
+            
+            timeSeriesData.struts.forEach((strut, index) => {
+                const color = strutColors[index % strutColors.length];
+                
+                traces.push({
+                    x: strut.data.map(d => d.time),
+                    y: strut.data.map(d => d.value),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: strut.strut_id,
+                    line: { color: color, width: 2 },
+                    hovertemplate: '<b>%{fullData.name}</b><br>' +
+                                  'Time: %{x:.1f}s<br>' +
+                                  'Tension: %{y:.1f} kN<br>' +
+                                  '<extra></extra>'
+                });
+                
+                // Create legend control
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background: ${color}"></div>
+                    <span>${strut.strut_id}</span>
+                `;
+                legendItem.onclick = () => toggleTrace('timeseries-plot', index);
+                legendContainer.appendChild(legendItem);
+            });
+            
+            const layout = {
+                title: 'Strut Forces Over Time',
+                xaxis: {
+                    title: 'Time (s)',
+                    gridcolor: '#e2e8f0',
+                    zeroline: false
+                },
+                yaxis: {
+                    title: 'Tension (kN)',
+                    gridcolor: '#e2e8f0',
+                    zeroline: true
+                },
+                hovermode: 'x unified',
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 40, r: 20, b: 60, l: 60 },
+                showlegend: false // Using custom legend
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToAdd: ['hovercompare', 'hoverclosest'],
+                toImageButtonOptions: {
+                    format: 'png',
+                    filename: `timeseries_${currentCase.case_id}`,
+                    height: 600,
+                    width: 1200,
+                    scale: 2
+                }
+            };
+            
+            Plotly.newPlot('timeseries-plot', traces, layout, config);
+        }
+        
+        function createHeatmapPlot() {
+            if (!timeSeriesData || !timeSeriesData.struts) return;
+            
+            // Create matrix of strut tensions over time
+            const strutNames = timeSeriesData.struts.map(s => s.strut_id);
+            const times = timeSeriesData.struts[0].data.map(d => d.time);
+            const matrix = [];
+            
+            timeSeriesData.struts.forEach(strut => {
+                matrix.push(strut.data.map(d => d.value));
+            });
+            
+            const trace = {
+                x: times,
+                y: strutNames,
+                z: matrix,
+                type: 'heatmap',
+                colorscale: [
+                    [0, '#3182ce'],
+                    [0.5, '#90cdf4'],
+                    [1, '#ef4444']
+                ],
+                colorbar: {
+                    title: 'Tension (kN)',
+                    thickness: 20,
+                    len: 0.9
+                },
+                hovertemplate: 'Strut: %{y}<br>' +
+                              'Time: %{x:.1f}s<br>' +
+                              'Tension: %{z:.1f} kN<br>' +
+                              '<extra></extra>'
+            };
+            
+            const layout = {
+                title: 'Tension Distribution Across Struts',
+                xaxis: {
+                    title: 'Time (s)',
+                    gridcolor: '#e2e8f0'
+                },
+                yaxis: {
+                    title: 'Strut',
+                    gridcolor: '#e2e8f0'
+                },
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 40, r: 80, b: 60, l: 80 }
+            };
+            
+            const config = { responsive: true };
+            
+            Plotly.newPlot('heatmap-plot', [trace], layout, config);
+        }
+        
+        function createDistributionPlot() {
+            if (!timeSeriesData || !timeSeriesData.struts) return;
+            
+            const traces = [];
+            
+            timeSeriesData.struts.forEach((strut, index) => {
+                const values = strut.data.map(d => d.value);
+                
+                traces.push({
+                    x: values,
+                    type: 'histogram',
+                    name: strut.strut_id,
+                    opacity: 0.6,
+                    marker: {
+                        color: strutColors[index % strutColors.length]
+                    },
+                    histnorm: 'probability',
+                    nbinsx: 30
+                });
+            });
+            
+            const layout = {
+                title: 'Tension Distribution',
+                xaxis: {
+                    title: 'Tension (kN)',
+                    gridcolor: '#e2e8f0'
+                },
+                yaxis: {
+                    title: 'Probability',
+                    gridcolor: '#e2e8f0'
+                },
+                barmode: 'overlay',
+                hovermode: 'x',
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 40, r: 20, b: 60, l: 60 },
+                showlegend: true,
+                legend: {
+                    x: 1,
+                    y: 1,
+                    xanchor: 'right',
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                }
+            };
+            
+            const config = { responsive: true };
+            
+            Plotly.newPlot('distribution-plot', traces, layout, config);
+        }
+        
+        function createComparisonPlot() {
+            if (!timeSeriesData || !criticalCase) return;
+            
+            // Create bar chart comparing max tensions
+            const strutNames = timeSeriesData.struts.map(s => s.strut_id);
+            const currentMaxValues = timeSeriesData.struts.map(s => s.max_value);
+            
+            const traces = [
+                {
+                    x: strutNames,
+                    y: currentMaxValues,
+                    type: 'bar',
+                    name: currentCase.case_id,
+                    marker: { color: '#4299e1' }
+                }
+            ];
+            
+            // Add critical case data if different
+            if (currentCase.case_id !== criticalCase.fe_filename_stem) {
+                traces.push({
+                    x: strutNames,
+                    y: strutNames.map(() => criticalCase.value), // Use critical max for reference
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Critical Reference',
+                    line: { color: '#ef4444', width: 2, dash: 'dash' }
+                });
+            }
+            
+            const layout = {
+                title: 'Case Comparison: Maximum Tensions',
+                xaxis: {
+                    title: 'Strut',
+                    gridcolor: '#e2e8f0'
+                },
+                yaxis: {
+                    title: 'Maximum Tension (kN)',
+                    gridcolor: '#e2e8f0'
+                },
+                hovermode: 'x',
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 40, r: 20, b: 60, l: 60 },
+                showlegend: true
+            };
+            
+            const config = { responsive: true };
+            
+            Plotly.newPlot('comparison-plot', traces, layout, config);
+        }
+        
+        function createPolarPlot() {
+            // Create polar plot showing max tension vs direction
+            const directions = [];
+            const tensions = [];
+            
+            // Get all cases with same LNG/tide as current case
+            const filteredCases = allCases.filter(c => {
+                return c.metadata?.lng_loading === currentCase?.metadata?.lng_loading &&
+                       c.metadata?.tide_level === currentCase?.metadata?.tide_level;
+            });
+            
+            filteredCases.forEach(case_ => {
+                const dir = case_.metadata?.parsed_components?.direction;
+                if (dir && case_.max_tension) {
+                    const degrees = parseInt(dir.replace('deg', ''));
+                    directions.push(degrees);
+                    tensions.push(case_.max_tension);
+                }
+            });
+            
+            // Sort by direction
+            const sorted = directions.map((d, i) => ({dir: d, tension: tensions[i]}))
+                                   .sort((a, b) => a.dir - b.dir);
+            
+            const trace = {
+                type: 'scatterpolar',
+                r: sorted.map(s => s.tension),
+                theta: sorted.map(s => s.dir),
+                fill: 'toself',
+                fillcolor: 'rgba(66, 153, 225, 0.3)',
+                line: {
+                    color: '#4299e1',
+                    width: 2
+                },
+                marker: {
+                    color: '#2b6cb1',
+                    size: 8
+                },
+                hovertemplate: 'Direction: %{theta}°<br>' +
+                              'Tension: %{r:.1f} kN<br>' +
+                              '<extra></extra>'
+            };
+            
+            const layout = {
+                title: `Directional Response (${currentCase?.metadata?.lng_loading || ''} ${currentCase?.metadata?.tide_level || ''})`,
+                polar: {
+                    radialaxis: {
+                        visible: true,
+                        title: 'Max Tension (kN)',
+                        gridcolor: '#e2e8f0'
+                    },
+                    angularaxis: {
+                        direction: 'clockwise',
+                        rotation: 90,
+                        gridcolor: '#e2e8f0'
+                    },
+                    bgcolor: '#f7fafc'
+                },
+                paper_bgcolor: 'white',
+                margin: { t: 60, r: 40, b: 40, l: 40 },
+                showlegend: false
+            };
+            
+            const config = { responsive: true };
+            
+            Plotly.newPlot('polar-plot', [trace], layout, config);
+        }
+        
+        function createPeriodSpectrum() {
+            try {
+                if (!timeSeriesData || !timeSeriesData.struts || timeSeriesData.struts.length === 0) {
+                    console.log('No time series data available for period spectrum');
+                    // Show a message in the plot area
+                    const plotDiv = document.getElementById('period-plot');
+                    if (plotDiv) {
+                        plotDiv.innerHTML = '<div class="loading">Time series data required for period spectrum analysis</div>';
+                    }
+                    return;
+                }
+            
+            // Perform FFT on the critical strut
+            const criticalStrut = timeSeriesData.struts.reduce((max, strut) => 
+                strut.max_value > max.max_value ? strut : max
+            );
+            
+            const values = criticalStrut.data.map(d => d.value);
+            const times = criticalStrut.data.map(d => d.time);
+            
+            if (values.length < 10) {
+                console.log('Insufficient data points for spectrum analysis');
+                const plotDiv = document.getElementById('period-plot');
+                if (plotDiv) {
+                    plotDiv.innerHTML = '<div class="loading">Insufficient data points for spectrum analysis</div>';
+                }
+                return;
+            }
+            
+            // Detrend the data (remove mean)
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const detrendedValues = values.map(v => v - mean);
+            
+            // Simple FFT approximation using Welch's method for better resolution
+            const dt = times[1] - times[0];
+            const fs = 1 / dt; // Sampling frequency
+            const N = Math.min(values.length, 1024); // Limit for performance
+            
+            // Calculate periods and spectral density
+            const periods = [];
+            const spectralDensity = [];
+            
+            // Generate period values from 2 to 30 seconds
+            const minPeriod = 2;
+            const maxPeriod = 30;
+            const numPoints = 100;
+            
+            for (let i = 0; i < numPoints; i++) {
+                const period = minPeriod + (maxPeriod - minPeriod) * i / (numPoints - 1);
+                periods.push(period);
+                
+                const freq = 1 / period;
+                const k = Math.round(freq * N / fs);
+                
+                if (k > 0 && k < N/2) {
+                    // Simple DFT calculation for this frequency
+                    let real = 0, imag = 0;
+                    for (let n = 0; n < Math.min(N, detrendedValues.length); n++) {
+                        const angle = -2 * Math.PI * freq * n * dt;
+                        real += detrendedValues[n] * Math.cos(angle);
+                        imag += detrendedValues[n] * Math.sin(angle);
+                    }
+                    
+                    // Power spectral density
+                    const power = 2 * (real * real + imag * imag) / (N * fs);
+                    // Convert to period spectrum: S(T) = S(f) * f^2
+                    const density = power * freq * freq;
+                    spectralDensity.push(Math.max(density, 1e-6)); // Avoid zero for log scale
+                } else {
+                    spectralDensity.push(1e-6); // Small value for missing data
+                }
+            }
+            
+            // Sort by period for better visualization
+            const sortedData = periods.map((p, i) => ({period: p, density: spectralDensity[i]}))
+                                     .sort((a, b) => a.period - b.period);
+            
+            // Check if we have valid data
+            if (sortedData.length === 0) {
+                console.log('No valid spectrum data');
+                const plotDiv = document.getElementById('period-plot');
+                if (plotDiv) {
+                    plotDiv.innerHTML = '<div class="loading">Unable to compute period spectrum - no valid data</div>';
+                }
+                return;
+            }
+            
+            // Find peak period
+            const maxDensityIdx = sortedData.reduce((maxIdx, curr, idx) => 
+                curr.density > sortedData[maxIdx].density ? idx : maxIdx, 0);
+            const peakPeriod = sortedData[maxDensityIdx]?.period || 10;
+            
+            const trace = {
+                x: sortedData.map(d => d.period),
+                y: sortedData.map(d => d.density),
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(66, 153, 225, 0.3)',
+                line: {
+                    color: '#4299e1',
+                    width: 2
+                },
+                hovertemplate: 'Period: %{x:.1f} s<br>' +
+                              'Spectral Density: %{y:.2e}<br>' +
+                              '<extra></extra>'
+            };
+            
+            // Add peak period marker
+            const peakDensity = sortedData[maxDensityIdx]?.density || 0;
+            const peakTrace = {
+                x: [peakPeriod],
+                y: [peakDensity],
+                type: 'scatter',
+                mode: 'markers+text',
+                name: 'Peak Period',
+                marker: {
+                    color: '#ef4444',
+                    size: 12,
+                    symbol: 'star'
+                },
+                text: [`Tp = ${peakPeriod.toFixed(1)}s`],
+                textposition: 'top center',
+                showlegend: false
+            };
+            
+            const layout = {
+                title: `Time Period Spectrum - ${criticalStrut.strut_id} (Peak: ${peakPeriod.toFixed(1)}s)`,
+                xaxis: {
+                    title: 'Time Period (seconds)',
+                    gridcolor: '#e2e8f0',
+                    range: [2, 25],
+                    dtick: 2
+                },
+                yaxis: {
+                    title: 'Spectral Density (kN²·s)',
+                    gridcolor: '#e2e8f0',
+                    type: 'log',
+                    exponentformat: 'e'
+                },
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 50, r: 20, b: 60, l: 80 },
+                showlegend: false,
+                annotations: [
+                    {
+                        x: 0.02,
+                        y: 0.98,
+                        xref: 'paper',
+                        yref: 'paper',
+                        text: `Typical Wave Periods:<br>` +
+                              `Wind Waves: 2-10s<br>` +
+                              `Swell: 10-20s<br>` +
+                              `Long Waves: >20s`,
+                        showarrow: false,
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        bordercolor: '#e2e8f0',
+                        borderwidth: 1,
+                        font: { size: 10 },
+                        align: 'left',
+                        xanchor: 'left',
+                        yanchor: 'top'
+                    }
+                ]
+            };
+            
+            const config = { responsive: true };
+            
+            Plotly.newPlot('period-plot', [trace, peakTrace], layout, config);
+            
+            } catch (error) {
+                console.error('Error creating period spectrum:', error);
+                const plotDiv = document.getElementById('period-plot');
+                if (plotDiv) {
+                    plotDiv.innerHTML = '<div class="loading">Error creating period spectrum</div>';
+                }
+            }
+        }
+        
+        function updateStatistics() {
+            if (!timeSeriesData || !timeSeriesData.statistics) return;
+            
+            const stats = timeSeriesData.statistics;
+            const criticalStrut = timeSeriesData.struts.reduce((max, strut) => 
+                strut.max_value > max.max_value ? strut : max
+            );
+            
+            document.getElementById('stat-max').textContent = stats.global_max.toFixed(1);
+            document.getElementById('stat-mean').textContent = criticalStrut.mean_value.toFixed(1);
+            document.getElementById('stat-std').textContent = criticalStrut.std_dev.toFixed(1);
+            
+            // Calculate RMS
+            const values = criticalStrut.data.map(d => d.value);
+            const rms = Math.sqrt(values.reduce((sum, v) => sum + v*v, 0) / values.length);
+            document.getElementById('stat-rms').textContent = rms.toFixed(1);
+            
+            document.getElementById('stat-peak-time').textContent = criticalStrut.max_time.toFixed(1) + 's';
+            
+            // Count zero crossings
+            const mean = criticalStrut.mean_value;
+            let crossings = 0;
+            for (let i = 1; i < values.length; i++) {
+                if ((values[i-1] - mean) * (values[i] - mean) < 0) {
+                    crossings++;
+                }
+            }
+            document.getElementById('stat-cycles').textContent = Math.floor(crossings / 2);
+        }
+        
+        function toggleTrace(plotId, index) {
+            const plot = document.getElementById(plotId);
+            const data = plot.data;
+            
+            const visible = data[index].visible;
+            Plotly.restyle(plotId, {'visible': visible === false ? true : false}, index);
+        }
+        
+        async function compareWithCritical() {
+            if (!criticalCase) {
+                alert('Critical case not loaded');
+                return;
+            }
+            
+            // Select critical case and load it
+            document.getElementById('case-selector').value = criticalCase.fe_filename_stem;
+            await loadCase();
+        }
+        
+        function exportPlots() {
+            const plotIds = ['timeseries-plot', 'heatmap-plot', 'distribution-plot', 
+                           'comparison-plot', 'polar-plot', 'frequency-plot'];
+            
+            plotIds.forEach(id => {
+                Plotly.downloadImage(id, {
+                    format: 'png',
+                    width: 1200,
+                    height: 600,
+                    filename: `${id}_${currentCase?.case_id || 'export'}`
+                });
+            });
+        }
+        
+        async function generatePDFReport() {
+            if (!currentCase) {
+                alert('Please load a case first');
+                return;
+            }
+            
+            const caseId = currentCase.case_id;
+            
+            // Ask user which type of PDF they want
+            const useRichPDF = confirm(
+                'Generate PDF Report\n\n' +
+                'OK = Rich PDF with charts (takes ~5-10 seconds)\n' +
+                'Cancel = Simple PDF without charts (takes ~1 second)'
+            );
+            
+            // Show loading message
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = useRichPDF ? '⏳ Generating Rich PDF with Charts...' : '⏳ Generating Simple PDF...';
+            btn.disabled = true;
+            
+            try {
+                // Request PDF generation with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), useRichPDF ? 60000 : 10000); // Longer timeout for rich PDF
+                
+                const pdfType = useRichPDF ? 'rich' : 'simple';
+                console.log(`[PDF] Generating ${pdfType} PDF for case: ${caseId}`);
+                const startTime = Date.now();
+                
+                // Choose endpoint based on user selection
+                const endpoint = useRichPDF 
+                    ? `${API_BASE}/api/rich-reports/generate/${caseId}`
+                    : `${API_BASE}/api/simple-reports/generate/${caseId}`;
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                console.log(`[PDF] ${pdfType} PDF response received in ${elapsed}s`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                // Download the PDF
+                const blob = await response.blob();
+                console.log(`[PDF] PDF size: ${blob.size} bytes`);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                const pdfPrefix = useRichPDF ? 'orcaflex_rich_report' : 'orcaflex_report';
+                a.download = `${pdfPrefix}_${caseId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Success message
+                btn.innerHTML = '✅ PDF Downloaded!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 3000);
+                
+            } catch (error) {
+                console.error('[PDF] Failed to generate PDF:', error);
+                if (error.name === 'AbortError') {
+                    alert('PDF generation timed out after 10 seconds. Please try again.');
+                } else {
+                    alert(`Failed to generate PDF: ${error.message}\nPlease check the console for details.`);
+                }
+                btn.innerHTML = '❌ PDF Failed';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 3000);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        
+        function toggleHeatmap() {
+            const heatmapCard = document.getElementById('heatmap-card');
+            if (heatmapCard.style.display === 'none' || !heatmapCard.style.display) {
+                heatmapCard.style.display = 'block';
+                // Create heatmap if not already created
+                if (timeSeriesData) {
+                    createHeatmapPlot();
+                }
+            } else {
+                heatmapCard.style.display = 'none';
+            }
+        }
+        
+        
+        async function showFolderBrowser() {
+            try {
+                // Get available folders from server
+                const response = await fetch(`${API_BASE}/api/config/folders`);
+                const data = await response.json();
+                
+                // Create a modal dialog for folder selection
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                `;
+                
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    background: white;
+                    border-radius: 12px;
+                    padding: 30px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                `;
+                
+                let folderOptions = data.folders.map(folder => `
+                    <div style="padding: 10px; margin: 5px 0; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.3s;"
+                         onmouseover="this.style.borderColor='#4299e1'; this.style.background='#ebf8ff';"
+                         onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';"
+                         onclick="selectFolder('${folder.path.replace(/\\/g, '/')}')">
+                        <div style="font-weight: 600; color: #2d3748;">${folder.name}</div>
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">${folder.description} (${folder.file_count} files)</div>
+                        <div style="font-size: 11px; color: #a0aec0; margin-top: 2px;">${folder.path}</div>
+                    </div>
+                `).join('');
+                
+                dialog.innerHTML = `
+                    <h2 style="margin-bottom: 20px; color: #2d3748;">Select Data Folder</h2>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 600; color: #4a5568; margin-bottom: 10px;">Available Folders:</div>
+                        ${folderOptions}
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button onclick="closeFolderBrowser()" style="margin-right: 10px; background: #e2e8f0; color: #4a5568;">Cancel</button>
+                    </div>
+                `;
+                
+                modal.appendChild(dialog);
+                document.body.appendChild(modal);
+                
+                // Store modal reference for closing
+                window.currentModal = modal;
+                
+                // Close on backdrop click
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        closeFolderBrowser();
+                    }
+                };
+                
+            } catch (error) {
+                alert('Error loading folders: ' + error.message);
+            }
+        }
+        
+        window.selectFolder = async function(path) {
+            closeFolderBrowser();
+            await changeFolder(path);
+        }
+        
+        window.closeFolderBrowser = function() {
+            if (window.currentModal) {
+                window.currentModal.remove();
+                window.currentModal = null;
+            }
+        }
+        
+        async function loadQuickFolder(folderName) {
+            // Quick access buttons for common folders
+            const basePath = 'D:/1522/ctr7/orcaflex/rev_a08/output/csv/';
+            const fullPath = basePath + folderName;
+            await changeFolder(fullPath);
+        }
+        
+        async function changeFolder(newPath) {
+            if (!newPath) {
+                alert('Please provide a folder path');
+                return;
+            }
+            
+            // Show loading state
+            const folderInput = document.getElementById('folder-path');
+            const originalValue = folderInput.value;
+            folderInput.value = 'Loading folder...';
+            
+            try {
+                // Update the API configuration
+                const response = await fetch(`${API_BASE}/api/config/folder`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ path: newPath })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || `Failed to change folder: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Update the display
+                folderInput.value = result.new_path;
+                
+                // Clear current data
+                currentCase = null;
+                timeSeriesData = null;
+                
+                // Clear all plots
+                const plotContainers = ['timeseries-plot', 'heatmap-plot', 'distribution-plot', 
+                                       'comparison-plot', 'polar-plot', 'period-plot'];
+                plotContainers.forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.innerHTML = '<div class="loading">No data loaded</div>';
+                    }
+                });
+                
+                // Reload cases from new folder
+                await loadCases();
+                await getCriticalCase();
+                
+                // Show success message
+                const statusDiv = document.createElement('div');
+                statusDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #48bb78; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999; animation: slideIn 0.3s ease;';
+                statusDiv.innerHTML = `✅ Folder loaded: ${folderName(result.new_path)}<br>Found ${allCases.length} cases`;
+                document.body.appendChild(statusDiv);
+                
+                setTimeout(() => {
+                    statusDiv.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => document.body.removeChild(statusDiv), 300);
+                }, 3000);
+                
+                // Auto-select and load critical case if available
+                if (criticalCase) {
+                    const selector = document.getElementById('case-selector');
+                    const criticalCaseId = criticalCase.fe_filename_stem;
+                    
+                    // Find and select critical case
+                    for (let option of selector.options) {
+                        if (option.value === criticalCaseId) {
+                            selector.value = criticalCaseId;
+                            // Auto-load the critical case
+                            setTimeout(() => loadCase(), 500);
+                            break;
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Failed to change folder:', error);
+                folderInput.value = originalValue;
+                
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #fc8181; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999;';
+                errorDiv.innerHTML = `❌ Error: ${error.message}`;
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => document.body.removeChild(errorDiv), 5000);
+            }
+        }
+        
+        function folderName(path) {
+            // Extract folder name from path
+            const parts = path.replace(/\\/g, '/').split('/');
+            return parts[parts.length - 1] || parts[parts.length - 2];
+        }
+        
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ the monolithic reference and checking numerical convergence.
 
 Saves:
   - Per-model: validation/benchmark.json
-  - Combined:  docs/domains/orcaflex/library/tier2_fast/validation/riser_library_benchmark.json
+  - Combined:  docs/modules/orcaflex/library/tier2_fast/validation/riser_library_benchmark.json
 
 Usage:
     uv run python scripts/benchmark_riser_library.py
@@ -37,7 +37,7 @@ import yaml
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 
-LIBRARY_ROOT = Path("docs/domains/orcaflex/library/tier2_fast")
+LIBRARY_ROOT = Path("docs/modules/orcaflex/library/tier2_fast")
 OUTPUT_ROOT = LIBRARY_ROOT / "validation"
 
 # Line name mapping: monolithic name -> modular name (spec line name)

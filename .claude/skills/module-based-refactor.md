@@ -10,10 +10,10 @@ Reorganize a repository from flat structure to module-based 5-layer architecture
 
 ```
 src/<package>/modules/<module_name>/
-tests/domains/<module_name>/
+tests/modules/<module_name>/
 specs/modules/<module_name>/
-docs/domains/<module_name>/
-examples/domains/<module_name>/
+docs/modules/<module_name>/
+examples/modules/<module_name>/
 ```
 
 ### Quick Commands
@@ -23,7 +23,7 @@ examples/domains/<module_name>/
 git mv src/<package>/<module> src/<package>/modules/<module>
 
 # Move tests
-git mv tests/<module> tests/domains/<module>
+git mv tests/<module> tests/modules/<module>
 
 # Search for old imports
 grep -r "from <module>" --include="*.py" .

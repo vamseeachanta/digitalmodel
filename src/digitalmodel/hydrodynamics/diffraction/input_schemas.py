@@ -311,23 +311,6 @@ class EnvironmentSpec(BaseModel):
             f"water_depth must be a number or 'infinite', got {type(v)}"
         )
 
-    @field_validator("water_density")
-    @classmethod
-    def validate_water_density(cls, v: float) -> float:
-        """Reject values outside the physical range for water (500–1100 kg/m³).
-
-        Fresh water ≈ 1000 kg/m³, seawater ≈ 1025 kg/m³, brines up to ~1100 kg/m³.
-        Values below 500 are likely unit errors (e.g. t/m³ stored as kg/m³).
-        Values above 1100 are outside any engineering water context.
-        """
-        if not (500.0 <= v <= 1100.0):
-            raise ValueError(
-                f"water_density={v} kg/m³ is outside the physical range [500, 1100]. "
-                f"Did you supply t/m³ instead of kg/m³? "
-                f"Fresh water = 1000, seawater ≈ 1025."
-            )
-        return v
-
 
 class FrequencyRangeSpec(BaseModel):
     """Frequency range specification (alternative to explicit values)."""

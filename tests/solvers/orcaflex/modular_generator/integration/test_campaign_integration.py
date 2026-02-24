@@ -15,11 +15,11 @@ import yaml
 # Paths to existing spec files used in backward-compatibility tests
 # ------------------------------------------------------------------
 FLOATING_SPEC = Path(
-    "D:/workspace-hub/digitalmodel/docs/domains/orcaflex/pipeline"
+    "D:/workspace-hub/digitalmodel/docs/modules/orcaflex/pipeline"
     "/installation/floating/30in_pipeline/spec.yml"
 )
 SLAY_SPEC = Path(
-    "D:/workspace-hub/digitalmodel/docs/domains/orcaflex/pipeline"
+    "D:/workspace-hub/digitalmodel/docs/modules/orcaflex/pipeline"
     "/installation/s-lay/SB-SA/spec.yml"
 )
 

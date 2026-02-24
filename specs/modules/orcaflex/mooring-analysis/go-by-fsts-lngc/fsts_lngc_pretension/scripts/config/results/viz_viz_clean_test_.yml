@@ -1,0 +1,12 @@
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+  label: viz_clean_test_
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+
+... [truncated] ...

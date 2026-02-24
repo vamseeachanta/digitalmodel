@@ -417,7 +417,7 @@ print(f"Peak amplitude: {peaks[0][1]:.2f}")
 - Module Guide: `/src/digitalmodel/modules/signal_analysis/README.md`
 - API Reference: `/docs/api/signal_analysis.md`
 - Examples: `/examples/signal_analysis_usage_example.py`
-- Tests: `/tests/domains/signal_analysis/`
+- Tests: `/tests/modules/signal_analysis/`
 
 **Installation**
 ```bash

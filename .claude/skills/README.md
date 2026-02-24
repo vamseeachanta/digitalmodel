@@ -150,7 +150,7 @@ Comprehensive guidelines for creating effective interactive HTML visualizations:
 - [OrcaFlex Module README](../../src/digitalmodel/modules/orcaflex/README.md)
 - [Fatigue Module Documentation](../../src/digitalmodel/modules/fatigue/)
 - [Workspace Hub Skills](../../../.claude/skills/README.md)
-- [HTML Reporting Standards](../../docs/domains/standards/HTML_REPORTING_STANDARDS.md)
+- [HTML Reporting Standards](../../docs/modules/standards/HTML_REPORTING_STANDARDS.md)
 
 ---
 

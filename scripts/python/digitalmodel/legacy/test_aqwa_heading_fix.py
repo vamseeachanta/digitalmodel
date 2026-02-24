@@ -134,7 +134,7 @@ def test_heading_inheritance():
 def test_actual_file_counts():
     """Test actual file to count data points before/after fix."""
 
-    file1 = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS")
+    file1 = Path("docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS")
 
     if not file1.exists():
         print(f"\n[WARN] Test file not found: {file1}")

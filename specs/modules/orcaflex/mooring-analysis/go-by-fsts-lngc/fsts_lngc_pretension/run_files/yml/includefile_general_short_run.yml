@@ -1,0 +1,4 @@
+General:
+  StageDuration[1]: 10
+  StageDuration[2]: 10
+  ImplicitConstantTimeStep: 0.1

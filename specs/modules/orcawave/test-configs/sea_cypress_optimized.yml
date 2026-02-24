@@ -1,0 +1,210 @@
+UnitsSystem: SI
+SolveType: Diagonal QTF only
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: true
+QuadraticLoadControlSurface: true
+QuadraticLoadMomentumConservation: false
+PreferredQuadraticLoadCalculationMethod: Control surface
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 0.05
+DivideNonPlanarPanels: true
+LinearSolverMethod: Direct LU
+OutputPanelPressures: false
+OutputPanelVelocities: false
+OutputBodyWireFrames: true
+OutputIntermediateResults: true
+ValidatePanelArrangement: true
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 15
+PanelsPerWavelengthWarningLevel: 7
+WaterDepth: 100
+WaterDensity: 1025
+WavesReferredToBy: period (s)
+HasWaveSpectrumForDragLinearisation: false
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- 10
+- 11
+- 12
+- 13
+- 14
+- 15
+- 16
+- 18
+- 20
+- 22
+- 25
+WaveHeading:
+- 0
+- 22.5
+- 45
+- 67.5
+- 90
+- 112.5
+- 135
+- 157.5
+- 180
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+QTFMinPeriodOrFrequency: 5
+QTFMaxPeriodOrFrequency: 20
+QTFFrequencyTypes: Both
+IncludeMeanDriftFullQTFs: true
+Bodies:
+- BodyName: SeaCypress
+  BodyMeshPosition:
+  - 0
+  - 0
+  - 0
+  BodyMeshAttitude:
+  - 0
+  - 0
+  - 0
+  BodyIncludedInAnalysis: true
+  BodyMeshFileName: ../inputs/geometry/sea_cypress_gmsh_optimized.dat
+  BodyMeshFormat: Aqwa dat
+  BodyMeshLengthUnits: m
+  BodyMeshSymmetry: None
+  BodyMeshBodyNumber: 1
+  BodyMeshImportDryPanels: true
+  BodyMeshDipolePanels: null
+  BodyAddInteriorSurfacePanels: false
+  BodyInteriorSurfacePanelMethod: Triangulation method
+  BodyControlSurfaceType: Automatically generated
+  BodyControlSurfacePanelSize: 5
+  BodyControlSurfaceSeparationFromBody: 10
+  BodyControlSurfaceIncludeFreeSurface: true
+  BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+  BodyOrcaFlexImportLength: 30
+  BodyHydrostaticIntegralMethod: Standard
+  BodyHydrostaticStiffnessMethod: Displacement
+  BodyInertiaSpecifiedBy: Matrix (for a general body)
+  BodyCentreOfMass:
+  - 0
+  - 0
+  - -1.5
+  BodyMass: 400000
+  BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+  - - 1.6e6
+    - 0
+    - 0
+  - - 0
+    - 1.5e7
+    - 0
+  - - 0
+    - 0
+    - 1.5e7
+  BodyInertiaTensorOriginType: Centre of mass
+  ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz,
+    BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalStiffnessMatrixOriginType: Body origin
+  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz,
+    BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalDampingMatrixOriginType: Body origin
+  BodyConnectionParent: Free
+  BodyIncreaseRollDampingToTarget: false
+  BodyFixedDOFx: false
+  BodyFixedDOFy: false
+  BodyFixedDOFz: false
+  BodyFixedDOFRx: false
+  BodyFixedDOFRy: false
+  BodyFixedDOFRz: false
+DetectAndSkipFieldPointsInsideBodies: true
+QTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Defined by mesh file
+FreeSurfacePanelledZoneMeshFileName: null
+FreeSurfacePanelledZoneMeshFormat: Wamit gdf
+FreeSurfacePanelledZoneMeshLengthUnits: m
+InteriorSurfacePanelsPen:
+- 1
+- Solid
+- Aqua
+FreeSurfaceMeshPen:
+- 1
+- Solid
+- Aqua
+OutputDirectory: ../outputs/
+OutputFilePrefix: sea_cypress_
+ExportFormat: All

@@ -463,12 +463,12 @@ runner = UniversalOrcaFlexRunner(max_workers=10)  # For large models
 
 ### Unit Tests
 ```bash
-pytest tests/domains/orcaflex/test_orcaflex_unit.py -v
+pytest tests/modules/orcaflex/test_orcaflex_unit.py -v
 ```
 
 ### CLI Tests
 ```bash
-pytest tests/domains/orcaflex/test_orcaflex_cli.py -v
+pytest tests/modules/orcaflex/test_orcaflex_cli.py -v
 ```
 
 ### Mock Mode Testing
@@ -481,7 +481,7 @@ run-to-sim --mock --all
 ### YAML File Validation Tests
 ```bash
 # Runs on all platforms — validates YAML structure and cross-references
-uv run pytest tests/domains/orcaflex/test_load_orcaflex_files.py -v
+uv run pytest tests/modules/orcaflex/test_load_orcaflex_files.py -v
 ```
 
 Two-level validation:
@@ -519,7 +519,7 @@ not possible on Linux. To transfer this work to a Windows machine:
 
 5. **Run full test suite**:
    ```powershell
-   uv run pytest tests/domains/orcaflex/test_load_orcaflex_files.py -v
+   uv run pytest tests/modules/orcaflex/test_load_orcaflex_files.py -v
    ```
    On Windows, `test_orcaflex_api_load` tests will execute (they are skipped
    on Linux). These load each model file through the OrcaFlex engine and catch

@@ -542,10 +542,10 @@ generator.add_component(..., component_id="My_Custom_FPSO_v2", ...)
 
 ## Related Documentation
 
-- **Template Library**: `docs/domains/orcaflex/templates/README.md`
-- **SCR Template**: `docs/domains/orcaflex/templates/risers/scr_catenary/README.md`
+- **Template Library**: `docs/modules/orcaflex/templates/README.md`
+- **SCR Template**: `docs/modules/orcaflex/templates/risers/scr_catenary/README.md`
 - **Claude Skill**: `.claude/skills/orcaflex-model-generator/SKILL.md`
-- **Examples**: `docs/domains/orcaflex/examples/model_generator_examples.py`
+- **Examples**: `docs/modules/orcaflex/examples/model_generator_examples.py`
 
 ---
 

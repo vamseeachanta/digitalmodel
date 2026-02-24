@@ -1,0 +1,67 @@
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant Config
+    participant Validator
+    participant Calculator
+    participant Math
+    participant Cache
+    participant Output
+    
+    User->>CLI: Execute calculation command
+    CLI->>Config: Load YAML configuration
+    Config->>Validator: Validate with Pydantic
+    
+    alt Validation Failed
+        Validator-->>User: Return validation errors
+    else Validation Passed
+        Validator->>Calculator: Pass validated config
+    end
+    
+    Calculator->>Cache: Check for cached results
+    
+    alt Results Cached
+        Cache-->>Calculator: Return cached forces
+    else Not Cached
+        Calculator->>Math: Initialize mathematical engine
+        
+        par Parallel Calculations
+            Math->>Math: Calculate S1(x) sectional area
+        and
+            Math->>Math: Calculate S2(x) sectional area
+        and
+            Math->>Math: Prepare kernel functions
+        end
+        
+        Math->>Math: Perform nested integration
+        
+        alt Finite Water Depth
+            Math->>Math: Apply harmonic corrections
+            Math->>Math: Sum convergent series
+        end
+        
+        Math-->>Calculator: Return force components
+        Calculator->>Cache: Store results
+    end
+    
+    Calculator->>Output: Format results
+    
+    par Output Generation
+        Output->>Output: Generate plots
+    and
+        Output->>Output: Create JSON/CSV
+    and
+        Output->>Output: Prepare report
+    end
+    
+    Output-->>User: Return results & visualizations
+    
+    opt Batch Processing
+        loop For each scenario
+            Calculator->>Math: Process scenario
+            Math-->>Calculator: Return forces
+        end
+        Calculator->>Output: Aggregate results
+    end
+```

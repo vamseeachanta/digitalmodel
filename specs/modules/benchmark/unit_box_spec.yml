@@ -1,0 +1,73 @@
+# Unit Box Benchmark Specification
+# WRK-098: Unified spec for 3-way solver comparison (AQWA, OrcaWave, BEMRosetta)
+#
+# Hull: 1m × 1m × 1m cube, draft = 1m (fully submerged sides)
+# Purpose: Validate solver setup with simplest possible geometry
+# Expected: Near-perfect agreement across all solvers
+
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBox_Benchmark"
+  type: "box"
+  geometry:
+    mesh_file: "unit_box_clean.gdf"
+    mesh_format: gdf
+    symmetry: none  # No symmetry for this simple case
+    reference_point: [0.5, 0.5, 0.0]  # Center of waterplane
+    waterline_z: 0.0
+    length_units: m
+    dimensions:
+      length: 1.0
+      beam: 1.0
+      draft: 1.0
+  inertia:
+    # Mass = displaced volume × water density = 1.0 m³ × 1025 kg/m³
+    mass: 1025.0  # kg
+    # CG at volumetric center of submerged portion
+    centre_of_gravity: [0.5, 0.5, -0.5]
+    # Radii of gyration for uniform cube: r = L/√12 ≈ 0.289
+    # Using slightly larger values for floating stability
+    radii_of_gyration: [0.3, 0.3, 0.3]  # [Rxx, Ryy, Rzz] in meters
+
+environment:
+  water_depth: 100.0  # Deep water relative to box size
+  water_density: 1025.0  # kg/m³
+  gravity: 9.80665  # m/s²
+
+frequencies:
+  input_type: frequency
+  # Range: 0.2 to 2.0 rad/s (periods ~3s to ~31s)
+  # 20 points for good resolution
+  values: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+           1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+
+wave_headings:
+  # Standard 5 headings: head, quartering, beam, quartering, following
+  values: [0.0, 45.0, 90.0, 135.0, 180.0]
+  symmetry: false  # Analyze all headings explicitly
+
+solver_options:
+  remove_irregular_frequencies: true
+  qtf_calculation: false
+  load_rao_method: both  # Froude-Krylov + diffraction
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+  output_dir: "benchmark_results/unit_box"
+
+metadata:
+  project: "WRK-031_3way_benchmark"
+  work_item: "WRK-098"
+  author: "digitalmodel"
+  description: "Unit Box benchmark for 3-way solver comparison (AQWA, OrcaWave, BEMRosetta)"
+  created: "2026-02-05"
+  tags: [benchmark, unit-box, validation, 3-way-comparison]
+
+# Solver-specific notes:
+# - AQWA: Use Aqwa.exe with batch mode, export to .LIS
+# - OrcaWave: Use OrcFxAPI Python binding
+# - BEMRosetta: Use BEMRosetta_cl.exe with NEMOH backend

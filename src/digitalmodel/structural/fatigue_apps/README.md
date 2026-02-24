@@ -256,13 +256,13 @@ Run the test suite:
 
 ```bash
 # Run all fatigue analysis tests
-pytest tests/domains/fatigue_analysis/ -v
+pytest tests/modules/fatigue_analysis/ -v
 
 # Run specific test file
-pytest tests/domains/fatigue_analysis/test_rainflow_counter.py -v
+pytest tests/modules/fatigue_analysis/test_rainflow_counter.py -v
 
 # With coverage
-pytest tests/domains/fatigue_analysis/ --cov=digitalmodel.structural.fatigue_analysis
+pytest tests/modules/fatigue_analysis/ --cov=digitalmodel.structural.fatigue_analysis
 ```
 
 ## Known Issues

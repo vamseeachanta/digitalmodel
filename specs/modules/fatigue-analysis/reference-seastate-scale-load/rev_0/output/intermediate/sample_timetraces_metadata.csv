@@ -1,0 +1,7 @@
+seastate_id,seastate_type,strut_id,time_trace_file,duration,sample_rate,units,description
+W01,wave,S1,W01_S1.csv,10800,0.1,kN,Wave case 01 - FSTS L015 MWL - Strut 1
+W01,wave,S2,W01_S2.csv,10800,0.1,kN,Wave case 01 - FSTS L015 MWL - Strut 2
+W02,wave,S1,W02_S1.csv,10800,0.1,kN,Wave case 02 - FSTS L015 MWL - Strut 1
+W02,wave,S2,W02_S2.csv,10800,0.1,kN,Wave case 02 - FSTS L015 MWL - Strut 2
+WD01,wind,S1,WD01_S1.csv,10800,0.1,kN,Wind case 01 - FSTS L015 MWL - Strut 1
+WD01,wind,S2,WD01_S2.csv,10800,0.1,kN,Wind case 01 - FSTS L015 MWL - Strut 2

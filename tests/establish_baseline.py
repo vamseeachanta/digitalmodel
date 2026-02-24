@@ -66,7 +66,7 @@ def run_tests_and_capture():
 def analyze_test_modules():
     """Analyze test modules and their status."""
     modules = {}
-    test_dir = Path('tests/domains')
+    test_dir = Path('tests/modules')
     
     for module_dir in test_dir.iterdir():
         if module_dir.is_dir() and not module_dir.name.startswith('__'):
@@ -169,7 +169,7 @@ def create_baseline_markdown(baseline):
 python -m pytest tests/ -v
 
 # Run working tests only (OrcaFlex mooring analysis)
-python -m pytest tests/domains/orcaflex/mooring_analysis/ -v
+python -m pytest tests/modules/orcaflex/mooring_analysis/ -v
 
 # Quick test run
 python -m pytest tests/ -q

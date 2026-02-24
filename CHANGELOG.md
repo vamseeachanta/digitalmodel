@@ -90,7 +90,7 @@ Major milestone release establishing core analytical infrastructure for offshore
 
 #### Tests
 - `tests/fatigue/test_fatigue_migration.py`: Migration validation
-- `tests/domains/fatigue_analysis/test_fatigue_analysis_sn.py`: S-N curve tests
+- `tests/modules/fatigue_analysis/test_fatigue_analysis_sn.py`: S-N curve tests
 - `tests/test_fatigue_basic.py`: Basic functionality tests
 - Comprehensive test coverage: 85%+
 

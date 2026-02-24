@@ -1,0 +1,183 @@
+%YAML 1.1
+# Type: Diffraction
+# Spar benchmark: Cylinder D=25m, draft=110m, 200m water depth
+# Source: AQWA SIMPLE.LIS (spar-example)
+# Mesh: docs/modules/aqwa/examples/spar-example/simple.dat
+# Created: 2026-02-08
+---
+UnitsSystem: SI
+SolveType: Potential and source formulations
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: No
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+HasResonanceDampingLid: No
+LengthTolerance: 1.0e-07
+WaterlineZTolerance: 1.0e-06
+WaterlineGapTolerance: 1.0e-06
+DivideNonPlanarPanels: Yes
+LinearSolverMethod: Direct LU
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1.0e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+WaterDepth: 200.0
+WaterDensity: 1.025
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+- 0.15
+- 0.20
+- 0.20944
+- 0.25
+- 0.30
+- 0.35
+- 0.38426
+- 0.40
+- 0.45
+- 0.50
+- 0.55
+- 0.60
+- 0.70
+- 0.80
+- 0.90
+- 1.00
+- 1.20
+- 1.50
+- 2.00
+- 2.32478
+WaveHeading:
+- 0.0
+- 45.0
+- 90.0
+- 135.0
+- 180.0
+Bodies:
+- BodyName: Spar_Benchmark
+  BodyMeshPosition:
+  - 0.0
+  - 0.0
+  - 0.0
+  BodyMeshAttitude:
+  - 0.0
+  - 0.0
+  - 0.0
+  BodyIncludedInAnalysis: Yes
+  BodyMeshFileName: simple.dat
+  BodyMeshFormat: Aqwa dat
+  BodyMeshLengthUnits: m
+  BodyMeshSymmetry: None
+  BodyAddInteriorSurfacePanels: Yes
+  BodyInteriorSurfacePanelMethod: Triangulation method
+  BodyOrcaFlexImportSymmetry: None
+  BodyHydrostaticIntegralMethod: Standard
+  BodyHydrostaticStiffnessMethod: Displacement
+  BodyInertiaSpecifiedBy: Matrix (for a general body)
+  BodyCentreOfMass:
+  - 0.0
+  - 0.0
+  - -61.63
+  BodyMass: 55000.0
+  BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+  - - 3.118e8
+    - 0
+    - 0
+  - - 0
+    - 3.118e8
+    - 0
+  - - 0
+    - 0
+    - 2.164e8
+  BodyInertiaTensorOriginType: Centre of mass
+  ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalStiffnessMatrixOriginType: Body origin
+  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalDampingMatrixOriginType: Body origin
+  BodyConnectionParent: Free
+  BodyIncreaseRollDampingToTarget: No
+  BodyFixedDOFx: No
+  BodyFixedDOFy: No
+  BodyFixedDOFz: No
+  BodyFixedDOFRx: No
+  BodyFixedDOFRy: No
+  BodyFixedDOFRz: No
+DetectAndSkipFieldPointsInsideBodies: Yes
+...

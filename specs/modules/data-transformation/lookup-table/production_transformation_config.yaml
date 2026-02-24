@@ -1,0 +1,79 @@
+# Production Configuration for Tension-to-Stress Transformation
+# Input: D:\1522\ctr9\fatigue_wsp_method\07c_fatigue\output\rainflow
+# Output: D:\1522\ctr9\fatigue_wsp_method\07c_fatigue\output\rainflow_stress
+
+# Input data configuration
+input:
+  folder: "D:\\1522\\ctr9\\fatigue_wsp_method\\07c_fatigue\\output\\rainflow"
+  file_pattern: "*_FC*_Strut*_rainflow.csv"
+  data_columns:
+    tension: "Range (kN)"
+    cycles: "Cycles_Annual"
+
+# Lookup table for transformation
+lookup_table:
+  file: "inputs/tension_range_to_stress_range_function.csv"
+  columns:
+    tension: "tension range (kN)"
+    stress: "stress range (Mpa)"
+    location_id: "location ID"
+    config: "config"
+
+# Transformation settings
+transformation:
+  method: "linear_interpolation"
+  bounds_error: false
+  fill_value: "extrapolate"
+  
+  # Config mapping for files without _mwl suffix
+  config_mapping:
+    "fsts_l015_125km3_l100_pb": "fsts_l015_125km3_l100_pb_mwl"
+    "fsts_l095_125km3_l000_pb": "fsts_l095_125km3_l000_pb_mwl"
+    "fsts_l015": "fsts_l015_mwl"
+    "fsts_l095": "fsts_l095_mwl"
+
+# Output configuration
+output:
+  folder: "D:\\1522\\ctr9\\fatigue_wsp_method\\07c_fatigue\\output\\rainflow_stress"
+  file_pattern: "{config}_FC{fc_number}_Strut{strut_number}_loc{location_id:02d}_stress_rainflow.csv"
+  columns:
+    - "stress range (Mpa)"
+    - "Cycles_Annual"
+
+# Processing settings
+processing:
+  batch_size: 100  # Process in batches for memory efficiency
+  parallel: true    # Enable parallel processing
+  max_workers: 4    # Number of parallel workers
+  
+  # Error handling
+  skip_errors: true  # Skip files that fail processing
+  error_log: "production_errors.log"
+  
+  # Progress tracking
+  show_progress: true
+  log_level: "INFO"
+
+# Quality checks
+validation:
+  check_monotonicity: true
+  check_negative_values: true
+  check_interpolation_accuracy: true
+  min_r_squared: 0.99
+  max_interpolation_error: 0.001  # 0.1% tolerance
+
+# Performance optimization
+optimization:
+  cache_interpolators: true  # Cache interpolators for each location/config
+  use_memory_mapping: true   # For large file processing
+  chunk_size: 10000         # Rows per chunk for large files
+
+# Metadata for tracking
+metadata:
+  version: "1.0.0"
+  created_date: "2025-01-24"
+  purpose: "Production transformation of fatigue tension data to stress"
+  source_description: "CTR9 fatigue workspace method output"
+  expected_files: 2592
+  locations: [2, 3, 5, 6, 7, 9, 10]
+  expected_output_files: 18144  # 2592 files x 7 locations

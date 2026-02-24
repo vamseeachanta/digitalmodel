@@ -1,0 +1,107 @@
+sequenceDiagram
+    participant User
+    participant Claude
+    participant MCP as MCP Server
+    participant COM as COM API
+    participant Vision
+    participant OW as OrcaWave
+    participant Agent as OW Agent
+    participant OF as OrcaFlex
+    
+    User->>Claude: "Analyze vessel hydrodynamics"
+    Claude->>MCP: create_vessel(specs)
+    
+    rect rgb(240, 248, 255)
+        Note over MCP: Vessel Creation
+        MCP->>Agent: Request optimal parameters
+        Agent-->>MCP: Mesh params, frequencies
+        MCP->>COM: CreateVessel(params)
+        COM->>OW: New vessel model
+        OW-->>COM: Model created
+        MCP->>Vision: Capture 3D view
+        Vision->>OW: Screenshot
+        Vision-->>MCP: Visual confirmation
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over MCP: Geometry Import
+        MCP->>COM: ImportGeometry(file)
+        COM->>OW: Load STL/GDF
+        OW-->>COM: Geometry loaded
+        MCP->>Agent: Validate geometry
+        Agent->>MCP: Check waterline, symmetry
+        MCP->>Vision: Verify visually
+        Vision-->>MCP: Geometry correct
+    end
+    
+    rect rgb(248, 255, 240)
+        Note over MCP: Mesh Optimization
+        MCP->>Agent: Analyze mesh quality
+        Agent->>COM: GetMeshData()
+        COM->>OW: Extract panels
+        OW-->>COM: Panel data
+        Agent->>Agent: Calculate metrics
+        Agent-->>MCP: Quality score: 0.72
+        MCP->>COM: RefineMesh(params)
+        COM->>OW: Update mesh
+        
+        loop Convergence Study
+            MCP->>COM: RunAnalysis()
+            COM->>OW: Execute solver
+            OW-->>COM: Results
+            MCP->>Agent: Check convergence
+            Agent-->>MCP: Converged/Not converged
+        end
+        
+        Agent-->>MCP: Optimal mesh found
+    end
+    
+    rect rgb(255, 245, 235)
+        Note over MCP: Hydrodynamic Analysis
+        MCP->>COM: SetAnalysisType("diffraction")
+        MCP->>COM: StartAnalysisAsync()
+        COM->>OW: Begin computation
+        
+        loop Monitor Progress
+            MCP->>COM: GetProgress()
+            COM-->>MCP: 45% complete
+            MCP->>Vision: Capture progress
+            Vision-->>MCP: Visual status
+            MCP->>Claude: Progress update
+            Claude->>User: "45% complete, converging well"
+        end
+        
+        OW-->>COM: Analysis complete
+        COM-->>MCP: Results ready
+    end
+    
+    rect rgb(240, 255, 240)
+        Note over MCP: Validation
+        MCP->>Agent: Validate results
+        Agent->>COM: GetHydrodynamics()
+        COM->>OW: Extract coefficients
+        OW-->>COM: Added mass, damping, etc.
+        
+        Agent->>Agent: Check reciprocity
+        Agent->>Agent: Verify energy
+        Agent->>Agent: Compare benchmarks
+        Agent-->>MCP: Validation passed ✓
+    end
+    
+    rect rgb(245, 245, 255)
+        Note over MCP: Export & Integration
+        MCP->>COM: GetAllResults()
+        COM->>OW: Full data export
+        OW-->>COM: Complete dataset
+        
+        MCP->>MCP: Format for OrcaFlex
+        MCP->>OF: Create vessel type
+        OF-->>MCP: Import successful
+        
+        MCP->>MCP: Generate Excel report
+        MCP-->>Claude: Analysis complete
+    end
+    
+    Claude-->>User: Results ready with reports
+    
+    Note over User, OF: Complete workflow: 2 minutes vs 30 minutes manual

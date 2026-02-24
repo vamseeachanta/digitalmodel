@@ -150,7 +150,7 @@ class Pressureloss:
 
         plt.text(0.5, 0.5, r"$\cos(y) + 4y + y^3$", fontsize=15, ha="center")
         plt.axis("off")
-        plt.savefig("tests/domains/pipeline/results/Plot/display_equation.png")
+        plt.savefig("tests/modules/pipeline/results/Plot/display_equation.png")
 
         flow_parameters = {
             "flow_rate": round(fr, 3),

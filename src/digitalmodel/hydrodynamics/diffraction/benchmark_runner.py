@@ -78,11 +78,6 @@ class BenchmarkConfig(BaseModel):
     timeout_seconds: int = 7200
     reference_solver: Optional[str] = None
 
-    # UI / Reporting overrides
-    report_title: Optional[str] = None
-    report_subtitle: Optional[str] = None
-    navigation_html: Optional[str] = None
-
 
 # ---------------------------------------------------------------------------
 # Run result
@@ -159,9 +154,7 @@ class BenchmarkRunner:
                 result.plot_paths = plot_paths
 
             # 3. Generate JSON report file
-            result.report_json_path = self._generate_json_report(
-                report, solver_metadata=solver_metadata,
-            )
+            result.report_json_path = self._generate_json_report(report)
 
             # 3b. Generate hydro data YAML
             result.hydro_data_yaml_path = self._generate_hydro_data_yaml(
@@ -235,17 +228,13 @@ class BenchmarkRunner:
     # Internal: JSON report
     # ------------------------------------------------------------------
 
-    def _generate_json_report(
-        self,
-        report: BenchmarkReport,
-        solver_metadata: Optional[Dict[str, Dict]] = None,
-    ) -> Path:
+    def _generate_json_report(self, report: BenchmarkReport) -> Path:
         """Serialize BenchmarkReport to a JSON file."""
         output_dir = Path(self.config.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / "benchmark_report.json"
 
-        data = self._report_to_dict(report, solver_metadata=solver_metadata)
+        data = self._report_to_dict(report)
 
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(data, fh, indent=2, default=_json_default)
@@ -408,11 +397,7 @@ class BenchmarkRunner:
         return yaml_path
 
     @staticmethod
-    def _report_to_dict(
-        self,
-        report: BenchmarkReport,
-        solver_metadata: Optional[Dict[str, Dict]] = None,
-    ) -> Dict[str, Any]:
+    def _report_to_dict(report: BenchmarkReport) -> Dict[str, Any]:
         """Convert a BenchmarkReport dataclass to a JSON-safe dict."""
         pairwise_data: Dict[str, Any] = {}
         for pair_key, pr in report.pairwise_results.items():
@@ -441,20 +426,6 @@ class BenchmarkRunner:
                 for k, v in pr.damping_correlations.items()
             }
 
-            hc_dict = None
-            if pr.hydrostatic_comparison:
-                hc = pr.hydrostatic_comparison
-                hc_dict = {
-                    "displacement_volume_diff": float(hc.displacement_volume_diff),
-                    "mass_diff": float(hc.mass_diff),
-                    "cog_diff": [float(v) for v in hc.cog_diff],
-                    "cob_diff": [float(v) for v in hc.cob_diff],
-                    "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": float(
-                        hc.stiffness_matrix_correlation,
-                    ),
-                }
-
             pairwise_data[pair_key] = {
                 "solver_a": pr.solver_a,
                 "solver_b": pr.solver_b,
@@ -462,7 +433,6 @@ class BenchmarkRunner:
                 "rao_comparisons": rao_dict,
                 "added_mass_correlations": am_corrs,
                 "damping_correlations": damp_corrs,
-                "hydrostatic_comparison": hc_dict,
             }
 
         consensus_data: Dict[str, Any] = {}
@@ -478,7 +448,7 @@ class BenchmarkRunner:
                 ],
             }
 
-        data = {
+        return {
             "vessel_name": report.vessel_name,
             "solver_names": report.solver_names,
             "comparison_date": report.comparison_date,
@@ -487,17 +457,6 @@ class BenchmarkRunner:
             "consensus_by_dof": consensus_data,
             "notes": report.notes,
         }
-
-        if solver_metadata:
-            # Extract semantic equivalence if present in any of the metadata dicts
-            for meta in solver_metadata.values():
-                if "_semantic_equivalence" in meta:
-                    data["semantic_equivalence"] = meta[
-                        "_semantic_equivalence"
-                    ]
-                    break
-
-        return data
 
     # ------------------------------------------------------------------
     # Internal: HTML report
@@ -552,16 +511,6 @@ class BenchmarkRunner:
                 vessel_name=report.vessel_name,
                 solver_names=report.solver_names,
             )
-
-        # --- 1b. Apply config overrides -------------------------------------
-        if self.config.report_title:
-            report_data.report_title = self.config.report_title
-        if self.config.report_subtitle:
-            report_data.report_subtitle = self.config.report_subtitle
-        if self.config.navigation_html:
-            if report_data.benchmark_html_sections is None:
-                report_data.benchmark_html_sections = {}
-            report_data.benchmark_html_sections["navigation"] = self.config.navigation_html
 
         # --- 2. Build benchmark sections via BenchmarkPlotter ---------------
         input_comparison_html = ""
@@ -631,23 +580,8 @@ class BenchmarkRunner:
                 f'<ul class="plot-links">{plot_links}</ul>'
             )
 
-        # --- 5. Build executive summary metrics --------------------------------
-        sem_data = None
-        if solver_metadata:
-            for meta in solver_metadata.values():
-                if "_semantic_equivalence" in meta:
-                    sem_data = meta["_semantic_equivalence"]
-                    break
-        benchmark_executive = self._build_benchmark_executive_html(
-            report, semantic=sem_data,
-        )
-
-        # --- 6. Pack into report_data.benchmark_html_sections ---------------
-        # Preserve any keys set earlier (e.g. "navigation" from config)
-        existing = report_data.benchmark_html_sections or {}
+        # --- 5. Pack into report_data.benchmark_html_sections ---------------
         report_data.benchmark_html_sections = {
-            **existing,
-            "benchmark_executive": benchmark_executive,
             "input_comparison": input_comparison_html,
             "input_files": input_files_html,
             "mesh_schematic": mesh_schematic_html,
@@ -660,263 +594,13 @@ class BenchmarkRunner:
             "overlay_plots": overlay_html,
         }
 
-        # --- 7. Set metadata from BenchmarkReport ---------------------------
+        # --- 6. Set metadata from BenchmarkReport ---------------------------
         report_data.solver_names = report.solver_names
         report_data.notes = list(report.notes)
 
-        # --- 8. Generate via unified template --------------------------------
+        # --- 7. Generate via unified template --------------------------------
         generate_diffraction_report(report_data, html_path)
         return html_path
-
-
-    # ------------------------------------------------------------------
-    # Internal: benchmark executive summary HTML
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _build_benchmark_executive_html(
-        report: BenchmarkReport,
-        semantic: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Build HTML for the executive summary benchmark metrics.
-
-        Returns a compact overview with verdict badge, per-DOF RAO table,
-        hydrodynamic coefficient summary, and semantic equivalence line.
-        """
-        if not report.pairwise_results:
-            return ""
-
-        # Use first pairwise result (typical: 2 solvers → 1 pair)
-        pw_key = next(iter(report.pairwise_results))
-        pw = report.pairwise_results[pw_key]
-
-        # --- 1. Verdict banner -------------------------------------------
-        agreement = pw.overall_agreement
-        badge_colors = {
-            "EXCELLENT": ("#27ae60", "#eafaf1"),
-            "GOOD": ("#2980b9", "#ebf5fb"),
-            "FAIR": ("#f39c12", "#fef9e7"),
-            "POOR": ("#e74c3c", "#fdedec"),
-        }
-        fg, bg = badge_colors.get(agreement, ("#999", "#f5f5f5"))
-        solver_label = f"{pw.solver_a} vs {pw.solver_b}"
-
-        verdict_html = (
-            f'<div style="background:{bg};border-left:4px solid {fg};'
-            f'padding:0.8em 1em;margin:0.8em 0;border-radius:4px;">'
-            f'<span style="font-size:1.3em;font-weight:700;color:{fg};">'
-            f"{agreement}</span>"
-            f'<span style="margin-left:1em;color:#555;">{solver_label}</span>'
-            f"</div>"
-        )
-
-        # --- 2. RAO comparison table (6 DOFs) ----------------------------
-        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
-
-        def _color(val: float) -> str:
-            if val >= 0.999:
-                return "#27ae60"
-            if val >= 0.99:
-                return "#f39c12"
-            return "#e74c3c"
-
-        rao_rows = []
-        for dof in dof_names:
-            comp = pw.rao_comparisons.get(dof)
-            if not comp:
-                continue
-            mag_r = comp.magnitude_stats.correlation
-            phase_r = comp.phase_stats.correlation
-            max_mag_diff = comp.max_magnitude_diff
-            max_phase_diff = comp.max_phase_diff
-            near_zero = max_mag_diff < 1e-6
-
-            signal_label = (
-                '<span style="color:#999;">Near-zero</span>'
-                if near_zero
-                else "Active"
-            )
-            phase_style = (
-                f"color:#999;"
-                if near_zero
-                else f"color:{_color(phase_r)};font-weight:600;"
-            )
-            phase_val = f"{phase_r:.4f}" if not near_zero else "-"
-
-            rao_rows.append(
-                f"<tr>"
-                f"<td>{dof.capitalize()}</td>"
-                f"<td style='color:{_color(mag_r)};font-weight:600;'>"
-                f"{mag_r:.4f}</td>"
-                f"<td style='{phase_style}'>{phase_val}</td>"
-                f"<td>{max_mag_diff:.4g}</td>"
-                f"<td>{max_phase_diff:.2f}&deg;</td>"
-                f"<td>{signal_label}</td>"
-                f"</tr>"
-            )
-
-        rao_table = (
-            '<h3 style="margin-top:1em;">RAO Comparison</h3>'
-            '<table style="width:100%;max-width:800px;">'
-            "<thead><tr>"
-            "<th>DOF</th><th>Mag r</th><th>Phase r</th>"
-            "<th>Max |diff|</th><th>Max Phase Diff</th><th>Signal</th>"
-            "</tr></thead>"
-            f"<tbody>{''.join(rao_rows)}</tbody></table>"
-        )
-
-        # --- 3. Hydrodynamic coefficient summary -------------------------
-        def _matrix_summary(
-            corrs: Dict,
-        ) -> tuple:
-            """Return (min_diag, min_offdiag, min_overall) from 6x6 corrs."""
-            diag_vals = []
-            offdiag_vals = []
-            for (i, j), v in corrs.items():
-                if not np.isfinite(v):
-                    continue
-                if i == j:
-                    diag_vals.append(v)
-                else:
-                    offdiag_vals.append(v)
-            min_diag = min(diag_vals) if diag_vals else float("nan")
-            min_offdiag = (
-                min(offdiag_vals) if offdiag_vals else float("nan")
-            )
-            all_vals = diag_vals + offdiag_vals
-            min_all = min(all_vals) if all_vals else float("nan")
-            return min_diag, min_offdiag, min_all
-
-        hydro_rows = []
-        for label, corrs in [
-            ("Added Mass", pw.added_mass_correlations),
-            ("Radiation Damping", pw.damping_correlations),
-        ]:
-            if not corrs:
-                continue
-            min_d, min_od, min_a = _matrix_summary(corrs)
-
-            def _fmt(v: float) -> str:
-                if math.isnan(v):
-                    return "-"
-                c = _color(v)
-                return (
-                    f"<span style='color:{c};font-weight:600;'>"
-                    f"{v:.4f}</span>"
-                )
-
-            hydro_rows.append(
-                f"<tr><td>{label}</td>"
-                f"<td>{_fmt(min_d)}</td>"
-                f"<td>{_fmt(min_od)}</td>"
-                f"<td>{_fmt(min_a)}</td></tr>"
-            )
-
-        hydro_html = ""
-        if hydro_rows:
-            hydro_html = (
-                '<h3 style="margin-top:1em;">'
-                "Hydrodynamic Coefficients</h3>"
-                '<table style="width:100%;max-width:700px;">'
-                "<thead><tr>"
-                "<th>Matrix</th><th>Min Diagonal r</th>"
-                "<th>Min Off-Diag r</th><th>Min Overall r</th>"
-                "</tr></thead>"
-                f"<tbody>{''.join(hydro_rows)}</tbody></table>"
-                '<p style="font-size:0.85em;color:#777;">'
-                'See <a href="#hydro-coefficients">'
-                "full 6&times;6 heatmaps</a> below.</p>"
-            )
-
-        # --- 4. Semantic equivalence summary --------------------------------
-        semantic_html = ""
-        if semantic:
-            sig = semantic.get("significant_count", 0)
-            cos = semantic.get("cosmetic_count", 0)
-            conv = semantic.get("convention_count", 0)
-            mat = semantic.get("match_count", 0)
-            total = mat + cos + conv + sig
-
-            if sig == 0:
-                badge = (
-                    '<span style="color:#27ae60;font-weight:600;">'
-                    "0 significant</span>"
-                )
-            else:
-                badge = (
-                    f'<span style="color:#e74c3c;font-weight:600;">'
-                    f"{sig} significant</span>"
-                )
-
-            # Build diff detail lists by level
-            all_diffs = semantic.get("diffs", [])
-            sig_diffs = [
-                d for d in all_diffs if d["level"] == "significant"
-            ]
-            cos_diffs = [
-                d for d in all_diffs if d["level"] == "cosmetic"
-            ]
-            conv_diffs = [
-                d for d in all_diffs if d["level"] == "convention"
-            ]
-
-            # Significant diffs — shown prominently
-            diff_detail = ""
-            if sig_diffs:
-                items = "".join(
-                    f"<li><code>{d['key']}</code>: "
-                    f"{d['owd']} vs {d['spec']}</li>"
-                    for d in sig_diffs
-                )
-                diff_detail = (
-                    f'<ul style="margin:0.3em 0 0 1em;'
-                    f'font-size:0.9em;">{items}</ul>'
-                )
-
-            # Footnote for cosmetic + convention diffs
-            footnote = ""
-            footnote_items = []
-            for d in cos_diffs:
-                footnote_items.append(
-                    f"<code>{d['key']}</code>: "
-                    f"{d['owd']} vs {d['spec']}"
-                )
-            for d in conv_diffs:
-                footnote_items.append(
-                    f"<code>{d['key']}</code>: "
-                    f"{d['owd']} vs {d['spec']}"
-                )
-            if footnote_items:
-                fn_list = "".join(
-                    f"<li>{item}</li>" for item in footnote_items
-                )
-                footnote = (
-                    '<details style="margin-top:0.5em;'
-                    'font-size:0.85em;color:#777;">'
-                    f"<summary>{cos} cosmetic + {conv} convention "
-                    f"diffs (no solver effect)</summary>"
-                    f'<ul style="margin:0.3em 0 0 1em;">'
-                    f"{fn_list}</ul>"
-                    "<p style='margin:0.3em 0 0 0.5em;"
-                    "font-style:italic;'>"
-                    "Cosmetic: GUI pens, naming, output flags. "
-                    "Convention: same physics, different "
-                    "representation (e.g. freq vs period). "
-                    "QTF-related settings are dormant when "
-                    "QTF is disabled.</p>"
-                    "</details>"
-                )
-
-            semantic_html = (
-                '<h3 style="margin-top:1em;">'
-                "Semantic Equivalence</h3>"
-                f'<p style="margin:0.3em 0;">'
-                f"{mat}/{total} match, {badge}, "
-                f"{conv} convention, {cos} cosmetic"
-                f"</p>{diff_detail}{footnote}"
-            )
-
-        return f"{verdict_html}{rao_table}{hydro_html}{semantic_html}"
 
 
 # ---------------------------------------------------------------------------

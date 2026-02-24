@@ -1,0 +1,5 @@
+configuration,average_contribution_percent,min_contribution_percent,max_contribution_percent
+fsts_l015_125km3_l100_pb_mwl,4.83,0.00,14.58
+fsts_l015_mwl,50.75,0.00,94.30
+fsts_l095_125km3_l000_pb_mwl,12.39,0.12,72.36
+fsts_l095_mwl,32.03,5.45,97.80

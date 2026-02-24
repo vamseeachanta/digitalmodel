@@ -1,0 +1,246 @@
+# Rainflow Analysis - 3D Plot Test Configuration
+# Based on production config but limited to 3 files for quick testing
+# Created: 2025-01-29
+
+# ============================================================================
+# PROJECT IDENTIFICATION
+# ============================================================================
+project:
+  name: "3D Plot Test - Rainflow Analysis"
+  description: "Testing 3D plot customization with production data"
+  analysis_type: "rainflow-with-visualization"
+  project_id: "RF-3D-TEST"
+  version: "1.0.0"
+  date: "2025-01-29"
+  
+# ============================================================================
+# INPUT DATA CONFIGURATION
+# ============================================================================
+input_data:
+  timetrace:
+    data_folder: "D:\\1522\\ctr9\\fatigue_wsp_method\\07c_fatigue\\output\\scaled_loads\\tension_data"
+    file_format: "csv"
+    name_pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_tension.csv"
+    # LIMITED PATTERN FOR TESTING - ONLY FC001 STRUT 1-3
+    filter_pattern: "*_FC001_Strut[1-3]_tension.csv"
+    data_column: "Scaled Tension (kN)"
+    time_column: "time"
+    sampling:
+      dt: 0.1
+      auto_detect: true
+  preprocessing:
+    remove_mean: false
+    filter:
+      enabled: false
+      
+# ============================================================================
+# RAINFLOW COUNTING METHOD
+# ============================================================================
+rainflow_counting:
+  method:
+    algorithm: "ASTM E1049"
+    auto_detect_length: true
+  binning:
+    num_bins: 50
+    method: "linear"
+    min_range: 0.0
+    max_range: 10000
+    mean_binning:
+      enabled: true
+      min_mean: -5000
+      max_mean: 5000
+  cycle_extraction:
+    count_type: "full-cycles"
+    min_range_threshold: 0.0
+    handle_residue: true
+  cycle_scaling:
+    timetrace_cycles: true
+    annual_cycles: true
+    scaling_method: "simple"
+    annual_hours: 8760
+    use_actual_duration: true
+    
+# ============================================================================
+# FFT ANALYSIS CONFIGURATION
+# ============================================================================
+fft_analysis:
+  window:
+    type: "hanning"
+    length_seconds: 500
+    overlap_percent: 50
+  parameters:
+    sampling_frequency: "auto"
+    expected_dt: 0.1
+    nfft: "auto"
+    freq_range:
+      min: 0.0
+      max: 5.0
+  spectral:
+    spectrum_type: "power"
+    scaling: "density"
+    detrend: "constant"
+    
+# ============================================================================
+# OUTPUT CONFIGURATION
+# ============================================================================
+output:
+  folders:
+    base: "specs/modules/signal-analysis/rainflow_with_visualization"
+    rainflow_results: "output_3d_test"
+    visualizations: "visualization_3d_test"
+  file_naming:
+    pattern: "{config}_FC{fc_number:03d}_Strut{strut_number}_{type}"
+    types:
+      rainflow: "rainflow"
+      fft: "fft"
+      summary: "summary"
+  formats:
+    rainflow_output:
+      format: "csv"
+      include_headers: true
+      columns:
+        - "Range (kN)"
+        - "Mean (kN)"
+        - "Cycles_TimeTrace"
+        - "Cycles_Annual"
+        - "Bin_Number"
+        - "Damage_Contribution"
+    individual_outputs: true
+    aggregate_summary:
+      enabled: true
+      filename: "3d_test_summary.csv"
+      include_statistics: true
+      
+# ============================================================================
+# VISUALIZATION CONFIGURATION - CUSTOMIZED 3D PLOTS
+# ============================================================================
+visualization:
+  # FFT visualization
+  fft_plot:
+    enabled: false  # Disabled for 3D plot testing
+    
+  # Rainflow visualization with custom 3D settings
+  rainflow_plot:
+    enabled: true
+    format: "png"
+    settings:
+      figure_size: [16, 8]
+      dpi: 200  # Higher DPI for production
+      
+    # 3D Rainflow Matrix Plot Customization
+    rainflow_3d_plot:
+      # Main plot title
+      title: "Production Data - Rainflow Cycle Distribution Analysis"
+      
+      # Subplot titles
+      subplot_titles:
+        scatter_3d: "3D Rainflow Matrix - Tension Cycles"
+        projection_2d: "2D Projection - Cycle Distribution"
+      
+      # Axis labels
+      axes_labels:
+        x_axis: "Tension Range (kN)"
+        y_axis: "Mean Tension (kN)"
+        z_axis: "Number of Cycles"
+        colorbar: "Cycle Count (log scale)"
+      
+      # Viewing angle for 3D plot
+      view_angle:
+        elevation: 25  # Slightly higher view
+        azimuth: 50   # Rotated for better perspective
+      
+      # Color scheme
+      colormap: "plasma"  # Using plasma for better contrast
+      
+      # Marker style
+      marker:
+        style: "o"
+        alpha: 0.8
+        edge_color: "darkblue"
+        edge_width: 0.4
+      
+      # Statistics box
+      show_statistics: true
+      statistics_position: [0.02, 0.98]
+      
+    # Plot components
+    components:
+      - "rainflow_matrix"  # Only 3D matrix plot
+      
+  # Time series visualization
+  timeseries_plot:
+    enabled: false  # Disabled for 3D plot testing
+    
+  # Combined report
+  combined_report:
+    enabled: false
+    
+# ============================================================================
+# PROCESSING OPTIONS
+# ============================================================================
+processing:
+  parallel:
+    enabled: false  # Single thread for testing
+    num_workers: 1
+  batch:
+    process_all_files: true
+    continue_on_error: true
+  memory:
+    max_memory_gb: 8
+    use_mmap: true
+    
+# ============================================================================
+# VALIDATION AND QUALITY CONTROL
+# ============================================================================
+validation:
+  input_checks:
+    check_completeness: true
+    max_missing_percent: 5.0
+    check_outliers: true
+    outlier_threshold: 6.0
+  output_checks:
+    verify_cycle_count: true
+    check_negative_ranges: true
+    validate_fft: true
+  quality_metrics:
+    calculate_snr: true
+    calculate_moments: true
+    generate_qc_report: false
+    
+# ============================================================================
+# LOGGING AND DEBUGGING
+# ============================================================================
+logging:
+  level: "INFO"
+  log_file: "3d_plot_test.log"
+  console_output: true
+  include_timestamps: true
+  log_performance: true
+  
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  error_handling:
+    stop_on_error: false
+    save_error_log: true
+    error_log_file: "3d_test_errors.log"
+  progress:
+    show_progress: true
+    update_interval: 1.0
+  limits:
+    max_execution_time: 300  # 5 minutes for test
+    max_file_size_mb: 1000
+    
+# ============================================================================
+# METADATA
+# ============================================================================
+metadata:
+  created_date: "2025-01-29"
+  created_by: "3D Plot Testing"
+  last_modified: "2025-01-29"
+  config_version: "1.0.0"
+  notes: |
+    Test configuration for verifying 3D plot customization
+    Limited to 3 files (FC001 Strut 1-3) for quick testing
+    Custom titles, labels, colors, and viewing angles

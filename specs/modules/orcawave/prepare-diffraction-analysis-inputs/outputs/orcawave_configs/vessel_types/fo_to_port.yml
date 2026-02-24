@@ -1,0 +1,40 @@
+VesselType:
+  Name: SeaCypress_fo_to_port
+  Description: 4070 gallons FO to Port
+  Geometry:
+    Length: 22.86
+    Beam: 8.53
+    Depth: 3.05
+    Draft: 2.042
+    GeometryFile: geometry/sea_cypress.gdf
+    SymmetryMode: xz plane
+  MassProperties:
+    Mass: 307516.75
+    CentreOfGravity:
+      X: 11.2794
+      Y: 0.1123
+      Z: 2.393
+    MomentsOfInertia:
+      Ixx: 2161040.49
+      Iyy: 9157539.02
+      Izz: 10288127.38
+      Ixy: 0.0
+      Ixz: 0.0
+      Iyz: 0.0
+    RadiiOfGyration:
+      Kxx: 2.6509
+      Kyy: 5.457
+      Kzz: 5.7841
+  Hydrostatics:
+    CalculateFromGeometry: true
+    WaterDensity: 1025.0
+    GravitationalAcceleration: 9.81
+  CoordinateSystem:
+    Origin:
+      Description: Frame 0 at baseline
+      X: 0.0
+      Y: 0.0
+      Z: 0.0
+    Orientation:
+      Description: X forward, Y port, Z up
+      Convention: ShipBuilding

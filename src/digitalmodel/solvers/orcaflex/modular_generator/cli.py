@@ -391,7 +391,7 @@ Examples:
       --input spec.yml
 
 For more information, see the documentation at:
-  docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/
+  docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/
 """
     )
 

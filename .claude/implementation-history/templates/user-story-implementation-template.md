@@ -66,8 +66,8 @@ Lines Deleted: [number]
 ### Key File Changes
 - **Modified**: `src/modules/[module]/[file].py` - [Description of changes]
 - **Added**: `src/modules/[module]/[new_file].py` - [Purpose of new file]
-- **Modified**: `src/digitalmodel/base_configs/domains/[config].yml` - [Config changes]
-- **Added**: `tests/domains/[module]/test_[feature].py` - [Test coverage added]
+- **Modified**: `src/digitalmodel/base_configs/modules/[config].yml` - [Config changes]
+- **Added**: `tests/modules/[module]/test_[feature].py` - [Test coverage added]
 
 ## Technical Implementation
 

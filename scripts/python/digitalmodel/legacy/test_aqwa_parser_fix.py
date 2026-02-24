@@ -104,7 +104,7 @@ def main():
     """Main test function."""
     # Test both files
     files_to_test = [
-        Path("docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS"),
+        Path("docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS"),
         Path("specs/modules/orcaflex/mooring-analysis/go-by-fsts-lngc/aqwa_to_ofx/input/FST2L015_FST1L015_HWL.LIS")
     ]
 

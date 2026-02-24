@@ -1,0 +1,65 @@
+graph LR
+    subgraph "Data Sources"
+        CSV[CSV Files<br/>dm_*.csv]
+        SIM[Simulation Files<br/>*.sim]
+        API_EXT[OrcaFlex API]
+    end
+    
+    subgraph "Ingestion Pipeline"
+        Monitor[File Monitor<br/>Watchdog]
+        Queue[Task Queue<br/>Celery]
+        Parser[CSV Parser<br/>Pandas]
+        Validator[Data Validator<br/>Pydantic]
+    end
+    
+    subgraph "Processing Layer"
+        Transform[Data Transformer<br/>Unit Conversion]
+        Analyzer[Statistical Analyzer<br/>NumPy/SciPy]
+        Aggregator[Data Aggregator<br/>Time Series]
+    end
+    
+    subgraph "Storage Layer"
+        DB[(PostgreSQL<br/>Structured Data)]
+        Cache[(Redis<br/>Hot Data)]
+        Files[File Storage<br/>Raw Files]
+    end
+    
+    subgraph "Service Layer"
+        REST[REST API<br/>FastAPI]
+        WS[WebSocket<br/>Real-time]
+        Export[Export Service<br/>Reports]
+    end
+    
+    subgraph "Presentation"
+        Dashboard[Dashboard UI]
+        Charts[Visualizations]
+        Reports[PDF Reports]
+    end
+    
+    CSV --> Monitor
+    SIM --> Monitor
+    API_EXT --> Queue
+    Monitor --> Queue
+    Queue --> Parser
+    Parser --> Validator
+    Validator --> Transform
+    Transform --> Analyzer
+    Transform --> Aggregator
+    Analyzer --> DB
+    Aggregator --> DB
+    DB --> Cache
+    Cache --> REST
+    Cache --> WS
+    DB --> Export
+    REST --> Dashboard
+    WS --> Charts
+    Export --> Reports
+    
+    style CSV fill:#e8f5e9
+    style SIM fill:#e8f5e9
+    style API_EXT fill:#e8f5e9
+    style DB fill:#fce4ec
+    style Cache fill:#fce4ec
+    style Dashboard fill:#e1f5fe
+    style Charts fill:#e1f5fe
+    style Reports fill:#e1f5fe

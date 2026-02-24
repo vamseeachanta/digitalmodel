@@ -18,7 +18,7 @@ converter = OrcaFlexConverterEnhanced(
     use_mock=True  # Use mock since we don't have OrcaFlex license
 )
 
-input_file = Path("docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.dat")
+input_file = Path("docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.dat")
 
 if input_file.exists():
     print(f"Input:  {input_file}")
@@ -41,7 +41,7 @@ print("\n[TEST 2] Batch Conversion - A01 Directory (Mock Mode)")
 print("-"*70)
 
 converter_batch = OrcaFlexConverterEnhanced(
-    input_dir=Path("docs/domains/orcaflex/examples/raw/A01"),
+    input_dir=Path("docs/modules/orcaflex/examples/raw/A01"),
     output_dir=Path("temp_test_conversion/A01_yml"),
     output_format='yml',
     use_mock=True,

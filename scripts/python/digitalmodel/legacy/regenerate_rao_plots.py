@@ -186,7 +186,7 @@ def generate_rao_plots(lis_file, output_dir):
 def main():
     """Main function."""
     # Input file
-    lis_file = Path('docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
+    lis_file = Path('docs/modules/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS')
 
     # Output directory
     output_dir = Path('tests/marine_engineering/plots/rao_qa')

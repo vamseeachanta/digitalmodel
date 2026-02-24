@@ -1,0 +1,62 @@
+{
+  "fsts_l015": {
+    "weight_pct": 46.25,
+    "critical_strut": "Strut1",
+    "min_fatigue_life": 0.002360071209024134,
+    "strut_lives": {
+      "Strut1": 0.002360071209024134,
+      "Strut2": 0.002449320294032263,
+      "Strut3": Infinity,
+      "Strut4": Infinity,
+      "Strut5": Infinity,
+      "Strut6": Infinity,
+      "Strut7": Infinity,
+      "Strut8": Infinity
+    }
+  },
+  "fsts_l095": {
+    "weight_pct": 46.25,
+    "critical_strut": "Strut2",
+    "min_fatigue_life": 0.0023333034466270705,
+    "strut_lives": {
+      "Strut1": 0.0025448234502150674,
+      "Strut2": 0.0023333034466270705,
+      "Strut3": Infinity,
+      "Strut4": Infinity,
+      "Strut5": Infinity,
+      "Strut6": Infinity,
+      "Strut7": Infinity,
+      "Strut8": Infinity
+    }
+  },
+  "fsts_l015_125km3_l100_pb": {
+    "weight_pct": 3.75,
+    "critical_strut": "Strut1",
+    "min_fatigue_life": 0.0026000697464637697,
+    "strut_lives": {
+      "Strut1": 0.0026000697464637697,
+      "Strut2": 0.0026100670006508155,
+      "Strut3": Infinity,
+      "Strut4": Infinity,
+      "Strut5": Infinity,
+      "Strut6": Infinity,
+      "Strut7": Infinity,
+      "Strut8": Infinity
+    }
+  },
+  "fsts_l095_125km3_l000_pb": {
+    "weight_pct": 3.75,
+    "critical_strut": "Strut2",
+    "min_fatigue_life": 0.00246936148117404,
+    "strut_lives": {
+      "Strut1": 0.0024951453175949745,
+      "Strut2": 0.00246936148117404,
+      "Strut3": Infinity,
+      "Strut4": Infinity,
+      "Strut5": Infinity,
+      "Strut6": Infinity,
+      "Strut7": Infinity,
+      "Strut8": Infinity
+    }
+  }
+}

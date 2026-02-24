@@ -1,0 +1,12 @@
+meta:
+  library: digitalmodel
+  basename: orcaflex
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+    - End Ex force
+    - End Ey force
+
+... [truncated] ...

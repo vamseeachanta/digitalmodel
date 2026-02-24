@@ -614,7 +614,7 @@ def main() -> None:
             "Examples:\n"
             "  uv run python scripts/benchmark/probe_owd_content.py\n"
             "  uv run python scripts/benchmark/probe_owd_content.py "
-            "--owd-path docs/domains/orcawave/L00_validation_wamit/2.4/"
+            "--owd-path docs/modules/orcawave/L00_validation_wamit/2.4/"
             '"OrcaWave v11.0 files/Hemisphere.owd"'
         ),
     )

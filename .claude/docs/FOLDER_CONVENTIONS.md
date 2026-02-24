@@ -8,7 +8,7 @@
 |--------|---------|
 | `src/` | Source code (Python packages) |
 | `tests/` | Test files (pytest) |
-| `docs/` | Documentation (under `docs/domains/`) |
+| `docs/` | Documentation (under `docs/modules/`) |
 | `scripts/` | Utility scripts (including `scripts/testing/`) |
 | `config/` | Configuration files |
 | `data/` | Data files |
@@ -52,7 +52,7 @@ src/.../modules/    = HOW to implement (code level)
 |----------|----------|--------------|
 | `agents/orcaflex/` | `modules/orcaflex/` | Complementary (AI + utilities) |
 | `agents/` | `.claude/agents/` | Hierarchical (domain + framework) |
-| `skills/automation/` | `scripts/automation/` | Orthogonal (docs + scripts) |
+| `skills/automation/` | `modules/automation/` | Orthogonal (docs + scripts) |
 | `modules/orcaflex/` | `src/.../orcaflex/` | Different layers (config + code) |
 
 ## Runtime Folders (Not Tracked in Git)

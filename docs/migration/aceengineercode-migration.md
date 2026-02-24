@@ -218,7 +218,7 @@ After migration, verify the following:
 
 ## Related Documentation
 
-- [digitalmodel Module Documentation](/docs/domains/)
+- [digitalmodel Module Documentation](/docs/modules/)
 - [Common Utilities Reference](/docs/guides/)
 - [OrcaFlex Integration Guide](/docs/software/)
 - [Configuration System Overview](/docs/guides/)

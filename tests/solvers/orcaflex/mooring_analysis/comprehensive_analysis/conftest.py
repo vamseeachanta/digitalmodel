@@ -139,13 +139,13 @@ def sample_csv_files(temp_directory, sample_pretension_dataframe,
 def real_csv_paths():
     """Provide paths to real CSV files from example folders."""
     return {
-        'pretension': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
+        'pretension': Path('D:/github/digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/'
                           'fsts-l015-test-cases/output/collate/csv/'
                           'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv'),
-        'stiffness': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
+        'stiffness': Path('D:/github/digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/'
                          'fsts-l015-test-cases/output/collate/csv/'
                          'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_mooring_stiffness_analysis.csv'),
-        'fender': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
+        'fender': Path('D:/github/digitalmodel/tests/modules/orcaflex/mooring-tension-iteration/'
                       'fsts-l015-test-cases/output/collate/csv/'
                       'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_fender_force_analysis.csv')
     }

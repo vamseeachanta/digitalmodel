@@ -85,7 +85,7 @@ def run_test_suite(test_path, exclude_patterns=None):
 
 def compare_modules():
     """Compare test results for different modules."""
-    base_path = Path('tests/domains/orcaflex')
+    base_path = Path('tests/modules/orcaflex')
     
     modules = [
         'analysis',
@@ -208,7 +208,7 @@ def main():
     report = generate_report(results)
     
     # Save report
-    report_path = Path('tests/domains/orcaflex/TEST_BASELINE_REPORT.md')
+    report_path = Path('tests/modules/orcaflex/TEST_BASELINE_REPORT.md')
     with open(report_path, 'w', encoding='utf-8') as f:
         f.write(report)
     

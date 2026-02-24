@@ -6,7 +6,7 @@ repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
 repo_name=$(basename $(git rev-parse --show-toplevel))
-tests_home="tests/domains"
+tests_home="tests/modules"
 bash_tools_home="dev_tools/bash_tools"
 
 source ${bash_tools_home}/common.sh

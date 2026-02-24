@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/mooring_analysis/**'
-      - 'tests/domains/mooring_analysis/**'
+      - 'tests/modules/mooring_analysis/**'
       - '.github/workflows/mooring-analysis-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/mooring_analysis/**'
-      - 'tests/domains/mooring_analysis/**'
+      - 'tests/modules/mooring_analysis/**'
 
 jobs:
   test:
@@ -45,11 +45,11 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest tests/domains/mooring_analysis/test_mooring_analysis_unit.py -v --cov=src/digitalmodel/modules/mooring_analysis --cov-report=xml --cov-report=term
+        pytest tests/modules/mooring_analysis/test_mooring_analysis_unit.py -v --cov=src/digitalmodel/modules/mooring_analysis --cov-report=xml --cov-report=term
 
     - name: Run CLI integration tests
       run: |
-        pytest tests/domains/mooring_analysis/test_mooring_analysis_cli.py -v
+        pytest tests/modules/mooring_analysis/test_mooring_analysis_cli.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

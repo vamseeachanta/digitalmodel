@@ -56,7 +56,7 @@ DigitalModel is a comprehensive Python-based engineering analysis platform focus
 ### Specification-First Development
 All features follow this structured approach:
 1. **Specification First**: Features start with specs in `.agent-os/projects/` or `.ai/specs/`
-2. **Configuration Templates**: Create/modify YAML configs in `base_configs/domains/`
+2. **Configuration Templates**: Create/modify YAML configs in `base_configs/modules/`
 3. **Module Implementation**: Implement analysis logic in `modules/`
 4. **Testing**: Create comprehensive tests with mock APIs where needed
 5. **Documentation**: Update relevant docs in `docs/` directory
@@ -100,7 +100,7 @@ The codebase is organized into:
 - `tests/`: Test suites for various modules
 - `docs/`: Technical documentation and references
 - `.ai/` & `.agent-os/`: AI agent guidance and specifications
-- `base_configs/domains/`: YAML configuration templates
+- `base_configs/modules/`: YAML configuration templates
 
 ### Engineering Domain Organization
 - `aqwa/` - ANSYS AQWA hydrodynamic analysis

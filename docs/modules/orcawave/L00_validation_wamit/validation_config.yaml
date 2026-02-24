@@ -1,0 +1,150 @@
+# WAMIT Validation Benchmark Configuration
+# Tracks all 12 Orcina validation cases (2.1-2.9, 3.1-3.3)
+
+version: "1.0"
+base_dir: docs/modules/orcawave/L00_validation_wamit
+
+cases:
+  "2.1":
+    name: Circular Cylinder (R=1, T=0.5)
+    geometry: cylinder
+    panels: 256
+    physics: basic_diffraction
+    hull_library_id: val_cylinder_r1_t05
+    phase: 2
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "50 freq (rad/s), 2 headings, free_floating, r=1.000000"
+
+  "2.2":
+    name: Floating Box with IRR
+    geometry: cylinder
+    panels: 256
+    physics: mesh_sensitivity
+    hull_library_id: val_cylinder_r1_t05
+    phase: 2
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "100 freq (rad/s), 2 headings, extended freq range, r=1.000000"
+
+  "2.3":
+    name: Truncated Cylinder
+    geometry: cylinder
+    panels: 256
+    physics: truncated_variant
+    hull_library_id: val_cylinder_r1_t05
+    phase: 2
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "Trimmed position z=0.27m attitude rx=15deg, r=1.000000"
+
+  "2.4":
+    name: Hemisphere
+    geometry: hemisphere
+    panels: 0
+    physics: reference_only
+    hull_library_id: null
+    phase: 3
+    status: blocked
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "Blocked — mesh file HemisphereAndLid0814.gdf missing from .owd directory"
+
+  "2.5":
+    name: ISSC TLP
+    geometry: tlp
+    panels: [128, 1012]
+    physics: mesh_convergence
+    hull_library_id: [val_issc_tlp_coarse, val_issc_tlp_fine]
+    phase: 2
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: 450.0
+    notes: "Coarse r=1.000000 (surge/sway), fine r=1.000000 (surge/sway), potential_only"
+
+  "2.6":
+    name: Cylinder R=1 T=2 + Spheroid
+    geometry: [cylinder, spheroid]
+    panels: [112, 64]
+    physics: multi_variant
+    hull_library_id: [val_cylinder_r1_t2, val_spheroid]
+    phase: 2
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: 3.0
+    notes: "Multi-body shallow water, r=1.000000"
+
+  "2.7":
+    name: Pyramid (ZC=0.8)
+    geometry: pyramid
+    panels: 408
+    physics: convergence_study
+    hull_library_id: canonical_pyramid_zc08
+    phase: 1
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "408-panel pyramid, r=1.000000, 738 pts"
+
+  "2.8":
+    name: Ellipsoid (96 panels)
+    geometry: ellipsoid
+    panels: 96
+    physics: mesh_refinement
+    hull_library_id: canonical_ellipsoid_96p
+    phase: 1
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "96-panel ellipsoid, r=1.000000, 18 pts"
+
+  "2.9":
+    name: Moonpool Cylinder with Damping Lid
+    geometry: moonpool
+    panels: [368, 32]
+    physics: damping_lid
+    hull_library_id: [val_moonpool_body, val_moonpool_lid]
+    phase: 3
+    status: pass
+    wamit_version: "v7.3"
+    water_depth: infinite
+    notes: "Damping lid epsilon=0.016, 75 freq x 6 headings, r=1.000000"
+
+  "3.1":
+    name: Bottom-Mounted Cylinder
+    geometry: cylinder_bmc
+    panels: 100
+    physics: fixed_structure
+    hull_library_id: val_bmc
+    phase: 3
+    status: pass
+    wamit_version: "v6.4S"
+    water_depth: 1.0
+    notes: "All DOFs fixed, Full QTF, free surface zone, r=1.0 (trivial — zero RAOs)"
+
+  "3.2":
+    name: Sphere with Lid and Zone
+    geometry: sphere
+    panels: 240
+    physics: interior_zone
+    hull_library_id: canonical_sphere_r5
+    phase: 1
+    status: pass
+    wamit_version: "v6.4S"
+    water_depth: infinite
+    notes: "Control surface lid, r=1.000000, 2 pts"
+
+  "3.3":
+    name: Cylinder + Ellipsoid Multi-body
+    geometry: [cylinder, ellipsoid]
+    panels: [420, 220]
+    physics: multi_body
+    hull_library_id: null
+    phase: 1
+    status: pass
+    wamit_version: "v6.4S"
+    water_depth: infinite
+    notes: "Multi-body with panelled interior zone, r=1.000000, 10 pts"

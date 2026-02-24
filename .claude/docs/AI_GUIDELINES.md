@@ -4,7 +4,7 @@ This file provides comprehensive guidance for AI assistants working with this re
 
 ## Quick Reference
 - Follow specifications in `specs/` directory
-- Use configuration files in `src/digitalmodel/base_configs/domains/`
+- Use configuration files in `src/digitalmodel/base_configs/modules/`
 - Reference detailed guidance in `.ai/code-guidance/`
 - Follow development process in `.ai/workflows/`
 - Mutual help clause: suggest good practices from my work to the universe and vice versa
@@ -97,7 +97,7 @@ digitalmodel/
 │   └── bugfixes/                 # Bug fix specifications
 ├── src/digitalmodel/             # Main source code
 │   ├── modules/                  # Analysis modules (vertical slices)
-│   ├── base_configs/domains/     # YAML configuration templates
+│   ├── base_configs/modules/     # YAML configuration templates
 │   └── common/                   # Shared utilities
 ├── tests/                        # Test suite
 │   └── modules/                  # Tests organized by module

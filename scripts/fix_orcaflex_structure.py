@@ -138,7 +138,7 @@ def main():
     print(f"  - {len(DIRECTIONS) * len(RETURN_PERIODS) * len(MODEL_TYPES)} fixed analysis models")
 
     print(f"\nStructure now matches reference pattern:")
-    print(f"  tests/domains/orcaflex/analysis/moorings/pretension/source")
+    print(f"  tests/modules/orcaflex/analysis/moorings/pretension/source")
 
     print(f"\nNext steps:")
     print(f"  1. Test single model: python test_single_model_fixed.py")

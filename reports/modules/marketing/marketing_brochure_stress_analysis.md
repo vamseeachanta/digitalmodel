@@ -300,7 +300,7 @@ print(f"Safety Factor: {results['safety_factor']:.2f}")
 - GitHub: https://github.com/vamseeachanta/digitalmodel
 
 **Documentation**
-- Module Guide: `/docs/domains/stress/README.md`
+- Module Guide: `/docs/modules/stress/README.md`
 - API Reference: `/docs/api/stress.md`
 - Examples: `/examples/stress/`
 

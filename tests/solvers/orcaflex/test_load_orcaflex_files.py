@@ -7,7 +7,7 @@ Two levels of validation:
    OrcFxAPI.Model().LoadData()
 
 Usage:
-    uv run pytest tests/domains/orcaflex/test_load_orcaflex_files.py -v
+    uv run pytest tests/modules/orcaflex/test_load_orcaflex_files.py -v
 """
 
 import platform

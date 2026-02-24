@@ -25,7 +25,7 @@ from digitalmodel.solvers.orcaflex.pipeline_schematic import (
 def sample_yaml_path():
     """Path to the sample pipeline installation model."""
     return Path(
-        "docs/domains/orcaflex/pipeline/installation/floating/"
+        "docs/modules/orcaflex/pipeline/installation/floating/"
         "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
     )
 
@@ -179,7 +179,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -198,7 +198,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -221,7 +221,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -241,7 +241,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -261,7 +261,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -285,7 +285,7 @@ class TestPipelineSchematicGenerator:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -374,7 +374,7 @@ class TestIntegration:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",
@@ -404,7 +404,7 @@ class TestIntegration:
 
     @pytest.mark.skipif(
         not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
+            "docs/modules/orcaflex/pipeline/installation/floating/"
             "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
         ).exists(),
         reason="Sample YAML not available",

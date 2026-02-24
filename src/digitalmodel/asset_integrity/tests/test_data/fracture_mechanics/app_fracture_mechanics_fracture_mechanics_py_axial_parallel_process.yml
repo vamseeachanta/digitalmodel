@@ -1,17 +1,17 @@
-&id004 !!python/object/new:digitalmodel.asset_integrity.common.update_deep.AttributeDict
+&id004 !!python/object/new:pyintegrity.common.update_deep.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/fracture_mechanics_py_axial_parallel_process.yml
-    DefaultInputFile: ~
-    analysis_root_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics
+    CustomInputFile: tests/test_data/fracture_mechanics/fracture_mechanics_py_axial_parallel_process.yml
+    DefaultInputFile: null
+    analysis_root_folder: tests/test_data/fracture_mechanics
     basename: fracture_mechanics
-    cfg_array_file_names: ~
+    cfg_array_file_names: null
     file_name: app_fracture_mechanics_fracture_mechanics_py_axial_parallel_process
     file_name_for_overwrite: app_fracture_mechanics_fracture_mechanics_py_axial_parallel_process
-    log_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\logs\
-    result_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\results\
-    start_time: 2026-02-18 04:23:09.038734
-  Inner_Pipe: ~
+    log_folder: tests/test_data/fracture_mechanics/logs/
+    result_folder: tests/test_data/fracture_mechanics/results/
+    start_time: 2023-10-17 11:40:06.659527
+  Inner_Pipe: null
   Material:
     Steel:
       E: 30000000.0
@@ -37,8 +37,8 @@ dictitems:
     Manufacturing:
       Coupling Mass Ratio: 0.1
     Material:
-      Buoyancy: ~
-      Insulation: ~
+      Buoyancy: null
+      Insulation: null
       Material: Steel
       Material_Grade: API 5L X80
       WeldFactor:
@@ -64,7 +64,16 @@ dictitems:
         SMYS: 80000
         geometry: *id001
   Result:
-    Exception: ''
+    Exception: "\n        An attempt has been made to start a new process before the\n\
+      \        current process has finished its bootstrapping phase.\n\n        This\
+      \ probably means that you are not using fork to start your\n        child processes\
+      \ and you have forgotten to use the proper idiom\n        in the main module:\n\
+      \n            if __name__ == '__main__':\n                freeze_support()\n\
+      \                ...\n\n        The \"freeze_support()\" line can be omitted\
+      \ if the program\n        is not going to be frozen to produce an executable.\n\
+      \n        To fix this issue, refer to the \"Safe importing of main module\"\n\
+      \        section in https://docs.python.org/3/library/multiprocessing.html\n\
+      \        "
   basename: fracture_mechanics
   default:
     Analysis:
@@ -148,6 +157,7 @@ dictitems:
         solution_step: 0.1
         values:
         - 5
+      stress_intensity_factor_solution: constant_values
       theta_array:
       - 90
       yield_discontinuity: false
@@ -165,8 +175,8 @@ dictitems:
     section_properties: *id002
   flaw:
     dimensions:
-      a: 2
-      c: 4
+      a: 25.0
+      c: 200
       p: 1
     geometry: thin_pipe
     location: internal_surface
@@ -176,16 +186,16 @@ dictitems:
     histograms:
       from_xlsx:
       - bending_factor: 1.0
-        column_to_analyze: ~
-        columns: ~
+        column_to_analyze: null
+        columns: null
         component_index:
         - 10
         component_label:
         - Buoyancy Jt. at Bottom
-        index_col: ~
-        io: tests\test_data\histograms\2500ft_WT0750_064pcf_combined_histograms.xlsx
+        index_col: null
+        io: tests/test_data/histograms/2500ft_WT0750_064pcf_combined_histograms.xlsx
         label: combined_histograms
-        replace: ~
+        replace: null
         sheet_name: combined_fatigue
         skipfooter: 0
         skiprows: 0
@@ -214,7 +224,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: outside
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -237,7 +247,7 @@ dictitems:
     - 1.6
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - K_r
     ylabel: Kr (Fracture Ratio)
@@ -250,7 +260,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -259,10 +269,10 @@ dictitems:
     x:
     - flaw_length
     xlabel: Flaw Length, 2c (mm)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - flaw_depth
     ylabel: Flaw Depth, a (mm)
@@ -275,7 +285,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -284,10 +294,10 @@ dictitems:
     x:
     - final_flaw_length
     xlabel: Flaw Length, 2c (mm)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - final_flaw_depth
     ylabel: Flaw Depth, a (mm)
@@ -300,7 +310,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -309,10 +319,10 @@ dictitems:
     x:
     - service_life
     xlabel: Service Life (years)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - final_flaw_depth
     ylabel: Flaw Depth, a (mm)

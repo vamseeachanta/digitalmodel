@@ -171,7 +171,7 @@ Input YAML File
 
 ## Examples
 
-See `docs/domains/orcaflex/modular_input_validation_example.py` for comprehensive usage examples.
+See `docs/modules/orcaflex/modular_input_validation_example.py` for comprehensive usage examples.
 
 ## CI/CD Integration
 

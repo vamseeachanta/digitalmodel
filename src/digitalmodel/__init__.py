@@ -33,6 +33,9 @@ __all__ = [
     "workflows",
 ]
 
+# Import modules subpackage for test patching support
+from . import modules
+
 # Install Layer 2 group redirect finder (flat -> grouped paths)
 from ._compat import _FLAT_TO_GROUP, install_group_redirect, warn_flat_import
 

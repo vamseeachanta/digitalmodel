@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class EnhancedOrcaflexDownloader:
     """Downloads and extracts OrcaFlex examples from Orcina portal ZIP files."""
     
-    def __init__(self, base_dir: str = "docs/domains/orcaflex/examples"):
+    def __init__(self, base_dir: str = "docs/modules/orcaflex/examples"):
         """
         Initialize the enhanced downloader.
         

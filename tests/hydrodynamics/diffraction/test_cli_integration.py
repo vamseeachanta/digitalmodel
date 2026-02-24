@@ -13,7 +13,7 @@ import shutil
 
 
 # Test data paths
-TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = Path("docs/modules/aqwa/examples/03_dat/001_ship_raos")
 TEST_LIS_DIR = TEST_DATA_DIR
 
 

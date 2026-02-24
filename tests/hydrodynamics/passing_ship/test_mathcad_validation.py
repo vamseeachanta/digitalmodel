@@ -3,7 +3,7 @@ Validation tests comparing Python implementation against original MathCAD calcul
 
 This test suite validates the passing ship force and moment calculations against
 the reference values from Wang's MathCAD implementation documented in:
-'docs/domains/ship_design/passing_ship/Calculation of forces and moments from Wang.pdf'
+'docs/modules/ship_design/passing_ship/Calculation of forces and moments from Wang.pdf'
 
 Reference Test Case (from MathCAD):
 -----------------------------------

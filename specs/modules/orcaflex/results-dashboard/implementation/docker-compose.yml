@@ -1,0 +1,94 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orcaflex-db
+    environment:
+      POSTGRES_DB: orcaflex_dashboard
+      POSTGRES_USER: orcaflex
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orcaflex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: orcaflex-cache
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: orcaflex-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://orcaflex:${DB_PASSWORD:-changeme}@postgres:5432/orcaflex_dashboard
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-here}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    volumes:
+      - ./src/backend:/app
+      - ./data:/data:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn src.backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: orcaflex-frontend
+    environment:
+      REACT_APP_API_URL: ${API_URL:-http://localhost:8000}
+      REACT_APP_WS_URL: ${WS_URL:-ws://localhost:8000}
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    command: npm start
+
+  nginx:
+    image: nginx:alpine
+    container_name: orcaflex-nginx
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: orcaflex-network

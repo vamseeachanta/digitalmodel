@@ -372,18 +372,18 @@ except BEMRosettaError as e:
 
 ```bash
 # Run all BEMRosetta tests
-uv run pytest tests/domains/bemrosetta/ -v
+uv run pytest tests/modules/bemrosetta/ -v
 
 # Run specific test categories
-uv run pytest tests/domains/bemrosetta/test_parsers.py -v
-uv run pytest tests/domains/bemrosetta/test_converters.py -v
-uv run pytest tests/domains/bemrosetta/test_mesh.py -v
-uv run pytest tests/domains/bemrosetta/test_validators.py -v
-uv run pytest tests/domains/bemrosetta/test_cli.py -v
-uv run pytest tests/domains/bemrosetta/test_integration.py -v
+uv run pytest tests/modules/bemrosetta/test_parsers.py -v
+uv run pytest tests/modules/bemrosetta/test_converters.py -v
+uv run pytest tests/modules/bemrosetta/test_mesh.py -v
+uv run pytest tests/modules/bemrosetta/test_validators.py -v
+uv run pytest tests/modules/bemrosetta/test_cli.py -v
+uv run pytest tests/modules/bemrosetta/test_integration.py -v
 
 # Run with coverage
-uv run pytest tests/domains/bemrosetta/ --cov=src/digitalmodel/modules/bemrosetta
+uv run pytest tests/modules/bemrosetta/ --cov=src/digitalmodel/modules/bemrosetta
 ```
 
 ## File Format Reference

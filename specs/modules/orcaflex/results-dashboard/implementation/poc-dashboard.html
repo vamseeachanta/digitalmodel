@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Results Dashboard - POC Demo</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .plotly-graph-div { width: 100% !important; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .active-tab { border-bottom: 3px solid #667eea; color: #667eea; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">🌊 OrcaFlex Results Dashboard</h1>
+                    <p class="text-indigo-100">Marine Engineering Analysis Platform - POC Demo</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm">Project: FPSO Mooring Analysis</p>
+                    <p class="text-xs text-indigo-200">Last Updated: <span id="timestamp"></span></p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Key Metrics -->
+    <div class="container mx-auto px-6 py-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="stat-card text-white p-4 rounded-lg shadow-lg">
+                <h3 class="text-sm opacity-90">Max Tension</h3>
+                <p class="text-2xl font-bold">1,247 kN</p>
+                <p class="text-xs opacity-75">↑ 12% from baseline</p>
+            </div>
+            <div class="stat-card text-white p-4 rounded-lg shadow-lg">
+                <h3 class="text-sm opacity-90">Max Offset</h3>
+                <p class="text-2xl font-bold">45.3 m</p>
+                <p class="text-xs opacity-75">Within limits</p>
+            </div>
+            <div class="stat-card text-white p-4 rounded-lg shadow-lg">
+                <h3 class="text-sm opacity-90">Safety Factor</h3>
+                <p class="text-2xl font-bold">2.34</p>
+                <p class="text-xs opacity-75">✓ API compliant</p>
+            </div>
+            <div class="stat-card text-white p-4 rounded-lg shadow-lg">
+                <h3 class="text-sm opacity-90">Simulation Status</h3>
+                <p class="text-2xl font-bold">Complete</p>
+                <p class="text-xs opacity-75">3600s analyzed</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="border-b">
+                <nav class="flex space-x-8 px-6">
+                    <button onclick="showTab('mooring')" id="tab-mooring" class="py-4 px-2 active-tab font-medium">Mooring Lines</button>
+                    <button onclick="showTab('motion')" id="tab-motion" class="py-4 px-2 text-gray-600 hover:text-indigo-600">Vessel Motion</button>
+                    <button onclick="showTab('environment')" id="tab-environment" class="py-4 px-2 text-gray-600 hover:text-indigo-600">Environment</button>
+                    <button onclick="showTab('fatigue')" id="tab-fatigue" class="py-4 px-2 text-gray-600 hover:text-indigo-600">Fatigue Analysis</button>
+                    <button onclick="showTab('comparison')" id="tab-comparison" class="py-4 px-2 text-gray-600 hover:text-indigo-600">Case Comparison</button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Mooring Lines Tab -->
+                <div id="content-mooring" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Mooring Line Tensions - Time Series</h3>
+                            <div id="tension-timeseries"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Tension Distribution</h3>
+                            <div id="tension-distribution"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Line Configuration - Plan View</h3>
+                            <div id="mooring-layout"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Maximum Tensions Summary</h3>
+                            <div id="max-tensions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vessel Motion Tab -->
+                <div id="content-motion" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">6DOF Motion Response</h3>
+                            <div id="motion-6dof"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Vessel Trajectory</h3>
+                            <div id="vessel-trajectory"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Motion RAOs</h3>
+                            <div id="motion-rao"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Statistical Summary</h3>
+                            <div id="motion-stats"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environment Tab -->
+                <div id="content-environment" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Wave Spectrum</h3>
+                            <div id="wave-spectrum"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Environmental Loads</h3>
+                            <div id="env-loads"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Directional Analysis</h3>
+                            <div id="wind-rose"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Current Profile</h3>
+                            <div id="current-profile"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fatigue Analysis Tab -->
+                <div id="content-fatigue" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Fatigue Life Estimation</h3>
+                            <div id="fatigue-life"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Damage Accumulation</h3>
+                            <div id="damage-accumulation"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">S-N Curves</h3>
+                            <div id="sn-curves"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Hotspot Analysis</h3>
+                            <div id="hotspot-analysis"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Comparison Tab -->
+                <div id="content-comparison" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Multi-Case Tension Comparison</h3>
+                            <div id="case-tensions"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Offset Comparison</h3>
+                            <div id="case-offsets"></div>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <h3 class="text-lg font-semibold mb-3">Performance Matrix</h3>
+                            <div id="performance-matrix"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+            <div class="flex justify-between items-center">
+                <div class="flex gap-4">
+                    <button onclick="exportReport()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                        📊 Export Report
+                    </button>
+                    <button onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        📁 Export Data
+                    </button>
+                    <button onclick="refreshData()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <div class="text-sm text-gray-600">
+                    Auto-refresh: <span id="auto-refresh" class="font-semibold">OFF</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            // Remove active class from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('active-tab');
+                tab.classList.add('text-gray-600');
+            });
+            // Show selected content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            // Activate selected tab
+            document.getElementById('tab-' + tabName).classList.add('active-tab');
+            document.getElementById('tab-' + tabName).classList.remove('text-gray-600');
+        }
+
+        // Generate realistic time series data
+        function generateTimeSeriesData(baseValue, variation, length = 1000) {
+            const time = Array.from({length}, (_, i) => i * 3.6); // 3600 seconds
+            const data = time.map(t => {
+                const wave = baseValue + variation * Math.sin(2 * Math.PI * t / 120);
+                const drift = variation * 0.1 * Math.sin(2 * Math.PI * t / 1800);
+                const noise = (Math.random() - 0.5) * variation * 0.2;
+                return wave + drift + noise;
+            });
+            return {time, data};
+        }
+
+        // MOORING LINES VISUALIZATIONS
+        const line1 = generateTimeSeriesData(800, 200);
+        const line2 = generateTimeSeriesData(850, 220);
+        const line3 = generateTimeSeriesData(780, 180);
+        const line4 = generateTimeSeriesData(820, 210);
+
+        // Tension Time Series
+        Plotly.newPlot('tension-timeseries', [
+            {x: line1.time, y: line1.data, name: 'Line 1', line: {color: '#667eea'}},
+            {x: line2.time, y: line2.data, name: 'Line 2', line: {color: '#764ba2'}},
+            {x: line3.time, y: line3.data, name: 'Line 3', line: {color: '#f56565'}},
+            {x: line4.time, y: line4.data, name: 'Line 4', line: {color: '#48bb78'}}
+        ], {
+            xaxis: {title: 'Time (s)'},
+            yaxis: {title: 'Tension (kN)'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Tension Distribution
+        Plotly.newPlot('tension-distribution', [
+            {y: line1.data, name: 'Line 1', type: 'box', marker: {color: '#667eea'}},
+            {y: line2.data, name: 'Line 2', type: 'box', marker: {color: '#764ba2'}},
+            {y: line3.data, name: 'Line 3', type: 'box', marker: {color: '#f56565'}},
+            {y: line4.data, name: 'Line 4', type: 'box', marker: {color: '#48bb78'}}
+        ], {
+            yaxis: {title: 'Tension (kN)'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Mooring Layout (Plan View)
+        const angles = [45, 135, 225, 315];
+        const radius = 1500;
+        const mooringX = angles.map(a => radius * Math.cos(a * Math.PI / 180));
+        const mooringY = angles.map(a => radius * Math.sin(a * Math.PI / 180));
+
+        Plotly.newPlot('mooring-layout', [
+            {
+                x: mooringX,
+                y: mooringY,
+                mode: 'markers+text',
+                type: 'scatter',
+                text: ['Line 1', 'Line 2', 'Line 3', 'Line 4'],
+                textposition: 'top center',
+                marker: {size: 12, color: '#667eea'}
+            },
+            {
+                x: [0], y: [0],
+                mode: 'markers',
+                type: 'scatter',
+                name: 'FPSO',
+                marker: {size: 30, color: '#f56565', symbol: 'square'}
+            }
+        ], {
+            xaxis: {title: 'East (m)', zeroline: true},
+            yaxis: {title: 'North (m)', zeroline: true, scaleanchor: 'x'},
+            height: 350,
+            margin: {t: 20},
+            showlegend: false
+        });
+
+        // Maximum Tensions Bar Chart
+        Plotly.newPlot('max-tensions', [{
+            x: ['Line 1', 'Line 2', 'Line 3', 'Line 4'],
+            y: [Math.max(...line1.data), Math.max(...line2.data), Math.max(...line3.data), Math.max(...line4.data)],
+            type: 'bar',
+            marker: {
+                color: ['#667eea', '#764ba2', '#f56565', '#48bb78']
+            },
+            text: ['1247 kN', '1292 kN', '1143 kN', '1241 kN'],
+            textposition: 'outside'
+        }], {
+            yaxis: {title: 'Maximum Tension (kN)'},
+            height: 350,
+            margin: {t: 40}
+        });
+
+        // VESSEL MOTION VISUALIZATIONS
+        const surge = generateTimeSeriesData(0, 15);
+        const sway = generateTimeSeriesData(0, 10);
+        const heave = generateTimeSeriesData(0, 5);
+        const roll = generateTimeSeriesData(0, 3);
+        const pitch = generateTimeSeriesData(0, 4);
+        const yaw = generateTimeSeriesData(0, 2);
+
+        // 6DOF Motion
+        Plotly.newPlot('motion-6dof', [
+            {x: surge.time, y: surge.data, name: 'Surge', line: {color: '#667eea'}},
+            {x: sway.time, y: sway.data, name: 'Sway', line: {color: '#764ba2'}},
+            {x: heave.time, y: heave.data, name: 'Heave', line: {color: '#f56565'}},
+            {x: roll.time, y: roll.data, name: 'Roll', yaxis: 'y2', line: {color: '#48bb78'}},
+            {x: pitch.time, y: pitch.data, name: 'Pitch', yaxis: 'y2', line: {color: '#ed8936'}},
+            {x: yaw.time, y: yaw.data, name: 'Yaw', yaxis: 'y2', line: {color: '#9f7aea'}}
+        ], {
+            xaxis: {title: 'Time (s)'},
+            yaxis: {title: 'Translation (m)'},
+            yaxis2: {title: 'Rotation (deg)', overlaying: 'y', side: 'right'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Vessel Trajectory
+        const trajectory = surge.data.map((s, i) => ({x: s, y: sway.data[i]}));
+        Plotly.newPlot('vessel-trajectory', [{
+            x: trajectory.map(p => p.x),
+            y: trajectory.map(p => p.y),
+            mode: 'lines',
+            type: 'scatter',
+            line: {color: '#667eea', width: 2},
+            name: 'Trajectory'
+        }, {
+            x: [0], y: [0],
+            mode: 'markers',
+            marker: {size: 10, color: 'red'},
+            name: 'Mean Position'
+        }], {
+            xaxis: {title: 'Surge (m)', zeroline: true},
+            yaxis: {title: 'Sway (m)', zeroline: true, scaleanchor: 'x'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Motion RAOs
+        const frequencies = Array.from({length: 50}, (_, i) => 0.02 + i * 0.02);
+        const raoSurge = frequencies.map(f => 10 / (1 + Math.pow(f / 0.15, 2)));
+        const raoHeave = frequencies.map(f => 8 / (1 + Math.pow(f / 0.12, 2)));
+        const raoPitch = frequencies.map(f => 5 / (1 + Math.pow(f / 0.10, 2)));
+
+        Plotly.newPlot('motion-rao', [
+            {x: frequencies, y: raoSurge, name: 'Surge', line: {color: '#667eea'}},
+            {x: frequencies, y: raoHeave, name: 'Heave', line: {color: '#764ba2'}},
+            {x: frequencies, y: raoPitch, name: 'Pitch', line: {color: '#f56565'}}
+        ], {
+            xaxis: {title: 'Frequency (Hz)', type: 'log'},
+            yaxis: {title: 'RAO (m/m or deg/m)', type: 'log'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Motion Statistics
+        function calculateStats(data) {
+            const mean = data.reduce((a, b) => a + b, 0) / data.length;
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const std = Math.sqrt(data.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / data.length);
+            return {mean, max, min, std};
+        }
+
+        const motionStats = {
+            'Surge': calculateStats(surge.data),
+            'Sway': calculateStats(sway.data),
+            'Heave': calculateStats(heave.data),
+            'Roll': calculateStats(roll.data),
+            'Pitch': calculateStats(pitch.data),
+            'Yaw': calculateStats(yaw.data)
+        };
+
+        const statsTable = Object.entries(motionStats).map(([motion, stats]) => ({
+            Motion: motion,
+            'Mean': stats.mean.toFixed(2),
+            'Max': stats.max.toFixed(2),
+            'Min': stats.min.toFixed(2),
+            'Std Dev': stats.std.toFixed(2)
+        }));
+
+        Plotly.newPlot('motion-stats', [{
+            type: 'table',
+            header: {
+                values: ['Motion', 'Mean', 'Max', 'Min', 'Std Dev'],
+                fill: {color: '#667eea'},
+                font: {color: 'white'}
+            },
+            cells: {
+                values: [
+                    statsTable.map(r => r.Motion),
+                    statsTable.map(r => r.Mean),
+                    statsTable.map(r => r.Max),
+                    statsTable.map(r => r.Min),
+                    statsTable.map(r => r['Std Dev'])
+                ],
+                fill: {color: '#f7fafc'}
+            }
+        }], {
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // ENVIRONMENT VISUALIZATIONS
+        // Wave Spectrum
+        const waveFreq = Array.from({length: 100}, (_, i) => 0.01 + i * 0.02);
+        const waveSpec = waveFreq.map(f => {
+            const fp = 0.15;
+            return 5 * Math.exp(-1.25 * Math.pow(fp/f, 4)) * Math.pow(fp/f, 5);
+        });
+
+        Plotly.newPlot('wave-spectrum', [{
+            x: waveFreq,
+            y: waveSpec,
+            type: 'scatter',
+            fill: 'tozeroy',
+            line: {color: '#667eea'}
+        }], {
+            xaxis: {title: 'Frequency (Hz)'},
+            yaxis: {title: 'Spectral Density (m²/Hz)'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Environmental Loads
+        Plotly.newPlot('env-loads', [{
+            x: ['Wave X', 'Wave Y', 'Wind X', 'Wind Y', 'Current X', 'Current Y'],
+            y: [450, 280, 180, 120, 90, 60],
+            type: 'bar',
+            marker: {
+                color: ['#667eea', '#764ba2', '#48bb78', '#4fd1c5', '#f56565', '#ed8936']
+            }
+        }], {
+            yaxis: {title: 'Force (kN)'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Wind Rose
+        const windDirections = Array.from({length: 16}, (_, i) => i * 22.5);
+        const windSpeeds = windDirections.map(() => 5 + Math.random() * 15);
+
+        Plotly.newPlot('wind-rose', [{
+            type: 'scatterpolar',
+            r: windSpeeds,
+            theta: windDirections,
+            mode: 'lines+markers',
+            fill: 'toself',
+            line: {color: '#667eea'},
+            marker: {color: '#764ba2'}
+        }], {
+            polar: {
+                radialaxis: {title: 'Wind Speed (m/s)'},
+                angularaxis: {direction: 'clockwise'}
+            },
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Current Profile
+        const depths = [0, 10, 20, 30, 50, 75, 100, 150, 200];
+        const currentSpeed = depths.map(d => 1.5 * Math.exp(-d/50));
+
+        Plotly.newPlot('current-profile', [{
+            x: currentSpeed,
+            y: depths.map(d => -d),
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: {color: '#667eea', width: 3},
+            marker: {size: 8, color: '#764ba2'}
+        }], {
+            xaxis: {title: 'Current Speed (m/s)'},
+            yaxis: {title: 'Depth (m)'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // FATIGUE ANALYSIS
+        // Fatigue Life
+        const mooringLines = ['Line 1', 'Line 2', 'Line 3', 'Line 4'];
+        const fatigueLife = [25.3, 22.1, 28.7, 24.5];
+
+        Plotly.newPlot('fatigue-life', [{
+            x: mooringLines,
+            y: fatigueLife,
+            type: 'bar',
+            marker: {
+                color: fatigueLife.map(life => life < 25 ? '#f56565' : '#48bb78')
+            },
+            text: fatigueLife.map(life => `${life} years`),
+            textposition: 'outside'
+        }], {
+            yaxis: {title: 'Fatigue Life (years)'},
+            height: 350,
+            margin: {t: 40},
+            shapes: [{
+                type: 'line',
+                x0: 0, x1: 1, xref: 'paper',
+                y0: 20, y1: 20,
+                line: {color: 'red', width: 2, dash: 'dash'}
+            }],
+            annotations: [{
+                x: 0.5, xref: 'paper',
+                y: 20,
+                text: 'Design Life: 20 years',
+                showarrow: false,
+                yshift: 10
+            }]
+        });
+
+        // Damage Accumulation
+        const years = Array.from({length: 30}, (_, i) => i);
+        const damage1 = years.map(y => y / 25.3);
+        const damage2 = years.map(y => y / 22.1);
+        const damage3 = years.map(y => y / 28.7);
+        const damage4 = years.map(y => y / 24.5);
+
+        Plotly.newPlot('damage-accumulation', [
+            {x: years, y: damage1, name: 'Line 1', line: {color: '#667eea'}},
+            {x: years, y: damage2, name: 'Line 2', line: {color: '#764ba2'}},
+            {x: years, y: damage3, name: 'Line 3', line: {color: '#f56565'}},
+            {x: years, y: damage4, name: 'Line 4', line: {color: '#48bb78'}}
+        ], {
+            xaxis: {title: 'Time (years)'},
+            yaxis: {title: 'Damage Ratio'},
+            height: 350,
+            margin: {t: 20},
+            shapes: [{
+                type: 'line',
+                x0: 0, x1: 30,
+                y0: 1, y1: 1,
+                line: {color: 'red', width: 2, dash: 'dash'}
+            }],
+            annotations: [{
+                x: 15,
+                y: 1,
+                text: 'Failure Limit',
+                showarrow: false,
+                yshift: 10
+            }]
+        });
+
+        // S-N Curves
+        const cycles = Array.from({length: 50}, (_, i) => Math.pow(10, 4 + i * 0.1));
+        const stressAPI = cycles.map(n => 1000 / Math.pow(n, 0.25));
+        const stressDNV = cycles.map(n => 900 / Math.pow(n, 0.23));
+
+        Plotly.newPlot('sn-curves', [
+            {x: cycles, y: stressAPI, name: 'API RP 2SK', line: {color: '#667eea'}},
+            {x: cycles, y: stressDNV, name: 'DNV-OS-E301', line: {color: '#764ba2'}}
+        ], {
+            xaxis: {title: 'Number of Cycles', type: 'log'},
+            yaxis: {title: 'Stress Range (MPa)', type: 'log'},
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Hotspot Analysis
+        const hotspots = [
+            {location: 'Fairlead 1', damage: 0.82, safety: 1.22},
+            {location: 'Fairlead 2', damage: 0.91, safety: 1.10},
+            {location: 'Fairlead 3', damage: 0.70, safety: 1.43},
+            {location: 'Fairlead 4', damage: 0.78, safety: 1.28},
+            {location: 'Chain-Wire 1', damage: 0.65, safety: 1.54},
+            {location: 'Chain-Wire 2', damage: 0.72, safety: 1.39}
+        ];
+
+        Plotly.newPlot('hotspot-analysis', [{
+            type: 'table',
+            header: {
+                values: ['Location', 'Damage Ratio', 'Safety Factor', 'Status'],
+                fill: {color: '#667eea'},
+                font: {color: 'white'}
+            },
+            cells: {
+                values: [
+                    hotspots.map(h => h.location),
+                    hotspots.map(h => h.damage.toFixed(2)),
+                    hotspots.map(h => h.safety.toFixed(2)),
+                    hotspots.map(h => h.damage > 0.8 ? '⚠️ Monitor' : '✅ OK')
+                ],
+                fill: {color: hotspots.map(h => h.damage > 0.8 ? '#fff5f5' : '#f0fff4')}
+            }
+        }], {
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // CASE COMPARISON
+        const cases = ['Base Case', '100yr Storm', 'Damaged Line', 'Ballast Change'];
+        const caseTensions = cases.map(() => ({
+            line1: 800 + Math.random() * 400,
+            line2: 850 + Math.random() * 450,
+            line3: 780 + Math.random() * 380,
+            line4: 820 + Math.random() * 420
+        }));
+
+        Plotly.newPlot('case-tensions', [
+            {x: cases, y: caseTensions.map(c => c.line1), name: 'Line 1', type: 'bar'},
+            {x: cases, y: caseTensions.map(c => c.line2), name: 'Line 2', type: 'bar'},
+            {x: cases, y: caseTensions.map(c => c.line3), name: 'Line 3', type: 'bar'},
+            {x: cases, y: caseTensions.map(c => c.line4), name: 'Line 4', type: 'bar'}
+        ], {
+            yaxis: {title: 'Maximum Tension (kN)'},
+            barmode: 'group',
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Case Offsets
+        const caseOffsets = cases.map(() => ({
+            surge: 15 + Math.random() * 30,
+            sway: 10 + Math.random() * 20,
+            total: 20 + Math.random() * 35
+        }));
+
+        Plotly.newPlot('case-offsets', [
+            {x: cases, y: caseOffsets.map(c => c.surge), name: 'Surge', type: 'bar'},
+            {x: cases, y: caseOffsets.map(c => c.sway), name: 'Sway', type: 'bar'},
+            {x: cases, y: caseOffsets.map(c => c.total), name: 'Total', type: 'bar'}
+        ], {
+            yaxis: {title: 'Maximum Offset (m)'},
+            barmode: 'group',
+            height: 350,
+            margin: {t: 20}
+        });
+
+        // Performance Matrix
+        const metrics = ['Max Tension', 'Max Offset', 'Fatigue Life', 'Safety Factor'];
+        const matrixData = cases.map(() => 
+            metrics.map(() => 0.5 + Math.random() * 0.5)
+        );
+
+        Plotly.newPlot('performance-matrix', [{
+            z: matrixData,
+            x: metrics,
+            y: cases,
+            type: 'heatmap',
+            colorscale: 'RdYlGn',
+            showscale: true
+        }], {
+            height: 300,
+            margin: {t: 20},
+            annotations: matrixData.flatMap((row, i) => 
+                row.map((val, j) => ({
+                    x: metrics[j],
+                    y: cases[i],
+                    text: val.toFixed(2),
+                    showarrow: false,
+                    font: {color: val > 0.7 ? 'white' : 'black'}
+                }))
+            )
+        });
+
+        // Export functions
+        function exportReport() {
+            alert('Report export initiated!\n\nGenerating PDF report with:\n• Executive Summary\n• All visualizations\n• Statistical analysis\n• Compliance verification\n\nReport will be saved to: OrcaFlex_Analysis_Report_' + 
+                  new Date().toISOString().slice(0,10) + '.pdf');
+        }
+
+        function exportData() {
+            alert('Data export initiated!\n\nExporting to Excel with sheets:\n• Time Series Data\n• Statistical Summary\n• Maximum Values\n• Fatigue Results\n\nFile will be saved to: OrcaFlex_Data_' + 
+                  new Date().toISOString().slice(0,10) + '.xlsx');
+        }
+
+        function refreshData() {
+            // Simulate data refresh
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            alert('Data refreshed successfully!\n\nLatest simulation results loaded.');
+        }
+
+        // Auto-resize plots
+        window.addEventListener('resize', () => {
+            Plotly.Plots.resize(document.getElementById('tension-timeseries'));
+        });
+    </script>
+</body>
+</html>

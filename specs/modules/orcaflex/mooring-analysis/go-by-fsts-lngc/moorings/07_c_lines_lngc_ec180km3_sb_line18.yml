@@ -1,0 +1,9 @@
+﻿New: Line18
+Line18:
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [FST2, 6.22, -21.10, 25.62]
+      - [LNGC, 297.52, 1.17, 26.40]
+    LineType, Length, TargetSegmentLength:
+      - [tail_88mm, 11, 10]
+      - [HMPE_44mm, 25.259, 10]
+    includefile: moorings/07_d_lines_lngc_common.yml

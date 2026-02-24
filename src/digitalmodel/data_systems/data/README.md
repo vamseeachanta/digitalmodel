@@ -42,8 +42,8 @@ df = load_data("sales_data", prefer_format="parquet")
 
 ## Documentation
 
-- **User Guide**: `docs/domains/data/MIGRATION_GUIDE.md`
-- **Implementation Summary**: `docs/domains/data/MIGRATION_SUMMARY.md`
+- **User Guide**: `docs/modules/data/MIGRATION_GUIDE.md`
+- **Implementation Summary**: `docs/modules/data/MIGRATION_SUMMARY.md`
 - **Examples**: `scripts/example_migration.py`
 
 ## Tests

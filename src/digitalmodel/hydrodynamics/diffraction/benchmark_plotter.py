@@ -66,40 +66,6 @@ def _is_phase_at_negligible_amplitude(
     return mag_at_phase_diff / peak_mag < _NEGLIGIBLE_AMPLITUDE_RATIO
 
 
-def _parse_fdf_panels(fdf_path: Path) -> list[list[list[float]]]:
-    """Parse a WAMIT .fdf free-surface panel file.
-
-    Each data row contains 8 values encoding 4 panel corner coordinates in the
-    horizontal plane (z=0): x1,x2,x3,x4,y1,y2,y3,y4 (all x-coords then all
-    y-coords, for the XZ-symmetry quadrant y>=0).
-
-    Returns a list of panels; each panel is a list of 4 [x, y, 0.0] vertices.
-    Returns an empty list on any read failure.
-    """
-    try:
-        panels: list[list[list[float]]] = []
-        with fdf_path.open(encoding="utf-8", errors="replace") as fh:
-            lines = fh.readlines()
-        # First 4 lines are header (title, RINNER, NPF/NTCL, NAL params)
-        for raw in lines[4:]:
-            raw = raw.strip()
-            if not raw:
-                continue
-            try:
-                vals = [float(v) for v in raw.split()]
-            except ValueError:
-                continue
-            if len(vals) != 8:
-                continue
-            # x1,x2,x3,x4 then y1,y2,y3,y4
-            xs = vals[:4]
-            ys = vals[4:]
-            panels.append([[xs[i], ys[i], 0.0] for i in range(4)])
-        return panels
-    except Exception:
-        return []
-
-
 class BenchmarkPlotter:
     """Generate interactive Plotly HTML overlay plots from multiple solvers.
 
@@ -123,14 +89,6 @@ class BenchmarkPlotter:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self.x_axis = x_axis
         self._solver_metadata = solver_metadata or {}
-        # Auto-detect axis orientation: when headings outnumber frequencies,
-        # plot RAO vs heading with period as legend (prevents empty plots when
-        # nfreqs == 1 but nheadings is large, e.g. OrcaWave validation 2.8).
-        _first = self._solver_names[0]
-        _first_comp = self._solver_results[_first].raos.get_component(DOF_ORDER[0])
-        self._heading_x_axis: bool = _first_comp.headings.count > len(
-            _first_comp.frequencies.values
-        )
 
     # ------------------------------------------------------------------
     # Public API
@@ -415,72 +373,37 @@ class BenchmarkPlotter:
             else self._get_heading_indices(first_comp, headings)
         )
 
-        if self._heading_x_axis:
-            # Heading on x-axis; one trace per solver×period.
-            # mode=lines+markers so even a single-period case is visible.
+        # Iterate headings first, then solvers — legend groups by heading
+        for hi in h_indices:
+            heading_label = f"{first_comp.headings.values[hi]:.0f}"
             for si, solver in enumerate(self._solver_names):
                 style = self._get_solver_style(si)
                 comp: RAOComponent = getattr(
                     self._solver_results[solver].raos, dof_name,
                 )
-                x_vals = comp.headings.values
-                nfreqs = len(comp.frequencies.values)
-                for fi in range(nfreqs):
-                    period_s = comp.frequencies.periods[fi]
-                    trace_name = f"{solver} {period_s:.2f}s"
-                    y_vals = (
-                        comp.magnitude[fi, :]
-                        if value_type == "amplitude"
-                        else comp.phase[fi, :]
-                    )
-                    fig.add_trace(
-                        go.Scatter(
-                            x=x_vals,
-                            y=y_vals,
-                            mode="lines+markers",
-                            name=trace_name,
-                            legendgroup=f"{solver}_{fi}",
-                            showlegend=show_legend,
-                            line=dict(
-                                dash=style["dash"],
-                                color=style["color_base"],
-                            ),
+                x_vals = self._get_x_values(comp)
+                y_vals = (
+                    comp.magnitude[:, hi]
+                    if value_type == "amplitude"
+                    else comp.phase[:, hi]
+                )
+                trace_name = f"{solver} H{heading_label}"
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_vals,
+                        y=y_vals,
+                        mode="lines",
+                        name=trace_name,
+                        legendgroup=f"{solver}_{heading_label}",
+                        showlegend=show_legend,
+                        line=dict(
+                            dash=style["dash"],
+                            color=style["color_base"],
                         ),
-                        row=row,
-                        col=col,
-                    )
-        else:
-            # Iterate headings first, then solvers — legend groups by heading
-            for hi in h_indices:
-                heading_label = f"{first_comp.headings.values[hi]:.0f}"
-                for si, solver in enumerate(self._solver_names):
-                    style = self._get_solver_style(si)
-                    comp = getattr(
-                        self._solver_results[solver].raos, dof_name,
-                    )
-                    x_vals = self._get_x_values(comp)
-                    y_vals = (
-                        comp.magnitude[:, hi]
-                        if value_type == "amplitude"
-                        else comp.phase[:, hi]
-                    )
-                    trace_name = f"{solver} H{heading_label}"
-                    fig.add_trace(
-                        go.Scatter(
-                            x=x_vals,
-                            y=y_vals,
-                            mode="lines",
-                            name=trace_name,
-                            legendgroup=f"{solver}_{heading_label}",
-                            showlegend=show_legend,
-                            line=dict(
-                                dash=style["dash"],
-                                color=style["color_base"],
-                            ),
-                        ),
-                        row=row,
-                        col=col,
-                    )
+                    ),
+                    row=row,
+                    col=col,
+                )
 
     # ------------------------------------------------------------------
     # Internal utilities
@@ -494,8 +417,6 @@ class BenchmarkPlotter:
 
     def _x_axis_label(self) -> str:
         """Human-readable label for the x-axis."""
-        if self._heading_x_axis:
-            return "Heading (deg)"
         if self.x_axis == "frequency":
             return "Frequency (rad/s)"
         return "Period (s)"
@@ -1091,113 +1012,6 @@ class BenchmarkPlotter:
             conv_diffs = [d for d in diffs if d["level"] == "convention"]
             cos_diffs = [d for d in diffs if d["level"] == "cosmetic"]
 
-            # Comments explaining why each key is classified this way
-            _KEY_COMMENTS: Dict[str, str] = {
-                # Significant
-                "DivideNonPlanarPanels": (
-                    "Splits non-planar panels into triangles; "
-                    "no effect on planar meshes but matters "
-                    "for curved geometry"
-                ),
-                # Convention
-                "WavesReferredToBy": (
-                    "Same frequencies, different unit label"
-                ),
-                "PeriodOrFrequency": (
-                    "Same frequency grid expressed as "
-                    "rad/s vs period (s)"
-                ),
-                # Cosmetic — QTF dormant
-                "PreferredQuadraticLoadCalculationMethod": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "QTFMinCrossingAngle": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "QTFMaxCrossingAngle": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "QuadraticLoadPressureIntegration": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "QTFCalculationMethod": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "QTFFrequencyTypes": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                "IncludeMeanDriftFullQTFs": (
-                    "QTF setting; dormant when QTF disabled"
-                ),
-                # Cosmetic — output flags
-                "OutputPanelPressures": (
-                    "Output flag; no effect on RAO results"
-                ),
-                "OutputPanelVelocities": (
-                    "Output flag; no effect on RAO results"
-                ),
-                # Cosmetic — field points
-                "FieldPointX, FieldPointY, FieldPointZ": (
-                    "Pressure monitoring points; "
-                    "not used in RAO calculation"
-                ),
-                # Cosmetic — GUI pens
-                "FreeSurfaceMeshPen": "GUI display color only",
-                "InteriorSurfacePanelsPen": "GUI display color only",
-                "BodyMeshPen": "GUI display color only",
-                "WaterlinePen": "GUI display color only",
-                "DampingLidMeshPen": "GUI display color only",
-                # Cosmetic — naming / identity
-                "BodyName": "Label only; no solver effect",
-                "BodyMeshFileName": (
-                    "Different filename, same mesh geometry"
-                ),
-                "BodyOrcaFlexImportLength": (
-                    "OrcaFlex GUI import hint; "
-                    "not used by OrcaWave solver"
-                ),
-                "BodyOrcaFlexImportSymmetry": (
-                    "OrcaFlex import setting; "
-                    "not a solver parameter"
-                ),
-                "DampingLidMeshFileName": (
-                    "Different filename; same lid geometry"
-                ),
-                # Cosmetic — OrcaWave internal defaults
-                "ComputationStrategy": (
-                    "OrcaWave internal default; "
-                    "not configurable via spec"
-                ),
-                "EnableMultibodyConstraints": (
-                    "OrcaWave internal default; "
-                    "not configurable via spec"
-                ),
-                "BodyOriginType": (
-                    "OrcaWave internal default; "
-                    "not configurable via spec"
-                ),
-                "BodyVolumeWarningLevel": (
-                    "OrcaWave internal default; "
-                    "not configurable via spec"
-                ),
-            }
-
-            # Default comments by level
-            _LEVEL_DEFAULTS: Dict[str, str] = {
-                "significant": "Solver parameter difference",
-                "convention": "Same physics, different representation",
-                "cosmetic": "No solver effect",
-            }
-
-            def _comment_for(d: Dict[str, Any]) -> str:
-                # Strip Bodies[N]. prefix for lookup
-                key = d["key"]
-                bare = key.split(".")[-1] if "." in key else key
-                return _KEY_COMMENTS.get(
-                    bare,
-                    _LEVEL_DEFAULTS.get(d["level"], ""),
-                )
-
             def _render_diff_table(
                 items: List[Dict[str, Any]], title: str,
                 collapsed: bool = False,
@@ -1205,24 +1019,20 @@ class BenchmarkPlotter:
                 if not items:
                     return
                 header = (
-                    "<table style='max-width:1000px;font-size:12px;"
+                    "<table style='max-width:800px;font-size:12px;"
                     "margin-top:0.5em;'>"
                     "<tr><th style='text-align:left'>Key</th>"
                     "<th style='text-align:left'>OrcaWave (.owd)</th>"
                     "<th style='text-align:left'>OrcaWave (spec.yml)</th>"
-                    "<th style='text-align:left'>Comment</th>"
                     "</tr>"
                 )
                 rows = ""
                 for d in items:
-                    comment = html_mod.escape(_comment_for(d))
                     rows += (
                         f"<tr>"
                         f"<td><code>{html_mod.escape(d['key'])}</code></td>"
                         f"<td>{html_mod.escape(d['owd'])}</td>"
                         f"<td>{html_mod.escape(d['spec'])}</td>"
-                        f"<td style='color:#777;font-style:italic;'>"
-                        f"{comment}</td>"
                         f"</tr>"
                     )
                 if collapsed:
@@ -1406,54 +1216,14 @@ class BenchmarkPlotter:
     def build_mesh_schematic_html(self) -> str:
         """Build 3D mesh schematic section for the benchmark report.
 
-        Primary: uses OrcFxAPI panelGeometry if available in solver_metadata
-        (symmetry-expanded, eliminates GDF path resolution issues).
-        Fallback: loads mesh files from solver_metadata["mesh_path"].
+        Loads mesh files from solver_metadata["mesh_path"] and creates
+        an interactive Plotly 3D visualization showing the panel mesh
+        with a waterline plane.
 
         Returns:
             HTML string with the mesh schematic section, or empty string
-            if no mesh source is available.
+            if no mesh paths are available.
         """
-        # --- Primary: OrcFxAPI panelGeometry (symmetry-expanded) ---
-        for solver in self._solver_names:
-            meta = self._solver_metadata.get(solver, {})
-            panel_geometry_data = meta.get("panel_geometry")
-            if panel_geometry_data:
-                n_panels = len(panel_geometry_data)
-                has_vertices = bool(
-                    panel_geometry_data and "vertices" in panel_geometry_data[0]
-                )
-                fdf_path = meta.get("fdf_path")
-                if has_vertices:
-                    mesh_html = self._build_panel_mesh3d_html(
-                        panel_geometry_data,
-                        fdf_path=fdf_path,
-                        title=f"Panel Mesh & Free Surface Zone ({solver})",
-                    )
-                    fs_note = (
-                        " + free-surface zone from FDF"
-                        if fdf_path else ""
-                    )
-                    return (
-                        f"<h2>Panel Mesh Geometry</h2>\n"
-                        f'<p style="color:#555;font-size:0.9em">Source: OrcFxAPI panelGeometry '
-                        f'({n_panels} panels, symmetry-expanded{fs_note}). '
-                        f"Use the view buttons or drag to rotate.</p>\n"
-                        f"{mesh_html}"
-                    )
-                # fallback: scatter plot of centroids when vertices not available
-                scatter_html = self._build_panel_scatter_html(
-                    panel_geometry_data,
-                    title=f"Panel Geometry ({solver})",
-                )
-                return (
-                    f"<h2>Panel Mesh Geometry</h2>\n"
-                    f'<p style="color:#555;font-size:0.9em">Source: OrcFxAPI panelGeometry '
-                    f'({n_panels} panels, symmetry-expanded)</p>\n'
-                    f"{scatter_html}"
-                )
-
-        # --- Fallback: GDF file loading ---
         # Collect mesh paths from solver metadata
         mesh_entries: List[tuple] = []  # (solver_name, mesh_path_str)
         for solver in self._solver_names:
@@ -1730,74 +1500,6 @@ class BenchmarkPlotter:
         return "\n".join(parts)
 
     @staticmethod
-    def build_coupling_heatmap_html(
-        output_dir: Path,
-        am_corr: list[list[float]],
-        damp_corr: list[list[float]],
-        body_i_name: str,
-        body_j_name: str,
-    ) -> Path:
-        """Render 6x6 correlation heatmaps for coupling matrices (AM & Damp)."""
-        import html as html_mod
-
-        dof_labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
-
-        # Convert list of lists to dict for _render_6x6_matrix
-        def _to_dict(matrix):
-            d = {}
-            for i in range(6):
-                for j in range(6):
-                    d[(i + 1, j + 1)] = matrix[i][j]
-            return d
-
-        am_dict = _to_dict(am_corr)
-        damp_dict = _to_dict(damp_corr)
-
-        am_table = BenchmarkPlotter._render_6x6_matrix(am_dict, dof_labels)
-        damp_table = BenchmarkPlotter._render_6x6_matrix(damp_dict, dof_labels)
-
-        title = f"Coupling: {body_i_name} \u2194 {body_j_name}"
-        # Sanitize filename
-        safe_i = "".join(c for c in body_i_name if c.isalnum() or c in "_-")
-        safe_j = "".join(c for c in body_j_name if c.isalnum() or c in "_-")
-        filename = f"coupling_{safe_i}_{safe_j}".lower()
-
-        html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<title>{html_mod.escape(title)}</title>
-<style>
-  body {{ margin:20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
-  h1 {{ font-size: 1.5em; margin-bottom: 0.5em; }}
-  h2 {{ font-size: 1.2em; margin-top: 1.5em; color: #555; }}
-  .container {{ max-width: 800px; margin: 0 auto; }}
-  table {{ border-collapse: collapse; width: 100%; max-width: 600px; margin-bottom: 20px; }}
-  th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 0.9em; }}
-  th {{ background-color: #f2f2f2; }}
-  .solver-table td {{ padding: 6px; }}
-</style>
-</head>
-<body>
-<div class="container">
-  <h1>{html_mod.escape(title)}</h1>
-  <p>Correlation of frequency-dependent coupling coefficients between .owd and spec.yml results.
-     Values near 1.000 indicate identical coefficients.</p>
-
-  <h2>Added Mass Coupling</h2>
-  {am_table}
-
-  <h2>Radiation Damping Coupling</h2>
-  {damp_table}
-</div>
-</body>
-</html>"""
-
-        path = output_dir / f"{filename}.html"
-        path.write_text(html, encoding="utf-8")
-        return path
-
-    @staticmethod
     def _render_6x6_matrix(
         corr_dict: dict,
         labels: List[str],
@@ -1833,269 +1535,6 @@ class BenchmarkPlotter:
             rows.append("</tr>")
         rows.append("</table>")
         return "\n".join(rows)
-
-    @staticmethod
-    def _build_panel_scatter_html(
-        panel_geometry_data: list,
-        title: str = "Panel Geometry",
-        height: int = 400,
-    ) -> str:
-        """Build interactive 3D scatter of panel centroids from panelGeometry data.
-
-        Groups panels by objectName (body name), uses one colour per body.
-        Marker size scales with sqrt(area). Adds a semi-transparent waterplane at z=0.
-
-        Args:
-            panel_geometry_data: List of dicts with 'area', 'centroid', 'objectName'
-            title: Plot title
-            height: Figure height in pixels
-
-        Returns:
-            HTML div string (Plotly figure, no full_html wrapper)
-        """
-        import numpy as np
-        import plotly.graph_objects as go
-
-        # Group panels by body name
-        bodies_data: dict = {}
-        for p in panel_geometry_data:
-            name = p.get("objectName", "Body")
-            if name not in bodies_data:
-                bodies_data[name] = {"x": [], "y": [], "z": [], "area": []}
-            c = p["centroid"]
-            bodies_data[name]["x"].append(c[0])
-            bodies_data[name]["y"].append(c[1])
-            bodies_data[name]["z"].append(c[2])
-            bodies_data[name]["area"].append(p["area"])
-
-        colours = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-        traces: List[Any] = []
-        for i, (name, pts) in enumerate(bodies_data.items()):
-            sizes = [max(4.0, 12.0 * (a ** 0.5)) for a in pts["area"]]
-            traces.append(go.Scatter3d(
-                x=pts["x"], y=pts["y"], z=pts["z"],
-                mode="markers",
-                marker=dict(size=sizes, color=colours[i % len(colours)], opacity=0.7),
-                name=name,
-                text=[f"Area: {a:.3f} m\u00b2" for a in pts["area"]],
-                hovertemplate="%{text}<extra>%{fullData.name}</extra>",
-            ))
-
-        # Waterplane reference at z=0
-        all_x = [v for b in bodies_data.values() for v in b["x"]]
-        all_y = [v for b in bodies_data.values() for v in b["y"]]
-        if all_x and all_y:
-            xr = [min(all_x) * 1.1, max(all_x) * 1.1]
-            yr = [min(all_y) * 1.1, max(all_y) * 1.1]
-            traces.append(go.Surface(
-                x=[[xr[0], xr[1]], [xr[0], xr[1]]],
-                y=[[yr[0], yr[0]], [yr[1], yr[1]]],
-                z=[[0.0, 0.0], [0.0, 0.0]],
-                showscale=False, opacity=0.15,
-                colorscale=[[0, "#4fc3f7"], [1, "#4fc3f7"]],
-                name="Waterplane", showlegend=False,
-            ))
-
-        fig = go.Figure(data=traces)
-        fig.update_layout(
-            title=title, height=height,
-            scene=dict(
-                xaxis_title="X (m)", yaxis_title="Y (m)", zaxis_title="Z (m)",
-                aspectmode="data",
-            ),
-            margin=dict(l=0, r=0, t=40, b=0),
-        )
-        return fig.to_html(full_html=False, include_plotlyjs="cdn")
-
-    @staticmethod
-    def _build_panel_mesh3d_html(
-        panel_geometry_data: list,
-        fdf_path: Optional[str] = None,
-        title: str = "Panel Mesh & Free Surface Zone",
-        height: int = 560,
-    ) -> str:
-        """Build interactive Mesh3d figure from panelGeometry vertices.
-
-        Renders body panels as a semi-transparent coral surface with wireframe
-        edges.  If fdf_path is supplied, also renders the free-surface zone
-        panels as a cyan overlay.  Three camera-preset buttons are provided:
-        Perspective (default), Plan (top-down), and Elevation (side view).
-
-        Args:
-            panel_geometry_data: List of dicts with 'vertices' key (4×3 float).
-            fdf_path: Optional path to WAMIT .fdf free-surface panel file.
-            title: Figure title.
-            height: Figure height in pixels.
-
-        Returns:
-            HTML div string (no full_html wrapper, assumes Plotly already loaded).
-        """
-        # ---- body mesh --------------------------------------------------
-        vx: List[float] = []
-        vy: List[float] = []
-        vz: List[float] = []
-        tri_i: List[int] = []
-        tri_j: List[int] = []
-        tri_k: List[int] = []
-        ex: List[Optional[float]] = []
-        ey: List[Optional[float]] = []
-        ez: List[Optional[float]] = []
-
-        for panel in panel_geometry_data:
-            verts = panel.get("vertices")
-            if not verts or len(verts) < 3:
-                continue
-            n = len(vx)
-            for v in verts:
-                vx.append(float(v[0]))
-                vy.append(float(v[1]))
-                vz.append(float(v[2]))
-            tri_i.append(n); tri_j.append(n + 1); tri_k.append(n + 2)
-            if len(verts) == 4:
-                tri_i.append(n); tri_j.append(n + 2); tri_k.append(n + 3)
-            # wireframe — close the polygon
-            for v in verts:
-                ex.append(float(v[0]))
-                ey.append(float(v[1]))
-                ez.append(float(v[2]))
-            ex.append(float(verts[0][0]))
-            ey.append(float(verts[0][1]))
-            ez.append(float(verts[0][2]))
-            ex.append(None); ey.append(None); ez.append(None)
-
-        fig = go.Figure()
-        if vx:
-            fig.add_trace(go.Mesh3d(
-                x=vx, y=vy, z=vz,
-                i=tri_i, j=tri_j, k=tri_k,
-                color="#e05a5a",
-                opacity=0.45,
-                name="Body panels",
-                showlegend=True,
-                hoverinfo="skip",
-            ))
-            fig.add_trace(go.Scatter3d(
-                x=ex, y=ey, z=ez,
-                mode="lines",
-                line=dict(color="#c0392b", width=1),
-                name="Body edges",
-                showlegend=False,
-                hoverinfo="skip",
-            ))
-
-        # ---- free-surface zone -----------------------------------------
-        if fdf_path:
-            fdf_panels = _parse_fdf_panels(Path(fdf_path))
-            if fdf_panels:
-                fvx: List[float] = []
-                fvy: List[float] = []
-                fvz: List[float] = []
-                fti: List[int] = []
-                ftj: List[int] = []
-                ftk: List[int] = []
-                fex: List[Optional[float]] = []
-                fey: List[Optional[float]] = []
-                fez: List[Optional[float]] = []
-                for pverts in fdf_panels:
-                    n = len(fvx)
-                    for v in pverts:
-                        fvx.append(float(v[0]))
-                        fvy.append(float(v[1]))
-                        fvz.append(float(v[2]))
-                    fti.append(n); ftj.append(n + 1); ftk.append(n + 2)
-                    if len(pverts) == 4:
-                        fti.append(n); ftj.append(n + 2); ftk.append(n + 3)
-                    for v in pverts:
-                        fex.append(float(v[0]))
-                        fey.append(float(v[1]))
-                        fez.append(float(v[2]))
-                    fex.append(float(pverts[0][0]))
-                    fey.append(float(pverts[0][1]))
-                    fez.append(float(pverts[0][2]))
-                    fex.append(None); fey.append(None); fez.append(None)
-                # also mirror y >= 0 panels to y <= 0 for XZ symmetry
-                n0 = len(fvx)
-                mirror_vx = list(fvx)
-                mirror_vy = [-y for y in fvy]
-                mirror_vz = list(fvz)
-                mirror_i = [i + n0 for i in fti]
-                mirror_j = [j + n0 for j in ftj]
-                mirror_k = [k + n0 for k in ftk]
-                fvx += mirror_vx
-                fvy += mirror_vy
-                fvz += mirror_vz
-                fti += mirror_i
-                ftj += mirror_j
-                ftk += mirror_k
-                fig.add_trace(go.Mesh3d(
-                    x=fvx, y=fvy, z=fvz,
-                    i=fti, j=ftj, k=ftk,
-                    color="#00bcd4",
-                    opacity=0.25,
-                    name="Free-surface zone",
-                    showlegend=True,
-                    hoverinfo="skip",
-                ))
-                # mirror wire edges too
-                mirror_ex = list(fex)
-                mirror_ey = [(-y if y is not None else None) for y in fey]
-                mirror_ez = list(fez)
-                fex += mirror_ex
-                fey += mirror_ey
-                fez += mirror_ez
-                fig.add_trace(go.Scatter3d(
-                    x=fex, y=fey, z=fez,
-                    mode="lines",
-                    line=dict(color="#0097a7", width=0.8),
-                    name="FS edges",
-                    showlegend=False,
-                    hoverinfo="skip",
-                ))
-
-        # ---- camera presets -------------------------------------------
-        cam_persp = dict(
-            eye=dict(x=1.6, y=1.2, z=0.9),
-            up=dict(x=0, y=0, z=1),
-        )
-        cam_plan = dict(
-            eye=dict(x=0, y=0, z=3.0),
-            up=dict(x=0, y=1, z=0),
-        )
-        cam_elev = dict(
-            eye=dict(x=3.0, y=0, z=0),
-            up=dict(x=0, y=0, z=1),
-        )
-        fig.update_layout(
-            title=dict(text=title, font=dict(size=13)),
-            height=height,
-            scene=dict(
-                aspectmode="data",
-                xaxis_title="X (m)",
-                yaxis_title="Y (m)",
-                zaxis_title="Z (m)",
-            ),
-            margin=dict(l=0, r=0, t=55, b=0),
-            legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.7)"),
-            updatemenus=[dict(
-                type="buttons",
-                direction="right",
-                x=0.0, y=1.10,
-                xanchor="left",
-                buttons=[
-                    dict(label="Perspective",
-                         method="relayout",
-                         args=[{"scene.camera": cam_persp}]),
-                    dict(label="Plan (top)",
-                         method="relayout",
-                         args=[{"scene.camera": cam_plan}]),
-                    dict(label="Elevation (side)",
-                         method="relayout",
-                         args=[{"scene.camera": cam_elev}]),
-                ],
-            )],
-        )
-        fig.update_layout(scene_camera=cam_persp)
-        return fig.to_html(full_html=False, include_plotlyjs=False)
 
     # ------------------------------------------------------------------
     # Raw RAO data tables (collapsible)

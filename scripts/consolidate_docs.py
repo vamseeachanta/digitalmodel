@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Consolidate docs/eng/ into docs/domains/.
+"""Consolidate docs/eng/ into docs/modules/.
 
 Migrates all files from the legacy docs/eng/ directory structure into
-docs/domains/ using explicit directory mappings and pattern-based routing
+docs/modules/ using explicit directory mappings and pattern-based routing
 for ref/ and root-level files.
 
 Usage:
@@ -398,7 +398,7 @@ def report_remaining(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Consolidate docs/eng/ into docs/domains/"
+        description="Consolidate docs/eng/ into docs/modules/"
     )
     parser.add_argument(
         "--dry-run",
@@ -421,7 +421,7 @@ def main() -> None:
         sys.exit(1)
 
     mode_label = "[DRY RUN] " if args.dry_run else ""
-    logger.info(f"{mode_label}Starting docs/eng/ -> docs/domains/ consolidation")
+    logger.info(f"{mode_label}Starting docs/eng/ -> docs/modules/ consolidation")
     logger.info(f"Source: {eng_dir}")
     logger.info(f"Target: {modules_dir}")
     logger.info("=" * 80)

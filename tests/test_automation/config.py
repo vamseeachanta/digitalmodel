@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 class TestPaths:
     """Test path configuration."""
     base_dir: str = "tests"
-    modules_dir: str = "tests/domains"
+    modules_dir: str = "tests/modules"
     in_progress_dir: str = "tests/in_progress" 
     no_license_dir: str = "tests/no_license"
     local_temp_dir: str = "tests/local_temp"

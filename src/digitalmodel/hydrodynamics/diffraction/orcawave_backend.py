@@ -15,7 +15,7 @@ OrcaWave YAML conventions:
 - Headings in degrees
 - Inertia tensor as 3x3 matrix rows
 
-Reference: OrcaWave 11.x YAML format (see docs/domains/orcawave/examples).
+Reference: OrcaWave 11.x YAML format (see docs/modules/orcawave/examples).
 """
 
 from __future__ import annotations

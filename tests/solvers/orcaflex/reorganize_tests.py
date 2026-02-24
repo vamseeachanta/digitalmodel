@@ -18,7 +18,7 @@ class TestReorganizer:
     """Reorganize test files into proper module structure."""
     
     def __init__(self):
-        self.base_path = Path("D:/github/digitalmodel/tests/domains/orcaflex")
+        self.base_path = Path("D:/github/digitalmodel/tests/modules/orcaflex")
         self.moves = []
         
     def plan_reorganization(self):
@@ -181,13 +181,13 @@ class TestReorganizer:
 
 ```bash
 # Run all tests
-python tests/domains/orcaflex/run_tests.py
+python tests/modules/orcaflex/run_tests.py
 
 # Run specific category
-pytest tests/domains/orcaflex/mooring_tension_iteration/batch_processing/
+pytest tests/modules/orcaflex/mooring_tension_iteration/batch_processing/
 
 # Run with OrcaFlex license
-ORCAFLEX_LICENSE_AVAILABLE=true pytest tests/domains/orcaflex/
+ORCAFLEX_LICENSE_AVAILABLE=true pytest tests/modules/orcaflex/
 ```
 """
         

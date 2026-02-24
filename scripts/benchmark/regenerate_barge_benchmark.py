@@ -32,7 +32,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 
 # --- Configuration ---
-BENCHMARK_DIR = Path("docs/domains/orcawave/L02_barge_benchmark")
+BENCHMARK_DIR = Path("docs/modules/orcawave/L02_barge_benchmark")
 SOURCE_DIR = BENCHMARK_DIR / "source_data"
 OWR_FILE = Path("benchmark_output/barge_final/orcawave/Barge_Benchmark.owr")
 LIS_FILE = SOURCE_DIR / "aqwa" / "WRK-031_3WAY_BENCHMARK.LIS"
@@ -40,7 +40,7 @@ SPEC_FILE = Path("specs/modules/benchmark/barge_benchmark_spec.yml")
 VESSEL_NAME = "Barge_Benchmark"
 WATER_DEPTH = 200.0
 
-# Output directory — canonical location in docs/domains/
+# Output directory — canonical location in docs/modules/
 OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 

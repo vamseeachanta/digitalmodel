@@ -10,11 +10,11 @@ import yaml
 # Spec file paths
 FLOATING_SPEC = (
     Path(__file__).parent.parent.parent.parent.parent.parent
-    / "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
+    / "docs/modules/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml"
 )
 SLAY_SPEC = (
     Path(__file__).parent.parent.parent.parent.parent.parent
-    / "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml"
+    / "docs/modules/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml"
 )
 
 

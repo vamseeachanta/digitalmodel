@@ -38,11 +38,11 @@ examples/
 ```bash
 # Generate OrcaFlex model from YAML configuration
 python scripts/generate_calm_buoy_project.py \
-  --config examples/domains/calm_buoy/north_sea_calm_project.yml \
+  --config examples/modules/calm_buoy/north_sea_calm_project.yml \
   --validate
 
 # Documentation
-cat examples/domains/calm_buoy/README.md
+cat examples/modules/calm_buoy/README.md
 ```
 
 **Key Files:**
@@ -52,10 +52,10 @@ cat examples/domains/calm_buoy/README.md
 
 ```bash
 # Run FPSO mooring analysis
-python examples/domains/fpso/fpso_mooring_analysis.py
+python examples/modules/fpso/fpso_mooring_analysis.py
 
 # Interactive notebook
-jupyter notebook examples/domains/fpso/fpso_mooring_analysis.ipynb
+jupyter notebook examples/modules/fpso/fpso_mooring_analysis.ipynb
 ```
 
 **Key Files:**
@@ -66,7 +66,7 @@ jupyter notebook examples/domains/fpso/fpso_mooring_analysis.ipynb
 
 ```bash
 # Lazy wave configuration example
-python examples/domains/mooring/lazy_wave_example.py
+python examples/modules/mooring/lazy_wave_example.py
 ```
 
 **Key Files:**
@@ -76,10 +76,10 @@ python examples/domains/mooring/lazy_wave_example.py
 
 ```bash
 # Basic fatigue analysis
-python examples/domains/fatigue/fatigue_analysis_examples.py
+python examples/modules/fatigue/fatigue_analysis_examples.py
 
 # Complete fatigue workflow
-python examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py
+python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py
 ```
 
 **Key Files:**
@@ -90,10 +90,10 @@ python examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py
 
 ```bash
 # Generate hydrodynamic charts
-python examples/domains/hydrodynamics/generate_hydro_charts.py
+python examples/modules/hydrodynamics/generate_hydro_charts.py
 
 # Interactive analysis
-jupyter notebook examples/domains/hydrodynamics/hydro_coefficients_example.ipynb
+jupyter notebook examples/modules/hydrodynamics/hydro_coefficients_example.ipynb
 ```
 
 **Key Files:**
@@ -104,10 +104,10 @@ jupyter notebook examples/domains/hydrodynamics/hydro_coefficients_example.ipynb
 
 ```bash
 # Plate capacity examples
-python examples/domains/stress/plate_capacity_examples.py
+python examples/modules/stress/plate_capacity_examples.py
 
 # Von Mises stress
-python examples/domains/stress/stress_examples/vm_stress_example.py
+python examples/modules/stress/stress_examples/vm_stress_example.py
 ```
 
 **Key Files:**
@@ -118,7 +118,7 @@ python examples/domains/stress/stress_examples/vm_stress_example.py
 
 ```bash
 # API Std 2RD pipeline design
-python examples/domains/api_standards/apistd2rd_demo.py
+python examples/modules/api_standards/apistd2rd_demo.py
 ```
 
 **Key Files:**
@@ -128,10 +128,10 @@ python examples/domains/api_standards/apistd2rd_demo.py
 
 ```bash
 # OCIMF MEG4/SMOG examples
-python examples/domains/ocimf/ocimf_demo.py
+python examples/modules/ocimf/ocimf_demo.py
 
 # Interactive visualization
-jupyter notebook examples/domains/ocimf/ocimf_visualization_example.ipynb
+jupyter notebook examples/modules/ocimf/ocimf_visualization_example.ipynb
 ```
 
 **Key Files:**
@@ -142,7 +142,7 @@ jupyter notebook examples/domains/ocimf/ocimf_visualization_example.ipynb
 
 ```bash
 # Reservoir analysis
-python examples/domains/reservoir/reservoir_analysis_examples.py
+python examples/modules/reservoir/reservoir_analysis_examples.py
 ```
 
 **Key Files:**
@@ -156,7 +156,7 @@ python examples/domains/reservoir/reservoir_analysis_examples.py
 
 1. **Start with tutorials:**
    ```bash
-   jupyter notebook examples/domains/tutorials/01_getting_started.ipynb
+   jupyter notebook examples/modules/tutorials/01_getting_started.ipynb
    ```
 
 2. **Run simple examples:**
@@ -247,7 +247,7 @@ Examples generate outputs in:
 
 ```bash
 # Copy template
-cp examples/domains/calm_buoy/north_sea_calm_project.yml projects/my_calm.yml
+cp examples/modules/calm_buoy/north_sea_calm_project.yml projects/my_calm.yml
 
 # Edit configuration
 vim projects/my_calm.yml
@@ -266,7 +266,7 @@ firefox projects/CALM_001/reports/validation/*.html
 
 ```bash
 # Run analysis
-python examples/domains/fpso/fpso_mooring_analysis.py
+python examples/modules/fpso/fpso_mooring_analysis.py
 
 # Review results in outputs/
 ls -lh examples/outputs/fpso_*
@@ -276,8 +276,8 @@ ls -lh examples/outputs/fpso_*
 
 ```bash
 # Complete fatigue workflow
-python examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py \
-  --input examples/domains/input_files/fatigue_analysis/offshore_structure_fatigue.yml \
+python examples/modules/fatigue/advanced_examples/complete_fatigue_analysis.py \
+  --input examples/modules/input_files/fatigue_analysis/offshore_structure_fatigue.yml \
   --output examples/output/fatigue_results
 ```
 
@@ -285,8 +285,8 @@ python examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py \
 
 ```bash
 # Pipeline design per API 2RD
-python examples/domains/api_standards/apistd2rd_demo.py \
-  --input examples/domains/input_files/api_std_2rd/pipeline_example_basic.yml
+python examples/modules/api_standards/apistd2rd_demo.py \
+  --input examples/modules/input_files/api_std_2rd/pipeline_example_basic.yml
 ```
 
 ---
@@ -346,17 +346,17 @@ When adding new examples:
 
 1. **Place in appropriate module directory:**
    ```
-   examples/domains/<module_name>/your_example.py
+   examples/modules/<module_name>/your_example.py
    ```
 
 2. **Update module README:**
    ```
-   examples/domains/<module_name>/README.md
+   examples/modules/<module_name>/README.md
    ```
 
 3. **Add input files if needed:**
    ```
-   examples/domains/input_files/<module_name>/your_input.yml
+   examples/modules/input_files/<module_name>/your_input.yml
    ```
 
 4. **Include docstrings and comments:**
@@ -369,7 +369,7 @@ When adding new examples:
 
 5. **Test the example:**
    ```bash
-   python examples/domains/<module_name>/your_example.py
+   python examples/modules/<module_name>/your_example.py
    ```
 
 ---

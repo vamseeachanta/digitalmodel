@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAO Quality Report - 2026-01-11 23:43</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .status-pass { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-fail { color: #dc3545; }
+        .status-unknown { color: #6c757d; }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .chart-container {
+            width: 100%;
+            min-height: 400px;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge-pass { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-fail { background: #f8d7da; color: #721c24; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-label {
+            color: #666;
+        }
+        .info-value {
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .vessel-type-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .expectations-table {
+            font-size: 0.9rem;
+        }
+        .expectations-table td {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Displacement RAO Quality Report</h1>
+            <p class="subtitle">Generated: 2026-01-11 23:43:07</p>
+            <p class="subtitle">Source: L02_OC4_Semi-sub.yml</p>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-title">Overall Status</div>
+                <div class="card-value" style="color: #dc3545;">FAIL</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Pass Rate</div>
+                <div class="card-value">48.1%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Checks</div>
+                <div class="card-value">81</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Passed</div>
+                <div class="card-value status-pass">39</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Warnings</div>
+                <div class="card-value status-warning">13</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Failed</div>
+                <div class="card-value status-fail">29</div>
+            </div>
+        </div>
+
+        <!-- Vessel Type Section -->
+        <div class="section">
+            <h2 class="section-title">Vessel Type Classification</h2>
+            <div class="info-grid">
+                <div>
+                    <div class="info-item">
+                        <span class="info-label">Detected Type:</span>
+                        <span class="info-value">Semi Submersible</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Confidence:</span>
+                        <span class="info-value">100.0%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Long Period Threshold:</span>
+                        <span class="info-value">30.0 seconds</span>
+                    </div>
+                </div>
+                <div>
+                    
+        <div class="info-item">
+            <span class="info-label">Heave Tn Range:</span>
+            <span class="info-value">17.0 - 25.0 s</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Pitch Tn Range:</span>
+            <span class="info-value">17.0 - 20.0 s</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Roll Tn Range:</span>
+            <span class="info-value">17.0 - 24.0 s</span>
+        </div>
+        
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Chart -->
+        <div class="section">
+            <h2 class="section-title">Results Summary</h2>
+            <div id="summaryChart" class="chart-container"></div>
+        </div>
+
+        <!-- Phase Check Results -->
+        <div class="section">
+            <h2 class="section-title">Long Period Phase Angle Checks</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Phase angles checked at longest available period (T &gt; 30s).
+                Expected values based on Orcina convention (phase lag from wave crest).
+            </p>
+            <div id="phaseChart" class="chart-container"></div>
+            
+        <table>
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>Heading</th>
+                    <th>Period (s)</th>
+                    <th>Actual Amp</th>
+                    <th>Expected Amp</th>
+                    <th>Amp Error</th>
+                    <th>Actual Phase</th>
+                    <th>Expected Phase</th>
+                    <th>Phase Error</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>HEAVE</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>1.0443</td>
+                <td>1.0000</td>
+                <td>4.4%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>1.0437</td>
+                <td>1.0000</td>
+                <td>4.4%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>1.0428</td>
+                <td>1.0000</td>
+                <td>4.3%</td>
+                <td>-2.1°</td>
+                <td>0.0°</td>
+                <td>2.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>1.0426</td>
+                <td>1.0000</td>
+                <td>4.3%</td>
+                <td>-2.1°</td>
+                <td>0.0°</td>
+                <td>2.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>1.0434</td>
+                <td>1.0000</td>
+                <td>4.3%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>1.0442</td>
+                <td>1.0000</td>
+                <td>4.4%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>1.0440</td>
+                <td>1.0000</td>
+                <td>4.4%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>1.0430</td>
+                <td>1.0000</td>
+                <td>4.3%</td>
+                <td>-2.2°</td>
+                <td>0.0°</td>
+                <td>2.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>1.0426</td>
+                <td>1.0000</td>
+                <td>4.3%</td>
+                <td>-2.1°</td>
+                <td>0.0°</td>
+                <td>2.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>0.0108</td>
+                <td>1.0000</td>
+                <td>98.9%</td>
+                <td>80.9°</td>
+                <td>-90.0°</td>
+                <td>170.9°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>0.0100</td>
+                <td>1.0000</td>
+                <td>99.0%</td>
+                <td>80.1°</td>
+                <td>-90.0°</td>
+                <td>170.1°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>0.0078</td>
+                <td>1.0000</td>
+                <td>99.2%</td>
+                <td>77.5°</td>
+                <td>-90.0°</td>
+                <td>167.5°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>0.0042</td>
+                <td>0.0000</td>
+                <td>0.4%</td>
+                <td>71.7°</td>
+                <td>0.0°</td>
+                <td>71.7°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>0.0006</td>
+                <td>0.0000</td>
+                <td>0.1%</td>
+                <td>-10.9°</td>
+                <td>0.0°</td>
+                <td>10.9°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>0.0041</td>
+                <td>0.0000</td>
+                <td>0.4%</td>
+                <td>-96.6°</td>
+                <td>0.0°</td>
+                <td>96.6°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>0.0077</td>
+                <td>1.0000</td>
+                <td>99.2%</td>
+                <td>-101.7°</td>
+                <td>90.0°</td>
+                <td>168.3°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>0.0101</td>
+                <td>1.0000</td>
+                <td>99.0%</td>
+                <td>-104.4°</td>
+                <td>90.0°</td>
+                <td>165.6°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>0.0110</td>
+                <td>1.0000</td>
+                <td>98.9%</td>
+                <td>-105.4°</td>
+                <td>90.0°</td>
+                <td>164.6°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-61.5°</td>
+                <td>0.0°</td>
+                <td>61.5°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>0.0042</td>
+                <td>0.0000</td>
+                <td>0.4%</td>
+                <td>-107.1°</td>
+                <td>0.0°</td>
+                <td>107.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>0.0078</td>
+                <td>0.0000</td>
+                <td>0.8%</td>
+                <td>-106.6°</td>
+                <td>0.0°</td>
+                <td>106.6°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>0.0102</td>
+                <td>1.0000</td>
+                <td>99.0%</td>
+                <td>-104.8°</td>
+                <td>90.0°</td>
+                <td>165.2°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>0.0109</td>
+                <td>1.0000</td>
+                <td>98.9%</td>
+                <td>-102.1°</td>
+                <td>90.0°</td>
+                <td>167.9°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>0.0100</td>
+                <td>1.0000</td>
+                <td>99.0%</td>
+                <td>-99.7°</td>
+                <td>90.0°</td>
+                <td>170.3°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>0.0077</td>
+                <td>0.0000</td>
+                <td>0.8%</td>
+                <td>-98.0°</td>
+                <td>0.0°</td>
+                <td>98.0°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>0.0042</td>
+                <td>0.0000</td>
+                <td>0.4%</td>
+                <td>-96.8°</td>
+                <td>0.0°</td>
+                <td>96.8°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>116.4°</td>
+                <td>0.0°</td>
+                <td>116.4°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>1.1186</td>
+                <td>1.0000</td>
+                <td>11.9%</td>
+                <td>-87.7°</td>
+                <td>90.0°</td>
+                <td>177.7°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>1.0319</td>
+                <td>1.0000</td>
+                <td>3.2%</td>
+                <td>-87.6°</td>
+                <td>90.0°</td>
+                <td>177.6°</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>0.7881</td>
+                <td>1.0000</td>
+                <td>21.2%</td>
+                <td>-87.2°</td>
+                <td>90.0°</td>
+                <td>177.2°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>0.4274</td>
+                <td>0.0000</td>
+                <td>42.7%</td>
+                <td>-86.4°</td>
+                <td>0.0°</td>
+                <td>86.4°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>0.0082</td>
+                <td>0.0000</td>
+                <td>0.8%</td>
+                <td>-5.8°</td>
+                <td>0.0°</td>
+                <td>5.8°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>0.4276</td>
+                <td>0.0000</td>
+                <td>42.8%</td>
+                <td>92.0°</td>
+                <td>0.0°</td>
+                <td>92.0°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>0.7907</td>
+                <td>1.0000</td>
+                <td>20.9%</td>
+                <td>92.7°</td>
+                <td>-90.0°</td>
+                <td>177.3°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>1.0312</td>
+                <td>1.0000</td>
+                <td>3.1%</td>
+                <td>93.1°</td>
+                <td>-90.0°</td>
+                <td>176.9°</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>SURGE</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>1.1150</td>
+                <td>1.0000</td>
+                <td>11.5%</td>
+                <td>93.2°</td>
+                <td>-90.0°</td>
+                <td>176.8°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>16.7°</td>
+                <td>0.0°</td>
+                <td>16.7°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>0.4283</td>
+                <td>0.0000</td>
+                <td>42.8%</td>
+                <td>-86.5°</td>
+                <td>0.0°</td>
+                <td>86.5°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>0.7893</td>
+                <td>0.0000</td>
+                <td>78.9%</td>
+                <td>-86.6°</td>
+                <td>0.0°</td>
+                <td>86.6°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>1.0298</td>
+                <td>1.0000</td>
+                <td>3.0%</td>
+                <td>-86.9°</td>
+                <td>90.0°</td>
+                <td>176.9°</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>1.1162</td>
+                <td>1.0000</td>
+                <td>11.6%</td>
+                <td>-87.3°</td>
+                <td>90.0°</td>
+                <td>177.3°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>1.0331</td>
+                <td>1.0000</td>
+                <td>3.3%</td>
+                <td>-87.6°</td>
+                <td>90.0°</td>
+                <td>177.6°</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>0.7899</td>
+                <td>0.0000</td>
+                <td>79.0%</td>
+                <td>-87.8°</td>
+                <td>0.0°</td>
+                <td>87.8°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>0.4259</td>
+                <td>0.0000</td>
+                <td>42.6%</td>
+                <td>-88.0°</td>
+                <td>0.0°</td>
+                <td>88.0°</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>SWAY</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>124.5°</td>
+                <td>0.0°</td>
+                <td>124.5°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>0°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>6.6°</td>
+                <td>0.0°</td>
+                <td>6.6°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>22°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-101.2°</td>
+                <td>0.0°</td>
+                <td>101.2°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>45°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-100.1°</td>
+                <td>0.0°</td>
+                <td>100.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>68°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>76.5°</td>
+                <td>0.0°</td>
+                <td>76.5°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>90°</td>
+                <td>30.0</td>
+                <td>0.0002</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>77.1°</td>
+                <td>0.0°</td>
+                <td>77.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>112°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>78.1°</td>
+                <td>0.0°</td>
+                <td>78.1°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>135°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-100.8°</td>
+                <td>0.0°</td>
+                <td>100.8°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>158°</td>
+                <td>30.0</td>
+                <td>0.0001</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-101.8°</td>
+                <td>0.0°</td>
+                <td>101.8°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>YAW</td>
+                <td>180°</td>
+                <td>30.0</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0%</td>
+                <td>-167.5°</td>
+                <td>0.0°</td>
+                <td>167.5°</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
+        </div>
+
+        <!-- Peak Detection Results -->
+        <div class="section">
+            <h2 class="section-title">Peak Period Detection</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                RAO peaks detected and compared against expected natural period ranges for semi submersible.
+            </p>
+            <div id="peakChart" class="chart-container"></div>
+            
+        <table>
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>Heading</th>
+                    <th>Peak Period (s)</th>
+                    <th>Peak Amplitude</th>
+                    <th>Expected Range</th>
+                    <th>In Range</th>
+                    <th>Amplification</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>HEAVE</td>
+                <td>0°</td>
+                <td>19.00</td>
+                <td>1.4244</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.36x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>22°</td>
+                <td>19.00</td>
+                <td>1.4228</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.36x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>45°</td>
+                <td>19.00</td>
+                <td>1.4264</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.37x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>68°</td>
+                <td>19.00</td>
+                <td>1.4282</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.37x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>90°</td>
+                <td>19.00</td>
+                <td>1.4231</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.36x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>112°</td>
+                <td>19.00</td>
+                <td>1.4239</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.36x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>135°</td>
+                <td>19.00</td>
+                <td>1.4231</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.36x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>158°</td>
+                <td>19.00</td>
+                <td>1.4244</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.37x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>HEAVE</td>
+                <td>180°</td>
+                <td>19.00</td>
+                <td>1.4291</td>
+                <td>(17.0, 25.0)</td>
+                <td>Yes</td>
+                <td>1.37x</td>
+                <td><span class="badge badge-pass">PASS</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>0°</td>
+                <td>25.00</td>
+                <td>0.0175</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.62x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>22°</td>
+                <td>25.00</td>
+                <td>0.0164</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.63x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>45°</td>
+                <td>25.00</td>
+                <td>0.0129</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.66x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>68°</td>
+                <td>25.00</td>
+                <td>0.0071</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.67x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>90°</td>
+                <td>7.00</td>
+                <td>0.0028</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>4.99x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>112°</td>
+                <td>25.00</td>
+                <td>0.0067</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.61x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>135°</td>
+                <td>25.00</td>
+                <td>0.0127</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.66x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>158°</td>
+                <td>25.00</td>
+                <td>0.0169</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.67x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>PITCH</td>
+                <td>180°</td>
+                <td>25.00</td>
+                <td>0.0184</td>
+                <td>(17.0, 20.0)</td>
+                <td>No</td>
+                <td>1.67x</td>
+                <td><span class="badge badge-fail">FAIL</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>0°</td>
+                <td>25.00</td>
+                <td>0.0000</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>3.10x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>22°</td>
+                <td>25.00</td>
+                <td>0.0073</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.73x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>45°</td>
+                <td>25.00</td>
+                <td>0.0130</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.67x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>68°</td>
+                <td>25.00</td>
+                <td>0.0169</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.66x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>90°</td>
+                <td>25.00</td>
+                <td>0.0181</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.65x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>112°</td>
+                <td>25.00</td>
+                <td>0.0163</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.63x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>135°</td>
+                <td>25.00</td>
+                <td>0.0124</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.61x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>158°</td>
+                <td>25.00</td>
+                <td>0.0069</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>1.65x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            <tr>
+                <td>ROLL</td>
+                <td>180°</td>
+                <td>25.00</td>
+                <td>0.0000</td>
+                <td>(17.0, 24.0)</td>
+                <td>No</td>
+                <td>3.19x</td>
+                <td><span class="badge badge-warning">WARNING</span></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
+        </div>
+
+        <!-- Expected Values Reference -->
+        <div class="section">
+            <h2 class="section-title">Reference: Expected Long Period Values</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                Expected RAO amplitudes and phases at long periods (quasi-static regime).
+            </p>
+            
+        <table class="expectations-table">
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>Heading</th>
+                    <th>Active</th>
+                    <th>Expected Amplitude</th>
+                    <th>Expected Phase</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>SURGE</td>
+                    <td>0°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>90°</td>
+                </tr>
+                
+                <tr>
+                    <td>SURGE</td>
+                    <td>90°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>SURGE</td>
+                    <td>180°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>-90°</td>
+                </tr>
+                
+                <tr>
+                    <td>SURGE</td>
+                    <td>270°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>SWAY</td>
+                    <td>0°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>SWAY</td>
+                    <td>90°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>90°</td>
+                </tr>
+                
+                <tr>
+                    <td>SWAY</td>
+                    <td>180°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>SWAY</td>
+                    <td>270°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>-90°</td>
+                </tr>
+                
+                <tr>
+                    <td>HEAVE</td>
+                    <td>0°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>0°</td>
+                </tr>
+                
+                <tr>
+                    <td>HEAVE</td>
+                    <td>90°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>0°</td>
+                </tr>
+                
+                <tr>
+                    <td>HEAVE</td>
+                    <td>180°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>0°</td>
+                </tr>
+                
+                <tr>
+                    <td>HEAVE</td>
+                    <td>270°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>0°</td>
+                </tr>
+                
+                <tr>
+                    <td>ROLL</td>
+                    <td>0°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>ROLL</td>
+                    <td>90°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>90°</td>
+                </tr>
+                
+                <tr>
+                    <td>ROLL</td>
+                    <td>180°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>ROLL</td>
+                    <td>270°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>-90°</td>
+                </tr>
+                
+                <tr>
+                    <td>PITCH</td>
+                    <td>0°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>-90°</td>
+                </tr>
+                
+                <tr>
+                    <td>PITCH</td>
+                    <td>90°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>PITCH</td>
+                    <td>180°</td>
+                    <td>Yes</td>
+                    <td>1.00</td>
+                    <td>90°</td>
+                </tr>
+                
+                <tr>
+                    <td>PITCH</td>
+                    <td>270°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>YAW</td>
+                    <td>0°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>YAW</td>
+                    <td>90°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>YAW</td>
+                    <td>180°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+                <tr>
+                    <td>YAW</td>
+                    <td>270°</td>
+                    <td>No</td>
+                    <td>~0</td>
+                    <td>N/A</td>
+                </tr>
+                
+            </tbody>
+        </table>
+        <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+            <strong>Phase Convention:</strong> Phase lag from wave crest to maximum positive excursion (Orcina convention).<br>
+            <strong>Amplitude Units:</strong> m/m for translations, normalized to wave slope for rotations.
+        </p>
+        
+        </div>
+
+        <footer>
+            <p>Generated by Digital Model RAO Quality Checker</p>
+            <p>Phase convention: Orcina (phase lag from wave crest)</p>
+        </footer>
+    </div>
+
+    <script>
+        // Summary Pie Chart
+        var summaryData = {"data": [{"type": "pie", "labels": ["Passed", "Warnings", "Failed"], "values": [39, 13, 29], "marker": {"colors": ["#28a745", "#ffc107", "#dc3545"]}, "textinfo": "label+value+percent", "hovertemplate": "<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<extra></extra>"}], "layout": {"title": "Check Results Distribution", "showlegend": true}};
+        Plotly.newPlot('summaryChart', summaryData.data, summaryData.layout, {responsive: true});
+
+        // Phase Check Chart
+        var phaseData = {"data": [{"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [-87.69062203875365, -87.5814929780646, -87.21173626510938, -86.38435217994339, -5.844189092538841, 91.95308185940961, 92.68241310870499, 93.06583027826478, 93.21906006366616], "mode": "markers+lines", "name": "SURGE Phase", "text": ["Long period surge at 0.0\u00b0 out of tolerance (amp err: 11.9%, phase err: 177.7\u00b0)", "Long period surge at 22.5\u00b0 marginal (amp err: 3.2%, phase err: 177.6\u00b0)", "Long period surge at 45.0\u00b0 out of tolerance (amp err: 21.2%, phase err: 177.2\u00b0)", "Inactive surge at 67.5\u00b0 has unexpected amplitude 0.427", "Inactive surge at 90.0\u00b0 correctly near zero", "Inactive surge at 112.5\u00b0 has unexpected amplitude 0.428", "Long period surge at 135.0\u00b0 out of tolerance (amp err: 20.9%, phase err: 177.3\u00b0)", "Long period surge at 157.5\u00b0 marginal (amp err: 3.1%, phase err: 176.9\u00b0)", "Long period surge at 180.0\u00b0 out of tolerance (amp err: 11.5%, phase err: 176.8\u00b0)"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#dc3545", "#ffc107", "#dc3545", "#dc3545", "#28a745", "#dc3545", "#dc3545", "#ffc107", "#dc3545"]}, "line": {"dash": "dot"}}, {"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [16.717345626168477, -86.5440962122288, -86.61149386071645, -86.8726760113147, -87.26144509450683, -87.60246259967397, -87.84875640090314, -88.01780230906894, 124.52183645284701], "mode": "markers+lines", "name": "SWAY Phase", "text": ["Inactive sway at 0.0\u00b0 correctly near zero", "Inactive sway at 22.5\u00b0 has unexpected amplitude 0.428", "Inactive sway at 45.0\u00b0 has unexpected amplitude 0.789", "Long period sway at 67.5\u00b0 marginal (amp err: 3.0%, phase err: 176.9\u00b0)", "Long period sway at 90.0\u00b0 out of tolerance (amp err: 11.6%, phase err: 177.3\u00b0)", "Long period sway at 112.5\u00b0 marginal (amp err: 3.3%, phase err: 177.6\u00b0)", "Inactive sway at 135.0\u00b0 has unexpected amplitude 0.790", "Inactive sway at 157.5\u00b0 has unexpected amplitude 0.426", "Inactive sway at 180.0\u00b0 correctly near zero"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#28a745", "#dc3545", "#dc3545", "#ffc107", "#dc3545", "#ffc107", "#dc3545", "#dc3545", "#28a745"]}, "line": {"dash": "dot"}}, {"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [-2.1695071296891797, -2.1655210958540465, -2.1398242876330187, -2.131635085536402, -2.159420941057988, -2.1698866272043915, -2.1691311855059894, -2.1504817620179892, -2.1287353440775973], "mode": "markers+lines", "name": "HEAVE Phase", "text": ["Long period heave at 0.0\u00b0 within tolerance", "Long period heave at 22.5\u00b0 within tolerance", "Long period heave at 45.0\u00b0 within tolerance", "Long period heave at 67.5\u00b0 within tolerance", "Long period heave at 90.0\u00b0 within tolerance", "Long period heave at 112.5\u00b0 within tolerance", "Long period heave at 135.0\u00b0 within tolerance", "Long period heave at 157.5\u00b0 within tolerance", "Long period heave at 180.0\u00b0 within tolerance"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745"]}, "line": {"dash": "dot"}}, {"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [-61.52053436762702, -107.0914719113884, -106.63930004896747, -104.77174912944025, -102.14672850353526, -99.74224286783067, -98.04933601350677, -96.84432201268561, 116.36546690429294], "mode": "markers+lines", "name": "ROLL Phase", "text": ["Inactive roll at 0.0\u00b0 correctly near zero", "Inactive roll at 22.5\u00b0 correctly near zero", "Inactive roll at 45.0\u00b0 correctly near zero", "Long period roll at 67.5\u00b0 out of tolerance (amp err: 99.0%, phase err: 165.2\u00b0)", "Long period roll at 90.0\u00b0 out of tolerance (amp err: 98.9%, phase err: 167.9\u00b0)", "Long period roll at 112.5\u00b0 out of tolerance (amp err: 99.0%, phase err: 170.3\u00b0)", "Inactive roll at 135.0\u00b0 correctly near zero", "Inactive roll at 157.5\u00b0 correctly near zero", "Inactive roll at 180.0\u00b0 correctly near zero"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#28a745", "#28a745", "#28a745", "#dc3545", "#dc3545", "#dc3545", "#28a745", "#28a745", "#28a745"]}, "line": {"dash": "dot"}}, {"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [80.85726862262588, 80.05738113000959, 77.5407049485319, 71.69525199285509, -10.939062408656184, -96.59222285613271, -101.7156324744202, -104.40606388428355, -105.41221842635812], "mode": "markers+lines", "name": "PITCH Phase", "text": ["Long period pitch at 0.0\u00b0 out of tolerance (amp err: 98.9%, phase err: 170.9\u00b0)", "Long period pitch at 22.5\u00b0 out of tolerance (amp err: 99.0%, phase err: 170.1\u00b0)", "Long period pitch at 45.0\u00b0 out of tolerance (amp err: 99.2%, phase err: 167.5\u00b0)", "Inactive pitch at 67.5\u00b0 correctly near zero", "Inactive pitch at 90.0\u00b0 correctly near zero", "Inactive pitch at 112.5\u00b0 correctly near zero", "Long period pitch at 135.0\u00b0 out of tolerance (amp err: 99.2%, phase err: 168.3\u00b0)", "Long period pitch at 157.5\u00b0 out of tolerance (amp err: 99.0%, phase err: 165.6\u00b0)", "Long period pitch at 180.0\u00b0 out of tolerance (amp err: 98.9%, phase err: 164.6\u00b0)"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#dc3545", "#dc3545", "#dc3545", "#28a745", "#28a745", "#28a745", "#dc3545", "#dc3545", "#dc3545"]}, "line": {"dash": "dot"}}, {"type": "scatter", "x": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0], "y": [6.562111787596791, -101.22692691678628, -100.12543657892815, 76.46455407045691, 77.06261789689745, 78.09435072536847, -100.75690311674788, -101.83921519876793, -167.54736856596332], "mode": "markers+lines", "name": "YAW Phase", "text": ["Inactive yaw at 0.0\u00b0 correctly near zero", "Inactive yaw at 22.5\u00b0 correctly near zero", "Inactive yaw at 45.0\u00b0 correctly near zero", "Inactive yaw at 67.5\u00b0 correctly near zero", "Inactive yaw at 90.0\u00b0 correctly near zero", "Inactive yaw at 112.5\u00b0 correctly near zero", "Inactive yaw at 135.0\u00b0 correctly near zero", "Inactive yaw at 157.5\u00b0 correctly near zero", "Inactive yaw at 180.0\u00b0 correctly near zero"], "hovertemplate": "<b>%{text}</b><br>Heading: %{x}\u00b0<br>Phase: %{y:.1f}\u00b0<extra></extra>", "marker": {"size": 12, "color": ["#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745"]}, "line": {"dash": "dot"}}], "layout": {"title": "Long Period Phase Angles by DOF and Heading", "xaxis": {"title": "Wave Heading (degrees)", "tickvals": [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0]}, "yaxis": {"title": "Phase Angle (degrees)", "range": [-180, 180]}, "hovermode": "closest", "showlegend": true, "legend": {"orientation": "h", "y": -0.2}}};
+        Plotly.newPlot('phaseChart', phaseData.data, phaseData.layout, {responsive: true});
+
+        // Peak Detection Chart
+        var peakData = {"data": [{"type": "bar", "x": ["ROLL @ 0\u00b0", "ROLL @ 22\u00b0", "ROLL @ 45\u00b0", "ROLL @ 68\u00b0", "ROLL @ 90\u00b0", "ROLL @ 112\u00b0", "ROLL @ 135\u00b0", "ROLL @ 158\u00b0", "ROLL @ 180\u00b0"], "y": [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0], "name": "ROLL", "text": ["Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 3.1x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-24.0s<br>Amp Factor: 3.2x"], "hovertemplate": "%{text}<extra></extra>", "marker": {"color": ["#ffc107", "#ffc107", "#ffc107", "#ffc107", "#ffc107", "#ffc107", "#ffc107", "#ffc107", "#ffc107"]}}, {"type": "scatter", "x": ["ROLL @ 0\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 22\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 45\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 68\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 90\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 112\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 135\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 158\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["ROLL @ 180\u00b0"], "y": [20.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 3.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "bar", "x": ["HEAVE @ 0\u00b0", "HEAVE @ 22\u00b0", "HEAVE @ 45\u00b0", "HEAVE @ 68\u00b0", "HEAVE @ 90\u00b0", "HEAVE @ 112\u00b0", "HEAVE @ 135\u00b0", "HEAVE @ 158\u00b0", "HEAVE @ 180\u00b0"], "y": [19.0, 19.0, 19.0, 19.0, 19.0, 19.0, 19.0, 19.0, 19.0], "name": "HEAVE", "text": ["Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x", "Peak: 19.0s<br>Expected: 17.0-25.0s<br>Amp Factor: 1.4x"], "hovertemplate": "%{text}<extra></extra>", "marker": {"color": ["#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745", "#28a745"]}}, {"type": "scatter", "x": ["HEAVE @ 0\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 22\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 45\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 68\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 90\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 112\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 135\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 158\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["HEAVE @ 180\u00b0"], "y": [21.0], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 4.0, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "bar", "x": ["PITCH @ 0\u00b0", "PITCH @ 22\u00b0", "PITCH @ 45\u00b0", "PITCH @ 68\u00b0", "PITCH @ 90\u00b0", "PITCH @ 112\u00b0", "PITCH @ 135\u00b0", "PITCH @ 158\u00b0", "PITCH @ 180\u00b0"], "y": [25.0, 25.0, 25.0, 25.0, 7.0, 25.0, 25.0, 25.0, 25.0], "name": "PITCH", "text": ["Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.7x", "Peak: 7.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 5.0x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.6x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.7x", "Peak: 25.0s<br>Expected: 17.0-20.0s<br>Amp Factor: 1.7x"], "hovertemplate": "%{text}<extra></extra>", "marker": {"color": ["#dc3545", "#dc3545", "#dc3545", "#dc3545", "#dc3545", "#dc3545", "#dc3545", "#dc3545", "#dc3545"]}}, {"type": "scatter", "x": ["PITCH @ 0\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 22\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 45\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 68\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 90\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 112\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 135\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 158\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}, {"type": "scatter", "x": ["PITCH @ 180\u00b0"], "y": [18.5], "mode": "markers", "marker": {"symbol": "line-ew", "size": 20, "color": "#666"}, "error_y": {"type": "constant", "value": 1.5, "visible": true, "color": "#666"}, "showlegend": false, "hoverinfo": "skip"}], "layout": {"title": "Peak Periods vs Expected Natural Period Ranges", "xaxis": {"title": "DOF @ Heading"}, "yaxis": {"title": "Period (seconds)"}, "barmode": "group", "hovermode": "closest", "showlegend": true}};
+        Plotly.newPlot('peakChart', peakData.data, peakData.layout, {responsive: true});
+    </script>
+</body>
+</html>

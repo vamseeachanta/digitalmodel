@@ -32,7 +32,7 @@ class CompleteOrcaflexDownloader:
     # All letter keys available on the Orcina examples page
     LETTER_KEYS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'z']
     
-    def __init__(self, base_dir: str = "docs/domains/orcaflex/examples"):
+    def __init__(self, base_dir: str = "docs/modules/orcaflex/examples"):
         """Initialize the complete downloader."""
         self.base_url = "https://www.orcina.com/resources/examples/"
         self.base_dir = Path(base_dir)
@@ -531,7 +531,7 @@ def main():
             logger.info(f"  {letter}: {cat_stats['zips']} ZIPs, {cat_stats['files']} files")
     
     # Check what file types we have
-    raw_dir = Path("docs/domains/orcaflex/examples/raw")
+    raw_dir = Path("docs/modules/orcaflex/examples/raw")
     if raw_dir.exists():
         dat_files = list(raw_dir.glob("**/*.dat"))
         sim_files = list(raw_dir.glob("**/*.sim"))

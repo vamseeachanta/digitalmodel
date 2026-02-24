@@ -186,11 +186,11 @@ User asks about OrcaFlex
 
 Framework agents coordinate; domain agents execute.
 
-### Q: Why both `skills/automation/` and `scripts/automation/`?
+### Q: Why both `skills/automation/` and `modules/automation/`?
 
 **Different purpose**:
 - `skills/automation/` = Documentation (what tools exist, how to use them)
-- `scripts/automation/` = Execution (actual orchestration scripts)
+- `modules/automation/` = Execution (actual orchestration scripts)
 
 ---
 

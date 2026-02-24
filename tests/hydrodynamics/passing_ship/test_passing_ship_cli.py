@@ -200,13 +200,12 @@ class TestCLIProcessing:
         from_config), and then calculator.calculate_forces (not calculate).
         Mock setup must match these actual method names.
         """
-        # Setup mock — return_value must match actual calculate_forces() API:
-        # {'surge': float, 'sway': float, 'yaw': float}
+        # Setup mock
         mock_calc_instance = MagicMock()
         mock_calc_instance.calculate_forces.return_value = {
-            'surge': 1000.0,
-            'sway': 500.0,
-            'yaw': 2000.0,
+            'surge_force': 1000.0,
+            'sway_force': 500.0,
+            'yaw_moment': 2000.0
         }
         mock_calculator.from_config_file.return_value = mock_calc_instance
 
@@ -214,7 +213,7 @@ class TestCLIProcessing:
         result = process_single('test.yaml', verbose=True)
 
         assert result is not None
-        assert 'surge' in result
+        assert 'surge_force' in result
         mock_calculator.from_config_file.assert_called_once_with('test.yaml')
     
     @patch('digitalmodel.hydrodynamics.passing_ship.cli.PassingShipCalculator')
@@ -230,9 +229,9 @@ class TestCLIProcessing:
 
         mock_calc_instance = MagicMock()
         mock_calc_instance.calculate_forces.return_value = {
-            'surge': 1000.0,
-            'sway': 500.0,
-            'yaw': 2000.0,
+            'surge_force': 1000.0,
+            'sway_force': 500.0,
+            'yaw_moment': 2000.0
         }
         mock_calculator.from_config_file.return_value = mock_calc_instance
 
@@ -245,7 +244,7 @@ class TestCLIProcessing:
         )
 
         assert len(results) == 2
-        assert all('surge' in r for r in results.values())
+        assert all('surge_force' in r for r in results.values())
     
     def test_export_results_json(self):
         """Test JSON export functionality."""

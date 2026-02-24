@@ -16,7 +16,7 @@ class ImportUpdater:
     """Update import statements in test files."""
     
     def __init__(self):
-        self.base_path = Path("D:/github/digitalmodel/tests/domains/orcaflex")
+        self.base_path = Path("D:/github/digitalmodel/tests/modules/orcaflex")
         
         # Map of test locations to update
         self.test_locations = {
@@ -48,8 +48,8 @@ class ImportUpdater:
     
     def calculate_relative_path_depth(self, test_location: str) -> int:
         """Calculate how many levels up to get to src/."""
-        # From tests/domains/orcaflex/[location] to src/
-        depth = len(Path(test_location).parts) + 3  # +3 for tests/domains/orcaflex
+        # From tests/modules/orcaflex/[location] to src/
+        depth = len(Path(test_location).parts) + 3  # +3 for tests/modules/orcaflex
         return depth
     
     def update_file_imports(self, file_path: Path, depth: int) -> dict:

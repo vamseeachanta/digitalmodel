@@ -1,0 +1,54 @@
+{
+  "name": "@digitalmodel/orcaflex-dashboard",
+  "version": "1.0.0",
+  "description": "OrcaFlex Results Dashboard Visualization",
+  "private": true,
+  "workspaces": [
+    "src/frontend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd src/frontend && npm run dev",
+    "dev:backend": "cd src/backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "build:frontend": "cd src/frontend && npm run build",
+    "build:backend": "cd src/backend && python -m build",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "test:frontend": "cd src/frontend && npm test",
+    "test:backend": "cd src/backend && pytest",
+    "test:all": "npm run test:frontend && npm run test:backend",
+    "test:e2e": "playwright test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd src/frontend && npm run lint",
+    "lint:backend": "cd src/backend && ruff check . && mypy .",
+    "format": "npm run format:frontend && npm run format:backend",
+    "format:frontend": "cd src/frontend && prettier --write .",
+    "format:backend": "cd src/backend && black . && isort .",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourorg/digitalmodel.git"
+  },
+  "keywords": [
+    "orcaflex",
+    "visualization",
+    "dashboard",
+    "marine",
+    "engineering"
+  ],
+  "author": "Marine Engineering Team",
+  "license": "PROPRIETARY"
+}

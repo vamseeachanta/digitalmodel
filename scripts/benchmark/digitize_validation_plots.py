@@ -17,7 +17,7 @@ Usage:
     uv run python scripts/benchmark/digitize_validation_plots.py --list
 
 Generates reference_data.yaml in each case directory under:
-    docs/domains/orcawave/L00_validation_wamit/<case>/reference_data.yaml
+    docs/modules/orcawave/L00_validation_wamit/<case>/reference_data.yaml
 """
 
 from __future__ import annotations

@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-08-25T05:08:03.757562",
+  "tests": {
+    "validate_formats": {
+      "status": "failed",
+      "passed_files": 7,
+      "failed_files": 5,
+      "details": "\n============================================================\nVALIDATING ALL GDF FILES\n============================================================\n\n============================================================\nGDF VALIDATION REPORT: simple_box_test.gdf\n============================================================\n\n[INFO] File Information:\n  header: Rhino->WAMIT file export (mesh)\n  length_scale: 1.0\n  gravity: 9.80665\n  x_symmetry: 0\n  y_symmetry: 0\n  declared_vertices: 30\n  actual_vertices: 30\n "
+    },
+    "check_files": {
+      "status": "passed",
+      "message": "All 8 required files exist"
+    },
+    "verify_dimensions": {
+      "status": "passed",
+      "geometries": {
+        "simple_box_test.gdf": {
+          "vertex_count": 30,
+          "expected": 30,
+          "match": true
+        },
+        "sea_cypress_orcawave.gdf": {
+          "vertex_count": 72996,
+          "expected": 72996,
+          "match": true
+        }
+      }
+    },
+    "test_converters": {
+      "status": "passed",
+      "scripts": {
+        "scripts/convert_to_orcawave_gdf.py": {
+          "exists": true,
+          "valid_python": true
+        },
+        "scripts/create_simple_box_gdf.py": {
+          "exists": true,
+          "valid_python": true
+        },
+        "scripts/test_orcawave_geometry.py": {
+          "exists": true,
+          "valid_python": true
+        }
+      }
+    },
+    "validate_configs": {
+      "status": "passed",
+      "configs": {
+        "configs/test_simple_box.yml": {
+          "valid_yaml": true,
+          "missing_fields": [],
+          "complete": true
+        },
+        "configs/sea_cypress_diffraction.yml": {
+          "valid_yaml": true,
+          "missing_fields": [],
+          "complete": true
+        }
+      }
+    },
+    "check_orcawave": {
+      "status": "passed",
+      "path": "C:\\Program Files (x86)\\Orcina\\OrcaFlex\\11.5\\OrcaWave.exe",
+      "message": "OrcaWave installation found"
+    },
+    "test_simple_geometry": {
+      "status": "passed",
+      "checks": {
+        "header": true,
+        "gravity": true,
+        "vertex_count": true
+      },
+      "message": "Simple box geometry validated"
+    },
+    "test_full_geometry": {
+      "status": "passed",
+      "checks": {
+        "header": true,
+        "gravity": true,
+        "vertex_count": true,
+        "sufficient_lines": true
+      },
+      "message": "Full vessel geometry validated"
+    }
+  },
+  "summary": {
+    "total": 8,
+    "passed": 7,
+    "failed": 1,
+    "skipped": 0
+  },
+  "duration": "0.94 seconds"
+}

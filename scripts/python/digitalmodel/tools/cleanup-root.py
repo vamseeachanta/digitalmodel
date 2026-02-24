@@ -104,7 +104,7 @@ class RootCleaner:
         
         # Test files
         if name.startswith('test_') or name.endswith('_test.py'):
-            return self.move_file(file_path, 'tests/domains/orcaflex/test_scripts')
+            return self.move_file(file_path, 'tests/modules/orcaflex/test_scripts')
             
         # Backup files
         if '.backup' in name or name.endswith(('.bak', '~', '.old')):
@@ -123,11 +123,11 @@ class RootCleaner:
             
         # Batch config files
         if name.startswith('batch_') and name.endswith('.yml'):
-            return self.move_file(file_path, 'tests/domains/orcaflex/batch_processing/test_configs')
+            return self.move_file(file_path, 'tests/modules/orcaflex/batch_processing/test_configs')
             
         # FSTS config files
         if name.startswith('fsts_') and name.endswith('.yml'):
-            return self.move_file(file_path, 'tests/domains/orcaflex/batch_processing/test_configs')
+            return self.move_file(file_path, 'tests/modules/orcaflex/batch_processing/test_configs')
             
         # Python tools
         if name.startswith('create-') and name.endswith('.py'):

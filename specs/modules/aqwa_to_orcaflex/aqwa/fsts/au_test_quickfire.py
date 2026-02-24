@@ -1,0 +1,35 @@
+# Standard library imports
+import os
+import sys
+
+from assetutilities.engine import engine
+
+# Reader imports
+
+
+def run_process(input_file, expected_result={}):
+    if input_file is not None and not os.path.isfile(input_file):
+        input_file = os.path.join(os.path.dirname(__file__), input_file)
+    cfg = engine(input_file)
+
+
+
+def test_process():
+    input_file = 'au_preproc_dat.yml'
+    # input_file = 'au_lwl_100yr_fst2_load_Ly_stat.yml'
+
+    # pytest_output_file = 'results/orcaflex_post_process_summary_pytest.yml'
+    # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
+    # expected_result = ymlInput(pytest_output_file, updateYml=None)
+
+    if len(sys.argv) > 1:
+        sys.argv.pop()
+
+    run_process(input_file, expected_result={})
+
+def get_valid_pytest_output_file(pytest_output_file):
+    if pytest_output_file is not None and not os.path.isfile(pytest_output_file):
+        pytest_output_file = os.path.join(os.path.dirname(__file__), pytest_output_file)
+    return pytest_output_file
+
+test_process()

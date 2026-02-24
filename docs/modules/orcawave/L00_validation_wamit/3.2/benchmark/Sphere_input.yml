@@ -1,0 +1,122 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.2\benchmark\Sphere_input.yml
+# Created: 10:53 PM on 2/15/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Full QTF calculation
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: Yes
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Pressure integration
+LengthTolerance: 100e-9
+WaterlineZTolerance: 10e-6
+WaterlineGapTolerance: 100e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: 3
+WaterDensity: 1
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 3
+  - 3.1
+WaveHeading:
+  - 0
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+QTFMinPeriodOrFrequency: 0
+QTFMaxPeriodOrFrequency: Infinity
+QTFFrequencyTypes: Difference frequencies
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: test102 cylinder
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: SphereWithLid.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyControlSurfaceType: Defined by mesh file
+    BodyControlSurfaceMeshFileName: SphereWithLid.csf
+    BodyControlSurfaceMeshFormat: Wamit csf
+    BodyControlSurfaceMeshLengthUnits: m
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# QTFs
+QTFCalculationMethod: Both
+PreferredQTFCalculationMethod: Direct method
+FreeSurfacePanelledZoneType: Defined by mesh file
+FreeSurfacePanelledZoneMeshFileName: PanelledZone.fdf
+FreeSurfacePanelledZoneMeshFormat: Wamit fdf
+FreeSurfacePanelledZoneMeshLengthUnits: m
+FreeSurfacePanelledZoneInnerRadius: 3
+FreeSurfaceQuadratureZoneNumberOfAnnuli: 2
+FreeSurfaceQuadratureZoneRadiusStep: 2
+FreeSurfaceQuadratureZoneNumberOfRadialNodes: 10
+FreeSurfaceQuadratureZoneNumberOfAzimuthalNodes: 8
+FreeSurfaceOuterCircleNumberOfSegments: 20
+FreeSurfaceAsymptoticZoneExpansionOrder: 10
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, Red]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...

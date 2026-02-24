@@ -1,0 +1,53 @@
+graph TB
+    subgraph "Client Layer"
+        Browser[Web Browser]
+        Mobile[Mobile Device]
+    end
+    
+    subgraph "Presentation Layer"
+        Nginx[Nginx<br/>Load Balancer]
+        Static[Static Assets<br/>CDN]
+    end
+    
+    subgraph "Application Layer"
+        Frontend[React Frontend<br/>TypeScript]
+        API[FastAPI Backend<br/>Python]
+        Worker[Celery Workers<br/>Background Tasks]
+    end
+    
+    subgraph "Data Layer"
+        Redis[(Redis Cache)]
+        PostgreSQL[(PostgreSQL<br/>Primary DB)]
+        FileStore[File Storage<br/>NAS/S3]
+    end
+    
+    subgraph "External Systems"
+        OrcaFlex[OrcaFlex<br/>Simulation Engine]
+        Email[Email Service]
+        Auth[Authentication<br/>Service]
+    end
+    
+    Browser --> Nginx
+    Mobile --> Nginx
+    Nginx --> Frontend
+    Nginx --> Static
+    Frontend --> API
+    API --> Redis
+    API --> PostgreSQL
+    API --> Worker
+    Worker --> PostgreSQL
+    Worker --> FileStore
+    Worker --> Email
+    API --> Auth
+    FileStore --> OrcaFlex
+    
+    style Browser fill:#e1f5fe
+    style Mobile fill:#e1f5fe
+    style Frontend fill:#fff3e0
+    style API fill:#fff3e0
+    style Worker fill:#fff3e0
+    style Redis fill:#fce4ec
+    style PostgreSQL fill:#fce4ec
+    style FileStore fill:#fce4ec
+    style OrcaFlex fill:#e8f5e9
+    style Nginx fill:#f3e5f5

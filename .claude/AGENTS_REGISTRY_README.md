@@ -459,7 +459,7 @@ Potential improvements for the registry system:
 
 - `.claude/agents/README.md` - Agent definitions overview
 - `modules/config/ai-agents-registry.json` - Legacy registry
-- `docs/domains/ai/AI_AGENT_GUIDELINES.md` - Agent usage guidelines
+- `docs/modules/ai/AI_AGENT_GUIDELINES.md` - Agent usage guidelines
 - `CLAUDE.md` - Project configuration
 
 ## Questions?

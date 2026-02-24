@@ -1,0 +1,63 @@
+# Steel Grade Properties — Engineering Reference Data (Tier 2)
+# Sources: API 5L, ASTM A106, casing grades
+# Policy: workspace-hub/docs/DATA_RESIDENCE_POLICY.md
+# Note: Canonical location. Legacy copy at src/digitalmodel/data_systems/data/steel_material.yml
+metadata:
+  version: "1.0"
+  tier: 2
+  units:
+    E: "psi"
+    G: "psi"
+    SMYS: "psi"
+    SMUS: "psi"
+    Rho: "lb/in3"
+    ThermalExpansionCoefficient: "1/F"
+
+common:
+  E: 30000000.0
+  G: 11538461.538461538
+  Poissonsratio: 0.3
+  Rho: 0.2817929
+  ThermalExpansionCoefficient: 6.5e-06
+
+Grades:
+  API 5L X52:
+    Reference: null
+    SMUS: null
+    SMYS: 52000
+  API 5L X60:
+    Reference: null
+    SMUS: null
+    SMYS: 60000
+  API 5L X65:
+    Reference: null
+    SMUS: 77500
+    SMYS: 65300
+  API 5L X70:
+    Reference: null
+    SMUS: null
+    SMYS: 70300
+  API 5L X80:
+    Reference: Assumed
+    SMUS: 95000
+    SMYS: 80000
+  ASTM A106 Grade A:
+    Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+    SMUS: 48000
+    SMYS: 30000
+  ASTM A106 Grade B:
+    Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+    SMUS: 60000
+    SMYS: 35000
+  ASTM A106 Grade C:
+    Reference: https://www.amerpipe.com/steel-pipe-products/carbon-pipe/a106/a106-specifications/
+    SMUS: 70000
+    SMYS: 40000
+  P110:
+    Reference: Assumed
+    SMUS: 125000
+    SMYS: 110000
+  S125:
+    Reference: Assumed
+    SMUS: 140000
+    SMYS: 125000

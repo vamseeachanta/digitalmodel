@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/aqwa/**'
-      - 'tests/domains/aqwa/**'
+      - 'tests/modules/aqwa/**'
       - '.github/workflows/aqwa-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/aqwa/**'
-      - 'tests/domains/aqwa/**'
+      - 'tests/modules/aqwa/**'
 
 jobs:
   test:
@@ -45,11 +45,11 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest tests/domains/aqwa/test_aqwa_lis_parser_real_data.py -v --cov=src/digitalmodel/modules/aqwa --cov-report=xml --cov-report=term
+        pytest tests/modules/aqwa/test_aqwa_lis_parser_real_data.py -v --cov=src/digitalmodel/modules/aqwa --cov-report=xml --cov-report=term
 
     - name: Run CLI integration tests
       run: |
-        pytest tests/domains/aqwa/test_aqwa_cli_integration.py -v
+        pytest tests/modules/aqwa/test_aqwa_cli_integration.py -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

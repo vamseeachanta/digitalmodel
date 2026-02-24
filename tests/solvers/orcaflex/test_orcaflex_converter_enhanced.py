@@ -26,7 +26,7 @@ from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexCo
 
 
 # Test data paths
-TEST_EXAMPLES_DIR = Path("docs/domains/orcaflex/examples/raw")
+TEST_EXAMPLES_DIR = Path("docs/modules/orcaflex/examples/raw")
 
 
 class TestOrcaFlexConverterEnhanced:

@@ -41,7 +41,7 @@ stats = manager.cleanup()
 - `../../scripts/example_memory_lifecycle.py` - Usage examples
 
 **Documentation:**
-- [Complete Guide](../../../docs/domains/automation/MEMORY_LIFECYCLE.md)
+- [Complete Guide](../../../docs/modules/automation/MEMORY_LIFECYCLE.md)
 - [Retention Policies](../../../.claude/memory-retention-policies.yaml)
 - [Tests](../../../tests/test_memory_lifecycle.py)
 

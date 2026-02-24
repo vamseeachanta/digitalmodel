@@ -1,0 +1,86 @@
+name: fst_barge_250m
+hull_type: fpso
+length_bp: 250.0
+beam: 46.0
+draft: 14.0
+depth: 18.0
+source: "generic barge-type floating storage terminal (~300k bbl capacity)"
+stations:
+  # Station 0 -- AP (x=0): raked stern, flat bottom, narrowing at top
+  - x_position: 0.0
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 21.5]
+      - [10.5, 20.0]
+      - [14.0, 18.0]
+  # Station 1 -- x=31.25: aft transition to parallel body
+  - x_position: 31.25
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 2 -- x=62.5: aft parallel body
+  - x_position: 62.5
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 3 -- x=93.75: aft-mid parallel body
+  - x_position: 93.75
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 4 -- x=125.0: midship (maximum section)
+  - x_position: 125.0
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 5 -- x=156.25: fwd-mid parallel body
+  - x_position: 156.25
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 6 -- x=187.5: fwd parallel body
+  - x_position: 187.5
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 7 -- x=218.75: fwd transition from parallel body
+  - x_position: 218.75
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 23.0]
+      - [10.5, 23.0]
+      - [14.0, 23.0]
+  # Station 8 -- FP (x=250): raked bow, narrowing at top
+  - x_position: 250.0
+    waterline_offsets:
+      - [0.0, 23.0]
+      - [3.5, 23.0]
+      - [7.0, 21.5]
+      - [10.5, 20.0]
+      - [14.0, 18.0]
+block_coefficient: 0.95
+displacement: 148120
+keel_profile:
+  - [0.0, 0.0]
+  - [125.0, 0.0]
+  - [250.0, 0.0]

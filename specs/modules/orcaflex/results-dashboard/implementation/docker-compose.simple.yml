@@ -1,0 +1,8 @@
+services:
+  app:
+    image: nginx:alpine
+    container_name: orcaflex-dashboard
+    ports:
+      - "8080:80"
+    volumes:
+      - ./simple-app:/usr/share/nginx/html

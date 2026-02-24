@@ -1,0 +1,40 @@
+VesselType:
+  Name: SeaCypress_incident_draft_fuel_centered
+  Description: Incident Draft Fuel centered
+  Geometry:
+    Length: 22.86
+    Beam: 8.53
+    Depth: 3.05
+    Draft: 1.981
+    GeometryFile: geometry/sea_cypress.gdf
+    SymmetryMode: xz plane
+  MassProperties:
+    Mass: 300912.45
+    CentreOfGravity:
+      X: 11.2911
+      Y: -0.0005
+      Z: 2.4331
+    MomentsOfInertia:
+      Ixx: 2094917.78
+      Iyy: 9098465.41
+      Izz: 10218270.06
+      Ixy: 0.0
+      Ixz: 0.0
+      Iyz: 0.0
+    RadiiOfGyration:
+      Kxx: 2.6385
+      Kyy: 5.4988
+      Kzz: 5.8273
+  Hydrostatics:
+    CalculateFromGeometry: true
+    WaterDensity: 1025.0
+    GravitationalAcceleration: 9.81
+  CoordinateSystem:
+    Origin:
+      Description: Frame 0 at baseline
+      X: 0.0
+      Y: 0.0
+      Z: 0.0
+    Orientation:
+      Description: X forward, Y port, Z up
+      Convention: ShipBuilding

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Batch spec extraction and modular generation for all OrcaFlex example models.
 
-Discovers .dat files under docs/domains/orcaflex/examples/raw/, converts each
+Discovers .dat files under docs/modules/orcaflex/examples/raw/, converts each
 to a spec.yml via MonolithicExtractor, optionally generates modular YAML via
 ModularModelGenerator, and optionally validates by running statics in OrcFxAPI.
 
@@ -44,8 +44,8 @@ except ImportError:
     HAS_ORCFXAPI = False
 
 # Paths relative to project root
-RAW_MODELS_ROOT = Path("docs/domains/orcaflex/examples/raw")
-DEFAULT_OUTPUT_ROOT = Path("docs/domains/orcaflex/library/model_library")
+RAW_MODELS_ROOT = Path("docs/modules/orcaflex/examples/raw")
+DEFAULT_OUTPUT_ROOT = Path("docs/modules/orcaflex/library/model_library")
 
 
 # ---------------------------------------------------------------------------

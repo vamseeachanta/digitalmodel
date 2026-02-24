@@ -28,17 +28,17 @@ HULL_SPECS: list[dict[str, str]] = [
     {
         "label": "BARGE",
         "code": "L02",
-        "path": "docs/domains/orcawave/L02_barge_benchmark/spec.yml",
+        "path": "docs/modules/orcawave/L02_barge_benchmark/spec.yml",
     },
     {
         "label": "SHIP",
         "code": "L03",
-        "path": "docs/domains/orcawave/L03_ship_benchmark/spec.yml",
+        "path": "docs/modules/orcawave/L03_ship_benchmark/spec.yml",
     },
     {
         "label": "SPAR",
         "code": "L04",
-        "path": "docs/domains/orcawave/L04_spar_benchmark/spec.yml",
+        "path": "docs/modules/orcawave/L04_spar_benchmark/spec.yml",
     },
 ]
 

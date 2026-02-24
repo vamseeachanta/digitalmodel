@@ -12,13 +12,13 @@ from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGene
 
 # Diverse vessel type files with actual RAO data
 rao_files = [
-    'docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml',
-    'docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Semi-sub multibody analysis_orcaflex.yml',
-    'docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml',
-    'docs/domains/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml',
-    'docs/domains/orcaflex/examples/raw/A05/A05 Lazy wave with FPSO.yml',
-    'docs/domains/orcaflex/examples/raw/C05/C05 Single point mooring.yml',
-    'docs/domains/orcaflex/examples/raw/C06/C06 CALM buoy.yml',
+    'docs/modules/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml',
+    'docs/modules/orcawave/examples/L03 Semi-sub multibody analysis/L03 Semi-sub multibody analysis_orcaflex.yml',
+    'docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml',
+    'docs/modules/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml',
+    'docs/modules/orcaflex/examples/raw/A05/A05 Lazy wave with FPSO.yml',
+    'docs/modules/orcaflex/examples/raw/C05/C05 Single point mooring.yml',
+    'docs/modules/orcaflex/examples/raw/C06/C06 CALM buoy.yml',
 ]
 
 validators = RAODataValidators()

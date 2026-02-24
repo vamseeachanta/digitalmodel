@@ -442,7 +442,7 @@ Next Step: OrcaFlex dynamic analysis with vessel motions
 
 **Documentation**
 - Module Guide: `/src/digitalmodel/modules/catenary/`
-- Validation Tests: `/tests/domains/catenary/`
+- Validation Tests: `/tests/modules/catenary/`
 - Examples: `/examples/catenary_analysis/`
 - Benchmark Cases: `/docs/validation/catenary_benchmarks.md`
 

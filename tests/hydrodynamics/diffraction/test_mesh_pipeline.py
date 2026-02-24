@@ -2,7 +2,7 @@
 
 Tests cover the MeshPipeline integration layer that wraps BEMRosetta
 mesh handlers for use in the diffraction spec converter. All tests use
-real mesh fixtures from tests/domains/bemrosetta/fixtures/.
+real mesh fixtures from tests/modules/bemrosetta/fixtures/.
 
 Note: Assertions use value-based comparisons (not ``isinstance`` or enum
 identity) because the src-layout can produce two distinct module

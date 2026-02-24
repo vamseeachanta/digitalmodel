@@ -31,14 +31,14 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 
 # --- Configuration ---
-BENCHMARK_DIR = Path("docs/domains/orcawave/L03_ship_benchmark")
-SOURCE_DIR = Path("docs/domains/orcawave/L01_aqwa_benchmark")
+BENCHMARK_DIR = Path("docs/modules/orcawave/L03_ship_benchmark")
+SOURCE_DIR = Path("docs/modules/orcawave/L01_aqwa_benchmark")
 OWR_FILE = SOURCE_DIR / "orcawave_001_ship_raos_rev2_matched_500m.owr"
 LIS_FILE = BENCHMARK_DIR / "source_data" / "aqwa" / "001_SHIP_RAOS_REV2.LIS"
 VESSEL_NAME = "Ship_001_RAOs"
 WATER_DEPTH = 500.0
 
-# Output directory — canonical location in docs/domains/
+# Output directory — canonical location in docs/modules/
 OUTPUT_DIR = BENCHMARK_DIR / "benchmark_results"
 
 

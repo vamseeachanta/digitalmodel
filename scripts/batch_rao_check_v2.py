@@ -12,8 +12,8 @@ from digitalmodel.marine_analysis.rao_quality_report import RAOQualityReportGene
 
 # Test files with actual RAO data
 rao_files = [
-    'docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml',
-    'docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Semi-sub multibody analysis_orcaflex.yml',
+    'docs/modules/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub_orcaflex.yml',
+    'docs/modules/orcawave/examples/L03 Semi-sub multibody analysis/L03 Semi-sub multibody analysis_orcaflex.yml',
 ]
 
 validators = RAODataValidators()

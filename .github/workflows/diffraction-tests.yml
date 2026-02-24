@@ -5,13 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/diffraction/**'
-      - 'tests/domains/diffraction/**'
+      - 'tests/modules/diffraction/**'
       - '.github/workflows/diffraction-tests.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/digitalmodel/modules/diffraction/**'
-      - 'tests/domains/diffraction/**'
+      - 'tests/modules/diffraction/**'
 
 jobs:
   test:
@@ -45,7 +45,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/domains/diffraction/ -v --cov=src/digitalmodel/modules/diffraction --cov-report=xml --cov-report=term
+        pytest tests/modules/diffraction/ -v --cov=src/digitalmodel/modules/diffraction --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

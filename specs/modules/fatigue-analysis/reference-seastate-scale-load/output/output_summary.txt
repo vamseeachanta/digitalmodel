@@ -1,0 +1,22 @@
+======================================================================
+LOAD SCALING OUTPUT SUMMARY
+======================================================================
+
+Generated: 2025-09-24 04:21:40
+Output Directory: output
+
+FILE STATISTICS:
+  - Tension Files: 320
+  - Unique Metadata: 6
+  - Deduplication Ratio: 320:6
+
+STORAGE EFFICIENCY:
+  - Total Size: 6.86 MB
+  - Estimated Original: 15.05 MB
+  - Space Saved: 8.18 MB (54.4%)
+
+KEY FILES:
+  - Tension Data: tension_data/*.csv
+  - Metadata Lookup: metadata/metadata_lookup.csv
+  - File Mapping: metadata/file_metadata_mapping.csv
+  - Quick Index: metadata/index.json

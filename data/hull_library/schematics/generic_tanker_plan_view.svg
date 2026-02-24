@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+<rect width="800" height="400" fill="#ffffff"/>
+<text x="400.0" y="20.0" font-family="sans-serif" font-size="14" fill="#333333" text-anchor="middle">Plan View - generic_tanker</text>
+<line x1="60.0" y1="60.0" x2="60.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="60.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">0.0</text>
+<line x1="196.0" y1="60.0" x2="196.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="196.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">46.0</text>
+<line x1="332.0" y1="60.0" x2="332.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="332.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">92.0</text>
+<line x1="468.0" y1="60.0" x2="468.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="468.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">138.0</text>
+<line x1="604.0" y1="60.0" x2="604.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="604.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">184.0</text>
+<line x1="740.0" y1="60.0" x2="740.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="740.0" y="358.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="middle">230.0</text>
+<line x1="60.0" y1="340.0" x2="740.0" y2="340.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="52.0" y="343.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="end">-18.5</text>
+<line x1="60.0" y1="270.0" x2="740.0" y2="270.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="52.0" y="273.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="end">-9.2</text>
+<line x1="60.0" y1="200.0" x2="740.0" y2="200.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="52.0" y="203.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="end">0.0</text>
+<line x1="60.0" y1="130.0" x2="740.0" y2="130.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="52.0" y="133.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="end">9.2</text>
+<line x1="60.0" y1="60.0" x2="740.0" y2="60.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="52.0" y="63.0" font-family="sans-serif" font-size="9" fill="#333333" text-anchor="end">18.5</text>
+<text x="400.0" y="375.0" font-family="sans-serif" font-size="11" fill="#333333" text-anchor="middle">Length (x) (m)</text>
+<text x="20.0" y="200.0" font-family="sans-serif" font-size="11" fill="#333333" text-anchor="middle" transform="rotate(-90,20.0,200.0)">Half-breadth (y) (m)</text>
+<rect x="60.0" y="60.0" width="680.0" height="280.0" stroke="#666666" stroke-width="1.0" fill="none"/>
+<polygon points="60.0,94.1 128.0,90.3 196.0,71.4 264.0,63.8 332.0,60.0 400.0,60.0 468.0,60.0 536.0,75.1 604.0,97.8 672.0,124.3 740.0,162.2 740.0,237.8 672.0,275.7 604.0,302.2 536.0,324.9 468.0,340.0 400.0,340.0 332.0,340.0 264.0,336.2 196.0,328.6 128.0,309.7 60.0,305.9" stroke="#1a3a5c" stroke-width="2.0" fill="none"/>
+<line x1="60.0" y1="200.0" x2="740.0" y2="200.0" stroke="#8899aa" stroke-width="0.5" fill="none" stroke-dasharray="4,3"/>
+<text x="745.0" y="204.0" font-family="sans-serif" font-size="10" fill="#8899aa" text-anchor="start">CL</text>
+</svg>

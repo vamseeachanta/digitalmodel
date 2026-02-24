@@ -209,8 +209,8 @@ project_folder/
 ## References
 
 - Plotly Documentation: https://plotly.com/python/
-- HTML Reporting Standards: `docs/domains/standards/HTML_REPORTING_STANDARDS.md`
-- Marine Engineering Examples: `docs/domains/orcawave/L01_aqwa_benchmark/`
+- HTML Reporting Standards: `docs/modules/standards/HTML_REPORTING_STANDARDS.md`
+- Marine Engineering Examples: `docs/modules/orcawave/L01_aqwa_benchmark/`
 
 ---
 

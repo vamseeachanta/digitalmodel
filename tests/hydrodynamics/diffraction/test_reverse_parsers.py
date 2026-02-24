@@ -746,7 +746,7 @@ class TestParseExistingOrcaWaveFile:
         )
 
         example_path = Path(
-            "/mnt/github/workspace-hub/digitalmodel/docs/domains/orcawave"
+            "/mnt/github/workspace-hub/digitalmodel/docs/modules/orcawave"
             "/examples/L01_default_vessel/L01 Default vessel.yml"
         )
         if not example_path.exists():

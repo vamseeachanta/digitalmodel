@@ -90,7 +90,7 @@ def run_tests(mode='auto', verbose=False, coverage=False, specific_test=None):
     if specific_test:
         cmd.append(specific_test)
     else:
-        cmd.append('tests/domains/orcaflex')
+        cmd.append('tests/modules/orcaflex')
     
     # Add options
     if verbose:

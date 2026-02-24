@@ -165,7 +165,7 @@ ls examples/ | grep calm
 # (mixed with 20+ other files)
 
 # After: Clear path
-ls examples/domains/calm_buoy/
+ls examples/modules/calm_buoy/
 # north_sea_calm_project.yml  README.md
 ```
 
@@ -176,7 +176,7 @@ cat examples/fpso_mooring_analysis.py
 # (no context about related files)
 
 # After: Module README explains everything
-cat examples/domains/fpso/README.md
+cat examples/modules/fpso/README.md
 # - All related files listed
 # - Usage examples
 # - Standards referenced
@@ -189,8 +189,8 @@ cat examples/domains/fpso/README.md
 examples/new_example.py  # (where does this go?)
 
 # After: Clear placement
-examples/domains/<module_name>/new_example.py
-examples/domains/<module_name>/README.md  # (update)
+examples/modules/<module_name>/new_example.py
+examples/modules/<module_name>/README.md  # (update)
 ```
 
 ### 4. **Learning Path**
@@ -212,38 +212,38 @@ examples/README.md  # → Beginners section
 ### By Asset Type
 ```bash
 # CALM Buoy
-ls examples/domains/calm_buoy/
+ls examples/modules/calm_buoy/
 
 # FPSO
-ls examples/domains/fpso/
+ls examples/modules/fpso/
 
 # General mooring
-ls examples/domains/mooring/
+ls examples/modules/mooring/
 ```
 
 ### By Analysis Type
 ```bash
 # Fatigue
-ls examples/domains/fatigue/
+ls examples/modules/fatigue/
 
 # Stress
-ls examples/domains/stress/
+ls examples/modules/stress/
 
 # Hydrodynamics
-ls examples/domains/hydrodynamics/
+ls examples/modules/hydrodynamics/
 ```
 
 ### By Standard
 ```bash
 # API standards
-ls examples/domains/api_standards/
+ls examples/modules/api_standards/
 
 # OCIMF guidelines
-ls examples/domains/ocimf/
+ls examples/modules/ocimf/
 
 # DNV standards (multiple modules)
-ls examples/domains/fatigue/
-ls examples/domains/stress/
+ls examples/modules/fatigue/
+ls examples/modules/stress/
 ```
 
 ---
@@ -285,9 +285,9 @@ ls examples/domains/stress/
 python examples/north_sea_calm_project.yml  # (doesn't work - YAML not executable)
 
 # New way (clear documentation)
-cat examples/domains/calm_buoy/README.md
+cat examples/modules/calm_buoy/README.md
 python scripts/generate_calm_buoy_project.py \
-  --config examples/domains/calm_buoy/north_sea_calm_project.yml \
+  --config examples/modules/calm_buoy/north_sea_calm_project.yml \
   --validate
 ```
 
@@ -298,8 +298,8 @@ python scripts/generate_calm_buoy_project.py \
 python examples/fpso_mooring_analysis.py
 
 # New way (with module context)
-cat examples/domains/fpso/README.md
-python examples/domains/fpso/fpso_mooring_analysis.py
+cat examples/modules/fpso/README.md
+python examples/modules/fpso/fpso_mooring_analysis.py
 # (README explains output, related files, next steps)
 ```
 
@@ -311,7 +311,7 @@ python examples/fatigue_analysis_examples.py
 # (user doesn't know about advanced examples in subdirectory)
 
 # New way (clear hierarchy)
-cat examples/domains/fatigue/README.md
+cat examples/modules/fatigue/README.md
 # → Basic: fatigue_analysis_examples.py
 # → Advanced: advanced_examples/complete_fatigue_analysis.py
 ```
@@ -356,7 +356,7 @@ ls examples/*.py examples/*.ipynb examples/*.yml 2>/dev/null | wc -l
 # 12 files
 
 # Count files after
-find examples/domains -type f \( -name "*.py" -o -name "*.ipynb" -o -name "*.yml" \) | wc -l
+find examples/modules -type f \( -name "*.py" -o -name "*.ipynb" -o -name "*.yml" \) | wc -l
 # 37 files (includes previously hidden subdirectories)
 ```
 
@@ -392,12 +392,12 @@ Old documentation files preserved:
 ### Find an Example
 ```bash
 # By module
-ls examples/domains/<module_name>/
+ls examples/modules/<module_name>/
 
 # By file type
-find examples/domains -name "*.py"
-find examples/domains -name "*.ipynb"
-find examples/domains -name "*.yml"
+find examples/modules -name "*.py"
+find examples/modules -name "*.ipynb"
+find examples/modules -name "*.yml"
 ```
 
 ### Read Documentation
@@ -406,16 +406,16 @@ find examples/domains -name "*.yml"
 cat examples/README.md
 
 # Module specific
-cat examples/domains/<module_name>/README.md
+cat examples/modules/<module_name>/README.md
 ```
 
 ### Run an Example
 ```bash
 # Python script
-python examples/domains/<module_name>/<script>.py
+python examples/modules/<module_name>/<script>.py
 
 # Jupyter notebook
-jupyter notebook examples/domains/<module_name>/<notebook>.ipynb
+jupyter notebook examples/modules/<module_name>/<notebook>.ipynb
 ```
 
 ---

@@ -1,17 +1,17 @@
-&id004 !!python/object/new:digitalmodel.asset_integrity.common.update_deep.AttributeDict
+&id004 !!python/object/new:pyintegrity.common.data.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/fracture_mechanics_py_axial_single_process.yml
-    DefaultInputFile: ~
-    analysis_root_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics
+    CustomInputFile: test_data/fracture_mechanics/fracture_mechanics_py_axial_single_process.yml
+    DefaultInputFile: null
+    analysis_root_folder: test_data/fracture_mechanics
     basename: fracture_mechanics
-    cfg_array_file_names: ~
+    cfg_array_file_names: null
     file_name: app_fracture_mechanics_fracture_mechanics_py_axial_single_process
     file_name_for_overwrite: app_fracture_mechanics_fracture_mechanics_py_axial_single_process
-    log_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\logs\
-    result_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\results\
-    start_time: 2026-02-18 04:23:09.595025
-  Inner_Pipe: ~
+    log_folder: test_data/fracture_mechanics\logs\
+    result_folder: test_data/fracture_mechanics\results\
+    start_time: 2023-10-17 13:36:16.994666
+  Inner_Pipe: null
   Material:
     Steel:
       E: 30000000.0
@@ -37,8 +37,8 @@ dictitems:
     Manufacturing:
       Coupling Mass Ratio: 0.1
     Material:
-      Buoyancy: ~
-      Insulation: ~
+      Buoyancy: null
+      Insulation: null
       Material: Steel
       Material_Grade: API 5L X80
       WeldFactor:
@@ -63,8 +63,6 @@ dictitems:
         SMUS: 95000
         SMYS: 80000
         geometry: *id001
-  Result:
-    Exception: ''
   basename: fracture_mechanics
   default:
     Analysis:
@@ -148,6 +146,7 @@ dictitems:
         solution_step: 0.1
         values:
         - 5
+      stress_intensity_factor_solution: table
       theta_array:
       - 90
       yield_discontinuity: false
@@ -165,8 +164,24 @@ dictitems:
     section_properties: *id002
   flaw:
     dimensions:
-      a: 2
-      c: 4
+      a: !!python/object/apply:numpy.core.multiarray.scalar
+      - !!python/object/apply:numpy.dtype
+        args:
+        - f8
+        - false
+        - true
+        state: !!python/tuple
+        - 3
+        - <
+        - null
+        - null
+        - null
+        - -1
+        - -1
+        - 0
+      - !!binary |
+        vYrqw2CnH0A=
+      c: 200
       p: 1
     geometry: thin_pipe
     location: internal_surface
@@ -176,16 +191,16 @@ dictitems:
     histograms:
       from_xlsx:
       - bending_factor: 1.0
-        column_to_analyze: ~
-        columns: ~
+        column_to_analyze: null
+        columns: null
         component_index:
         - 10
         component_label:
         - Buoyancy Jt. at Bottom
-        index_col: ~
-        io: tests\test_data\histograms\2500ft_WT0750_064pcf_combined_histograms.xlsx
+        index_col: null
+        io: tests/test_data/histograms/2500ft_WT0750_064pcf_combined_histograms.xlsx
         label: combined_histograms
-        replace: ~
+        replace: null
         sheet_name: combined_fatigue
         skipfooter: 0
         skiprows: 0
@@ -208,13 +223,14 @@ dictitems:
     transfer_delta_K: 323
   pipe_properties: *id003
   plot_settings:
-  - file_name_extension: FAD
+  - file_name: test_data/fracture_mechanics\results\app_fracture_mechanics_fracture_mechanics_py_axial_single_process_FAD.png
+    file_name_extension: FAD
     grid: true
     label:
     - Option 1
     legend: true
     legend_location: outside
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -237,20 +253,21 @@ dictitems:
     - 1.6
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - K_r
     ylabel: Kr (Fracture Ratio)
     ylim:
     - 0
     - 1.6
-  - file_name_extension: unstable_fracture_limits
+  - file_name: test_data/fracture_mechanics\results\app_fracture_mechanics_fracture_mechanics_py_axial_single_process_unstable_fracture_limits.png
+    file_name_extension: unstable_fracture_limits
     grid: true
     label:
-    - Option 1
+    - external_surface flaw, axial
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -259,10 +276,10 @@ dictitems:
     x:
     - flaw_length
     xlabel: Flaw Length, 2c (mm)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - flaw_depth
     ylabel: Flaw Depth, a (mm)
@@ -275,7 +292,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -284,10 +301,10 @@ dictitems:
     x:
     - final_flaw_length
     xlabel: Flaw Length, 2c (mm)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - final_flaw_depth
     ylabel: Flaw Depth, a (mm)
@@ -300,7 +317,7 @@ dictitems:
     - Option 1
     legend: true
     legend_location: best
-    marker: ~
+    marker: null
     orientation: portrait
     plt_kind: line
     size: half_letter
@@ -309,10 +326,10 @@ dictitems:
     x:
     - service_life
     xlabel: Service Life (years)
-    xlim: ~
+    xlim: null
     xscale:
       log: false
-    xticklabels: ~
+    xticklabels: null
     y:
     - final_flaw_depth
     ylabel: Flaw Depth, a (mm)

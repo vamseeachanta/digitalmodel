@@ -87,7 +87,7 @@ class TemplateManager:
 
         Args:
             templates_dir: Path to templates directory. Defaults to
-                          docs/domains/orcaflex/templates/
+                          docs/modules/orcaflex/templates/
         """
         if templates_dir is None:
             self.templates_dir = DEFAULT_TEMPLATES_DIR

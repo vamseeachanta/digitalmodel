@@ -1,5 +1,3 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Generate GDF panel meshes from hull profile YAMLs in the hull library.
 
 Loads each YAML profile, creates a HullProfile, generates a panel mesh via

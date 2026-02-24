@@ -1,0 +1,12 @@
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+  label: viz_fsts_
+parameters:
+  VarNames:
+    Line:
+    - End force
+    - End moment
+
+... [truncated] ...

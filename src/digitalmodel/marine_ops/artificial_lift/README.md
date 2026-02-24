@@ -37,6 +37,6 @@ print(results.diagnostic_message)
 Standard `digitalmodel` configuration supports `basename: artificial_lift` to trigger this workflow.
 
 ## Tests
-- `tests/domains/artificial_lift/test_dynacard.py`: Core logic unit tests.
-- `tests/domains/artificial_lift/test_dynacard_cleansed.py`: Robustness tests using an anonymized production dataset.
-- `tests/domains/artificial_lift/test_solver_parity.py`: Mathematical parity verification against legacy implementations.
+- `tests/modules/artificial_lift/test_dynacard.py`: Core logic unit tests.
+- `tests/modules/artificial_lift/test_dynacard_cleansed.py`: Robustness tests using an anonymized production dataset.
+- `tests/modules/artificial_lift/test_solver_parity.py`: Mathematical parity verification against legacy implementations.

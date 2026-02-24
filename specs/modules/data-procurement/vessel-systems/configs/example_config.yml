@@ -1,0 +1,273 @@
+# Vessel Systems Data Procurement Configuration Example
+# Version: 1.0.0
+# Reference: @specs/modules/data-procurement/vessel-systems/spec.md
+
+version: "1.0"
+
+# Reference common components framework
+# extends: "@specs/modules/data-procurement/common-components/spec.md"  # Documentation reference only
+
+# Data source category
+data_source:
+  category: "vessel_systems"
+  description: "Vessel characteristics, RAOs, and hydrodynamic data"
+
+# Vessel identification method
+vessel:
+  # Option 1: Search by IMO/MMSI/Name
+  identification:
+    method: "imo"  # imo, mmsi, name, dimensions
+    value: "9321483"  # IMO number example
+
+    # Alternative: Search by name
+    # method: "name"
+    # value: "Front Altair"
+
+  # Option 2: Specify generic vessel type
+  generic:
+    enabled: false
+    type: "VLCC"  # VLCC, Suezmax, Aframax, Semi-sub, Drillship, LNG, Barge
+    dwt: 300000  # tonnes (if known)
+    draft: 20.0  # m (operating draft)
+
+    # Dimensions (if type not sufficient)
+    dimensions:
+      loa: 330.0  # m (length overall)
+      beam: 58.0  # m
+      depth: 30.0  # m
+
+# API provider configuration
+apis:
+  # MarineTraffic for vessel database
+  MarineTraffic:
+    base_url: "https://services.marinetraffic.com/api/exportvessel/v:8"
+    authentication:
+      method: "api_key"
+      key: "${MARINETRAFFIC_API_KEY}"
+    rate_limit:
+      requests_per_minute: 5  # Free tier
+    enabled: true
+
+  # ShipXplorer (alternative)
+  ShipXplorer:
+    base_url: "https://api.shipxplorer.com/v1"
+    authentication:
+      method: "api_key"
+      key: "${SHIPXPLORER_API_KEY}"
+    rate_limit:
+      requests_per_hour: 100  # Free tier
+    enabled: false
+
+  # Generic RAO database (local repository)
+  GenericRAO:
+    source: "repository"
+    path: "@specs/modules/data-procurement/vessel-systems/data/generic_raos/"
+    enabled: true
+
+# RAO (Response Amplitude Operator) configuration
+raos:
+  # RAO data source
+  source: "generic_database"  # generic_database, calculated, provided
+
+  # Drafts to retrieve/generate RAOs for
+  drafts: [18, 20, 22]  # m
+
+  # Wave directions (degrees, 0 = head seas)
+  wave_directions: [0, 15, 30, 45, 60, 90, 120, 135, 150, 165, 180]
+
+  # Frequency range
+  frequency_range:
+    min: 0.1  # rad/s
+    max: 2.0  # rad/s
+    step: 0.05
+
+  # Degrees of freedom
+  dof:
+    - surge      # X translation
+    - sway       # Y translation
+    - heave      # Z translation
+    - roll       # X rotation
+    - pitch      # Y rotation
+    - yaw        # Z rotation
+
+  # RAO reference point (relative to vessel coordinate system)
+  reference_point:
+    x: 165.0  # m (from stern, typically LBP/2)
+    y: 0.0    # m (centerline)
+    z: -10.0  # m (from waterline, negative = below)
+
+  # Interpolation settings
+  interpolation:
+    draft: "linear"      # Method for draft interpolation
+    direction: "linear"  # Method for direction interpolation
+    frequency: "cubic"   # Method for frequency interpolation
+
+# Hydrostatic properties
+hydrostatics:
+  # Calculate automatically from dimensions
+  auto_calculate: true
+
+  # Or provide manually
+  manual:
+    enabled: false
+    properties:
+      block_coefficient: 0.82
+      waterplane_coefficient: 0.88
+      midship_coefficient: 0.98
+      gm_metacentric_height: 6.5  # m
+      kb_center_buoyancy: 8.0     # m from keel
+      kg_center_gravity: 14.5     # m from keel
+
+  # Radii of gyration (calculated if not provided)
+  radii_of_gyration:
+    roll: 0.38   # × Beam
+    pitch: 0.25  # × LBP
+    yaw: 0.25    # × LBP
+
+# Natural periods (calculated or provided)
+natural_periods:
+  calculate: true
+
+  # Or specify manually
+  manual:
+    enabled: false
+    roll: 12.5   # seconds
+    pitch: 8.0   # seconds
+    heave: 10.0  # seconds
+
+# Output configuration
+output:
+  format: "orcaflex_yml"  # orcaflex_yml, aqwa, json, csv
+  path: "./data/vessels/"
+  filename_pattern: "vessel_{vessel_name}_{draft}m.yml"
+
+  # Include additional data in output
+  include_vessel_particulars: true
+  include_natural_periods: true
+  include_hydrostatics: true
+  include_rao_plots: true
+
+  # OrcaFlex-specific settings
+  orcaflex:
+    vessel_type: "Vessel"  # or "6DBuoy"
+    rao_direction_convention: "TowardsVessel"  # or "FromVessel"
+    rao_period_or_frequency: "Frequency"       # or "Period"
+
+  # AQWA-specific settings
+  aqwa:
+    include_phase: true
+    format: "table"  # table or matrix
+
+# Caching configuration
+caching:
+  enabled: true
+  ttl_days: 365  # Vessel data changes rarely
+  tier: "L3"     # L3 (disk cache) suitable for infrequent changes
+  cache_directory: "./cache/vessels/"
+
+# Validation settings
+validation:
+  # Check vessel dimensions for reasonableness
+  check_dimensions: true
+  dimension_ranges:
+    loa: [50, 500]    # m
+    beam: [10, 100]   # m
+    draft: [5, 30]    # m
+    dwt: [5000, 500000]  # tonnes
+
+  # Check hydrostatic properties
+  check_hydrostatics: true
+  hydrostatic_ranges:
+    cb: [0.6, 0.9]    # Block coefficient
+    gm: [0.5, 15.0]   # m (metacentric height)
+
+  # Check RAO amplitudes for reasonableness
+  check_rao_amplitudes: true
+  rao_amplitude_limits:
+    surge: [0, 5.0]   # m/m
+    sway: [0, 5.0]
+    heave: [0, 2.0]
+    roll: [0, 30.0]   # deg/m
+    pitch: [0, 20.0]
+    yaw: [0, 10.0]
+
+  # Warn on extrapolation
+  warn_on_extrapolation: true
+
+# Data quality settings
+quality_control:
+  # Consistency checks
+  check_consistency: true
+
+  # Ensure vessel data is complete
+  required_fields:
+    - "loa"
+    - "beam"
+    - "draft"
+    - "displacement"
+
+  # Validate against classification society rules
+  classification_check:
+    enabled: false
+    society: "ABS"  # ABS, DNV, LR, BV
+
+# Analysis-specific settings
+analysis:
+  # Coupled mooring analysis
+  mooring_analysis:
+    include_added_mass: true
+    include_damping: true
+
+  # Motion limits (for operability assessment)
+  motion_limits:
+    operating:
+      heave: 5.0   # m
+      roll: 10.0   # degrees
+      pitch: 8.0   # degrees
+    survival:
+      heave: 15.0
+      roll: 25.0
+      pitch: 20.0
+
+# Database settings (for local vessel database)
+database:
+  # Store retrieved vessels locally
+  local_storage: true
+  database_path: "./data/vessel_database.json"
+
+  # Auto-update database
+  auto_update: true
+  update_interval_days: 30
+
+# Logging and monitoring
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"
+  output:
+    - type: "file"
+      path: "./logs/vessel_systems.log"
+    - type: "console"
+
+# Use case specific presets
+presets:
+  # CALM buoy mooring analysis
+  calm_buoy:
+    vessel_type: "VLCC"
+    drafts: [18, 20, 22]
+    output_format: "orcaflex_yml"
+    include_hawser_connection: true
+
+  # FPSO mooring design
+  fpso:
+    vessel_type: "FPSO"
+    drafts: [16, 18, 20]
+    include_turret_offset: true
+
+  # Drillship riser analysis
+  drillship:
+    vessel_type: "Drillship"
+    drafts: [10, 12, 14]
+    include_moonpool: true
+
+# Current preset (comment out to use manual config)
+# active_preset: "calm_buoy"

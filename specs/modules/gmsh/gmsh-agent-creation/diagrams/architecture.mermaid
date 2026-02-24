@@ -1,0 +1,282 @@
+```mermaid
+graph TB
+    subgraph "GMSH Agent Architecture"
+        subgraph "Input Layer"
+            CLI[CLI Interface]
+            API[Python API]
+            CONFIG[Configuration Files]
+            GEOM[Geometry Files<br/>STEP/IGES/STL]
+        end
+
+        subgraph "GMSH Agent Core"
+            AGENT[GMSHAgent<br/>Main Controller]
+            MESHGEN[Mesh Generator<br/>1D/2D/3D]
+            QUALITY[Quality Analyzer<br/>Metrics Engine]
+            OPTIMIZE[Optimizer<br/>Refinement]
+            BATCH[Batch Processor<br/>Parallel Execution]
+        end
+
+        subgraph "Integration Layer"
+            ORCAFLEX[OrcaFlex<br/>Integration]
+            ANSYS[ANSYS<br/>Integration]
+            CONVERTER[Format<br/>Converter]
+        end
+
+        subgraph "Output Layer"
+            MESHFILES[Mesh Files<br/>MSH/VTK/INP]
+            REPORTS[Quality<br/>Reports]
+            LOGS[Process<br/>Logs]
+        end
+    end
+
+    CLI --> AGENT
+    API --> AGENT
+    CONFIG --> AGENT
+    GEOM --> MESHGEN
+
+    AGENT --> MESHGEN
+    AGENT --> BATCH
+    MESHGEN --> QUALITY
+    QUALITY --> OPTIMIZE
+    OPTIMIZE --> MESHGEN
+
+    BATCH --> MESHGEN
+    BATCH --> QUALITY
+
+    OPTIMIZE --> ORCAFLEX
+    OPTIMIZE --> ANSYS
+    OPTIMIZE --> CONVERTER
+
+    ORCAFLEX --> MESHFILES
+    ANSYS --> MESHFILES
+    CONVERTER --> MESHFILES
+    QUALITY --> REPORTS
+    AGENT --> LOGS
+
+    style AGENT fill:#e1f5fe
+    style MESHGEN fill:#fff3e0
+    style QUALITY fill:#f3e5f5
+    style OPTIMIZE fill:#e8f5e9
+    style BATCH fill:#fce4ec
+```
+
+```mermaid
+flowchart LR
+    subgraph "Mesh Generation Workflow"
+        START([Start]) --> INPUT[Load Geometry]
+        INPUT --> VALIDATE{Valid<br/>Geometry?}
+        VALIDATE -->|No| HEAL[Heal Geometry]
+        HEAL --> VALIDATE
+        VALIDATE -->|Yes| CONFIG[Apply Configuration]
+        
+        CONFIG --> GEN[Generate Mesh]
+        GEN --> METRICS[Calculate Metrics]
+        METRICS --> CHECK{Quality<br/>OK?}
+        
+        CHECK -->|No| OPT[Optimize Mesh]
+        OPT --> SMOOTH[Smooth Elements]
+        SMOOTH --> REFINE[Refine Locally]
+        REFINE --> METRICS
+        
+        CHECK -->|Yes| EXPORT[Export Mesh]
+        EXPORT --> REPORT[Generate Report]
+        REPORT --> END([End])
+    end
+
+    style START fill:#c8e6c9
+    style END fill:#ffcdd2
+    style CHECK fill:#fff9c4
+    style VALIDATE fill:#fff9c4
+```
+
+```mermaid
+classDiagram
+    class GMSHAgent {
+        -config: dict
+        -gmsh: module
+        -logger: Logger
+        +__init__(config_path)
+        +generate_mesh(geometry, config)
+        +optimize_mesh(mesh, targets)
+        +batch_process(input_dir, config)
+        +assess_quality(mesh)
+    }
+
+    class MeshGenerator {
+        -algorithm: str
+        -element_size: float
+        +generate_1d(geometry)
+        +generate_2d(geometry)
+        +generate_3d(geometry)
+        +set_density(min, max, growth)
+    }
+
+    class QualityAnalyzer {
+        -metrics: dict
+        +calculate_jacobian(mesh)
+        +calculate_aspect_ratio(mesh)
+        +calculate_skewness(mesh)
+        +generate_report(mesh)
+    }
+
+    class MeshOptimizer {
+        -iterations: int
+        -method: str
+        +smooth_laplacian(mesh)
+        +refine_adaptive(mesh)
+        +remesh_local(mesh, region)
+        +optimize_quality(mesh, targets)
+    }
+
+    class BatchProcessor {
+        -parallel_workers: int
+        -queue: Queue
+        +process_batch(files, config)
+        +monitor_progress()
+        +aggregate_results()
+    }
+
+    class IntegrationAdapter {
+        <<interface>>
+        +export(mesh, format)
+        +validate_compatibility()
+    }
+
+    class OrcaFlexAdapter {
+        +export_panels(mesh)
+        +export_mooring(mesh)
+        +map_properties(mesh)
+    }
+
+    class ANSYSAdapter {
+        +export_cdb(mesh)
+        +export_named_selections(mesh)
+        +map_boundary_conditions(mesh)
+    }
+
+    GMSHAgent --> MeshGenerator
+    GMSHAgent --> QualityAnalyzer
+    GMSHAgent --> MeshOptimizer
+    GMSHAgent --> BatchProcessor
+    GMSHAgent --> IntegrationAdapter
+    
+    IntegrationAdapter <|-- OrcaFlexAdapter
+    IntegrationAdapter <|-- ANSYSAdapter
+```
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant Agent
+    participant GMSH
+    participant Quality
+    participant Export
+
+    User->>CLI: mesh generate platform.step
+    CLI->>Agent: initialize(config)
+    Agent->>Agent: load_configuration()
+    
+    CLI->>Agent: generate_mesh(platform.step)
+    Agent->>GMSH: import_geometry()
+    GMSH-->>Agent: geometry_object
+    
+    Agent->>GMSH: create_mesh(params)
+    GMSH-->>Agent: mesh_object
+    
+    Agent->>Quality: assess(mesh)
+    Quality-->>Agent: metrics
+    
+    alt Quality OK
+        Agent->>Export: save(mesh, format)
+        Export-->>Agent: file_path
+        Agent-->>CLI: success(file_path)
+        CLI-->>User: Mesh generated: output.msh
+    else Quality Poor
+        Agent->>GMSH: optimize(mesh)
+        GMSH-->>Agent: optimized_mesh
+        Agent->>Quality: reassess(optimized_mesh)
+    end
+```
+
+```mermaid
+graph TD
+    subgraph "Deployment Architecture"
+        subgraph "Repository Structure"
+            REPO[DigitalModel Repository]
+            AGENTS[agents/gmsh/]
+            MODULES[src/modules/gmsh/]
+            SPECS[specs/modules/gmsh/]
+        end
+
+        subgraph "Dependencies"
+            PYTHON[Python 3.10+]
+            GMSHLIB[GMSH Library]
+            NUMPY[NumPy/SciPy]
+            PYVISTA[PyVista]
+        end
+
+        subgraph "Execution Modes"
+            STANDALONE[Standalone CLI]
+            INTEGRATED[Module Import]
+            SLASH[Slash Command]
+            BATCH[Batch Runner]
+        end
+
+        subgraph "Integration Points"
+            ORCAMOD[OrcaFlex Module]
+            ANSYSMOD[ANSYS Module]
+            SIGNALMOD[Signal Analysis]
+        end
+    end
+
+    REPO --> AGENTS
+    REPO --> MODULES
+    REPO --> SPECS
+
+    AGENTS --> PYTHON
+    MODULES --> PYTHON
+    PYTHON --> GMSHLIB
+    PYTHON --> NUMPY
+    PYTHON --> PYVISTA
+
+    AGENTS --> STANDALONE
+    MODULES --> INTEGRATED
+    AGENTS --> SLASH
+    AGENTS --> BATCH
+
+    INTEGRATED --> ORCAMOD
+    INTEGRATED --> ANSYSMOD
+    INTEGRATED --> SIGNALMOD
+
+    style REPO fill:#e3f2fd
+    style AGENTS fill:#fff3e0
+    style MODULES fill:#f3e5f5
+    style SPECS fill:#e8f5e9
+```
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading: load_geometry()
+    Loading --> GeometryLoaded: success
+    Loading --> Error: failure
+    
+    GeometryLoaded --> Meshing: generate_mesh()
+    Meshing --> MeshGenerated: complete
+    Meshing --> Error: failure
+    
+    MeshGenerated --> QualityCheck: assess_quality()
+    QualityCheck --> Optimizing: quality_poor
+    QualityCheck --> Exporting: quality_good
+    
+    Optimizing --> MeshGenerated: optimized
+    Optimizing --> Error: max_iterations
+    
+    Exporting --> Complete: saved
+    Exporting --> Error: io_error
+    
+    Error --> Idle: reset()
+    Complete --> Idle: reset()
+    Complete --> [*]
+```

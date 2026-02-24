@@ -188,16 +188,16 @@ structural_analysis/
 
 ```bash
 # Run all tests
-pytest tests/domains/structural_analysis/ -v
+pytest tests/modules/structural_analysis/ -v
 
 # Run unit tests only
-pytest tests/domains/structural_analysis/test_structural_analysis_unit.py -v
+pytest tests/modules/structural_analysis/test_structural_analysis_unit.py -v
 
 # Run CLI tests
-pytest tests/domains/structural_analysis/test_structural_analysis_cli.py -v
+pytest tests/modules/structural_analysis/test_structural_analysis_cli.py -v
 
 # With coverage
-pytest tests/domains/structural_analysis/ --cov=src/digitalmodel/modules/structural_analysis --cov-report=term
+pytest tests/modules/structural_analysis/ --cov=src/digitalmodel/modules/structural_analysis --cov-report=term
 ```
 
 **Test Coverage:**
