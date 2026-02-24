@@ -25,24 +25,15 @@ class PromptEnhancer:
     
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
-        self.agent_os_path = repo_path / ".agent-os"
-        self.task_summary_file = self.agent_os_path / "task_summary.md"
-        self.prompt_config_file = self.agent_os_path / "prompt_config.yaml"
-        
-        # Ensure directories exist
-        self.agent_os_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Load or initialize configuration
         self.config = self.load_config()
-        
+
         # Initialize task summary if needed
         self.init_task_summary()
     
     def load_config(self) -> Dict:
         """Load or initialize prompt configuration"""
-        if self.prompt_config_file.exists():
-            with open(self.prompt_config_file, 'r') as f:
-                return yaml.safe_load(f) or self.get_default_config()
         return self.get_default_config()
     
     def get_default_config(self) -> Dict:
@@ -58,69 +49,12 @@ class PromptEnhancer:
         }
     
     def save_config(self):
-        """Save configuration"""
-        with open(self.prompt_config_file, 'w') as f:
-            yaml.dump(self.config, f, default_flow_style=False)
+        """Save configuration (no-op; config is in-memory only)"""
+        pass
     
     def init_task_summary(self):
-        """Initialize task_summary.md if it doesn't exist"""
-        if not self.task_summary_file.exists():
-            initial_content = f"""# Task Summary and Next Steps
-
-> Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-> Auto-maintained by Prompt Enhancement System
-
-## Current Context
-
-### Active Tasks
-*No active tasks yet*
-
-### Completed Tasks
-*No completed tasks yet*
-
-## Next Logical Steps
-
-### Immediate (Today)
-- [ ] Review project requirements
-- [ ] Set up development environment
-- [ ] Initialize first specification
-
-### Short-term (This Week)
-- [ ] Complete initial implementation
-- [ ] Set up testing framework
-- [ ] Document core functionality
-
-### Long-term (This Month)
-- [ ] Optimize performance
-- [ ] Add advanced features
-- [ ] Prepare for production
-
-## Questions and Clarifications
-
-### Pending Questions
-*No pending questions*
-
-### Resolved Questions
-*No resolved questions yet*
-
-## Solution Optimization Log
-
-### Current Approach
-*Not yet determined*
-
-### Alternative Approaches Considered
-*None yet*
-
-### Efficiency Metrics
-- **Time to Solution**: TBD
-- **Resource Usage**: TBD
-- **Complexity Score**: TBD
-
----
-*This file is automatically updated with each task execution*
-"""
-            with open(self.task_summary_file, 'w') as f:
-                f.write(initial_content)
+        """Initialize task summary (no-op; file-based summary removed)"""
+        pass
     
     def enhance_prompt(self, original_prompt: str, command_type: str = "general") -> str:
         """
@@ -310,68 +244,8 @@ Before proceeding, please clarify the following:
 """
     
     def update_task_summary(self, task_info: Dict):
-        """Update task_summary.md with completed task and next steps"""
-        
-        # Read current summary
-        with open(self.task_summary_file, 'r') as f:
-            content = f.read()
-        
-        # Parse and update sections
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
-        
-        # Update last modified
-        content = content.replace(
-            content.split('\n')[2],
-            f"> Last Updated: {timestamp}"
-        )
-        
-        # Add completed task
-        completed_task = f"""
-- [x] **{task_info.get('name', 'Task')}** - {task_info.get('description', 'Completed')}
-  - Completed: {timestamp}
-  - Duration: {task_info.get('duration', 'N/A')}
-  - Approach: {task_info.get('approach', 'Optimum single-path solution')}
-"""
-        
-        # Insert into completed tasks section
-        if "*No completed tasks yet*" in content:
-            content = content.replace("*No completed tasks yet*", completed_task)
-        else:
-            # Find completed tasks section and append
-            lines = content.split('\n')
-            for i, line in enumerate(lines):
-                if "### Completed Tasks" in line:
-                    # Find next section or end
-                    j = i + 1
-                    while j < len(lines) and not lines[j].startswith('##'):
-                        j += 1
-                    # Insert before next section
-                    lines.insert(j - 1, completed_task)
-                    break
-            content = '\n'.join(lines)
-        
-        # Update next steps
-        if 'next_steps' in task_info:
-            next_steps_content = "\n".join([f"- [ ] {step}" for step in task_info['next_steps']])
-            
-            # Update immediate section
-            lines = content.split('\n')
-            for i, line in enumerate(lines):
-                if "### Immediate (Today)" in line:
-                    # Clear old and add new
-                    j = i + 1
-                    while j < len(lines) and not lines[j].startswith('###'):
-                        if lines[j].strip() and not lines[j].startswith('- ['):
-                            break
-                        j += 1
-                    # Replace with new steps
-                    lines[i+1:j] = next_steps_content.split('\n')
-                    break
-            content = '\n'.join(lines)
-        
-        # Save updated summary
-        with open(self.task_summary_file, 'w') as f:
-            f.write(content)
+        """Update task summary (no-op; file-based summary removed)"""
+        pass
     
     def create_prompt_wrapper(self, command: str) -> str:
         """Create a wrapper that enhances any command prompt"""
