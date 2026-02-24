@@ -210,6 +210,16 @@ repos:
                     print("Coverage not installed, skipping coverage check")
         pass_filenames: false
 
+  # Guard: reject Windows-path directory artifacts (WRK-364)
+  - repo: local
+    hooks:
+      - id: no-windows-path-dirs
+        name: No Windows-path directory artifacts
+        language: python
+        entry: python scripts/hooks/check-no-windows-paths.py
+        pass_filenames: false
+        stages: [pre-commit]
+
 # Configuration for specific tools
 ci:
   autofix_commit_msg: |

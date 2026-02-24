@@ -337,3 +337,7 @@ docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/ru
 .claude-flow/
 .hive-mind/
 .swarm/
+
+# Windows-path directory artifacts (cross-platform path bug — WRK-364)
+# Matches dirs like: D:\workspace-hub\... created on Windows and synced to Linux
+[A-Z]:\*
