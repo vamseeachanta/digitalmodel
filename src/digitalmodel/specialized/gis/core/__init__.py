@@ -1,5 +1,4 @@
-"""GIS core subpackage: CRS handling, coordinate transforms, geometry primitives."""
-
-from .spatial_query import SpatialQuery
+"""Deprecated shim. Use digitalmodel.gis.core instead."""
+from digitalmodel.gis.core.spatial_query import SpatialQuery  # noqa: F401
 
 __all__ = ["SpatialQuery"]

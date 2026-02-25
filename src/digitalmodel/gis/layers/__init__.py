@@ -1,6 +1,8 @@
-"""GIS layers subpackage: FeatureLayer and WellLayer data models."""
+"""GIS layers subpackage: FeatureLayer, WellLayer, RasterLayer, TemporalLayer."""
 
 from .feature_layer import FeatureLayer
+from .raster_layer import RasterLayer
+from .temporal_layer import TemporalLayer
 from .well_layer import WellLayer
 
-__all__ = ["FeatureLayer", "WellLayer"]
+__all__ = ["FeatureLayer", "RasterLayer", "TemporalLayer", "WellLayer"]
