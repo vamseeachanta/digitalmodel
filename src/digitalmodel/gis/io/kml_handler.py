@@ -98,8 +98,6 @@ def _extract_placemark(placemark: etree._Element) -> dict:
 
 def _build_placemark(feature: dict) -> etree._Element:
     """Build a KML Placemark element from a feature dictionary."""
-    placemark = etree.SubElement(etree.Element("dummy"), _tag("Placemark"))
-    # Detach from dummy parent so it can be appended elsewhere
     placemark = etree.Element(_tag("Placemark"))
 
     if feature.get("name"):

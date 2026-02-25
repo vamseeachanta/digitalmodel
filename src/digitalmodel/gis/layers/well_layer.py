@@ -129,12 +129,18 @@ class WellLayer(FeatureLayer):
         -------
         WellLayer
         """
+        if self._depth_col not in self._data.columns:
+            raise KeyError(
+                f"Depth column '{self._depth_col}' not found. "
+                f"Available columns: {list(self._data.columns)}"
+            )
+
         mask = pd.Series([True] * len(self._data), index=self._data.index)
 
-        if min_depth_m is not None and self._depth_col in self._data.columns:
+        if min_depth_m is not None:
             mask &= self._data[self._depth_col] >= min_depth_m
 
-        if max_depth_m is not None and self._depth_col in self._data.columns:
+        if max_depth_m is not None:
             mask &= self._data[self._depth_col] <= max_depth_m
 
         filtered = self._data.loc[mask].reset_index(drop=True)

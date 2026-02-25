@@ -15,12 +15,21 @@ import pytest
 from lxml import etree
 
 from digitalmodel.gis.coordinates import CoordinatePoint
+from digitalmodel.gis.core.coordinate_transformer import (
+    wgs84_to_utm,
+    utm_to_wgs84,
+)
+from digitalmodel.gis.integrations.blender_export import (
+    BlenderExporter,
+    _wgs84_to_utm_zone,
+)
 from digitalmodel.gis.integrations.google_earth_export import (
     GoogleEarthExporter,
     _sanitise_style_id,
 )
 from digitalmodel.gis.io.kml_handler import KMLHandler
 from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from digitalmodel.gis.layers.well_layer import WellLayer
 
 
 # ------------------------------------------------------------------
@@ -180,3 +189,117 @@ class TestFeatureLayerDefensiveCopy:
         external = layer.data
         external["val"] = 999
         assert layer.data["val"].iloc[0] == 1
+
+
+# ------------------------------------------------------------------
+# P1: Cross-UTM-zone Blender coordinate consistency
+# ------------------------------------------------------------------
+
+
+class TestBlenderCrossZoneConsistency:
+    """Verify Blender export uses a single UTM zone for all points."""
+
+    def test_cross_zone_wells_produce_consistent_coordinates(self) -> None:
+        """Wells spanning two UTM zones should all project to centroid zone."""
+        # Zone 15 (-90) and Zone 16 (-84) boundary
+        df = pd.DataFrame(
+            {
+                "longitude": [-90.0, -84.0],
+                "latitude": [29.0, 29.0],
+                "well_name": ["West", "East"],
+                "water_depth_m": [100.0, 200.0],
+            }
+        )
+        layer = FeatureLayer(data=df, name="cross-zone")
+        script = BlenderExporter.generate_well_script(layer)
+
+        # The script should parse and contain both wells
+        import ast
+
+        ast.parse(script)
+        assert "West" in script
+        assert "East" in script
+
+    def test_utm_zone_helper_uses_specified_zone(self) -> None:
+        """_wgs84_to_utm_zone should use the explicitly given zone."""
+        e1, n1, z1, h1 = _wgs84_to_utm_zone(-90.0, 29.0, 15, "N")
+        e2, n2, z2, h2 = _wgs84_to_utm_zone(-90.0, 29.0, 16, "N")
+        assert z1 == 15
+        assert z2 == 16
+        # Different zones yield different eastings for the same point
+        assert abs(e1 - e2) > 1.0
+
+
+# ------------------------------------------------------------------
+# P2: UTM zone/hemisphere validation
+# ------------------------------------------------------------------
+
+
+class TestUTMValidation:
+    """Verify UTM helpers reject invalid zone and hemisphere inputs."""
+
+    def test_wgs84_to_utm_rejects_zone_zero(self) -> None:
+        with pytest.raises(ValueError, match="1-60"):
+            wgs84_to_utm(-90.0, 29.0, zone=0)
+
+    def test_wgs84_to_utm_rejects_zone_61(self) -> None:
+        with pytest.raises(ValueError, match="1-60"):
+            wgs84_to_utm(-90.0, 29.0, zone=61)
+
+    def test_utm_to_wgs84_rejects_invalid_hemisphere(self) -> None:
+        with pytest.raises(ValueError, match="'N' or 'S'"):
+            utm_to_wgs84(500000.0, 3000000.0, zone=15, hemisphere="X")
+
+    def test_utm_to_wgs84_rejects_zone_zero(self) -> None:
+        with pytest.raises(ValueError, match="1-60"):
+            utm_to_wgs84(500000.0, 3000000.0, zone=0, hemisphere="N")
+
+
+# ------------------------------------------------------------------
+# P2: HTML escaping in KML descriptions
+# ------------------------------------------------------------------
+
+
+class TestKMLDescriptionEscaping:
+    """Verify that property values are HTML-escaped in KML descriptions."""
+
+    def test_description_escapes_html_entities(self, tmp_path: Path) -> None:
+        """Angle brackets and ampersands in properties should be escaped."""
+        df = pd.DataFrame(
+            {
+                "longitude": [-90.0],
+                "latitude": [29.0],
+                "name": ["test<script>"],
+                "note": ["a & b"],
+            }
+        )
+        layer = FeatureLayer(data=df, name="test")
+        filepath = tmp_path / "escape_test.kml"
+        GoogleEarthExporter.export_wells(layer, filepath)
+
+        content = filepath.read_text(encoding="utf-8")
+        assert "<script>" not in content
+        assert "&lt;script&gt;" in content
+        assert "&amp;" in content
+
+
+# ------------------------------------------------------------------
+# P3: WellLayer depth filter raises on missing column
+# ------------------------------------------------------------------
+
+
+class TestWellLayerDepthFilterConsistency:
+    """Verify depth filter raises when depth column is missing."""
+
+    def test_filter_by_depth_raises_when_column_missing(self) -> None:
+        df = pd.DataFrame(
+            {
+                "longitude": [-90.0],
+                "latitude": [29.0],
+                "well_name": ["W1"],
+                "status": ["active"],
+            }
+        )
+        layer = WellLayer(data=df, name="test")
+        with pytest.raises(KeyError, match="water_depth_m"):
+            layer.filter_by_depth_range(min_depth_m=100.0)

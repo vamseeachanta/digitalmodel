@@ -6,6 +6,7 @@ pipeline routes, and lease block polygons with configurable styling.
 
 from __future__ import annotations
 
+import html
 from pathlib import Path
 
 from lxml import etree
@@ -312,7 +313,8 @@ class GoogleEarthExporter:
             An HTML table suitable for KML Placemark descriptions.
         """
         rows = "".join(
-            f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
+            f"<tr><td><b>{html.escape(str(k))}</b></td>"
+            f"<td>{html.escape(str(v))}</td></tr>"
             for k, v in properties.items()
         )
         return f"<table>{rows}</table>"

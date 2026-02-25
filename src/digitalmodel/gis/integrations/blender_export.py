@@ -105,6 +105,68 @@ def _wgs84_to_utm_simple(
     return easting, northing, zone, hemisphere
 
 
+def _wgs84_to_utm_zone(
+    longitude: float,
+    latitude: float,
+    zone: int,
+    hemisphere: str,
+) -> tuple[float, float, int, str]:
+    """Project WGS84 to UTM using a specified zone (for cross-zone consistency).
+
+    Same formulas as :func:`_wgs84_to_utm_simple` but with the zone and
+    hemisphere explicitly provided rather than auto-detected.
+    """
+    a = 6_378_137.0
+    f = 1.0 / 298.257_223_563
+    b = a * (1 - f)
+    e2 = 1 - (b / a) ** 2
+    e_prime2 = e2 / (1 - e2)
+    k0 = 0.9996
+
+    central_meridian = math.radians((zone - 1) * 6 - 180 + 3)
+
+    lat_r = math.radians(latitude)
+    lon_r = math.radians(longitude)
+
+    n = a / math.sqrt(1 - e2 * math.sin(lat_r) ** 2)
+    t = math.tan(lat_r) ** 2
+    c = e_prime2 * math.cos(lat_r) ** 2
+    A = math.cos(lat_r) * (lon_r - central_meridian)
+
+    M = a * (
+        (1 - e2 / 4 - 3 * e2**2 / 64 - 5 * e2**3 / 256) * lat_r
+        - (3 * e2 / 8 + 3 * e2**2 / 32 + 45 * e2**3 / 1024) * math.sin(2 * lat_r)
+        + (15 * e2**2 / 256 + 45 * e2**3 / 1024) * math.sin(4 * lat_r)
+        - (35 * e2**3 / 3072) * math.sin(6 * lat_r)
+    )
+
+    easting = (
+        k0
+        * n
+        * (
+            A
+            + (1 - t + c) * A**3 / 6
+            + (5 - 18 * t + t**2 + 72 * c - 58 * e_prime2) * A**5 / 120
+        )
+        + 500_000.0
+    )
+
+    northing_raw = k0 * (
+        M
+        + n
+        * math.tan(lat_r)
+        * (
+            A**2 / 2
+            + (5 - t + 9 * c + 4 * c**2) * A**4 / 24
+            + (61 - 58 * t + t**2 + 600 * c - 330 * e_prime2) * A**6 / 720
+        )
+    )
+
+    northing = northing_raw if hemisphere == "N" else northing_raw + 10_000_000.0
+
+    return easting, northing, zone, hemisphere
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -177,12 +239,15 @@ class BlenderExporter:
             centroid.x, centroid.y
         )
 
+        # Use the centroid's UTM zone for ALL points to ensure consistent
+        # projected coordinates even when data spans UTM zone boundaries.
         wells: list[dict] = []
         df = layer.data
         for _, row in df.iterrows():
             lon = float(row[layer.lon_col])
             lat = float(row[layer.lat_col])
-            e, n, _, _ = _wgs84_to_utm_simple(lon, lat)
+            # Force centroid zone so cross-zone points stay consistent
+            e, n, _, _ = _wgs84_to_utm_zone(lon, lat, _zone, _hemi)
             bx, by = cls.geo_to_blender(e, n, origin_e, origin_n, scale_factor)
             well_record: dict = {
                 "bx": round(bx, 6),

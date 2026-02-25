@@ -178,6 +178,9 @@ def wgs84_to_utm(
     if zone is None:
         zone = _auto_detect_utm_zone(longitude, latitude)
 
+    if not 1 <= zone <= 60:
+        raise ValueError(f"UTM zone must be 1-60, got {zone}")
+
     hemisphere = "N" if latitude >= 0 else "S"
 
     source_crs = "EPSG:4326"
@@ -217,6 +220,11 @@ def utm_to_wgs84(
         (longitude, latitude) in decimal degrees.
     """
     hemisphere = hemisphere.upper()
+    if hemisphere not in ("N", "S"):
+        raise ValueError(f"Hemisphere must be 'N' or 'S', got '{hemisphere}'")
+    if not 1 <= zone <= 60:
+        raise ValueError(f"UTM zone must be 1-60, got {zone}")
+
     epsg_code = 32600 + zone if hemisphere == "N" else 32700 + zone
     source_crs = f"EPSG:{epsg_code}"
     target_crs = "EPSG:4326"
