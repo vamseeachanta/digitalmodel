@@ -1,7 +1,7 @@
 # Reader imports
 
 # Reader imports
-from digitalmodel.infrastructure.common.pipe_properties import PipeProperties
+from digitalmodel.infrastructure.base_solvers.marine.pipe_properties import PipeProperties
 from digitalmodel.subsea.pipeline.lateral_buckling import LateralBuckling
 from digitalmodel.subsea.pipeline.thermal_buckling import ThermalBuckling
 from digitalmodel.subsea.pipeline.upheaval_buckling import UpheavalBuckling

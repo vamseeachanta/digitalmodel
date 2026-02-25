@@ -1,6 +1,12 @@
 """
-ABOUTME: Marine analysis solvers for base_solvers module
-ABOUTME: Placeholder for marine-specific solver implementations
+ABOUTME: Marine engineering solvers — pipe properties, riser analysis.
+ABOUTME: Migrated from infrastructure/common/ in Phase 2D (WRK-415).
 """
 
-__all__ = []
+from .pipe_properties import PipeProperties
+from .typical_riser_stack_up_calculations import TypicalRiserStackUpCalculations
+
+__all__ = [
+    "PipeProperties",
+    "TypicalRiserStackUpCalculations",
+]
