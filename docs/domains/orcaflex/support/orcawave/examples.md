@@ -1,3 +1,8 @@
+> **Note**: OrcaWave is a **frequency-domain** diffraction/radiation solver (`OrcFxAPI.Diffraction`).
+> It is NOT the same as OrcaFlex (`OrcFxAPI.Model`), which is a time-domain dynamics solver.
+> Both use `import OrcFxAPI` but serve different purposes.
+> OrcaWave produces `.owr` results (RAOs, added mass, QTF); OrcaFlex produces `.sim` time histories.
+
 =========================================
 
 From: Orcina <orcina@orcina.com>
