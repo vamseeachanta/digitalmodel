@@ -80,7 +80,7 @@ class VIVAnalysisComponents():
         return line
 
     def save_modal_visualizations(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for plt_index in range(0, len(self.cfg['modal_plots'])):
@@ -97,7 +97,7 @@ class VIVAnalysisComponents():
             viz.save_and_close()
 
     def save_mode_shapes(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for plt_index in range(0, len(self.cfg['mode_shape_plots']['each_modal_set'])):
@@ -141,7 +141,7 @@ class VIVAnalysisComponents():
             viz.save_and_close()
 
     def get_current_data(self):
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         self.current_data = []
         for current_data_index in range(0, len(self.cfg.current_data['from_xlsx'])):
@@ -160,7 +160,7 @@ class VIVAnalysisComponents():
                               plt_settings['file_suffix'] + '.png'})
             for current_data_index in range(0, len(self.cfg.current_data['from_xlsx'])):
                 if not self.current_data[current_data_index].probability.isnull().values.any():
-                    from digitalmodel.infrastructure.common.visualizations import Visualization
+                    from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
                     viz = Visualization()
 
                     surface_current_speeds = self.current_data[current_data_index][self.current_data[current_data_index].depth == 0].copy()
@@ -192,7 +192,7 @@ class VIVAnalysisComponents():
             viz.save_and_close()
 
     def plot_current_exceedance(self, reference_depth = 0):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for plot_index in range(0, len(self.cfg.current_data['plot']['exceedance'])):
@@ -233,7 +233,7 @@ class VIVAnalysisComponents():
             viz.save_and_close()
 
     def plot_current_profiles(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for current_data_index in range(0, len(self.cfg.current_data['from_xlsx'])):
@@ -258,7 +258,7 @@ class VIVAnalysisComponents():
                 viz.save_and_close()
 
     def get_wave_data(self):
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         self.wave_data = []
         for wave_data_index in range(0, len(self.cfg.wave_data['from_xlsx'])):
@@ -268,7 +268,7 @@ class VIVAnalysisComponents():
             self.wave_data.append(df)
 
     def plot_wave_data(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for wave_data_index in range(0, len(self.wave_data)):
@@ -289,7 +289,7 @@ class VIVAnalysisComponents():
                 viz.save_and_close()
 
     def plot_wave_exceedance(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
 
         for plot_index in range(0, len(self.cfg.wave_data['plot']['exceedance'])):

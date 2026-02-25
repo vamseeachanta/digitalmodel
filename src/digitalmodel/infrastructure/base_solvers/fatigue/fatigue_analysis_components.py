@@ -29,9 +29,9 @@ class FatigueAnalysisComponents():
 
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
 
         SheetNames = []
@@ -80,7 +80,7 @@ class FatigueAnalysisComponents():
 
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         self.viv_plt_df_array = []
         for file_index in range(0, len(self.cfg['Shear7_sets'])):
@@ -114,7 +114,7 @@ class FatigueAnalysisComponents():
     def tabulate_viv_results(self):
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
 
         if self.cfg.__contains__('viv_tables'):
@@ -169,7 +169,7 @@ class FatigueAnalysisComponents():
     def tabulate_overall_viv_results(self):
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
 
         if self.cfg.__contains__('viv_tables'):
@@ -205,7 +205,7 @@ class FatigueAnalysisComponents():
 
     def plot_viv_tables(self):
         if self.cfg.__contains__('viv_tables') and self.cfg.viv_tables.__contains__('plot'):
-            from digitalmodel.infrastructure.common.visualizations import Visualization
+            from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
             for table_index in range(0, len(self.cfg.viv_tables['length'])):
                 viz = Visualization()
                 plt_settings = self.cfg.viv_tables['plot'][0]
@@ -268,7 +268,7 @@ class FatigueAnalysisComponents():
         return df
 
     def save_viv_fatigue_life_visualizations(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
         for plot_index in range(0, len(self.cfg.viv_plots['combined'])):
             plt_settings = self.cfg.viv_plots['combined'][plot_index]
@@ -300,7 +300,7 @@ class FatigueAnalysisComponents():
 
 
     def read_orcaflex_wave_fatigue(self):
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         cfg_temp = self.cfg['WaveFatigue_Sets'][0]
         self.total_wave_fatigue = read_data.xlsx_to_df_by_keyword_search(cfg_temp)
@@ -357,12 +357,12 @@ class FatigueAnalysisComponents():
         self.viv_histogram_df_array.append(self.sum_df)
 
     def qa_histograms(self):
-        from digitalmodel.infrastructure.common.ETL_components import ETL_components
+        from digitalmodel.infrastructure.utils.ETL_components import ETL_components
         etl_components = ETL_components(cfg=None)
         self.sum_df = etl_components.get_sum_df_from_df_array(self.viv_histogram_df_array)
 
     def save_viv_histograms(self):
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
         cfg_temp = {
             "FileName": self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name'] + '_viv_histograms.xlsx',
@@ -432,7 +432,7 @@ class FatigueAnalysisComponents():
         return histogram_object
 
     def get_viv_fundamental_natural_frequency(self, file_index):
-        from digitalmodel.infrastructure.common.data import FromString, ReadData
+        from digitalmodel.infrastructure.utils.data import FromString, ReadData
         read_data = ReadData()
         cfg_temp = self.cfg['histogram']['shear7']['fundamental_natural_frequency']['from_ascii'].copy()
         io = self.cfg['Shear7_sets'][file_index]['io'][0:len(self.cfg['Shear7_sets'][file_index]['io'])-3] + 'out'
@@ -451,7 +451,7 @@ class FatigueAnalysisComponents():
         return natural_frequency
 
     def get_wave_cummulative_histograms(self):
-        from digitalmodel.infrastructure.common.data import ReadData
+        from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         cfg_temp = {'files': {'from_xlsx': [self.cfg['histogram']['wave']]}}
         self.wave_cummulative_histograms = read_data.from_xlsx(cfg_temp)
@@ -465,7 +465,7 @@ class FatigueAnalysisComponents():
             self.combined_histograms[label] = self.wave_cummulative_histograms[label] + self.viv_cummulative_histograms[label]
 
     def save_combined_histograms(self):
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
         df_array = [ self.combined_histograms, self.wave_cummulative_histograms, self.viv_cummulative_histograms]
         cfg_temp = {
@@ -494,7 +494,7 @@ class FatigueAnalysisComponents():
         import numpy as np
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
         basefile_name = self.cfg['Analysis']['result_folder'] + self.cfg['Analysis']['file_name']
         self.combined_fatigue.to_csv(basefile_name + '_combined_fatigue.csv')
@@ -572,7 +572,7 @@ class FatigueAnalysisComponents():
         return result
 
     def save_visualizations(self):
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         viz = Visualization()
         plt_settings = self.cfg['plot_settings'][0]
         plt_settings.update(
@@ -586,8 +586,8 @@ class FatigueAnalysisComponents():
     def orcaflex_wave_fatigue_analysis(self):
         import pandas as pd
 
-        from digitalmodel.infrastructure.common.data import ReadData, SaveData
-        from digitalmodel.infrastructure.common.visualizations import Visualization
+        from digitalmodel.infrastructure.utils.data import ReadData, SaveData
+        from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         cfg = self.cfg
 
         viz_data = Visualization()

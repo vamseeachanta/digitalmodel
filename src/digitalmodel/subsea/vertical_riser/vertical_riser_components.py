@@ -11,7 +11,7 @@ from digitalmodel.solvers.orcaflex.orcaflex_model_components import (
     OrcaflexModelComponents,
 )
 from digitalmodel.infrastructure.base_solvers.viv.shear7_model_components import Shear7ModelComponents
-from digitalmodel.infrastructure.common.visualizations import Visualization
+from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
 
 
 class VerticalRiser:

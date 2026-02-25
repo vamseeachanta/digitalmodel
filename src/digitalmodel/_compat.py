@@ -162,7 +162,7 @@ _FLAT_TO_FULL_PATH: dict[str, str] = {
     "orcaflex_post_process": "digitalmodel.solvers.orcaflex.post_process",
     "fatigue_analysis": "digitalmodel.structural.fatigue_apps",
     "diffraction_cli": "digitalmodel.hydrodynamics.diffraction.diffraction_cli",
-    "standards_lookup": "digitalmodel.infrastructure.common.standards_lookup",
+    "standards_lookup": "digitalmodel.infrastructure.utils.standards_lookup",
 }
 
 

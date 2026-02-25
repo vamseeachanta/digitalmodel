@@ -26,7 +26,7 @@ class FEAComponents:
 
     def get_raw_data(self):
         if self.cfg.default["data_source"] == "db":
-            from digitalmodel.infrastructure.common.database import Database
+            from digitalmodel.infrastructure.utils.database import Database
 
             db_properties = self.cfg.db
             self.dbe = Database(db_properties)

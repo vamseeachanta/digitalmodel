@@ -26,7 +26,7 @@ from digitalmodel.solvers.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.solvers.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
 from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
-from digitalmodel.infrastructure.common.parallel_processing import should_use_parallel
+from digitalmodel.infrastructure.utils.parallel_processing import should_use_parallel
 from digitalmodel.solvers.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 ou = OrcaflexUtilities()  # noqa

@@ -798,7 +798,7 @@ class OrcaflexModelComponents():
         print('Successfully write file: "{0}"'.format(self.riser_model.cfg['Analysis']['fe_filename']))
 
     def build_model(self, shear7_flag):
-        from digitalmodel.infrastructure.common.data import SaveData
+        from digitalmodel.infrastructure.utils.data import SaveData
         save_data = SaveData()
         cfg = self.riser_model.cfg
         FEAType = self.riser_model.fea_type

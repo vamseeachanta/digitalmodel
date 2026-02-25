@@ -4,7 +4,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Dict, List, Tuple, Optional
 from loguru import logger
 from assetutilities.common.yml_utilities import is_file_valid_func
-from digitalmodel.infrastructure.common.parallel_processing import should_use_parallel
+from digitalmodel.infrastructure.utils.parallel_processing import should_use_parallel
 from assetutilities.common.path_resolver import PathResolver
 try:
     import OrcFxAPI
