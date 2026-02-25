@@ -1,0 +1,175 @@
+default:
+  Constants:
+    g : 9.81
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+  extract: NULL
+
+  transform:
+    from_xlsx_to_yaml_file: True
+    orcaflex:
+      input_files: True
+      simulation_runs: False
+      modal_runs: False
+
+  load: NULL
+
+files:
+  from_xlsx:
+    -
+      io: data_manager\data\ETL_py_GI_Extreme_LoadCases.xlsx
+      sheet_name: seed1
+      index_col: NULL
+      skiprows: 10
+      skipfooter: 142
+      columns: [// Wave Name, Select Current, SaveData]
+      label: seed1
+      replace:
+        -
+          column: // Wave Name
+          to_replace: S100
+          replace_with: 100yr Wave Near
+        -
+          column: // Wave Name
+          to_replace: N100
+          replace_with: 100yr Wave Far
+        -
+          column: // Wave Name
+          to_replace: SE100
+          replace_with: 100yr Wave Near Trans
+        -
+          column: // Wave Name
+          to_replace: NE100
+          replace_with: 100yr Wave Far Trans
+        -
+          column: // Wave Name
+          to_replace: NW100
+          replace_with: 100yr Wave Far Trans
+        -
+          column: // Wave Name
+          to_replace: SW100
+          replace_with: 100yr Wave Near Trans
+        -
+          column: // Wave Name
+          to_replace: S10
+          replace_with: 10yr Wave Near
+        -
+          column: // Wave Name
+          to_replace: N10
+          replace_with: 10yr Wave Far
+        -
+          column: // Wave Name
+          to_replace: SE10
+          replace_with: 10yr Wave Near Trans
+        -
+          column: // Wave Name
+          to_replace: NE10
+          replace_with: 10yr Wave Far Trans
+        -
+          column: // Wave Name
+          to_replace: NW10
+          replace_with: 10yr Wave Far Trans
+        -
+          column: // Wave Name
+          to_replace: SW10
+          replace_with: 10yr Wave Near Trans
+        -
+          column: // Wave Name
+          to_replace: W100
+          replace_with: 100yr Wave Trans
+        -
+          column: // Wave Name
+          to_replace: E100
+          replace_with: 100yr Wave Trans
+        -
+          column: // Wave Name
+          to_replace: W10
+          replace_with: 10yr Wave Trans
+        -
+          column: // Wave Name
+          to_replace: E10
+          replace_with: 10yr Wave Trans
+        -
+          column: // Wave Name
+          to_replace: SW10
+          replace_with: 10yr Wave Near Trans
+        -
+          column: Select Current
+          to_replace: S100
+          replace_with: 100yr Current Near
+        -
+          column: Select Current
+          to_replace: N100
+          replace_with: 100yr Current Far
+        -
+          column: Select Current
+          to_replace: SE100
+          replace_with: 100yr Current Near Trans
+        -
+          column: Select Current
+          to_replace: NE100
+          replace_with: 100yr Current Far Trans
+        -
+          column: Select Current
+          to_replace: NW100
+          replace_with: 100yr Current Far Trans
+        -
+          column: Select Current
+          to_replace: SW100
+          replace_with: 100yr Current Near Trans
+        -
+          column: Select Current
+          to_replace: S10
+          replace_with: 10yr Current Near
+        -
+          column: Select Current
+          to_replace: N10
+          replace_with: 10yr Current Far
+        -
+          column: Select Current
+          to_replace: SE10
+          replace_with: 10yr Current Near Trans
+        -
+          column: Select Current
+          to_replace: NE10
+          replace_with: 10yr Current Far Trans
+        -
+          column: Select Current
+          to_replace: NW10
+          replace_with: 10yr Current Far Trans
+        -
+          column: Select Current
+          to_replace: SW10
+          replace_with: 10yr Current Near Trans
+        -
+          column: Select Current
+          to_replace: W100
+          replace_with: 100yr Current Trans
+        -
+          column: Select Current
+          to_replace: E100
+          replace_with: 100yr Current Trans
+        -
+          column: Select Current
+          to_replace: W10
+          replace_with: 10yr Current Trans
+        -
+          column: Select Current
+          to_replace: E10
+          replace_with: 10yr Current Trans
+        -
+          column: SaveData
+          to_replace: .dat
+          replace_with: .sim
+
+transform:
+  df_row_to_array:
+    df_label: Files
+    Lines:
+      - Name: SaveData
+      - Label: [// Wave Name, Select Current]
+      - ObjectName: SLWR
+

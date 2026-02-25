@@ -1,0 +1,37 @@
+# Quick Release Hook 100 Tonne - Library Component
+# Category: connectors
+# Description: Quick release hook for emergency disconnection
+# Application: CALM buoy hawser release, tanker mooring, emergency systems
+# SWL: 100 tonnes (981 kN), Release under load capability
+# Release mechanism: Hydraulic or mechanical trigger
+# NOTE: No section header - properties only for IncludeFile
+# Modeled as 6D Buoy representing connector mass at attachment point
+BuoyType: Spar buoy
+Connection: Free
+DampingRelativeTo: Earth
+Mass: 1800
+Volume: 0.23
+MomentsOfInertia:
+- 180
+- 400
+- 400
+CentreOfMass:
+- 0
+- 0
+- 0
+Height: 0.8
+Pen: [2, Solid, $FF0000]
+# Hook dimensions: ~0.8m length x 0.6m width x 0.5m height
+# Includes release mechanism and safety interlocks
+# Can release under 50% SWL load conditions
+Cylinders:
+- CylinderOuterDiameter: 0.6
+  CylinderInnerDiameter: 0
+  CylinderLength: 0.8
+  CylinderAxialDragArea: 0.28
+  DragForceCoefficient:
+  - 1.2
+  - 1.0
+  AddedMassForceCoefficient:
+  - 1.0
+  - 0.7

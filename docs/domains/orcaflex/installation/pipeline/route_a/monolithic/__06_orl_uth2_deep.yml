@@ -1,0 +1,420 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: S:\IAT\SURF\Talos_Venice\02-ANALYSIS\01-UMB\02-StaticUmb\02-DETAILED\5.LD\STAT\__06_orl_uth2_deep.yml
+# Created: 10:49 PM on 7/12/2023
+# User: 
+# Machine: 
+---
+BaseFile: __05_add_uthassembly_rigging.yml
+LineTypes:
+  New: cobrahead_dummy_type
+  cobrahead_dummy_type:
+    Category: General
+    OD: 0.3
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 10e-6
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [10e3, ~]
+    EA: 10e6
+    PoissonRatio: 0.5
+    GJ: 1000
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [1, Solid, $4080FF]
+6DBuoys:
+  ChuteSupport1:
+    NumberOfSupportedLines: 0
+  uth2-deep:
+    InitialX: -89
+    InitialZ: 13
+    InitialRotation2: 270
+  New: UTA-Stub
+  UTA-Stub:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: uth2-deep
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [0.403, 0, 0.11599999999999966]
+    InitialAttitude: [0, 25, 0]
+    Mass: 0
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0
+    Height: 1.13
+    CentreOfVolume: [0, 0, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 0]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [0, 0, 0]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0, 0, 0]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [0, 0, 0]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [0, 0, 0]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: ~
+    SupportCoordinateSystems: []
+    SupportedLine: []
+    Supports: []
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: 0
+    Wings: []
+    Hidden: No
+    Pen: [1, Solid, Fuchsia]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.11, 0.11, 1.13]
+      - [-0.11, 0.11, 1.13]
+      - [-0.11, -0.11, 1.13]
+      - [0.11, -0.11, 1.13]
+      - [0.11, 0.11, 0]
+      - [-0.11, 0.11, 0]
+      - [-0.11, -0.11, 0]
+      - [0.11, -0.11, 0]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+Lines:
+  Umbilical:
+    EndAConnection: uth2-deep
+    EndAX: -0.8155
+    EndAY: 0
+    EndAZ: -0.042
+    EndAAzimuth: 180
+    EndADeclination: 89.99999999999999
+    EndAGamma: -90
+    ConnectionxBendingStiffness[1]: 1e6
+    ConnectionxBendingStiffness[2]: 1e6
+    NumberOfSections: 9
+    LineType[1]: ArmorPot_LineType
+    Length[1]: 0.6
+    Length[2]: 34.8
+    TargetSegmentLength[2]: 0.2
+    Length[3]: 5
+    TargetSegmentLength[3]: 0.5
+    Length[4]: 10
+    TargetSegmentLength[4]: 1
+    Length[5]: 885
+    Length[6]: 10
+    TargetSegmentLength[6]: 1
+    Length[7]: 180
+    TargetSegmentLength[7]: 0.5
+    Length[8]: 20
+    TargetSegmentLength[8]: 1
+    LineType[9]: InfUmbVenice-3.84in-Orlov
+    Length[9]: 350
+    ExpansionFactor[9]: ~
+    TargetSegmentLength[9]: 2
+    ClashCheck[9]: No
+    PreBendBendAngle[9]: 0
+    ReactsToWake[9]: No
+    WakeModel[9]: (none)
+    DisturbanceVessel[9]: (none)
+    StaticsStep1: Catenary
+  New: cobrahead_dummy
+  cobrahead_dummy:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: uth2-deep
+    EndAX: 1.28
+    EndAY: 0
+    EndAZ: 0.934
+    EndAAzimuth: 0
+    EndADeclination: 90.00000000000001
+    EndAGamma: 0
+    EndAReleaseStage: ~
+    EndBConnection: uth2-deep
+    EndBX: 1.643
+    EndBY: 0
+    EndBZ: 0.765
+    EndBAzimuth: 0
+    EndBDeclination: 90.00000000000001
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: cobrahead_dummy_type
+        Length: 0.4
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.4
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: Yes
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+Shapes:
+  New:
+    - UTH2-25deg-Connector
+    - cog
+    - cov
+    - padeye_buoyancy
+    - padeye_main_crane
+  UTH2-25deg-Connector:
+    Locked: No
+    ShapeType: Elastic solid
+    Shape: Cylinder
+    Connection: uth2-deep
+    Origin: [1.28, 0, 0.934]
+    Azimuth: 0
+    Declination: 115
+    Length: 0.5
+    OuterDiameter: 0.2
+    InnerDiameter: 0.1
+    NormalStiffness: 100
+    ShearStiffness: 100
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  cog:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: uth2-deep
+    Origin: [-0.0615, 0, 0.141]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  cov:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: uth2-deep
+    Origin: [-0.5285, 0, 0.009]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  padeye_buoyancy:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: uth2-deep
+    Origin: [1.2815, 0, 1.273]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  padeye_main_crane:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: uth2-deep
+    Origin: [0.7305, 0, 0.106]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+...

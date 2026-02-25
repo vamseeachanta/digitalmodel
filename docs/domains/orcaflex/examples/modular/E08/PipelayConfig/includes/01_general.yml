@@ -1,0 +1,12 @@
+# General Configuration
+# Generated from: PipelayConfig.yml
+# Date: 2026-01-18 22:18:14
+General: {}
+basecaseName: basecase.dat
+maxTension: 250
+minTension: 0
+minConstraintClearance: 0
+maxBollardPull: 500.0
+increment: 1.0
+noOfCasesToAnalyse: 18
+codeCheckReference: API RP 1111

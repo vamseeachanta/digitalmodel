@@ -1,0 +1,96 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\w_shielding\__03f_add_shielding.yml
+# Created: 6:27 PM on 9/1/2023
+# User: 
+# Machine: 
+---
+BaseFile: __03e_struc_lower_elev_for_convergence.yml
+6DBuoys:
+  mudmat:
+    DisturbanceVessel: Seven_Seas
+  1:
+    DisturbanceVessel: Seven_Seas
+  2:
+    DisturbanceVessel: Seven_Seas
+  3:
+    DisturbanceVessel: Seven_Seas
+  4:
+    DisturbanceVessel: Seven_Seas
+  5:
+    DisturbanceVessel: Seven_Seas
+  6:
+    DisturbanceVessel: Seven_Seas
+  7:
+    DisturbanceVessel: Seven_Seas
+  8:
+    DisturbanceVessel: Seven_Seas
+  9:
+    DisturbanceVessel: Seven_Seas
+  10:
+    DisturbanceVessel: Seven_Seas
+  11:
+    DisturbanceVessel: Seven_Seas
+  12:
+    DisturbanceVessel: Seven_Seas
+  13:
+    DisturbanceVessel: Seven_Seas
+  14:
+    DisturbanceVessel: Seven_Seas
+  15:
+    DisturbanceVessel: Seven_Seas
+  16:
+    DisturbanceVessel: Seven_Seas
+  17:
+    DisturbanceVessel: Seven_Seas
+  18:
+    DisturbanceVessel: Seven_Seas
+  19:
+    DisturbanceVessel: Seven_Seas
+  20:
+    DisturbanceVessel: Seven_Seas
+  21:
+    DisturbanceVessel: Seven_Seas
+  22:
+    DisturbanceVessel: Seven_Seas
+  23:
+    DisturbanceVessel: Seven_Seas
+  24:
+    DisturbanceVessel: Seven_Seas
+  25:
+    DisturbanceVessel: Seven_Seas
+  26:
+    DisturbanceVessel: Seven_Seas
+  27:
+    DisturbanceVessel: Seven_Seas
+  28:
+    DisturbanceVessel: Seven_Seas
+  29:
+    DisturbanceVessel: Seven_Seas
+  30:
+    DisturbanceVessel: Seven_Seas
+  31:
+    DisturbanceVessel: Seven_Seas
+  32:
+    DisturbanceVessel: Seven_Seas
+  33:
+    DisturbanceVessel: Seven_Seas
+  34:
+    DisturbanceVessel: Seven_Seas
+  35:
+    DisturbanceVessel: Seven_Seas
+  36:
+    DisturbanceVessel: Seven_Seas
+Lines:
+  _02_main_crane_wire_bot:
+    DisturbanceVessel[1]: Seven_Seas
+  Sling1:
+    DisturbanceVessel[1]: Seven_Seas
+  Sling2:
+    DisturbanceVessel[1]: Seven_Seas
+  Sling3:
+    DisturbanceVessel[1]: Seven_Seas
+  Sling4:
+    DisturbanceVessel[1]: Seven_Seas
+...

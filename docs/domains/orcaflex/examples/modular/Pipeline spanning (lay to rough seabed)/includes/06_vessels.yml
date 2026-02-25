@@ -1,0 +1,46 @@
+# Vessels Configuration
+# Generated from: Pipeline spanning (lay to rough seabed).yml
+# Date: 2026-01-18 22:17:55
+Vessels:
+- Name: Laying Vessel
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -32.758651032745895
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: Prescribed
+  SuperimposedMotion: None
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: Yes
+  IncludeWindLoad: Yes
+  PrimaryMotionIsTreatedAs: Low frequency
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Subtraction, legacy
+  ? PrescribedMotionMode, PrescribedMotionSpeedValue, PrescribedMotionDirectionRelativeTo, PrescribedMotionDirectionValue, PrescribedMotionRateOfTurn
+  : - - Speed change
+      - 0.5
+      - Vessel heading
+      - 0
+      - 0
+    - - Constant speed
+      - 0.5
+      - Vessel heading
+      - 0
+      - 0
+  ShadedDrawingCullingMode: Anticlockwise

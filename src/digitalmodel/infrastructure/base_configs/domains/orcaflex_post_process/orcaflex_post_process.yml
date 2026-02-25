@@ -1,0 +1,120 @@
+meta:
+  basename: orcaflex_post_process
+  library: digitalmodel
+  description: Post-process OrcaFlex results
+  
+parameters:
+  VarNames:
+    Line: [End force, End moment, End Ex force, End Ey force, End Ez force, End Ex moment, End Ey moment, End Ez moment, End Lx force, End Ly force, End Lz force, End Lx moment, End Ly moment, End Lz moment, End GX force, End GY force, End GZ force, End GX moment, End GY moment, End GZ moment, X, Y, Z, Dynamic x, Dynamic y, Dynamic z, Layback, Effective tension, Wall tension, Normalised tension, Sidewall pressure, Bend moment, x bend moment, y bend moment, Bend moment component, In plane bend moment, Out of plane bend moment, Curvature, Normalised curvature, x curvature, y curvature, Curvature component, In plane curvature, Out of plane curvature, Bend radius, x bend radius, y bend radius, Bend radius component, In plane bend radius, Out of plane bend radius, Shear force, x shear force, y shear force, Shear force component, In plane shear force, Out of plane shear force, Arc length, Expansion factor]
+    # Vessel: [X, Y, Z, Dynamic x, Dynamic y, Dynamic z, Rotation 1, Rotation 2, Rotation 3, Dynamic Rx, Dynamic Ry, Dynamic Rz, Sea surface Z, Sea surface clearance, Sea velocity, Sea X velocity, Sea Y velocity, Sea Z velocity, Sea acceleration, Sea X acceleration, Sea Y acceleration, Sea Z acceleration, Air gap, Velocity, GX velocity, GY velocity, GZ velocity, x velocity, y velocity, z velocity, Angular velocity, x angular velocity, y angular velocity, z angular velocity, Acceleration, GX acceleration, GY acceleration, GZ acceleration, x acceleration, y acceleration, z acceleration, Acceleration rel. g, x acceleration rel. g, y acceleration rel. g, z acceleration rel. g, Angular acceleration, x angular acceleration, y angular acceleration, z angular acceleration, Surge, Sway, Heave, Roll, Pitch, Yaw, Total force, Total Lx force, Total Ly force, Total Lz force, Total moment, Total Lx moment, Total Ly moment, Total Lz moment, Connections force, Connections Lx force, Connections Ly force, Connections Lz force, Connections moment, Connections Lx moment, Connections Ly moment, Connections Lz moment, Connections GX force, Connections GY force, Connections GZ force, Connections GX moment, Connections GY moment, Connections GZ moment, Hydrostatic stiffness force, Hydrostatic stiffness Lx force, Hydrostatic stiffness Ly force, Hydrostatic stiffness Lz force, Hydrostatic stiffness moment, Hydrostatic stiffness Lx moment, Hydrostatic stiffness Ly moment, Hydrostatic stiffness Lz moment]
+
+
+time_series_settings:
+  data: False
+
+orcaflex_post_process: {}
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    visualization:
+      flag: True
+    summary:
+      flag: False
+      statistics:
+        Minimum: False
+        Maximum: False
+        Mean: False
+        StdDev: False
+      min: True
+      max: True
+      mean: True
+    linked_statistics:
+      flag: False
+      min: True
+      max: True
+      mean: True
+    RangeGraph:
+      flag: False
+    RAOs:
+      flag: False
+    time_series:
+      flag: False
+      histogram: True
+      summation: True
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+visualization_settings:
+  label: ld_6_7_8
+  individual: True
+  combined: False #TODO to be coded
+  hide_items: []
+  add_items: [Umbilical, uta2-deep]
+  views: ["Elevation", "Plan"]
+  tdp_line: Umbilical
+  viewparams:
+    elevation:
+      # RelativeToObject: uth2-deep  # Commented - object might not exist in all models
+      ViewCentre: [-17, 0, 12]
+      ViewSize: 120
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 270
+      ViewElevation: 0
+      ViewGamma: 71.89
+      Height: 1425
+      Width: 892
+    plan:
+      # RelativeToObject: uth2-deep  # Commented - object might not exist in all models
+      ViewCentre: [10, 0, 8]
+      ViewSize: 80
+      DrawViewAxes: False
+      DrawGlobalAxes: False
+      DrawScaleBar: False
+      ViewAzimuth: 270
+      ViewElevation: 90
+      ViewGamma: 0
+      Height: 1425
+      Width: 892
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+time_series_settings:
+  histogram: True
+  summation: True
+  groups: []
+
+
+file_management:
+  flag: True
+  input_directory: NULL
+  output_directory: NULL
+  update_unfinished:
+    flag: False
+
+  filename:
+    extension: [sim]
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: []
+
+parallel_processing:
+  enabled: true
+  max_workers: 3  # or "auto" for cpu_count()
+  timeout_per_file: 1200  # seconds
+  save_error_reports: true
+  progress_reporting: true

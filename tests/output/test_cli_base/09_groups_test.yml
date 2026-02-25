@@ -1,0 +1,13 @@
+# OrcaFlex Groups Wrapper Test
+Groups:
+  - Name: MooringSystem
+    Type: Lines
+    Contents: [Mooring1, Mooring2, Mooring3, Mooring4, Mooring5, Mooring6, Mooring7, Mooring8]
+
+  - Name: VesselGroup
+    Type: Vessels
+    Contents: [Vessel1]
+
+  - Name: BuoyGroup
+    Type: 6DBuoys
+    Contents: [CALMTop]

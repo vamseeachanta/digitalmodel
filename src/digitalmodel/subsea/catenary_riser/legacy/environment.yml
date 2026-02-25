@@ -1,0 +1,14 @@
+name: catenary
+channels:
+  - defaults
+dependencies:
+  - python=3.6
+  - pyyaml
+  - yaml
+  - matplotlib
+  - scipy
+  - pandas
+  - xlrd
+  - pip:
+    - oyaml
+    - imgkit

@@ -1,0 +1,18 @@
+# VariableData Configuration
+# Generated from: C03 Turret moored FPSO.yml
+# Date: 2026-01-18 22:18:03
+VariableData:
+  Constraintrotationalstiffness:
+  - Name: Rotation Stiffness
+    IndependentValue, DependentValue:
+    - - -30
+      - -10e3
+    - - -29.9
+      - -0.1
+    - - 0
+      - 0
+    - - 29.9
+      - 0.1
+    - - 30
+      - 10e3
+    Hysteretic: No

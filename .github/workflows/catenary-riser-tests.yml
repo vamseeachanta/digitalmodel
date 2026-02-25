@@ -1,0 +1,122 @@
+name: Catenary Riser Module Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/catenary_riser/**'
+      - 'tests/domains/catenary_riser/**'
+      - '.github/workflows/catenary-riser-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/catenary_riser/**'
+      - 'tests/domains/catenary_riser/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Catenary Riser Module
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-cov pytest-mock
+
+    - name: Run unit tests
+      run: |
+        pytest tests/domains/catenary_riser/test_catenary_riser_unit.py -v --cov=src/digitalmodel/modules/catenary_riser --cov-report=term-missing --cov-report=xml
+
+    - name: Run CLI tests
+      run: |
+        pytest tests/domains/catenary_riser/test_catenary_riser_cli.py -v
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: catenary-riser
+        name: catenary-riser-coverage
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff black isort mypy
+
+    - name: Run ruff
+      run: |
+        ruff check src/digitalmodel/modules/catenary_riser
+
+    - name: Run black
+      run: |
+        black --check src/digitalmodel/modules/catenary_riser tests/domains/catenary_riser
+
+    - name: Run isort
+      run: |
+        isort --check-only src/digitalmodel/modules/catenary_riser tests/domains/catenary_riser
+
+  cli-validation:
+    name: CLI Command Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install package
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+
+    - name: Test CLI installation
+      run: |
+        catenary-riser --version
+
+    - name: Test simple command
+      run: |
+        catenary-riser simple --diameter 0.508 --thickness 0.025 --length 1500 --water-depth 1000 --offset 500
+
+    - name: Test weight command
+      run: |
+        catenary-riser weight --diameter 0.508 --thickness 0.025
+
+    - name: Test lazy-wave command
+      run: |
+        catenary-riser lazy-wave --diameter 0.508 --thickness 0.025 --length 1500 --water-depth 1000 --offset 500

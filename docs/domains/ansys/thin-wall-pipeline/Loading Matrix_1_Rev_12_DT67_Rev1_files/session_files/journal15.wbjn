@@ -1,0 +1,16 @@
+﻿# encoding: utf-8
+# Release 16.2
+SetScriptVersion(Version="16.2.176")
+Extensions.LoadExtension(
+    Id="12cc10e9-e815-4a0d-bf35-ca21e45dbaa0",
+    Version="2.1",
+    Format="Binary")
+Save(Overwrite=True)
+system1 = GetSystem(Name="SYS 2")
+model1 = system1.GetContainer(ComponentName="Model")
+model1.Edit()
+Save(Overwrite=True)
+Save(Overwrite=True)
+Save(Overwrite=True)
+model1.Exit()
+Save(Overwrite=True)

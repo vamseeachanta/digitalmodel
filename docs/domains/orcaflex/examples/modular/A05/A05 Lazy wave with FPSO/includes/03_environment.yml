@@ -1,0 +1,104 @@
+# Environment Configuration
+# Generated from: A05 Lazy wave with FPSO.yml
+# Date: 2026-01-18 22:18:01
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 15e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 64
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 2950
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 25
+  SeabedShearStiffness: 3.5
+  WaveTrains:
+  - Name: Wave
+    WaveType: Dean stream
+    WaveDirection: 180
+    WaveHeight: 25
+    WavePeriod: 18
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveStreamFunctionOrder: 5
+    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 3.6
+    - 0
+  - - 130
+    - 3.4
+    - 0
+  - - 260
+    - 3
+    - 0
+  - - 300
+    - 1.9
+    - 0
+  - - 350
+    - 1
+    - 0
+  - - 400
+    - 0.65
+    - 0
+  - - 590
+    - 0.4
+    - 0
+  - - 820
+    - 0.33
+    - 0
+  - - 2854
+    - 0.33
+    - 0
+  - - 2903
+    - 0.32
+    - 0
+  - - 2935
+    - 0.3
+    - 0
+  - - 2945.5
+    - 0.13
+    - 0
+  - - 2950
+    - 0
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.0799077895374654
+  AirSpeedOfSound: 1125.3280839895012
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+  SeaSurfacePen:
+  - 1
+  - Solid
+  - $FCFC54
+  SeabedPen:
+  - 1
+  - Solid
+  - $004498

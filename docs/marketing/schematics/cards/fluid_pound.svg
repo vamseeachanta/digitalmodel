@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="200" viewBox="0 0 280 200">
+<rect width="280" height="200" fill="#ffffff"/>
+<text x="140.0" y="18.0" font-family="sans-serif" font-size="13" font-weight="bold" fill="#2e7d32" text-anchor="middle">Fluid Pound</text>
+<text x="140.0" y="30.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#2e7d32" text-anchor="middle">[Tier 1 — Core Conditions]</text>
+<rect x="45.0" y="35.0" width="220.0" height="120.0" stroke="#666666" stroke-width="1.0" fill="none"/>
+<line x1="45.0" y1="35.0" x2="45.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="45.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">-6</text>
+<line x1="118.3" y1="35.0" x2="118.3" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="118.3" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">36</text>
+<line x1="191.7" y1="35.0" x2="191.7" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="191.7" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">78</text>
+<line x1="265.0" y1="35.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="265.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">120</text>
+<line x1="45.0" y1="155.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="158.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">-2595</text>
+<line x1="45.0" y1="115.0" x2="265.0" y2="115.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="118.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">4293</text>
+<line x1="45.0" y1="75.0" x2="265.0" y2="75.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="78.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">11180</text>
+<line x1="45.0" y1="35.0" x2="265.0" y2="35.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="38.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">18068</text>
+<text x="155.0" y="181.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle">Position (in)</text>
+<text x="15.0" y="95.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle" transform="rotate(-90,15.0,95.0)">Load (lbs)</text>
+<polygon points="55.0,107.8 55.2,95.2 55.8,77.9 56.8,59.5 58.3,43.7 60.1,43.3 62.3,44.4 64.9,42.1 67.9,42.2 71.2,43.2 74.9,41.8 78.9,42.7 83.2,44.4 87.8,42.8 92.7,44.5 97.8,42.1 103.2,43.3 108.7,43.5 114.5,44.2 120.5,41.7 126.5,43.5 132.7,43.8 139.0,43.7 145.4,42.6 151.8,42.8 158.2,42.7 164.6,42.7 171.0,40.5 177.3,43.8 183.5,43.9 189.5,44.3 195.5,42.5 201.3,41.8 206.8,43.4 212.2,44.4 217.3,44.4 222.2,42.4 226.8,42.3 231.1,42.6 235.1,44.1 238.8,43.0 242.1,43.1 245.1,43.0 247.7,42.1 249.9,43.0 251.7,42.4 253.2,43.2 254.2,42.9 254.8,42.4 255.0,45.2 255.0,43.7 254.8,60.3 254.2,77.0 253.2,93.0 251.7,107.1 249.9,110.2 247.7,107.8 245.1,111.3 242.1,109.5 238.8,108.8 235.1,108.3 231.1,108.1 226.8,108.0 222.2,109.5 217.3,109.7 212.2,149.5 206.8,149.5 201.3,148.2 195.5,146.8 189.5,145.4 183.5,144.0 177.3,142.6 171.0,141.2 164.6,139.8 158.2,138.4 151.8,137.0 145.4,135.6 139.0,134.2 132.7,132.8 126.5,131.4 120.5,130.0 114.5,128.6 108.7,127.2 103.2,125.8 97.8,124.5 92.7,123.1 87.8,121.7 83.2,120.3 78.9,118.9 74.9,117.5 71.2,116.1 67.9,114.7 64.9,113.3 62.3,111.9 60.1,110.5 58.3,109.1 56.8,107.7 55.8,106.3 55.2,104.9 55.0,103.5" stroke="#1a3a5c" stroke-width="2.0" fill="none"/>
+</svg>

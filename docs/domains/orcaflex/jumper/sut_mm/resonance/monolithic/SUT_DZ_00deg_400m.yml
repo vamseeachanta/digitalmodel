@@ -1,0 +1,20 @@
+BaseFile: SUT_DZ_00deg_1990m_properties.yml
+6DBuoys:
+  SUT_DZ_30deg:
+    InitialZ: -400.56999999999994
+3DBuoys:
+  Masterlink:
+    InitialZ: -392.19000000000005
+Lines:
+  CraneWire#2:
+    EndBZ: -389.23
+    Sections:
+    - Length: 10
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5
+    - Length: 382.29999999999995
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5
+    - Length: 10
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5

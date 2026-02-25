@@ -1,0 +1,43 @@
+{
+  "user": "Demo User",
+  "start_date": "2025-08-09T00:52:34.667623",
+  "sessions": [
+    {
+      "session_id": 1,
+      "start_time": "2025-08-09T00:52:34.667724",
+      "end_time": null,
+      "tasks_completed": [],
+      "commands": [
+        {
+          "command": "create a vessel 2.5m diameter and 6m long",
+          "result": "success",
+          "time_seconds": 1.5,
+          "timestamp": "2025-08-09T00:52:34.668790"
+        },
+        {
+          "command": "optimize for weight reduction",
+          "result": "success",
+          "time_seconds": 1.5,
+          "timestamp": "2025-08-09T00:52:34.669178"
+        },
+        {
+          "command": "render technical view",
+          "result": "success",
+          "time_seconds": 1.5,
+          "timestamp": "2025-08-09T00:52:34.669558"
+        }
+      ],
+      "time_traditional_cad": 0,
+      "time_ai_cad": 0,
+      "quality_rating": null,
+      "ease_rating": null,
+      "notes": []
+    }
+  ],
+  "designs_created": 0,
+  "commands_executed": 3,
+  "time_saved_hours": 0,
+  "satisfaction_ratings": [],
+  "issues_encountered": [],
+  "feature_requests": []
+}

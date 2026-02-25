@@ -1,0 +1,70 @@
+# SN Curve Parameters — Engineering Reference Data (Tier 2)
+# Sources: DNV-RP-C203, API RP 2A-WSD, BS 7608, AWS D1.1
+# Policy: workspace-hub/docs/DATA_RESIDENCE_POLICY.md
+metadata:
+  version: "1.0"
+  tier: 2
+  description: "Standard SN curve parameters for fatigue analysis"
+
+standards:
+  DNV:
+    description: "DNV-RP-C203 (in air, T=16-25mm)"
+    curves:
+      B1: {A: 4.22e+15, m: 4.0, fatigue_limit: 106.97}
+      B2: {A: 1.01e+15, m: 3.5, fatigue_limit: 93.59}
+      C: {A: 1.08e+12, m: 3.0, fatigue_limit: 73.1}
+      C1: {A: 4.23e+11, m: 3.0, fatigue_limit: 65.5}
+      C2: {A: 1.08e+11, m: 3.0, fatigue_limit: 46.78}
+      D: {A: 5.73e+11, m: 3.0, fatigue_limit: 52.63}
+      E: {A: 3.29e+11, m: 3.0, fatigue_limit: 45.54}
+      F: {A: 1.73e+11, m: 3.0, fatigue_limit: 36.84}
+      F1: {A: 1.08e+11, m: 3.0, fatigue_limit: 36.58}
+      F3: {A: 5.73e+10, m: 3.0, fatigue_limit: 29.64}
+      G: {A: 2.82e+10, m: 3.0, fatigue_limit: 23.44}
+      W1: {A: 2.15e+10, m: 3.0, fatigue_limit: 21.34}
+      W2: {A: 1.08e+10, m: 3.0, fatigue_limit: 16.92}
+      W3: {A: 5.3e+9, m: 3.0, fatigue_limit: 13.35}
+    multislope:
+      D_MULTISLOPE:
+        slopes: [3.0, 3.5, 5.0]
+        constants: [5.73e+11, 1.08e+11, 2.5e+10]
+        transition_cycles: [2.0e+6, 1.0e+7]
+        fatigue_limit: 52.63
+      F_MULTISLOPE:
+        slopes: [3.0, 4.0, 5.0]
+        constants: [1.73e+11, 8.6e+10, 2.15e+10]
+        transition_cycles: [2.0e+6, 1.0e+7]
+        fatigue_limit: 36.84
+
+  API:
+    description: "API RP 2A-WSD"
+    curves:
+      X: {A: 1.01e+12, m: 3.0, fatigue_limit: 48.0}
+      X_prime: {A: 1.52e+11, m: 3.0, fatigue_limit: 32.7}
+      Y: {A: 3.56e+11, m: 3.0, fatigue_limit: 40.6}
+      S-N1: {A: 6.21e+11, m: 3.0, fatigue_limit: 0.0}
+      S-N2: {A: 1.24e+11, m: 3.0, fatigue_limit: 0.0}
+
+  BS:
+    description: "BS 7608"
+    curves:
+      B: {A: 3.9e+12, m: 3.0, fatigue_limit: 100.0}
+      C: {A: 1.0e+12, m: 3.0, fatigue_limit: 63.0}
+      D: {A: 3.9e+11, m: 3.0, fatigue_limit: 50.0}
+      E: {A: 1.6e+11, m: 3.0, fatigue_limit: 40.0}
+      F: {A: 6.3e+10, m: 3.0, fatigue_limit: 32.0}
+      F2: {A: 2.5e+10, m: 3.0, fatigue_limit: 25.0}
+      G: {A: 1.0e+10, m: 3.0, fatigue_limit: 20.0}
+      W: {A: 3.9e+9, m: 3.0, fatigue_limit: 16.0}
+
+  AWS:
+    description: "AWS D1.1"
+    curves:
+      A: {A: 8.11e+11, m: 3.0, fatigue_limit: 165.0}
+      B: {A: 3.91e+11, m: 3.0, fatigue_limit: 110.0}
+      B1: {A: 2.63e+11, m: 3.0, fatigue_limit: 83.0}
+      C: {A: 1.37e+11, m: 3.0, fatigue_limit: 69.0}
+      C1: {A: 1.01e+11, m: 3.0, fatigue_limit: 55.0}
+      D: {A: 7.21e+10, m: 3.0, fatigue_limit: 48.0}
+      E: {A: 3.61e+10, m: 3.0, fatigue_limit: 31.0}
+      E1: {A: 1.81e+10, m: 3.0, fatigue_limit: 18.0}

@@ -1,0 +1,644 @@
+{
+  "structure": {
+    "total_files": 98,
+    "file_sizes": [
+      10319,
+      20748,
+      5585,
+      24336,
+      11230,
+      13290,
+      1735,
+      608,
+      1025,
+      1115,
+      1037,
+      1013,
+      1022,
+      1116,
+      1113,
+      1119,
+      1044,
+      1039,
+      1044,
+      4815,
+      6521,
+      10485,
+      9562,
+      7213,
+      861,
+      1566,
+      1708,
+      968,
+      3221,
+      1236,
+      1946,
+      2547,
+      879,
+      15684,
+      1463,
+      2564,
+      9810,
+      17056,
+      3045,
+      1115,
+      1939,
+      15734,
+      12928,
+      22969,
+      11683,
+      16646,
+      14395,
+      1157,
+      1393,
+      12639,
+      5912,
+      5931,
+      1670,
+      1812,
+      2860,
+      6127,
+      6460,
+      12463,
+      12706,
+      10314,
+      985,
+      1013,
+      2176,
+      2062,
+      2188,
+      1042,
+      3110,
+      1066,
+      5,
+      1412,
+      1278,
+      15906,
+      2394,
+      15004,
+      6254,
+      15524,
+      7796,
+      3790,
+      935,
+      1388,
+      1384,
+      1391,
+      1199,
+      1811,
+      3519,
+      1229,
+      1515,
+      5534,
+      7479,
+      5697,
+      10419,
+      14781,
+      17980,
+      9130,
+      20261,
+      26237,
+      18056,
+      13995
+    ],
+    "modules": [
+      "conftest.py",
+      "test_performance_baselines.py",
+      "benchmarks/test_performance_benchmarks.py",
+      "contracts/test_api_contracts.py",
+      "factories/conftest.py",
+      "integration/test_cross_module_integration.py",
+      "modules/conftest.py",
+      "modules/aqwa/conftest.py",
+      "modules/aqwa/test_aqwa_anl_raos.py",
+      "modules/aqwa/test_aqwa_aqr.py",
+      "modules/aqwa/test_aqwa_aqr_raos.py",
+      "modules/aqwa/test_aqwa_dat.py",
+      "modules/aqwa/test_aqwa_ef_server.py",
+      "modules/aqwa/test_aqwa_lis.py",
+      "modules/aqwa/test_aqwa_mes_files.py",
+      "modules/aqwa/test_aqwa_no_mes_files.py",
+      "modules/aqwa/test_aqwa_preproces_deck.py",
+      "modules/aqwa/test_damping.py",
+      "modules/aqwa/test_preproces_deck_10.py",
+      "modules/automation/go_by_folder/conftest.py",
+      "modules/automation/go_by_folder/test_analyzer.py",
+      "modules/automation/go_by_folder/test_integration.py",
+      "modules/automation/go_by_folder/test_minimizers.py",
+      "modules/automation/go_by_folder/test_scanner.py",
+      "modules/catenary_riser/conftest.py",
+      "modules/catenary_riser/test_catenary.py",
+      "modules/catenary_riser/test_catenary_riser.py",
+      "modules/cathodic_protection/conftest.py",
+      "modules/cathodic_protection/test_cathodic_protection_basic.py",
+      "modules/code_dnvrph103/conftest.py",
+      "modules/code_dnvrph103/test_code_dnvrph103_circular.py",
+      "modules/code_dnvrph103/test_code_dnvrph103_rectangular.py",
+      "modules/fatigue_analysis/conftest.py",
+      "modules/fatigue_analysis/test_cli.py",
+      "modules/fatigue_analysis/test_fatigue_analysis_sn.py",
+      "modules/fatigue_analysis/test_fatigue_analysis_timetrace.py",
+      "modules/fatigue_analysis/test_rainflow_counter.py",
+      "modules/fatigue_analysis/test_reference_seastate_processor.py",
+      "modules/fatigue_analysis/test_reference_seastate_scaling.py",
+      "modules/installation/conftest.py",
+      "modules/installation/test_installation_structure.py",
+      "modules/marine_analysis/python_code_passing_ship/test_calculator.py",
+      "modules/marine_analysis/python_code_passing_ship/test_cli.py",
+      "modules/marine_analysis/python_code_passing_ship/test_configuration.py",
+      "modules/marine_analysis/python_code_passing_ship/test_documentation_examples.py",
+      "modules/marine_analysis/python_code_passing_ship/test_formulations.py",
+      "modules/marine_analysis/python_code_passing_ship/test_visualization.py",
+      "modules/mooring/conftest.py",
+      "modules/orcaflex/conftest.py",
+      "modules/orcaflex/test_examples_downloader.py",
+      "modules/orcaflex/test_opp_summary_fix.py",
+      "modules/orcaflex/analysis/test_dat_analysis.py",
+      "modules/orcaflex/file_preparation/test_load_vessel_aqwa.py",
+      "modules/orcaflex/file_preparation/test_orcaflex_file_preparation.py",
+      "modules/orcaflex/mooring-tension-iteration/mooring_tension_iteration_test.py",
+      "modules/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_test.py",
+      "modules/orcaflex/mooring_analysis/comprehensive_analysis/conftest.py",
+      "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_config.py",
+      "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_models.py",
+      "modules/orcaflex/universal/test_universal_runner.py",
+      "modules/pipeline/conftest.py",
+      "modules/pipeline/test_pipeline.py",
+      "modules/pipeline/test_pipeline_lateral_buckling.py",
+      "modules/pipeline/test_pipeline_pressure_loss.py",
+      "modules/pipeline/test_pipeline_upheaval_buckling.py",
+      "modules/rao_analysis/conftest.py",
+      "modules/rao_analysis/test_rao_analysis.py",
+      "modules/ship_design/conftest.py",
+      "modules/ship_design/test_ship_design_aqwa.py",
+      "modules/ship_design/test_ship_design_seasam_combined_fatigue_by_file.py",
+      "modules/signal_analysis/conftest.py",
+      "modules/signal_analysis/test_generate_outputs.py",
+      "modules/signal_analysis/test_histogram.py",
+      "modules/signal_analysis/test_integration.py",
+      "modules/signal_analysis/test_integration_simple.py",
+      "modules/signal_analysis/test_orcaflex_tension_analysis.py",
+      "modules/signal_analysis/test_rainflow_timeseries1.py",
+      "modules/signal_analysis/fixtures/test_signals.py",
+      "modules/time_series/conftest.py",
+      "modules/time_series/test_csv_window_fft.py",
+      "modules/time_series/test_sample_fft.py",
+      "modules/time_series/test_window_fft.py",
+      "modules/umbilical_analysis/conftest.py",
+      "modules/umbilical_analysis/test_umbilical_analysis_installation.py",
+      "modules/umbilical_analysis/test_umbilical_analysis_line_properties.py",
+      "modules/viv_analysis/conftest.py",
+      "modules/viv_analysis/test_viv_analysis.py",
+      "naming_convention_validation/test_integrated_processor_naming.py",
+      "naming_convention_validation/test_updated_naming_convention.py",
+      "performance/conftest.py",
+      "performance/test_benchmarks.py",
+      "performance/test_load_testing.py",
+      "property/test_mathematical_properties.py",
+      "property/test_property_based_tests.py",
+      "property/test_state_machine_properties.py",
+      "security/test_injection_attacks.py",
+      "security/test_security_validation.py",
+      "utils/test_helpers.py"
+    ],
+    "test_types": {
+      "unit": 80,
+      "integration": 4,
+      "performance": 5,
+      "property": 3,
+      "benchmark": 0,
+      "security": 2,
+      "automation": 4
+    },
+    "large_files": [
+      {
+        "file": "test_performance_baselines.py",
+        "lines": 571,
+        "size_kb": 20.26171875
+      },
+      {
+        "file": "contracts/test_api_contracts.py",
+        "lines": 660,
+        "size_kb": 23.765625
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_configuration.py",
+        "lines": 687,
+        "size_kb": 22.4306640625
+      },
+      {
+        "file": "property/test_state_machine_properties.py",
+        "lines": 575,
+        "size_kb": 19.7861328125
+      },
+      {
+        "file": "security/test_injection_attacks.py",
+        "lines": 678,
+        "size_kb": 25.6220703125
+      }
+    ],
+    "complex_modules": [
+      {
+        "file": "conftest.py",
+        "lines": 307
+      },
+      {
+        "file": "test_performance_baselines.py",
+        "lines": 571
+      },
+      {
+        "file": "contracts/test_api_contracts.py",
+        "lines": 660
+      },
+      {
+        "file": "factories/conftest.py",
+        "lines": 354
+      },
+      {
+        "file": "integration/test_cross_module_integration.py",
+        "lines": 369
+      },
+      {
+        "file": "modules/automation/go_by_folder/test_minimizers.py",
+        "lines": 301
+      },
+      {
+        "file": "modules/fatigue_analysis/test_cli.py",
+        "lines": 410
+      },
+      {
+        "file": "modules/fatigue_analysis/test_reference_seastate_processor.py",
+        "lines": 484
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_calculator.py",
+        "lines": 421
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_cli.py",
+        "lines": 406
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_configuration.py",
+        "lines": 687
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_documentation_examples.py",
+        "lines": 364
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_formulations.py",
+        "lines": 495
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_visualization.py",
+        "lines": 443
+      },
+      {
+        "file": "modules/orcaflex/test_examples_downloader.py",
+        "lines": 332
+      },
+      {
+        "file": "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_config.py",
+        "lines": 371
+      },
+      {
+        "file": "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_models.py",
+        "lines": 366
+      },
+      {
+        "file": "modules/orcaflex/universal/test_universal_runner.py",
+        "lines": 305
+      },
+      {
+        "file": "modules/signal_analysis/test_generate_outputs.py",
+        "lines": 459
+      },
+      {
+        "file": "modules/signal_analysis/test_integration.py",
+        "lines": 400
+      },
+      {
+        "file": "modules/signal_analysis/test_orcaflex_tension_analysis.py",
+        "lines": 416
+      },
+      {
+        "file": "performance/test_load_testing.py",
+        "lines": 409
+      },
+      {
+        "file": "property/test_mathematical_properties.py",
+        "lines": 459
+      },
+      {
+        "file": "property/test_state_machine_properties.py",
+        "lines": 575
+      },
+      {
+        "file": "security/test_injection_attacks.py",
+        "lines": 678
+      },
+      {
+        "file": "security/test_security_validation.py",
+        "lines": 498
+      },
+      {
+        "file": "utils/test_helpers.py",
+        "lines": 414
+      }
+    ]
+  },
+  "config": {
+    "parallel_enabled": true,
+    "coverage_enabled": true,
+    "reporting_overhead": [
+      "coverage",
+      "html_reports",
+      "json_reports"
+    ],
+    "timeout_configured": true,
+    "performance_markers": true,
+    "optimization_potential": []
+  },
+  "estimates": {
+    "total_estimated_time": 423.0,
+    "by_category": {
+      "unit": {
+        "files": 80,
+        "estimated_seconds": 160.0,
+        "estimated_minutes": 2.6666666666666665
+      },
+      "integration": {
+        "files": 4,
+        "estimated_seconds": 32.0,
+        "estimated_minutes": 0.5333333333333333
+      },
+      "performance": {
+        "files": 5,
+        "estimated_seconds": 75.0,
+        "estimated_minutes": 1.25
+      },
+      "property": {
+        "files": 3,
+        "estimated_seconds": 36.0,
+        "estimated_minutes": 0.6
+      },
+      "benchmark": {
+        "files": 0,
+        "estimated_seconds": 0.0,
+        "estimated_minutes": 0.0
+      },
+      "security": {
+        "files": 2,
+        "estimated_seconds": 20.0,
+        "estimated_minutes": 0.3333333333333333
+      },
+      "automation": {
+        "files": 4,
+        "estimated_seconds": 100.0,
+        "estimated_minutes": 1.6666666666666667
+      }
+    },
+    "bottleneck_files": [],
+    "parallel_potential": 126.89999999999999,
+    "parallel_estimated_time": 126.89999999999999
+  },
+  "dependencies": {
+    "heavy_imports": [
+      {
+        "file": "test_performance_baselines.py",
+        "module": "pandas"
+      },
+      {
+        "file": "test_performance_baselines.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_cli.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_rainflow_counter.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_rainflow_counter.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_reference_seastate_processor.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_reference_seastate_processor.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_reference_seastate_scaling.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/fatigue_analysis/test_reference_seastate_scaling.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_calculator.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_documentation_examples.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_documentation_examples.py",
+        "module": "matplotlib"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_formulations.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_visualization.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_visualization.py",
+        "module": "matplotlib"
+      },
+      {
+        "file": "modules/orcaflex/test_examples_downloader.py",
+        "module": "requests"
+      },
+      {
+        "file": "modules/orcaflex/test_opp_summary_fix.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/orcaflex/test_opp_summary_fix.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_models.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_models.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/test_generate_outputs.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/signal_analysis/test_generate_outputs.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/test_generate_outputs.py",
+        "module": "matplotlib"
+      },
+      {
+        "file": "modules/signal_analysis/test_integration.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/signal_analysis/test_integration.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/test_integration_simple.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/test_orcaflex_tension_analysis.py",
+        "module": "pandas"
+      },
+      {
+        "file": "modules/signal_analysis/test_orcaflex_tension_analysis.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/test_orcaflex_tension_analysis.py",
+        "module": "matplotlib"
+      },
+      {
+        "file": "modules/signal_analysis/test_rainflow_timeseries1.py",
+        "module": "numpy"
+      },
+      {
+        "file": "modules/signal_analysis/fixtures/test_signals.py",
+        "module": "numpy"
+      },
+      {
+        "file": "performance/test_benchmarks.py",
+        "module": "pandas"
+      },
+      {
+        "file": "performance/test_benchmarks.py",
+        "module": "numpy"
+      },
+      {
+        "file": "performance/test_load_testing.py",
+        "module": "pandas"
+      },
+      {
+        "file": "performance/test_load_testing.py",
+        "module": "numpy"
+      },
+      {
+        "file": "property/test_mathematical_properties.py",
+        "module": "pandas"
+      },
+      {
+        "file": "property/test_mathematical_properties.py",
+        "module": "numpy"
+      }
+    ],
+    "external_services": [
+      {
+        "file": "contracts/test_api_contracts.py",
+        "type": "api"
+      },
+      {
+        "file": "contracts/test_api_contracts.py",
+        "type": "service"
+      },
+      {
+        "file": "integration/test_cross_module_integration.py",
+        "type": "api"
+      },
+      {
+        "file": "integration/test_cross_module_integration.py",
+        "type": "service"
+      },
+      {
+        "file": "integration/test_cross_module_integration.py",
+        "type": "database"
+      },
+      {
+        "file": "modules/automation/go_by_folder/test_minimizers.py",
+        "type": "api"
+      },
+      {
+        "file": "modules/automation/go_by_folder/test_minimizers.py",
+        "type": "database"
+      },
+      {
+        "file": "modules/marine_analysis/python_code_passing_ship/test_documentation_examples.py",
+        "type": "api"
+      },
+      {
+        "file": "modules/orcaflex/test_examples_downloader.py",
+        "type": "requests."
+      },
+      {
+        "file": "modules/orcaflex/mooring_analysis/comprehensive_analysis/test_config.py",
+        "type": "api"
+      },
+      {
+        "file": "security/test_injection_attacks.py",
+        "type": "api"
+      },
+      {
+        "file": "security/test_injection_attacks.py",
+        "type": "database"
+      },
+      {
+        "file": "security/test_injection_attacks.py",
+        "type": "sql"
+      },
+      {
+        "file": "security/test_security_validation.py",
+        "type": "requests."
+      },
+      {
+        "file": "utils/test_helpers.py",
+        "type": "api"
+      },
+      {
+        "file": "utils/test_helpers.py",
+        "type": "service"
+      }
+    ],
+    "file_operations": 67,
+    "mock_usage": 48,
+    "database_tests": 3
+  },
+  "analysis_time": 0.15868639945983887,
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "Import Optimization",
+      "recommendation": "Optimize 37 heavy module imports",
+      "implementation": "Use lazy imports, mock heavy dependencies, or conditional imports",
+      "estimated_improvement": "10-15% faster test startup time"
+    },
+    {
+      "priority": "LOW",
+      "category": "Reporting Overhead",
+      "recommendation": "Consider disabling coverage for development runs",
+      "implementation": "Use separate make targets: one with coverage (CI), one without (dev)",
+      "estimated_improvement": "15-25% faster execution without coverage"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+@startuml aqwa_ef_technical
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA External Force | Technical
+
+start
+
+    note right
+        Objective: External Force - Technical Process
+    end note
+
+    partition "Start up" {
+
+        :Start the EF Server;
+        :Start the EF Client;
+    }
+
+    partition "Access Analysis Data" {
+        note right
+            For every timestep
+        end note
+        :Stucture Data;
+            note right
+                Using "Analysis" object
+                using structure index (starts with 0)
+            end note
+
+        :Node position - Start;
+            note right
+                Defined by user
+            end note
+        :Node position - Current;
+            note right
+                Based on structure CoG current position &
+                utilize rotationMatrix using structure rotations
+            end note
+        :Node Velocity;
+            note right
+                Based on structure CoG current velocity &
+                utilize rotationMatrix using structure angular velocities
+            end note
+    }
+
+    partition "Evaluate External Forces" {
+        note right
+            For every timestep
+        end note
+        :Evaluate force at Node;
+            note right
+                Using "Analysis" object
+                using structure index (starts with 0)
+            end note
+
+        :Transform Force to Structure CoG;
+            note right
+                Convert force to structure CoG
+                utilize rotationMatrix using structure rotations
+            end note
+    }
+
+
+    partition "Apply External Forces at Structure CoG" {
+        note right
+            For every timestep
+        end note
+    }
+
+    partition "Closing down" {
+        note right
+            End of simulation
+        end note
+
+        :Write log file;
+        :Write intermediate results;
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

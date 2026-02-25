@@ -1,0 +1,60 @@
+# General Configuration
+# Generated from: C10 Multiple statics.yml
+# Date: 2026-01-18 22:18:08
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 25
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 16
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 494.4220204275893
+  DefaultViewCentre:
+  - 0
+  - 0
+  - 0
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 90
+Groups:
+  Structure:
+    Vessel1: Model
+    Mooring Set1: Model
+    Line1: Mooring Set1
+    Line2: Mooring Set1
+    Line3: Mooring Set1
+    Mooring Set2: Model
+    Line4: Mooring Set2
+    Line5: Mooring Set2
+    Line6: Mooring Set2
+    Mooring Set3: Model
+    Line7: Mooring Set3
+    Line8: Mooring Set3
+    Line9: Mooring Set3
+    Mooring Set4: Model
+    Line10: Mooring Set4
+    Line11: Mooring Set4
+    Line12: Mooring Set4
+  State:
+    Collapsed:
+    - Variable data

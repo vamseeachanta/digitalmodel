@@ -1,0 +1,95 @@
+# Variation: Deep Water 200m
+# IMPORTANT: When overriding Lines, must include ALL properties
+# because OrcaFlex replaces the entire object definition
+Environment:
+  WaterDepth: 200
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [100, 0.5, 0]
+    - [200, 0.2, 0]
+
+Lines:
+  # Mooring Leg 1 (0 degrees) - Scaled for 200m depth
+  # Anchor radius: 600m, Line length: 700m
+  - Name: Mooring_1
+    EndAConnection: CALM_Buoy
+    EndAX: 6.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 600
+    EndBY: 0
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 2 (60 degrees)
+  - Name: Mooring_2
+    EndAConnection: CALM_Buoy
+    EndAX: 3.0
+    EndAY: 5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 300
+    EndBY: 520
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 3 (120 degrees)
+  - Name: Mooring_3
+    EndAConnection: CALM_Buoy
+    EndAX: -3.0
+    EndAY: 5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: -300
+    EndBY: 520
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 4 (180 degrees)
+  - Name: Mooring_4
+    EndAConnection: CALM_Buoy
+    EndAX: -6.0
+    EndAY: 0
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: -600
+    EndBY: 0
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 5 (240 degrees)
+  - Name: Mooring_5
+    EndAConnection: CALM_Buoy
+    EndAX: -3.0
+    EndAY: -5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: -300
+    EndBY: -520
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]
+
+  # Mooring Leg 6 (300 degrees)
+  - Name: Mooring_6
+    EndAConnection: CALM_Buoy
+    EndAX: 3.0
+    EndAY: -5.196
+    EndAZ: -2.25
+    EndBConnection: Anchored
+    EndBX: 300
+    EndBY: -520
+    EndBZ: -200
+    IncludedInStatics: Yes
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm, 700, 10]

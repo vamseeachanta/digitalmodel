@@ -1,0 +1,80 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileVertical
+
+[3]
+FormType=View
+Minimized=False
+CentreX=-60.2806023165192
+CentreY=0.516370601131233
+CentreZ=-0.58873388575283
+Azimuth=271.5
+Elevation=0
+Gamma=0
+Size=24.3981419792569
+Shaded=True
+
+[2]
+FormType=View
+Minimized=False
+CentreX=101.874958987988
+CentreY=0
+CentreZ=-0.0607790622765977
+Azimuth=270
+Elevation=0
+Gamma=0
+Size=11.6439373398334
+Shaded=False
+
+[1]
+FormType=Graph
+Minimized=False
+ResultType=XYGraph
+Period=Stage 1
+
+[1_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Metocean buoy
+VarName=Z
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=-8
+AxisMax=8
+
+[1_Xaxis]
+ObjectType=6D Buoy
+ObjectName=Metocean buoy
+VarName=X
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=-100
+AxisMax=-50
+
+[0]
+FormType=Graph
+Minimized=False
+ResultType=XYGraph
+Period=WholeSimulation
+
+[0_Yaxis]
+ObjectType=6D Buoy
+ObjectName=Metocean buoy
+VarName=Z
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=-8
+AxisMax=8
+
+[0_Xaxis]
+ObjectType=6D Buoy
+ObjectName=Metocean buoy
+VarName=Sea Surface Z
+PositionX=0
+PositionY=0
+PositionZ=0
+AxisMin=-6
+AxisMax=8
+

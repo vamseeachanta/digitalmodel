@@ -1,0 +1,53 @@
+@startwbs software_footprint
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Marine \n Software Footprint
+
+* Marine Engineering 
+
+** Data
+*** Excel
+*** ASCII \n csv, yml (program nuetral)
+
+** Design \n Output: Software Neutral Drawings
+*** Vault \n(Native Drawings)
+*** Rhino
+*** AutoCAD inventor
+
+** Stability
+*** GHS
+*** AQWA
+*** OrcaFlex/OrcaWave
+
+** Weight
+*** Ad Hoc \n(Excel Workbooks)
+
+** Global Motion Analysis
+*** ANSYS/AQWA
+*** OrcaFlex/OrcaWave
+
+** CFD
+*** OpenFoam
+*** ANSYS Fluent/CFX
+
+** Hull Structural Analysis
+*** ANSYS
+*** ABS SafeHull \n(Nastran Engine)
+
+** Foundations
+*** Nastran \n(Autodesk)
+*** ANSYS
+*** CADRE \n(Beam Elements program)
+*** Beam Sec. Mod. Calcs \n(Excel Workbooks)
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

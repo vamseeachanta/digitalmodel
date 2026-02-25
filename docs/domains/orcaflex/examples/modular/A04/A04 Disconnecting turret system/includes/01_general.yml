@@ -1,0 +1,91 @@
+# General Configuration
+# Generated from: A04 Disconnecting turret system.yml
+# Date: 2026-01-18 22:18:00
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: Yes
+  ImplicitVariableMaxTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 17.5
+  - 17.5
+  - 5
+  - 47.5
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  NorthDirectionDefined: Yes
+  NorthDirection: 90
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 403.851056707969
+  DefaultViewCentre:
+  - 27.2687750918258
+  - 127.529426656563
+  - -88.8503555803685
+  DefaultViewAzimuth: 267.1
+  DefaultViewElevation: 0
+FrictionCoefficients:
+  FrictionCoefficient6DBuoyName, 6DBuoyFrictionCoefficientShapeName, 6DBuoyFrictionCoefficient:
+  - - Turret
+    - Turret Bearing Plate
+    - 1
+Groups:
+  Structure:
+    Vessel System: Model
+    FPSO: Vessel System
+    Moonpool: Vessel System
+    Moonpool Cage: Vessel System
+    Vertical Set: Moonpool Cage
+    Vertical N: Vertical Set
+    Vertical NW: Vertical Set
+    Vertical W: Vertical Set
+    Vertical SW: Vertical Set
+    Vertical S: Vertical Set
+    Vertical SE: Vertical Set
+    Vertical E: Vertical Set
+    Vertical NE: Vertical Set
+    Slope Set: Moonpool Cage
+    Slope N: Slope Set
+    Slope NW: Slope Set
+    Slope W: Slope Set
+    Slope SW: Slope Set
+    Slope S: Slope Set
+    Slope SE: Slope Set
+    Slope E: Slope Set
+    Slope NE: Slope Set
+    Moonpool Restraints: Vessel System
+    Turret Bearing Plate: Moonpool Restraints
+    Latch: Moonpool Restraints
+    Disconnecting System: Model
+    Turret Set: Disconnecting System
+    Turret: Turret Set
+    Shell of Turret: Turret Set
+    Risers and Umbilicals: Disconnecting System
+    GI: Risers and Umbilicals
+    Prod N: Risers and Umbilicals
+    GL: Risers and Umbilicals
+    Prod S: Risers and Umbilicals
+    WI: Risers and Umbilicals
+    Umb: Risers and Umbilicals
+    Moorings: Disconnecting System
+    LEG1: Moorings
+    LEG2: Moorings
+    LEG3: Moorings
+  State:
+    Collapsed:
+    - Variable data

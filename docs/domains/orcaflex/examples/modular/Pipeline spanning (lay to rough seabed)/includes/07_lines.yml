@@ -1,0 +1,89 @@
+# Lines Configuration
+# Generated from: Pipeline spanning (lay to rough seabed).yml
+# Date: 2026-01-18 22:17:55
+Lines:
+- Name: Laid Line
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Laying Vessel
+      - 240
+      - 0
+      - 6.925
+      - 0
+      - 0
+      - 0
+      - 0
+    - - Anchored
+      - -140
+      - 0
+      - 0.17499999999999716
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - With Friction
+    - 425
+    - 1
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Spline
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0
+  SplineOrder: 3
+  SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+  - - 207.2413489672541
+    - 0
+    - 6.925
+  - - -8.517012205528175
+    - -5.684341886083298e-14
+    - 20.221981296652725
+  - - -107.95741396223815
+    - -1.1368683772161593e-13
+    - 11.442277835679977
+  - - -88.88017240232597
+    - -2.8421709430403982e-14
+    - -80.40811931513325
+  - - -140
+    - 0
+    - -89.825
+  FullStaticsMinDamping: 3
+  FullStaticsMaxDamping: 30
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  SegmentPen:
+  - 1
+  - Solid
+  - Red

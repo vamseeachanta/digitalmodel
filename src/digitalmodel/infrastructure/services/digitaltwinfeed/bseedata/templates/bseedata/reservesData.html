@@ -1,0 +1,37 @@
+{% extends 'bseedata/index.html' %}
+{% block subitem_page %}
+
+<script type="text/javascript">
+    reserves_json = JSON.parse({{context['data']['reserves_json']  | tojson | safe }})
+</script>
+
+<div id="Reserves1">
+    <h4>Field Reserves</h4>
+</div>
+
+<div id="fieldReserves">
+<br>
+  <p>Note the SEC field reserves data can increase or decrease. The reserves reported are dependent on the oil price in the previous year. </p>
+ <br>
+</div> {# fieldReserves #}
+
+<button type="button" class="btn btn-primary btn-lg" data-toggle="collapse" data-target="#reserves">Reserves Data</button>
+<div> <br> </div>
+  <button type="button" onclick="downloadCSVFromJson('{{ context.data.field_summary_df_dict[0]['Field Nickname'] | safe}}_reserves.csv', reserves_json);">Download as CSV</button>
+ <p><br></p>
+<div id="reserves" class="collapse">
+{{context.data.reserves_html | safe}}
+</div> {# reserves #}
+
+<a id=dummy_download> </a>
+
+<script type="text/javascript">
+    var chartData = {{ context.data['oilReserves'] | safe}}
+    addChartToDOM(chartData);
+</script>
+<script type="text/javascript">
+    var chartData = {{ context.data['fieldReserves'] | safe}}
+    addChartToDOM(chartData);
+</script>
+
+{% endblock %} {# subitem_page #}

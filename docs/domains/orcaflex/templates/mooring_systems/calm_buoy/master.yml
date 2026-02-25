@@ -1,0 +1,26 @@
+%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.5
+# Template: CALM Buoy Mooring System
+# Description: 6-leg catenary anchor leg mooring buoy with tanker connection
+---
+# Input Parameters (for parametric analysis)
+# See inputs/parameters.yml for modifiable values:
+#   water_depth: 100              # m
+#   hs: 3.5                       # m, significant wave height
+#   tp: 12.0                      # s, peak period
+#   wave_direction: 180           # deg
+#   current_speed: 1.2            # m/s
+#   wind_speed: 12                # m/s
+#   num_mooring_legs: 6
+#
+# Include files - load in order
+# Note: Buoys must be before Lines since lines connect to buoys
+- includefile: includes/01_general.yml
+- includefile: includes/02_var_data.yml
+- includefile: includes/03_environment.yml
+- includefile: includes/04_vessel_types.yml
+- includefile: includes/05_line_types.yml
+- includefile: includes/06_vessels.yml
+- includefile: includes/08_buoys.yml
+- includefile: includes/07_lines.yml

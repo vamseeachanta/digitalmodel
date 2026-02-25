@@ -1,0 +1,224 @@
+# LineTypes Configuration
+# Generated from: A01 Pliant wave riser.yml
+# Date: 2026-01-18 22:17:57
+LineTypes:
+- Name: 10"Product
+  Category: General
+  OD: 0.3926
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.22135
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 361.85
+  - ~
+  EA: 650e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+- Name: 10"P+SmallBuoys
+  Category: General
+  OD: 0.8782653785730142
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.42525390999154283
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 361.85
+  - ~
+  EA: 650e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 1.2
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.4480455905969684
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 10"P+SmallBuoys drag
+  - ~
+  - 0.34635695364238406
+  Cl: 0
+  NormalDragLiftDiameter: 0.3926
+  AxialDragLiftDiameter: 0.3926
+  StressOD: 0.3926
+  StressID: 0.254
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 2
+  - Solid
+  - Red
+- Name: 10"P+BigBuoys
+  Category: General
+  OD: 1.133219572368921
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.5863662556206354
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 361.85
+  - ~
+  EA: 650e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 1.45
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.9999999999999998
+  - ~
+  - 0.4747947069217477
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 10"P+BigBuoys drag
+  - ~
+  - 0.5210536423841059
+  Cl: 0
+  NormalDragLiftDiameter: 0.3926
+  AxialDragLiftDiameter: 0.3926
+  StressOD: 0.3926
+  StressID: 0.254
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 3
+  - Solid
+  - Lime
+- Name: Tether
+  Category: General
+  OD: 0.082
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.036109
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 367.00000000000006e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Aqua

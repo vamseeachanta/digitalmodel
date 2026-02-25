@@ -1,0 +1,270 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings:
+
+  -
+    file_name_extension: BOP_Yellow_Accelerations
+    df: input_data_table_statistics
+    table_name: YT_BOPYELLOWMRU_ACCMRU
+    statistic: Maximum
+    label: [ACCFWD, ACCSTBD]
+    x: [StartTime]
+    y: [ACCFWD, ACCSTBD]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: BOP Accelerations
+    suptitle: BOP Accelerations. Yellow Pod
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+
+  -
+    file_name_extension: WH_BM_only
+    df: input_data_table_statistics
+    table_name: BD_WHBENDINGMOMENT
+    statistic: Maximum
+    label: [Bending Moment, Orientation]
+    x: [StartTime]
+    y: [MAGNITUDE]
+    scale:
+      columns: [MAGNITUDE]
+      factors: [0.000737562]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Maximum Bending Moment (ft-kips)
+    suptitle: Wellhead Measured Data
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+  -
+    file_name_extension: WH_BM_only_zoom1
+    df: input_data_table_statistics
+    table_name: BD_WHBENDINGMOMENT
+    statistic: Maximum
+    label: [Bending Moment, Orientation]
+    x: [StartTime]
+    y: [MAGNITUDE]
+    scale:
+      columns: [MAGNITUDE]
+      factors: [0.000737562]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Maximum Bending Moment (ft-kips)
+    suptitle: Wellhead Measured Data
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+#    xlim: [0, 1.6]
+    ylim: [0, 70000]
+  -
+    file_name_extension: WH_BM_only_zoom2
+    df: input_data_table_statistics
+    table_name: BD_WHBENDINGMOMENT
+    statistic: Maximum
+    label: [Bending Moment, Orientation]
+    x: [StartTime]
+    y: [MAGNITUDE]
+    scale:
+      columns: [MAGNITUDE]
+      factors: [0.000737562]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Maximum Bending Moment (ft-kips)
+    suptitle: Wellhead Measured Data
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+#    xlim: [0, 1.6]
+    ylim: [0, 2000]
+
+  -
+    file_name_extension: vessel_positions
+    df: input_data_table_statistics
+    table_name: BD18_VESSEL
+    statistic: Maximum
+    label: [Position East (m), Position North (m)]
+    x: [StartTime]
+    y: [POSITIONEAST, POSITIONNORTH]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Vessel Motions
+    suptitle: Vessel Position
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+  -
+    file_name_extension: vessel_motions
+    df: input_data_table_statistics
+    table_name: BD18_VESSEL
+    statistic: Maximum
+    label: [Heave (ft), Pitch (deg), Roll (deg)]
+    x: [StartTime]
+    y: [HEAVE, PITCH, ROLL]
+    scale:
+      columns: [HEAVE, PITCH, ROLL]
+      factors: [3.281, 57.3, 57.3]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Vessel Motions
+    suptitle: Vessel Motions
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+  -
+    file_name_extension: vessel_heading
+    df: input_data_table_statistics
+    table_name: BD18_VESSEL
+    statistic: Maximum
+    label: [Heading (deg from Global N)]
+    x: [StartTime]
+    y: [HEADING]
+    scale:
+      columns: [HEADING]
+      factors: [57.3]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Vessel Heading
+    suptitle: Vessel Motions
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: [0, 360]
+
+  -
+    file_name_extension: WH_BM_Orientation_only
+    df: input_data_table_statistics
+    table_name: BD_WHBENDINGMOMENT
+    statistic: Average
+    label: [Orientation]
+    x: [StartTime]
+    y: [ORIENTATION]
+    scale:
+      columns: [ORIENTATION]
+      factors: [57.3]
+    size: A4
+    orientation: landscape
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: Bending Moment Mean Orientation (deg from Global N)
+    suptitle: Wellhead Measured Data
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+
+  -
+    file_name_extension: BOP_Blue_Accelerations
+    df: input_data_table_statistics
+    table_name: BD_BOPBLUEMRUACC
+    statistic: Maximum
+    label: [ACCFWD, ACCSTBD]
+    x: [StartTime]
+    y: [ACCFWD, ACCSTBD]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: BOP Accelerations
+    suptitle: BOP Accelerations. Blue Pod
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL

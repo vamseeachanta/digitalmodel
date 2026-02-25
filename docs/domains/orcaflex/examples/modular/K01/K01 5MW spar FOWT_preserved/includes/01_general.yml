@@ -1,0 +1,11 @@
+# General Configuration
+# Generated from: K01 5MW spar FOWT_preserved.yml
+# Date: 2026-01-18 22:18:23
+General: {}
+model_name: K01 5MW spar FOWT
+original_sim_file: K01 5MW spar FOWT.sim
+preserved_from: orphaned_sim_file
+note: This .sim file had no corresponding input file and was preserved
+original_size: 76.28 MB
+preservation_date: '2024-08-21'
+todo: Convert to proper OrcaFlex input format when needed

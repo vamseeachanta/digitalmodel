@@ -1,0 +1,36 @@
+# Swivel Connector 150 Tonne - Library Component
+# Category: connectors
+# Description: Mooring swivel for 150 tonne SWL
+# Application: CALM buoy swivel stack, mooring line rotation allowance
+# SWL: 150 tonnes (1472 kN), Proof Load: 300 tonnes
+# Rotation: 360 degrees continuous, low friction bearing
+# NOTE: No section header - properties only for IncludeFile
+# Modeled as 6D Buoy representing connector mass at joint point
+BuoyType: Spar buoy
+Connection: Free
+DampingRelativeTo: Earth
+Mass: 2500
+Volume: 0.32
+MomentsOfInertia:
+- 250
+- 350
+- 350
+CentreOfMass:
+- 0
+- 0
+- 0
+Height: 1.0
+Pen: [2, Solid, $008080]
+# Swivel dimensions: ~1.0m length x 0.6m diameter
+# Forged steel construction with internal bearings
+Cylinders:
+- CylinderOuterDiameter: 0.6
+  CylinderInnerDiameter: 0
+  CylinderLength: 1.0
+  CylinderAxialDragArea: 0.28
+  DragForceCoefficient:
+  - 1.0
+  - 0.8
+  AddedMassForceCoefficient:
+  - 1.0
+  - 0.5

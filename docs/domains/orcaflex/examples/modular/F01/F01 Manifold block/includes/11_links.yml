@@ -1,0 +1,60 @@
+# Links Configuration
+# Generated from: F01 Manifold block.yml
+# Date: 2026-01-18 22:18:15
+Links:
+- Name: Bridle 1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle
+    - 0
+    - 0
+    - 0
+  - - Main Buoy
+    - 3
+    - -2.999999999999999
+    - 1.2000000000000004
+  ReleaseStage: ~
+  UnstretchedLength: 5
+  Stiffness: 100e3
+- Name: Bridle 2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle
+    - 0
+    - 0
+    - 0
+  - - Main Buoy
+    - -3
+    - -2.999999999999999
+    - 1.2000000000000002
+  ReleaseStage: ~
+  UnstretchedLength: 5
+  Stiffness: 100e3
+- Name: Bridle 3
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle
+    - 0
+    - 0
+    - 0
+  - - Main Buoy
+    - -3
+    - 3
+    - 1.2000000000000002
+  ReleaseStage: ~
+  UnstretchedLength: 5
+  Stiffness: 100e3
+- Name: Bridle 4
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Shackle
+    - 0
+    - 0
+    - 0
+  - - Main Buoy
+    - 3
+    - 3.000000000000001
+    - 1.2
+  ReleaseStage: ~
+  UnstretchedLength: 5
+  Stiffness: 100e3

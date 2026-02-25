@@ -1,0 +1,20 @@
+{% extends 'StockAnalysis/index.html' %}
+
+{% block subitem_page %}
+	{% if context %}
+	<div id="strategies">
+		<br>
+	<p>Proposed updates are given below:</p>
+	<ul>
+	  <li>Tickers currently supported are S&P 500 and Dow30. Add more tickers (June 30, 2021)</li>
+	  <li>Add more (previous/future) institutional investors information. Similar to Insider info (Sep 7, 2021)</li>
+	  <li>Additional institutional previous data will help make better decisions. Curently looking for data sources. Please provide any recommendations to get institutional investor data to support@aceengineer.com</li>
+	</ul>
+
+	<p>Mail recommendations or suggestions to <a href="mailto:support@aceengineer.com">support@aceengineer.com</a></p>
+	</div>
+
+
+	{% endif %}
+{% endblock %} {# subitem_page #}
+

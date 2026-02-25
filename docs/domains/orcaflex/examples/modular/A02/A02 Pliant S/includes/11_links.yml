@@ -1,0 +1,49 @@
+# Links Configuration
+# Generated from: A02 Pliant S.yml
+# Date: 2026-01-18 22:17:58
+Links:
+- Name: Umb tether
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Umb lower
+    - 0
+    - 0
+    - 55.4166666666668
+    - End B
+  - - Anchored
+    - 141.3592373
+    - 18.75400319
+    - 4
+  ReleaseStage: ~
+  UnstretchedLength: 2.2
+  Stiffness: 545e3
+- Name: 10" tether East
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - 10" lower East
+    - 0
+    - 0
+    - 55.4166666666667
+    - End B
+  - - Anchored
+    - 141.7065337
+    - 16.78438768
+    - 4
+  ReleaseStage: ~
+  UnstretchedLength: 2.2
+  Stiffness: 545e3
+- Name: 10" tether West
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - 10" lower West
+    - 0
+    - 0
+    - 55.4166666666667
+    - End B
+  - - Anchored
+    - 141.011941
+    - 20.72361869
+    - 4
+  ReleaseStage: ~
+  UnstretchedLength: 2.2
+  Stiffness: 545e3

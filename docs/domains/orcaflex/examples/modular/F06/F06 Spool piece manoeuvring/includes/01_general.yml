@@ -1,0 +1,81 @@
+# General Configuration
+# Generated from: F06 Spool piece manoeuvring.yml
+# Date: 2026-01-18 22:18:19
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 20
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.02
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 55
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+3DBuoys:
+- Name: Master link
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -22.01589226131739
+  - 18.588509722697015
+  - 15.479456984948783
+  Mass: 1
+  Volume: 0.2
+  BulkModulus: Infinity
+  Height: 0.5
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - $004000
+Groups:
+  Structure:
+    Vessel: Model
+    Crane wire and spreader: Model
+    Crane wire: Crane wire and spreader
+    Master link: Crane wire and spreader
+    Spreader bar: Crane wire and spreader
+    Upper sling1: Crane wire and spreader
+    Upper sling2: Crane wire and spreader
+    Spoolpiece: Model
+    Spool: Spoolpiece
+    Running tool1: Spoolpiece
+    Running tool2: Spoolpiece
+    Lower sling1: Spoolpiece
+    Lower sling2: Spoolpiece
+    Lower sling3: Spoolpiece
+  State:
+    Collapsed:
+    - Variable data

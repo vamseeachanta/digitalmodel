@@ -1,0 +1,40 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT-2buoys\_13_i01_def__uth_landing4on_elastic_surf.yml
+# Created: 3:04 PM on 7/13/2023
+# User: 
+# Machine: 
+---
+BaseFile: _10_i02_cal.yml
+Vessels:
+  SevenArctic:
+    InitialX: 87
+Lines:
+  Umbilical:
+    Length[3]: 980
+    StaticsStep1: Catenary
+Shapes:
+  New: mudmat_uta
+  mudmat_uta:
+    Locked: No
+    ShapeType: Elastic solid
+    Shape: Block
+    Connection: Anchored
+    Origin: [-85.08969437248955, -3.6000000000000005, 0]
+    Size: [2.8, 2, 1.34]
+    Orientation: [0, 0, 0]
+    NormalStiffness: 10e3
+    ShearStiffness: 100
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+...

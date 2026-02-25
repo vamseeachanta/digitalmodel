@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AQWA vs OrcaWave Peak RAO Comparison</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        .criteria {
+            background-color: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        .pass {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .fail {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .metric {
+            display: inline-block;
+            margin-right: 30px;
+            margin-bottom: 10px;
+        }
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        .metric-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #111827;
+        }
+        .note {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .info {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .highlight {
+            background-color: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌊 AQWA vs OrcaWave Peak RAO Comparison</h1>
+        <div class="subtitle">
+            Hydrodynamic Validation - Focus on Peak/Significant Values<br>
+            Generated: 2026-01-05 11:00:19
+        </div>
+        <div class="criteria">
+            <strong>Validation Criteria:</strong><br>
+            ✓ 5% tolerance applies to peak and significant values<br>
+            ✓ "Significant" = values ≥ 10% of peak magnitude<br>
+            ✓ Pass requires 90% of significant points within 5% tolerance
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📊 AQWA Peak RAO Analysis</h2>
+        <div class="note">
+            <strong>Note:</strong> OrcaWave data not available. Showing AQWA peak analysis only.
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>DOF</th>
+                    <th>Peak Magnitude</th>
+                    <th>Peak Period (s)</th>
+                    <th>Peak Heading (°)</th>
+                    <th>Threshold</th>
+                    <th>Significant Points</th>
+                    <th>% Significant</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>SURGE</strong></td>
+                    <td class="highlight">0.8926</td>
+                    <td>21.97</td>
+                    <td>-180.0</td>
+                    <td>0.0893</td>
+                    <td>2</td>
+                    <td>0.1%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>SWAY</strong></td>
+                    <td class="highlight">0.0000</td>
+                    <td>0.29</td>
+                    <td>-180.0</td>
+                    <td>0.0000</td>
+                    <td>1443</td>
+                    <td>100.0%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>HEAVE</strong></td>
+                    <td class="highlight">0.9224</td>
+                    <td>21.97</td>
+                    <td>-180.0</td>
+                    <td>0.0922</td>
+                    <td>2</td>
+                    <td>0.1%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>ROLL</strong></td>
+                    <td class="highlight">0.0002</td>
+                    <td>21.97</td>
+                    <td>-180.0</td>
+                    <td>0.0000</td>
+                    <td>2</td>
+                    <td>0.1%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>PITCH</strong></td>
+                    <td class="highlight">0.4577</td>
+                    <td>21.97</td>
+                    <td>-180.0</td>
+                    <td>0.0458</td>
+                    <td>2</td>
+                    <td>0.1%</td>
+                </tr>
+
+                <tr>
+                    <td><strong>YAW</strong></td>
+                    <td class="highlight">0.0000</td>
+                    <td>0.29</td>
+                    <td>-180.0</td>
+                    <td>0.0000</td>
+                    <td>1443</td>
+                    <td>100.0%</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🔧 Next Steps</h2>
+        <div class="note">
+            <strong>To complete the 5% tolerance comparison:</strong>
+            <ol>
+                <li>Run OrcaWave analysis using: <code>orcawave_001_ship_raos_rev2.yml</code></li>
+                <li>Ensure OrcaWave uses same mesh and analysis parameters as AQWA</li>
+                <li>Save OrcaWave results to .sim file</li>
+                <li>Re-run this script: <code>python run_comparison_peaks.py</code></li>
+                <li>Review peak comparison to verify 5% tolerance on significant values</li>
+            </ol>
+        </div>
+        <div class="info">
+            <strong>Peak values identified above will be compared</strong> when OrcaWave data becomes available.
+            The comparison will focus on periods and headings where RAO magnitudes are ≥10% of peak.
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+# FLEX_12inch_Buoyancy - Library Component
+# Category: line_types
+# Description: 12-inch flexible riser with buoyancy modules
+# NOTE: No section header - properties only for IncludeFile
+#
+# Buoyancy section for lazy wave configuration:
+# - Larger OD due to buoyancy modules
+# - Same ID as base pipe
+# - Lower net mass for positive buoyancy
+# - Higher drag coefficients due to modules
+OD: 0.95
+ID: 0.3048
+MassPerUnitLength: 55.0
+CompressionIsLimited: Yes
+EA: 720000000.0
+EI:
+- 1800000.0
+- ~
+GJ: 8000
+PoissonRatio: 0.35
+Cd:
+- 1.5
+- ~
+- 0.4
+Ca:
+- 1.0
+- ~
+- 0.5
+NormalDragLiftDiameter: 0.4064
+AxialDragLiftDiameter: 0.4064
+SeabedLateralFrictionCoefficient: 0.5
+OuterContactDiameter: 1.05
+StressOD: 0.4064
+StressID: 0.3048

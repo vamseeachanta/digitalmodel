@@ -1,0 +1,580 @@
+# Shapes Configuration
+# Generated from: A03 Jumper to high tower.yml
+# Date: 2026-01-18 22:18:00
+Shapes:
+- Name: Bell Pr N Out
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 21.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Pr N In
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 9.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Pr S In
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 0.499999999999997
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Pr S Out
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - -11.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Con N
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 15.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - $FF80FF
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Con S
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - -5.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - $FF80FF
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Gas
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 6.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - $4080FF
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell Water
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 3.49999999999999
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.401
+  - - 0.5
+    - 0.443
+  - - 1
+    - 0.631
+  - - 1.5
+    - 0.943
+  - - 2
+    - 1.381
+  - - 2.5
+    - 1.943
+  - - 3
+    - 2.631
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Green
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Pr N Out
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 21.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Pr N In
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 9.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Pr S In
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 0.499999999999997
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Pr S Out
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - -11.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Con N
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 15.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Con S
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - -5.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Gas
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 6.5
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Trap Water
+  ShapeType: Trapped water
+  Shape: Curved plate
+  Connection: FPSO
+  Origin:
+  - 3.49999999999999
+  - -10.5
+  - -6
+  Orientation:
+  - 270
+  - 150
+  - -90
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.401
+  - - 0.5
+    - 1.443
+  - - 1
+    - 1.631
+  - - 1.5
+    - 1.943
+  - - 2
+    - 2.381
+  - - 2.5
+    - 2.943
+  - - 3
+    - 3.631
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

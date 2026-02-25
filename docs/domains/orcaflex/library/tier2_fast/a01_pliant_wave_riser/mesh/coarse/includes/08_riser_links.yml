@@ -1,0 +1,15 @@
+Links:
+- Name: Tether Pliant Simple
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Anchored
+    - -116.0
+    - 0.0
+    - 1.0
+  - - 10in Pliant Simple
+    - 0.0
+    - 0.0
+    - 176.0
+    - End A
+  UnstretchedLength: 9.9
+  Stiffness: 367000.0

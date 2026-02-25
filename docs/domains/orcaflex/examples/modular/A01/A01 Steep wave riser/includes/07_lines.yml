@@ -1,0 +1,293 @@
+# Lines Configuration
+# Generated from: A01 Steep wave riser.yml
+# Date: 2026-01-18 22:17:57
+Lines:
+- Name: 10" Steep Wave1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 10
+      - 11.9132
+      - -7.0076
+      - 90
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - 67
+      - 0
+      - 4.5
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 10" flexible
+    - 5.5
+    - 0.25
+  - - 10" flexible
+    - 45
+    - 4
+  - - 10" flexible
+    - 30
+    - 1
+  - - 10"+Floats
+    - 60
+    - 1
+  - - 10" flexible
+    - 5
+    - 1
+  - - 10" flexible
+    - 5.5
+    - 0.25
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  Hidden: Yes
+  DrawNodesAsDiscs: No
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: TopEnd BSR
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 10
+      - 11.9132
+      - -7.0076
+      - 90
+      - 170
+      - 0
+      - ~
+    - - Free
+      - 3.07319170621798
+      - -0.0734481557501763
+      - -10.3513215407794
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Root
+    Length: 0.5
+    NumberOfSegments: 2
+    DisturbanceVessel: (none)
+  - LineType: BSR Cone
+    TargetSegmentLength: 0.25
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  Hidden: Yes
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: Seabed End BSR
+  IncludeTorsion: Yes
+  TopEnd: End B
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchored
+      - 67
+      - 0
+      - 4.5
+      - 0
+      - 0
+      - 0
+      - ~
+    - - Free
+      - 63.6858672901876
+      - 0.647682867776705
+      - -95.8726854601354
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Root
+    Length: 0.5
+    NumberOfSegments: 2
+    DisturbanceVessel: (none)
+  - LineType: BSR Cone
+    TargetSegmentLength: 0.25
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  Hidden: Yes
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: 10" Steep Wave
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 10
+      - 12
+      - -7.5
+      - 90
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - 67
+      - 0
+      - 5
+      - 360
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - - Infinity
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 10" flexible
+    - 5
+    - 0.25
+  - - 10" flexible
+    - 45
+    - 4
+  - - 10" flexible
+    - 30
+    - 1
+  - - 10"+Floats
+    - 60
+    - 1
+  - - 10" flexible
+    - 5
+    - 1
+  - - 10" flexible
+    - 5
+    - 0.25
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+  - - Topside BSR
+    - 0
+    - 0
+    - 0
+    - End A
+    - Stiffener1
+  - - Seabed BSR
+    - 0
+    - 0
+    - 0
+    - End B
+    - Stiffener2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White

@@ -1,0 +1,6 @@
+%YAML 1.1
+# Case: CALM Buoy in Deep Water (200m)
+# Combines base model with deep water variation
+---
+BaseFile: ../base/calm_buoy_base.yml
+IncludeFile: ../variations/deep_water_200m.yml

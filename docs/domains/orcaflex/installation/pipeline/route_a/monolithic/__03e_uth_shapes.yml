@@ -1,0 +1,121 @@
+﻿BaseFile: __03d_uth_all_dofs.yml
+
+Shapes:
+  New:
+    - UTH2-25deg-Connector
+    - cog
+    - cov
+    - padeye_buoyancy
+    - padeye_main_crane
+  UTH2-25deg-Connector:
+    Locked: No
+    ShapeType: Elastic solid
+    Shape: Cylinder
+    Connection: UTA
+    Origin: [1.28, 0, 0.934]
+    Azimuth: 0
+    Declination: 115
+    Length: 0.5
+    OuterDiameter: 0.2
+    InnerDiameter: 0.1
+    NormalStiffness: 100
+    ShearStiffness: 100
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  cog:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: UTA
+    Origin: [-0.0615, 0, 0.141]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  cov:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: UTA
+    Origin: [-0.5285, 0, 0.009]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  padeye_buoyancy:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: UTA
+    Origin: [1.2815, 0, 1.273]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+  padeye_main_crane:
+    Locked: Yes
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: UTA
+    Origin: [0.7305, 0, 0.106]
+    Azimuth: 234.00000000309296
+    Declination: 89.99999999995524
+    Length: 0.001
+    OuterDiameter: 0.2
+    InnerDiameter: 0
+    Labels: []
+    Hidden: No
+    OutsidePen: [1, Solid, Gray]
+    InsidePen: [1, Solid, $FF6000]
+    NumberOfLines: 10
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]

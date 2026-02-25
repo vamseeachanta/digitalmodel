@@ -1,0 +1,8 @@
+%YAML 1.1
+# Type: Model
+# Generated from: spec.yml
+
+---
+- includefile: includes/01_general.yml
+- includefile: includes/03_environment.yml
+- includefile: includes/20_generic_objects.yml

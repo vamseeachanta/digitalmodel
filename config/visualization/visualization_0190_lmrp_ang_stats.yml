@@ -1,0 +1,378 @@
+---
+parameters:
+  start_datetime_range1: &start_datetime_range1 "2019-08-01 00:00:00"
+  end_datetime_range1: &end_datetime_range1 "2019-09-01 00:00:00"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: False
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+
+# Extrema Plots
+  -
+    file_name_extension: pitch
+    ncols: 1
+    suptitle: LMRP Pitch
+    sets:
+
+    -
+      title: Blue MRU
+      xlabel: Date
+      ylabel: Pitch (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+    -
+      title: Yellow MRU
+      xlabel: Date
+      ylabel: Pitch (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+  -
+    file_name_extension: roll
+    ncols: 1
+    suptitle: LMRP Roll
+    sets:
+    -
+      title: Blue MRU
+      xlabel: Date
+      ylabel: Roll (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+    -
+      title: Yellow MRU
+      xlabel: Date
+      ylabel: Roll (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2, 2]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+
+  -
+    file_name_extension: pitch_range1
+    ncols: 1
+    suptitle: LMRP Pitch
+    sets:
+
+    -
+      title: Blue MRU
+      xlabel: Date
+      ylabel: Pitch (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2, 2]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+    -
+      title: Yellow MRU
+      xlabel: Date
+      ylabel: Pitch (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2, 2]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+  -
+    file_name_extension: roll_range1
+    suptitle: LMRP Roll
+    sets:
+    -
+      title: Blue MRU
+      xlabel: Date
+      ylabel: Roll (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2, 2]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+    -
+      title: Yellow MRU
+      xlabel: Date
+      ylabel: Roll (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2, 2]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [ROLL]
+          scale:
+            columns: [ROLL]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL

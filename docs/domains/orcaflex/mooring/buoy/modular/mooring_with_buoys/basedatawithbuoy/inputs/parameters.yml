@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: basedatawithbuoy.yml
+# Generated: 2026-01-18 22:19:54
+
+water_depth: 499.9999999999999
+current_speed: 3.38
+wind_speed: 42.2
+water_density: 0.06398865959054832
+stage_durations:
+- 10
+- 500
+wave_direction: 45
+

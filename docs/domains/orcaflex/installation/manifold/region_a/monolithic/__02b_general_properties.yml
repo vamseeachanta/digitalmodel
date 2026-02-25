@@ -1,0 +1,14 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\wo_shielding\__02b_general_properties.yml
+# Created: 2:19 PM on 9/7/2023
+# User: 
+# Machine: 
+---
+BaseFile: __02a_water_depth.yml
+General:
+  StaticsTolerance: 100e-6
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 20
+...

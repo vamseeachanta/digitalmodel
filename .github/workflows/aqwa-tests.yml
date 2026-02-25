@@ -1,0 +1,101 @@
+name: AQWA Module Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/aqwa/**'
+      - 'tests/domains/aqwa/**'
+      - '.github/workflows/aqwa-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/digitalmodel/modules/aqwa/**'
+      - 'tests/domains/aqwa/**'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Create virtual environment
+      run: |
+        uv venv
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv pip install -e .
+        uv pip install pytest pytest-cov pytest-xdist
+
+    - name: Run unit tests
+      run: |
+        pytest tests/domains/aqwa/test_aqwa_lis_parser_real_data.py -v --cov=src/digitalmodel/modules/aqwa --cov-report=xml --cov-report=term
+
+    - name: Run CLI integration tests
+      run: |
+        pytest tests/domains/aqwa/test_aqwa_cli_integration.py -v
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: aqwa
+        name: aqwa-coverage
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Create virtual environment
+      run: |
+        uv venv
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv pip install ruff black isort mypy
+
+    - name: Run ruff
+      run: |
+        ruff check src/digitalmodel/modules/aqwa/
+
+    - name: Run black
+      run: |
+        black --check src/digitalmodel/modules/aqwa/
+
+    - name: Run isort
+      run: |
+        isort --check-only src/digitalmodel/modules/aqwa/
+
+    - name: Run mypy
+      continue-on-error: true
+      run: |
+        mypy src/digitalmodel/modules/aqwa/ --ignore-missing-imports

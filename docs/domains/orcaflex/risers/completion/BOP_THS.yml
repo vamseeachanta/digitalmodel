@@ -1,0 +1,1593 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\risers\completion\BOP_THS.yml
+# Created: 9:59 PM on 1/17/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+General:
+  # Units
+  UnitsSystem: SI
+  # Reset
+  LineResetRepresentation: Quick
+  # Analysis data
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  # Statics
+  BuoysIncludedInStatics: None
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  StaticsTolerance: 10e-9
+  StaticsMinDamping: 100
+  StaticsMaxDamping: 500
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  ImplicitTolerance: 10e-6
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 8
+    - 300
+  # Restart state
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  SeabedOriginDepth: 2896
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 1000
+  SeabedShearStiffness: ~
+  # Waves
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: No
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaveTrains:
+    - Name: Wave1
+      WaveType: JONSWAP
+      WaveDirection: 180
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveNumberOfSpectralDirections: 1
+      WaveJONSWAPParameters: Partially specified
+      WaveHs: 0
+      WaveTz: 8
+      WaveGamma: 1
+      WaveNumberOfComponents: 100
+      WaveSpectrumMinRelFrequency: 0.5
+      WaveSpectrumMaxRelFrequency: 10
+      WaveSpectrumMaxComponentFrequencyRange: 0.05
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1, 0]
+    - [25, 1, 0]
+    - [50, 0.996, 0]
+    - [75, 0.909, 0]
+    - [100, 0.771, 0]
+    - [125, 0.68, 0]
+    - [200, 0.506, 0]
+    - [300, 0.357, 0]
+    - [400, 0.275, 0]
+    - [500, 0.217, 0]
+    - [600, 0.174, 0]
+    - [700, 0.15, 0]
+    - [750, 0.14, 0]
+    - [800, 0.121, 0]
+    - [900, 0.063, 0]
+    - [1000, 0, 0]
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: No
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+VesselTypes:
+  - Name: Semi
+    Length: 95.0976
+    # Conventions
+    RAOResponseUnits: degrees
+    RAOWaveUnit: amplitude
+    WavesReferredToBy: period (s)
+    RAOPhaseConvention: lags
+    RAOPhaseUnitsConvention: degrees
+    RAOPhaseRelativeToConvention: crest
+    SurgePositive: forward
+    SwayPositive: port
+    HeavePositive: up
+    RollPositiveStarboard: down
+    PitchPositiveBow: down
+    YawPositiveBow: port
+    Symmetry: None
+    CurrentCoeffSymmetry: None
+    WindCoeffSymmetry: None
+    QTFConventionsRotationOrder: RzRyRx
+    QTFConventionsRotationAxes: rotated
+    QTFConventionsFrameOfReference: body
+    Draughts:
+      - Name: Transocean_NB
+        Mass: 53.72e3
+        MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
+          - [56.776932e6, 0, 0]
+          - [0, 60.682394e6, 0]
+          - [0, 0, 78.839839e6]
+        CentreOfMass: [0, 0, 23.53]
+        DisplacementRAOs:
+          RAOOrigin: [0, 0, 0]
+          PhaseOrigin: [~, ~, ~]
+          RAOs: []
+        LoadRAOs:
+          RAOOrigin: [0, 0, 0]
+          PhaseOrigin: [~, ~, ~]
+          RAOs: []
+        WaveDriftQTFMethod: Newman's approximation
+        WaveDrift:
+          RAOOrigin: [2.53, 0, -1.97]
+          RAOs: []
+        SumFrequencyQTFs:
+          RAOOrigin: [0, 0, 0]
+          PhaseOrigin: [~, ~, ~]
+          QTFCutoffPeriod: Infinity
+          RAOPeriodOrFrequency1, RAOPeriodOrFrequency2, RAODirection1, RAODirection2, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase: []
+        SeaStateRAOs:
+          SeaStateRAOInterpolationType: Direction and period only
+          SeaStateRAOGradientType: Specified
+          SeaStateRAODirection, SeaStateRAOPeriodOrFrequency, SeaStateRAOX, SeaStateRAOY, SeaStateRAOZ, SeaStateRAOPotentialAmp, SeaStateRAOPotentialPhase, SeaStateRAOGradientXAmp, SeaStateRAOGradientXPhase, SeaStateRAOGradientYAmp, SeaStateRAOGradientYPhase, SeaStateRAOGradientZAmp, SeaStateRAOGradientZPhase: []
+        # Stiffness, added mass and damping
+        AMDMethod: Constant
+        ReferenceOrigin: [0, 0, 0]
+        ReferenceOriginDatumPosition: [0, 0, 0]
+        HydrostaticStiffnessMethod: Displacement
+        DisplacedVolume: ~
+        CentreOfBuoyancy: [~, ~, ~]
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - [14.444459951199993e3, 0, 28.744475302999996e3]
+          - [0, 162.279838639e3, 0]
+          - [28.744475302999996e3, 0, 10.1141462156e6]
+        AMDTimeStep: ~
+        AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz:
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+        DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz:
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+          - [0, 0, 0, 0, 0, 0]
+        # Other damping
+        OtherDampingOrigin: [0, 0, 0]
+        OtherDampingFrameOfReference: Primary low frequency heading
+        OtherDampingCalculatedFrom: Wave frequency motion
+        OtherLinearDamping: [0, 0, 0, 0, 0, 0]
+        OtherQuadraticDamping: [0, 0, 0, 0, 0, 0]
+        # Current load
+        CurrentAreasAndAreaMoment: [0, 0, 0, 0, 0, 0]
+        CurrentDragOrigin: [0, 0, 0]
+        CurrentCoeffDirection, CurrentCoeffSurge, CurrentCoeffSway, CurrentCoeffHeave, CurrentCoeffRoll, CurrentCoeffPitch, CurrentCoeffYaw: []
+        CurrentYawRateDrag: [0, 0, 0]
+        # Wind load
+        WindAreasAndAreaMoment: [0, 0, 0, 0, 0, 0]
+        WindDragOrigin: [0, 0, 0]
+        WindCoeffDirection, WindCoeffSurge, WindCoeffSway, WindCoeffHeave, WindCoeffRoll, WindCoeffPitch, WindCoeffYaw: []
+    # Shaded drawing
+    ShadedDrawingCullingMode: Anticlockwise
+    ShadedDrawingOrigin: [0, 0, -2.185]
+RayleighDampingCoefficients:
+  - Name: 0p3
+    Mode: Stiffness proportional
+    DampingRatio: 0.3
+    Period1: ~
+    ApplyToGeometricStiffness: No
+LineTypes:
+  - Name: Diverter
+    Category: General
+    # Geometry and mass
+    OD: 0.5334
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.74408
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+  - Name: IB
+    Category: General
+    # Geometry and mass
+    OD: 0.5994
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.74408
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $8080FF]
+  - Name: OB
+    Category: General
+    # Geometry and mass
+    OD: 0.9671
+    ID: 0.5842
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 3.67855
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [480e3, 480e3]
+    EA: 10.3e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 369e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.635
+    StressID: 0.5842
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Red]
+  - Name: Pup Joint
+    Category: General
+    # Geometry and mass
+    OD: 1.366
+    ID: 0.4891
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 11.12491
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [353e3, 353e3]
+    EA: 10.4e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 271e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5494
+    StressID: 0.4891
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $404080]
+  - Name: SLK_Top
+    Category: General
+    # Geometry and mass
+    OD: 0.5768
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Maroon]
+  - Name: RJT_3
+    Category: General
+    # Geometry and mass
+    OD: 1.0342
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Green]
+  - Name: FUV
+    Category: General
+    # Geometry and mass
+    OD: 0.665
+    ID: 0.4891
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 1.38895
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [353e3, 353e3]
+    EA: 10.4e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 271e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5494
+    StressID: 0.4891
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+  - Name: RJT_5
+    Category: General
+    # Geometry and mass
+    OD: 1.0041
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Green]
+  - Name: RJT_7
+    Category: General
+    # Geometry and mass
+    OD: 0.9635
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $800040]
+  - Name: RJT_9
+    Category: General
+    # Geometry and mass
+    OD: 0.9133
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $A00000]
+  - Name: RJT_10
+    Category: General
+    # Geometry and mass
+    OD: 0.9005
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Teal]
+  - Name: SKL_BOT
+    Category: General
+    # Geometry and mass
+    OD: 0.5768
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.64066
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [248e3, 248e3]
+    EA: 7.57e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 190e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5334
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Olive]
+  - Name: Riser Adaptor
+    Category: General
+    # Geometry and mass
+    OD: 0.7072
+    ID: 0.489
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 1.7858
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [467e3, 467e3]
+    EA: 13.4e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 359e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.5652
+    StressID: 0.489
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $400080]
+  - Name: LMRP
+    Category: General
+    # Geometry and mass
+    OD: 1.8147
+    ID: 0.508
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 18.68953
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [2.82e6, 2.82e6]
+    EA: 53.7e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 2.17e6
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [0.4, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [0.25, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: 4.572
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.762
+    StressID: 0.508
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Teal]
+  - Name: BOP
+    Category: General
+    # Geometry and mass
+    OD: 2.3584
+    ID: 0.508
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 32.66121
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [2.82e6, 2.82e6]
+    EA: 53.7e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 2.17e6
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [0.4, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [0.25, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: 4.572
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.762
+    StressID: 0.508
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, Gray]
+  - Name: THS
+    Category: General
+    # Geometry and mass
+    OD: 1.683
+    ID: 0.3048
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 16.96506
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [603e3, 603e3]
+    EA: 27.5e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 464e3
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.508
+    StressID: 0.3048
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+  - Name: Well Head
+    Category: General
+    # Geometry and mass
+    OD: 0.9144
+    ID: 0.8128
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 1.08189
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [2.73e6, 2.73e6]
+    EA: 29.2e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 2.1e6
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.9144
+    StressID: 0.8128
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+    # Drawing
+    Pen: [1, Solid, $13664B]
+  - Name: Conductor
+    Category: General
+    # Geometry and mass
+    OD: 0.9144
+    ID: 0.8128
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 1.08189
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [2.73e6, 2.73e6]
+    EA: 29.2e6
+    PoissonRatio: 0.3
+    ExpansionTable: None
+    GJ: 2.1e6
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.5]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: 0.9144
+    StressID: 0.8128
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: 0p3
+FlexJointTypes:
+  - Name: UFJ
+    BendStiffness: [38.0578096790976, ~]
+    Pen: [7, Solid, Red]
+  - Name: LFJ
+    BendStiffness: [177.81317, ~]
+    Pen: [7, Solid, Red]
+P-yModels:
+  - Name: P-y Static
+    PyCurves:
+      - DepthBelowSeabedFrom: 0
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 1.6529]
+          - [0.0145, 2.3696]
+          - [0.0483, 3.5907]
+          - [0.1448, 5.1711]
+          - [0.3861, 7.1832]
+          - [2.8956, 7.1832]
+      - DepthBelowSeabedFrom: 0.9144
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 4.781]
+          - [0.0145, 6.8839]
+          - [0.0483, 9.5619]
+          - [0.1448, 9.5619]
+          - [0.3861, 15.3172]
+          - [2.8956, 9.5619]
+      - DepthBelowSeabedFrom: 1.8288
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 7.8437]
+          - [0.0145, 11.2929]
+          - [0.0483, 15.6856]
+          - [0.1448, 15.6856]
+          - [0.3861, 24.5671]
+          - [2.8956, 15.6856]
+      - DepthBelowSeabedFrom: 2.7432
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 11.2276]
+          - [0.0145, 16.1664]
+          - [0.0483, 22.4533]
+          - [0.1448, 22.4533]
+          - [0.3861, 34.9328]
+          - [2.8956, 22.4533]
+      - DepthBelowSeabedFrom: 3.6576
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 15.7727]
+          - [0.0145, 22.7128]
+          - [0.0483, 31.5453]
+          - [0.1448, 31.5453]
+          - [0.3861, 46.4108]
+          - [2.8956, 31.5453]
+      - DepthBelowSeabedFrom: 4.572
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 22.4533]
+          - [0.0145, 32.3328]
+          - [0.0483, 44.9066]
+          - [0.1448, 44.9066]
+          - [0.3861, 59.0046]
+          - [2.8956, 44.9066]
+      - DepthBelowSeabedFrom: 5.4864
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 48.989]
+          - [0.0145, 70.5442]
+          - [0.0483, 97.9781]
+          - [0.1448, 97.9781]
+          - [0.3861, 72.7124]
+          - [2.8956, 97.9781]
+      - DepthBelowSeabedFrom: 6.4008
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 59.1951]
+          - [0.0145, 85.2409]
+          - [0.0483, 118.3902]
+          - [0.1448, 118.3902]
+          - [0.3861, 87.4872]
+          - [2.8956, 118.3902]
+      - DepthBelowSeabedFrom: 12.192
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 59.1951]
+          - [0.0145, 85.2409]
+          - [0.0483, 63.9579]
+          - [0.1448, 118.3902]
+          - [0.3861, 147.145]
+          - [2.8956, 118.3902]
+      - DepthBelowSeabedFrom: 12.2174
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0025, 122.4726]
+          - [0.0079, 176.3606]
+          - [0.0267, 244.9452]
+          - [0.0798, 244.9452]
+          - [0.2123, 147.145]
+          - [2.8956, 244.9452]
+      - DepthBelowSeabedFrom: 21.336
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0025, 183.7089]
+          - [0.0079, 264.5409]
+          - [0.0267, 367.4179]
+          - [0.0798, 367.4179]
+          - [0.2123, 241.3418]
+          - [2.8956, 367.4179]
+      - DepthBelowSeabedFrom: 28.956
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0033, 122.4726]
+          - [0.0102, 176.3606]
+          - [0.0338, 244.9452]
+          - [0.1013, 244.9452]
+          - [0.2703, 323.9446]
+          - [2.8956, 244.9452]
+      - DepthBelowSeabedFrom: 28.9814
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0033, 183.7089]
+          - [0.0102, 264.5409]
+          - [0.0338, 367.4179]
+          - [0.1013, 367.4179]
+          - [0.2703, 327.2486]
+          - [2.8956, 367.4179]
+  - Name: P-y Cyclic
+    PyCurves:
+      - DepthBelowSeabedFrom: 0
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 1.6529]
+          - [0.0145, 2.3696]
+          - [0.0483, 3.5907]
+          - [0.1448, 5.1711]
+          - [0.3861, 0]
+          - [2.8956, 0]
+      - DepthBelowSeabedFrom: 0.9144
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 3.5236]
+          - [0.0145, 5.0549]
+          - [0.0483, 7.6586]
+          - [0.1448, 11.0298]
+          - [0.3861, 1.5314]
+          - [2.8956, 1.5314]
+      - DepthBelowSeabedFrom: 1.8288
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 5.6501]
+          - [0.0145, 8.1068]
+          - [0.0483, 12.2835]
+          - [0.1448, 17.6887]
+          - [0.3861, 5.1584]
+          - [2.8956, 5.1584]
+      - DepthBelowSeabedFrom: 2.7432
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 8.0342]
+          - [0.0145, 11.5269]
+          - [0.0483, 17.4655]
+          - [0.1448, 25.1513]
+          - [0.3861, 10.8284]
+          - [2.8956, 10.8284]
+      - DepthBelowSeabedFrom: 3.6576
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 10.6742]
+          - [0.0145, 15.3154]
+          - [0.0483, 23.2063]
+          - [0.1448, 33.416]
+          - [0.3861, 19.0295]
+          - [2.8956, 19.0295]
+      - DepthBelowSeabedFrom: 4.572
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 13.5718]
+          - [0.0145, 19.4722]
+          - [0.0483, 29.5023]
+          - [0.1448, 42.4844]
+          - [0.3861, 30.0965]
+          - [2.8956, 30.092]
+      - DepthBelowSeabedFrom: 5.4864
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 16.7234]
+          - [0.0145, 23.9956]
+          - [0.0483, 36.3571]
+          - [0.1448, 52.353]
+          - [0.3861, 45.0826]
+          - [2.8956, 45.0826]
+      - DepthBelowSeabedFrom: 6.4008
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 20.1218]
+          - [0.0145, 28.8709]
+          - [0.0483, 43.7436]
+          - [0.1448, 62.9908]
+          - [2.8956, 62.9854]
+      - DepthBelowSeabedFrom: 12.192
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0048, 33.8424]
+          - [0.0145, 48.5572]
+          - [0.0483, 73.5725]
+          - [0.1448, 105.9434]
+          - [2.8956, 105.9434]
+      - DepthBelowSeabedFrom: 12.2174
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0025, 33.8424]
+          - [0.0079, 48.5572]
+          - [0.0267, 73.5725]
+          - [0.0798, 105.9434]
+          - [2.8956, 105.9434]
+      - DepthBelowSeabedFrom: 21.336
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0025, 55.5082]
+          - [0.0079, 79.6435]
+          - [0.0267, 120.6709]
+          - [0.0798, 173.766]
+          - [2.8956, 173.766]
+      - DepthBelowSeabedFrom: 28.956
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0033, 74.5069]
+          - [0.0102, 107.0411]
+          - [0.0338, 161.9723]
+          - [0.1013, 233.2405]
+          - [2.8956, 233.2405]
+      - DepthBelowSeabedFrom: 28.9814
+        ModelType: P-y table
+        Deflection, Resistance:
+          - [0, 0]
+          - [0.0033, 75.2671]
+          - [0.0102, 107.9918]
+          - [0.0338, 163.6234]
+          - [0.1013, 235.6192]
+          - [2.8956, 235.6192]
+Vessels:
+  - Name: Transocean_NB
+    VesselType: Semi
+    Draught: Transocean_NB
+    Length: 95.0976
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+    Orientation: [0, 0, 0]
+    # Calculation
+    IncludedInStatics: None
+    PrimaryMotion: None
+    SuperimposedMotion: RAOs + harmonics
+    ImposedMotionConsistentWithSolver: No
+    IncludeAppliedLoads: No
+    IncludeWaveLoad1stOrder: No
+    IncludeWaveDriftLoad2ndOrder: No
+    IncludeWaveDriftDamping: No
+    IncludeSumFrequencyLoad: No
+    IncludeAddedMassAndDamping: No
+    IncludeManoeuvringLoad: No
+    IncludeOtherDamping: No
+    IncludeCurrentLoad: No
+    IncludeWindLoad: No
+    CalculationMode: Filtering
+    CalculateHydrostaticStiffnessAnglesBy: Subtraction, legacy
+    # Drawing
+    Pen: [1, Solid, $FF8000]
+    PenMode: Use vessel type's own pen
+    # Shaded drawing
+    ShadedDrawingCullingMode: Anticlockwise
+Lines:
+  - Name: Drilling Riser
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: P-y Cyclic
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Free, 0, 0, 25, 0, 180, 180, ~]
+      - [Fixed, 0, 0, -2957.468, 0, 180, 180, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - []
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Diverter, 0.6096, 0.25]
+      - [IB, 12.8016, 1]
+      - [OB, 21.336, 1]
+      - [Pup Joint, 3.048, 1]
+      - [SLK_Top, 22.86, 2.5]
+      - [RJT_3, 274.32, 10]
+      - [FUV, 4.572, 1]
+      - [RJT_3, 434.34, 10]
+      - [RJT_5, 617.22, 10]
+      - [RJT_7, 594.36, 10]
+      - [RJT_9, 594.36, 10]
+      - [RJT_10, 205.74, 10]
+      - [SKL_BOT, 114.3, 5]
+      - [Riser Adaptor, 1.524, 0.5]
+      - [LMRP, 7.55904, 0.25]
+      - [BOP, 9.50976, 0.25]
+      - [THS, 1.524, 0.25]
+      - [Well Head, 1.524, 0.25]
+      - [Conductor, 60.96, 0.25]
+    # Attachments
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+      - [UFJ, 0, 0, 0.6096, End A, Flex Joint1]
+      - [LFJ, 0, 0, 2903.22, End A, Flex Joint2]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1.678
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    # Results
+    RangeGraphArclengthAxisOrientation: Vertical
+    RangeGraphArclengthAxisInverted: Yes
+    # Drawing
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $8080FF]
+    DrawShadedNodesAsSpheres: Yes
+Links:
+  - Name: Tensioner1
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 2.395, -2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner2
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 2.395, 0, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner3
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 2.395, 2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner4
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 0, 2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner5
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, -2.395, 2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner6
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, -2.395, 0, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner7
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, -2.395, -2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Tensioner8
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 0, -2.048, 25]
+      - [Drilling Riser, 0, 0, 13.4116, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [20, 1435]
+    LinearDamper: Yes
+    DampingConstant: 0.1
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.25
+  - Name: Top Tensioner
+    LinkType: Spring/damper
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Transocean_NB, 0, 0, 35]
+      - [Drilling Riser, 0, 0, 0, End A]
+    ReleaseStage: ~
+    LinearSpring: No
+    SpringLength, SpringTension:
+      - [0, 1435]
+      - [10, 1435]
+    LinearDamper: Yes
+    DampingConstant: 2
+Groups:
+  Structure:
+    Drilling Riser: Model
+    Transocean_NB: Model
+    Tensioner1: Model
+    Tensioner2: Model
+    Tensioner3: Model
+    Tensioner4: Model
+    Tensioner5: Model
+    Tensioner6: Model
+    Tensioner7: Model
+    Tensioner8: Model
+    Top Tensioner: Model
+  State:
+    Collapsed: []
+...

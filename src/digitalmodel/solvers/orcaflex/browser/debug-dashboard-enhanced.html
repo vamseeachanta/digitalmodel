@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Debug Dashboard - Enhanced</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #569cd6;
+            border-bottom: 2px solid #569cd6;
+            padding-bottom: 10px;
+        }
+        .debug-section {
+            background: #252526;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #464647;
+        }
+        .debug-section h2 {
+            color: #4ec9b0;
+            margin-top: 0;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        button.danger {
+            background: #d73a49;
+        }
+        button.danger:hover {
+            background: #cb2431;
+        }
+        .debug-output {
+            background: #1e1e1e;
+            border: 1px solid #464647;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .info { color: #dcdcaa; }
+        .warning { color: #ce9178; }
+        .metric { color: #b5cea8; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #464647;
+        }
+        .stat-label {
+            color: #858585;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            color: #4ec9b0;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        input[type="text"], select {
+            background: #3c3c3c;
+            border: 1px solid #464647;
+            color: #cccccc;
+            padding: 8px;
+            border-radius: 3px;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            border: 1px solid #464647;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+        }
+        
+        #charts {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 OrcaFlex Debug Dashboard - Enhanced</h1>
+        
+        <!-- System Status -->
+        <div class="debug-section">
+            <h2>System Status</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Server Status</div>
+                    <div class="stat-value" id="serverStatus">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">API Latency</div>
+                    <div class="stat-value" id="apiLatency">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Available Folders</div>
+                    <div class="stat-value" id="folderCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Last Test</div>
+                    <div class="stat-value" id="lastTest">-</div>
+                </div>
+            </div>
+            <button onclick="updateSystemStatus()">Refresh Status</button>
+        </div>
+        
+        <!-- Quick Tests -->
+        <div class="debug-section">
+            <h2>Quick Tests</h2>
+            <div class="test-grid">
+                <div>
+                    <h3>Connection Tests</h3>
+                    <button onclick="testConnection()">Test API Connection</button>
+                    <button onclick="testEndpoints()">Test All Endpoints</button>
+                    <button onclick="testParallelProcessing()">Test Parallel Processing</button>
+                </div>
+                <div>
+                    <h3>Data Tests</h3>
+                    <button onclick="loadSubfolders()">Load Folders</button>
+                    <button onclick="testMaxStrutForce()">Test Max Strut Force</button>
+                    <button onclick="testDataLoad()">Test Data Loading</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Custom Test -->
+        <div class="debug-section">
+            <h2>Custom Test</h2>
+            <div>
+                <label>Folder:</label>
+                <select id="testFolder">
+                    <option value="">Select folder...</option>
+                </select>
+                
+                <label>Test Type:</label>
+                <select id="testType">
+                    <option value="max_strut">Max Strut Force</option>
+                    <option value="data_load">Data Load</option>
+                    <option value="file_list">File List</option>
+                    <option value="performance">Performance Test</option>
+                </select>
+                
+                <button onclick="runCustomTest()">Run Custom Test</button>
+            </div>
+        </div>
+        
+        <!-- Performance Monitor -->
+        <div class="debug-section">
+            <h2>Performance Monitor</h2>
+            <button onclick="startPerformanceTest()">Start Performance Test</button>
+            <button onclick="clearPerformanceData()">Clear Data</button>
+            <div id="performanceChart"></div>
+        </div>
+        
+        <!-- Debug Console -->
+        <div class="debug-section">
+            <h2>Debug Console</h2>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <button onclick="exportLogs()">Export Logs</button>
+            <button onclick="toggleVerbose()">Toggle Verbose</button>
+            <div class="debug-output" id="debugOutput">
+                <div class="info">Debug console ready. Enhanced debugging features loaded.</div>
+            </div>
+        </div>
+        
+        <!-- Code Snippets -->
+        <div class="debug-section">
+            <h2>Useful Debug Commands</h2>
+            <h3>Browser Console:</h3>
+            <div class="code-block">
+// Check API status
+fetch('http://localhost:5000/api/test').then(r => r.json()).then(console.log);
+
+// Get max strut force for specific folder
+fetch('http://localhost:5000/api/max_strut_force?subfolder=02c_005yr')
+  .then(r => r.json()).then(console.log);
+
+// Force clear busy state (if stuck)
+setBusyState(false);
+isLoading = false;
+            </div>
+            
+            <h3>Python Server:</h3>
+            <div class="code-block">
+# Add debug breakpoint
+import pdb; pdb.set_trace()
+
+# Enable verbose logging
+app.logger.setLevel(logging.DEBUG)
+
+# Monitor parallel processing
+print(f"Workers: {max_workers}, Files: {len(strut_files)}")
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div id="charts"></div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let verbose = false;
+        let performanceData = [];
+        
+        function log(message, type = 'info') {
+            const output = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+            
+            if (verbose || type === 'error') {
+                console.log(`[${type}]`, message);
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('debugOutput').innerHTML = '<div class="info">Logs cleared.</div>';
+        }
+        
+        function exportLogs() {
+            const logs = document.getElementById('debugOutput').textContent;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `debug_logs_${new Date().toISOString()}.txt`;
+            a.click();
+            log('Logs exported', 'success');
+        }
+        
+        function toggleVerbose() {
+            verbose = !verbose;
+            log(`Verbose mode: ${verbose ? 'ON' : 'OFF'}`, 'info');
+        }
+        
+        async function updateSystemStatus() {
+            try {
+                // Test server
+                const start = Date.now();
+                const response = await fetch(`${API_BASE}/test`);
+                const latency = Date.now() - start;
+                
+                if (response.ok) {
+                    document.getElementById('serverStatus').textContent = '✓ Online';
+                    document.getElementById('serverStatus').style.color = '#4ec9b0';
+                } else {
+                    document.getElementById('serverStatus').textContent = '✗ Error';
+                    document.getElementById('serverStatus').style.color = '#f48771';
+                }
+                
+                document.getElementById('apiLatency').textContent = `${latency}ms`;
+                
+                // Get folders
+                const folderResponse = await fetch(`${API_BASE}/subfolders`);
+                const folderData = await folderResponse.json();
+                
+                if (folderData.subfolders) {
+                    document.getElementById('folderCount').textContent = folderData.subfolders.length;
+                    
+                    // Update folder select
+                    const select = document.getElementById('testFolder');
+                    select.innerHTML = '<option value="">Select folder...</option>';
+                    folderData.subfolders.forEach(folder => {
+                        const option = document.createElement('option');
+                        option.value = folder;
+                        option.textContent = folder;
+                        select.appendChild(option);
+                    });
+                }
+                
+                document.getElementById('lastTest').textContent = new Date().toLocaleTimeString();
+                
+                log('System status updated', 'success');
+            } catch (error) {
+                log(`Status update failed: ${error.message}`, 'error');
+                document.getElementById('serverStatus').textContent = '✗ Offline';
+                document.getElementById('serverStatus').style.color = '#f48771';
+            }
+        }
+        
+        async function testConnection() {
+            log('Testing connection to server...', 'info');
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_BASE}/test`);
+                const data = await response.json();
+                const time = Date.now() - start;
+                
+                log(`✓ Connected in ${time}ms: ${JSON.stringify(data)}`, 'success');
+            } catch (error) {
+                log(`✗ Connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testEndpoints() {
+            const endpoints = [
+                '/test',
+                '/subfolders',
+                '/vessel_types',
+                '/excel_config'
+            ];
+            
+            log('Testing all endpoints...', 'info');
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const start = Date.now();
+                    const response = await fetch(`${API_BASE}${endpoint}`);
+                    const time = Date.now() - start;
+                    
+                    if (response.ok) {
+                        log(`✓ ${endpoint}: ${response.status} (${time}ms)`, 'success');
+                    } else {
+                        log(`✗ ${endpoint}: ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    log(`✗ ${endpoint}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testParallelProcessing() {
+            const folder = document.getElementById('testFolder').value || '02c_005yr';
+            log(`Testing parallel processing for folder: ${folder}`, 'info');
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_BASE}/max_strut_force?subfolder=${folder}`);
+                const data = await response.json();
+                const time = Date.now() - start;
+                
+                if (data.error) {
+                    log(`✗ Error: ${data.error}`, 'error');
+                } else {
+                    log(`✓ Max force found: ${data.max_force?.toFixed(2)} N`, 'success');
+                    log(`  File: ${data.filename}`, 'info');
+                    log(`  Processing time: ${data.processing_time}`, 'metric');
+                    log(`  Total time: ${time}ms`, 'metric');
+                    log(`  Related files: ${data.total_files}`, 'info');
+                }
+            } catch (error) {
+                log(`✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadSubfolders() {
+            log('Loading subfolders...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/subfolders`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    log(`✗ Error: ${data.error}`, 'error');
+                } else if (data.subfolders) {
+                    log(`✓ Found ${data.subfolders.length} folders:`, 'success');
+                    data.subfolders.slice(0, 10).forEach(folder => {
+                        log(`  - ${folder}`, 'info');
+                    });
+                    if (data.subfolders.length > 10) {
+                        log(`  ... and ${data.subfolders.length - 10} more`, 'info');
+                    }
+                }
+            } catch (error) {
+                log(`✗ Failed to load folders: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testMaxStrutForce() {
+            const folder = document.getElementById('testFolder').value;
+            if (!folder) {
+                log('Please select a folder first', 'warning');
+                return;
+            }
+            
+            log(`Testing max strut force for: ${folder}`, 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/max_strut_force?subfolder=${folder}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    log(`✗ Error: ${data.error}`, 'error');
+                } else {
+                    log('✓ Max strut force configuration found:', 'success');
+                    log(`  Filename: ${data.filename}`, 'info');
+                    log(`  Max Force: ${data.max_force?.toFixed(2)} N`, 'metric');
+                    log(`  Column: ${data.force_column}`, 'info');
+                    log(`  Processing Time: ${data.processing_time}`, 'metric');
+                    
+                    if (data.vesselType) {
+                        log(`  Vessel Type: ${data.vesselType}`, 'info');
+                    }
+                    if (data.fst1 && data.fst2) {
+                        log(`  FST Config: FST1=${data.fst1}%, FST2=${data.fst2}%`, 'info');
+                    }
+                    if (data.tide) {
+                        log(`  Tide: ${data.tide}`, 'info');
+                    }
+                    if (data.heading) {
+                        log(`  Heading: ${data.heading}°`, 'info');
+                    }
+                }
+            } catch (error) {
+                log(`✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDataLoad() {
+            const folder = document.getElementById('testFolder').value;
+            if (!folder) {
+                log('Please select a folder first', 'warning');
+                return;
+            }
+            
+            log(`Testing data load for: ${folder}`, 'info');
+            
+            const params = {
+                subfolder: folder,
+                tide: 'hwl',
+                heading: '0',
+                envType: 'colinear',
+                vesselType: 'FST',
+                fst1: '15',
+                fst2: '15',
+                mooring: 'intact'
+            };
+            
+            const queryString = new URLSearchParams(params).toString();
+            
+            try {
+                const response = await fetch(`${API_BASE}/data?${queryString}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    log(`✗ Error: ${data.error}`, 'error');
+                } else {
+                    log('✓ Data loaded successfully', 'success');
+                    log(`  Filename: ${data.filename}`, 'info');
+                    log(`  Data type: ${data.data_type}`, 'info');
+                    log(`  Rows: ${data.metadata?.rows}`, 'metric');
+                    log(`  Columns: ${data.columns?.length}`, 'metric');
+                    
+                    if (data.time) {
+                        log(`  Time points: ${data.time.length}`, 'metric');
+                        log(`  Duration: ${data.time[data.time.length-1]?.toFixed(2)}s`, 'info');
+                    }
+                    
+                    // Count data categories
+                    let categories = [];
+                    if (data.jacket && Object.keys(data.jacket).length > 0) {
+                        categories.push(`Jacket: ${Object.keys(data.jacket).length} cols`);
+                    }
+                    if (data.struts && Object.keys(data.struts).length > 0) {
+                        categories.push(`Struts: ${Object.keys(data.struts).length} cols`);
+                    }
+                    if (data.lines && Object.keys(data.lines).length > 0) {
+                        categories.push(`Lines: ${Object.keys(data.lines).length} cols`);
+                    }
+                    
+                    if (categories.length > 0) {
+                        log(`  Data categories: ${categories.join(', ')}`, 'info');
+                    }
+                }
+            } catch (error) {
+                log(`✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runCustomTest() {
+            const folder = document.getElementById('testFolder').value;
+            const testType = document.getElementById('testType').value;
+            
+            if (!folder) {
+                log('Please select a folder', 'warning');
+                return;
+            }
+            
+            log(`Running ${testType} test on ${folder}...`, 'info');
+            
+            switch(testType) {
+                case 'max_strut':
+                    await testMaxStrutForce();
+                    break;
+                case 'data_load':
+                    await testDataLoad();
+                    break;
+                case 'file_list':
+                    await testFileList(folder);
+                    break;
+                case 'performance':
+                    await runPerformanceTest(folder);
+                    break;
+            }
+        }
+        
+        async function testFileList(folder) {
+            try {
+                const response = await fetch(`${API_BASE}/files/${folder}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    log(`✗ Error: ${data.error}`, 'error');
+                } else {
+                    log(`✓ Found ${data.files?.length} files in ${folder}`, 'success');
+                    
+                    // Group files by type
+                    const fileTypes = {};
+                    data.files?.forEach(file => {
+                        const ext = file.filename.split('.').pop();
+                        fileTypes[ext] = (fileTypes[ext] || 0) + 1;
+                    });
+                    
+                    Object.entries(fileTypes).forEach(([ext, count]) => {
+                        log(`  ${ext}: ${count} files`, 'info');
+                    });
+                    
+                    // Show first 5 files
+                    data.files?.slice(0, 5).forEach(file => {
+                        log(`  - ${file.filename} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
+                    });
+                }
+            } catch (error) {
+                log(`✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runPerformanceTest(folder) {
+            log('Starting performance test...', 'info');
+            
+            const iterations = 3;
+            const results = [];
+            
+            for (let i = 0; i < iterations; i++) {
+                log(`  Iteration ${i + 1}/${iterations}...`, 'info');
+                
+                const start = Date.now();
+                try {
+                    const response = await fetch(`${API_BASE}/max_strut_force?subfolder=${folder}`);
+                    const data = await response.json();
+                    const time = Date.now() - start;
+                    
+                    results.push({
+                        iteration: i + 1,
+                        time: time,
+                        processingTime: parseFloat(data.processing_time?.replace(' seconds', '') || 0)
+                    });
+                    
+                    log(`    Total: ${time}ms, Processing: ${data.processing_time}`, 'metric');
+                } catch (error) {
+                    log(`    Failed: ${error.message}`, 'error');
+                }
+            }
+            
+            if (results.length > 0) {
+                const avgTime = results.reduce((a, b) => a + b.time, 0) / results.length;
+                const avgProcessing = results.reduce((a, b) => a + b.processingTime, 0) / results.length;
+                
+                log(`✓ Performance test complete:`, 'success');
+                log(`  Average total time: ${avgTime.toFixed(0)}ms`, 'metric');
+                log(`  Average processing: ${avgProcessing.toFixed(2)}s`, 'metric');
+                
+                // Add to performance data
+                performanceData.push({
+                    timestamp: new Date(),
+                    folder: folder,
+                    avgTime: avgTime,
+                    avgProcessing: avgProcessing
+                });
+                
+                updatePerformanceChart();
+            }
+        }
+        
+        async function startPerformanceTest() {
+            const folders = ['02c_005yr', '03c_100yr', '04c_1000yr'];
+            
+            for (const folder of folders) {
+                if (document.getElementById('testFolder').options.namedItem(folder)) {
+                    await runPerformanceTest(folder);
+                }
+            }
+        }
+        
+        function updatePerformanceChart() {
+            if (performanceData.length === 0) return;
+            
+            const trace = {
+                x: performanceData.map(d => d.timestamp),
+                y: performanceData.map(d => d.avgProcessing),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Processing Time',
+                text: performanceData.map(d => d.folder)
+            };
+            
+            const layout = {
+                title: 'Performance Over Time',
+                xaxis: { title: 'Time' },
+                yaxis: { title: 'Processing Time (seconds)' },
+                height: 300
+            };
+            
+            Plotly.newPlot('performanceChart', [trace], layout);
+        }
+        
+        function clearPerformanceData() {
+            performanceData = [];
+            document.getElementById('performanceChart').innerHTML = '';
+            log('Performance data cleared', 'info');
+        }
+        
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Enhanced debug dashboard loaded', 'success');
+            updateSystemStatus();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'l') {
+                clearLogs();
+            } else if (e.ctrlKey && e.key === 'r') {
+                updateSystemStatus();
+            } else if (e.ctrlKey && e.key === 't') {
+                testConnection();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+# OrcaFlex Modular Model Generator - Template Specification
+# Installation - Subsea Pull-In Analysis
+#
+# Model Type: Generic (subsea installation)
+# Source: OrcaFlex Examples - D02 Pull in analysis
+# Template Version: 1.0
+#
+# Subsea pipe pull-in through funnel into wellhead. Multi-stage simulation
+# with winch-controlled pull-in dynamics. Includes gateway markers,
+# elastic funnel shape, and wellhead structure visualization.
+#
+# Usage:
+#   Copy this directory, modify values, then generate:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "installation_pull_in_template"
+  description: "Subsea pipe pull-in through funnel with winch-controlled dynamics"
+  structure: installation               # riser | pipeline | mooring | installation | vessel
+  operation: installation               # in-place | installation | production
+  project: "OrcaFlex Templates"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 137                          # Water depth (m)
+    density: 1.025                      # Seawater density (te/m3)
+  seabed:
+    slope: 0                            # Flat seabed
+    stiffness:
+      normal: 500                       # Normal stiffness (kN/m/m2)
+      shear: 100                        # Shear stiffness (kN/m/m2)
+  waves:
+    type: Airy                          # Calm conditions for installation
+    height: 0                           # No waves (calm sea)
+    period: 10                          # Wave period (s)
+    direction: 180                      # Wave direction (deg)
+  current:
+    speed: 0                            # No current (calm conditions)
+    direction: 180                      # Current direction (deg)
+    profile:
+    - - 0.0
+      - 0.0
+    - - 100.0
+      - 0.0
+  wind:
+    speed: 0                            # No wind
+    direction: 0                        # Wind direction (deg)
+
+simulation:
+  stages:                               # 4-stage pull-in sequence
+  - 1                                   # Stage 1: Build-up
+  - 46                                  # Stage 2: Winch payout to gate
+  - 40                                  # Stage 3: Pull through funnel
+  - 5                                   # Stage 4: Final positioning
+  time_step: 0.05                       # Implicit time step (s)
+
+generic:
+  line_types:
+  - name: Pipe Type                      # Main installation pipe
+    category: General
+    outer_diameter: 0.142               # OD (m)
+    inner_diameter: 0
+    mass_per_length: 0.02548            # Mass (te/m)
+    bending_stiffness:
+    - 60                                # EI (kN.m2)
+    - null
+    axial_stiffness: 269e3              # EA (kN)
+    properties:
+      CentreOfMass:
+      - 0
+      - 0
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      AllowableTension: null
+      MinRadius:
+      - null
+      - null
+      PoissonRatio: 0.5
+      ExpansionTable: None
+      GJ: 0
+      TensionTorqueCoupling: 0
+      OuterContactDiameter: null
+      InnerContactDiameter: null
+      ClashStiffness: 10e3
+      Ca:
+      - 1
+      - null
+      - 0
+      Cm:
+      - null
+      - null
+      - null
+      Cs: 0
+      Ce: 0
+      Cd:
+      - 1.2
+      - null
+      - 0.008
+      Cl: 0
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
+      TensileStressLoadingFactor: 1
+      BendingStressLoadingFactor: 1
+      ShearStressLoadingFactor: 1
+      TorsionalStressLoadingFactor: 1
+      SeabedLateralFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: 0.3
+      RayleighDampingCoefficients: (no damping)
+  - name: Pullhead                       # Heavy pullhead at pipe end
+    category: General
+    outer_diameter: 0.3                 # Larger OD for pullhead (m)
+    inner_diameter: 0
+    mass_per_length: 1                  # Heavy mass (te/m)
+    bending_stiffness:
+    - 60
+    - null
+    axial_stiffness: 269e3
+    properties:
+      CentreOfMass:
+      - 0
+      - 0
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      AllowableTension: null
+      MinRadius:
+      - null
+      - null
+      PoissonRatio: 0.5
+      ExpansionTable: None
+      GJ: 0
+      TensionTorqueCoupling: 0
+      OuterContactDiameter: null
+      InnerContactDiameter: null
+      ClashStiffness: 10e3
+      Ca:
+      - 1
+      - null
+      - 0
+      Cm:
+      - null
+      - null
+      - null
+      Cs: 0
+      Ce: 0
+      Cd:
+      - 1.2
+      - null
+      - 0.008
+      Cl: 0
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
+      TensileStressLoadingFactor: 1
+      BendingStressLoadingFactor: 1
+      ShearStressLoadingFactor: 1
+      TorsionalStressLoadingFactor: 1
+      SeabedLateralFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: 0.3
+      RayleighDampingCoefficients: (no damping)
+      Pen:
+      - 1
+      - Solid
+      - $00FF80
+  - name: Gateway                        # Visual marker (massless)
+    category: General
+    outer_diameter: 0.5
+    inner_diameter: 0
+    mass_per_length: 10e-6              # Effectively massless
+    bending_stiffness:
+    - 60
+    - null
+    axial_stiffness: 269e3
+    properties:
+      CentreOfMass:
+      - 0
+      - 0
+      BulkModulus: Infinity
+      CompressionIsLimited: false
+      AllowableTension: null
+      MinRadius:
+      - null
+      - null
+      PoissonRatio: 0.5
+      ExpansionTable: None
+      GJ: 0
+      TensionTorqueCoupling: 0
+      OuterContactDiameter: null
+      InnerContactDiameter: null
+      ClashStiffness: 10e3
+      Ca:
+      - 0                               # No added mass (marker only)
+      - null
+      - 0
+      Cm:
+      - null
+      - null
+      - null
+      Cs: 0
+      Ce: 0
+      Cd:
+      - 0                               # No drag (marker only)
+      - null
+      - 0
+      Cl: 0
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+      StressOD: null
+      StressID: null
+      AllowableStress: null
+      TensileStressLoadingFactor: 1
+      BendingStressLoadingFactor: 1
+      ShearStressLoadingFactor: 1
+      TorsionalStressLoadingFactor: 1
+      SeabedLateralFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: null
+      RayleighDampingCoefficients: (no damping)
+      Pen:
+      - 3
+      - Solid
+      - Blue
+  lines:
+  - name: Pipe                           # Main installation pipe
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Curvature
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Free
+          - 66.38999999999999
+          - 610.949
+          - -136.85
+          - 50.78
+          - 90
+          - 0
+          - null
+        - - Free
+          - 363.50150620402354
+          - 825.9268264163715
+          - -136.929
+          - 34.391000000000005
+          - 90
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - []
+      - []
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      : - - null
+          - 0
+          - 0.001
+        - - null
+          - 0
+          - 0.001
+      Sections:
+      - LineType: Pullhead
+        Length: 2
+        NumberOfSegments: 1
+        ClashCheck: true
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 28
+        TargetSegmentLength: 1
+        ClashCheck: true
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 490
+        TargetSegmentLength: 5
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 30
+        TargetSegmentLength: 10
+        DisturbanceVessel: (none)
+      DecoupleLateralAndAxialSeabedFriction: false
+      CoveredSectionsWarnIfLineLeavesCover: true
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 0
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Prescribed
+      StaticsStep2: Full statics
+      StaticsSeabedFrictionPolicy: As laid
+      AsLaidTension: 0
+      TrackEndAAzimuth: 50.779999999999994
+      TrackSectionLength, TrackSectionTurn:
+      - - 71.30438609334925
+        - 0
+      - - 30.049
+        - 43.041999999999994
+      - - 31.804699999999997
+        - 0
+      - - 113.833
+        - -163.05399999999997
+      - - 42.595
+        - 0
+      - - 125.0041
+        - 179.05499999999998
+      - - 4.906
+        - 0
+      - - 52.657
+        - -75.42599999999999
+      - - 39.9980458600998
+        - -0.006318996680519717
+      FullStaticsConvergenceControlMethod: Mag. of std. error / change
+      FullStaticsMaxIterations: 2000
+      FullStaticsMinDamping: 2
+      FullStaticsMaxDamping: 20
+      FullStaticsMagOfStdChange: 0.01
+  - name: Gateway 1                      # Entry gateway marker
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Curvature
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Anchored
+          - 44.9
+          - 526.3
+          - 1
+          - 0
+          - 180
+          - 0
+          - null
+        - - Anchored
+          - 44.9
+          - 526.3
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      : - - null
+          - 0
+          - 0.001
+        - - null
+          - 0
+          - 0.001
+      Sections:
+      - LineType: Gateway
+        Length: 0.9
+        NumberOfSegments: 1
+        ClashCheck: true
+        DisturbanceVessel: (none)
+      DecoupleLateralAndAxialSeabedFriction: false
+      CoveredSectionsWarnIfLineLeavesCover: true
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 0
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: None
+  - name: Gateway 2                      # Exit gateway marker
+    properties:
+      IncludeTorsion: false
+      TopEnd: End A
+      LengthAndEndOrientations: Explicit
+      Representation: Finite element
+      PyModel: (none)
+      PreBendSpecifiedBy: Curvature
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by environment
+      ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+        ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+      : - - Anchored
+          - 46.3
+          - 524.9
+          - 1
+          - 0
+          - 180
+          - 0
+          - null
+        - - Anchored
+          - 46.3
+          - 524.9
+          - 0
+          - 0
+          - 180
+          - 0
+          - null
+      ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - - 0
+        - null
+      - - 0
+        - null
+      ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+        ConnectionApplyRamp, ConnectionUseSmoothGrowth
+      : - - null
+          - 0
+          - 0.001
+        - - null
+          - 0
+          - 0.001
+      Sections:
+      - LineType: Gateway
+        Length: 0.9
+        NumberOfSegments: 1
+        ClashCheck: true
+        DisturbanceVessel: (none)
+      DecoupleLateralAndAxialSeabedFriction: false
+      CoveredSectionsWarnIfLineLeavesCover: true
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: true
+      ContentsDensity: 0
+      ContentsTemperature: null
+      ContentsPressureRefZ: null
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: true
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      StaticsSeabedFrictionPolicy: None
+  shapes:
+  - name: Funnel                         # Entry funnel for pipe pull-in
+    shape_type: Elastic solid
+    shape: Curved plate
+    connection: Anchored
+    origin:
+    - 35
+    - 515
+    - 3.5
+    properties:
+      Orientation:
+      - 45
+      - 105
+      - 90
+      IncludedAngleOfRevolution: 360
+      IsHollow: true
+      Thickness: 0.5
+      ProfileDistanceAlongAxis, ProfileDiameter:
+      - - 0
+        - 1.4
+      - - 3
+        - 1.8
+      - - 6.5
+        - 4
+      NormalStiffness: 1000
+      ShearStiffness: 100
+      OutsidePen:
+      - 1
+      - Solid
+      - Olive
+      NumberOfLines: 4
+      ShadedDrawingCullingMode: Anticlockwise
+  - name: Wellhead                       # Subsea wellhead structure
+    shape_type: Drawing
+    shape: Block
+    connection: Anchored
+    origin:
+    - 31
+    - 505
+    - 0
+    properties:
+      Size:
+      - 10
+      - 10
+      - 10
+      Orientation:
+      - 0
+      - 0
+      - 45
+      OutsidePen:
+      - 1
+      - Solid
+      - Blue
+      NumberOfLines: 2
+      ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea
+        Template.x'
+      ShadedDrawingDrawSize: 25
+      ShadedDrawingCullingMode: Anticlockwise
+      ShadedDrawingOrigin:
+      - 3
+      - 0.9
+      - -0.25
+      ShadedDrawingOrientation:
+      - 0
+      - 0
+      - 90
+  - name: Pullhead camera                # Camera tracking pullhead
+    shape_type: Drawing
+    shape: Cylinder
+    connection: Pipe
+    origin:
+    - 0
+    - 0
+    - 35
+    length: 0.2
+    properties:
+      ConnectionzRelativeTo: End A
+      Azimuth: 0
+      Declination: 0
+      OuterDiameter: 0.1
+      InnerDiameter: 0
+  winches:
+  - name: To Gate                        # Winch pulling pipe to gateway
+    properties:
+      WinchType: Simple
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Anchored
+        - 45.6
+        - 525.6
+        - 2
+      - - Anchored
+        - 45.6
+        - 525.6
+        - 0
+      - - Pipe
+        - 0
+        - 0
+        - 0
+        - End A
+      Stiffness: 200
+      Damping: 0.05
+      ReleaseStage: 2
+      WinchControlType: By stage
+      StageMode, StageValue:
+      - - Specified tension
+        - 0
+      - - Specified payout
+        - 0
+      - - Specified payout
+        - -87.84
+      - - Specified tension
+        - 0
+      - - Specified payout
+        - 0
+      Pen:
+      - 1
+      - Solid
+      - Red
+      ShadedDrawingDiameter: 0.05
+  - name: To Hub                         # Winch pulling pipe into hub
+    properties:
+      WinchType: Simple
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - - Anchored
+        - 35
+        - 515
+        - 5.5
+      - - Anchored
+        - 35
+        - 515
+        - 3.5
+      - - Pipe
+        - 0
+        - 0
+        - 0
+        - End A
+      Stiffness: 200
+      Damping: 0.05
+      ReleaseStage: null
+      WinchControlType: By stage
+      StageMode, StageValue:
+      - - Specified tension
+        - 0
+      - - Specified tension
+        - 0
+      - - Specified tension
+        - 0
+      - - Specified payout
+        - -15
+      - - Specified payout
+        - 0
+      Pen:
+      - 1
+      - Solid
+      - Red
+      ShadedDrawingDiameter: 0.05
+  friction_coefficients:
+    data:
+      ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient,
+        LineTypeAxialCoefficient
+      : - - Pullhead
+          - Funnel
+          - 0.5
+          - null
+  groups:
+    data:
+      Structure:
+        Pipe: Model
+        Wellhead Structure: Model
+        Wellhead: Wellhead Structure
+        Funnel: Wellhead Structure
+        To Hub: Wellhead Structure
+        Gateway Structure: Model
+        To Gate: Gateway Structure
+        Gateway 1: Gateway Structure
+        Gateway 2: Gateway Structure
+        Pullhead camera: Model
+      State:
+        Collapsed:
+        - Variable data
+  general_properties:
+    UnitsSystem: SI
+    JacobianBufferingPolicy: 1
+    JacobianPerturbationFactor: 0
+    BuoysIncludedInStatics: Individually specified
+    LineStaticsStep1Policy: All lines included
+    LineStaticsStep2Policy: Solve coupled systems
+    WholeSystemStaticsEnabled: true
+    StaticsMaxIterations: 2400
+    StaticsMinDamping: 2
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: false
+    LogPrecision: Single
+    TargetLogSampleInterval: 0.1

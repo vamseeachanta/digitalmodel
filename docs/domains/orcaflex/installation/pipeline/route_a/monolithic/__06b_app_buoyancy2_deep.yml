@@ -1,0 +1,179 @@
+BaseFile: __06a_app_buoyancy1_deep.yml
+
+6DBuoys:
+  New:
+  - buoyancy2
+  buoyancy2:
+    AddedInertiaCoefficient:
+    - 0.097
+    - 0.097
+    - 0.099
+    AddedMassCoefficient:
+    - 0.852
+    - 0.852
+    - 0.427
+    BulkModulus: Infinity
+    BuoyType: Lumped buoy
+    CentreOfMass:
+    - 0
+    - 0
+    - 0
+    CentreOfMassOriginColour: Red
+    CentreOfVolume:
+    - 0
+    - 0
+    - 0
+    CentreOfVolumeOriginColour: Aqua
+    CharacteristicForce: '~'
+    CharacteristicLength: '~'
+    Connection: Free
+    DegreesOfFreedomInStatics: X,Y,Z
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    DragArea:
+    - 0.209
+    - 0.209
+    - 0.122
+    DragAreaMoment:
+    - 0.002
+    - 0.002
+    - 0.001
+    DragForceCoefficient:
+    - 1.167
+    - 1.167
+    - 0.926
+    DragMomentCoefficient:
+    - 1.0
+    - 1.0
+    - 1.0
+    EdgeFrom, EdgeTo, EdgeDiameter:
+    - - 1
+      - 2
+      - '~'
+    - - 2
+      - 3
+      - '~'
+    - - 3
+      - 4
+      - '~'
+    - - 4
+      - 1
+      - '~'
+    - - 5
+      - 6
+      - '~'
+    - - 6
+      - 7
+      - '~'
+    - - 7
+      - 8
+      - '~'
+    - - 8
+      - 5
+      - '~'
+    - - 1
+      - 5
+      - '~'
+    - - 2
+      - 6
+      - '~'
+    - - 3
+      - 7
+      - '~'
+    - - 4
+      - 8
+      - '~'
+    FluidAccelerationForceCoefficient:
+    - '~'
+    - '~'
+    - '~'
+    GlobalAppliedLoads: []
+    Height: 0.6
+    Hidden: false
+    HydrodynamicInertia:
+    - 0.003
+    - 0.003
+    - 0.002
+    HydrodynamicMass:
+    - '~'
+    - '~'
+    - '~'
+    InitialPosition: [-85.4622774219532, -0.5453777636487963, -905]
+    InitialAttitude: [0, 90, 0]
+    LocalAppliedLoads: []
+    Locked: false
+    LumpedBuoyAddedMassMethod: Diagonal values
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    Mass: 0.05
+    MomentsOfInertia:
+    - 0.002
+    - 0.002
+    - 0.001
+    MorisonElements: []
+    Pen:
+    - 2
+    - Solid
+    - Fuchsia
+    SeabedFrictionCoefficient: 0
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingDrawSize: '~'
+    ShadedDrawingFileName: null
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrientation:
+    - 0
+    - 0
+    - 0
+    ShadedDrawingOrigin:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystems: []
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: '~'
+    SupportedLine: []
+    Supports: []
+    TotalContactArea: '~'
+    UnitDampingForce:
+    - 0
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+    - 0
+    VertexX, VertexY, VertexZ:
+    - - 0.1745
+      - 0.1745
+      - 0.3
+    - - -0.1745
+      - 0.1745
+      - 0.3
+    - - -0.1745
+      - -0.1745
+      - 0.3
+    - - 0.1745
+      - -0.1745
+      - 0.3
+    - - 0.1745
+      - 0.1745
+      - -0.3
+    - - -0.1745
+      - 0.1745
+      - -0.3
+    - - -0.1745
+      - -0.1745
+      - -0.3
+    - - 0.1745
+      - -0.1745
+      - -0.3
+    Volume: 0.07317
+    WaveCalculationMethod: Specified by environment
+    Wings: []
+    WireFrameOrigin:
+    - 0
+    - 0
+    - 0
+    WireFrameSymmetry: None
+    WireFrameType: Edges

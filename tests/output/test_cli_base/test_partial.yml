@@ -1,0 +1,6 @@
+# Test master
+- includefile: 01_general.yml
+- includefile: 02_environment.yml
+- includefile: 04_vessel.yml
+- includefile: 06_line_types.yml
+- includefile: 07_lines.yml

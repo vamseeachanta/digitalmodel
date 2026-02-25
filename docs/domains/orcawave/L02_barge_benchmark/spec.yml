@@ -1,0 +1,74 @@
+# Canonical spec.yml for Barge Benchmark (L02)
+# Source: source_data/orcawave/Barge_Benchmark.yml
+# Units: Pure SI (kg, m, s) — backend converts to OrcaFlex-SI (te)
+
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: Barge_Benchmark
+  type: barge
+  geometry:
+    mesh_file: source_data/orcawave/barge_generated.gdf
+    mesh_format: gdf
+    symmetry: none
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 16400000.0  # 16400 te * 1000
+    centre_of_gravity: [0.0, 0.0, -5.0]
+    inertia_tensor:
+      Ixx: 1640000000.0  # 1640000 te.m^2 * 1000
+      Iyy: 3690000000.0  # 3690000 te.m^2 * 1000
+      Izz: 3690000000.0  # 3690000 te.m^2 * 1000
+      Ixy: 0.0
+      Ixz: 0.0
+      Iyz: 0.0
+
+environment:
+  water_depth: 200.0
+  water_density: 1025.0  # kg/m^3 (backend converts to 1.025 te/m^3)
+
+frequencies:
+  input_type: period
+  values:
+    - 5.236
+    - 5.4636
+    - 5.712
+    - 5.984
+    - 6.2832
+    - 6.6139
+    - 6.9813
+    - 7.392
+    - 7.854
+    - 8.3776
+    - 8.976
+    - 9.6664
+    - 10.472
+    - 11.424
+    - 12.5664
+    - 13.9626
+    - 15.708
+    - 17.952
+    - 20.944
+
+wave_headings:
+  values: [0.0, 45.0, 90.0, 135.0, 180.0]
+  symmetry: false
+
+solver_options:
+  remove_irregular_frequencies: true
+  qtf_calculation: false
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+  directory: benchmark_results
+
+metadata:
+  project: OrcaWave Benchmark Library
+  description: Barge diffraction benchmark — 80m x 40m x 10m box barge, 200m water depth
+  tags: [benchmark, barge, validation, L02]

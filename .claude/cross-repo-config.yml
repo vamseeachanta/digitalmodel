@@ -1,0 +1,20 @@
+cross_repo:
+  auto_update: false
+  base_directory: src/external
+  enabled: true
+  hub_repository: assetutilities
+  references:
+    allowed_repositories:
+    - assetutilities
+    - agent-os-core
+    - shared-templates
+    cache_enabled: true
+    cache_ttl: 300
+    offline_fallback: true
+  submodules:
+  - branch: main
+    description: AssetUtilities hub repository for shared components
+    enabled: true
+    name: assetutilities
+    path: src/external/assetutilities
+    repository: https://github.com/vamseeachanta/assetutilities.git

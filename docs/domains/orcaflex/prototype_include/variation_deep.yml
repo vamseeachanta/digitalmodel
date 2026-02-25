@@ -1,0 +1,5 @@
+# Variation: Deep water case
+# Only changes from base model
+Environment:
+  WaterDepth: 200
+  WindSpeed: 25

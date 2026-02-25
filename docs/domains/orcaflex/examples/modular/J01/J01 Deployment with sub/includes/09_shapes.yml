@@ -1,0 +1,89 @@
+# Shapes Configuration
+# Generated from: J01 Deployment with sub.yml
+# Date: 2026-01-18 22:18:22
+Shapes:
+- Name: Hull
+  Locked: Yes
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Submarine
+  Origin:
+  - -50
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 90
+  Length: 100
+  OuterDiameter: 9.999999999999998
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: conn_t
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Submarine
+  Origin:
+  - 25
+  - 0
+  - 4.999999999999999
+  Azimuth: 0
+  Declination: 0
+  Length: 9.999999999999998
+  OuterDiameter: 3.9999999999999996
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Tail
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Submarine
+  Origin:
+  - -59.99999999999999
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 90
+  Length: 9.999999999999998
+  OuterDiameter: 5.999999999999999
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: nose
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Submarine
+  Origin:
+  - 55
+  - 0
+  - 0
+  Orientation:
+  - 180
+  - 90
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.1
+  - - 0.67
+    - 5
+  - - 1.46
+    - 7.08
+  - - 2.5
+    - 8.66
+  - - 5
+    - 10
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

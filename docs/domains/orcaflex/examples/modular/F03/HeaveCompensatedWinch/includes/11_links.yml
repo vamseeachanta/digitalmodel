@@ -1,0 +1,64 @@
+# Links Configuration
+# Generated from: HeaveCompensatedWinch.yml
+# Date: 2026-01-18 22:18:18
+Links:
+- Name: Link1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Line1
+    - 0
+    - 0
+    - 0
+    - End B
+  - - Template
+    - 2.5
+    - 2.5
+    - 1.5
+  ReleaseStage: ~
+  UnstretchedLength: 8
+  Stiffness: 10e3
+- Name: Link2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Line1
+    - 0
+    - 0
+    - 0
+    - End B
+  - - Template
+    - 2.5
+    - -2.5
+    - 1.5
+  ReleaseStage: ~
+  UnstretchedLength: 8
+  Stiffness: 10e3
+- Name: Link3
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Line1
+    - 0
+    - 0
+    - 0
+    - End B
+  - - Template
+    - -2.5
+    - -2.5
+    - 1.5
+  ReleaseStage: ~
+  UnstretchedLength: 8
+  Stiffness: 10e3
+- Name: Link4
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Line1
+    - 0
+    - 0
+    - 0
+    - End B
+  - - Template
+    - -2.5
+    - 2.5
+    - 1.5
+  ReleaseStage: ~
+  UnstretchedLength: 8
+  Stiffness: 10e3

@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: L02 OC4 Semi-sub.yml
+# Generated: 2026-01-18 22:18:48
+
+water_depth: 200
+current_speed: 0
+wind_speed: 15
+water_density: 1.025
+stage_durations:
+- 8
+- 200
+wave_direction: 0
+

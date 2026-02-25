@@ -1,0 +1,185 @@
+# General Configuration
+# Generated from: F01 Manifold block.yml
+# Date: 2026-01-18 22:18:15
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.001
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.01
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 40
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 14.56114425116946
+  DefaultViewCentre:
+  - 26.785538448695302
+  - 33.061290145261346
+  - 4.1573796475039435
+  DefaultViewAzimuth: 40.599999999999966
+  DefaultViewElevation: 3.200000000000019
+3DBuoys:
+- Name: Shackle
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - 1.8956992360382354e-06
+  - 12.475975509477886
+  - 6.854314355402328
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+Groups:
+  Structure:
+    Orca-Installer 2: Model
+    Lifting Gear: Model
+    Crane Wire: Lifting Gear
+    Bridle 1: Lifting Gear
+    Bridle 2: Lifting Gear
+    Bridle 3: Lifting Gear
+    Bridle 4: Lifting Gear
+    Shackle: Lifting Gear
+    Manifold: Model
+    Main Buoy: Manifold
+    Top Plate: Manifold
+    Roof 1: Top Plate
+    Roof 2: Top Plate
+    Roof 3: Top Plate
+    Roof 4: Top Plate
+    Roof 5: Top Plate
+    Roof 6: Top Plate
+    Roof 7: Top Plate
+    Roof 8: Top Plate
+    Roof 9: Top Plate
+    Roof 10: Top Plate
+    Roof 11: Top Plate
+    Roof 12: Top Plate
+    Roof 13: Top Plate
+    Roof 14: Top Plate
+    Roof 15: Top Plate
+    Roof 16: Top Plate
+    Roof 17: Top Plate
+    Roof 18: Top Plate
+    Roof 19: Top Plate
+    Roof 20: Top Plate
+    Roof 21: Top Plate
+    Roof 22: Top Plate
+    Roof 23: Top Plate
+    Roof 24: Top Plate
+    Framework: Manifold
+    End Frames: Framework
+    Frame 1: End Frames
+    Frame 2: End Frames
+    Frame 3: End Frames
+    Frame 4: End Frames
+    Frame 5: End Frames
+    Frame 6: End Frames
+    Frame 7: End Frames
+    Frame 8: End Frames
+    Top & Bottom Frames: Framework
+    Frame 9: Top & Bottom Frames
+    Frame 10: Top & Bottom Frames
+    Frame 11: Top & Bottom Frames
+    Frame 12: Top & Bottom Frames
+    Frame 13: Top & Bottom Frames
+    Frame 14: Top & Bottom Frames
+    Frame 15: Top & Bottom Frames
+    Frame 16: Top & Bottom Frames
+    Verticals: Framework
+    Frame 17: Verticals
+    Frame 18: Verticals
+    Frame 19: Verticals
+    Frame 20: Verticals
+    Frame 21: Verticals
+    Frame 22: Verticals
+    Frame 23: Verticals
+    Frame 24: Verticals
+    Frame 29: Verticals
+    Frame 30: Verticals
+    Diagonals: Framework
+    Frame 25: Diagonals
+    Frame 26: Diagonals
+    Frame 27: Diagonals
+    Frame 28: Diagonals
+    Mud Mats: Manifold
+    Port Front: Mud Mats
+    MudMat Port 1: Port Front
+    MudMat Port 2: Port Front
+    MudMat Port 3: Port Front
+    MudMat Port 4: Port Front
+    MudMat Port 5: Port Front
+    MudMat Port 6: Port Front
+    MudMat Port 7: Port Front
+    MudMat Port 8: Port Front
+    Port Rear: Mud Mats
+    MudMat Port 9: Port Rear
+    MudMat Port 10: Port Rear
+    MudMat Port 11: Port Rear
+    MudMat Port 12: Port Rear
+    MudMat Port 13: Port Rear
+    MudMat Port 14: Port Rear
+    MudMat Port 15: Port Rear
+    MudMat Port 16: Port Rear
+    Stb Front: Mud Mats
+    MudMat Starboard 1: Stb Front
+    MudMat Starboard 2: Stb Front
+    MudMat Starboard 3: Stb Front
+    MudMat Starboard 4: Stb Front
+    MudMat Starboard 5: Stb Front
+    MudMat Starboard 6: Stb Front
+    MudMat Starboard 7: Stb Front
+    MudMat Starboard 8: Stb Front
+    Stb Rear: Mud Mats
+    MudMat Starboard 9: Stb Rear
+    MudMat Starboard 10: Stb Rear
+    MudMat Starboard 11: Stb Rear
+    MudMat Starboard 12: Stb Rear
+    MudMat Starboard 13: Stb Rear
+    MudMat Starboard 14: Stb Rear
+    MudMat Starboard 15: Stb Rear
+    MudMat Starboard 16: Stb Rear
+    Blocks: Manifold
+    Processor: Blocks
+    Block A: Blocks
+    Block B: Blocks
+  State:
+    Collapsed:
+    - Variable data
+    - Top Plate
+    - Framework
+    - Mud Mats
+    - Blocks

@@ -1,0 +1,111 @@
+# General Configuration
+# Generated from: G04 Anchor-last deployment.yml
+# Date: 2026-01-18 22:18:20
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  StartingVelocitySpeed: 2
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 20
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 250
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 948.6146214619904
+  DefaultViewCentre:
+  - 95.02812184318915
+  - 0
+  - -266.2991882450459
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+3DBuoys:
+- Name: Buoy
+  Connection: Free
+  InitialPosition:
+  - -449.71985337857035
+  - 0
+  - 1.3509561550461648
+  Mass: 0.25
+  Volume: 1
+  BulkModulus: Infinity
+  Height: 5
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 2.5
+  - 2.5
+  - 0.2
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+- Name: Anchor
+  Connection: Free
+  InitialPosition:
+  - -0.34423542095239335
+  - 0
+  - 5.0192894008167945
+  Mass: 1
+  Volume: 0.009999999999999998
+  BulkModulus: Infinity
+  Height: 2
+  SeabedFrictionCoefficient: 0.5
+  ContactArea: 0.6
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0.6
+  - 0.6
+  - 0.6
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+Groups:
+  Structure:
+    Lay vessel: Model
+    Buoy: Model
+    Anchor: Model
+    Mooring: Model
+    Release Link: Model
+  State:
+    Collapsed:
+    - Variable data

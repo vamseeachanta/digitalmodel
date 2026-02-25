@@ -1,0 +1,68 @@
+# General Configuration
+# Generated from: M01 Pipeline walking.yml
+# Date: 2026-01-18 22:19:27
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 3
+  StaticsMaxDamping: 30
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.2
+  LogPrecision: Single
+  TargetLogSampleInterval: 1
+  LogStartTime: ~
+  StartTime: 0
+  FirstStage: 1
+  RampStartTime: ~
+  RampFinishTime: 0
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 3200
+  - 3200
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+SupportTypes:
+- Name: Sleeper type
+  Geometry: U shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.2
+  USupportHorizontalLength: 20
+  USupportVerticalLength: 2
+  WireFrameDrawEnds: $000001
+ExpansionTables:
+- Name: Expansion table steel
+  ExpansionTableTemperature, ExpansionTablePressure, ExpansionTableExpansionFactor:
+  - - 0
+    - N/A
+    - 1
+  - - 100
+    - N/A
+    - 1.00106
+  - - 200
+    - N/A
+    - 1.00212
+FrictionCoefficients:
+  ? FrictionCoefficientSupportTypeName, SupportTypeFrictionCoefficientLineName, SupportTypeLateralCoefficient, SupportTypeAxialCoefficient
+  : - - (all support types)
+      - (all lines)
+      - 0.1
+      - ~
+Groups:
+  Structure:
+    Pipeline: Model
+    Sleepers 1: Model
+    Sleepers 2: Model
+    Sleepers 3: Model
+    Sleepers 4: Model
+    Sleepers 5: Model
+    Sleepers 6: Model
+  State:
+    Collapsed: []

@@ -1,0 +1,534 @@
+version: '1.0'
+updated: '2026-02-13'
+entries:
+- hull_id: canonical_barge_100x20x10
+  hull_type: barge
+  name: barge_100x20x10
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/barges/barge_100x20x10.gdf
+  panel_count: 228
+  vertex_count: 167
+  symmetry: yz
+  length_m: 100.0
+  beam_m: 20.0
+  draft_m: 8.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_unit_box
+  hull_type: barge
+  name: unit_box
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/barges/unit_box.gdf
+  panel_count: 5
+  vertex_count: 8
+  length_m: 1.0
+  beam_m: 1.0
+  draft_m: 1.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_fst_204m_draft12m
+  hull_type: fpso
+  name: fst_204m_draft12m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/fpso/fst_204m_draft12m.gdf
+  panel_count: 19450
+  vertex_count: 9999
+  length_m: 204.592
+  beam_m: 43.749
+  draft_m: 11.736
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_lngc_125km3_270m
+  hull_type: lngc
+  name: lngc_125km3_270m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_125km3_270m.gdf
+  panel_count: 28879
+  vertex_count: 9999
+  length_m: 270.224
+  beam_m: 43.399
+  draft_m: 11.732
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_lngc_180km3_287m
+  hull_type: lngc
+  name: lngc_180km3_287m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_180km3_287m.gdf
+  panel_count: 28626
+  vertex_count: 9999
+  length_m: 287.381
+  beam_m: 46.4
+  draft_m: 11.732
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_fst_barge_250m
+  hull_type: fpso
+  name: fst_barge_250m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/fpso/fst_barge_250m.gdf
+  panel_count: 2000
+  vertex_count: 2259
+  symmetry: y
+  length_m: 250.0
+  beam_m: 46.0
+  draft_m: 14.0
+  displacement_t: 148120
+  description: "Barge-type floating storage terminal (~300k bbl capacity)"
+  tags:
+  - gdf
+  - canonical
+  - fst
+- hull_id: canonical_fst_ship_330m
+  hull_type: fpso
+  name: fst_ship_330m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/fpso/fst_ship_330m.gdf
+  panel_count: 2160
+  vertex_count: 2408
+  symmetry: y
+  length_m: 330.0
+  beam_m: 60.0
+  draft_m: 22.0
+  displacement_t: 356400
+  description: "Ship-type floating storage terminal (converted VLCC class)"
+  tags:
+  - gdf
+  - canonical
+  - fst
+  - vlcc
+- hull_id: canonical_lngc_qflex_315m
+  hull_type: lngc
+  name: lngc_qflex_315m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_qflex_315m.gdf
+  panel_count: 2205
+  vertex_count: 2526
+  symmetry: y
+  length_m: 315.0
+  beam_m: 50.0
+  draft_m: 12.0
+  displacement_t: 148176
+  description: "Q-Flex class LNG carrier (~210k m3 capacity)"
+  tags:
+  - gdf
+  - canonical
+  - lngc
+  - qflex
+- hull_id: canonical_lngc_qmax_345m
+  hull_type: lngc
+  name: lngc_qmax_345m
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/lngc/lngc_qmax_345m.gdf
+  panel_count: 2415
+  vertex_count: 2766
+  symmetry: y
+  length_m: 345.0
+  beam_m: 55.0
+  draft_m: 12.0
+  displacement_t: 182160
+  description: "Q-Max class LNG carrier (~266k m3 capacity)"
+  tags:
+  - gdf
+  - canonical
+  - lngc
+  - qmax
+- hull_id: canonical_cylinder_r10_d50
+  hull_type: cylinder
+  name: cylinder_r10_d50
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/cylinder_r10_d50.gdf
+  panel_count: 420
+  vertex_count: 453
+  symmetry: xy
+  length_m: 1.0
+  beam_m: 1.0
+  draft_m: 2.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_ellipsoid_96p
+  hull_type: ellipsoid
+  name: ellipsoid_96p
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/ellipsoid_96p.gdf
+  panel_count: 96
+  vertex_count: 109
+  symmetry: xy
+  length_m: 1.96
+  beam_m: 0.98
+  draft_m: 0.8
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_pyramid_zc08
+  hull_type: custom
+  name: pyramid_zc08
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/pyramid_zc08.gdf
+  panel_count: 408
+  vertex_count: 781
+  length_m: 11.0
+  beam_m: 10.0
+  draft_m: 3.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_sphere_r5
+  hull_type: sphere
+  name: sphere_r5
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/sphere_r5.gdf
+  panel_count: 240
+  vertex_count: 249
+  symmetry: xy
+  length_m: 1.0
+  beam_m: 1.0
+  draft_m: 1.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_l03_centre_column
+  hull_type: semi_pontoon
+  name: l03_centre_column
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/l03_centre_column.gdf
+  panel_count: 336
+  vertex_count: 337
+  length_m: 6.5
+  beam_m: 6.337
+  draft_m: 20.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_l03_outer_column
+  hull_type: semi_pontoon
+  name: l03_outer_column
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/l03_outer_column.gdf
+  panel_count: 1178
+  vertex_count: 1179
+  length_m: 24.0
+  beam_m: 23.918
+  draft_m: 20.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_oc4_semisub
+  hull_type: semi_pontoon
+  name: oc4_semisub
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/oc4_semisub.gdf
+  panel_count: 1069
+  vertex_count: 938
+  symmetry: yz
+  length_m: 67.3
+  beam_m: 36.966
+  draft_m: 32.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_l01_vessel_385p
+  hull_type: ship
+  name: l01_vessel_385p
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/ships/l01_vessel_385p.gdf
+  panel_count: 385
+  vertex_count: 507
+  symmetry: yz
+  length_m: 103.21
+  beam_m: 7.98
+  draft_m: 11.66
+  tags:
+  - gdf
+  - canonical
+- hull_id: canonical_spar_r10_d50
+  hull_type: spar
+  name: spar_r10_d50
+  source: canonical
+  panel_format: gdf
+  file_path: data/hull_library/panels/spars/spar_r10_d50.gdf
+  panel_count: 378
+  vertex_count: 265
+  length_m: 20.0
+  beam_m: 20.0
+  draft_m: 50.0
+  tags:
+  - gdf
+  - canonical
+- hull_id: val_cylinder_r1_t05
+  hull_type: cylinder
+  name: val_cylinder_r1_t05
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_cylinder_r1_t05.gdf
+  panel_count: 256
+  vertex_count: 289
+  symmetry: xy
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 0.5
+  description: "WAMIT validation cylinder R=1m, T=0.5m (cases 2.1-2.3)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_cylinder_r1_t2
+  hull_type: cylinder
+  name: val_cylinder_r1_t2
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_cylinder_r1_t2.gdf
+  panel_count: 112
+  vertex_count: 127
+  symmetry: xy
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 2.0
+  description: "WAMIT validation cylinder R=1m, T=2m (case 2.6 body 1)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_spheroid
+  hull_type: ellipsoid
+  name: val_spheroid
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_spheroid.gdf
+  panel_count: 64
+  vertex_count: 73
+  symmetry: xy
+  length_m: 4.0
+  beam_m: 1.0
+  draft_m: 0.25
+  description: "WAMIT validation spheroid ULEN=2m (case 2.6 body 2)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+- hull_id: val_issc_tlp_coarse
+  hull_type: tlp
+  name: val_issc_tlp_coarse
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/val_issc_tlp_coarse.gdf
+  panel_count: 128
+  vertex_count: 145
+  symmetry: xy
+  length_m: 86.25
+  beam_m: 86.25
+  draft_m: 35.0
+  description: "WAMIT validation ISSC TLP coarse mesh ULEN=43.125m (case 2.5)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - tlp
+- hull_id: val_issc_tlp_fine
+  hull_type: tlp
+  name: val_issc_tlp_fine
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/semi_subs/val_issc_tlp_fine.gdf
+  panel_count: 1012
+  vertex_count: 1045
+  symmetry: xy
+  length_m: 86.25
+  beam_m: 86.25
+  draft_m: 35.0
+  description: "WAMIT validation ISSC TLP fine mesh ULEN=43.125m (case 2.5)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - tlp
+- hull_id: val_moonpool_body
+  hull_type: cylinder
+  name: val_moonpool_body
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_moonpool_body.gdf
+  panel_count: 368
+  vertex_count: 369
+  symmetry: xz+yz
+  length_m: 1.0
+  beam_m: 1.0
+  draft_m: 0.1875
+  description: "WAMIT validation moonpool cylinder body R_outer=0.5m R_inner=0.25m (case 2.9)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - moonpool
+- hull_id: val_moonpool_lid
+  hull_type: lid
+  name: val_moonpool_lid
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_moonpool_lid.gdf
+  panel_count: 32
+  vertex_count: 33
+  symmetry: xz+yz
+  length_m: 0.5
+  beam_m: 0.5
+  draft_m: 0.0
+  description: "WAMIT validation moonpool damping lid (case 2.9)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - moonpool
+  - lid
+- hull_id: val_bmc
+  hull_type: cylinder
+  name: val_bmc
+  source: wamit_validation
+  panel_format: gdf
+  file_path: data/hull_library/panels/primitives/val_bmc.gdf
+  panel_count: 100
+  vertex_count: 101
+  symmetry: xz+yz
+  length_m: 2.0
+  beam_m: 2.0
+  draft_m: 1.0
+  description: "WAMIT validation bottom-mounted cylinder R=1m h=1m (case 3.1)"
+  tags:
+  - gdf
+  - wamit_validation
+  - L00
+  - bottom_mounted
+- hull_id: hull_collection_example_aframax_ga
+  hull_type: tanker
+  name: Example Aframax GA
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: Example Aframax GA.pdf
+  description: Metadata-only entry (.pdf)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_generic_tanker_mesh_parametric_scaling1
+  hull_type: tanker
+  name: Generic Tanker Mesh Parametric Scaling1
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: Generic Tanker Mesh Parametric Scaling1.xlsx
+  description: Metadata-only entry (.xlsx)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_generictankerhull
+  hull_type: tanker
+  name: GenericTankerHull
+  source: hull_collection
+  panel_format: rhino_3dm
+  file_path: GenericTankerHull.3dm
+  description: Metadata-only entry (.3dm)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_typical_fairlead_locations
+  hull_type: custom
+  name: Typical Fairlead Locations
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: Typical Fairlead Locations.xlsx
+  description: Metadata-only entry (.xlsx)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_results2
+  hull_type: custom
+  name: RESULTS2
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: RESULTS2.xls
+  description: Metadata-only entry (.xls)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_writeup
+  hull_type: custom
+  name: WRITEUP
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: WRITEUP.doc
+  description: Metadata-only entry (.doc)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_uncle_john_raos
+  hull_type: custom
+  name: Uncle John RAOs
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: Uncle John RAOs.xlsx
+  description: Metadata-only entry (.xlsx)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: hull_collection_motion_stan
+  hull_type: custom
+  name: MOTION_STAN
+  source: hull_collection
+  panel_format: yaml_profile
+  file_path: MOTION_STAN.xls
+  description: Metadata-only entry (.xls)
+  tags:
+  - metadata
+  - hull_collection
+- hull_id: rock_oil_field_7_seas
+  hull_type: custom
+  name: 7_Seas
+  source: rock_oil_field
+  panel_format: yaml_profile
+  file_path: 7_Seas.hst
+  description: Metadata-only entry (.hst)
+  tags:
+  - metadata
+  - rock_oil_field
+- hull_id: rock_oil_field_7_seas_1
+  hull_type: custom
+  name: 7_Seas
+  source: rock_oil_field
+  panel_format: yaml_profile
+  file_path: 7_Seas.rao
+  description: Metadata-only entry (.rao)
+  tags:
+  - metadata
+  - rock_oil_field
+- hull_id: orcaflex_fpso_328m
+  hull_type: fpso
+  name: FPSO Vessel Type 328m
+  source: orcaflex_yaml
+  panel_format: orcaflex_yaml
+  file_path: (orcaflex vessel type definition)
+  length_m: 328.2
+  draft_m: 9.46
+  description: OrcaFlex vessel type with RAOs and wireframe
+  tags:
+  - orcaflex
+  - fpso

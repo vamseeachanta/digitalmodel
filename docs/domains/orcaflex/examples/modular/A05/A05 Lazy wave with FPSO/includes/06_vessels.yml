@@ -1,0 +1,48 @@
+# Vessels Configuration
+# Generated from: A05 Lazy wave with FPSO.yml
+# Date: 2026-01-18 22:18:01
+Vessels:
+- Name: FPSO
+  VesselType: FPSO Type
+  Draught: Draught1
+  Length: 984.251968503937
+  Connection: Free
+  InitialPosition:
+  - -295.275590551181
+  - 0
+  - -49.2125984251968
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ? HarmonicMotionPeriod, HarmonicMotionSurgeAmp, HarmonicMotionSurgePhase, HarmonicMotionSwayAmp, HarmonicMotionSwayPhase, HarmonicMotionHeaveAmp, HarmonicMotionHeavePhase, HarmonicMotionRollAmp, HarmonicMotionRollPhase, HarmonicMotionPitchAmp, HarmonicMotionPitchPhase, HarmonicMotionYawAmp, HarmonicMotionYawPhase
+  : - - 120
+      - 165
+      - 90
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  ShadedDrawingCullingMode: Anticlockwise

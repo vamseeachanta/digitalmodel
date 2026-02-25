@@ -1,0 +1,157 @@
+# VariableData Configuration
+# Generated from: CALMBuoy_1YR_IM_FUL_R2_D3.yml
+# Date: 2026-01-18 22:20:12
+VariableData:
+  Dragcoefficient:
+  - Name: Re vs Cd
+    IndependentValue, DependentValue:
+    - - 10e3
+      - 1.2
+    - - 50e3
+      - 1.2
+    - - 240e3
+      - 1.2
+    - - 255e3
+      - 1.19
+    - - 300e3
+      - 1.16
+    - - 340e3
+      - 1.05
+    - - 380e3
+      - 0.8
+    - - 425e3
+      - 0.42
+    - - 510e3
+      - 0.4
+    - - 600e3
+      - 0.42
+    - - 675e3
+      - 0.48
+    - - 850e3
+      - 0.57
+    - - 1.3e6
+      - 0.68
+    - - 1.7e6
+      - 0.7
+    - - 8.5e6
+      - 0.7
+    - - 25e6
+      - 0.7
+  - Name: Generic Drag
+    IndependentValue, DependentValue:
+    - - 10e3
+      - 1.2
+    - - 50e3
+      - 1.2
+    - - 240e3
+      - 1.2
+    - - 255e3
+      - 1.19
+    - - 300e3
+      - 1.16
+    - - 340e3
+      - 1.05
+    - - 380e3
+      - 0.8
+    - - 425e3
+      - 0.42
+    - - 510e3
+      - 0.4
+    - - 600e3
+      - 0.42
+    - - 675e3
+      - 0.48
+    - - 850e3
+      - 0.57
+    - - 1.3e6
+      - 0.68
+    - - 1.7e6
+      - 0.7
+    - - 8.5e6
+      - 0.7
+    - - 25e6
+      - 0.7
+  Verticalvariationfactor:
+  - Name: 100yr Wind Profile
+    IndependentValue, DependentValue:
+    - - 0.01
+      - 0.435
+    - - 0.95
+      - 0.807
+    - - 1.9
+      - 0.864
+    - - 10
+      - 1
+  - Name: 1yr Wind Profile
+    IndependentValue, DependentValue:
+    - - 10
+      - 1
+    - - 1.9
+      - 0.877
+    - - 0.95
+      - 0.826
+    - - 0.01
+      - 0.49
+  Axialstiffness:
+  - Name: HawserStiffness
+    IndependentValue, DependentValue:
+    - - 0
+      - 0
+    - - 5
+      - 800
+    - - 9
+      - 2000
+    - - 13
+      - 4000
+    - - 15
+      - 5400
+    - - 15.8
+      - 6000
+    - - 19
+      - 8000
+    - - 20
+      - 8600
+    - - 24
+      - 10.4e3
+    Hysteretic: No
+  Linetypediameter:
+  - Name: Flange Profile End A
+    IndependentValue, DependentValue:
+    - - 0
+      - 0.91
+    - - 0.4
+      - 0.7
+  - Name: Flange Profile End B
+    IndependentValue, DependentValue:
+    - - 0
+      - 0.91
+    - - 0.4
+      - 0.7
+  - Name: Sheath Profile End A
+    IndependentValue, DependentValue:
+    - - 0
+      - 0.6
+    - - 0.1
+      - 0.64
+    - - 0.2
+      - 0.69
+    - - 0.5
+      - 0.69
+    - - 1.1
+      - 0.62
+    - - 1.6
+      - 0.6
+  - Name: Sheath Profile End B
+    IndependentValue, DependentValue:
+    - - 0
+      - 0.6
+    - - 0.5
+      - 0.62
+    - - 1.1
+      - 0.69
+    - - 1.4000000000000001
+      - 0.69
+    - - 1.5
+      - 0.64
+    - - 1.6
+      - 0.6

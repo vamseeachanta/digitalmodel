@@ -1,0 +1,115 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.5, 28.1] },
+      "properties": {
+        "name": "Well-Alpha",
+        "timestamp": "2010-06-15T00:00:00Z",
+        "event_type": "installed",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.5, 28.1] },
+      "properties": {
+        "name": "Well-Alpha",
+        "timestamp": "2014-03-20T00:00:00Z",
+        "event_type": "inspected",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.5, 28.1] },
+      "properties": {
+        "name": "Well-Alpha",
+        "timestamp": "2018-11-05T00:00:00Z",
+        "event_type": "repaired",
+        "status": "under_maintenance"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.3, 28.2] },
+      "properties": {
+        "name": "Well-Bravo",
+        "timestamp": "2012-01-10T00:00:00Z",
+        "event_type": "installed",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.3, 28.2] },
+      "properties": {
+        "name": "Well-Bravo",
+        "timestamp": "2016-07-22T00:00:00Z",
+        "event_type": "inspected",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-90.3, 28.2] },
+      "properties": {
+        "name": "Well-Bravo",
+        "timestamp": "2020-09-01T00:00:00Z",
+        "event_type": "decommissioned",
+        "status": "decommissioned"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-89.8, 28.5] },
+      "properties": {
+        "name": "Well-Charlie",
+        "timestamp": "2015-04-18T00:00:00Z",
+        "event_type": "installed",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-89.8, 28.5] },
+      "properties": {
+        "name": "Well-Charlie",
+        "timestamp": "2019-12-30T00:00:00Z",
+        "event_type": "inspected",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-91.2, 27.8] },
+      "properties": {
+        "name": "Well-Delta",
+        "timestamp": "2011-08-25T00:00:00Z",
+        "event_type": "installed",
+        "status": "operational"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-91.2, 27.8] },
+      "properties": {
+        "name": "Well-Delta",
+        "timestamp": "2017-05-14T00:00:00Z",
+        "event_type": "repaired",
+        "status": "under_maintenance"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-91.2, 27.8] },
+      "properties": {
+        "name": "Well-Delta",
+        "timestamp": "2024-02-28T00:00:00Z",
+        "event_type": "decommissioned",
+        "status": "decommissioned"
+      }
+    }
+  ]
+}

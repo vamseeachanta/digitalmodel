@@ -1,0 +1,29 @@
+# Shapes Configuration
+# Generated from: H03 Floating and stowed lines.yml
+# Date: 2026-01-18 22:18:21
+Shapes:
+- Name: Hull
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: FSU
+  Origin:
+  - -103.5
+  - -22.25
+  - -13.13
+  Size:
+  - 207
+  - 44.5
+  - 24.7
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 100
+  ShearStiffness: 100
+  Damping: 50
+  OutsidePen:
+  - 2
+  - Solid
+  - Red
+  NumberOfLines: 3
+  ShadedDrawingCullingMode: Anticlockwise

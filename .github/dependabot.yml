@@ -1,0 +1,128 @@
+version: 2
+
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    assignees:
+      - "@default-assignee"
+    reviewers:
+      - "@security-team"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+    open-pull-requests-limit: 10
+    allow:
+      - dependency-type: "direct"
+        update-type: "version-update:semver-patch"
+      - dependency-type: "direct"
+        update-type: "version-update:semver-minor"
+      - dependency-type: "indirect"
+        update-type: "security-update"
+    ignore:
+      # Ignore major version updates for these stable packages
+      - dependency-name: "numpy"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pandas"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "sqlalchemy"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group testing dependencies together
+      testing-dependencies:
+        patterns:
+          - "pytest*"
+          - "coverage"
+          - "*test*"
+      # Group linting and formatting tools
+      dev-tools:
+        patterns:
+          - "black"
+          - "ruff"
+          - "mypy"
+          - "isort"
+          - "pre-commit"
+      # Group scientific computing packages
+      scientific:
+        patterns:
+          - "numpy"
+          - "scipy"
+          - "matplotlib"
+          - "pandas"
+          - "scikit-learn"
+      # Group web framework dependencies
+      web:
+        patterns:
+          - "fastapi"
+          - "uvicorn"
+          - "pydantic*"
+          - "httpx"
+      # Group database dependencies
+      database:
+        patterns:
+          - "sqlalchemy"
+          - "alembic"
+          - "psycopg*"
+          - "asyncpg"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "UTC"
+    assignees:
+      - "@default-assignee"
+    reviewers:
+      - "@devops-team"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+    open-pull-requests-limit: 5
+    groups:
+      actions-core:
+        patterns:
+          - "actions/*"
+      security-actions:
+        patterns:
+          - "github/codeql-action"
+          - "aquasecurity/trivy-action"
+      build-actions:
+        patterns:
+          - "docker/*"
+          - "*setup*"
+
+  # Docker (if Dockerfiles use explicit versions)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "UTC"
+    assignees:
+      - "@default-assignee"
+    reviewers:
+      - "@devops-team"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+    open-pull-requests-limit: 3

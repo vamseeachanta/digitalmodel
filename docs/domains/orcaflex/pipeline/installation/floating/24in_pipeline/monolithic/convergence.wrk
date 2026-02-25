@@ -1,0 +1,32 @@
+﻿%YAML 1.1
+# Type: Workspace
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\pipeline\installation\floating\24in_pipeline\monolithic\convergence.wrk
+# Created: 11:05 AM on 1/22/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+LengthUnits: m
+TileMode: TileVertical
+Windows:
+  - FormType: View
+    Minimized: False
+    CentreX: 2139.273153471956
+    CentreY: -821.2967910897698
+    CentreZ: -1238.9696105001135
+    Azimuth: 270
+    Elevation: 90
+    Gamma: 0
+    Size: 5475.311940598466
+    Shaded: False
+  - FormType: View
+    Minimized: False
+    CentreX: 2015.9827076726006
+    CentreY: 1.7763568394002505e-15
+    CentreZ: -723.8471063737511
+    Azimuth: 270
+    Elevation: 0
+    Gamma: 0
+    Size: 3168.583298957446
+    Shaded: False
+...

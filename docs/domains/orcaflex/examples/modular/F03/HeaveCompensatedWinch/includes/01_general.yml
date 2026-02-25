@@ -1,0 +1,49 @@
+# General Configuration
+# Generated from: HeaveCompensatedWinch.yml
+# Date: 2026-01-18 22:18:18
+General:
+  Comments: "Example of using a Python external function to model a heave-compensated winch in OrcaFlex.\r\nFor details see \"External Function Examples.pdf\" in the same folder as this file."
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.05
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 100
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 130.6711409395973
+  DefaultViewCentre:
+  - 49.95525727069351
+  - 0
+  - -40.54457006441152
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+Groups:
+  Structure:
+    Winch: Model
+    Line1: Model
+    Vessel: Model
+    Template: Model
+    Link1: Model
+    Link2: Model
+    Link3: Model
+    Link4: Model
+  State:
+    Collapsed: []

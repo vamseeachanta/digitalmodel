@@ -1,0 +1,648 @@
+# Lines Configuration
+# Generated from: A06 SHEAR7 interface.yml
+# Date: 2026-01-18 22:18:01
+Lines:
+- Name: Riser
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: SHEAR7
+  DynamicsVIV: None
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 56
+      - 0
+      - -533.75
+      - 0
+      - 172
+      - 0
+      - ~
+    - - Anchored
+      - 6085
+      - 0
+      - 0.37906
+      - 0
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Flexjoint Stiffness
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Flexjoint
+    Length: 9
+    TargetSegmentLength: 1
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 1
+    TargetSegmentLength: 1
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 4
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 40
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 3800
+    TargetSegmentLength: 40
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 40
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 4
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 4
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 50
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 100
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 1100
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 100
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 50
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 4
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 800
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 2
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 20
+    TargetSegmentLength: 4
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 10
+    TargetSegmentLength: 5
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 50
+    TargetSegmentLength: 10
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 120
+    TargetSegmentLength: 12
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Riser Pipe
+    Length: 1300
+    TargetSegmentLength: 20
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Flowline
+    Length: 410
+    TargetSegmentLength: 40
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  - LineType: Flowline
+    Length: 1600
+    TargetSegmentLength: 80
+    DisturbanceVessel: (none)
+    VIVDiameter: ~
+    SHEAR7StrouhalType: User specified
+    SHEAR7StrouhalNumber: 0.18
+    SHEAR7LiftCoefficientTable: 1
+    SHEAR7LiftFactor: 1
+    SHEAR7SectionReducedVelocityBW: 0.5
+    SHEAR7ReDependentDampingCoefficient: 1
+    SHEAR7StillWaterReducedVelocityDampingCoefficient: 0.2
+    SHEAR7LowReducedVelocityDampingCoefficient: 0.18
+    SHEAR7HighReducedVelocityDampingCoefficient: 0.2
+    SHEAR7AxialFlowDampingCoefficient: 0
+    SHEAR7SectionYoungsModulus: 4.427712057427829e6
+    SHEAR7SectionSNCurve: Curve1
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 19.200000000000006
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 720.0000000000001
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  VIVTolerance: 0.001
+  SHEAR7CouplingMethod: Partial, automatic modes file
+  SHEAR7FirstMode: ~
+  SHEAR7LastMode: 500
+  SHEAR7IncludeCoupledObjects: No
+  SHEAR7OutputLocationStart: ~
+  SHEAR7OutputLocationEnd: ~
+  SHEAR7OutputLocationIncrementLength: 32.80839895013123
+  SHEAR7CurrentProfileDiscretisation: Regular spacing
+  SHEAR7CurrentProfileTargetSpacing: 32.80839895013123
+  SHEAR7CurrentProfileProbability: 1
+  SHEAR7CurrentProfileID: 1
+  SHEAR7PowerRatioCutoffLevel: 0.05
+  SHEAR7StructuralDampingRatio: 0.003
+  SHEAR7PrimaryZoneAmplitudeLimit: 0.3
+  SHEAR7BendingStressCurvatureFactor: ~
+  SHEAR7PowerRatioExponent: Ratio
+  SHEAR7BetaControlNumber: 4
+  SHEAR7NonOrthogonalDamping: Yes
+  SHEAR7HigherHarmonicsFactor: 0
+  SHEAR7HigherHarmonicsThreshold: 0.4
+  SHEAR7FatigueCalculationRadialPosition: Outer
+  SHEAR7FatigueCalculationMethod: Default
+  SHEAR7Response: Transverse
+  SHEAR7IncludeGravityForTiltContaminationEstimation: Yes
+  SHEAR7GlobalSCF: 1
+  SHEAR7ModelStickSlipHysteresis: No
+  DrawShadedNodesAsSpheres: Yes

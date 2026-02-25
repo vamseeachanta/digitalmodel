@@ -1,0 +1,69 @@
+basename: file_edit
+edit_type: concatenate
+concatenate_type: 2d_array # 2d_array
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+input:
+  - output_filename: NULL
+    output_basename: ld
+    output_dir: rev3/moor
+    file_extension: dat
+    filename:
+    input_files:
+      [
+        [raw/_0to9_dynamic.deck],
+        [raw/_10_no_tug.deck, raw/_10_tug.deck],
+        [raw/_11_12.deck],
+        [
+          raw/_13_100MPH000WD.deck,
+          raw/_13_100MPH015WD.deck,
+          raw/_13_100MPH030WD.deck,
+          raw/_13_100MPH045WD.deck,
+          raw/_13_100MPH060WD.deck,
+          raw/_13_100MPH075WD.deck,
+          raw/_13_100MPH090WD.deck,
+          raw/_13_120MPH000WD.deck,
+          raw/_13_120MPH015WD.deck,
+          raw/_13_120MPH030WD.deck,
+          raw/_13_120MPH045WD.deck,
+          raw/_13_120MPH060WD.deck,
+          raw/_13_120MPH075WD.deck,
+          raw/_13_120MPH090WD.deck,
+        ],
+        [raw/_14_10moors.deck, raw/_14_09moors.deck],
+        [raw/_15_.deck],
+      ]
+    input_file_labels:
+      [
+        [""],
+        ["", tug],
+        [""],
+        [
+          100MPH000WD,
+          100MPH015WD,
+          100MPH030WD,
+          100MPH045WD,
+          100MPH060WD,
+          100MPH075WD,
+          100MPH090WD,
+          120MPH000WD,
+          120MPH015WD,
+          120MPH030WD,
+          120MPH045WD,
+          120MPH060WD,
+          120MPH075WD,
+          120MPH090WD,
+        ],
+        [10moors, 09moors],
+        [""],
+      ]
+
+    batch:
+      flag: True
+      extension: no
+      content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe /nowind

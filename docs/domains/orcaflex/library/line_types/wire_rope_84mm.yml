@@ -1,0 +1,18 @@
+# Wire Rope 84mm (6x36 IWRC) - Library Component
+# Category: line_types
+# NOTE: No section header - properties only for IncludeFile
+# Category is provided by parent object, not in library file
+# Typical application: VLCC mooring, heavy lift
+OD: 0.084
+ID: 0
+MassPerUnitLength: 0.031
+CompressionIsLimited: Yes
+EA: 550000
+EI: [0, ~]
+GJ: 0
+PoissonRatio: 0.3
+Cd: [1.2, ~, 0.01]
+Ca: [1, ~, 0.02]
+SeabedLateralFrictionCoefficient: 0.6
+RayleighDampingCoefficients: (no damping)
+Pen: [1, Solid, Gray]

@@ -1,0 +1,85 @@
+{
+  "timestamp": "20251003_115654",
+  "metrics": [
+    {
+      "module_name": "wave_spectra",
+      "test_name": "JONSWAP_generation",
+      "execution_time_ms": 0.6440951999975368,
+      "memory_usage_mb": 172.7578125,
+      "peak_memory_mb": 172.7578125,
+      "iterations": 1000,
+      "timestamp": "20251003_115654",
+      "target_time_ms": 10.0,
+      "meets_target": true,
+      "speedup_factor": 1.0
+    },
+    {
+      "module_name": "environmental_loading",
+      "test_name": "OCIMF_coefficient_lookup",
+      "execution_time_ms": 0.10681997000065167,
+      "memory_usage_mb": 175.2578125,
+      "peak_memory_mb": 175.2578125,
+      "iterations": 10000,
+      "timestamp": "20251003_115654",
+      "target_time_ms": 1.0,
+      "meets_target": true,
+      "speedup_factor": 1.0
+    },
+    {
+      "module_name": "catenary",
+      "test_name": "catenary_solver",
+      "execution_time_ms": 0.24340999996638857,
+      "memory_usage_mb": 175.40625,
+      "peak_memory_mb": 175.40625,
+      "iterations": 100,
+      "timestamp": "20251003_115654",
+      "target_time_ms": 10.0,
+      "meets_target": true,
+      "speedup_factor": 1.0
+    },
+    {
+      "module_name": "hydrodynamic_coefficients",
+      "test_name": "coefficient_interpolation",
+      "execution_time_ms": 0.4026906999933999,
+      "memory_usage_mb": 175.6953125,
+      "peak_memory_mb": 175.6953125,
+      "iterations": 1000,
+      "timestamp": "20251003_115654",
+      "target_time_ms": 5.0,
+      "meets_target": true,
+      "speedup_factor": 1.0
+    }
+  ],
+  "summary": {
+    "total_tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "pass_rate": 100.0,
+    "by_module": {
+      "wave_spectra": {
+        "tests": 1,
+        "passed": 1,
+        "avg_time_ms": 0.6440951999975368,
+        "total_memory_mb": 172.7578125
+      },
+      "environmental_loading": {
+        "tests": 1,
+        "passed": 1,
+        "avg_time_ms": 0.10681997000065167,
+        "total_memory_mb": 175.2578125
+      },
+      "catenary": {
+        "tests": 1,
+        "passed": 1,
+        "avg_time_ms": 0.24340999996638857,
+        "total_memory_mb": 175.40625
+      },
+      "hydrodynamic_coefficients": {
+        "tests": 1,
+        "passed": 1,
+        "avg_time_ms": 0.4026906999933999,
+        "total_memory_mb": 175.6953125
+      }
+    }
+  }
+}

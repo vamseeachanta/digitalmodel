@@ -1,0 +1,226 @@
+# Lines Configuration
+# Generated from: K02 10MW fixed-bottom OWT.yml
+# Date: 2026-01-18 22:18:26
+Lines:
+- Name: Tower
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Nacelle
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Monopile
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - -180
+      - ~
+      - End A
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Tower line type
+    - 105.63
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Quick
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 1
+  - Solid
+  - White
+- Name: Monopile
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - 0
+      - 0
+      - 10
+      - 180
+      - 180
+      - 0
+      - ~
+    - - 'Soil-h=45m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - []
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 45
+      - End B
+      - 'Soil-h=0m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 40
+      - End B
+      - 'Soil-h=5m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 35
+      - End B
+      - 'Soil-h=10m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 30
+      - End B
+      - 'Soil-h=15m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 25
+      - End B
+      - 'Soil-h=20m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 20
+      - End B
+      - 'Soil-h=25m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 15
+      - End B
+      - 'Soil-h=30m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 10
+      - End B
+      - 'Soil-h=35m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - 5
+      - End B
+      - 'Soil-h=40m: Rz'
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - Monopile (above mudline) line type
+    - 40
+    - 5
+  - - Monopile (below mudline) line type
+    - 45
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Quick
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  FullStaticsTolerance: 2e-6
+  NodePen:
+  - 1
+  - Solid
+  - Gray

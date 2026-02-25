@@ -1,0 +1,137 @@
+# General Configuration
+# Generated from: J01 Deployment with sub.yml
+# Date: 2026-01-18 22:18:22
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  StartingVelocitySpeed: 1.4999999999999998
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Explicit time domain
+  AlwaysUseRecommendedTimeSteps: Yes
+  InnerTimeStep: 70e-6
+  TargetOuterTimeStep: 0.0021
+  RecommendedInnerTimeStepRatio: 10
+  RecommendedOuterTimeStepToInnerMultiple: 30
+  RecommendedOuterTimeStepToWavePeriodRatio: 40
+  TensionTargetDamping: 10
+  BendingTargetDamping: 10
+  TorsionTargetDamping: 10
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 5
+  - 30
+  - 5
+  - 60
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 300
+  DefaultViewCentre:
+  - 0
+  - 0
+  - -180
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+3DBuoys:
+- Name: Float 1
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -96.91986006974254
+  - 2.4219826646883975
+  - -192.34702568482672
+  Mass: 0.1
+  Volume: 0.19999999999999996
+  BulkModulus: Infinity
+  Height: 1.9999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0.9999999999999999
+  - 0.9999999999999999
+  - 0.9999999999999999
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+- Name: Float2
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -94.35781751955864
+  - 2.422209366951565
+  - -191.3884806706101
+  Mass: 0.1
+  Volume: 0.19999999999999996
+  BulkModulus: Infinity
+  Height: 1.9999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0.9999999999999999
+  - 0.9999999999999999
+  - 0.9999999999999999
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+Groups:
+  Structure:
+    Sub: Model
+    Submarine: Sub
+    Hull: Sub
+    Tail: Sub
+    conn_t: Sub
+    nose: Sub
+    Subline: Model
+    Release Mechanism: Model
+    Deployer: Release Mechanism
+    D_A2: Release Mechanism
+    D_A1: Release Mechanism
+    1st Sensor: Model
+    Sensor1: 1st Sensor
+    Anchor1: 1st Sensor
+    Float 1: 1st Sensor
+    A1_F1: 1st Sensor
+    Baseline: Model
+    2nd Sensor: Model
+    Sensor2: 2nd Sensor
+    Anchor2: 2nd Sensor
+    Float2: 2nd Sensor
+    A2_F2: 2nd Sensor
+  State:
+    Collapsed:
+    - Variable data

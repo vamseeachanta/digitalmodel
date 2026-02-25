@@ -1,0 +1,183 @@
+# General Configuration
+# Generated from: F01 Trapped water.yml
+# Date: 2026-01-18 22:18:16
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 20
+  - 20
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 77.28687350835321
+  DefaultViewCentre:
+  - 1.5
+  - 15.857570362235727
+  - -5.823349737143978
+  DefaultViewAzimuth: 360
+  DefaultViewElevation: 0
+3DBuoys:
+- Name: Shackle2
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -34.99999999999998
+  - 19.999999999999975
+  - 13.697695121440425
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: Shackle1
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -34.99999999999998
+  - 19.999999999999975
+  - 13.697695121440425
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: Shackle3
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -34.99999999999998
+  - 19.999999999999975
+  - 13.697695121440425
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Hidden: Yes
+- Name: Shackle4
+  Connection: Free
+  IncludedInStatics: Yes
+  InitialPosition:
+  - -34.99999999999998
+  - 19.999999999999975
+  - 13.697695121440425
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Hidden: Yes
+Groups:
+  Structure:
+    Vessel1: Model
+    Hollow Spar: Model
+    Crane Payout1: Hollow Spar
+    Crane Wire1: Hollow Spar
+    1 Bridle1: Hollow Spar
+    2 Bridle1: Hollow Spar
+    Shackle1: Hollow Spar
+    Hollow Spar Buoy: Hollow Spar
+    Lumped Buoy (Original): Model
+    Crane Payout2: Lumped Buoy (Original)
+    Crane Wire2: Lumped Buoy (Original)
+    1 Bridle2: Lumped Buoy (Original)
+    2 Bridle2: Lumped Buoy (Original)
+    Shackle2: Lumped Buoy (Original)
+    Lumped Buoy1: Lumped Buoy (Original)
+    Lumped Buoy (HydroInertia): Model
+    Crane Payout3: Lumped Buoy (HydroInertia)
+    Crane Wire3: Lumped Buoy (HydroInertia)
+    1 Bridle3: Lumped Buoy (HydroInertia)
+    2 Bridle3: Lumped Buoy (HydroInertia)
+    Shackle3: Lumped Buoy (HydroInertia)
+    Lumped Buoy2: Lumped Buoy (HydroInertia)
+    Lumped Buoy (Body+HydroInertia): Model
+    Crane Payout4: Lumped Buoy (Body+HydroInertia)
+    Crane Wire4: Lumped Buoy (Body+HydroInertia)
+    1 Bridle4: Lumped Buoy (Body+HydroInertia)
+    2 Bridle4: Lumped Buoy (Body+HydroInertia)
+    Shackle4: Lumped Buoy (Body+HydroInertia)
+    Lumped Buoy3: Lumped Buoy (Body+HydroInertia)
+    Trapped Water: Lumped Buoy (Body+HydroInertia)
+  State:
+    Collapsed:
+    - Variable data

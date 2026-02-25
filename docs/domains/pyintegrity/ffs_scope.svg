@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1394px" preserveAspectRatio="none" style="width:2128px;height:1394px;background:#FFFFFF;" version="1.1" viewBox="0 0 2128 1394" width="2128px" zoomAndPan="magnify"><defs/><g><rect fill="#FF6347" height="90.4375" id="_title" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="626" x="737" y="10"/><text fill="#000000" font-family="sans-serif" font-size="28" font-weight="bold" lengthAdjust="spacing" textLength="598" x="747" y="49.0664">API579 FFS Assessment | pyintegrity Scope</text><text fill="#000000" font-family="sans-serif" font-size="28" font-weight="bold" lengthAdjust="spacing" textLength="256" x="926" y="84.2852">Corrosion/Erosion</text><!--MD5=[dcf9d23a479b6f5be5f2cd2f538bf578]
+cluster dc--><g id="cluster_dc"><path d="M17,124.4375 L249,124.4375 A7.5,7.5 0 0 1 254,129.4375 L268,171.6563 L1397,171.6563 A5,5 0 0 1 1402,176.6563 L1402,614.4375 A5,5 0 0 1 1397,619.4375 L17,619.4375 A5,5 0 0 1 12,614.4375 L12,129.4375 A5,5 0 0 1 17,124.4375 " fill="none" style="stroke:#000000;stroke-width:3.0;"/><line style="stroke:#000000;stroke-width:3.0;" x1="12" x2="268" y1="171.6563" y2="171.6563"/><text fill="#000000" font-family="sans-serif" font-size="28" font-weight="bold" lengthAdjust="spacing" textLength="230" x="20" y="157.5039">Damage Classes</text></g><!--MD5=[53bb02c66ed189a23d979471ce1464b9]
+cluster ce--><g id="cluster_ce"><path d="M1455,324.4375 L1713,324.4375 A7.5,7.5 0 0 1 1718,329.4375 L1732,371.6563 L2109,371.6563 A5,5 0 0 1 2114,376.6563 L2114,1311.4375 A5,5 0 0 1 2109,1316.4375 L1455,1316.4375 A5,5 0 0 1 1450,1311.4375 L1450,329.4375 A5,5 0 0 1 1455,324.4375 " fill="none" style="stroke:#000000;stroke-width:3.0;"/><line style="stroke:#000000;stroke-width:3.0;" x1="1450" x2="1732" y1="371.6563" y2="371.6563"/><text fill="#000000" font-family="sans-serif" font-size="28" font-weight="bold" lengthAdjust="spacing" textLength="256" x="1458" y="357.5039">Corrosion/Erosion</text></g><!--MD5=[e723db763673807bf801d3a18b6864d1]
+cluster pyintegrityscope--><g id="cluster_pyintegrityscope"><path d="M1503,412.4375 L1749,412.4375 A7.5,7.5 0 0 1 1754,417.4375 L1768,459.6563 L2061,459.6563 A5,5 0 0 1 2066,464.6563 L2066,851.4375 A5,5 0 0 1 2061,856.4375 L1503,856.4375 A5,5 0 0 1 1498,851.4375 L1498,417.4375 A5,5 0 0 1 1503,412.4375 " fill="none" style="stroke:#000000;stroke-width:3.0;"/><line style="stroke:#000000;stroke-width:3.0;" x1="1498" x2="1768" y1="459.6563" y2="459.6563"/><text fill="#000000" font-family="sans-serif" font-size="28" font-weight="bold" lengthAdjust="spacing" textLength="244" x="1506" y="445.5039">pyintegrity Scope</text></g><!--MD5=[63c2aa622e9d26831bc3dbfbef2c931e]
+entity brittle--><g id="elem_brittle"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="268" x="44" y="196.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="272" y="206.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="268" y="210.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="268" y="218.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="188" x="74" y="265.5039">Brittle Fracture</text></g><!--MD5=[b1eb8c458ab7905e6b69b205f092c1b9]
+entity corrosion--><g id="elem_corrosion"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="308" x="382" y="196.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="650" y="206.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="646" y="210.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="646" y="218.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="228" x="412" y="265.5039">Corrosion/Erosion</text></g><!--MD5=[8bad86e3d788a15bf0f10d6791107558]
+entity crack--><g id="elem_crack"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="296" x="760" y="196.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="1016" y="206.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1012" y="210.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1012" y="218.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="216" x="790" y="265.5039">Crack-Like Flaws</text></g><!--MD5=[195f25cf28bdadad5d5ec85f1f89a202]
+entity fire--><g id="elem_fire"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="244" x="1126" y="196.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="1330" y="206.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1326" y="210.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1326" y="218.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="164" x="1156" y="265.5039">Fire Damage</text></g><!--MD5=[880f66f5c7fc06d90286a618ae15112a]
+entity creep--><g id="elem_creep"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="272" x="44" y="491.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="276" y="501.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="272" y="505.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="272" y="513.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="192" x="74" y="560.5039">Creep Damage</text></g><!--MD5=[d519af7755e1087ad3fc43eadc75198b]
+entity mechanical--><g id="elem_mechanical"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="336" x="386" y="491.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="682" y="501.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="678" y="505.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="678" y="513.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="256" x="416" y="560.5039">Mechanical Damage</text></g><!--MD5=[439ecd082ec376e38fe977ab4aa76ca4]
+entity Fatigue--><g id="elem_Fatigue"><rect fill="#FF6347" height="95.2188" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="290" x="793" y="491.4375"/><rect fill="#FF6347" height="20" style="stroke:#FF0000;stroke-width:4.0;" width="30" x="1043" y="501.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1039" y="505.4375"/><rect fill="#FF6347" height="4" style="stroke:#FF0000;stroke-width:4.0;" width="8" x="1039" y="513.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="210" x="823" y="560.5039">Fatigue Damage</text></g><!--MD5=[d4e94a34f6b4690c5eef77094da777f7]
+entity corrosion_part6--><g id="elem_corrosion_part6"><rect fill="#FF6347" height="110.4375" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="432" x="1566" y="944.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="68" x="1586" y="993.5039">Part6</text><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="384" x="1594" y="1028.7227">Assessment of Pitting Damage</text></g><!--MD5=[ba6911d8dcd413db08acdcff7cb35f41]
+entity corrosion_part7--><g id="elem_corrosion_part7"><rect fill="#FF6347" height="110.4375" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="332" x="1616" y="1174.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="68" x="1636" y="1223.5039">Part7</text><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="284" x="1644" y="1258.7227">Assessment of Blisters</text></g><!--MD5=[2ee0080d17efe3ea7fc486a2184063f4]
+entity corrosion_part4--><g id="elem_corrosion_part4"><rect fill="#FF6347" height="110.4375" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="486" x="1535" y="484.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="68" x="1555" y="533.5039">Part4</text><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="438" x="1563" y="568.7227">Assessment of General Metal Loss</text></g><!--MD5=[9208b1b0986a28124c131e076a9042a4]
+entity corrosion_part5--><g id="elem_corrosion_part5"><rect fill="#FF6347" height="110.4375" rx="15" ry="15" style="stroke:#FF0000;stroke-width:4.0;" width="502" x="1531" y="714.4375"/><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="68" x="1551" y="763.5039">Part5</text><text fill="#000000" font-family="sans-serif" font-size="28" lengthAdjust="spacing" textLength="454" x="1559" y="798.7227">Assessment of Localized Metal Loss</text></g><!--MD5=[361f310878f9b273c3d2940460a2098c]
+link corrosion to corrosion_part4--><g id="link_corrosion_corrosion_part4"><path d="M690.5,286.7375 C702.46,288.9575 714.4,290.9175 726,292.4375 C800.5,302.2175 1329.9,287.2975 1402,308.4375 C1517.94,342.4575 1634.06,421.7775 1705.92,477.4775 " fill="none" id="corrosion-to-corrosion_part4" style="stroke:#181818;stroke-width:2.0;"/><polygon fill="#181818" points="1714.48,484.1575,1705.1962,466.7848,1706.5911,478.0122,1695.3637,479.407,1714.48,484.1575" style="stroke:#181818;stroke-width:2.0;"/></g><!--MD5=[5c21e5a95bafed0d06f5e81bb4159f19]
+link corrosion_part4 to corrosion_part5--><g id="link_corrosion_part4_corrosion_part5"><path d="M1778.94,594.9975 C1779.52,627.6375 1780.26,669.5575 1780.88,703.8775 " fill="none" id="corrosion_part4-to-corrosion_part5" style="stroke:#181818;stroke-width:2.0;"/><polygon fill="#181818" points="1781.06,714.2575,1788.7503,696.123,1780.8886,704.259,1772.7526,696.3973,1781.06,714.2575" style="stroke:#181818;stroke-width:2.0;"/></g><!--MD5=[ad73c8fa7967adbe1d940ebe37bd19e2]
+link corrosion_part5 to corrosion_part6--><g id="link_corrosion_part5_corrosion_part6"><path d="M1782,824.9975 C1782,857.6375 1782,899.5575 1782,933.8775 " fill="none" id="corrosion_part5-to-corrosion_part6" style="stroke:#181818;stroke-width:2.0;"/><polygon fill="#181818" points="1782,944.2575,1790,926.2575,1782,934.2575,1774,926.2575,1782,944.2575" style="stroke:#181818;stroke-width:2.0;"/></g><!--MD5=[73555d3d23d70dcfb7357ca9e3dc60ad]
+link corrosion_part6 to corrosion_part7--><g id="link_corrosion_part6_corrosion_part7"><path d="M1782,1054.9975 C1782,1087.6375 1782,1129.5575 1782,1163.8775 " fill="none" id="corrosion_part6-to-corrosion_part7" style="stroke:#181818;stroke-width:2.0;"/><polygon fill="#181818" points="1782,1174.2575,1790,1156.2575,1782,1164.2575,1774,1156.2575,1782,1174.2575" style="stroke:#181818;stroke-width:2.0;"/></g><rect fill="none" height="50.3125" style="stroke:none;stroke-width:2.0;" width="192" x="954" y="1328.4375"/><text fill="#888888" font-family="sans-serif" font-size="20" lengthAdjust="spacing" textLength="192" x="954" y="1349.1992">2022.10.31 at 11:04</text><text fill="#888888" font-family="sans-serif" font-size="20" lengthAdjust="spacing" textLength="142" x="979" y="1374.3555">ffs_scope.puml</text><!--MD5=[3b4d94a63082186e1e424b42b7111640]
+@startuml ffs_scope
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title API579 FFS Assessment | pyintegrity Scope \n Corrosion/Erosion
+
+package "Damage Classes" as dc {
+component "Brittle Fracture" as brittle
+component "Corrosion/Erosion" as corrosion
+component "Crack-Like Flaws" as crack
+component "Fire Damage" as fire
+component "Creep Damage" as creep
+component "Mechanical Damage" as mechanical
+component "Fatigue Damage" as Fatigue
+}
+
+package "Corrosion/Erosion" as ce {
+    package "pyintegrity Scope" as pyintegrityscope {
+    agent "Part4 \n Assessment of General Metal Loss" as corrosion_part4
+    agent "Part5 \n Assessment of Localized Metal Loss" as corrosion_part5
+    }
+agent "Part6 \n Assessment of Pitting Damage" as corrosion_part6
+agent "Part7 \n Assessment of Blisters" as corrosion_part7
+}
+
+corrosion - -> corrosion_part4
+corrosion_part4 - -> corrosion_part5
+corrosion_part5 - -> corrosion_part6
+corrosion_part6 - -> corrosion_part7
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml
+
+@startuml ffs_scope
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title API579 FFS Assessment | pyintegrity Scope \n Corrosion/Erosion
+
+package "Damage Classes" as dc {
+component "Brittle Fracture" as brittle
+component "Corrosion/Erosion" as corrosion
+component "Crack-Like Flaws" as crack
+component "Fire Damage" as fire
+component "Creep Damage" as creep
+component "Mechanical Damage" as mechanical
+component "Fatigue Damage" as Fatigue
+}
+
+package "Corrosion/Erosion" as ce {
+    package "pyintegrity Scope" as pyintegrityscope {
+    agent "Part4 \n Assessment of General Metal Loss" as corrosion_part4
+    agent "Part5 \n Assessment of Localized Metal Loss" as corrosion_part5
+    }
+agent "Part6 \n Assessment of Pitting Damage" as corrosion_part6
+agent "Part7 \n Assessment of Blisters" as corrosion_part7
+}
+
+corrosion - -> corrosion_part4
+corrosion_part4 - -> corrosion_part5
+corrosion_part5 - -> corrosion_part6
+corrosion_part6 - -> corrosion_part7
+
+footer
+2022.10.31 at 11:04
+ffs_scope.puml
+end footer
+
+@enduml
+
+PlantUML version 1.2022.8(Sun Sep 25 04:00:33 CDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

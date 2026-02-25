@@ -1,0 +1,3 @@
+# Case: External Turret Configuration
+BaseFile: ../base/turret_mooring_base.yml
+IncludeFile: ../variations/external_turret.yml

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Benchmark RAO Amplitude Overlay</title>
+<style>
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; }
+  .grid { display:grid; grid-template-columns:70% 30%; height:100vh; }
+  .plot { overflow:auto; }
+  .table-panel {
+    overflow:auto; padding:8px; background:#fafafa;
+    border-left:1px solid #ddd; font-size:12px;
+  }
+  .table-panel h3 { margin:12px 0 4px; font-size:13px; }
+  .table-panel table {
+    border-collapse:collapse; width:100%; margin-bottom:8px;
+  }
+  .table-panel th, .table-panel td {
+    border:1px solid #ccc; padding:3px 5px; text-align:right;
+  }
+  .table-panel th { background:#e8e8e8; font-weight:600; }
+  .table-panel td:first-child, .table-panel td:nth-child(2) {
+    text-align:left;
+  }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="plot"><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>                <div id="17b4230e-4ef0-44dd-80fd-1069f732675e" class="plotly-graph-div" style="height:1200px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("17b4230e-4ef0-44dd-80fd-1069f732675e")) {                    Plotly.newPlot(                        "17b4230e-4ef0-44dd-80fd-1069f732675e",                        [{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":true,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[0.6662263046854076,0.6495714058106706,0.5802511519802339,0.41892946290963207,0.15513728783809863,0.15513728783809844,0.41892946290963223,0.5802511519802338,0.6495714058106705,0.6662263046854071,0.6495714058106712,0.5802511519802338,0.41892946290963234,0.1551372878380987,0.15513728783809827,0.41892946290963207,0.5802511519802342,0.6495714058106707],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":true,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[0.6662263046854076,0.6495714058106706,0.5802511519802339,0.41892946290963207,0.15513728783809863,0.15513728783809844,0.41892946290963223,0.5802511519802338,0.6495714058106705,0.6662263046854071,0.6495714058106712,0.5802511519802338,0.41892946290963234,0.1551372878380987,0.15513728783809827,0.41892946290963207,0.5802511519802342,0.6495714058106707],"type":"scatter","xaxis":"x","yaxis":"y"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[1.205339014937763e-16,0.12748631549011788,0.2635396811711281,0.39431040830619074,0.47927093889672584,0.4792709388967259,0.39431040830619113,0.263539681171128,0.12748631549011782,1.796468266460895e-16,0.12748631549011788,0.26353968117112764,0.39431040830619063,0.4792709388967255,0.47927093889672573,0.39431040830619046,0.26353968117112836,0.1274863154901176],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[1.205339014937763e-16,0.12748631549011788,0.2635396811711281,0.39431040830619074,0.47927093889672584,0.4792709388967259,0.39431040830619113,0.263539681171128,0.12748631549011782,1.796468266460895e-16,0.12748631549011788,0.26353968117112764,0.39431040830619063,0.4792709388967255,0.47927093889672573,0.39431040830619046,0.26353968117112836,0.1274863154901176],"type":"scatter","xaxis":"x2","yaxis":"y2"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[0.7180116456010157,0.768567401995679,0.9050490742821973,1.0756347433791182,1.1962557075593183,1.196255707559318,1.0756347433791174,0.9050490742821968,0.7685674019956786,0.718011645601015,0.7685674019956799,0.9050490742821972,1.0756347433791165,1.1962557075593183,1.196255707559318,1.0756347433791171,0.905049074282197,0.7685674019956794],"type":"scatter","xaxis":"x3","yaxis":"y3"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[0.7180116456010157,0.768567401995679,0.9050490742821973,1.0756347433791182,1.1962557075593183,1.196255707559318,1.0756347433791174,0.9050490742821968,0.7685674019956786,0.718011645601015,0.7685674019956799,0.9050490742821972,1.0756347433791165,1.1962557075593183,1.196255707559318,1.0756347433791171,0.905049074282197,0.7685674019956794],"type":"scatter","xaxis":"x3","yaxis":"y3"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[2.2559982076482904e-15,1.7908169394808355,3.701448066554507,5.537380555366988,6.729979797191369,6.729979797191367,5.5373805553669735,3.7014480665545135,1.790816939480837,1.5534584135584753e-15,1.7908169394808315,3.7014480665545126,5.537380555366981,6.729979797191371,6.729979797191366,5.537380555366986,3.7014480665545086,1.7908169394808362],"type":"scatter","xaxis":"x4","yaxis":"y4"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[2.2559982076482904e-15,1.7908169394808355,3.701448066554507,5.537380555366988,6.729979797191369,6.729979797191367,5.5373805553669735,3.7014480665545135,1.790816939480837,1.5534584135584753e-15,1.7908169394808315,3.7014480665545126,5.537380555366981,6.729979797191371,6.729979797191366,5.537380555366986,3.7014480665545086,1.7908169394808362],"type":"scatter","xaxis":"x4","yaxis":"y4"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[99.7228813006463,96.95830014191634,86.03037516400549,61.67289366355109,22.73946465175861,22.739464651758567,61.67289366355113,86.03037516400543,96.95830014191627,99.7228813006462,96.95830014191644,86.03037516400548,61.6728936635511,22.739464651758645,22.73946465175856,61.67289366355109,86.0303751640055,96.95830014191631],"type":"scatter","xaxis":"x5","yaxis":"y5"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[99.7228813006463,96.95830014191634,86.03037516400549,61.67289366355109,22.73946465175861,22.739464651758567,61.67289366355113,86.03037516400543,96.95830014191627,99.7228813006462,96.95830014191644,86.03037516400548,61.6728936635511,22.739464651758645,22.73946465175856,61.67289366355109,86.0303751640055,96.95830014191631],"type":"scatter","xaxis":"x5","yaxis":"y5"},{"legendgroup":"OrcaWave (.owd)_0","line":{"color":"#1f77b4","dash":"solid"},"mode":"lines+markers","name":"OrcaWave (.owd) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[3.831167879362559e-15,7.1114998308928286,11.607583845245061,10.957048762524396,4.529272645968492,4.529272645968496,10.957048762524387,11.607583845245065,7.111499830892839,3.985675706650559e-15,7.111499830892843,11.607583845245054,10.95704876252439,4.529272645968502,4.5292726459684935,10.957048762524382,11.60758384524507,7.111499830892841],"type":"scatter","xaxis":"x6","yaxis":"y6"},{"legendgroup":"OrcaWave (spec.yml)_0","line":{"color":"#ff7f0e","dash":"dash"},"mode":"lines+markers","name":"OrcaWave (spec.yml) 2.00s","showlegend":false,"x":[0.0,20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0],"y":[3.831167879362559e-15,7.1114998308928286,11.607583845245061,10.957048762524396,4.529272645968492,4.529272645968496,10.957048762524387,11.607583845245065,7.111499830892839,3.985675706650559e-15,7.111499830892843,11.607583845245054,10.95704876252439,4.529272645968502,4.5292726459684935,10.957048762524382,11.60758384524507,7.111499830892841],"type":"scatter","xaxis":"x6","yaxis":"y6"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"matches":"x6","showticklabels":false},"yaxis":{"anchor":"x","domain":[0.8583333333333333,1.0]},"xaxis2":{"anchor":"y2","domain":[0.0,1.0],"matches":"x6","showticklabels":false},"yaxis2":{"anchor":"x2","domain":[0.6866666666666666,0.8283333333333334]},"xaxis3":{"anchor":"y3","domain":[0.0,1.0],"matches":"x6","showticklabels":false},"yaxis3":{"anchor":"x3","domain":[0.515,0.6566666666666667]},"xaxis4":{"anchor":"y4","domain":[0.0,1.0],"matches":"x6","showticklabels":false},"yaxis4":{"anchor":"x4","domain":[0.3433333333333333,0.485]},"xaxis5":{"anchor":"y5","domain":[0.0,1.0],"matches":"x6","showticklabels":false},"yaxis5":{"anchor":"x5","domain":[0.17166666666666666,0.31333333333333335]},"xaxis6":{"anchor":"y6","domain":[0.0,1.0],"title":{"text":"Heading (deg)"}},"yaxis6":{"anchor":"x6","domain":[0.0,0.14166666666666666]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Surge (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Sway (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":0.8283333333333334,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Heave (m\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":0.6566666666666667,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Roll (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":0.485,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Pitch (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":0.31333333333333335,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Yaw (deg\u002fm)","x":0.5,"xanchor":"center","xref":"paper","y":0.14166666666666666,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Benchmark RAO Amplitude Overlay"},"legend":{"font":{"size":10},"orientation":"v","yanchor":"top","y":1.0,"xanchor":"left","x":1.02,"tracegroupgap":2},"margin":{"l":60,"r":160,"t":80,"b":40},"height":1200},                        {"responsive": true}                    )                };                            </script>        </div></div>
+  <div class="table-panel"><h3>Surge (m/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>0.6662</td><td>2.00</td><td>0.6662</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>0.6662</td><td>2.00</td><td>0.6662</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>0.6662</td><td>2.00</td><td>0.6662</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>0.6662</td><td>2.00</td><td>0.6662</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>0.1551</td><td>2.00</td><td>0.1551</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>0.4189</td><td>2.00</td><td>0.4189</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>0.5803</td><td>2.00</td><td>0.5803</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>0.6496</td><td>2.00</td><td>0.6496</td><td>0.0</td></tr>
+</table>
+<h3>Sway (m/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>1.205e-16</td><td>2.00</td><td>1.205e-16</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>1.796e-16</td><td>2.00</td><td>1.796e-16</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>1.205e-16</td><td>2.00</td><td>1.205e-16</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>1.796e-16</td><td>2.00</td><td>1.796e-16</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>0.4793</td><td>2.00</td><td>0.4793</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>0.3943</td><td>2.00</td><td>0.3943</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>0.2635</td><td>2.00</td><td>0.2635</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>0.1275</td><td>2.00</td><td>0.1275</td><td>0.0</td></tr>
+</table>
+<h3>Heave (m/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>0.718</td><td>2.00</td><td>0.718</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>0.718</td><td>2.00</td><td>0.718</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>0.718</td><td>2.00</td><td>0.718</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>0.718</td><td>2.00</td><td>0.718</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>1.196</td><td>2.00</td><td>1.196</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>1.076</td><td>2.00</td><td>1.076</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>0.905</td><td>2.00</td><td>0.905</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>0.7686</td><td>2.00</td><td>0.7686</td><td>0.0</td></tr>
+</table>
+<h3>Roll (deg/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>2.256e-15</td><td>2.00</td><td>2.256e-15</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>1.553e-15</td><td>2.00</td><td>1.553e-15</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>2.256e-15</td><td>2.00</td><td>2.256e-15</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>1.553e-15</td><td>2.00</td><td>1.553e-15</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>6.73</td><td>2.00</td><td>6.73</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>5.537</td><td>2.00</td><td>5.537</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>3.701</td><td>2.00</td><td>3.701</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>1.791</td><td>2.00</td><td>1.791</td><td>0.0</td></tr>
+</table>
+<h3>Pitch (deg/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>99.72</td><td>2.00</td><td>99.72</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>99.72</td><td>2.00</td><td>99.72</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>99.72</td><td>2.00</td><td>99.72</td><td>0.0</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>99.72</td><td>2.00</td><td>99.72</td><td>0.0</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>22.74</td><td>2.00</td><td>22.74</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>61.67</td><td>2.00</td><td>61.67</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>86.03</td><td>2.00</td><td>86.03</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>96.96</td><td>2.00</td><td>96.96</td><td>0.0</td></tr>
+</table>
+<h3>Yaw (deg/m)</h3>
+<table>
+<tr><th>Hdg</th><th>Solver</th><th>Peak&nbsp;Amp</th><th>Peak&nbsp;T(s)</th><th>LP&nbsp;Amp</th><th>Diff(%)</th></tr>
+<tr><td>0</td><td>OrcaWave (.owd)</td><td>3.831e-15</td><td>2.00</td><td>3.831e-15</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (.owd)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (.owd)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (.owd)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (.owd)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (.owd)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (.owd)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (.owd)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (.owd)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (.owd)</td><td>3.986e-15</td><td>2.00</td><td>3.986e-15</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (.owd)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (.owd)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (.owd)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (.owd)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (.owd)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (.owd)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (.owd)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (.owd)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>0</td><td>OrcaWave (spec.yml)</td><td>3.831e-15</td><td>2.00</td><td>3.831e-15</td><td>-</td></tr>
+<tr><td>20</td><td>OrcaWave (spec.yml)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>40</td><td>OrcaWave (spec.yml)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>60</td><td>OrcaWave (spec.yml)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>80</td><td>OrcaWave (spec.yml)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>100</td><td>OrcaWave (spec.yml)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>120</td><td>OrcaWave (spec.yml)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>140</td><td>OrcaWave (spec.yml)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>160</td><td>OrcaWave (spec.yml)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>180</td><td>OrcaWave (spec.yml)</td><td>3.986e-15</td><td>2.00</td><td>3.986e-15</td><td>-</td></tr>
+<tr><td>200</td><td>OrcaWave (spec.yml)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+<tr><td>220</td><td>OrcaWave (spec.yml)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>240</td><td>OrcaWave (spec.yml)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>260</td><td>OrcaWave (spec.yml)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>280</td><td>OrcaWave (spec.yml)</td><td>4.529</td><td>2.00</td><td>4.529</td><td>0.0</td></tr>
+<tr><td>300</td><td>OrcaWave (spec.yml)</td><td>10.96</td><td>2.00</td><td>10.96</td><td>0.0</td></tr>
+<tr><td>320</td><td>OrcaWave (spec.yml)</td><td>11.61</td><td>2.00</td><td>11.61</td><td>0.0</td></tr>
+<tr><td>340</td><td>OrcaWave (spec.yml)</td><td>7.111</td><td>2.00</td><td>7.111</td><td>0.0</td></tr>
+</table></div>
+</div>
+</body>
+</html>

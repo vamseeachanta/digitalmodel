@@ -1,0 +1,5 @@
+,FileName,Nominal OD,Design WT,Pc,"Method1Utilization, Normal Operating Pressure, SLS","Method1Utilization, Installation, ALS","Method1Utilization, Design Pressure, ALS"
+0,K:\Dropbox\Dropbox\0119 Programming\001 VMStress2RD\COD\API-STD-2RD\Rev2\results\Summary_Burst_Pressure_OD_10p75_CA0p236.yml,10.75,1.24,19506.540530707825,0.5791203297005848,0.4621431790307672,0.5785914595358634
+1,K:\Dropbox\Dropbox\0119 Programming\001 VMStress2RD\COD\API-STD-2RD\Rev2\results\Summary_Burst_Pressure_OD_12p75_CA0p236.yml,12.75,1.43,18799.33099408757,0.6033769833420521,0.4815073773102651,0.601817633839356
+2,K:\Dropbox\Dropbox\0119 Programming\001 VMStress2RD\COD\API-STD-2RD\Rev2\results\Summary_Burst_Pressure_OD_14_CA0p236.yml,14.0,1.55,18483.09848294322,0.6150198495128052,0.49080468203306166,0.6125830737114913
+3,K:\Dropbox\Dropbox\0119 Programming\001 VMStress2RD\COD\API-STD-2RD\Rev2\results\Summary_Burst_Pressure_OD_16_CA0p236.yml,16.0,1.73,17920.595905713148,0.6272455981453579,0.5005469661815052,0.6267581362919908

@@ -1,0 +1,22 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\w_shielding\__01b_delete_vessel_objects.yml
+# Created: 5:43 PM on 9/1/2023
+# User: 
+# Machine: 
+---
+BaseFile: __01a_7Seas - SeastateRAO.dat
+General:
+  StageCount: 2
+  StageDuration[1]: 8
+  StageDuration[2]: 16
+Vessels:
+  region_b_EL:
+    Name: Seven_Seas
+Shapes:
+  Deleted:
+    - AFT Crane Pedestal
+    - Aft crane radius
+    - Aft crane radius range
+...

@@ -1,0 +1,466 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: NULL
+    nrows: 4
+    ncols: 1
+    suptitle: Riser Acceleration (m/s2)
+    sets:
+
+    -
+      title: BOP Blue MRU
+      xlabel: Date
+      ylabel: Forward Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Yellow MRU
+      xlabel: Date
+      ylabel: Forward Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Blue MRU
+      xlabel: Date
+      ylabel: Starboard Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Yellow MRU
+      xlabel: Date
+      ylabel: Starboard Direction (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: exp_range
+    nrows: 4
+    ncols: 1
+    suptitle: Riser Acceleration (m/s2)
+    sets:
+
+    -
+      title: BOP Blue MRU
+      xlabel: Date
+      ylabel: Forward Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-1, 1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Yellow MRU
+      xlabel: Date
+      ylabel: Forward Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-1, 1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Blue MRU
+      xlabel: Date
+      ylabel: Starboard Dir. (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-1, 1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRUACC
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Yellow MRU
+      xlabel: Date
+      ylabel: Starboard Direction (m/s2)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-1, 1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+

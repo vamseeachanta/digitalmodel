@@ -1,0 +1,16 @@
+basename: fatigue_analysis
+
+fatigue_data:
+  csv: True
+  io: tests/test_data/fatigue_analysis/fatigue_data.csv
+
+inputs:
+  software: NULL
+  calculation_type: damage
+  fatigue_curve: DnV 2005 C2 Seawater CP
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
