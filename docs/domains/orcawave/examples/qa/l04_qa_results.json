@@ -1,0 +1,32 @@
+{
+  "example_id": "L04",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L04 Sectional bodies\\L04 Sectional bodies.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 3,
+  "n_passed": 3,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "positive_damping_diagonal",
+      "passed": true,
+      "message": "Min diagonal damping = -0",
+      "value": -0.0,
+      "threshold": 0.0
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    }
+  ]
+}

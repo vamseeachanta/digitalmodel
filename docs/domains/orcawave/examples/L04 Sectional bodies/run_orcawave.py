@@ -33,6 +33,27 @@ except ImportError as e:
     print(f"[ERROR] Failed to import OrcFxAPI: {e}")
     sys.exit(1)
 
+# Keys added in OrcaWave versions newer than 11.6 — strip before loading
+_UNSUPPORTED_KEYS = {"PanelAngleWarningLevel"}
+
+
+def _load_data_compat(diff, yml_file):
+    """Load YAML stripping keys unsupported in OrcFxAPI 11.6.
+    Temp file is written in same directory so relative .gdf paths stay valid.
+    """
+    p = Path(yml_file)
+    text = p.read_text(encoding="utf-8")
+    filtered = "\n".join(
+        line for line in text.splitlines()
+        if not any(line.strip().startswith(k) for k in _UNSUPPORTED_KEYS)
+    )
+    tmp_path = p.parent / "_tmp_compat.yml"
+    try:
+        tmp_path.write_text(filtered, encoding="utf-8")
+        diff.LoadData(str(tmp_path))
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
 
 def main():
     example_dir = Path(__file__).parent
@@ -46,7 +67,7 @@ def main():
     print("  Solver: Direct LU | Drag linearisation: No | Bodies: 7 | Headings: 16")
 
     diff = OrcFxAPI.Diffraction(threadCount=12)
-    diff.LoadData(str(yml_file))
+    _load_data_compat(diff, yml_file)
 
     if diff.ValidationErrorText:
         print(f"[ERROR] Validation failed:\n{diff.ValidationErrorText}")

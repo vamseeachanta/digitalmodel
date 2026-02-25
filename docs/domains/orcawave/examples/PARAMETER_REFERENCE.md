@@ -107,7 +107,7 @@ reporting.
 | `PanelsPerWavelengthWarningLevel` | `5` | Minimum number of panels per wavelength below which a resolution warning fires. |
 | `PanelOverlapWarningLevel` | `100e-6`, `0.001` | Panel overlap distance (m) above which an overlap warning is issued. L02/L03 use 100e-6; L04/L05 use 0.001. Only present when `ValidatePanelArrangement: Yes`. |
 | `PanelGapWarningLevel` | `100e-6`, `0.001` | Panel gap distance (m) above which a gap warning is issued. Same pattern as overlap level. |
-| `PanelAngleWarningLevel` | `120` | Included angle (degrees) between adjacent panels above which a dihedral warning fires. L02/L03 only. |
+| `PanelAngleWarningLevel` | `120` | Included angle (degrees) between adjacent panels above which a dihedral warning fires. L02/L03 only. **⚠ Not supported in OrcFxAPI 11.6** — strip before loading via API (see run scripts). |
 
 ---
 

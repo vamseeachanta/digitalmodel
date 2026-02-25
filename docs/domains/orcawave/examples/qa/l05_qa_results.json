@@ -1,0 +1,39 @@
+{
+  "example_id": "L05",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L05 Panel pressures\\L05 Panel pressures.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 4,
+  "n_passed": 4,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "positive_damping_diagonal",
+      "passed": true,
+      "message": "Min diagonal damping = -0",
+      "value": -0.0,
+      "threshold": 0.0
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "panel_count",
+      "passed": true,
+      "message": "Panel count: 5238",
+      "value": 5238.0,
+      "threshold": null
+    }
+  ]
+}

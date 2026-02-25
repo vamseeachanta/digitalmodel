@@ -1,0 +1,39 @@
+{
+  "example_id": "L01",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L01_default_vessel\\L01 Default vessel.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 4,
+  "n_passed": 4,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "positive_damping_diagonal",
+      "passed": true,
+      "message": "Min diagonal damping = 3.098",
+      "value": 3.0981263135842285,
+      "threshold": 0.0
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "heave_rao_quasi_static",
+      "passed": true,
+      "message": "Heave RAO at T=22.0s = 0.979 (expected ~1.0 \u00b1 0.2)",
+      "value": 0.9790050180360211,
+      "threshold": 1.0
+    }
+  ]
+}
