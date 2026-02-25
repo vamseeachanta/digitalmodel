@@ -348,6 +348,38 @@ class StandardSNCurves:
         'E1': {'A': 1.81e10, 'm': 3.0, 'fatigue_limit': 18.0},
     }
 
+    # BS 7608 (revised) Curves — UK steel structures, m=4.0 slope
+    # log10(N) = log10(A) - m * log10(S), reference thickness t_ref=22mm
+    # Class D: log10(N) = 15.3697 - 4.0 * log10(S)  [S in MPa]
+    BS_7608_REVISED_CURVES = {
+        'D': {'A': 10 ** 15.3697, 'm': 4.0, 'fatigue_limit': 40.0,
+              'cutoff_cycles': 1e9},
+    }
+
+    # ISO 19902 Annex O — offshore fixed steel structures
+    # F_AIR:     log10(N) = 12.48 - 3.0 * log10(S)   [S in N/mm² = MPa]
+    # F_SW_NOCP: seawater without cathodic protection => N * 0.5 => A * 0.5
+    # F2_SW_CP:  log10(N) = 16.13 - 5.0 * log10(S)   for S < 100 MPa
+    ISO_19902_CURVES = {
+        'F_AIR': {'A': 10 ** 12.48, 'm': 3.0, 'fatigue_limit': 0.0,
+                  'cutoff_cycles': 1e8},
+        'F_SW_NOCP': {'A': 0.5 * 10 ** 12.48, 'm': 3.0, 'fatigue_limit': 0.0,
+                      'cutoff_cycles': 1e8},
+        'F2_SW_CP': {'A': 10 ** 16.13, 'm': 5.0, 'fatigue_limit': 0.0,
+                     'cutoff_cycles': 1e8},
+    }
+
+    # DNVGL-RP-C203 (latest) — T curve for tubular joints with SCF integration
+    # T_AIR:   log10(N) = 11.764 - 3.0 * log10(S)  [S in MPa]
+    # T_SW_CP: log10(N) = 11.68  - 3.0 * log10(S)  for N < 1e7 (seawater with CP)
+    # S_hot = SCF * S_nominal (apply at call site before passing to get_allowable_cycles)
+    DNVGL_RP_C203_CURVES = {
+        'T_AIR': {'A': 10 ** 11.764, 'm': 3.0, 'fatigue_limit': 0.0,
+                  'cutoff_cycles': 1e7},
+        'T_SW_CP': {'A': 10 ** 11.68, 'm': 3.0, 'fatigue_limit': 0.0,
+                    'cutoff_cycles': 1e7},
+    }
+
     _loaded_from_yaml: bool = False
 
     @classmethod
@@ -396,8 +428,21 @@ class StandardSNCurves:
             logger.warning("Failed to load SN curves YAML: %s, using hardcoded dicts", e)
 
     @classmethod
+    def _all_curves_dict(cls) -> Dict[str, Dict]:
+        """Return mapping of all standard names to their curve parameter dicts."""
+        return {
+            'DNV': cls.DNV_CURVES,
+            'API': cls.API_CURVES,
+            'BS': cls.BS_CURVES,
+            'AWS': cls.AWS_CURVES,
+            'BS_7608_REVISED': cls.BS_7608_REVISED_CURVES,
+            'ISO_19902': cls.ISO_19902_CURVES,
+            'DNVGL_RP_C203': cls.DNVGL_RP_C203_CURVES,
+        }
+
+    @classmethod
     def get_curve(cls,
-                  standard: Literal['DNV', 'API', 'BS', 'AWS'],
+                  standard: str,
                   curve_class: str,
                   material: Optional[MaterialProperties] = None) -> PowerLawSNCurve:
         """
@@ -405,10 +450,11 @@ class StandardSNCurves:
 
         Parameters
         ----------
-        standard : {'DNV', 'API', 'BS', 'AWS'}
-            Standard/code name
+        standard : str
+            Standard/code name.  Supported values: 'DNV', 'API', 'BS', 'AWS',
+            'BS_7608_REVISED', 'ISO_19902', 'DNVGL_RP_C203'.
         curve_class : str
-            Curve classification (e.g., 'D', 'C', 'X')
+            Curve classification (e.g., 'D', 'C', 'X', 'T_AIR')
         material : MaterialProperties, optional
             Material properties
 
@@ -418,19 +464,16 @@ class StandardSNCurves:
             Standard S-N curve
         """
         cls._ensure_loaded()
-        curves_dict = {
-            'DNV': cls.DNV_CURVES,
-            'API': cls.API_CURVES,
-            'BS': cls.BS_CURVES,
-            'AWS': cls.AWS_CURVES
-        }
+        curves_dict = cls._all_curves_dict()
 
         if standard not in curves_dict:
             raise ValueError(f"Unknown standard: {standard}")
 
         if curve_class not in curves_dict[standard]:
             available = list(curves_dict[standard].keys())
-            raise ValueError(f"Unknown {standard} curve class: {curve_class}. Available: {available}")
+            raise ValueError(
+                f"Unknown {standard} curve class: {curve_class}. Available: {available}"
+            )
 
         params = curves_dict[standard][curve_class]
         name = f"{standard}-{curve_class}"
@@ -440,6 +483,7 @@ class StandardSNCurves:
             A=params['A'],
             m=params['m'],
             fatigue_limit=params['fatigue_limit'],
+            cutoff_cycles=params.get('cutoff_cycles', 1e7),
             material=material
         )
 
@@ -497,7 +541,10 @@ class StandardSNCurves:
             'API': list(cls.API_CURVES.keys()),
             'BS': list(cls.BS_CURVES.keys()),
             'AWS': list(cls.AWS_CURVES.keys()),
-            'DNV_MULTISLOPE': list(cls.DNV_MULTISLOPE_CURVES.keys())
+            'DNV_MULTISLOPE': list(cls.DNV_MULTISLOPE_CURVES.keys()),
+            'BS_7608_REVISED': list(cls.BS_7608_REVISED_CURVES.keys()),
+            'ISO_19902': list(cls.ISO_19902_CURVES.keys()),
+            'DNVGL_RP_C203': list(cls.DNVGL_RP_C203_CURVES.keys()),
         }
 
         if standard:

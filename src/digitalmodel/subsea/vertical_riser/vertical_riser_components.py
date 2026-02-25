@@ -4,14 +4,14 @@ import math
 from assetutilities.common.data import ReadData
 
 from digitalmodel.custom.PipeSizing import PipeSizing
-from digitalmodel.infrastructure.common.typical_riser_stack_up_calculations import (
+from digitalmodel.infrastructure.base_solvers.marine.typical_riser_stack_up_calculations import (
     TypicalRiserStackUpCalculations,
 )
 from digitalmodel.solvers.orcaflex.orcaflex_model_components import (
     OrcaflexModelComponents,
 )
-from digitalmodel.infrastructure.common.shear7_model_components import Shear7ModelComponents
-from digitalmodel.infrastructure.common.visualizations import Visualization
+from digitalmodel.infrastructure.base_solvers.viv.shear7_model_components import Shear7ModelComponents
+from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
 
 
 class VerticalRiser:

@@ -6,15 +6,15 @@ from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
 from digitalmodel.hydrodynamics.aqwa import Aqwa
-from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
-from digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_circular import (
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
-from digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular import (
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
 from digitalmodel.signal_processing.signal_analysis.fatigue import FatigueDamageCalculator as FatigueAnalysis
-from digitalmodel.infrastructure.common.ship_design import ShipDesign
+from digitalmodel.infrastructure.base_solvers.marine.ship.ship_design import ShipDesign
 from digitalmodel.subsea.mooring_analysis import MooringDesigner
 from digitalmodel.solvers.orcaflex.orcaflex import OrcaFlex
 from digitalmodel.solvers.orcaflex.orcaflex_file_management import (
@@ -33,7 +33,7 @@ from digitalmodel.signal_processing.time_series.time_series_analysis import Time
 from digitalmodel.infrastructure.transformation.transformation import Transformation
 # from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.infrastructure.common.plate_buckling import PlateBuckling
+from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import PlateBuckling
 from loguru import logger
 from digitalmodel.solvers.orcaflex.output_control import OutputController, get_output_level_from_argv
 

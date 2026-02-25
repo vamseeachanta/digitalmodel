@@ -1,6 +1,0 @@
-Environment:
-  - includefile: _03a_sea_density.yml
-  - includefile: _03b_seabed.yml
-  - includefile: waves_180deg_1yr.yml
-  - includefile: current_180deg_1yr.yml
-  - includefile: wind_180deg_1yr.yml

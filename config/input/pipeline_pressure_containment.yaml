@@ -1,0 +1,47 @@
+# Pipeline pressure containment sizing workflow configuration
+# Standards: DNV-ST-F101 (2021) and API RP 1111 (4th Edition, 2015)
+# WRK-355: Pipeline and flexibles module — pressure containment checks
+#
+# Usage:
+#   from digitalmodel.subsea.pipeline.pipeline_pressure import run_sizing_from_yaml
+#   result = run_sizing_from_yaml("config/input/pipeline_pressure_containment.yaml")
+#
+# All dimensions in metres; all pressures in MPa.
+
+pipeline:
+  # Pipe geometry
+  outer_diameter_m: 0.3239          # 12.75-inch nominal OD
+
+  # Pressure design parameters
+  design_pressure_MPa: 20.0         # Internal design pressure
+  depth_m: 500.0                    # Water depth (external pressure source)
+
+  # Material (X52 | X60 | X65 | X70)
+  material: "X65"
+
+  # DNV-ST-F101 safety class (low | normal | high)
+  safety_class: "normal"
+
+  # Wall thickness allowances
+  corrosion_allowance_m: 0.001      # 1 mm corrosion allowance
+  fab_tol_pct: 12.5                 # 12.5% negative fabrication tolerance
+
+# ---------------------------------------------------------------------------
+# Example deepwater configuration (collapse-governed):
+# ---------------------------------------------------------------------------
+# pipeline:
+#   outer_diameter_m: 0.4064        # 16-inch OD
+#   design_pressure_MPa: 15.0
+#   depth_m: 2000.0
+#   material: "X65"
+#   safety_class: "normal"
+#   corrosion_allowance_m: 0.003
+#   fab_tol_pct: 12.5
+
+# ---------------------------------------------------------------------------
+# Material library reference (SMYS / SMTS per API 5L, MPa):
+#   X52:  SMYS=358  SMTS=455
+#   X60:  SMYS=413  SMTS=517
+#   X65:  SMYS=448  SMTS=531
+#   X70:  SMYS=482  SMTS=565
+# ---------------------------------------------------------------------------

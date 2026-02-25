@@ -264,7 +264,9 @@ class WaveSpectra:
             Spectral moment
         """
         integrand = frequencies**n * spectrum
-        return np.trapz(integrand, frequencies)
+        if hasattr(np, "trapezoid"):
+            return float(np.trapezoid(integrand, frequencies))
+        return float(np.trapz(integrand, frequencies))
 
     def significant_height_from_spectrum(
         self,

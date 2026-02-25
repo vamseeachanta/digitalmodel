@@ -1,0 +1,92 @@
+metadata:
+  extracted_at: '2026-02-25T00:00:00Z'
+  project: wellhead-fatigue
+  source_file: bop-wellhead-ref.dat
+  enriched: true
+  enrich_log:
+    source: synthetic-fixture/wellhead-fatigue/bop-wellhead-ref.dat
+    enriched_at: '2026-02-25T00:00:00Z'
+    lines_enriched: 3
+    vessels_enriched: 1
+lines:
+- component_type: marine_drilling_riser_joint
+  nps_in: 21.0
+  public_match:
+    component_id: RJ-21-75-BARE
+    grade_range:
+    - X-80
+    connection_type: flanged
+    pressure_rating_psi: 5000.0
+    manufacturer: null
+    api_standard: API-STD-16F
+    source: worldenergydata.vessel_fleet.DrillingRiserLoader
+  dat_properties:
+    OD:
+    - 0.5334
+    WallThickness:
+    - 0.0254
+    Length:
+    - 15.24
+    - 15.24
+    - 15.24
+    - 15.24
+    CDn: 1.0
+    CDt: 0.01
+    MassPerUnitLength: 322.5
+    EIx: 1.2e9
+    EIy: 1.2e9
+- component_type: pipeline_segment
+  nps_in: 10.0
+  public_match:
+    schedule: XS
+    grade_range:
+    - X52
+    - X80
+    standard: API 5L / ASME B36.10M
+    domain_hint: infield_pipeline
+    source: worldenergydata.bsee.pipeline.PipelineSpecLookup
+  dat_properties:
+    OD:
+    - 0.2731
+    WallThickness:
+    - 0.0127
+    Length:
+    - 50.0
+    - 50.0
+    - 50.0
+    CDn: 0.9
+    CDt: 0.01
+    MassPerUnitLength: 65.2
+- component_type: pipeline_segment
+  nps_in: 12.0
+  public_match:
+    schedule: XS
+    grade_range:
+    - X52
+    - X80
+    standard: API 5L / ASME B36.10M
+    domain_hint: infield_pipeline
+    source: worldenergydata.bsee.pipeline.PipelineSpecLookup
+  dat_properties:
+    OD:
+    - 0.3239
+    WallThickness:
+    - 0.0119
+    Length:
+    - 100.0
+    - 100.0
+    CDn: 0.9
+    CDt: 0.01
+    MassPerUnitLength: 91.5
+vessels:
+- vessel_class: drillship
+  water_depth_rating_m: 3048.0
+  public_source: worldenergydata.vessel_fleet.BSEE_rig_fleet
+  dat_properties:
+    InitialX: 0.0
+    InitialY: 0.0
+    InitialZ: 0.0
+    Length: 198.0
+    Beam: 38.0
+    Draft: 10.5
+    Displacement: 39000.0

@@ -43,6 +43,13 @@ def mock_imports():
         'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular',
         'digitalmodel.signal_processing.signal_analysis.fatigue',
         'digitalmodel.infrastructure.common.ship_design',
+        # New canonical paths (Phase 2D)
+        'digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection',
+        'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular',
+        'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular',
+        'digitalmodel.infrastructure.base_solvers.marine.ship.ship_design',
+        'digitalmodel.infrastructure.base_solvers.structural.plate_buckling',
+        'digitalmodel.infrastructure.base_solvers.marine.pipe_properties',
         'digitalmodel.modules.mooring.mooring',
         'digitalmodel.solvers.orcaflex.orcaflex',
         'digitalmodel.solvers.orcaflex.orcaflex_file_management',

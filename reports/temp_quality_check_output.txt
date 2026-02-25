@@ -1,2 +1,0 @@
-D:\workspace-hub\digitalmodel\src\digitalmodel\modules\marine_analysis\visualization\integration_charts.py:66: UserWarning: Some modules unavailable: No module named 'digitalmodel.modules.marine_analysis.mooring_analysis'
-  warnings.warn(f"Some modules unavailable: {e}")

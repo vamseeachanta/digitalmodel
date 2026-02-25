@@ -407,7 +407,6 @@ class BenchmarkRunner:
 
         return yaml_path
 
-    @staticmethod
     def _report_to_dict(
         self,
         report: BenchmarkReport,

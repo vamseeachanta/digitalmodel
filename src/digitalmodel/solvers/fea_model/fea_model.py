@@ -1,4 +1,4 @@
-from digitalmodel.infrastructure.common.FEAComponents import FEAComponents
+from digitalmodel.infrastructure.base_solvers.structural.fea.FEAComponents import FEAComponents
 
 
 def fea_model(cfg):

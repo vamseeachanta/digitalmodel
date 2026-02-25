@@ -2,7 +2,7 @@
 import logging
 
 # Reader imports
-from digitalmodel.infrastructure.common.pipe_properties import PipeProperties
+from digitalmodel.infrastructure.base_solvers.marine.pipe_properties import PipeProperties
 from digitalmodel.subsea.viv_analysis.viv_analysis_legacy import (
     viv_analysis as VIVAnalysisLegacy,
 )

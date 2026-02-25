@@ -70,18 +70,49 @@ def box_cmd(length, width, height, element_size, output, analyze):
                 nodes = mesh_data['nodes']
                 elements = mesh_data['elements']
 
-                # Get tetrahedral elements
-                if '4-node tetrahedron' in elements:
-                    elem_conn = elements['4-node tetrahedron']['connectivity']
+                # Prefer tetrahedral elements; fall back to triangles
+                _TET_KEY = 'Tetrahedron 4'
+                _TRI_KEY = 'Triangle 3'
+                elem_conn = None
+                if _TET_KEY in elements:
+                    elem_conn = elements[_TET_KEY]['connectivity']
+                elif _TRI_KEY in elements:
+                    elem_conn = elements[_TRI_KEY]['connectivity']
+                elif elements:
+                    elem_conn = next(iter(elements.values()))['connectivity']
 
+                # Only analyse 4-node tetrahedral elements; surface meshes
+                # produce Triangle 3 elements which require a different metric.
+                has_tets = (
+                    elem_conn is not None
+                    and len(elem_conn) > 0
+                    and elem_conn.shape[1] == 4
+                )
+
+                if has_tets:
                     quality = analyzer.analyze_tetrahedral_mesh(nodes, elem_conn)
 
                     click.echo("\n=== Mesh Quality ===\n")
-                    click.echo(f"Jacobian:      min={quality.min_jacobian:.3f}, mean={quality.mean_jacobian:.3f}")
-                    click.echo(f"Aspect Ratio:  max={quality.max_aspect_ratio:.2f}, mean={quality.mean_aspect_ratio:.2f}")
-                    click.echo(f"Skewness:      max={quality.max_skewness:.3f}, mean={quality.mean_skewness:.3f}")
+                    click.echo(
+                        f"Jacobian:      min={quality.min_jacobian:.3f},"
+                        f" mean={quality.mean_jacobian:.3f}"
+                    )
+                    click.echo(
+                        f"Aspect Ratio:  max={quality.max_aspect_ratio:.2f},"
+                        f" mean={quality.mean_aspect_ratio:.2f}"
+                    )
+                    click.echo(
+                        f"Skewness:      max={quality.max_skewness:.3f},"
+                        f" mean={quality.mean_skewness:.3f}"
+                    )
                     click.echo(f"\nQuality Score: {quality.quality_score:.1f}/100")
-                    click.echo(f"Status:        {'GOOD' if quality.is_good else 'ACCEPTABLE' if quality.is_acceptable else 'POOR'}")
+                    click.echo(
+                        f"Status:        "
+                        f"{'GOOD' if quality.is_good else 'ACCEPTABLE' if quality.is_acceptable else 'POOR'}"
+                    )
+                else:
+                    click.echo("\n=== Mesh Quality ===\n")
+                    click.echo("No 3D tetrahedral elements found (surface mesh only).")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -130,8 +161,8 @@ def cylinder_cmd(radius, height, element_size, output, analyze):
                 nodes = mesh_data['nodes']
                 elements = mesh_data['elements']
 
-                if '4-node tetrahedron' in elements:
-                    elem_conn = elements['4-node tetrahedron']['connectivity']
+                if 'Tetrahedron 4' in elements:
+                    elem_conn = elements['Tetrahedron 4']['connectivity']
                     quality = analyzer.analyze_tetrahedral_mesh(nodes, elem_conn)
 
                     click.echo("\n=== Mesh Quality ===\n")

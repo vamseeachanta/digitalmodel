@@ -1,5 +1,0 @@
-LineTypes:
-  includefile: _05_line_types.yml
-
-Lines:
-  includefile: _07_lines_discretised.yml

@@ -26,7 +26,7 @@ class TestImportErrorWhenMissing:
 
     def test_raises_import_error_without_folium(self) -> None:
         with patch(
-            "digitalmodel.specialized.gis.integrations.folium_maps.HAS_FOLIUM", False
+            "digitalmodel.gis.integrations.folium_maps.HAS_FOLIUM", False
         ):
             with pytest.raises(ImportError, match="folium is required"):
                 FoliumMapBuilder()

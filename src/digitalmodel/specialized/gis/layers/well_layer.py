@@ -16,7 +16,7 @@ from digitalmodel.gis.core.crs import CRSDefinition
 from digitalmodel.gis.core.geometry import GeoPoint
 from digitalmodel.gis.io.geojson_handler import GeoJSONHandler
 from digitalmodel.gis.io.kml_handler import KMLHandler
-from digitalmodel.gis.layers.feature_layer import FeatureLayer
+from .feature_layer import FeatureLayer
 
 logger = logging.getLogger(__name__)
 

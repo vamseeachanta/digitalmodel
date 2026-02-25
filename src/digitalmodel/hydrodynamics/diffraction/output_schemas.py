@@ -318,7 +318,7 @@ class DiffractionResults:
     hydrostatics: Optional[HydrostaticResults] = None
 
     # Metadata
-    created_date: str
+    created_date: str = ""
     analysis_date: Optional[str] = None
     source_files: Optional[List[str]] = None
     notes: Optional[str] = None

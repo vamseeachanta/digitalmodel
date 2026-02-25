@@ -18,7 +18,7 @@ if sys.platform == 'win32':
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from digitalmodel.infrastructure.validators.data_validator import DataValidator
+from digitalmodel.infrastructure.validation.data_validator import DataValidator
 
 # Setup logging
 logging.basicConfig(
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     print("  ✅ config/validation/validation_config.yaml")
     print("  ✅ examples/validation_examples.py")
     print("  ✅ examples/validation_integration_demo.py (this file)")
-    print("\nNote: Import using 'from digitalmodel.infrastructure.validators import DataValidator'")
+    print("\nNote: Import using 'from digitalmodel.infrastructure.validation import DataValidator'")
 
     try:
         # Run demos

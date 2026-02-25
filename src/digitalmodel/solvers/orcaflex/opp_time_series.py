@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 # Reader imports
-from digitalmodel.infrastructure.common.ETL_components import ETL_components
+from digitalmodel.infrastructure.utils.ETL_components import ETL_components
 from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents
 from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
 

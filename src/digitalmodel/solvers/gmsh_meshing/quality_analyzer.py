@@ -130,76 +130,89 @@ class MeshQualityAnalyzer:
 
     def _tetrahedron_jacobian(self, pts: np.ndarray) -> float:
         """
-        Compute Jacobian for tetrahedral element
+        Compute mean-ratio Jacobian quality metric for a tetrahedral element.
 
-        Jacobian = det(J) / |J|_Frobenius
-        where J is the Jacobian matrix
+        Uses the mean-ratio metric: q = 3 * (6V)^(2/3) / sum(|e_i|^2),
+        where V is the element volume and the sum runs over all 6 edges.
+        A regular (equilateral) tetrahedron scores ~0.4; a degenerate
+        element scores near 0. Values > 0.3 indicate acceptable quality.
 
         Args:
             pts: 4×3 array of tetrahedron vertices
 
         Returns:
-            Normalized Jacobian (0-1, higher is better)
+            Mean-ratio quality metric in [0, 1), higher is better.
         """
-        # Edges from first vertex
+        # Compute volume via scalar triple product
         e1 = pts[1] - pts[0]
         e2 = pts[2] - pts[0]
         e3 = pts[3] - pts[0]
+        volume = abs(float(np.dot(e1, np.cross(e2, e3)))) / 6.0
 
-        # Jacobian matrix
-        J = np.column_stack([e1, e2, e3])
-
-        # Determinant
-        det_J = np.linalg.det(J)
-
-        # Frobenius norm
-        norm_J = np.linalg.norm(J, 'fro')
-
-        if norm_J < 1e-12:
+        if volume < 1e-12:
             return 0.0
 
-        # Normalized Jacobian
-        jacobian = det_J / norm_J**3
+        # Sum of squares of all 6 edge lengths
+        edge_sq_sum = 0.0
+        for i in range(4):
+            for j in range(i + 1, 4):
+                edge_sq_sum += float(np.dot(pts[i] - pts[j], pts[i] - pts[j]))
 
-        return float(jacobian)
+        if edge_sq_sum < 1e-12:
+            return 0.0
+
+        # Mean-ratio metric: 3 * (6V)^(2/3) / sum(|e|^2)
+        six_v = 6.0 * volume
+        quality = 3.0 * (six_v ** (2.0 / 3.0)) / edge_sq_sum
+
+        return float(quality)
 
     def _tetrahedron_aspect_ratio(self, pts: np.ndarray) -> float:
         """
-        Compute aspect ratio for tetrahedral element
+        Compute aspect ratio for tetrahedral element.
 
-        AR = max_edge_length / min_altitude
+        AR = max_edge_length / min_altitude, where each altitude is
+        computed exactly as h_i = 3 * V / face_area_i.
 
         Args:
             pts: 4×3 array of tetrahedron vertices
 
         Returns:
-            Aspect ratio (1.0 is ideal, higher is worse)
+            Aspect ratio (1.0 is ideal for a regular tet, higher is worse)
         """
         # Compute all edge lengths
         edges = []
         for i in range(4):
-            for j in range(i+1, 4):
-                edge_length = np.linalg.norm(pts[i] - pts[j])
-                edges.append(edge_length)
+            for j in range(i + 1, 4):
+                edges.append(float(np.linalg.norm(pts[i] - pts[j])))
 
         max_edge = max(edges)
 
-        # Compute volume
+        # Compute volume via scalar triple product
         v = pts[1] - pts[0]
         u = pts[2] - pts[0]
         w = pts[3] - pts[0]
-        volume = abs(np.dot(v, np.cross(u, w))) / 6.0
+        volume = abs(float(np.dot(v, np.cross(u, w)))) / 6.0
 
         if volume < 1e-12:
             return 999.0
 
-        # Minimum altitude = 3 * volume / base_area
-        # Approximate using volume and max edge
-        min_altitude = 3 * volume / (max_edge**2)
+        # Compute all four face areas and the minimum altitude h = 3V / A
+        min_altitude = float("inf")
+        for k in range(4):
+            face = pts[[j for j in range(4) if j != k]]
+            a = face[1] - face[0]
+            b = face[2] - face[0]
+            area = 0.5 * float(np.linalg.norm(np.cross(a, b)))
+            if area > 1e-12:
+                altitude = 3.0 * volume / area
+                if altitude < min_altitude:
+                    min_altitude = altitude
 
-        aspect_ratio = max_edge / min_altitude if min_altitude > 1e-12 else 999.0
+        if min_altitude < 1e-12:
+            return 999.0
 
-        return float(aspect_ratio)
+        return float(max_edge / min_altitude)
 
     def _tetrahedron_skewness(self, pts: np.ndarray) -> float:
         """

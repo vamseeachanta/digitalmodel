@@ -1,9 +1,0 @@
-# Seabed
-SeabedType: Flat
-SeabedOrigin: [0, 0]
-WaterDepth: 10
-SeabedSlopeDirection: 0
-SeabedSlope: 0
-SeabedModel: Elastic
-SeabedNormalStiffness: 100
-SeabedShearStiffness: ~

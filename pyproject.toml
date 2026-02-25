@@ -187,6 +187,14 @@ docs = [
     "sphinx>=6.0",
     "sphinx-rtd-theme>=1.0",
 ]
+well = [
+    "the_well>=1.2.0",  # CC BY 4.0 — The Well turbulent flow datasets (Polymathic AI)
+]
+nde = [
+    # The Well acoustic scattering datasets for subsea NDE validation (WRK-418)
+    # CC BY 4.0, Polymathic AI — install: pip install digitalmodel[nde]
+    "the_well>=1.2.0",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/username/digitalmodel"

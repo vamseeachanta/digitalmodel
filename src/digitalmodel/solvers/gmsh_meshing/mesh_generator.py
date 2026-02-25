@@ -24,14 +24,16 @@ class GMSHMeshGenerator:
     Requires gmsh Python package: pip install gmsh
     """
 
-    # GMSH algorithm codes
+    # GMSH Algorithm3D codes for 3-D meshing.
+    # Code 1 = Delaunay (HXT), 4 = Frontal, 10 = HXT.
+    # Codes 5 and 6 produce "No elements in volume" for OCC box geometry.
     ALGORITHM_CODES = {
-        MeshAlgorithm.MESHADAPT: 1,
-        MeshAlgorithm.AUTOMATIC: 2,
-        MeshAlgorithm.DELAUNAY: 5,
-        MeshAlgorithm.FRONTAL: 6,
-        MeshAlgorithm.FRONTAL_DELAUNAY: 6,  # Default
-        MeshAlgorithm.PACKED_PARALLELOGRAMS: 7,
+        MeshAlgorithm.MESHADAPT: 4,
+        MeshAlgorithm.AUTOMATIC: 1,
+        MeshAlgorithm.DELAUNAY: 1,
+        MeshAlgorithm.FRONTAL: 4,
+        MeshAlgorithm.FRONTAL_DELAUNAY: 1,  # Default — Delaunay works reliably
+        MeshAlgorithm.PACKED_PARALLELOGRAMS: 10,
     }
 
     def __init__(self):
@@ -222,8 +224,11 @@ class GMSHMeshGenerator:
         for elem_type in element_types:
             elem_tags, elem_nodes = gmsh.model.mesh.getElementsByType(elem_type)
 
-            # Get element properties
-            elem_name, dim, order, num_nodes_per_elem, _ = gmsh.model.mesh.getElementProperties(elem_type)
+            # Get element properties (API returns variable-length tuple)
+            props = gmsh.model.mesh.getElementProperties(elem_type)
+            elem_name, dim, order, num_nodes_per_elem = (
+                props[0], props[1], props[2], props[3]
+            )
 
             # Reshape connectivity
             connectivity = elem_nodes.reshape(-1, num_nodes_per_elem)

@@ -218,9 +218,9 @@ class TestIntegration:
             elements = mesh_data['elements']
 
             # Analyze quality
-            if '4-node tetrahedron' in elements:
+            if 'Tetrahedron 4' in elements:
                 analyzer = MeshQualityAnalyzer()
-                elem_conn = elements['4-node tetrahedron']['connectivity']
+                elem_conn = elements['Tetrahedron 4']['connectivity']
 
                 quality = analyzer.analyze_tetrahedral_mesh(nodes, elem_conn)
 

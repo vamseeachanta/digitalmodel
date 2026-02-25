@@ -1,5 +1,0 @@
-# This directory stores cross-repository test results
-# Generated files:
-# - dashboard-{timestamp}.html - Interactive Plotly dashboard
-# - results-{timestamp}.csv - CSV export of all results
-# - test-results-{timestamp}.json - Full JSON results with metadata

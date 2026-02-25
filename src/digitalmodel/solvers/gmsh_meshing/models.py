@@ -86,13 +86,26 @@ class MeshQuality:
 
     @property
     def quality_score(self) -> float:
-        """Overall quality score (0-100)"""
-        # Weighted average of metrics
-        jacobian_score = min(100, self.min_jacobian / 0.3 * 100)
-        aspect_score = max(0, (1 - self.max_aspect_ratio / 10.0) * 100)
-        skewness_score = max(0, (1 - self.max_skewness) * 100)
+        """Overall quality score (0-100).
 
-        return (jacobian_score + aspect_score + skewness_score) / 3.0
+        Weighted sum of three normalised metrics (weights: 50/30/20):
+        - Jacobian (weight 50%): 100 at J >= 0.3 (good), 0 at J = 0
+        - Aspect ratio (weight 30%): 100 at AR = 1 (ideal), 0 at AR = 10
+        - Skewness (weight 20%): 100 at S = 0 (ideal), 0 at S = 0.9
+
+        A mesh satisfying all ``is_good`` conditions scores >= 80.
+        """
+        jacobian_score = min(100.0, self.min_jacobian / 0.3 * 100.0)
+        aspect_score = max(
+            0.0, (1.0 - (self.max_aspect_ratio - 1.0) / 9.0) * 100.0
+        )
+        skewness_score = max(0.0, (1.0 - self.max_skewness / 0.9) * 100.0)
+
+        return (
+            0.50 * jacobian_score
+            + 0.30 * aspect_score
+            + 0.20 * skewness_score
+        )
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""

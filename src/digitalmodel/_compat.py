@@ -119,7 +119,8 @@ _FLAT_TO_GROUP: dict[str, str] = {
     "services": "infrastructure",
     "domains": "infrastructure",
     "validation": "infrastructure",
-    "validators": "infrastructure",
+    # "validators" removed (WRK-415 Phase 2B): infrastructure/validators/ deleted,
+    # all callers migrated to infrastructure/validation/
     "templates": "infrastructure",
     "calculations": "infrastructure",
     "transformation": "infrastructure",
@@ -161,7 +162,7 @@ _FLAT_TO_FULL_PATH: dict[str, str] = {
     "orcaflex_post_process": "digitalmodel.solvers.orcaflex.post_process",
     "fatigue_analysis": "digitalmodel.structural.fatigue_apps",
     "diffraction_cli": "digitalmodel.hydrodynamics.diffraction.diffraction_cli",
-    "standards_lookup": "digitalmodel.infrastructure.common.standards_lookup",
+    "standards_lookup": "digitalmodel.infrastructure.utils.standards_lookup",
 }
 
 

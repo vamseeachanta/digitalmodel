@@ -1,1 +1,0 @@
-/usr/bin/bash: line 1: vulture: command not found

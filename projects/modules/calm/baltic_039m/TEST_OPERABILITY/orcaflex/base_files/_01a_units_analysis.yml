@@ -1,7 +1,0 @@
-# Units
-UnitsSystem: SI
-# Reset
-LineResetRepresentation: Quick
-# Analysis data
-JacobianBufferingPolicy: 01
-JacobianPerturbationFactor: 0.0001

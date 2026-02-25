@@ -38,6 +38,15 @@ from .mesh_refiner import (
     convergence_summary,
 )
 from .lookup import HullLookupTarget, HullMatch, HullLookup, get_hull_form
+from .parametric_hull import ParametricRange, HullParametricSpace
+from .rao_database import RAODatabaseEntry, RAODatabase
+from .rao_lookup_plots import (
+    per_hull_rao_plot,
+    comparison_plot,
+    parameter_sweep_plot,
+    export_html,
+    export_png,
+)
 
 __all__ = [
     # Profile schema
@@ -84,4 +93,16 @@ __all__ = [
     "HullMatch",
     "HullLookup",
     "get_hull_form",
+    # Parametric hull (WRK-043 Phase 1)
+    "ParametricRange",
+    "HullParametricSpace",
+    # RAO database (WRK-043 Phase 3)
+    "RAODatabaseEntry",
+    "RAODatabase",
+    # RAO lookup plots (WRK-043 Phase 4)
+    "per_hull_rao_plot",
+    "comparison_plot",
+    "parameter_sweep_plot",
+    "export_html",
+    "export_png",
 ]

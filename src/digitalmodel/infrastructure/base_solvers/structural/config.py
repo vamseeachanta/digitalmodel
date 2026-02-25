@@ -5,6 +5,13 @@ ABOUTME: Extends Phase 2.1 ConfigManager with structural parameters
 
 from typing import Dict, Any
 
+from assetutilities.constants import (
+    E_STEEL,
+    NU_STEEL,
+    RHO_STEEL,
+    FY_A36,
+)
+
 # Structural Solver Configuration Schema
 STRUCTURAL_CONFIG_SCHEMA = {
     "analysis_type": {
@@ -30,14 +37,14 @@ STRUCTURAL_CONFIG_SCHEMA = {
         "min": 1e9,
         "max": 1e12,
         "unit": "Pa",
-        "default": 2.1e11,
-        "description": "Young's modulus (Pa). Default: steel (2.1e11)"
+        "default": E_STEEL,
+        "description": "Young's modulus (Pa). Default: steel (E_STEEL from assetutilities)"
     },
     "poissons_ratio": {
         "type": float,
         "min": 0.0,
         "max": 0.5,
-        "default": 0.3,
+        "default": NU_STEEL,
         "description": "Poisson's ratio (dimensionless)"
     },
     "density": {
@@ -45,16 +52,16 @@ STRUCTURAL_CONFIG_SCHEMA = {
         "min": 100,
         "max": 20000,
         "unit": "kg/m^3",
-        "default": 7850,
-        "description": "Material density (kg/m³). Default: steel (7850)"
+        "default": RHO_STEEL,
+        "description": "Material density (kg/m³). Default: steel (RHO_STEEL from assetutilities)"
     },
     "yield_strength": {
         "type": float,
         "min": 1e7,
         "max": 1e9,
         "unit": "Pa",
-        "default": 2.5e8,
-        "description": "Yield strength (Pa). Default: steel (2.5e8)"
+        "default": FY_A36,
+        "description": "Yield strength (Pa). Default: ASTM A36 (FY_A36 from assetutilities)"
     },
     "solver_type": {
         "type": str,
@@ -92,12 +99,13 @@ STRUCTURAL_CONFIG_SCHEMA = {
 }
 
 # Material property presets
+# Elastic constants sourced from assetutilities.constants (E_STEEL, NU_STEEL, RHO_STEEL)
 MATERIAL_PROPERTIES = {
     "steel": {
-        "E": 2.1e11,        # Pa
-        "nu": 0.3,          # Dimensionless
-        "rho": 7850,        # kg/m³
-        "sigma_y": 2.5e8,   # Pa
+        "E": E_STEEL,       # Pa — from assetutilities.constants
+        "nu": NU_STEEL,     # Dimensionless
+        "rho": RHO_STEEL,   # kg/m³
+        "sigma_y": FY_A36,  # Pa — ASTM A36 min yield
         "name": "Mild Steel"
     },
     "aluminum": {

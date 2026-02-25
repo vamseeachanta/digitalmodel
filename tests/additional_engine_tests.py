@@ -27,6 +27,12 @@ mock_modules = {
     'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
     'digitalmodel.signal_processing.signal_analysis.fatigue': MagicMock(),
     'digitalmodel.infrastructure.common.ship_design': MagicMock(),
+    # New canonical paths (Phase 2D)
+    'digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection': MagicMock(),
+    'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular': MagicMock(),
+    'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
+    'digitalmodel.infrastructure.base_solvers.marine.ship.ship_design': MagicMock(),
+    'digitalmodel.infrastructure.base_solvers.structural.plate_buckling': MagicMock(),
     'digitalmodel.modules.mooring.mooring': MagicMock(),
     'digitalmodel.solvers.orcaflex.orcaflex': MagicMock(),
     'digitalmodel.solvers.orcaflex.orcaflex_file_management': MagicMock(),
@@ -41,6 +47,7 @@ mock_modules = {
     'digitalmodel.subsea.vertical_riser.vertical_riser': MagicMock(),
     'digitalmodel.subsea.viv_analysis.viv_analysis': MagicMock(),
     'digitalmodel.infrastructure.common.plate_buckling': MagicMock(),
+    'digitalmodel.infrastructure.base_solvers.marine.pipe_properties': MagicMock(),
     'loguru': MagicMock(),
     'digitalmodel.solvers.orcaflex.output_control': MagicMock(),
 }
