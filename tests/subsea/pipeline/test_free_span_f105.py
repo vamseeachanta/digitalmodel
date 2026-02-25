@@ -30,6 +30,9 @@ from digitalmodel.subsea.pipeline.free_span.span_allowable_length import (
     SpanAllowableLength,
 )
 from digitalmodel.subsea.pipeline.free_span import FreespanVIVFatigue
+from digitalmodel.subsea.pipeline.free_span.span_natural_frequency import (
+    _added_mass_coefficient,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +83,25 @@ def below_onset_input(ref_input):
 # Natural Frequency tests (F105 Sec 6.8)
 # ---------------------------------------------------------------------------
 
+class TestAddedMassCoefficient:
+    """Unit tests for Ca(e/D) seabed proximity function."""
+
+    def test_far_from_seabed_ca_equals_one(self):
+        assert _added_mass_coefficient(1.0) == 1.0
+        assert _added_mass_coefficient(0.8) == 1.0
+
+    def test_on_seabed_ca_equals_one_point_five(self):
+        assert abs(_added_mass_coefficient(0.0) - 1.5) < 1e-9
+
+    def test_midpoint_interpolation(self):
+        """Ca at e/D=0.4 should be midway between 1.5 and 1.0."""
+        assert abs(_added_mass_coefficient(0.4) - 1.25) < 1e-9
+
+    def test_negative_gap_clamped(self):
+        """Negative seabed gap is physically impossible — clamp to e/D=0 (Ca=1.5)."""
+        assert _added_mass_coefficient(-0.5) == _added_mass_coefficient(0.0)
+
+
 class TestSpanNaturalFrequency:
     def test_fn_IL_pinned_pinned_range(self, ref_input):
         """fn_IL for PP span L=34m must be within ±15% of 0.42 Hz."""
@@ -121,6 +143,33 @@ class TestSpanNaturalFrequency:
         fn_no = SpanNaturalFrequency(inp_no_sag).fn_IL()
         fn_sag = SpanNaturalFrequency(inp_sag).fn_IL()
         assert fn_sag >= fn_no
+
+    def test_tensile_axial_force_increases_fn(self, ref_input):
+        """Positive Se (tension) increases natural frequency per F105 Eq 6.8-1."""
+        from dataclasses import replace
+        fn_base = SpanNaturalFrequency(ref_input).fn_IL()
+        inp_tension = replace(ref_input, effective_axial_force_N=500_000.0)  # 500 kN tension
+        fn_tension = SpanNaturalFrequency(inp_tension).fn_IL()
+        assert fn_tension > fn_base
+
+    def test_compressive_axial_force_reduces_fn(self, ref_input):
+        """Negative Se (compression) reduces natural frequency per F105 Eq 6.8-1."""
+        from dataclasses import replace
+        fn_base = SpanNaturalFrequency(ref_input).fn_IL()
+        inp_compression = replace(ref_input, effective_axial_force_N=-200_000.0)  # 200 kN compression
+        fn_compression = SpanNaturalFrequency(inp_compression).fn_IL()
+        assert fn_compression < fn_base
+
+    def test_seabed_proximity_increases_added_mass(self, ref_input):
+        """Small seabed gap (e/D < 0.8) gives Ca > 1 → higher m_e → lower fn."""
+        from dataclasses import replace
+        # Far from seabed: e/D >> 0.8 → Ca = 1.0
+        inp_far = replace(ref_input, seabed_gap_m=5.0)
+        # Close to seabed: e/D = 0.2 → Ca = 1.375
+        inp_close = replace(ref_input, seabed_gap_m=0.2 * ref_input.od_m)
+        fn_far = SpanNaturalFrequency(inp_far).fn_IL()
+        fn_close = SpanNaturalFrequency(inp_close).fn_IL()
+        assert fn_close < fn_far, "Seabed proximity should increase m_e and reduce fn"
 
 
 # ---------------------------------------------------------------------------
@@ -173,7 +222,8 @@ class TestSpanOnsetScreening:
                                  freq.m_effective_kgm)
         Ks = scr.stability_parameter()
         Vr_on = scr.il_onset_velocity(Ks)
-        if Ks < 0.4 / inp.gamma_k:
+        # Ks is already post-gamma_k; check against 0.4 directly (F105 Sec 4.3.5)
+        if Ks < 0.4:
             expected = 1.0 / inp.gamma_on_IL
             assert abs(Vr_on - expected) < 0.01
 
@@ -287,6 +337,35 @@ class TestSpanFatigueDamage:
         fat_low = self._build_with_stress(ref_input, stress_mpa=50.0)
         fat_high = self._build_with_stress(ref_input, stress_mpa=80.0)
         assert fat_high.fatigue_life_years() < fat_low.fatigue_life_years()
+
+    def test_fixed_fixed_cbc_gives_higher_stress_at_same_amplitude(
+        self, ref_input, ff_input
+    ):
+        """Fixed-fixed stress > pinned-pinned at the same A/D.
+
+        Validates the Cbc boundary-condition curvature factor:
+          Cbc_pp=1.0, Cbc_ff=2.3 → σ_ff/σ_pp ≈ 2.3 for equal amplitude.
+
+        Note: for the same span length and current velocity, the higher fixed-fixed
+        natural frequency may lower the reduced velocity and thus the actual VIV
+        amplitude — but the stress PER UNIT AMPLITUDE is always higher for ff.
+        """
+        freq_pp = SpanNaturalFrequency(ref_input).compute()
+        freq_ff = SpanNaturalFrequency(ff_input).compute()
+        Ks_dummy = 0.3  # same for both; we're testing Cbc, not amplitude
+        amp_pp = SpanVIVAmplitude(ref_input, Ks_dummy, freq_pp.fn_IL_hz,
+                                  freq_pp.fn_CF_hz, freq_pp.EI_Nm2,
+                                  freq_pp.m_effective_kgm)
+        amp_ff = SpanVIVAmplitude(ff_input, Ks_dummy, freq_ff.fn_IL_hz,
+                                  freq_ff.fn_CF_hz, freq_ff.EI_Nm2,
+                                  freq_ff.m_effective_kgm)
+        A_over_D = 0.5  # controlled equal amplitude
+        sigma_pp = amp_pp.stress_from_amplitude(A_over_D, freq_pp.fn_CF_hz, mode="CF")
+        sigma_ff = amp_ff.stress_from_amplitude(A_over_D, freq_ff.fn_CF_hz, mode="CF")
+        assert sigma_ff > sigma_pp, (
+            f"Fixed-fixed stress ({sigma_ff:.1f} MPa) should exceed "
+            f"pinned-pinned ({sigma_pp:.1f} MPa) at same A/D"
+        )
 
     def test_dnv_f_class_wired_correctly(self, ref_input):
         """DNV F-class (in air): N = 1.73e11 * S^-3. Verify allowable cycles."""

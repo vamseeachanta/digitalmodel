@@ -71,13 +71,16 @@ class SpanAllowableLength:
         return inp.e_modulus_pa * I
 
     def _compute_m_e(self) -> float:
+        """Effective mass with seabed proximity Ca correction (F105 Sec 6.8.2)."""
+        from .span_natural_frequency import _added_mass_coefficient
         inp = self._inp
         id_m = inp.od_m - 2.0 * inp.wt_m
         A_steel = math.pi / 4.0 * (inp.od_m**2 - id_m**2)
         A_bore = math.pi / 4.0 * id_m**2
         m_pipe = inp.steel_density_kgm3 * A_steel
         m_content = inp.content_density_kgm3 * A_bore
-        m_added = 1.0 * inp.water_density_kgm3 * math.pi / 4.0 * inp.od_m**2
+        Ca = _added_mass_coefficient(inp.seabed_gap_m / inp.od_m)
+        m_added = Ca * inp.water_density_kgm3 * math.pi / 4.0 * inp.od_m**2
         return m_pipe + m_content + m_added
 
     # ------------------------------------------------------------------

@@ -55,6 +55,7 @@ def _added_mass_coefficient(e_over_D: float) -> float:
     """
     if e_over_D >= 0.8:
         return _CA_BASE
+    e_over_D = max(0.0, e_over_D)  # clamp: negative gap is physically impossible
     # interpolate from Ca=1.5 at e/D=0 to Ca=1.0 at e/D=0.8
     return 1.0 + 0.5 * (1.0 - e_over_D / 0.8)
 _TWO_PI = 2.0 * math.pi
