@@ -148,9 +148,16 @@ class KMLHandler:
         Each feature dictionary contains the keys:
         ``name``, ``description``, ``geometry_type``, ``coordinates``,
         and ``properties``.
+
+        The parser disables external entity resolution and network access
+        to prevent XXE attacks on untrusted KML input.
         """
         file_path = Path(file_path)
-        tree = etree.parse(str(file_path))
+        parser = etree.XMLParser(
+            resolve_entities=False,
+            no_network=True,
+        )
+        tree = etree.parse(str(file_path), parser=parser)
         root = tree.getroot()
 
         features: list[dict] = []
@@ -161,12 +168,22 @@ class KMLHandler:
 
     @staticmethod
     def read_kmz(file_path: str | Path) -> list[dict]:
-        """Extract a KMZ archive and parse the KML file found inside."""
+        """Extract a KMZ archive and parse the KML file found inside.
+
+        Uses safe extraction that rejects entries with absolute paths or
+        ``..`` path segments to prevent zip-slip path traversal attacks.
+        """
         file_path = Path(file_path)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             with zipfile.ZipFile(file_path, "r") as zf:
-                zf.extractall(tmp_dir)
+                for member in zf.infolist():
+                    member_path = Path(member.filename)
+                    if member_path.is_absolute() or ".." in member_path.parts:
+                        raise ValueError(
+                            f"Refusing to extract unsafe path: {member.filename}"
+                        )
+                    zf.extract(member, tmp_dir)
 
             kml_path: Path | None = None
             for path in Path(tmp_dir).rglob("*.kml"):

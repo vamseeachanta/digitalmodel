@@ -11,10 +11,9 @@ class CoordinatePoint:
     crs: str = "EPSG:4326"  # Default to WGS84
 
     def __post_init__(self):
-        # Validate CRS
+        # Validate and normalise CRS to canonical EPSG:<code> form
         try:
             if ":" in self.crs:
-                # Expecting EPSG:XXXX
                 parts = self.crs.split(":")
                 if parts[0].upper() != "EPSG":
                     raise ValueError("Only EPSG codes are supported currently")
@@ -22,10 +21,11 @@ class CoordinatePoint:
             elif self.crs.upper() == "WGS84":
                 self.crs = "EPSG:4326"
             else:
-                # If it's not EPSG and not WGS84, it might be invalid
-                # but we'll try to let CRSDefinition handle it if it's an EPSG number
-                CRSDefinition.from_epsg(int(self.crs))
-        except Exception:
+                # Bare numeric string (e.g. "3857") — normalise to EPSG:<code>
+                epsg_code = int(self.crs)
+                CRSDefinition.from_epsg(epsg_code)
+                self.crs = f"EPSG:{epsg_code}"
+        except (ValueError, TypeError):
             raise ValueError(f"Invalid CRS: {self.crs}")
 
     def to_crs(self, target_crs: str) -> 'CoordinatePoint':

@@ -63,8 +63,8 @@ class FeatureLayer:
 
     @property
     def data(self) -> pd.DataFrame:
-        """The underlying DataFrame (read-only copy)."""
-        return self._data
+        """The underlying DataFrame (defensive copy)."""
+        return self._data.copy()
 
     @property
     def name(self) -> str:

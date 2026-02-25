@@ -31,6 +31,11 @@ def _tag(local_name: str) -> str:
     return f"{{{KML_NS}}}{local_name}"
 
 
+def _sanitise_style_id(value: str) -> str:
+    """Sanitise a value for use as a KML style ID attribute."""
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in str(value))
+
+
 class GoogleEarthExporter:
     """Export offshore assets to styled KML files for Google Earth."""
 
@@ -75,7 +80,7 @@ class GoogleEarthExporter:
             # Create Style elements for each unique value
             for val, color in color_map.items():
                 style = etree.SubElement(document, _tag("Style"))
-                style.set("id", f"style-{val}")
+                style.set("id", f"style-{_sanitise_style_id(val)}")
                 icon_style = etree.SubElement(style, _tag("IconStyle"))
                 color_el = etree.SubElement(icon_style, _tag("color"))
                 color_el.text = color
@@ -117,7 +122,7 @@ class GoogleEarthExporter:
                 val = row.get(color_by)
                 if val is not None:
                     style_url = etree.SubElement(placemark, _tag("styleUrl"))
-                    style_url.text = f"#style-{val}"
+                    style_url.text = f"#style-{_sanitise_style_id(str(val))}"
             elif icon_url:
                 style_url = etree.SubElement(placemark, _tag("styleUrl"))
                 style_url.text = "#default-style"
