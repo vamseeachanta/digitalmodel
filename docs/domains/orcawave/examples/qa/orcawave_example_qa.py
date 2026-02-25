@@ -337,21 +337,27 @@ def check_l06(owr_path: Path) -> ExampleQAResult:
     _check_raos_finite(diff, result)
     _check_added_mass_finite(diff, result)
 
-    # QTF-specific check: verify QTF data is present
+    # QTF-specific check: verify QTF frequency grid and heading pairs are present
     try:
-        # Check that QTF results exist (attribute presence varies by OrcaWave version)
-        has_qtf = hasattr(diff, "QTFResults") or hasattr(diff, "qtfResults")
+        qtf_freqs = np.array(diff.QTFFrequencies)   # shape (n_pairs, n_freq)
+        qtf_hdgs = list(diff.QTFHeadingPairs)
+        n_freq_pairs = qtf_freqs.shape[0]
+        n_hdg_pairs = len(qtf_hdgs)
+        passed = n_freq_pairs > 0 and n_hdg_pairs > 0
         result.checks.append(QACheck(
             name="qtf_data_present",
-            passed=has_qtf,
-            message="QTF results attribute present" if has_qtf
-                    else "QTF results not found (may be version-dependent)",
+            passed=passed,
+            message=(
+                f"QTF frequency grid shape {qtf_freqs.shape}; "
+                f"{n_hdg_pairs} heading pair(s)"
+            ),
+            value=float(n_freq_pairs * n_hdg_pairs),
         ))
     except Exception as e:
         result.checks.append(QACheck(
             name="qtf_data_present",
             passed=False,
-            message=f"Error: {e}",
+            message=f"Error accessing QTF data: {e}",
         ))
 
     return result
