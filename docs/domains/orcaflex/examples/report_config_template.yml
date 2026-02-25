@@ -1,0 +1,42 @@
+# OrcaFlex HTML Report Config Template
+#
+# Pass to generate_orcaflex_report() via the config_yml argument:
+#
+#   from digitalmodel.orcaflex.reporting import generate_orcaflex_report
+#   generate_orcaflex_report("model.sim", "report.html", config_yml="report_config.yml")
+#
+# Or run the builder directly:
+#   uv run python -c "
+#     from digitalmodel.orcaflex.reporting import generate_orcaflex_report
+#     generate_orcaflex_report('A01_catenary_riser.sim', 'A01_report.html')
+#   "
+
+title: "OrcaFlex Analysis Report"
+
+sections:
+  # Section 1: Model object counts, environment, simulation settings
+  model_summary: true
+
+  # Section 2: Static results — line profiles, vessel draft
+  static_config: true
+
+  # Section 3: Dynamic time series — vessel DOFs, line end tensions
+  time_series: true
+
+  # Section 4: Range graph envelopes — min/max/mean along arc length
+  range_graphs: true
+
+  # Section 5: Code check utilisation table
+  # Requires code check results saved in the .sim file
+  code_check: false
+
+  # Section 6: Mooring fairlead tensions and watch circle
+  # Enable for moored systems (mooring lines in model)
+  mooring_loads: false
+
+  # Section 7: Modal natural frequencies and mode shapes
+  # Requires modal analysis run and saved in OrcaFlex
+  modal_analysis: false
+
+  # Section 8: QA pass/fail summary from orcaflex_example_qa.py results
+  qa_summary: true
