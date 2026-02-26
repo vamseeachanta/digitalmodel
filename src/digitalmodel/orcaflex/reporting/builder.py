@@ -24,16 +24,15 @@ _HTML_TEMPLATE = """\
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-    crossorigin="anonymous">
   <script src="{plotlyjs_src}" {plotlyjs_attrs}></script>
   <style>
-    body {{ font-family: "Segoe UI", system-ui, sans-serif; background: #f8f9fa; }}
+    body {{ font-family: "Segoe UI", system-ui, sans-serif; background: #f8f9fa; margin: 0; }}
+    .container {{ width: min(1280px, 95vw); margin: 0 auto; }}
     .report-header {{ background: #0d6efd; color: white; padding: 2rem; margin-bottom: 2rem; }}
+    .header-subtitle {{ margin: 0; opacity: 0.75; }}
     .section-card {{ background: white; border-radius: 8px; padding: 1.5rem;
                     margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }}
+    .section-card h2 {{ margin-top: 0; margin-bottom: 0.8rem; font-size: 1.2rem; }}
     .section-disabled {{ color: #adb5bd; font-style: italic; }}
     table.ofx {{ width: 100%; border-collapse: collapse; font-size: .9rem; }}
     table.ofx th {{ background: #e9ecef; padding: .4rem .7rem; text-align: left; }}
@@ -44,16 +43,15 @@ _HTML_TEMPLATE = """\
   </style>
 </head>
 <body>
-<div class="report-header container-fluid">
+<div class="report-header">
+  <div class="container">
   <h1>{title}</h1>
-  <p class="mb-0 opacity-75">OrcaFlex simulation report &mdash; {sim_name}</p>
+  <p class="header-subtitle">OrcaFlex simulation report &mdash; {sim_name}</p>
 </div>
-<div class="container-fluid px-4">
+</div>
+<div class="container">
 {sections}
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-  integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-  crossorigin="anonymous"></script>
 </body>
 </html>
 """
