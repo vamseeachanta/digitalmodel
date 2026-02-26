@@ -1,0 +1,15 @@
+# encoding: utf-8
+# Release 16.0
+SetScriptVersion(Version="16.0.361")
+system1 = GetSystem(Name="SYS")
+system2 = GetSystem(Name="Modal")
+designPoint1 = Parameters.GetDesignPoint(Name="3")
+designPoint1.Delete()
+designPoint2 = Parameters.GetDesignPoint(Name="4")
+designPoint2.Delete()
+SetParameterExpression(
+    Parameter=Parameters.GetParameter(Name="P1"),
+    Expression="1700000 [N]")
+SetParameterExpression(
+    Parameter=Parameters.GetParameter(Name="P2"),
+    Expression="-1700000 [N]")
