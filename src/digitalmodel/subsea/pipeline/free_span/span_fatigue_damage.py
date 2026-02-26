@@ -36,7 +36,7 @@ class SpanFatigueDamage:
     ----------
     inp         PipeSpanInput (carries sn_curve_class and environment)
     fn          Governing natural frequency [Hz] (use CF fn for VIV fatigue)
-    stress_mpa  Peak stress range per cycle [MPa]
+    stress_mpa  Stress range Δσ per cycle [MPa] (= 2 × peak for fully-reversed VIV)
     """
 
     def __init__(

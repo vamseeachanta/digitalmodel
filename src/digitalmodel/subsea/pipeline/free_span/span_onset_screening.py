@@ -93,6 +93,7 @@ class SpanOnsetScreening:
     def _seabed_proximity_factor(self) -> float:
         """ψ_prox — seabed proximity correction (F105 Sec 4.4.6)."""
         e_over_D = self._inp.seabed_gap_m / self._inp.od_m
+        e_over_D = max(0.0, e_over_D)  # clamp: negative gap is physically impossible
         if e_over_D >= 0.8:
             return 1.0
         return 0.2 * (4.0 + 1.25 * e_over_D)

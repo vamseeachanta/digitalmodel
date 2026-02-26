@@ -138,21 +138,19 @@ class SpanVIVAmplitude:
     def stress_from_amplitude(
         self, A_over_D: float, fn: float, mode: str = "IL"
     ) -> float:
-        """Peak bending stress from VIV amplitude [MPa] (screening approximation).
+        """Bending stress range Δσ from VIV amplitude [MPa] (screening level).
+
+        VIV motion is sinusoidal and zero-mean (fully reversed), so:
+            Δσ = 2 × σ_peak_one_side
 
         Formula for first bending mode (F105 Sec 6.5 / screening level):
-            M_peak = κ_peak × EI × amplitude_m
-            σ_peak = M_peak × (D/2) / I_section
+            σ_peak = κ_peak × EI × amplitude_m × (D/2) / I_section
+            Δσ     = 2 × σ_peak   (full stress range for S-N fatigue input)
 
-        κ_peak = (π/L)² × Cbc  where Cbc accounts for BC-dependent maximum
-        curvature location (at ends for fixed supports, midspan for pinned).
-
-        Boundary condition curvature scaling Cbc (ratio to pinned-pinned peak):
-            pinned-pinned: 1.0  (sine, max at midspan)
-            fixed-pinned:  1.8  (approx, max at fixed end)
-            fixed-fixed:   2.3  (approx, max at fixed ends)
-
-        For detailed design, use FEA modal stresses.
+        κ_peak = (π/L)² × Cbc  where Cbc is BC-dependent peak curvature:
+            pinned-pinned: 1.0  (max at midspan)
+            fixed-pinned:  1.8  (max at fixed end)
+            fixed-fixed:   2.3  (max at fixed ends)
         """
         if A_over_D <= 0.0:
             return 0.0
@@ -169,8 +167,9 @@ class SpanVIVAmplitude:
         M_peak = (k_wave**2 * Cbc) * self._EI * amplitude_m
         id_m = inp.od_m - 2.0 * inp.wt_m
         I_sec = math.pi / 64.0 * (inp.od_m**4 - id_m**4)
-        sigma_pa = M_peak * (inp.od_m / 2.0) / I_sec
-        return sigma_pa / 1.0e6  # Pa → MPa
+        sigma_peak_pa = M_peak * (inp.od_m / 2.0) / I_sec
+        # Stress range: fully-reversed VIV cycle → Δσ = 2 × σ_peak
+        return 2.0 * sigma_peak_pa / 1.0e6  # Pa → MPa
 
 
 # ---------------------------------------------------------------------------
