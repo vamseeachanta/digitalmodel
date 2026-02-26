@@ -26,7 +26,7 @@ def _reader() -> APDLReader:
 # parse_materials — basic parsing
 # ---------------------------------------------------------------------------
 
-class TestParseMateriasBasic:
+class TestParseMaterialsBasic:
     def test_returns_list(self):
         mats = _reader().parse_materials(SEWOL_INP)
         assert isinstance(mats, list)
@@ -143,3 +143,18 @@ class TestParseSections:
         inp.write_text("/PREP7\nMP,EX,1,206000\n")
         secs = _reader().parse_sections(inp)
         assert secs == []
+
+    def test_secdata_blank_field_preserves_positional_order(self, tmp_path):
+        """SECDATA,area,,Iy must not shift Iy into Iz position."""
+        inp = tmp_path / "blank_field.inp"
+        inp.write_text(
+            "SECTYPE,5,BEAM,ASEC\n"
+            "SECDATA,1000.0,,500.0,200.0\n"  # area=1000, Iz=None, Iy=500, J=200
+        )
+        secs = _reader().parse_sections(inp)
+        assert len(secs) == 1
+        s = secs[0]
+        assert s.area_mm2 == pytest.approx(1000.0)
+        assert s.iz_mm4 is None
+        assert s.iy_mm4 == pytest.approx(500.0)
+        assert s.j_mm4 == pytest.approx(200.0)

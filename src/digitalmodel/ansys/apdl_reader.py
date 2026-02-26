@@ -50,7 +50,7 @@ class APDLReader:
 
         for line in self._iter_lines(filepath):
             parts = self._split_apdl(line)
-            if not parts or parts[0].upper() != "MP":
+            if not parts or not parts[0] or parts[0].upper() != "MP":
                 continue
             if len(parts) < 4:
                 continue
@@ -76,12 +76,12 @@ class APDLReader:
         of APDLSection objects.
         """
         filepath = Path(filepath)
-        sections: list[APDLSection] = {}
+        sections: dict[int, APDLSection] = {}
         pending_id: int | None = None
 
         for line in self._iter_lines(filepath):
             parts = self._split_apdl(line)
-            if not parts:
+            if not parts or not parts[0]:
                 continue
             cmd = parts[0].upper()
 
@@ -108,10 +108,13 @@ class APDLReader:
                 sec = sections[pending_id]
                 vals = []
                 for p in parts[1:]:
-                    try:
-                        vals.append(float(p))
-                    except ValueError:
+                    if p == "":
                         vals.append(None)
+                    else:
+                        try:
+                            vals.append(float(p))
+                        except ValueError:
+                            vals.append(None)
                 if len(vals) >= 1:
                     sec.area_mm2 = vals[0]
                 if len(vals) >= 2:
@@ -144,5 +147,9 @@ class APDLReader:
 
     @staticmethod
     def _split_apdl(line: str) -> list[str]:
-        """Split an APDL command line by comma, strip whitespace."""
-        return [p.strip() for p in line.split(",") if p.strip()]
+        """Split an APDL command line by comma, strip whitespace.
+
+        Empty fields (e.g. ``SECDATA,1.0,,2.0``) are preserved as ``""``
+        so that positional APDL arguments are not shifted.
+        """
+        return [p.strip() for p in line.split(",")]
