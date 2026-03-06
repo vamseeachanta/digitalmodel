@@ -538,20 +538,20 @@ class TestApiCollapsePressure:
         assert p_thick > p_thin
 
     def test_p_c_less_than_both_components(self, x65):
-        """Harmonic interaction: p_c < p_plastic and p_c < p_e."""
+        """Shell interaction: p_c < p_y and p_c < p_e."""
         D, t = 0.3239, 0.01905
-        f_o = 1.0
-        p_plastic = f_o * 0.45 * x65.SMYS * (2.0 * t / D)
+        p_y = 2.0 * x65.SMYS * (t / D)
         p_e = api_elastic_collapse_pressure(D=D, t=t)
         p_c = api_collapse_pressure(D=D, t=t, SMYS=x65.SMYS)
-        assert p_c < p_plastic
+        assert p_c < p_y
         assert p_c < p_e
 
-    def test_ovality_reduces_collapse_pressure(self, x65):
+    def test_ovality_reduces_collapse_resistance(self, x65):
         D, t = 0.3239, 0.01905
-        p_round = api_collapse_pressure(D=D, t=t, SMYS=x65.SMYS, f_o=1.0)
-        p_oval = api_collapse_pressure(D=D, t=t, SMYS=x65.SMYS, f_o=0.85)
-        assert p_oval < p_round
+        # Test via the check function which applies ovality reduction factor g(delta)
+        res_round = api_external_collapse_check(depth=100.0, D=D, t=t, SMYS=x65.SMYS, ovality=0.0)
+        res_oval = api_external_collapse_check(depth=100.0, D=D, t=t, SMYS=x65.SMYS, ovality=0.02)
+        assert res_oval["p_allowable"] < res_round["p_allowable"]
 
 
 # ---------------------------------------------------------------------------

@@ -406,32 +406,32 @@ def api_collapse_pressure(
     D: float,
     t: float,
     SMYS: float,
-    f_o: float = 1.0,
     E: float = _E_STEEL,
     nu: float = _NU_STEEL,
 ) -> float:
-    """Collapse pressure per API RP 1111 Section 4.3.3 interaction equation.
+    """Characteristic collapse pressure per API RP 1111 4th Ed Eq. (10).
 
-    Two-term harmonic (plastic + elastic) interaction::
+    Uses the "Shell" formula to interpolate between elastic and plastic collapse::
 
-        p_plastic = f_o * 0.45 * SMYS * (2 * t / D)
-        p_e       = api_elastic_collapse_pressure(D, t, E, nu)
-        p_c       = p_plastic * p_e / (p_plastic + p_e)
+        p_c = (p_y * p_e) / sqrt(p_y^2 + p_e^2)
+
+    where::
+        p_y = 2 * SMYS * (t/D)
+        p_e = 2 * E * (t/D)^3 / (1 - nu^2)
 
     Args:
-        D:     Outside diameter [m].
-        t:     Wall thickness [m].
+        D:     Nominal outside diameter [m].
+        t:     Nominal wall thickness [m].
         SMYS:  Specified Minimum Yield Strength [MPa].
-        f_o:   Ovality factor (0, 1]. Default 1.0 (perfectly round).
         E:     Young's modulus [MPa]. Default 207000 MPa.
         nu:    Poisson's ratio. Default 0.3.
 
     Returns:
-        Collapse pressure p_c [MPa].
+        Characteristic collapse pressure p_c [MPa].
     """
-    p_plastic = f_o * 0.45 * SMYS * (2.0 * t / D)
+    p_y = 2.0 * SMYS * (t / D)
     p_e = api_elastic_collapse_pressure(D=D, t=t, E=E, nu=nu)
-    return p_plastic * p_e / (p_plastic + p_e)
+    return (p_y * p_e) / math.sqrt(p_y ** 2 + p_e ** 2)
 
 
 # ---------------------------------------------------------------------------
@@ -443,38 +443,39 @@ def api_external_collapse_check(
     D: float,
     t: float,
     SMYS: float,
-    f_o: float = 1.0,
-    E: float = _E_STEEL,
-    nu: float = _NU_STEEL,
+    ovality: float = 0.0,
+    manufacturing: str = "seamless",
     rho_sw: float = _RHO_SW,
 ) -> dict[str, object]:
-    """Check external hydrostatic pressure against allowable collapse pressure.
+    """Check external hydrostatic pressure against API RP 1111 collapse limit.
 
-    Design criterion (API RP 1111 Section 4.3.3)::
+    Criterion (Section 4.3.3.1)::
 
-        p_water <= DF_COLLAPSE * p_c
+        p_water <= f_o * p_c * g(delta)
+
+    Factors (f_o):
+    - 0.7 for seamless or ERW.
+    - 0.6 for DSAW (cold expanded).
 
     Args:
-        depth:   Water depth [m].
-        D:       Outside diameter [m].
-        t:       Wall thickness [m].
-        SMYS:    SMYS at temperature [MPa].
-        f_o:     Ovality factor. Default 1.0.
-        E:       Young's modulus [MPa]. Default 207000 MPa.
-        nu:      Poisson's ratio. Default 0.3.
-        rho_sw:  Seawater density [kg/m3]. Default 1025 kg/m3.
+        depth:         Water depth [m].
+        D:             Outside diameter [m].
+        t:             Wall thickness [m].
+        SMYS:          SMYS at temperature [MPa].
+        ovality:       Pipe ovality delta. Default 0.0.
+        manufacturing: "seamless", "ERW", or "DSAW". Default "seamless".
+        rho_sw:        Seawater density [kg/m3]. Default 1025 kg/m3.
 
     Returns:
-        Dict with keys:
-        - ``pass`` (bool): True when criterion is satisfied.
-        - ``utilization`` (float): p_water / p_allowable.
-        - ``p_water`` (float): Hydrostatic pressure at depth [MPa].
-        - ``p_c`` (float): Collapse pressure [MPa].
-        - ``p_allowable`` (float): DF_COLLAPSE * p_c [MPa].
+        Dict with keys: ``pass``, ``utilization``, ``p_water``, ``p_c``,
+        ``p_allowable``.
     """
+    f_o = 0.6 if manufacturing.upper() == "DSAW" else 0.7
+    g_delta = 1.0 / (1.0 + 20.0 * ovality)
+
     p_water = api_water_pressure(depth=depth, rho_sw=rho_sw)
-    p_c = api_collapse_pressure(D=D, t=t, SMYS=SMYS, f_o=f_o, E=E, nu=nu)
-    p_allowable = DF_COLLAPSE * p_c
+    p_c = api_collapse_pressure(D=D, t=t, SMYS=SMYS)
+    p_allowable = f_o * p_c * g_delta
     utilization = p_water / p_allowable if p_allowable > 0.0 else float("inf")
 
     return {
@@ -483,6 +484,146 @@ def api_external_collapse_check(
         "p_water": p_water,
         "p_c": p_c,
         "p_allowable": p_allowable,
+    }
+
+
+def api_ovality_reduction_factor(ovality: float) -> float:
+    """Collapse reduction factor due to ovality per API RP 1111 Eq. (13).
+
+    g(delta) = 1 / (1 + 20*delta)
+
+    Args:
+        ovality: Pipe ovality delta = (D_max - D_min) / (D_max + D_min).
+
+    Returns:
+        Reduction factor g(delta).
+    """
+    return 1.0 / (1.0 + 20.0 * ovality)
+
+
+# ---------------------------------------------------------------------------
+# API RP 1111: Combined Bending and External Pressure (Section 4.3.3.2)
+# ---------------------------------------------------------------------------
+
+def api_combined_loading_external_check(
+    epsilon: float,
+    p_e: float,
+    p_i: float,
+    D: float,
+    t: float,
+    SMYS: float,
+    ovality: float = 0.0,
+    condition: str = "installation",
+    manufacturing: str = "seamless",
+) -> dict[str, object]:
+    """Combined bending and external pressure check per API RP 1111 Eq. (12).
+
+    Interaction formula::
+
+        (f_i * epsilon / epsilon_b) + ((p_e - p_i) / (f_o * p_c)) <= g(delta)
+
+    where::
+        epsilon_b = t / (2 * D)
+
+    Factors (f_i):
+    - 3.33 for installation.
+    - 2.00 for in-place.
+
+    Args:
+        epsilon:       Actual bending strain.
+        p_e:           External pressure [MPa].
+        p_i:           Internal pressure [MPa].
+        D:             Outside diameter [m].
+        t:             Wall thickness [m].
+        SMYS:          SMYS at temperature [MPa].
+        ovality:       Pipe ovality. Default 0.0.
+        condition:     "installation" or "in-place".
+        manufacturing: "seamless", "ERW" or "DSAW".
+
+    Returns:
+        Dict with keys: ``pass``, ``utilization``, ``epsilon_b``, ``p_c``.
+    """
+    f_i = 3.33 if condition.lower() == "installation" else 2.00
+    f_o = 0.6 if manufacturing.upper() == "DSAW" else 0.7
+    g_delta = api_ovality_reduction_factor(ovality)
+
+    epsilon_b = t / (2.0 * D)
+    p_c = api_collapse_pressure(D=D, t=t, SMYS=SMYS)
+
+    p_net = max(0.0, p_e - p_i)
+
+    bending_term = (f_i * epsilon / epsilon_b) if epsilon_b > 0.0 else 0.0
+    pressure_term = (p_net / (f_o * p_c)) if p_c > 0.0 else 0.0
+
+    utilization = (bending_term + pressure_term) / g_delta if g_delta > 0.0 else float("inf")
+
+    return {
+        "pass": utilization <= 1.0,
+        "utilization": utilization,
+        "epsilon_b": epsilon_b,
+        "p_c": p_c,
+    }
+
+
+# ---------------------------------------------------------------------------
+# API RP 1111: Combined Bending, Tension, and Internal Pressure (Section 4.3.1.2)
+# ---------------------------------------------------------------------------
+
+def api_combined_loading_internal_check(
+    p_i: float,
+    p_e: float,
+    T_e: float,
+    M: float,
+    D: float,
+    t: float,
+    mat: PipeMaterial,
+    phi: float = 0.9,
+) -> dict[str, object]:
+    """Combined loading utilization per API RP 1111 Section 4.3.1.2 / Eq. (8).
+
+    Interaction equation::
+
+        sqrt( ((p_i - p_e) / p_b)^2 + (T_e / T_y)^2 + (M / M_p)^2 ) <= phi
+
+    Reference quantities::
+        T_y = SMYS * pi * (D - t) * t
+        M_p = SMYS * (D - t)^2 * t
+
+    Args:
+        p_i:    Internal pressure [MPa].
+        p_e:    External pressure [MPa].
+        T_e:    Effective tension [N].
+        M:      Bending moment [N·m].
+        D:      Outside diameter [m].
+        t:      Wall thickness [m].
+        mat:    Pipeline material (SMYS/SMTS).
+        phi:    Combined load design factor. Default 0.9.
+
+    Returns:
+        Dict with keys: ``pass``, ``utilization``, ``p_b``, ``T_y``, ``M_p``.
+    """
+    smys_pa = mat.SMYS * 1.0e6
+    T_y = smys_pa * math.pi * (D - t) * t
+    M_p = smys_pa * (D - t) ** 2 * t
+
+    d_over_t = D / t
+    if d_over_t <= 15.0:
+        p_b = 0.45 * (mat.SMYS + mat.SMTS) * math.log(D / (D - 2.0 * t))
+    else:
+        p_b = 0.90 * (mat.SMYS + mat.SMTS) * t / (D - t)
+
+    p_term = ((p_i - p_e) / p_b) ** 2 if p_b > 0.0 else 0.0
+    t_term = (abs(T_e) / T_y) ** 2 if T_y > 0.0 else 0.0
+    m_term = (abs(M) / M_p) ** 2 if M_p > 0.0 else 0.0
+
+    utilization = math.sqrt(p_term + t_term + m_term) / phi if phi > 0.0 else float("inf")
+
+    return {
+        "pass": utilization <= 1.0,
+        "utilization": utilization,
+        "p_b": p_b,
+        "T_y": T_y,
+        "M_p": M_p,
     }
 
 
@@ -508,6 +649,29 @@ def api_propagating_buckle_pressure(
         Propagating buckle pressure p_p [MPa].
     """
     return 24.0 * SMYS * (t / D) ** 2.4
+
+
+def api_transition_water_depth(
+    D: float,
+    t: float,
+    SMYS: float,
+    rho_sw: float = _RHO_SW,
+    g: float = _G,
+) -> float:
+    """Water depth at which hydrostatic pressure equals propagating buckle pressure.
+
+    Args:
+        D:       Outside diameter [m].
+        t:       Wall thickness [m].
+        SMYS:    SMYS at temperature [MPa].
+        rho_sw:  Seawater density [kg/m3]. Default 1025 kg/m3.
+        g:       Gravitational acceleration [m/s2]. Default 9.81 m/s2.
+
+    Returns:
+        Transition water depth [m].
+    """
+    p_p = api_propagating_buckle_pressure(D=D, t=t, SMYS=SMYS)
+    return p_p * 1.0e6 / (rho_sw * g)
 
 
 # ---------------------------------------------------------------------------
@@ -601,9 +765,13 @@ __all__ = [
     # API RP 1111
     "api_water_pressure", "api_elastic_collapse_pressure",
     "api_collapse_pressure", "api_external_collapse_check",
+    "api_ovality_reduction_factor",
     "api_propagating_buckle_pressure", "api_propagating_buckle_check",
+    "api_transition_water_depth",
     "api_burst_pressure", "api_internal_pressure_check",
     "api_combined_loading_check",
+    "api_combined_loading_external_check",
+    "api_combined_loading_internal_check",
     # Workflow
     "WallThicknessSizingWorkflow", "run_sizing_from_yaml",
 ]
