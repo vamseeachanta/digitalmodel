@@ -68,16 +68,16 @@ repos:
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: [-r, src/, -f, json, -o, bandit-report.json]
+        args: [-r, src/]
         pass_filenames: false
 
   # Secrets detection
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
     hooks:
-      - id: detect-secrets
-        args: [--baseline, .secrets.baseline]
-        exclude: uv.lock
+      - id: gitleaks
+        # Note: requires workspace-hub parent checkout; ../.gitleaks.toml is hub-relative
+        args: [--config, ../.gitleaks.toml]
 
   # Documentation
   - repo: https://github.com/pycqa/pydocstyle
