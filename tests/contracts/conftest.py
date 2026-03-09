@@ -25,17 +25,10 @@ def pytest_configure(config):
     )
 
 
-@pytest.hookimpl(hookwrapper=True)
+@pytest.hookimpl(wrapper=True)
 def pytest_runtest_makereport(item, call):
-    outcome = yield
-    report = outcome.get_result()
+    report = yield
     if report.failed:
-        longrepr_str = str(report.longrepr)
-        prefix = (
-            f"[CONTRACT VIOLATION] symbol={item.name} au_version={AU_VERSION}\n"
-        )
-        # Prepend CONTRACT VIOLATION context as a custom report section;
-        # avoid mutating longrepr directly to stay compatible with pytest-html.
-        report.sections.append(
-            ("contract", prefix + longrepr_str)
-        )
+        prefix = f"[CONTRACT VIOLATION] symbol={item.name} au_version={AU_VERSION}\n"
+        report.sections.append(("contract", prefix + str(report.longrepr)))
+    return report
