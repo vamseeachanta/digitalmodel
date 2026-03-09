@@ -1,0 +1,34 @@
+name: Build API Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docs/api/**'
+      - 'mkdocs.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'docs/api/**'
+      - 'mkdocs.yml'
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    if: hashFiles('mkdocs.yml') != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build docs
+        run: uv run --group docs mkdocs build --strict
