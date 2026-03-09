@@ -386,3 +386,7 @@ format = "black . && isort ."
 lint = "flake8 . & mypy . & pylint ."
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = []
