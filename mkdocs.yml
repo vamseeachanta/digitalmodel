@@ -1,0 +1,26 @@
+site_name: digitalmodel API Reference
+site_description: Auto-generated API documentation for digitalmodel
+docs_dir: docs/api
+site_dir: site
+
+nav:
+  - API Reference: index.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      enable_inventory: false
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          inventories: []
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections

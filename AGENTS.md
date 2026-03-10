@@ -1,9 +1,11 @@
-# Digitalmodel Agent Contract Pointer
+---
+purpose: Engineering digital twin — asset integrity, cathodic protection, GIS, hydrodynamics, field development
+entry_points: [src/digitalmodel/engine.py, src/digitalmodel/asset_integrity/, src/digitalmodel/cathodic_protection/]
+test_command: PYTHONPATH=src uv run python -m pytest
+depends_on: [assetutilities]
+maturity: beta
+---
+# digitalmodel
 
-This repository inherits the canonical contract from:
-../AGENTS.md
-
-- Contract-Version: 1.0.0
-- Generated-At: 2026-02-17T16:39:59Z
-
-Do not hand-edit policy here. Update workspace-hub/AGENTS.md and regenerate adapters.
+Contract: ../AGENTS.md | Source: src/digitalmodel/
+Key modules: engine.py, asset_integrity/, cathodic_protection/, gis/, hydrodynamics/, field_development/

@@ -186,6 +186,9 @@ test = [
 docs = [
     "sphinx>=6.0",
     "sphinx-rtd-theme>=1.0",
+    "mkdocs>=1.6.0",
+    "mkdocstrings[python]>=0.25.0",
+    "mkdocs-material>=9.5.0",
 ]
 well = [
     "the_well>=1.2.0",  # CC BY 4.0 — The Well turbulent flow datasets (Polymathic AI)
@@ -386,3 +389,14 @@ format = "black . && isort ."
 lint = "flake8 . & mypy . & pylint ."
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"
+
+[dependency-groups]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocstrings[python]>=0.25.0",
+    "mkdocs-material>=9.5.0",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = []
