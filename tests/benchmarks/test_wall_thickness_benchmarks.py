@@ -25,7 +25,7 @@ _LOADS = DesignLoads(
     internal_pressure=15.0,
     external_pressure=10.0,
 )
-_FACTORS = DesignFactors(safety_class=SafetyClass.NORMAL)
+_FACTORS = DesignFactors(safety_class=SafetyClass.MEDIUM)
 
 
 def test_bench_wall_thickness_dnv(benchmark):

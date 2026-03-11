@@ -98,8 +98,23 @@ def test_bench_cp_abs_gn_offshore(benchmark):
 
 def test_bench_cp_dnv_rp_b401(benchmark):
     """Benchmark DNV_RP_B401_offshore cathodic protection route."""
-    cfg = _abs_ships_cfg()
-    cfg["inputs"]["calculation_type"] = "DNV_RP_B401_offshore"
+    cfg = {
+        "inputs": {
+            "calculation_type": "DNV_RP_B401_offshore",
+            "design_data": {"design_life": 25},
+            "environment": {
+                "seawater": {"resistivity": {"input": 0.3}, "temperature_deg_c": 7.0},
+            },
+            "structure": {
+                "zones": [
+                    {"zone": "submerged", "area_m2": 600.0,
+                     "coating_breakdown_initial": 0.05, "coating_breakdown_final": 0.20,
+                     "coating_breakdown_rate": 0.006},
+                ]
+            },
+            "anode": _ANODE_LONG_FLUSH,
+        }
+    }
     cp = CathodicProtection()
     result = benchmark(lambda: cp.router(cfg))
     assert result is not None
