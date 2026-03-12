@@ -50,7 +50,10 @@ def wall_thickness_required(
 ) -> float:
     """Calculate minimum wall thickness using Barlow's formula.
 
-    t = (P * OD) / (2 * SMYS * SF)
+    t = (P * OD * SF) / (2 * SMYS)
+
+    Safety factor SF >= 1 scales the required thickness upward (more conservative).
+    Equivalent API design-factor form: t = p*D / (2*SMYS*DF) with DF = 1/SF.
 
     Parameters
     ----------
@@ -61,14 +64,14 @@ def wall_thickness_required(
     smys_mpa : float
         Specified minimum yield strength [MPa].
     safety_factor : float, optional
-        Design safety factor [-]. Default 1.5.
+        Safety factor >= 1 [-]. Higher value → thicker wall. Default 1.5.
 
     Returns
     -------
     float
         Required wall thickness [mm].
     """
-    return (design_pressure_mpa * od_mm) / (2.0 * smys_mpa * safety_factor)
+    return (design_pressure_mpa * od_mm * safety_factor) / (2.0 * smys_mpa)
 
 
 def effective_tension(

@@ -44,18 +44,20 @@ class TestTopTensionRequired:
 
 
 class TestWallThicknessRequired:
-    """Per Barlow's formula: t = (P * OD) / (2 * SMYS * SF)."""
+    """Per Barlow's formula: t = (P * OD * SF) / (2 * SMYS). SF >= 1 increases thickness."""
 
     def test_barlow_typical_riser(self):
-        """21-inch OD, 10 MPa, X80 (552 MPa), SF=1.5 -> ~0.127 mm... check."""
+        """21-inch OD, 10 MPa, X80 (552 MPa), SF=1.5.
+
+        t = (10 * 533.4 * 1.5) / (2 * 552) = 8001 / 1104 = 7.25 mm
+        """
         result = wall_thickness_required(
             od_mm=533.4,  # 21 inch
             design_pressure_mpa=10.0,
             smys_mpa=552.0,
             safety_factor=1.5,
         )
-        # t = (10 * 533.4) / (2 * 552 * 1.5) = 5334 / 1656 = 3.22 mm
-        assert result == pytest.approx(3.22, rel=0.02)
+        assert result == pytest.approx(7.25, rel=0.02)
 
     def test_wall_thickness_increases_with_pressure(self):
         """Higher pressure requires thicker wall."""
@@ -74,6 +76,12 @@ class TestWallThicknessRequired:
         t1 = wall_thickness_required(533.4, 15.0, 414.0)  # X60
         t2 = wall_thickness_required(533.4, 15.0, 552.0)  # X80
         assert t1 > t2
+
+    def test_wall_thickness_increases_with_safety_factor(self):
+        """Higher safety factor requires thicker wall (more conservative)."""
+        t1 = wall_thickness_required(533.4, 15.0, 552.0, safety_factor=1.0)
+        t2 = wall_thickness_required(533.4, 15.0, 552.0, safety_factor=1.5)
+        assert t2 > t1
 
 
 class TestEffectiveTension:
