@@ -33,7 +33,7 @@ class TestCurrentDemand:
     """Verify current demand I_c = A_c * i_c * f_c (DNV-RP-B401 §7.4.1)."""
 
     def test_buoyancy_tank_initial_current_demand(self):
-        """Verify against SLHR CP report §5.1.1: buoyancy tank initial.
+        """Verify against hybrid riser CP design report §5.1.1: buoyancy tank initial.
 
         Buoyancy tank: area=1021 m2, i_c=0.440 A/m2, f_c=0.02 -> I_c=8.99 A
         """
@@ -45,7 +45,7 @@ class TestCurrentDemand:
         assert result == pytest.approx(8.98, abs=0.05)
 
     def test_buoyancy_tank_mean_current_demand(self):
-        """Verify against SLHR CP report §5.1.1: buoyancy tank mean.
+        """Verify against hybrid riser CP design report §5.1.1: buoyancy tank mean.
 
         Buoyancy tank: area=1021 m2, i_c=0.220 A/m2, f_c=0.11 -> I_c=24.70 A
         """
@@ -57,7 +57,7 @@ class TestCurrentDemand:
         assert result == pytest.approx(24.71, abs=0.15)
 
     def test_buoyancy_tank_final_current_demand(self):
-        """Verify against SLHR CP report §5.1.1: buoyancy tank final.
+        """Verify against hybrid riser CP design report §5.1.1: buoyancy tank final.
 
         Buoyancy tank: area=1021 m2, i_c=0.220 A/m2, f_c=0.20 -> I_c=44.92 A
         """
@@ -85,7 +85,7 @@ class TestAnodeMassRequirement:
     """Verify M_a = (I_cm * t * 8760) / (u * epsilon) (DNV-RP-B401 §7.7.1)."""
 
     def test_buoyancy_tank_mass_12in_production(self):
-        """Verify SLHR CP report §5.1.1: buoyancy tank anode mass = 2645 kg.
+        """Verify hybrid riser CP design report §5.1.1: buoyancy tank anode mass = 2645 kg.
 
         I_mean=24.70 A, T=22 yr, u=0.90, epsilon=2000 A-h/kg
         M = 24.70 * 22 * 8760 / (0.90 * 2000) = 2642.7 kg
@@ -99,7 +99,7 @@ class TestAnodeMassRequirement:
         assert result == pytest.approx(2645, rel=0.01)
 
     def test_ura_mass_12in_production(self):
-        """Verify SLHR CP report §5.1.1: URA anode mass = 1030 kg.
+        """Verify hybrid riser CP design report §5.1.1: URA anode mass = 1030 kg.
 
         I_mean=9.62 A, T=22 yr, u=0.90, epsilon=2000 A-h/kg
         """
@@ -112,7 +112,7 @@ class TestAnodeMassRequirement:
         assert result == pytest.approx(1030, rel=0.02)
 
     def test_line_pipe_mass_12in_production(self):
-        """Verify SLHR CP report §5.1.1: line pipe anode mass = 159 kg.
+        """Verify hybrid riser CP design report §5.1.1: line pipe anode mass = 159 kg.
 
         I_mean=1.48 A, T=22 yr, u=0.90, epsilon=2000 A-h/kg
         """
@@ -125,7 +125,7 @@ class TestAnodeMassRequirement:
         assert result == pytest.approx(159, rel=0.02)
 
     def test_ballast_box_mass(self):
-        """Verify SLHR CP report §5.1.1: ballast box anode mass = 1860 kg.
+        """Verify hybrid riser CP design report §5.1.1: ballast box anode mass = 1860 kg.
 
         I_mean=17.38 A, T=22 yr, u=0.90, epsilon=2000 A-h/kg
         """
@@ -203,12 +203,34 @@ class TestAnodeResistanceSlenderStandoff:
 class TestAnodeCurrentOutput:
     """Verify anode current output I_a = delta_E / R_a."""
 
+    def test_standoff_anode_default_voltage(self):
+        """Standoff anode: rho=0.30 ohm-m, L=1.530m, r=0.085m.
+
+        Uses anode_current_output() directly with default delta_E=0.25V.
+        """
+        I_a = anode_current_output(rho=0.30, L_a=1.530, r_a=0.085)
+        assert I_a > 0.0
+        assert I_a < 10.0  # physically reasonable for a single anode
+
+    def test_standoff_anode_custom_voltage(self):
+        """Higher driving voltage gives more current (physical law)."""
+        I_low = anode_current_output(rho=0.30, L_a=1.530, r_a=0.085, delta_E=0.20)
+        I_high = anode_current_output(rho=0.30, L_a=1.530, r_a=0.085, delta_E=0.30)
+        assert I_high > I_low
+
+    def test_proximity_factor_reduces_current(self):
+        """Proximity factor > 1 increases effective resistance → less current."""
+        I_open = anode_current_output(rho=0.30, L_a=1.530, r_a=0.085, proximity_factor=1.0)
+        I_shielded = anode_current_output(
+            rho=0.30, L_a=1.530, r_a=0.085, proximity_factor=2.0
+        )
+        assert I_shielded < I_open
+
     def test_flush_mount_suction_pile_initial(self):
         """Flush-mount 29lb anode on suction pile: R_a_init=0.4209 ohm.
 
         From riser modification CP calc (Appendix 2):
-        I_a = 0.25 / 0.4209 = 0.59 A
-        Suction pile: rho=31 ohm-cm
+        I_a = 0.25 / 0.4209 = 0.59 A (manual formula for flush geometry)
         """
         R_a = flush_anode_resistance(
             rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
@@ -286,21 +308,20 @@ class TestNumberOfAnodes:
     """Verify anode count calculation."""
 
     def test_buoyancy_tank_anode_count(self):
-        """Buoyancy tank: 2645 kg total / 119 kg per anode = 23 -> ceil = 23.
+        """Buoyancy tank: 2645 kg total / 119 kg per anode = ceil(22.23) = 23.
 
-        Doc shows 24 anodes (rounded to nearest larger even integer).
+        Doc shows 24 anodes (rounded to nearest larger even integer for symmetric placement).
         """
-        n = number_of_anodes(2645.0, 119.0)
-        # ceil(2645/119) = ceil(22.23) = 23
-        assert n == 23
+        assert number_of_anodes(2645.0, 119.0) == 23
+        assert number_of_anodes(2645.0, 119.0, round_to_even=True) == 24
 
     def test_ura_anode_count(self):
         """URA: 1030 kg total / 119 kg per anode = ceil(8.66) = 9.
 
-        Doc shows 10 (nearest larger even integer).
+        Doc shows 10 (nearest larger even integer for symmetric placement).
         """
-        n = number_of_anodes(1030.0, 119.0)
-        assert n == 9
+        assert number_of_anodes(1030.0, 119.0) == 9
+        assert number_of_anodes(1030.0, 119.0, round_to_even=True) == 10
 
     def test_zero_mass_raises_or_returns_zero(self):
         """Division by zero protection."""

@@ -218,6 +218,7 @@ def equivalent_radius_from_mass(
 def number_of_anodes(
     total_mass_kg: float,
     anode_net_mass_kg: float,
+    round_to_even: bool = False,
 ) -> int:
     """Number of anodes required (rounded up).
 
@@ -227,13 +228,19 @@ def number_of_anodes(
         Total net anode mass requirement [kg].
     anode_net_mass_kg : float
         Net mass of one anode [kg].
+    round_to_even : bool, optional
+        Round up to the next even integer for symmetric placement.
+        Default False (mathematical ceiling only).
 
     Returns
     -------
     int
-        Number of anodes (rounded up to nearest integer).
+        Number of anodes (rounded up to nearest integer or even integer).
     """
-    return math.ceil(total_mass_kg / anode_net_mass_kg)
+    n = math.ceil(total_mass_kg / anode_net_mass_kg)
+    if round_to_even and n % 2 != 0:
+        n += 1
+    return n
 
 
 def protected_length(
@@ -295,9 +302,11 @@ def flush_anode_resistance(
     L_a_in : float
         Anode length [inches].
     W_in : float
-        Anode width [inches].
+        Anode width [inches]. Accepted for API compatibility with
+        design spreadsheets; not used in the slender-body approximation
+        (width/height are folded into r_eq_in).
     H_in : float
-        Anode height [inches].
+        Anode height [inches]. Same note as W_in.
     r_eq_in : float
         Anode equivalent radius [inches].
 
@@ -306,9 +315,13 @@ def flush_anode_resistance(
     float
         Anode-to-electrolyte resistance [ohm].
     """
+    # W_in and H_in are accepted for compatibility with standard CP
+    # spreadsheet call signatures; the slender-body formula only needs
+    # L and r_eq (all cross-section information is collapsed into r_eq).
     # Convert inches to cm for McCoy/Sunde half-space formula.
     # Flush-mount anodes radiate into a half-space (mounted on hull),
     # giving a factor of 1/(pi*L) instead of 1/(2*pi*L).
+    _ = W_in, H_in  # explicitly unused — folded into r_eq_in
     L_cm = L_a_in * 2.54
     r_cm = r_eq_in * 2.54
     return (rho_ohm_cm / (math.pi * L_cm)) * (
