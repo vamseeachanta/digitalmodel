@@ -45,6 +45,139 @@ Utilize a single source of ASCII inputs (promoting single source of truth) to ge
 
 ---
 
+## ⚡ Power Generation Controls & Data Center Infrastructure
+
+Engineering modules for power generation controls, microgrid systems, and mission-critical data center infrastructure — spanning generator sequencing, SCADA/EPMS protocol integration, and commissioning validation.
+
+### Generator Sequencing & Paralleling Logic
+Deterministic state-machine for multi-generator paralleling per IEEE 1547 / NFPA 110.
+- Generator state machine: OFFLINE → CRANKING → IDLE → RATED → SYNCHRONIZED → ONLINE
+- Synchronization checker: voltage/frequency/phase-angle match within configurable tolerances
+- Parallel bus controller: load sharing computation, priority-based load-shed execution
+- Black-start sequencer: critical load definition, NFPA 110 compliance validation
+
+**Source:** [`src/digitalmodel/power/controls/`](src/digitalmodel/power/controls/) | **Tests:** [`tests/power/controls/`](tests/power/controls/)
+
+### SCADA & Protocol Integration
+Protocol simulation and data-mapping toolkit for Modbus TCP/RTU, DNP3, OPC UA, and EPMS/BMS integration.
+- Modbus register map: CSV import, raw-to-engineering scaling, consistency validation
+- DNP3 point list: analog/binary inputs, SEL RTAC-compatible config export
+- OPC UA node model: device tree → namespace builder, XML export (Ignition/Wonderware)
+- EPMS data model: generator/switchgear/BMS points, template compliance, Excel-ready I/O list
+
+**Source:** [`src/digitalmodel/power/protocols/`](src/digitalmodel/power/protocols/) | **Tests:** [`tests/power/protocols/`](tests/power/protocols/)
+
+### Microgrid Energy Management System
+Rule-based microgrid EMS for grid-connected and island-mode operation per IEEE 1547.4.
+- Merit-order DER dispatch (PV → BESS → genset)
+- BESS controller: SOC management with derating bands and island-mode reserve
+- Island detection: ROCOF via linear regression, vector shift detection
+- Mode transitions: grid-connected ↔ islanded ↔ black-start
+
+**Source:** [`src/digitalmodel/power/microgrid/`](src/digitalmodel/power/microgrid/) | **Tests:** [`tests/power/microgrid/`](tests/power/microgrid/) — 29 tests
+
+### Data Center Power Topology
+UPS/STS/N+1 redundancy modeling with single-point-of-failure detection and Uptime Institute Tier I–IV classification.
+- Redundancy schemes: N, N+1, 2N, 2N+1
+- Cascaded power path: utility → MV switchgear → transformer → UPS → STS → PDU → rack
+- SPOF detection across multiple power paths
+- Tier classification with availability computation
+
+**Source:** [`src/digitalmodel/power/datacenter/`](src/digitalmodel/power/datacenter/) | **Tests:** [`tests/power/datacenter/`](tests/power/datacenter/) — 42 tests
+
+### Commissioning Validation (FAT/SAT/IST)
+Test procedure generator and results validator for generator and switchgear commissioning.
+- Phase-specific templates: FAT (insulation, hi-pot, relay, breaker, control logic), SAT (cable megger, grounding, phase rotation, protection, interlocks), IST (load test, failover, SCADA, e-stop, performance)
+- Test results validation against generated sequences
+- Punch list export with severity classification (critical/major/minor)
+
+**Source:** [`src/digitalmodel/power/commissioning/`](src/digitalmodel/power/commissioning/) | **Tests:** [`tests/power/commissioning/`](tests/power/commissioning/) — 32 tests
+
+### Protection Relay Coordination
+IEEE C37.112 inverse-time relay curve modeling for overcurrent and differential protection coordination.
+- Overcurrent relay types: 50 (instantaneous), 51 (time-overcurrent)
+- Differential relay (87) with slope and minimum operate current settings
+- Curve types: moderately inverse, very inverse, extremely inverse, definite time
+- Coordination checker: upstream/downstream grading margin validation
+- Time-current intersection calculator for relay curves
+
+**Source:** [`src/digitalmodel/power/protection/`](src/digitalmodel/power/protection/) | **Tests:** [`tests/power/protection/`](tests/power/protection/) — 23 tests
+
+### IEC 61850 GOOSE Messaging
+IEC 61850-8-1 GOOSE publisher/subscriber model with SCL structure generation and logical node mapping.
+- Logical node types: XCBR, XSWI, CSWI, PTOC, PDIF, MMXU, CILO
+- GOOSE control block, dataset, and data attribute models
+- Publisher/subscriber binding validation
+- SCL-compatible structure output (IED → AccessPoint → LDevice → LN0)
+
+**Source:** [`src/digitalmodel/power/protocols/iec61850_goose.py`](src/digitalmodel/power/protocols/iec61850_goose.py) | **Tests:** [`tests/power/protocols/`](tests/power/protocols/) — 25 tests
+
+### Power Flow / Load Flow Calculator
+Newton-Raphson power flow solver for radial and simple-loop distribution networks.
+- Bus types: slack (reference), PV (generator), PQ (load)
+- Y-bus (admittance matrix) assembly with transformer tap ratio support
+- Jacobian-based Newton-Raphson iterative solver
+- Results: bus voltages/angles, branch active/reactive flows, system losses
+
+**Source:** [`src/digitalmodel/power/analysis/`](src/digitalmodel/power/analysis/) | **Tests:** [`tests/power/analysis/`](tests/power/analysis/) — 32 tests
+
+### Droop Control Simulator
+Frequency/voltage droop response modeling for parallel generator load sharing.
+- Governor droop: frequency→power output with configurable droop percentage
+- AVR droop: voltage→reactive power mapping
+- N-generator parallel load sharing solver (bisection method)
+- Isochronous + droop mix support
+- Droop setting recommender for target load split ratios
+
+**Source:** [`src/digitalmodel/power/microgrid/droop_control.py`](src/digitalmodel/power/microgrid/droop_control.py) | **Tests:** [`tests/power/microgrid/test_droop_control.py`](tests/power/microgrid/test_droop_control.py) — 29 tests
+
+---
+
+## 🛡️ Cathodic Protection Design
+
+Multi-standard cathodic protection design platform for offshore structures, pipelines, vessels, and generator fuel systems.
+
+| Standard | Scope | Tests |
+|----------|-------|-------|
+| [DNV-RP-B401](src/digitalmodel/cathodic_protection/dnv_rp_b401.py) | Offshore structures — anode sizing, coating breakdown, zone-based design | 36 |
+| [API RP 1632](src/digitalmodel/cathodic_protection/api_rp_1632.py) | Underground pipelines — Dwight resistance, current demand, anode life | 16 |
+| [ISO 15589-2](src/digitalmodel/cathodic_protection/iso_15589_2.py) | Offshore pipelines — bracelet anodes, attenuation length | 20 |
+| [Fuel System CP](src/digitalmodel/cathodic_protection/fuel_system_cp.py) | Generator fuel piping — impressed current, ground bed, rectifier design | 22 |
+| ABS GN Ships/Offshore | Vessel hulls and floating structures | configured |
+
+- Structure types: submarine pipelines, vessel hulls, fixed offshore platforms
+- Anode materials: Al-Zn-In, zinc, magnesium (H-1 alloy)
+- 16 worked example calculations: [`docs/domains/cathodic_protection/examples/`](docs/domains/cathodic_protection/examples/)
+- Standards inventory (21 standards audited): [`standards-inventory.md`](docs/domains/cathodic_protection/standards-inventory.md)
+
+**Source:** [`src/digitalmodel/cathodic_protection/`](src/digitalmodel/cathodic_protection/) | **Tests:** [`tests/cathodic_protection/`](tests/cathodic_protection/) — 72 tests
+
+---
+
+## 🌍 GIS & Infrastructure Asset Management
+
+Geospatial analysis library for infrastructure asset management — 27 modules, ~5,000 lines.
+
+- **Core:** CRS transformation (UTM ↔ lat/long), spatial queries, geometry operations
+- **I/O:** GeoJSON, GeoTIFF, KML/KMZ, ESRI Shapefile
+- **Visualization:** [Folium](src/digitalmodel/gis/integrations/folium_maps.py) (web maps), [Plotly](src/digitalmodel/gis/integrations/plotly_maps.py) (3D/2D), [QGIS](src/digitalmodel/gis/integrations/qgis_export.py), [Google Earth](src/digitalmodel/gis/integrations/google_earth_export.py), [Blender](src/digitalmodel/gis/integrations/blender_export.py) (3D mesh)
+- **Layers:** Feature, raster, temporal, well position
+
+**Source:** [`src/digitalmodel/gis/`](src/digitalmodel/gis/)
+
+---
+
+## 🔬 Asset Integrity & Fitness-for-Service
+
+- [API 579](src/digitalmodel/asset_integrity/API579.py) Level 1/2/3 FFS assessment framework
+- [BS 7910 fracture mechanics](src/digitalmodel/asset_integrity/fracture_mechanics.py) — FAD diagrams, critical flaw limits
+- Remaining strength factor calculations
+- Worked examples: [general metal loss](examples/asset_integrity/example_api579_gml.py), [local metal loss](examples/asset_integrity/example_api579_lml.py)
+
+**Source:** [`src/digitalmodel/asset_integrity/`](src/digitalmodel/asset_integrity/)
+
+---
+
 ## 🚀 Key Features
 
 ### ✅ Single Source of Truth
@@ -405,17 +538,22 @@ mypy src/digitalmodel
 
 ## 🌟 Recent Additions
 
+### March 2026
+- ✨ **Power Generation Controls** - Generator sequencing, paralleling logic, black-start per IEEE 1547 / NFPA 110
+- ✨ **SCADA/Protocol Integration** - Modbus, DNP3, OPC UA, EPMS data model with I/O list export
+- ✨ **Microgrid EMS** - IEEE 1547.4 island detection, DER merit-order dispatch, BESS SOC management
+- ✨ **Data Center Topology** - UPS/STS/N+1 redundancy, SPOF detection, Uptime Tier I–IV classification
+- ✨ **Commissioning Validator** - FAT/SAT/IST test sequence generation and results validation
+- ✨ **Protection Relay Coordination** - IEEE C37.112 overcurrent/differential relay curves, coordination grading
+- ✨ **IEC 61850 GOOSE Messaging** - Publisher/subscriber model, SCL structure, logical node mapping
+- ✨ **Power Flow Calculator** - Newton-Raphson load flow solver for radial distribution networks
+- ✨ **Droop Control Simulator** - Governor/AVR droop, N-generator parallel load sharing
+- ✨ **Generator Fuel System CP** - Impressed current CP for underground fuel piping per API RP 1632
+
 ### September 2025
 - ✨ **Fatigue S-N Curve Database** - 221 curves from 17 international standards
-- ✨ **Advanced Plotting Module** - Log-log, linear-log, SCF, fatigue limits
-- ✨ **CLI Tools** - Command-line interface for curve analysis
-- ✨ **Comprehensive Examples** - 8 example scripts demonstrating capabilities
-
-### Key Features
-- Direct GitHub data access for remote projects
-- Multiple integration methods (URL, submodule, clone, sparse checkout)
-- Production-ready plotting matching industry Excel tools
-- Full documentation and API reference
+- ✨ **Cathodic Protection Platform** - DNV-RP-B401, API RP 1632, ISO 15589-2 — 72 verified tests
+- ✨ **GIS Infrastructure Module** - 27 modules for geospatial asset management
 
 ---
 
@@ -507,6 +645,6 @@ Special thanks to:
 
 ---
 
-**Last Updated**: September 30, 2025
-**Version**: 2.0.0
-**Total Commits**: 305+
+**Last Updated**: March 2026
+**Version**: 3.0.0
+**Total Commits**: 500+
