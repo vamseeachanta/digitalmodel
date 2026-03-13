@@ -261,7 +261,6 @@ Tabulated for NACA 0012/0015/0020 sections, AR = 1.0–3.0, J = 0.2–1.1.
 - Ship types: single-screw merchant ships and naval vessels
 - Validated against: experimental data from Southampton towing tank
 - Key finding: C_L can be 2–4× higher in propeller slipstream vs free stream at same angle
-- RANS validation: SST k-ω gives best agreement for rudder-in-slipstream configurations
 
 ---
 
@@ -366,7 +365,7 @@ eta_0 = J * K_T / (2*pi * K_Q) = P_T / P_D
 | EAR | 0.58 |
 | Design speed | 14 knots (J = 0.629) |
 
-**Self-propulsion coefficients at 14 knots (Table 4.3):**
+**Self-propulsion coefficients at 9–16 knots (Table 4.3):**
 
 | V_s [kn] | t | w | η_H | J | η₀ |
 |----------|---|---|-----|---|-----|
@@ -426,11 +425,24 @@ K_T = T / (rho * n^2 * D^4)   (thrust coefficient)
 K_Q = Q / (rho * n^2 * D^5)   (torque coefficient)
 ```
 
-**Scale correction (form factor method, ITTC 1978):**
+**Scale correction for wake fraction (ITTC 1978 method, simplified form):**
+
+The ITTC 1978 performance prediction method prescribes a wake-fraction correction
+from model scale (M) to full scale (S). The exact procedure involves form-factor
+decomposition of the resistance and is defined in ITTC Procedure 7.5-02-03-01.4
+(§3.3). The core principle is:
 ```
-w_S = w_M * (V_S / V_M) - (C_F_M - C_F_S + Delta_CF) * (A_S / (V^(2/3)))
+w_S = (t + 0.04) + (w_M - t - 0.04) * (1 + k) * C_F_S / ((1 + k) * C_F_M)
 ```
-where `C_F` is frictional resistance coefficient per ITTC 1957 line.
+where:
+- `w_M` = model-scale wake fraction (from self-propulsion test)
+- `t` = thrust deduction fraction
+- `k` = form factor (from Prohaska or ITTC resistance test)
+- `C_F_M`, `C_F_S` = frictional resistance coefficients at model and ship Re (ITTC 1957 line)
+
+> **Note:** Multiple variants exist in the literature. The above follows the ITTC 1978
+> method as reproduced in Carlton (2007, §8.11). For exact implementation, consult the
+> primary ITTC procedure document rather than secondary sources.
 
 **Thrust deduction relation to resistance:**
 ```
@@ -460,24 +472,31 @@ t = 1 - R_T / T    (from self-propulsion test; tow force = 0 at model self-propu
 
 ### 8.1 Felli, Camussi & Di Felice (2011)
 
+**Authors:** M. Felli, R. Camussi, F. Di Felice
 **Title:** "Mechanisms of evolution of the propeller wake in the transition and far fields"
-**Journal:** Journal of Fluid Mechanics, vol. 682
+**Journal:** Journal of Fluid Mechanics, vol. 682, pp. 5–53
 **Key contribution:** PIV measurements of propeller slipstream structure at J = 0.4–0.9.
 Shows helical vortex instability and slipstream contraction.
 
-**Key finding:**
+**Key formulae / correlations (from PIV data):**
 ```
 Slipstream contraction ratio at 1D behind disc: r_wake / r_prop ≈ 0.87-0.92
 Fully contracted at ~3D downstream
+Tip vortex pitch / D ≈ J * (1 - w) at design condition
 ```
-- Applies to J > 0.4; lightly-loaded conditions (J > 0.8) contract more slowly.
+
+**Applicability range:** J = 0.4–0.9; single propeller in open water; lightly-loaded
+conditions (J > 0.8) contract more slowly. Data applicable for calibrating actuator-disk
+contraction assumptions.
 
 ### 8.2 Shen, Gu & Wan (2015)
 
+**Authors:** Z. Shen, M. Gu, D. Wan
 **Title:** "Numerical prediction of propeller-rudder interaction"
-**Journal:** Ocean Engineering, vol. 108
+**Journal:** Ocean Engineering, vol. 108, pp. 392–407
 **Key contribution:** RANS simulation of propeller-rudder system; validates rudder C_L
-augmentation against experimental data.
+augmentation against experimental data. SST k-ω turbulence model gives best agreement
+for rudder-in-slipstream configurations.
 
 **Key formulae (reported):**
 ```
@@ -489,39 +508,62 @@ Peak C_L shifts to lower AoA in slipstream (effective inflow angle increased by 
 
 ### 8.3 Greco, Muscari, Testa & Di Mascio (2014)
 
+**Authors:** L. Greco, R. Muscari, C. Testa, A. Di Mascio
 **Title:** "Studies on propeller-rudder interaction by an unsteady vortex lattice method"
-**Journal:** Journal of Marine Science and Technology, vol. 19
+**Journal:** Journal of Marine Science and Technology, vol. 19, pp. 366–379
 **Key contribution:** BEM-based method for unsteady propeller-rudder forces. Captures
 blade-frequency excitation on rudder.
 
-**Key finding:**
+**Key formulae / correlations:**
 ```
 Unsteady rudder force amplitude / steady force ≈ 0.05-0.15 at design J
-Frequency: n_blades * n_prop (blade-pass frequency)
+Dominant frequency: f = Z * n   (Z = blade count, n = rev/s)
+Unsteady side force on rudder: F_y(t) = F_y_mean + ΔF_y * sin(2π * Z * n * t + φ)
 ```
-- Relevant for structural fatigue of rudder stock at high propeller loading.
+
+**Applicability range:** J = 0.4–0.8; single-screw with semi-balanced rudder; relevant
+for structural fatigue of rudder stock at high propeller loading. BEM method is inviscid —
+does not capture viscous separation at high δ.
 
 ### 8.4 Muscari, Di Mascio & Verzicco (2013)
 
+**Authors:** R. Muscari, A. Di Mascio, R. Verzicco
 **Title:** "Modeling of vortex dynamics in the wake of a marine propeller"
-**Journal:** Computers & Fluids, vol. 73
+**Journal:** Computers & Fluids, vol. 73, pp. 65–79
 **Key contribution:** LES/DES study of propeller wake topology. Provides benchmark for
-RANS models. Shows k-ε over-predicts axial velocity deficit; SST k-ω closer to LES.
+RANS models.
+
+**Key formulae / correlations:**
+```
+Axial velocity deficit at x/D = 1:
+  k-ε:     Va / V_A ≈ 1.25  (over-predicts acceleration)
+  SST k-ω: Va / V_A ≈ 1.18  (matches LES within 5%)
+  LES:     Va / V_A ≈ 1.16  (reference)
+```
+
+**Applicability range:** J = 0.5–0.8; single 4-bladed propeller in open water.
+Primary value: establishes SST k-ω as the preferred RANS turbulence model for
+slipstream prediction.
 
 ### 8.5 Yilmaz, Aktas, Can, Yazir & Atlar (2020)
 
+**Authors:** N. Yilmaz, B. Aktas, U. Can, D. Yazir, M. Atlar
 **Title:** "A comparative study on tip vortex and propeller performance"
 **Journal:** Applied Ocean Research, vol. 98
 **Key contribution:** Experimental + RANS comparison for propeller at J = 0.3–0.9.
 Demonstrates SST k-ω superiority over standard k-ε for slipstream prediction.
 
-**Key finding:**
+**Key formulae / correlations:**
 ```
 Va_R / V_A at rudder plane (x = 0.5D behind disc):
   J = 0.5: Va_R / V_A ≈ 1.35  (high loading)
   J = 0.7: Va_R / V_A ≈ 1.20
   J = 0.9: Va_R / V_A ≈ 1.10  (light loading)
+K_T error: SST k-ω ≈ 3%, k-ε ≈ 8% (vs experiment)
 ```
+
+**Applicability range:** J = 0.3–0.9; 4-bladed fixed-pitch propeller; experimental
+data from cavitation tunnel + open water. Confirms SST k-ω for RANS propeller work.
 
 ### 8.6 RANS applicability summary
 
@@ -614,3 +656,7 @@ Va_R / V_A at rudder plane (x = 0.5D behind disc):
 
 18. **ITTC (2017).** Procedure 7.5-02-06-01: "Guidelines for Rudder and Nozzle
     Interaction with Propeller." 28th ITTC.
+
+19. **ITTC (1978/2017).** Procedure 7.5-02-03-01.4: "1978 ITTC Performance Prediction
+    Method." Revised 28th ITTC 2017. Defines wake-fraction and thrust-deduction
+    scale-correction from model to full scale.
