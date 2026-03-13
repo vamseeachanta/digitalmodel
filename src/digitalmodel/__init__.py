@@ -10,6 +10,7 @@ Domain groups::
     digitalmodel.signal_processing   - Signal analysis & time series
     digitalmodel.solvers             - Solver integrations (OrcaFlex, GMSH, Blender)
     digitalmodel.specialized         - Domain-specific apps (GIS, finance, marketing)
+    digitalmodel.power               - Power systems (data center topology, UPS/STS)
     digitalmodel.structural          - Structural analysis & fatigue
     digitalmodel.subsea              - Subsea systems (mooring, risers, VIV)
     digitalmodel.visualization       - Dashboards & reporting
@@ -24,6 +25,7 @@ __all__ = [
     "hydrodynamics",
     "infrastructure",
     "marine_ops",
+    "power",
     "signal_processing",
     "solvers",
     "specialized",
