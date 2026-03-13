@@ -157,17 +157,20 @@ simulation programs.
 
 ### Key Formulae (as extracted from McTaggart 2005, Section 9)
 
-**Propeller thrust force:**
+**Effective propeller thrust on hull** (net of thrust deduction):
 ```
-F_prop = (1 - t) * rho * n^2 * D^4 * K_T(J)
+F_prop = (1 - t) * T = (1 - t) * rho * n^2 * D^4 * K_T(J)
 ```
+> Note: `F_prop` here is the net hull thrust, not the raw propeller thrust
+> `T = rho * n^2 * D^4 * K_T(J)`. Söding and McTaggart use `F_prop` consistently
+> as the (1-t)-reduced quantity in the interaction force equations below.
 
 **Advance ratio at propeller:**
 ```
 J = U * (1 - w) / (n * D)
 ```
 
-**Thrust loading coefficient:**
+**Thrust loading coefficient** (based on effective thrust):
 ```
 C_th = F_prop / (0.5 * rho * U^2 * (1 - w)^2 * pi/4 * D^2)
 ```
@@ -187,10 +190,11 @@ where `C^(rp)` is the rudder-propeller interaction coefficient.
 **Rudder-propeller interaction forces in ship-fixed axes:**
 ```
 F_1^(rp,S) = F_drag^(rp)                          (surge)
-F_2^(rp,S) = -F_lift^(rp) * sin(Gamma)            (sway)
-F_3^(rp,S) =  F_lift^(rp) * cos(Gamma)            (heave)
+F_2^(rp,S) = -F_lift^(rp) * cos(Gamma)            (sway)
+F_3^(rp,S) =  F_lift^(rp) * sin(Gamma)            (heave)
 ```
-where `Gamma` is rudder dihedral angle.
+where `Gamma` is rudder dihedral angle (= 0° for a conventional vertical rudder,
+so cos(0) = 1 → full sway force, sin(0) = 0 → zero heave; per McTaggart 2005, Eq. 67).
 
 **Interaction coefficient selection:**
 ```
@@ -280,10 +284,11 @@ full-scale turning circle trials for the Esso Osaka tanker.
 
 ### Key Formulae (from Sections 7–9)
 
-**Propeller thrust (Eq. 59):**
+**Effective propeller thrust on hull (Eq. 59):**
 ```
 F_prop = (1 - t_prop) * rho * n_prop^2 * D_prop^4 * K_T(J_prop)
 ```
+> Same convention as Söding: `F_prop` = net hull thrust after thrust deduction.
 
 **Advance ratio (Eq. 60):**
 ```
