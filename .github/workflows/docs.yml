@@ -17,7 +17,7 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    if: hashFiles('mkdocs.yml') != ''
+    if: ${{ hashFiles('mkdocs.yml') != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,4 +31,6 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Build docs
+        env:
+          UV_NO_SOURCES: "true"
         run: uv run --group docs mkdocs build --strict
