@@ -1,11 +1,14 @@
 # ABOUTME: On-bottom stability for subsea pipelines per DNV-RP-F109.
-# ABOUTME: Submerged weight, Morison hydrodynamic loads, lateral stability check.
+# ABOUTME: Submerged weight, Morison hydrodynamic loads, lateral/vertical stability.
 """On-bottom stability — DNV-RP-F109 simplified method.
 
 Implements:
 - submerged_weight: pipe cross-section weight minus buoyancy (per unit length)
 - hydrodynamic_loads: Morison drag + inertia + lift on seabed pipe
+- drag_force_per_meter, lift_force_per_meter, inertia_force_per_meter: individual components
 - lateral_stability_check: utilization = gamma * F_h / (mu * (W_s - F_l))
+- check_lateral_stability: kN-based lateral stability wrapper
+- check_vertical_stability: vertical stability (weight vs lift)
 """
 from dataclasses import dataclass
 import math
@@ -41,7 +44,16 @@ class StabilityResult:
 
     is_stable: bool
     utilization: float
-    required_weight_n_per_m: float
+    required_weight_n_per_m: float = 0.0
+    standard: str = STANDARD
+
+
+@dataclass
+class VerticalStabilityResult:
+    """Vertical stability check result."""
+
+    is_stable: bool
+    utilization: float
     standard: str = STANDARD
 
 
@@ -188,4 +200,138 @@ def lateral_stability_check(
         is_stable=utilization <= 1.0,
         utilization=utilization,
         required_weight_n_per_m=required_ws,
+    )
+
+
+def drag_force_per_meter(
+    current_velocity_ms: float,
+    pipe_od_m: float,
+    water_density_kg_m3: float,
+    drag_coeff: float,
+) -> float:
+    """Drag force per unit length: F_D = 0.5 * rho * C_D * D * U^2.
+
+    Args:
+        current_velocity_ms: Flow velocity (m/s).
+        pipe_od_m: Total outer diameter (m).
+        water_density_kg_m3: Water density (kg/m^3).
+        drag_coeff: Drag coefficient C_D.
+
+    Returns:
+        Drag force per metre (N/m).
+    """
+    return (
+        0.5 * water_density_kg_m3 * drag_coeff
+        * pipe_od_m * current_velocity_ms**2
+    )
+
+
+def lift_force_per_meter(
+    current_velocity_ms: float,
+    pipe_od_m: float,
+    water_density_kg_m3: float,
+    lift_coeff: float,
+) -> float:
+    """Lift force per unit length: F_L = 0.5 * rho * C_L * D * U^2.
+
+    Args:
+        current_velocity_ms: Flow velocity (m/s).
+        pipe_od_m: Total outer diameter (m).
+        water_density_kg_m3: Water density (kg/m^3).
+        lift_coeff: Lift coefficient C_L.
+
+    Returns:
+        Lift force per metre (N/m).
+    """
+    return (
+        0.5 * water_density_kg_m3 * lift_coeff
+        * pipe_od_m * current_velocity_ms**2
+    )
+
+
+def inertia_force_per_meter(
+    acceleration_ms2: float,
+    pipe_od_m: float,
+    water_density_kg_m3: float,
+    inertia_coeff: float,
+) -> float:
+    """Inertia force per unit length: F_I = rho * C_M * pi/4 * D^2 * a.
+
+    Args:
+        acceleration_ms2: Water particle acceleration (m/s^2).
+        pipe_od_m: Total outer diameter (m).
+        water_density_kg_m3: Water density (kg/m^3).
+        inertia_coeff: Inertia coefficient C_M.
+
+    Returns:
+        Inertia force per metre (N/m).
+    """
+    return (
+        water_density_kg_m3 * inertia_coeff
+        * (math.pi / 4.0) * pipe_od_m**2 * acceleration_ms2
+    )
+
+
+def check_lateral_stability(
+    submerged_weight_per_meter_kn: float,
+    horizontal_load_per_meter_kn: float,
+    lift_load_per_meter_kn: float,
+    friction_coeff: float,
+    safety_factor: float,
+) -> StabilityResult:
+    """Lateral stability check with kN/m inputs.
+
+    Convenience wrapper around lateral_stability_check that accepts
+    forces in kN/m instead of N/m.
+
+    Args:
+        submerged_weight_per_meter_kn: Submerged weight W_s (kN/m).
+        horizontal_load_per_meter_kn: Total horizontal load (kN/m).
+        lift_load_per_meter_kn: Lift load (kN/m).
+        friction_coeff: Pipe-soil friction coefficient.
+        safety_factor: Safety factor gamma.
+
+    Returns:
+        StabilityResult with utilization ratio and stability flag.
+    """
+    return lateral_stability_check(
+        submerged_weight_n_per_m=submerged_weight_per_meter_kn * 1000.0,
+        horizontal_force_n_per_m=horizontal_load_per_meter_kn * 1000.0,
+        lift_force_n_per_m=lift_load_per_meter_kn * 1000.0,
+        friction_coefficient=friction_coeff,
+        safety_factor=safety_factor,
+    )
+
+
+def check_vertical_stability(
+    submerged_weight_per_meter_kn: float,
+    lift_load_per_meter_kn: float,
+    safety_factor: float,
+) -> VerticalStabilityResult:
+    """Vertical stability check per DNV-RP-F109.
+
+    Pipe is vertically stable when W_s >= gamma * F_l.
+    Utilization = gamma * F_l / W_s; stable when <= 1.0.
+
+    Args:
+        submerged_weight_per_meter_kn: Submerged weight W_s (kN/m).
+        lift_load_per_meter_kn: Lift load F_l (kN/m).
+        safety_factor: Safety factor gamma.
+
+    Returns:
+        VerticalStabilityResult with stability flag.
+
+    Raises:
+        ValueError: If submerged weight is zero or negative.
+    """
+    if submerged_weight_per_meter_kn <= 0.0:
+        raise ValueError(
+            "submerged_weight_per_meter_kn must be positive"
+        )
+
+    utilization = safety_factor * lift_load_per_meter_kn / submerged_weight_per_meter_kn
+
+    return VerticalStabilityResult(
+        is_stable=utilization <= 1.0,
+        utilization=utilization,
     )
