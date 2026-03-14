@@ -17,7 +17,6 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('mkdocs.yml') != '' }}
 
     steps:
       - uses: actions/checkout@v4
