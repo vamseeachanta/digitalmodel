@@ -277,9 +277,12 @@ class AQWAInputParser:
     def _parse_headings(self, lines: list[str]) -> WaveHeadingSpec:
         """Extract wave headings from DIRN cards in deck 6.
 
-        AQWA stores headings in degrees. The canonical spec also uses degrees.
+        AQWA stores headings in degrees and may write the full symmetric
+        expansion (e.g. -180..180 for a half-symmetry model whose spec
+        only contained 0..180).  Detect symmetric expansion and recover
+        the canonical [0, 180] range.
         """
-        heading_list: list[float] = []
+        raw_headings: list[float] = []
 
         for line in lines:
             upper = line.upper()
@@ -287,10 +290,19 @@ class AQWAInputParser:
                 floats = _FLOAT_PATTERN.findall(line)
                 if floats:
                     heading_deg = float(floats[-1])
-                    heading_list.append(heading_deg)
+                    raw_headings.append(heading_deg)
 
-        if not heading_list:
-            heading_list = [0.0]  # fallback
+        if not raw_headings:
+            return WaveHeadingSpec(values=[0.0])
+
+        # Detect symmetric expansion: if headings span negative values,
+        # AQWA has mirrored the [0, 180] spec to [-180, 180].
+        # Recover the original by keeping only non-negative headings.
+        has_negative = any(h < 0 for h in raw_headings)
+        if has_negative:
+            heading_list = sorted(set(h for h in raw_headings if h >= 0))
+        else:
+            heading_list = sorted(set(raw_headings))
 
         return WaveHeadingSpec(values=heading_list)
 

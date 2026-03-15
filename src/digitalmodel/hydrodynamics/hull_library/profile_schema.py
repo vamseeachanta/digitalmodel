@@ -39,6 +39,8 @@ class HullType(str, Enum):
     ELLIPSOID = "ellipsoid"
     FPSO = "fpso"
     LNGC = "lngc"
+    TLP = "tlp"
+    LID = "lid"
     CUSTOM = "custom"
 
 

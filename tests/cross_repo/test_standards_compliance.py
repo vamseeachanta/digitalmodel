@@ -269,7 +269,7 @@ class ComplianceChecker:
         return "agent_registry", True, f"Found registry at {found_registries[0]}", []
 
 
-def test_repository_compliance(repo_path: Path, config: Dict) -> Dict:
+def check_repository_compliance(repo_path: Path, config: Dict) -> Dict:
     """
     Test a single repository for standards compliance.
 
@@ -302,6 +302,6 @@ if __name__ == "__main__":
     config_file = Path(__file__).parent.parent.parent / "config" / "cross-repo-test-config.yaml"
 
     config = load_config(config_file)
-    results = test_repository_compliance(repo, config)
+    results = check_repository_compliance(repo, config)
 
     print(json.dumps(results, indent=2))

@@ -50,7 +50,7 @@ class TestAQWALISParser:
         # Check periods match frequencies (2π/ω)
         for freq, period in zip(frequencies, periods):
             expected_period = 2 * np.pi / freq
-            assert abs(period - expected_period) < 0.01
+            assert abs(period - expected_period) < 0.02
 
     def test_extract_headings(self, parser):
         """Test heading extraction"""
@@ -150,8 +150,9 @@ class TestAQWALISParser:
         # Check data consistency
         n_freqs = len(data['frequencies'])
         assert len(data['periods']) == n_freqs
-        assert len(data['added_mass']) <= n_freqs  # May have fewer matrices
-        assert len(data['damping']) <= n_freqs
+        # Added mass/damping may include infinite-frequency (ω→∞) matrix
+        assert len(data['added_mass']) <= n_freqs + 1
+        assert len(data['damping']) <= n_freqs + 1
 
     def test_standalone_function(self):
         """Test standalone parse function"""

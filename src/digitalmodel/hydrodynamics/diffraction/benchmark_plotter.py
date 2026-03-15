@@ -231,7 +231,7 @@ class BenchmarkPlotter:
     def build_input_comparison_html(self) -> str:
         """Render an HTML table comparing solver input parameters."""
         return _build_input_comparison_html(
-            self._solver_results, self._solver_names,
+            self._solver_names, self._solver_results,
             self._solver_metadata,
         )
 
@@ -244,7 +244,8 @@ class BenchmarkPlotter:
     def build_mesh_schematic_html(self) -> str:
         """Build 3D mesh schematic section for the benchmark report."""
         return _build_mesh_schematic_html(
-            self._solver_names, self._solver_metadata,
+            self._solver_names, self._solver_results,
+            self._solver_metadata, _get_solver_style,
         )
 
     def build_semantic_equivalence_html(self) -> str:

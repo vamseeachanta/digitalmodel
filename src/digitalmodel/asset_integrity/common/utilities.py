@@ -1,5 +1,5 @@
+import importlib.util
 import os
-import imp
 import logging
 from pathlib import Path
 from webcolors import rgb_to_hex
@@ -13,8 +13,10 @@ def get_module_path(module=None):
     if module is None:
         module_path = __name__
         module = module_path.split(".")[0]
-    module_info = imp.find_module(module)
-    module_path = module_info[1]
+    spec = importlib.util.find_spec(module)
+    if spec is None or spec.origin is None:
+        raise ModuleNotFoundError(f"No module named {module!r}")
+    module_path = str(Path(spec.origin).parent)
     return module_path
 
 

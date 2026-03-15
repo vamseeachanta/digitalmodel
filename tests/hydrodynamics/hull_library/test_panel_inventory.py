@@ -34,10 +34,14 @@ GDF_DIR = Path(
     "/specs/modules/orcawave/test-configs/geometry"
 )
 
+_HAS_GDF_FILES = GDF_DIR.exists() and any(GDF_DIR.glob("*.gdf"))
+
 
 @pytest.fixture
 def gdf_dir() -> Path:
     """Path to the real GDF test-configs directory."""
+    if not _HAS_GDF_FILES:
+        pytest.skip("GDF test data not available in test-configs/geometry/")
     return GDF_DIR
 
 

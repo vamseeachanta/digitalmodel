@@ -23,6 +23,11 @@ CATALOG_YAML = REPO_ROOT / "data" / "hull_library" / "catalog" / "hull_panel_cat
 CATALOG_CSV = REPO_ROOT / "data" / "hull_library" / "catalog" / "hull_panel_catalog.csv"
 PANELS_DIR = REPO_ROOT / "data" / "hull_library" / "panels"
 
+pytestmark = pytest.mark.skipif(
+    not CATALOG_YAML.exists(),
+    reason="hull panel catalog not yet generated (data/hull_library/catalog/)",
+)
+
 
 @pytest.fixture
 def catalog() -> PanelCatalog:

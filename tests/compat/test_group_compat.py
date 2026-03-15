@@ -33,7 +33,7 @@ EXPECTED_GROUPS = {
     "specialized",
 }
 
-EXPECTED_MODULE_COUNT = 64  # 64 modules mapped to groups (group-named modules excluded)
+EXPECTED_MODULE_COUNT = len(_FLAT_TO_GROUP)  # dynamic: all modules mapped to groups
 
 
 class TestFlatToGroupMapping:

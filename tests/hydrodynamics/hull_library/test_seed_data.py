@@ -5,6 +5,11 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "hull_library" / "profiles"
 
+pytestmark = pytest.mark.skipif(
+    not DATA_DIR.exists(),
+    reason="hull profile seed data not yet generated (data/hull_library/profiles/)",
+)
+
 
 class TestSeedProfiles:
     """Validate all seed YAML profiles load and are consistent."""
