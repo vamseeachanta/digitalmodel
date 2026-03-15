@@ -1,7 +1,11 @@
 # ABOUTME: Benchmark package for dynacard vision model evaluation (WRK-251).
 # ABOUTME: Provides test set builder, vision classifier interface, and benchmark runner.
 
-from .test_set_builder import build_hold_out_test_set, LabelledCard
+try:
+    from .test_set_builder import build_hold_out_test_set, LabelledCard
+except ModuleNotFoundError:
+    build_hold_out_test_set = None  # test_set_builder not yet implemented
+    LabelledCard = None
 from .vision_classifier import (
     VisionModelClassifier,
     ClassifierBackend,

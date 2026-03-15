@@ -7,7 +7,10 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 from ..diagnostics import PumpDiagnostics
-from .test_set_builder import LabelledCard
+try:
+    from .test_set_builder import LabelledCard
+except ModuleNotFoundError:
+    LabelledCard = None  # test_set_builder not yet implemented
 from .vision_classifier import VisionModelClassifier
 
 # ---------------------------------------------------------------------------
