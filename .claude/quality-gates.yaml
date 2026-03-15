@@ -7,7 +7,7 @@ gates:
     enabled: true
     order: 1
     description: "All tests must pass"
-    command: "pytest --maxfail=1 -x"
+    command: "pytest --maxfail=1 -x --capture=no"
     failure_action: "block"
     warning_action: "report"
 
