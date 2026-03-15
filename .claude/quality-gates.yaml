@@ -7,7 +7,7 @@ gates:
     enabled: true
     order: 1
     description: "All tests must pass"
-    command: "pytest --maxfail=10 -p no:asyncio -p no:capture -p no:randomly --no-header -q --ignore=tests/specialized --ignore=tests/workflows --ignore=tests/infrastructure/performance --ignore=tests/solvers/orcaflex/modular_generator --ignore=tests/asset_integrity --ignore=tests/cross_repo --ignore=tests/contracts --ignore=tests/compat"
+    command: "pytest --maxfail=10 -p no:asyncio -p no:randomly --no-header -q --ignore=tests/specialized --ignore=tests/workflows --ignore=tests/infrastructure/performance --ignore=tests/solvers/orcaflex/modular_generator --ignore=tests/asset_integrity --ignore=tests/cross_repo --ignore=tests/contracts --ignore=tests/compat"
     failure_action: "block"
     warning_action: "report"
 
