@@ -32,6 +32,8 @@ collect_ignore = [
     str(_tests_dir / "workflows/orcawave/test_end_to_end.py"),
     str(_tests_dir / "workflows/orcawave/test_integration.py"),
     str(_tests_dir / "workflows/standalone/markitdown/test_converter.py"),
+    # Requires pytest-asyncio plugin (disabled due to hypothesis conflict)
+    str(_tests_dir / "test_workflow_checkpoints.py"),
 ]
 
 # Add src/ to Python path
