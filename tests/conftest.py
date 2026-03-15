@@ -34,6 +34,9 @@ collect_ignore = [
     str(_tests_dir / "workflows/standalone/markitdown/test_converter.py"),
     # Requires pytest-asyncio plugin (disabled due to hypothesis conflict)
     str(_tests_dir / "test_workflow_checkpoints.py"),
+    # Data file dependencies not in git — hull profiles and chain database
+    str(_tests_dir / "marine_ops/marine_engineering/test_component_database.py"),
+    str(_tests_dir / "hydrodynamics/hull_library/test_hull_library_expansion.py"),
 ]
 
 # Add src/ to Python path
