@@ -228,11 +228,18 @@ class QualityGateValidator:
                     metrics={"exit_code": 0},
                 )
             else:
+                # Include last 50 lines of stdout for diagnosis
+                stdout_tail = "\n".join(
+                    result.stdout.splitlines()[-50:]
+                ) if result.stdout else ""
                 return GateResult(
                     gate_name="tests",
                     status=GateStatus.FAILURE,
                     message="Some tests failed",
-                    metrics={"exit_code": result.returncode},
+                    metrics={
+                        "exit_code": result.returncode,
+                        "stdout_tail": stdout_tail,
+                    },
                     errors=[result.stderr] if result.stderr else [],
                 )
         except subprocess.TimeoutExpired:
