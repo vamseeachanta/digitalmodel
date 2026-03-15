@@ -215,10 +215,13 @@ class QualityGateValidator:
         try:
             result = subprocess.run(
                 command.split(),
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
                 timeout=600,
             )
+            # stderr merged into stdout for parsing
+            result.stderr = ""
 
             # Parse pytest summary line to determine actual result
             # (exit code may be wrong due to capture plugin bug)
