@@ -12,7 +12,7 @@ from .models import GeometryType, ElementType, MeshAlgorithm
 try:
     import gmsh
     GMSH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     GMSH_AVAILABLE = False
 
 

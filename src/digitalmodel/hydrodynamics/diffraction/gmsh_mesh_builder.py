@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field, model_validator
 try:
     import gmsh
     GMSH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     GMSH_AVAILABLE = False
 
 
