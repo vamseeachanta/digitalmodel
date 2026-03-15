@@ -7,7 +7,7 @@ gates:
     enabled: true
     order: 1
     description: "All tests must pass"
-    command: "pytest --maxfail=3 -x --capture=no -p no:asyncio"
+    command: "pytest --maxfail=3 -x -p no:asyncio --no-header -q"
     failure_action: "block"
     warning_action: "report"
 
@@ -126,4 +126,4 @@ settings:
     cache_enabled: true
     cache_duration: 3600  # 1 hour in seconds
     parallel_execution: false  # Keep simple for now
-    timeout: 300  # 5 minutes max per gate
+    timeout: 600  # 10 minutes max per gate

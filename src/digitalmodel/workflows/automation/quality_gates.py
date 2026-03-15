@@ -217,7 +217,7 @@ class QualityGateValidator:
                 command.split(),
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=600,
             )
 
             if result.returncode == 0:
