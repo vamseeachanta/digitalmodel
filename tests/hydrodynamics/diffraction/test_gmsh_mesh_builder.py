@@ -17,7 +17,7 @@ import pytest
 try:
     import gmsh  # noqa: F401
     GMSH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     GMSH_AVAILABLE = False
 
 

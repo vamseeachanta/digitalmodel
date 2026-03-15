@@ -13,7 +13,7 @@ import pytest
 try:
     import gmsh  # noqa: F401
     GMSH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     GMSH_AVAILABLE = False
 
 from digitalmodel.hydrodynamics.bemrosetta.models.mesh_models import (
