@@ -84,13 +84,14 @@ class ManifoldChecker:
         n_faces_u = n_st - 1
         n_faces_v = n_wl - 1
 
-        # Check u-adjacent faces
+        # Check u-adjacent faces — a negative dot product means the
+        # surface folds back on itself (self-intersection).
         for i in range(n_faces_u - 1):
             for j in range(n_faces_v):
                 dot = np.dot(
                     normals[i, j], normals[i + 1, j]
                 )
-                if dot < -0.5:
+                if dot < 0.0:
                     return False
 
         # Check v-adjacent faces
@@ -99,7 +100,7 @@ class ManifoldChecker:
                 dot = np.dot(
                     normals[i, j], normals[i, j + 1]
                 )
-                if dot < -0.5:
+                if dot < 0.0:
                     return False
 
         return True

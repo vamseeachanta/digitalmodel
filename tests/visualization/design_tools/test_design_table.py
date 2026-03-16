@@ -229,13 +229,14 @@ class TestManifoldCheck:
 
     def test_manifold_check_detects_self_intersection(self):
         """Self-intersecting surface (folded grid) fails."""
-        # Create a valid grid then fold one row back on itself
+        # Create a smooth grid then fold an interior station so that
+        # face normals reverse direction (z-coordinates inverted).
         grid = np.zeros((4, 4, 3))
         for i in range(4):
             for j in range(4):
-                grid[i, j] = [i * 10.0, float(j) * 2.0, float(j)]
-        # Fold: reverse the y-coordinates of one interior station
-        grid[2, :, 1] = grid[2, ::-1, 1]
+                grid[i, j] = [i * 10.0, float(j) * 2.0, float(j) * 3.0]
+        # Fold: invert z of interior station so surface crosses itself
+        grid[2, :, 2] = -grid[2, :, 2]
         checker = ManifoldChecker(grid)
         assert not checker.check_self_intersection()
 

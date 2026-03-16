@@ -74,6 +74,14 @@ class CalculiXResultParser:
             max_d = max(max_d, disp["magnitude"])
         return max_d
 
+    def get_max_stress_component(self, component: str = "sxx") -> float:
+        """Return maximum value of a specific stress component across all nodes."""
+        if not self._parsed:
+            self.parse_frd_file()
+        return max(
+            abs(s[component]) for s in self._stresses.values()
+        )
+
     def get_stress_at_node(self, node_id: int) -> dict:
         """Return stress components at a specific node (1-based ID)."""
         if not self._parsed:
@@ -101,8 +109,8 @@ class CalculiXResultParser:
     def _parse_disp_block(self, lines: list[str], start: int) -> int:
         """Parse a DISP block starting after the -4 header."""
         i = start + 1
-        # Skip the -5 component-names line
-        if i < len(lines) and lines[i].strip().startswith("-5"):
+        # Skip all -5 component-name header lines
+        while i < len(lines) and lines[i].strip().startswith("-5"):
             i += 1
         while i < len(lines):
             line = lines[i]
@@ -116,7 +124,7 @@ class CalculiXResultParser:
     def _parse_stress_block(self, lines: list[str], start: int) -> int:
         """Parse a STRESS block starting after the -4 header."""
         i = start + 1
-        if i < len(lines) and lines[i].strip().startswith("-5"):
+        while i < len(lines) and lines[i].strip().startswith("-5"):
             i += 1
         while i < len(lines):
             line = lines[i]
@@ -128,23 +136,35 @@ class CalculiXResultParser:
         return i
 
     def _parse_disp_line(self, line: str):
-        """Parse: -1  node_id  dx  dy  dz  dmag"""
-        parts = line.split()
-        if len(parts) < 6:
+        """Parse fixed-width FRD displacement line.
+
+        Format: -1  node_id(10)  dx(12)  dy(12)  dz(12)
+        """
+        if len(line) < 37:
             return
-        node_id = int(parts[1])
-        dx, dy, dz, dmag = (float(parts[j]) for j in range(2, 6))
+        node_id = int(line[3:13])
+        dx = float(line[13:25])
+        dy = float(line[25:37])
+        dz = float(line[37:49]) if len(line) >= 49 else 0.0
+        dmag = math.sqrt(dx * dx + dy * dy + dz * dz)
         self._displacements[node_id] = {
             "dx": dx, "dy": dy, "dz": dz, "magnitude": dmag,
         }
 
     def _parse_stress_line(self, line: str):
-        """Parse: -1  node_id  sxx  syy  szz  sxy  syz  szx"""
-        parts = line.split()
-        if len(parts) < 8:
+        """Parse fixed-width FRD stress line.
+
+        Format: -1  node_id(10)  sxx(12)  syy(12)  szz(12)  sxy(12)  syz(12)  szx(12)
+        """
+        if len(line) < 85:
             return
-        node_id = int(parts[1])
-        sxx, syy, szz, sxy, syz, szx = (float(parts[j]) for j in range(2, 8))
+        node_id = int(line[3:13])
+        sxx = float(line[13:25])
+        syy = float(line[25:37])
+        szz = float(line[37:49])
+        sxy = float(line[49:61])
+        syz = float(line[61:73])
+        szx = float(line[73:85])
         self._stresses[node_id] = {
             "sxx": sxx, "syy": syy, "szz": szz,
             "sxy": sxy, "syz": syz, "szx": szx,

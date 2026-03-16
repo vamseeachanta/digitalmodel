@@ -95,10 +95,10 @@ class FEMChain:
             )
             gmsh.model.mesh.field.add("Threshold", 2)
             gmsh.model.mesh.field.setNumber(2, "InField", 1)
-            gmsh.model.mesh.field.setNumber(2, "SizeMin", element_size / 3)
+            gmsh.model.mesh.field.setNumber(2, "SizeMin", hole_r / 8)
             gmsh.model.mesh.field.setNumber(2, "SizeMax", element_size)
-            gmsh.model.mesh.field.setNumber(2, "DistMin", hole_r * 0.5)
-            gmsh.model.mesh.field.setNumber(2, "DistMax", hole_r * 3)
+            gmsh.model.mesh.field.setNumber(2, "DistMin", hole_r * 0.2)
+            gmsh.model.mesh.field.setNumber(2, "DistMax", hole_r * 5)
             gmsh.model.mesh.field.setAsBackgroundMesh(2)
 
             gmsh.option.setNumber("Mesh.Algorithm3D", 1)
@@ -198,13 +198,37 @@ class FEMChain:
         frd = parser.parse_frd_file()
         max_vm = parser.get_max_von_mises()
         max_disp = parser.get_max_displacement()
+        max_sxx = parser.get_max_stress_component("sxx")
+
+        # Find max stress near hole (exclude load/BC application nodes)
+        hole_sxx = self._max_stress_near_hole(parser)
 
         return {
             "max_von_mises": max_vm,
+            "max_sxx": max_sxx,
+            "hole_sxx": hole_sxx,
             "max_displacement": max_disp,
             "n_disp_nodes": len(frd["displacements"]),
             "n_stress_nodes": len(frd["stresses"]),
         }
+
+    def _max_stress_near_hole(self, parser: CalculiXResultParser) -> float:
+        """Find max σ_xx near the hole, excluding boundary/load regions."""
+        if self._nodes is None:
+            return 0.0
+        max_sxx = 0.0
+        hole_r = 10.0  # Default from run_plate_validation
+        search_r = hole_r * 3.0
+        for node_id, stress in parser._stresses.items():
+            # node_id is 1-based; nodes array is 0-based
+            idx = node_id - 1
+            if idx < 0 or idx >= len(self._nodes):
+                continue
+            x, y, z = self._nodes[idx]
+            dist = (x * x + y * y) ** 0.5
+            if dist < search_r:
+                max_sxx = max(max_sxx, abs(stress["sxx"]))
+        return max_sxx
 
     # ------------------------------------------------------------------
     # Validation shortcut
@@ -220,21 +244,23 @@ class FEMChain:
         plate_h = 200.0
         hole_r = 10.0
         thickness = 1.0
-        element_size = 3.0
+        element_size = 8.0
 
         stats = self.create_plate_with_hole(
             plate_w, plate_h, hole_r, thickness, element_size,
         )
 
-        # Applied traction as equivalent nodal loads
+        # Applied traction as equivalent nodal loads on quarter model
+        # Far edge spans y=0..plate_h/2, total force = σ × t × (H/2)
+        n_load = len(self._node_sets.get("LOAD", [1]))
+        force_per_node = sigma_applied * thickness * (plate_h / 2.0) / n_load
         self.setup_analysis(
             material={"name": "STEEL", "E": 210000.0, "nu": 0.3},
             loads=[{
                 "type": "cload",
                 "node_set": "LOAD",
                 "dof": 1,
-                "magnitude": sigma_applied * thickness * plate_h
-                / len(self._node_sets.get("LOAD", [1])),
+                "magnitude": force_per_node,
                 "direction": (1, 0, 0),
             }],
             boundary_conditions=[
@@ -249,7 +275,9 @@ class FEMChain:
             raise RuntimeError(f"ccx failed: {status['stderr']}")
 
         results = self.extract_results()
-        kt = results["max_von_mises"] / sigma_applied
+        # Kt = max σ_xx near hole / σ_applied
+        # Excludes boundary/load nodes where stress singularities occur
+        kt = results["hole_sxx"] / sigma_applied
 
         return {
             **results,

@@ -125,7 +125,7 @@ class INPWriter:
                 continue
             lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET=EALL")
             for row in data["connectivity"]:
-                node_refs = ", ".join(str(n + 1) for n in row)
+                node_refs = ", ".join(str(int(n) + 1) for n in row)
                 lines.append(f"{elem_id}, {node_refs}")
                 elem_id += 1
 
