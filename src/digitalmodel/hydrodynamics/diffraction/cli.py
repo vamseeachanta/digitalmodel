@@ -984,5 +984,71 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import benchmark_so
 cli.add_command(benchmark_solvers_cmd)
 
 
+# ---------------------------------------------------------------------------
+# WRK-5091: mesh-build — generate panel meshes from geometry specs
+# ---------------------------------------------------------------------------
+
+
+@cli.command("mesh-build")
+@click.argument("spec_file", type=click.Path(exists=True))
+@click.option(
+    "--output", "-o", type=click.Path(), default="./mesh_output",
+    help="Output directory (default: ./mesh_output)",
+)
+@click.option(
+    "--formats", "-f", multiple=True,
+    type=click.Choice(["gdf", "dat", "msh"], case_sensitive=False),
+    default=["gdf", "dat", "msh"],
+    help="Output format(s). Repeat -f for multiple (default: all three).",
+)
+@click.option("--stem", type=str, default=None, help="Output filename stem (default: geometry type)")
+@click.option("--dry-run/--no-dry-run", default=False, help="Validate spec only, skip mesh generation")
+def mesh_build(spec_file, output, formats, stem, dry_run):
+    """Generate panel meshes from a geometry spec YAML file.
+
+    Reads SPEC_FILE (YAML with geometry_type, dimensions, mesh_size)
+    and generates mesh files in GDF (OrcaWave/WAMIT), DAT (AQWA),
+    and/or MSH v2.2 (BEMRosetta/Nemoh) formats.
+    """
+    import yaml
+
+    try:
+        spec_path = Path(spec_file)
+        with open(spec_path) as f:
+            spec_data = yaml.safe_load(f)
+
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            GmshMeshBuilder,
+            GmshMeshSpec,
+            GMSH_AVAILABLE,
+        )
+
+        if not GMSH_AVAILABLE:
+            click.echo("Error: gmsh Python package not installed. Install: pip install gmsh", err=True)
+            sys.exit(1)
+
+        spec = GmshMeshSpec.from_dict(spec_data)
+        spec.validate_for_geometry()
+
+        if dry_run:
+            click.echo(f"Dry run: spec valid — {spec.geometry_type} ({spec.mesh_size}m mesh)")
+            fmt_str = ", ".join(formats); click.echo(f"  Formats: {fmt_str}")
+            click.echo(f"  Output: {output}")
+            return
+
+        builder = GmshMeshBuilder()
+        output_dir = Path(output)
+        result = builder.build(spec, output_dir=output_dir, formats=list(formats), output_stem=stem)
+
+        click.echo(f"Mesh generated: {result.geometry_type}")
+        click.echo(f"  Panels: {result.n_panels}, Nodes: {result.n_nodes}")
+        for fmt, path in result.output_files.items():
+            click.echo(f"  {fmt}: {path}")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()

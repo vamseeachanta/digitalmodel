@@ -162,6 +162,20 @@ except ImportError:
     SolverType = None
     run_benchmark = None
 
+
+# WRK-140: gmsh mesh builder (optional - requires gmsh package)
+try:
+    from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+        GmshMeshBuilder,
+        GmshMeshSpec,
+        MeshExportResult,
+        GMSH_AVAILABLE,
+    )
+except ImportError:
+    GmshMeshBuilder = None
+    GmshMeshSpec = None
+    MeshExportResult = None
+    GMSH_AVAILABLE = False
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
     from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
@@ -286,6 +300,12 @@ __all__ = [
     'BenchmarkRunResult',
     'SolverType',
     'run_benchmark',
+
+    # WRK-140: gmsh mesh builder
+    'GmshMeshBuilder',
+    'GmshMeshSpec',
+    'MeshExportResult',
+    'GMSH_AVAILABLE',
 ]
 
 __version__ = "3.0.0"
