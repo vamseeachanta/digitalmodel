@@ -12,6 +12,7 @@ from .models import (
     GeometryType,
     ElementType,
     MeshAlgorithm,
+    INPExportConfig,
 )
 try:
     from .mesh_generator import GMSHMeshGenerator
@@ -28,4 +29,5 @@ __all__ = [
     "MeshAlgorithm",
     "GMSHMeshGenerator",
     "MeshQualityAnalyzer",
+    "INPExportConfig",
 ]

@@ -186,3 +186,20 @@ class MeshStatistics:
             result['quality'] = self.quality.to_dict()
 
         return result
+
+
+@dataclass
+class INPExportConfig:
+    """Configuration for CalculiX INP file export."""
+
+    element_type_map: Dict[str, str] = field(default_factory=lambda: {
+        'Tetrahedron 4': 'C3D4',
+        'Tetrahedron 10': 'C3D10',
+        'Hexahedron 8': 'C3D8',
+        'Hexahedron 20': 'C3D20',
+        'Triangle 3': 'CPS3',
+        'Triangle 6': 'CPS6',
+        'Quadrilateral 4': 'CPS4',
+    })
+    include_sets: bool = True
+    node_offset: int = 1  # CalculiX uses 1-based indexing
