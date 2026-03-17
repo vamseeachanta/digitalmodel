@@ -1,0 +1,97 @@
+source_type: python
+source_description: "S-lay installation bending strain checks per API RP 1111 Section 6 — sagbend and overbend bending strain for 12.75-inch pipeline"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "slay_installation"
+equations:
+  - name: "Sagbend bending strain"
+    latex: "\\epsilon_{sag} = \\frac{D}{2 R_{sagbend}}"
+    description: "Bending strain at sagbend from pipe OD and bend radius"
+  - name: "Overbend bending strain"
+    latex: "\\epsilon_{over} = \\frac{D}{2 R_{overbend}}"
+    description: "Bending strain at overbend from pipe OD and bend radius"
+  - name: "Bending utilization"
+    latex: "U = \\frac{\\epsilon}{\\epsilon_{allow}}"
+    description: "Utilization ratio: actual strain / allowable strain"
+inputs:
+  - name: "Pipe outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.32385
+  - name: "Sagbend radius"
+    symbol: "R_sag"
+    unit: "m"
+    test_value: 200.0
+  - name: "Overbend radius"
+    symbol: "R_over"
+    unit: "m"
+    test_value: 150.0
+  - name: "Allowable bending strain"
+    symbol: "epsilon_allow"
+    unit: "-"
+    test_value: 0.005
+outputs:
+  - name: "Sagbend strain (R=200m)"
+    symbol: "epsilon_sag"
+    unit: "-"
+    test_expected: 0.000810
+    tolerance: 8.1e-6
+  - name: "Sagbend strain (R=50m)"
+    symbol: "epsilon_sag_small"
+    unit: "-"
+    test_expected: 0.003239
+    tolerance: 3.2e-5
+  - name: "Overbend strain (R=150m)"
+    symbol: "epsilon_over"
+    unit: "-"
+    test_expected: 0.001080
+    tolerance: 1.1e-5
+worked_examples:
+  - description: "Sagbend strain — R=200m, D=0.32385m => eps=0.000810"
+    inputs:
+      D: 0.32385
+      R_sagbend: 200.0
+    outputs:
+      epsilon_sag: 0.000810
+    use_as_test: true
+  - description: "Sagbend strain — R=50m, D=0.32385m => eps=0.003239"
+    inputs:
+      D: 0.32385
+      R_sagbend: 50.0
+    outputs:
+      epsilon_sag: 0.003239
+    use_as_test: true
+  - description: "Overbend strain — R=150m, D=0.32385m => eps=0.001080"
+    inputs:
+      D: 0.32385
+      R_overbend: 150.0
+    outputs:
+      epsilon_over: 0.001080
+    use_as_test: true
+  - description: "Bending check PASS — R_sag=200, R_over=150 (both util < 1.0)"
+    inputs:
+      D: 0.32385
+      R_sagbend: 200.0
+      R_overbend: 150.0
+    outputs:
+      pass: true
+      sagbend_utilization: 0.162
+      overbend_utilization: 0.216
+      epsilon_b_allow: 0.005
+    use_as_test: true
+  - description: "Bending check FAIL — R_sag=30m (sagbend util=1.08 > 1.0)"
+    inputs:
+      D: 0.32385
+      R_sagbend: 30.0
+      R_overbend: 150.0
+    outputs:
+      pass: false
+      sagbend_utilization: 1.080
+    use_as_test: true
+assumptions:
+  - "Conservative allowable bending strain limit 0.5% (0.005)"
+  - "12.75-inch (0.32385 m) OD pipeline"
+  - "No strain concentration factor applied"
+references:
+  - "API RP 1111 Section 6 — Installation"

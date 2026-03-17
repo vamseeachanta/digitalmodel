@@ -1,0 +1,100 @@
+source_type: python
+source_description: "Catenary force calculation test vectors from test_simplified.py — force-based solver and force decomposition"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "catenary_forces"
+equations:
+  - name: "Vertical force"
+    latex: "F_v = w \\cdot S"
+    description: "Vertical force equals weight per length times arc length"
+  - name: "Total force from vertical and angle"
+    latex: "F = F_v / \\sin(90^\\circ - q)"
+    description: "Total force from vertical component and complementary angle"
+  - name: "Horizontal force"
+    latex: "F_h = F \\cdot \\cos(90^\\circ - q)"
+    description: "Horizontal component of total force"
+  - name: "Force-based arc length"
+    latex: "S = d \\cdot (2 F/w - d)"
+    description: "Arc length from applied force, weight, and vertical distance"
+  - name: "Force-based horizontal distance"
+    latex: "X = (F/w - d) \\cdot \\ln\\left(\\frac{S + F/w}{F/w - d}\\right)"
+    description: "Horizontal distance from force-based catenary formulation"
+inputs:
+  - name: "Weight per unit length"
+    symbol: "w"
+    unit: "N/m"
+    test_value: 50.0
+  - name: "Arc length"
+    symbol: "S"
+    unit: "m"
+    test_value: 100.0
+  - name: "Hang-off angle"
+    symbol: "q"
+    unit: "degrees"
+    test_value: 30.0
+outputs:
+  - name: "Vertical force"
+    symbol: "Fv"
+    unit: "N"
+    test_expected: 5000.0
+    tolerance: 0.0001
+  - name: "Total force"
+    symbol: "F"
+    unit: "N"
+    test_expected: 5773.502692
+    tolerance: 0.0001
+  - name: "Horizontal force"
+    symbol: "Fh"
+    unit: "N"
+    test_expected: 2886.751346
+    tolerance: 0.0001
+worked_examples:
+  - description: "Force decomposition at 30 degrees, w=50 N/m, S=100m"
+    inputs:
+      weight_per_length: 50.0
+      arc_length: 100.0
+      angle_deg: 30.0
+    outputs:
+      Fv: 5000.0
+      F: 5773.502692
+      Fh: 2886.751346
+    use_as_test: true
+  - description: "Force decomposition at 45 degrees, w=100 N/m, S=200m"
+    inputs:
+      weight_per_length: 100.0
+      arc_length: 200.0
+      angle_deg: 45.0
+    outputs:
+      Fv: 20000.0
+      F: 28284.27125
+      Fh: 20000.0
+    use_as_test: true
+  - description: "Force-based catenary: F=10kN, w=50, d=100m"
+    inputs:
+      force: 10000.0
+      weight_per_length: 50.0
+      vertical_distance: 100.0
+    outputs:
+      arc_length: 30000.0
+      horizontal_distance: 571.0427
+      weight_suspended: 1500000.0
+      horizontal_tension: 190.3152
+      shape_parameter: 2.5775
+    use_as_test: true
+  - description: "Force-based catenary: realistic marine cable 50t, 100kg/m, 500m"
+    inputs:
+      force: 500000.0
+      weight_per_length: 981.0
+      vertical_distance: 500.0
+    outputs:
+      arc_length: 259684.0
+      horizontal_distance: 98.76
+      weight_suspended: 254729604.0
+    use_as_test: true
+assumptions:
+  - "Uniform weight per unit length"
+  - "Static equilibrium"
+  - "Force must satisfy F > w*d/2 for valid solution"
+references:
+  - "digitalmodel/tests/marine_ops/marine_engineering/catenary/test_simplified.py"

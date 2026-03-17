@@ -1,0 +1,149 @@
+source_type: standard
+source_description: "Stress concentration factor and mean stress correction vectors from test_sn_curves.py and test_worked_examples.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "fatigue"
+subcategory: "scf_and_corrections"
+equations:
+  - name: "Goodman mean stress correction"
+    latex: "S_{a,eq} = \\frac{S_a}{1 - S_m / S_u}"
+    description: "Equivalent fully-reversed stress amplitude using Goodman diagram"
+  - name: "Gerber mean stress correction"
+    latex: "S_{a,eq} = \\frac{S_a}{1 - (S_m / S_u)^2}"
+    description: "Equivalent stress amplitude using Gerber parabolic correction"
+  - name: "Soderberg mean stress correction"
+    latex: "S_{a,eq} = \\frac{S_a}{1 - S_m / S_y}"
+    description: "Equivalent stress amplitude using Soderberg yield-based correction"
+  - name: "Thickness correction factor"
+    latex: "f = \\left(\\frac{t}{t_{ref}}\\right)^k"
+    description: "Thickness correction factor per DNV-RP-C203"
+  - name: "Effective stress with SCF"
+    latex: "S_{eff} = SCF \\times S_{nominal}"
+    description: "Effective stress range including stress concentration"
+inputs:
+  - name: "Stress amplitude"
+    symbol: "S_a"
+    unit: "MPa"
+    test_value: 100.0
+  - name: "Mean stress"
+    symbol: "S_m"
+    unit: "MPa"
+    test_value: 100.0
+  - name: "Ultimate tensile strength"
+    symbol: "S_u"
+    unit: "MPa"
+    test_value: 400.0
+  - name: "Yield strength"
+    symbol: "S_y"
+    unit: "MPa"
+    test_value: 250.0
+outputs:
+  - name: "Goodman corrected stress"
+    symbol: "S_a_eq"
+    unit: "MPa"
+    test_expected: 133.333
+    tolerance: 0.01
+  - name: "Gerber corrected stress"
+    symbol: "S_a_eq"
+    unit: "MPa"
+    test_expected: 106.667
+    tolerance: 0.01
+worked_examples:
+  - description: "Goodman: Sa=100, Sm=0, Su=400 => Sa_eq=100 (zero mean)"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 0.0
+      ultimate_strength: 400.0
+    outputs:
+      equivalent_stress: 100.0
+    use_as_test: true
+  - description: "Goodman: Sa=100, Sm=100, Su=400 => Sa_eq=133.33"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 100.0
+      ultimate_strength: 400.0
+    outputs:
+      equivalent_stress: 133.333
+    use_as_test: true
+  - description: "Goodman: Sa=100, Sm=200, Su=400 => Sa_eq=200"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 200.0
+      ultimate_strength: 400.0
+    outputs:
+      equivalent_stress: 200.0
+    use_as_test: true
+  - description: "Gerber: Sa=100, Sm=0, Su=400 => Sa_eq=100"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 0.0
+      ultimate_strength: 400.0
+    outputs:
+      equivalent_stress: 100.0
+    use_as_test: true
+  - description: "Gerber: Sa=100, Sm=100, Su=400 => Sa_eq=106.667"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 100.0
+      ultimate_strength: 400.0
+    outputs:
+      equivalent_stress: 106.667
+    use_as_test: true
+  - description: "Soderberg: Sa=100, Sm=0, Sy=250 => Sa_eq=100"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 0.0
+      yield_strength: 250.0
+    outputs:
+      equivalent_stress: 100.0
+    use_as_test: true
+  - description: "Soderberg: Sa=100, Sm=100, Sy=250 => Sa_eq=166.67"
+    inputs:
+      stress_amplitude: 100.0
+      mean_stress: 100.0
+      yield_strength: 250.0
+    outputs:
+      equivalent_stress: 166.667
+    use_as_test: true
+  - description: "Thickness correction: DNV-D at 50mm (t_ref=25, k=0.25)"
+    inputs:
+      actual_thickness: 50.0
+      reference_thickness: 25.0
+      thickness_exponent: 0.25
+    outputs:
+      correction_factor: 1.1892
+    use_as_test: true
+  - description: "Findley critical plane: constant sigma_xx=50, tau_xy=20, k=0.5"
+    inputs:
+      sigma_xx: 50.0
+      tau_xy: 20.0
+      k: 0.5
+    outputs:
+      findley_param: 45.0
+      equivalent_stress: 90.0
+    use_as_test: true
+  - description: "Brown-Miller: symmetric sine sigma_xx amplitude=100 => eq_stress=200"
+    inputs:
+      sigma_xx_amplitude: 100.0
+    outputs:
+      equivalent_stress: 200.0
+    use_as_test: true
+  - description: "SWT: sigma_max=100, delta_sigma=200 => eq_stress=100"
+    inputs:
+      sigma_max: 100.0
+      delta_sigma: 200.0
+    outputs:
+      equivalent_stress: 100.0
+    use_as_test: true
+assumptions:
+  - "Goodman correction is linear between Sa and Su"
+  - "Gerber correction uses parabolic relationship"
+  - "Soderberg uses yield strength (more conservative than Goodman)"
+  - "Thickness correction per DNV-RP-C203 Cl. 2.4.1"
+  - "SCF applied as multiplier to nominal stress range"
+references:
+  - "DNV-RP-C203 (2016) Cl. 2.4.1 — Thickness effect"
+  - "Goodman, J. (1899) Mechanics Applied to Engineering"
+  - "Gerber, H. (1874) Bestimmung der zulassigen Spannungen"
+  - "Soderberg, C.R. (1930) Factor of Safety and Working Stress"
+  - "Findley, W.N. (1959) A Theory for Effect of Mean Stress"

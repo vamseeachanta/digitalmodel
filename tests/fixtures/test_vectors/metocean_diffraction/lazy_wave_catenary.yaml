@@ -1,0 +1,121 @@
+source_type: python
+source_description: "Lazy-wave catenary solver test vectors from test_lazy_wave_catenary.py — legacy formula verification"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "lazy_wave_catenary"
+equations:
+  - name: "Hangoff section bend radius"
+    latex: "R = d \\cdot \\cos(90-q) / (1 - \\cos(90-q))"
+    description: "Bend radius of the hangoff catenary section from depth and angle"
+  - name: "Hangoff arc length"
+    latex: "S = R \\cdot \\tan(90-q)"
+    description: "Arc length of hangoff section"
+  - name: "Hangoff horizontal distance"
+    latex: "X = R \\cdot \\text{asinh}(\\tan(90-q))"
+    description: "Horizontal distance of hangoff catenary section"
+  - name: "Sag-to-buoyancy vertical distance"
+    latex: "d = (h_{hog} - h_{sag}) \\cdot |w_b| / (|w_b| + |w|)"
+    description: "Vertical distance of sag-to-buoyancy segment"
+  - name: "Catenary horizontal distance"
+    latex: "X = R \\cdot \\text{acosh}(d/R + 1)"
+    description: "Horizontal distance from bend radius and vertical distance"
+  - name: "Catenary arc length"
+    latex: "S = R \\cdot \\sinh(X/R)"
+    description: "Arc length from bend radius and horizontal distance"
+  - name: "Horizontal force"
+    latex: "F_h = R \\cdot w"
+    description: "Horizontal force at hangoff from bend radius and weight"
+inputs:
+  - name: "Hangoff angle"
+    symbol: "q"
+    unit: "deg"
+    test_value: 15.0
+  - name: "Hangoff depth below MSL"
+    symbol: "d"
+    unit: "m"
+    test_value: 50.0
+  - name: "Hog bend above seabed"
+    symbol: "h_hog"
+    unit: "m"
+    test_value: 300.0
+  - name: "Sag bend elevation"
+    symbol: "h_sag"
+    unit: "m"
+    test_value: 150.0
+  - name: "Bare riser weight"
+    symbol: "w"
+    unit: "N/m"
+    test_value: 1000.0
+  - name: "Net buoyancy weight"
+    symbol: "w_b"
+    unit: "N/m"
+    test_value: -500.0
+  - name: "Vertical distance"
+    symbol: "V"
+    unit: "m"
+    test_value: 500.0
+  - name: "Hangoff bend radius"
+    symbol: "R"
+    unit: "m"
+    test_value: 2000.0
+outputs:
+  - name: "Horizontal force"
+    symbol: "Fh"
+    unit: "N"
+    test_expected: 2000000.0
+    tolerance: 1.0
+worked_examples:
+  - description: "Typical config: hangoff q=15 deg, d=50m — bend radius, arc, horizontal from legacy catenary equations"
+    inputs:
+      hangoff_angle: 15.0
+      hangoff_below_msl: 50.0
+      hog_bend_above_seabed: 300.0
+      sag_bend_elevation: 150.0
+      weight_without_buoyancy: 1000.0
+      weight_with_buoyancy: -500.0
+      vertical_distance: 500.0
+      hangoff_bend_radius: 2000.0
+    outputs:
+      horizontal_force: 2000000.0
+      segment_count: 5
+    use_as_test: true
+  - description: "Sag-to-buoyancy segment vertical distance: (300-150)*500/(500+1000) = 50.0"
+    inputs:
+      hog_elev: 300.0
+      sag_elev: 150.0
+      w_buoy_abs: 500.0
+      w_abs: 1000.0
+    outputs:
+      sag_to_buoy_d: 50.0
+    use_as_test: true
+  - description: "Buoyancy-to-hog bend radius: R_new = R * w / |w_b| = 2000 * 1000/500 = 4000"
+    inputs:
+      initial_bend_radius: 2000.0
+      weight: 1000.0
+      buoyancy_weight_abs: 500.0
+    outputs:
+      new_bend_radius: 4000.0
+    use_as_test: true
+  - description: "Alternative config: q=20 d=60 — forces positive, arc lengths positive"
+    inputs:
+      hangoff_angle: 20.0
+      hangoff_below_msl: 60.0
+      hog_bend_above_seabed: 250.0
+      sag_bend_elevation: 120.0
+      weight_without_buoyancy: 800.0
+      weight_with_buoyancy: -400.0
+      vertical_distance: 400.0
+      hangoff_bend_radius: 1500.0
+    outputs:
+      horizontal_force_min: 0.0
+      vertical_force_min: 0.0
+    use_as_test: true
+assumptions:
+  - "Catenary equations assume uniform weight per unit length"
+  - "Negative buoyancy weight indicates net upward force from buoyancy modules"
+  - "All segment calculations match legacy sagHogEquation and lazyWaveCatenaryEquation"
+  - "Solver tolerance rel_tol=1e-9 for legacy comparison"
+references:
+  - "digitalmodel/tests/test_lazy_wave_catenary.py"
+  - "digitalmodel/src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py"

@@ -1,0 +1,141 @@
+source_type: standard
+source_description: "DNV-RP-B401 sacrificial anode design workflow including net/gross mass, bracelet resistance, and driving voltage"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "sacrificial_anode_design"
+equations:
+  - name: "Net Anode Mass"
+    latex: "m_{net} = \\frac{I_c \\cdot T \\cdot 8760}{u \\cdot \\varepsilon}"
+    description: "Net anode mass requirement per DNV-RP-B401"
+  - name: "Gross Anode Mass"
+    latex: "m_{gross} = \\frac{m_{net}}{u}"
+    description: "Gross anode mass including non-consumable insert"
+  - name: "Bracelet Anode Resistance"
+    latex: "R_a = \\frac{0.315 \\cdot \\rho}{\\sqrt{A}}"
+    description: "Modified bracelet anode resistance formula"
+  - name: "Dwight Flush Anode Resistance"
+    latex: "R_a = \\frac{\\rho}{2\\pi L} \\left( \\ln\\frac{2L}{r} - 1 \\right)"
+    description: "Flush/stand-off anode resistance using Dwight ln(2L/r)-1 variant"
+  - name: "Anode Current Output"
+    latex: "I_a = \\frac{E_c - E_a}{R_a}"
+    description: "Galvanic anode current output via Ohm's law"
+inputs:
+  - name: "Protective current demand"
+    symbol: "I_c"
+    unit: "A"
+    test_value: 15.0
+  - name: "Design life"
+    symbol: "T"
+    unit: "years"
+    test_value: 25.0
+  - name: "Utilization factor"
+    symbol: "u"
+    unit: "dimensionless"
+    test_value: 0.8
+  - name: "Electrochemical capacity"
+    symbol: "epsilon"
+    unit: "A-h/kg"
+    test_value: 780.0
+outputs:
+  - name: "Net anode mass"
+    symbol: "m_net"
+    unit: "kg"
+    test_expected: 5264.423
+    tolerance: 0.01
+worked_examples:
+  - description: "Net mass zinc anode (I_c=10 A, T=25 yr, u=0.8, epsilon=780 Ah/kg)"
+    inputs:
+      I_c: 10.0
+      T: 25.0
+      u: 0.8
+      epsilon: 780.0
+    outputs:
+      net_mass_kg: 3509.615
+    use_as_test: true
+  - description: "Net mass aluminium anode (I_c=5 A, T=25 yr, u=0.8, epsilon=2000 Ah/kg)"
+    inputs:
+      I_c: 5.0
+      T: 25.0
+      u: 0.8
+      epsilon: 2000.0
+    outputs:
+      net_mass_kg: 684.375
+    use_as_test: true
+  - description: "Gross mass from net mass (m_net=1000 kg, u=0.8)"
+    inputs:
+      m_net: 1000.0
+      u: 0.8
+    outputs:
+      gross_mass_kg: 1250.0
+    use_as_test: true
+  - description: "Anode count exact division (m_gross=1000 kg, m_anode=200 kg)"
+    inputs:
+      m_gross: 1000.0
+      m_anode: 200.0
+    outputs:
+      anode_count: 5
+    use_as_test: true
+  - description: "Anode count rounds up (m_gross=201 kg, m_anode=200 kg)"
+    inputs:
+      m_gross: 201.0
+      m_anode: 200.0
+    outputs:
+      anode_count: 2
+    use_as_test: true
+  - description: "Bracelet anode resistance (rho=0.3 ohm-m, A=0.5 m2)"
+    inputs:
+      rho: 0.3
+      A: 0.5
+    outputs:
+      resistance_ohm: 0.1336
+    use_as_test: true
+  - description: "Driving voltage standard aluminium (E_c=-0.80V, E_a=-1.05V)"
+    inputs:
+      E_c: -0.80
+      E_a: -1.05
+    outputs:
+      driving_voltage_V: 0.25
+    use_as_test: true
+  - description: "Driving voltage zinc (E_c=-0.80V, E_a=-1.00V)"
+    inputs:
+      E_c: -0.80
+      E_a: -1.00
+    outputs:
+      driving_voltage_V: 0.20
+    use_as_test: true
+  - description: "Current output Ohms law (E_c=-0.80V, E_a=-1.05V, R_a=0.05 ohm)"
+    inputs:
+      E_c: -0.80
+      E_a: -1.05
+      R_a: 0.05
+    outputs:
+      current_output_A: 5.0
+    use_as_test: true
+  - description: "Integration workflow: 22 bracelet anodes for 15 A demand (zinc, 25 yr)"
+    inputs:
+      I_c: 15.0
+      T: 25.0
+      u: 0.8
+      epsilon: 780.0
+      m_anode: 300.0
+      rho: 0.30
+      A_bracelet: 0.25
+      E_c: -0.80
+      E_a: -1.00
+    outputs:
+      net_mass_kg: 5264.423
+      gross_mass_kg: 6580.529
+      anode_count: 22
+      bracelet_resistance_ohm: 0.189
+      current_per_anode_A: 1.058
+    use_as_test: true
+assumptions:
+  - "Zinc electrochemical capacity 780 A-h/kg (ASTM B418 Type II)"
+  - "Aluminium electrochemical capacity 2000 A-h/kg"
+  - "8760 hours per year conversion"
+  - "Bracelet formula coefficient 0.315 per DNV-RP-B401"
+references:
+  - "DNV-RP-B401 (2005/2017)"
+  - "DNV-RP-B401, Table 10-6 (anode properties)"
+  - "DNV-RP-B401, Table 10-7 (anode resistance formulas)"

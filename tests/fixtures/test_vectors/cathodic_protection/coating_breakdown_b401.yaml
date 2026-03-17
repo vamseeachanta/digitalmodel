@@ -1,0 +1,76 @@
+source_type: standard
+source_description: "DNV-RP-B401 coating breakdown factor calculations for Category III and 3LPP coatings"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "coating_breakdown"
+equations:
+  - name: "Coating Breakdown Factor"
+    latex: "f_c = a + b \\cdot t"
+    description: "Linear coating breakdown factor at time t per DNV-RP-B401 Table 10-4"
+inputs:
+  - name: "Initial breakdown constant"
+    symbol: "a"
+    unit: "dimensionless"
+    test_value: 0.02
+  - name: "Annual degradation rate"
+    symbol: "b"
+    unit: "1/year"
+    test_value: 0.00818
+  - name: "Elapsed time"
+    symbol: "t"
+    unit: "years"
+    test_value: 11.0
+outputs:
+  - name: "Breakdown factor"
+    symbol: "f_c"
+    unit: "dimensionless"
+    test_expected: 0.10998
+    tolerance: 0.005
+worked_examples:
+  - description: "Category III coating at t=0 (initial)"
+    inputs:
+      a: 0.02
+      b: 0.00818
+      t_years: 0.0
+    outputs:
+      breakdown_factor: 0.02
+    use_as_test: true
+  - description: "Category III coating at t=11 years (mean, T/2 for 22-yr life)"
+    inputs:
+      a: 0.02
+      b: 0.00818
+      t_years: 11.0
+    outputs:
+      breakdown_factor: 0.10998
+    use_as_test: true
+  - description: "Category III coating at t=22 years (final)"
+    inputs:
+      a: 0.02
+      b: 0.00818
+      t_years: 22.0
+    outputs:
+      breakdown_factor: 0.19996
+    use_as_test: true
+  - description: "3LPP coating at t=0 (initial)"
+    inputs:
+      a: 0.005
+      b: 0.0002
+      t_years: 0.0
+    outputs:
+      breakdown_factor: 0.005
+    use_as_test: true
+  - description: "3LPP coating at t=22 years (final)"
+    inputs:
+      a: 0.005
+      b: 0.0002
+      t_years: 22.0
+    outputs:
+      breakdown_factor: 0.0094
+    use_as_test: true
+assumptions:
+  - "Linear degradation model for coating breakdown"
+  - "Category III coating constants: a=0.02, b=0.00818 (DNV-RP-B401 Table 10-4)"
+  - "3LPP coating constants: a=0.005, b=0.0002 (DNV-RP-B401 Table 10-4)"
+references:
+  - "DNV-RP-B401 (2005/2017), Table 10-4"

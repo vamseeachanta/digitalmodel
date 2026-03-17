@@ -665,3 +665,14 @@ data from cavitation tunnel + open water. Confirms SST k-ω for RANS propeller w
 19. **ITTC (1978/2017).** Procedure 7.5-02-03-01.4: "1978 ITTC Performance Prediction
     Method." Revised 28th ITTC 2017. Defines wake-fraction and thrust-deduction
     scale-correction from model to full scale.
+
+---
+
+## Appendix: 4-Quadrant Propeller Data
+
+> See companion document: [propeller-4-quadrant-data.md](propeller-4-quadrant-data.md)
+> (WRK-1280)
+>
+> Covers β-angle parameterisation, Fourier coefficient representation of C_T*(β) and
+> C_Q*(β), Wageningen B4-70 tabulated coefficients, and applicability to crash-stop
+> and crash-astern maneuvering simulations.

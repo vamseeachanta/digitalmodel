@@ -1,0 +1,149 @@
+source_type: python
+source_description: "On-bottom stability calculations per DNV-RP-F109 — drag, lift, inertia forces, submerged weight, Keulegan-Carpenter number, stability check"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "on_bottom_stability"
+equations:
+  - name: "Peak combined velocity"
+    latex: "U_{peak} = U_c + U_w"
+    description: "Peak combined current and wave velocity"
+  - name: "Drag force per unit length"
+    latex: "F_D = \\frac{1}{2} C_D \\rho_w D U_{peak}^2"
+    description: "Hydrodynamic drag force on pipeline"
+  - name: "Lift force per unit length"
+    latex: "F_L = \\frac{1}{2} C_L \\rho_w D U_{peak}^2"
+    description: "Hydrodynamic lift force on pipeline"
+  - name: "Inertia force per unit length"
+    latex: "F_I = C_M \\rho_w \\frac{\\pi}{4} D^2 \\frac{2\\pi U_w}{T_w}"
+    description: "Hydrodynamic inertia force on pipeline"
+  - name: "Keulegan-Carpenter number"
+    latex: "KC = \\frac{U_w T_w}{D}"
+    description: "KC number characterizing oscillatory flow regime"
+  - name: "Stability factor"
+    latex: "SF = \\frac{\\mu (W_s - F_L)}{F_H}"
+    description: "On-bottom stability safety factor (pass if SF > 1.0)"
+  - name: "Generalized stability number"
+    latex: "G_s = \\frac{W_s}{\\rho_w g D^2}"
+    description: "Non-dimensional stability number"
+inputs:
+  - name: "Pipe outer diameter (bare)"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.3239
+  - name: "Steel wall thickness"
+    symbol: "t_steel"
+    unit: "m"
+    test_value: 0.0127
+  - name: "Current velocity"
+    symbol: "U_c"
+    unit: "m/s"
+    test_value: 0.5
+  - name: "Wave velocity"
+    symbol: "U_w"
+    unit: "m/s"
+    test_value: 1.0
+  - name: "Wave period"
+    symbol: "T_w"
+    unit: "s"
+    test_value: 12.0
+  - name: "Seawater density"
+    symbol: "rho_w"
+    unit: "kg/m3"
+    test_value: 1025.0
+  - name: "Friction coefficient (sand)"
+    symbol: "mu"
+    unit: "-"
+    test_value: 0.5
+outputs:
+  - name: "Peak combined velocity"
+    symbol: "U_peak"
+    unit: "m/s"
+    test_expected: 1.5
+    tolerance: 1.0e-6
+  - name: "Drag force (bare pipe)"
+    symbol: "F_D"
+    unit: "N/m"
+    test_expected: 261.2
+    tolerance: 2.6
+  - name: "Lift force (bare pipe)"
+    symbol: "F_L"
+    unit: "N/m"
+    test_expected: 335.6
+    tolerance: 3.4
+  - name: "Inertia force"
+    symbol: "F_I"
+    unit: "N/m"
+    test_expected: 145.4
+    tolerance: 2.9
+  - name: "Submerged weight (bare)"
+    symbol: "W_s_bare"
+    unit: "N/m"
+    test_expected: 217.0
+    tolerance: 4.3
+  - name: "Submerged weight (concrete coated)"
+    symbol: "W_s_coated"
+    unit: "N/m"
+    test_expected: 2074.0
+    tolerance: 41.5
+  - name: "Keulegan-Carpenter number"
+    symbol: "KC"
+    unit: "-"
+    test_expected: 37.05
+    tolerance: 0.37
+  - name: "Current velocity ratio"
+    symbol: "M"
+    unit: "-"
+    test_expected: 0.5
+    tolerance: 1.0e-6
+  - name: "Generalized stability number (bare)"
+    symbol: "G_s"
+    unit: "-"
+    test_expected: 0.206
+    tolerance: 0.004
+worked_examples:
+  - description: "Scenario 1 — 12-inch bare pipe FAILS stability (too light)"
+    inputs:
+      D: 0.3239
+      t_steel: 0.0127
+      U_c: 0.5
+      U_w: 1.0
+      T_w: 12.0
+      mu: 0.5
+      concrete_coating: false
+    outputs:
+      pass: false
+      stability_factor_negative: true
+      KC: 37.05
+      M: 0.5
+    use_as_test: true
+  - description: "Scenario 2 — 12-inch pipe + 75mm concrete coating PASSES (SF ~ 2.07)"
+    inputs:
+      D: 0.3239
+      t_steel: 0.0127
+      U_c: 0.5
+      U_w: 1.0
+      T_w: 12.0
+      mu: 0.5
+      t_concrete: 0.075
+      rho_concrete: 3040.0
+    outputs:
+      pass: true
+      stability_factor: 2.07
+      W_s: 2074.0
+      D_hydro: 0.4739
+    use_as_test: true
+  - description: "Required stability number at KC=37.1, M=0.5"
+    inputs:
+      KC: 37.1
+      M: 0.5
+    outputs:
+      Gs_required: 1.333
+    use_as_test: true
+assumptions:
+  - "Sand seabed (friction coefficient mu = 0.5)"
+  - "C_D = 0.7, C_L = 0.9, C_M = 3.29 (default hydrodynamic coefficients)"
+  - "Steel density 7850 kg/m3"
+  - "Linear superposition of current and wave velocity"
+references:
+  - "DNV-RP-F109 On-Bottom Stability Design of Submarine Pipelines"

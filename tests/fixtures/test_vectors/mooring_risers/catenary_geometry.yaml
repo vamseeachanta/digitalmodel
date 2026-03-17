@@ -1,0 +1,86 @@
+source_type: python
+source_description: "Simplified catenary solver angle-based and force-based test vectors from test_simplified.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "catenary_geometry"
+equations:
+  - name: "Catenary arc length (angle-based)"
+    latex: "S = R \\cdot \\tan(90^\\circ - q)"
+    description: "Arc length from bend radius and complementary angle"
+  - name: "Catenary horizontal distance (angle-based)"
+    latex: "X = R \\cdot \\operatorname{asinh}(\\tan(90^\\circ - q))"
+    description: "Horizontal distance using inverse hyperbolic sine"
+  - name: "Catenary bend radius"
+    latex: "R = d \\cdot \\cos(90^\\circ - q) / (1 - \\cos(90^\\circ - q))"
+    description: "Bend radius from vertical distance and complementary angle"
+inputs:
+  - name: "Hang-off angle"
+    symbol: "q"
+    unit: "degrees"
+    test_value: 30.0
+  - name: "Vertical distance"
+    symbol: "d"
+    unit: "m"
+    test_value: 100.0
+outputs:
+  - name: "Arc length"
+    symbol: "S"
+    unit: "m"
+    test_expected: 173.2050808
+    tolerance: 0.0001
+  - name: "Horizontal distance"
+    symbol: "X"
+    unit: "m"
+    test_expected: 131.6957897
+    tolerance: 0.0001
+  - name: "Bend radius"
+    symbol: "R"
+    unit: "m"
+    test_expected: 100.0
+    tolerance: 0.0001
+worked_examples:
+  - description: "Angle-based catenary at 30 degrees, 100m vertical"
+    inputs:
+      angle_deg: 30.0
+      vertical_distance: 100.0
+    outputs:
+      arc_length: 173.2050808
+      horizontal_distance: 131.6957897
+      bend_radius: 100.0
+    use_as_test: true
+  - description: "Angle-based catenary at 45 degrees, 100m vertical"
+    inputs:
+      angle_deg: 45.0
+      vertical_distance: 100.0
+    outputs:
+      arc_length: 241.4213562
+      horizontal_distance: 212.782407
+      bend_radius: 241.4213562
+    use_as_test: true
+  - description: "Angle-based catenary at 10 degrees (steep), 100m vertical"
+    inputs:
+      angle_deg: 10.0
+      vertical_distance: 100.0
+    outputs:
+      arc_length: 119.175359
+      horizontal_distance: 52.991147
+      bend_radius: 21.009463
+    use_as_test: true
+  - description: "Angle-based catenary at 80 degrees (shallow), 100m vertical"
+    inputs:
+      angle_deg: 80.0
+      vertical_distance: 100.0
+    outputs:
+      arc_length: 1143.00523
+      horizontal_distance: 1135.315774
+      bend_radius: 6482.92347
+    use_as_test: true
+assumptions:
+  - "Uniform weight per unit length along catenary"
+  - "No bending stiffness (flexible line)"
+  - "Static equilibrium, no current or wave loads"
+  - "Complementary angle formulation: uses (90 - q) internally"
+references:
+  - "digitalmodel/tests/marine_ops/marine_engineering/catenary/test_simplified.py"
+  - "digitalmodel/src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py"

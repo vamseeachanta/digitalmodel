@@ -1,0 +1,123 @@
+source_type: excel
+source_description: "Catenary solver validation against Excel Poly Mooring reference and verified analytical solution from CATENARY_SOLVER_STATUS.md"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "mooring_catenary_solver"
+equations:
+  - name: "Catenary equation"
+    latex: "y(x) = a \\cdot (\\cosh(x/a) - 1)"
+    description: "Catenary shape equation where a = H/w"
+  - name: "Catenary arc length"
+    latex: "s = a \\cdot \\sinh(x/a)"
+    description: "Arc length along catenary from anchor"
+  - name: "Catenary parameter"
+    latex: "a = H / w"
+    description: "Catenary parameter from horizontal tension and weight"
+  - name: "Elastic elongation"
+    latex: "\\Delta L = H \\cdot L / EA"
+    description: "Elastic stretch of mooring line"
+  - name: "Total tension (Pythagorean)"
+    latex: "T = \\sqrt{H^2 + V^2}"
+    description: "Total tension from horizontal and vertical components"
+  - name: "Vertical tension at fairlead"
+    latex: "V = H \\cdot \\tanh(x/a)"
+    description: "Vertical tension using hyperbolic tangent"
+inputs:
+  - name: "Unstretched line length"
+    symbol: "L"
+    unit: "m"
+    test_value: 1000
+  - name: "Horizontal span"
+    symbol: "X"
+    unit: "m"
+    test_value: 800
+  - name: "Vertical span"
+    symbol: "Y"
+    unit: "m"
+    test_value: 100
+  - name: "Submerged weight per length"
+    symbol: "w"
+    unit: "N/m"
+    test_value: 1962
+  - name: "Axial stiffness"
+    symbol: "EA"
+    unit: "N"
+    test_value: 64.0e9
+outputs:
+  - name: "Horizontal tension (verified analytical)"
+    symbol: "H"
+    unit: "N"
+    test_expected: 1327168
+    tolerance: 13272
+  - name: "Vertical tension at fairlead (verified analytical)"
+    symbol: "V"
+    unit: "N"
+    test_expected: 1961959
+    tolerance: 19620
+  - name: "Total tension at fairlead (verified analytical)"
+    symbol: "T"
+    unit: "N"
+    test_expected: 2368683
+    tolerance: 23687
+  - name: "Catenary parameter (verified analytical)"
+    symbol: "a"
+    unit: "m"
+    test_expected: 676.44
+    tolerance: 6.76
+  - name: "Elongation (verified analytical)"
+    symbol: "dL"
+    unit: "m"
+    test_expected: 0.021
+    tolerance: 0.005
+worked_examples:
+  - description: "Verified analytical solution: L=1000m, X=800m, w=1962 N/m, EA=64e9 N"
+    inputs:
+      length: 1000
+      horizontal_span: 800
+      vertical_span: 100
+      weight_per_length: 1962
+      ea_stiffness: 64.0e9
+    outputs:
+      horizontal_tension: 1327168
+      vertical_tension_fairlead: 1961959
+      total_tension_fairlead: 2368683
+      catenary_parameter: 676.44
+      elongation: 0.021
+    use_as_test: true
+  - description: "Excel Poly Mooring reference values (noted inconsistent in CATENARY_SOLVER_STATUS.md)"
+    inputs:
+      length: 1000
+      horizontal_span: 800
+      vertical_span: 100
+      weight_per_length: 1962
+      ea_stiffness: 64.0e9
+    outputs:
+      horizontal_tension: 785000
+      vertical_tension_fairlead: 196200
+      total_tension_fairlead: 809000
+      elongation: 12.3
+    use_as_test: true
+  - description: "CatenaryResults dataclass reference values (from test_catenary_solver.py)"
+    inputs:
+      length: 1000
+      horizontal_span: 800
+      vertical_span: 100
+      weight_per_length: 1962
+      ea_stiffness: 64.0e9
+    outputs:
+      horizontal_tension: 785000
+      vertical_tension_fairlead: 196200
+      total_tension_fairlead: 809000
+      total_tension_anchor: 785000
+      elongation: 12.3
+    use_as_test: true
+assumptions:
+  - "Catenary shape with uniform weight per unit length"
+  - "Elastic elongation modeled as H*L/EA"
+  - "Newton-Raphson solver with Brent fallback"
+  - "Excel reference values found inconsistent per CATENARY_SOLVER_STATUS.md — verified analytical solution is H=1,327,168 N"
+references:
+  - "digitalmodel/tests/marine_ops/marine_engineering/test_mooring_catenary.py"
+  - "digitalmodel/tests/marine_ops/marine_engineering/test_catenary_solver.py"
+  - "digitalmodel/tests/CATENARY_SOLVER_STATUS.md"

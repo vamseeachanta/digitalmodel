@@ -1,0 +1,128 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance (Summer 2020), Chapters 2-3"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "hydrostatics"
+equations:
+  - name: "Buoyant Force"
+    latex: "F_b = \\gamma \\cdot V"
+    description: "Buoyant force equals specific weight times submerged volume"
+  - name: "Submerged Volume"
+    latex: "V = \\frac{W_{lb}}{\\gamma}"
+    description: "Submerged volume from displacement weight and specific weight"
+  - name: "Vertical CG After Weight Change"
+    latex: "KG_{new} = \\frac{W_1 \\cdot KG_1 + w \\cdot kg}{W_1 + w}"
+    description: "New vertical center of gravity after adding or removing weight"
+  - name: "Transverse CG After Weight Shift"
+    latex: "TCG_{new} = \\frac{W \\cdot TCG \\mp w \\cdot d}{W}"
+    description: "New transverse CG after moving a weight laterally"
+  - name: "GM from Inclining Experiment"
+    latex: "GM = \\frac{w \\cdot d}{W \\cdot \\tan(\\phi)}"
+    description: "Metacentric height from inclining experiment measurements"
+  - name: "Simpson's First Rule"
+    latex: "A = \\frac{h}{3}(y_0 + 4y_1 + 2y_2 + 4y_3 + \\ldots + y_n)"
+    description: "Numerical integration for waterplane area calculation"
+inputs:
+  - name: "Volume submerged"
+    symbol: "V"
+    unit: "ft^3"
+    test_value: 20.0
+  - name: "Displacement"
+    symbol: "Delta"
+    unit: "LT"
+    test_value: 4092.0
+  - name: "Initial KG"
+    symbol: "KG"
+    unit: "ft"
+    test_value: 18.5
+outputs:
+  - name: "Buoyant force in saltwater"
+    symbol: "F_b"
+    unit: "lb"
+    test_expected: 1280.0
+    tolerance: 1.0
+  - name: "Submerged volume in freshwater"
+    symbol: "V"
+    unit: "ft^3"
+    test_expected: 143590.0
+    tolerance: 100.0
+  - name: "New KG after weight addition"
+    symbol: "KG_new"
+    unit: "ft"
+    test_expected: 18.774
+    tolerance: 0.01
+  - name: "New TCG after weight shift"
+    symbol: "TCG_new"
+    unit: "ft"
+    test_expected: 1.633
+    tolerance: 0.01
+  - name: "GM from inclining experiment"
+    symbol: "GM"
+    unit: "ft"
+    test_expected: 9.84
+    tolerance: 0.5
+  - name: "Waterplane area via Simpson's rule"
+    symbol: "A_wp"
+    unit: "ft^2"
+    test_expected: 10523.0
+    tolerance: 10.0
+worked_examples:
+  - description: "Example 2.1 (p.49): Buoyant force on 20 ft3 in salt water"
+    inputs:
+      volume_ft3: 20.0
+      water: "saltwater"
+    outputs:
+      buoyant_force_lb: 1280.0
+    use_as_test: true
+  - description: "Example 2.2 (p.49): Submerged volume for 4000 LT in fresh water"
+    inputs:
+      displacement_lt: 4000.0
+      water: "freshwater"
+    outputs:
+      volume_ft3: 143590.0
+    use_as_test: true
+  - description: "Example 2.3 (p.70): Waterplane area via Simpson's 1st rule (Lpp=326.4 ft, 5 stations)"
+    inputs:
+      offsets_ft: [0.39, 12.92, 20.97, 21.71, 12.58]
+      spacing_ft: 81.6
+    outputs:
+      full_waterplane_area_ft2: 10523.0
+    use_as_test: true
+  - description: "Example 3.2 (p.107): FFG-7 KG shift from 100 LT weight addition at kg=30 ft"
+    inputs:
+      displacement_lt: 4092.0
+      initial_kg_ft: 18.5
+      weight_lt: 100.0
+      weight_kg_ft: 30.0
+    outputs:
+      new_kg_ft: 18.774
+    use_as_test: true
+  - description: "Example 3.3 (p.110): Transverse CG shift from 50 LT moved 30 ft to port"
+    inputs:
+      displacement_lt: 4092.0
+      initial_tcg_ft: 2.0
+      weight_moved_lt: 50.0
+      distance_ft: 30.0
+      direction: "port"
+    outputs:
+      new_tcg_ft: 1.633
+    use_as_test: true
+  - description: "Example 3.4 (p.122): GM from inclining experiment on FFG-7"
+    inputs:
+      weight_moved_lt: 30.0
+      distance_ft: 20.0
+      displacement_lt: 4092.0
+      tan_phi: 0.0149
+    outputs:
+      gm_ft: 9.84
+    use_as_test: true
+assumptions:
+  - "Salt water specific weight gamma = 64.0 lb/ft^3"
+  - "Fresh water specific weight gamma = 62.4 lb/ft^3"
+  - "1 long ton = 2240 lb"
+  - "Simpson's 1st rule requires odd number of ordinates"
+  - "Waterplane area = 2 * half-area (symmetric hull)"
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 2"
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 3"

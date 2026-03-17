@@ -1,0 +1,76 @@
+source_type: python
+source_description: "API RP 1111 combined loading checks — external pressure + bending, internal pressure + bending + tension interaction"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "combined_loading"
+equations:
+  - name: "API combined loading external"
+    latex: "U = 3.33 \\frac{\\epsilon}{\\epsilon_b} + \\frac{p_e}{f_d \\cdot p_c} \\leq 1.0"
+    description: "Combined bending strain + external pressure interaction (installation)"
+  - name: "API combined loading internal"
+    latex: "U = \\frac{1}{f_d} \\sqrt{\\left(\\frac{p}{p_b}\\right)^2 + \\left(\\frac{T}{T_y}\\right)^2 + \\left(\\frac{M}{M_p}\\right)^2}"
+    description: "Combined internal pressure + tension + moment interaction"
+inputs:
+  - name: "Pipe outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.32385
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.0127
+  - name: "X65 SMYS"
+    symbol: "SMYS"
+    unit: "MPa"
+    test_value: 448.16
+  - name: "X65 SMTS"
+    symbol: "SMTS"
+    unit: "MPa"
+    test_value: 530.9
+outputs:
+  - name: "External combined utilization"
+    symbol: "U_ext"
+    unit: "-"
+    test_expected: 0.83
+    tolerance: 0.008
+  - name: "Internal combined utilization"
+    symbol: "U_int"
+    unit: "-"
+    test_expected: 0.657
+    tolerance: 0.007
+worked_examples:
+  - description: "API combined loading EXTERNAL — epsilon=0.001, p_e=10 MPa, installation"
+    inputs:
+      epsilon: 0.001
+      p_e: 10.0
+      p_i: 0.0
+      D: 0.32385
+      t: 0.0127
+      SMYS: 448.16
+      condition: "installation"
+    outputs:
+      pass: true
+      utilization: 0.83
+    use_as_test: true
+  - description: "API combined loading INTERNAL — p_i=20, T=500kN, M=100kNm"
+    inputs:
+      p_i: 20.0
+      p_e: 0.0
+      T_e: 500000.0
+      M: 100000.0
+      D: 0.32385
+      t: 0.0127
+      SMYS: 448.16
+      SMTS: 530.9
+    outputs:
+      pass: true
+      utilization: 0.657
+    use_as_test: true
+assumptions:
+  - "API RP 1111 design factors: fd_burst = 0.72, fd_collapse = 0.7"
+  - "No temperature derating"
+  - "Installation condition for external check"
+  - "X65 pipe grade"
+references:
+  - "API RP 1111 Section 4.3.4 — Combined Loading"

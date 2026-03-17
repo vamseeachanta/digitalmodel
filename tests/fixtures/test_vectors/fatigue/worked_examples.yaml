@@ -1,0 +1,161 @@
+source_type: standard
+source_description: "Three canonical offshore fatigue worked examples from worked_examples.py — pipeline girth weld, SCR touchdown, mooring chain"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "fatigue"
+subcategory: "worked_examples"
+equations:
+  - name: "Seawater+CP S-N curve reduction"
+    latex: "A_{SwCP} = 0.87 \\times A_{air}"
+    description: "DNV-RP-C203 seawater+CP reduction factor on intercept A"
+  - name: "Seawater free-corrosion S-N curve reduction"
+    latex: "A_{SwFree} = 0.72 \\times A_{air}"
+    description: "DNV-RP-C203 seawater free-corrosion reduction on intercept A"
+  - name: "Chain S-N curve"
+    latex: "\\log(N) = 15.19 - 3.0 \\times \\log(\\Delta\\sigma)"
+    description: "DNVGL-OS-E301 R3 studless chain curve, seawater+CP"
+  - name: "Effective stress with SCF"
+    latex: "S_{eff} = SCF \\times S_{nominal}"
+    description: "Effective stress range with stress concentration factor"
+  - name: "Fatigue life from damage"
+    latex: "T_{life} = \\frac{T_{design}}{D}"
+    description: "Estimated fatigue life from Miner damage and design life"
+  - name: "DFF check"
+    latex: "D \\times DFF \\leq 1.0"
+    description: "Design fatigue factor acceptance criterion"
+inputs:
+  - name: "Design life"
+    symbol: "T_design"
+    unit: "years"
+    test_value: 20.0
+  - name: "Stress concentration factor"
+    symbol: "SCF"
+    unit: "dimensionless"
+    test_value: 1.5
+  - name: "Design fatigue factor"
+    symbol: "DFF"
+    unit: "dimensionless"
+    test_value: 3.0
+  - name: "Chain curve A"
+    symbol: "A_chain"
+    unit: "MPa^3 * cycles"
+    test_value: 1.55e15
+  - name: "Chain curve m"
+    symbol: "m"
+    unit: "dimensionless"
+    test_value: 3.0
+outputs:
+  - name: "Pipeline girth weld SCF"
+    symbol: "SCF"
+    unit: "dimensionless"
+    test_expected: 1.5
+    tolerance: 0.01
+  - name: "Pipeline girth weld DFF"
+    symbol: "DFF"
+    unit: "dimensionless"
+    test_expected: 3.0
+    tolerance: 0.01
+worked_examples:
+  - description: "Pipeline girth weld: DNV D-curve, seawater+CP, SCF=1.5, DFF=3, 20y design life"
+    inputs:
+      curve: "DNV-D-SwCP"
+      environment: "seawater_cp"
+      scf: 1.5
+      dff: 3.0
+      design_life_years: 20.0
+      weibull_shape: 0.9
+      weibull_scale: 80.0
+      cycles_per_year: 3150000
+    outputs:
+      damage_positive: true
+      life_years_positive: true
+      passes_consistent_with_damage_times_dff: true
+    use_as_test: true
+  - description: "SCR touchdown zone: DNV F1-curve, seawater free-corrosion, SCF=1.0, DFF=10, 20y"
+    inputs:
+      curve: "DNV-F1-SwFree"
+      environment: "seawater_free_corrosion"
+      scf: 1.0
+      dff: 10.0
+      design_life_years: 20.0
+      weibull_shape: 1.1
+      weibull_scale: 60.0
+      cycles_per_year: 5000000
+    outputs:
+      damage_positive: true
+      fatigue_limit: 0.0
+      name: "SCR Touchdown Zone"
+    use_as_test: true
+  - description: "Mooring chain link: DNVGL-OS-E301 R3 studless, seawater+CP, SCF=1.0, DFF=5, 25y"
+    inputs:
+      curve: "Chain-R3-Studless-SwCP"
+      A: 1.55e15
+      m: 3.0
+      scf: 1.0
+      dff: 5.0
+      design_life_years: 25.0
+      weibull_shape: 0.8
+      weibull_scale: 120.0
+      cycles_per_year: 600000
+    outputs:
+      damage_positive: true
+      fatigue_limit: 0.0
+      name: "Mooring Chain Link"
+    use_as_test: true
+  - description: "Pipeline damage doubles with double design life"
+    inputs:
+      curve: "DNV-D-SwCP"
+      scf: 1.5
+      dff: 3.0
+      design_life_years_a: 20.0
+      design_life_years_b: 40.0
+    outputs:
+      damage_ratio: 2.0
+      damage_ratio_tolerance: 0.001
+    use_as_test: true
+  - description: "SCR damage doubles with double design life"
+    inputs:
+      curve: "DNV-F1-SwFree"
+      design_life_years_a: 10.0
+      design_life_years_b: 20.0
+    outputs:
+      damage_ratio: 2.0
+      damage_ratio_tolerance: 0.001
+    use_as_test: true
+  - description: "Seawater+CP curve has lower A than air curve (DNV-D)"
+    inputs:
+      standard: "DNV"
+      curve_class: "D"
+      sw_cp_factor: 0.87
+    outputs:
+      A_sw_cp_less_than_A_air: true
+    use_as_test: true
+  - description: "Seawater free-corrosion has zero fatigue limit"
+    inputs:
+      standard: "DNV"
+      curve_class: "F1"
+      environment: "seawater_free_corrosion"
+    outputs:
+      fatigue_limit: 0.0
+    use_as_test: true
+  - description: "Chain curve: no fatigue limit per DNVGL-OS-E301 Cl. 6.3.3"
+    inputs:
+      curve: "Chain-R3-Studless-SwCP"
+    outputs:
+      fatigue_limit: 0.0
+    use_as_test: true
+assumptions:
+  - "Weibull stress distribution for synthetic histograms (no client data)"
+  - "Seawater+CP factor 0.87 reduces A per DNV-RP-C203 Table 2-2"
+  - "Free-corrosion factor 0.72 with fatigue limit removed per Cl. 2.4.3"
+  - "Chain curve: log(K)=15.19, m=3.0 per DNVGL-OS-E301 Table 6-2"
+  - "Palmgren-Miner linear damage accumulation"
+  - "Reference thickness 25 mm (no thickness correction)"
+references:
+  - "DNV-RP-C203 (2016) Table 2-2 — seawater+CP S-N curves"
+  - "DNV-RP-C203 (2016) Cl. 2.4.3 — seawater free-corrosion guidance"
+  - "DNVGL-OS-E301 (2021) Table 6-2 — chain S-N curves"
+  - "DNVGL-ST-F101 (2017) Cl. 6.7 — DFF for seabed pipelines"
+  - "DNVGL-ST-F201 (2018) Cl. 5.4.4 — SCR DFF requirements"
+  - "API RP 2SK (2005) Table 5.5-1 — mooring DFF requirements"
+  - "ISO 13628-7 — girth weld SCF guidance"

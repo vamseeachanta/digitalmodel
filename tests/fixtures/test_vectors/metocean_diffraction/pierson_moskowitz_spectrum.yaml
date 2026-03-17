@@ -1,0 +1,81 @@
+source_type: python
+source_description: "Pierson-Moskowitz spectrum tests from test_wave_spectra.py and test_wave_spectra_extended.py — DNV-RP-C205 Section 3.5.1"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "pierson_moskowitz_spectrum"
+equations:
+  - name: "Pierson-Moskowitz Spectrum"
+    latex: "S(\\omega) = \\alpha \\cdot g^2 / \\omega^5 \\cdot \\exp[-1.25(\\omega_p/\\omega)^4]"
+    description: "Fully developed sea spectrum as a function of angular frequency"
+  - name: "PM Zero-Crossing Period"
+    latex: "T_z \\approx 0.711 \\cdot T_p"
+    description: "Approximate relationship between zero-crossing and peak period for PM spectrum"
+inputs:
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 3.0
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 12.0
+outputs:
+  - name: "Recovered Hs from spectrum"
+    symbol: "Hs_recovered"
+    unit: "m"
+    test_expected: 3.0
+    tolerance: 0.06
+  - name: "Zero-crossing period"
+    symbol: "Tz"
+    unit: "s"
+    test_expected: 7.11
+    tolerance: 1.07
+worked_examples:
+  - description: "PM Hs=3.0m Tp=12.0s — recovered Hs within 2%"
+    inputs:
+      hs: 3.0
+      tp: 12.0
+    outputs:
+      hs_recovered: 3.0
+    use_as_test: true
+  - description: "PM Hs=5.0m Tp=10.0s — recovered Hs within 2% (Pierson & Moskowitz 1964)"
+    inputs:
+      hs: 5.0
+      tp: 10.0
+    outputs:
+      hs_recovered: 5.0
+    use_as_test: true
+  - description: "PM energy scales as Hs^2 — Hs=4 vs Hs=2 gives ratio 4.0"
+    inputs:
+      hs_small: 2.0
+      hs_large: 4.0
+      tp: 10.0
+    outputs:
+      energy_ratio: 4.0
+    use_as_test: true
+  - description: "PM Tz approximately 0.711*Tp for Tp=10s"
+    inputs:
+      hs: 3.0
+      tp: 10.0
+    outputs:
+      tz_expected: 7.11
+    use_as_test: true
+  - description: "PM equivalent to JONSWAP with gamma=1.0 (energy ratio near 1.0)"
+    inputs:
+      hs: 4.0
+      tp: 10.0
+      gamma_jonswap: 1.0
+    outputs:
+      energy_ratio_pm_jonswap_min: 0.5
+      energy_ratio_pm_jonswap_max: 2.0
+    use_as_test: true
+assumptions:
+  - "Fully developed sea state assumed (unlimited fetch)"
+  - "Tz/Tp ratio of 0.711 validated within 15% tolerance"
+  - "PM is equivalent to JONSWAP with gamma=1.0 for total energy"
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads, Section 3.5.1"
+  - "Pierson, W.J. and Moskowitz, L. (1964)"
+  - "digitalmodel/tests/marine_ops/marine_engineering/test_wave_spectra.py"
+  - "digitalmodel/tests/unit/hydrodynamics/test_wave_spectra_extended.py"

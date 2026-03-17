@@ -1,0 +1,87 @@
+source_type: python
+source_description: "Impressed current CP design for generator fuel piping systems with coating degradation model"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "impressed_current_fuel_system"
+equations:
+  - name: "Pipe Surface Area"
+    latex: "A = \\pi \\cdot D \\cdot L"
+    description: "Outer surface area of a cylindrical pipe segment"
+  - name: "Effective Bare Area"
+    latex: "A_{bare} = A \\cdot \\min(f_0 + 0.01t,\\, 1.0)"
+    description: "Effective bare area accounting for coating degradation at 1% per year"
+  - name: "Current Demand"
+    latex: "I = A_{bare} \\cdot 21.5 / 1000"
+    description: "Current demand using 21.5 mA/m2 design current density for bare steel"
+inputs:
+  - name: "Pipe length"
+    symbol: "L"
+    unit: "m"
+    test_value: 100.0
+  - name: "Outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.1524
+  - name: "Coating type"
+    symbol: "coating"
+    unit: "enum"
+    test_value: "FBE"
+  - name: "Design years"
+    symbol: "t"
+    unit: "years"
+    test_value: 20
+outputs:
+  - name: "Effective bare area"
+    symbol: "A_bare"
+    unit: "m2"
+    test_expected: 10.53
+    tolerance: 0.1
+worked_examples:
+  - description: "Coating breakdown factors by type"
+    inputs:
+      coating_types:
+        - BARE
+        - FBE
+        - POLYETHYLENE
+        - COAL_TAR
+    outputs:
+      breakdown_factors:
+        BARE: 1.0
+        FBE: 0.02
+        POLYETHYLENE: 0.01
+        COAL_TAR: 0.05
+    use_as_test: true
+  - description: "FBE coating degradation at 20 years (f = 0.02 + 0.01*20 = 0.22)"
+    inputs:
+      coating_type: "FBE"
+      initial_factor: 0.02
+      degradation_rate_per_year: 0.01
+      years: 20
+    outputs:
+      final_factor: 0.22
+    use_as_test: true
+  - description: "Polyethylene coating degradation capped at 1.0 at 200 years"
+    inputs:
+      coating_type: "POLYETHYLENE"
+      initial_factor: 0.01
+      degradation_rate_per_year: 0.01
+      years: 200
+    outputs:
+      final_factor: 1.0
+    use_as_test: true
+  - description: "Protection criterion is -0.85 V CSE"
+    inputs:
+      standard: "API RP 1632"
+    outputs:
+      criterion_v_cse: -0.85
+    use_as_test: true
+assumptions:
+  - "Coating degradation rate 1% per year for all coating types"
+  - "Maximum coating breakdown factor capped at 1.0"
+  - "Design current density 21.5 mA/m2 for bare steel (midpoint of 10.76-32.3 mA/m2 range)"
+  - "Protection criterion -0.85 V vs CSE per API RP 1632"
+  - "Default burial depth 0.9 m"
+references:
+  - "API RP 1632 (3rd Edition, 1996)"
+  - "NACE SP0169 (protection criteria)"

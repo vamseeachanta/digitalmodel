@@ -1,0 +1,172 @@
+source_type: python
+source_description: "Extracted from digitalmodel test_fad.py and test_calculations.py — BS7910 Failure Assessment Diagram calculations"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "structural"
+subcategory: "fracture_mechanics"
+equations:
+  - name: "BS7910 Lr_max (Plastic Collapse Load Ratio Limit)"
+    latex: "L_{r,max} = \\frac{SMYS + SMUS}{2 \\cdot SMYS}"
+    description: "Maximum load ratio for FAD cutoff per BS7910:2013 clause 7.3.2"
+  - name: "BS7910 FAD Option 1 Curve"
+    latex: "f(L_r) = \\left(1 + \\frac{1}{2} L_r^2\\right)^{-1/2} \\cdot \\left(0.3 + 0.7 \\exp(-\\mu L_r^6)\\right)"
+    description: "Failure Assessment Diagram Option 1 curve function"
+  - name: "ASME B31.4 Burst Pressure (Thin-wall Barlow)"
+    latex: "P = \\frac{2 \\cdot S_{allow} \\cdot t}{D}"
+    description: "Modified Barlow burst pressure for thin-wall pipe (D/t >= 30)"
+  - name: "ASME B31.8 Burst Pressure (Thick-wall)"
+    latex: "P = \\frac{2 \\cdot t \\cdot S_{allow}}{D - t}"
+    description: "Modified Barlow burst pressure for thick-wall pipe (D/t < 30)"
+  - name: "API RP 1111 Burst Pressure"
+    latex: "P = F_d \\cdot 0.90 \\cdot (SMYS + SMUS) \\cdot \\frac{t}{D - t}"
+    description: "API RP 1111 burst pressure for thin-wall deepwater pipeline"
+  - name: "API STD 2RD Burst Pressure (Logarithmic)"
+    latex: "P = F_d \\cdot k \\cdot (SMYS + SMUS) \\cdot \\ln\\left(\\frac{D}{D - 2t}\\right)"
+    description: "API STD 2RD von Mises thick-wall logarithmic burst formula"
+  - name: "Collapse Propagation Pressure (API RP 1111)"
+    latex: "P_p = 24 \\cdot SMYS \\cdot \\left(\\frac{t}{D}\\right)^{2.4}"
+    description: "Collapse propagation pressure per API RP 1111"
+  - name: "API STD 2RD Collapse"
+    latex: "P_c = \\frac{P_y \\cdot P_{el}}{\\sqrt{P_y^2 + P_{el}^2}}"
+    description: "API STD 2RD collapse pressure transition formula"
+inputs:
+  - name: "SMYS (X65)"
+    symbol: "SMYS"
+    unit: "Pa"
+    test_value: 448000000
+  - name: "SMUS (X65)"
+    symbol: "SMUS"
+    unit: "Pa"
+    test_value: 531000000
+  - name: "Young's Modulus"
+    symbol: "E"
+    unit: "Pa"
+    test_value: 200000000000
+outputs:
+  - name: "Lr_max for X65"
+    symbol: "Lr_max"
+    unit: "dimensionless"
+    test_expected: 1.09263
+    tolerance: 0.0001
+worked_examples:
+  - description: "Lr_max for X65 steel (SMYS=448 MPa, SMUS=531 MPa)"
+    inputs:
+      SMYS: 448.0e6
+      SMUS: 531.0e6
+    outputs:
+      Lr_max: 1.09263
+    use_as_test: true
+  - description: "FAD Option 1 Kr at Lr=0 equals 1.0"
+    inputs:
+      Lr: 0.0
+    outputs:
+      Kr: 1.0
+    use_as_test: true
+  - description: "FAD Option 1 Kr at Lr_max equals 0.0"
+    inputs:
+      Lr: 1.09231
+      SMYS: 65000
+      SMUS: 77000
+    outputs:
+      Kr: 0.0
+      Lr_max: 1.09231
+    use_as_test: true
+  - description: "Lr_max for X52 steel (SMYS=52000 psi, SMUS=66000 psi)"
+    inputs:
+      SMYS: 52000
+      SMUS: 66000
+    outputs:
+      Lr_max: 1.13462
+    use_as_test: true
+  - description: "Lr_max = 1.0 when SMYS equals SMUS (elastic-plastic edge case)"
+    inputs:
+      SMYS: 400.0e6
+      SMUS: 400.0e6
+    outputs:
+      Lr_max: 1.0
+    use_as_test: true
+  - description: "ASME B31.4 burst — 12.75in OD, 0.375in WT, X52 (thin-wall D/t=34)"
+    inputs:
+      SMYS_psi: 52000
+      design_factor: 0.72
+      weld_efficiency: 1.0
+      temp_derating: 1.0
+      t_in: 0.375
+      D_in: 12.75
+    outputs:
+      S_allow_psi: 37440
+      P_burst_psi: 2202.35
+    use_as_test: true
+  - description: "ASME B31.4 thin-wall burst — 24in OD, 0.5in WT, X52"
+    inputs:
+      SMYS_psi: 52000
+      design_factor: 0.72
+      t_in: 0.5
+      D_in: 24.0
+    outputs:
+      P_burst_psi: 1560.0
+    use_as_test: true
+  - description: "ASME B31.4 min thickness — 24in OD, X52, Pi=1000 psi"
+    inputs:
+      Pi_psi: 1000
+      Pe_psi: 0
+      D_in: 24.0
+      S_allow_psi: 37440
+    outputs:
+      t_min_in: 0.32051
+    use_as_test: true
+  - description: "ASME B31.8 thick-wall burst — 16in OD, 0.625in WT, X65, F=0.5"
+    inputs:
+      SMYS_psi: 65000
+      design_factor: 0.5
+      t_in: 0.625
+      D_in: 16.0
+      D_over_t: 25.6
+    outputs:
+      S_allow_psi: 32500
+      P_burst_psi: 2642.28
+    use_as_test: true
+  - description: "API RP 1111 burst — 10.75in OD, 0.625in WT, X65, Fd=0.9"
+    inputs:
+      SMYS_psi: 65000
+      SMUS_psi: 77000
+      Fd: 0.9
+      t_in: 0.625
+      D_in: 10.75
+    outputs:
+      P_burst_psi: 7102.22
+    use_as_test: true
+  - description: "API STD 2RD burst — 10.75in OD, 1.0in WT, X65, Fd=0.67"
+    inputs:
+      SMYS_psi: 65000
+      SMUS_psi: 77000
+      Fd: 0.67
+      k: 1.0
+      t_in: 1.0
+      D_in: 10.75
+    outputs:
+      P_burst_psi: 19483.6
+    use_as_test: true
+  - description: "Collapse propagation pressure — 10.75in OD, 0.625in WT, X65, Fp=0.8"
+    inputs:
+      SMYS_psi: 65000
+      t_in: 0.625
+      D_in: 10.75
+      Fp: 0.8
+    outputs:
+      t_over_D: 0.05814
+      Pp_psi: 2221.44
+    use_as_test: true
+assumptions:
+  - "BS7910:2013 Option 1 FAD curve uses mu parameter from material properties"
+  - "Kr at Lr=0 equals 1.0 by definition (no applied load)"
+  - "Kr at Lr_max equals 0.0 (cutoff point of FAD curve)"
+  - "FAD curve is monotonically non-increasing from Lr=0 to Lr_max"
+  - "ASME B31.4 thin-wall/thick-wall transition at D/t = 30"
+  - "API RP 1111 thin-wall branch for D/t > 15"
+references:
+  - "BS 7910:2013+A1:2015, Guide to Methods for Assessing the Acceptability of Flaws in Metallic Structures"
+  - "ASME B31.4-2016, Pipeline Transportation Systems for Liquids and Slurries"
+  - "ASME B31.8-2016, Gas Transmission and Distribution Piping"
+  - "API RP 1111:2009, Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines"
+  - "API STD 2RD:2013, Design of Risers for Floating Production Systems"

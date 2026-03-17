@@ -1,0 +1,68 @@
+source_type: python
+source_description: "Extracted from digitalmodel/tests/drilling_riser/test_tool_passage_doc_verified.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "drilling_riser_tool_passage"
+equations:
+  - name: "Annular clearance"
+    latex: "c = \\frac{ID_{riser} - OD_{tool}}{2}"
+    description: "Radial clearance between riser inner diameter and tool outer diameter"
+  - name: "Minimum riser ID required"
+    latex: "ID_{min} = OD_{tool} + 2 \\times c_{req}"
+    description: "Minimum riser ID for tool passage with required radial clearance"
+  - name: "Spacing requirement"
+    latex: "S = L_{conn} + L_{tool} + m"
+    description: "Connector spacing for tool passage including margin"
+inputs:
+  - name: "Riser inner diameter"
+    symbol: "ID_riser"
+    unit: "mm"
+    test_value: 500.0
+  - name: "Tool outer diameter"
+    symbol: "OD_tool"
+    unit: "mm"
+    test_value: 200.0
+outputs:
+  - name: "Annular clearance"
+    symbol: "c"
+    unit: "mm"
+    test_expected: 150.0
+    tolerance: 0.01
+worked_examples:
+  - description: "Basic annular clearance: riser ID 500mm, tool OD 200mm"
+    inputs:
+      riser_id_mm: 500.0
+      tool_od_mm: 200.0
+    outputs:
+      clearance_mm: 150.0
+    use_as_test: true
+  - description: "Zero clearance when tool OD equals riser ID"
+    inputs:
+      riser_id_mm: 300.0
+      tool_od_mm: 300.0
+    outputs:
+      clearance_mm: 0.0
+    use_as_test: true
+  - description: "Minimum riser ID: tool OD 200mm with 50mm clearance"
+    inputs:
+      tool_od_mm: 200.0
+      clearance_mm: 50.0
+    outputs:
+      minimum_riser_id_mm: 300.0
+    use_as_test: true
+  - description: "Connector spacing: 2.0m connector, 10.0m tool, 1.5m margin"
+    inputs:
+      connector_length_m: 2.0
+      tool_length_m: 10.0
+      margin_m: 1.5
+    outputs:
+      spacing_m: 13.5
+    use_as_test: true
+assumptions:
+  - "Concentric tool passage (no eccentricity correction)"
+  - "Rigid body clearance check (no dynamic deflection)"
+references:
+  - "144507 SpaceOut drawing — tool passage clearance"
+  - "API SPEC 16F — riser running equipment"
+  - "2H-CAL-0015-8 — drilling riser stackup reference"
