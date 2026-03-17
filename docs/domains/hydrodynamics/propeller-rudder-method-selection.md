@@ -231,17 +231,62 @@ diameter against full-scale trial data or RANS simulation:
 
 ---
 
-## 7. Decision Summary
+## 7. Quantitative Comparison (Esso Osaka, δ=20°, n=1.5 rps)
+
+J-sweep results from `propeller_rudder.py` implementation:
+
+| J | V_s [m/s] | SB sway [kN] | AD sway [kN] | Ratio SB/AD |
+|---|-----------|-------------|-------------|-------------|
+| 0.10 | 2.1 | -1,617 | -4,417 | 0.37 |
+| 0.20 | 4.2 | -1,671 | -4,425 | 0.38 |
+| 0.30 | 6.3 | -1,688 | -4,490 | 0.38 |
+| 0.50 | 10.5 | -1,578 | -4,799 | 0.33 |
+| 0.70 | 14.7 | -1,253 | -5,367 | 0.23 |
+| 1.00 | 21.1 | -373 | -6,751 | 0.06 |
+
+### Key finding: the two methods model different quantities
+
+- **Söding/Brix** computes the propeller-augmented *interaction increment* —
+  the additional rudder force caused by the propeller slipstream. Correctly
+  diminishes toward zero as propeller loading decreases (high J).
+- **AD + flat-plate** computes the *total rudder force* in the slipstream —
+  amplified velocity applied to the full rudder area. Grows with V² as
+  ship speed increases.
+
+These are **complementary, not competing**:
+
+| Aspect | Söding | AD + Flat-Plate |
+|--------|--------|-----------------|
+| What it computes | Interaction increment | Total rudder force |
+| Validated against | Turning circle trials | Slipstream PIV data |
+| At n = 0 | Zero (correct) | Ship-speed rudder force |
+| Use in maneuvering | Additive to hull forces | Baseline rudder model |
+
+---
+
+## 8. Decision Summary: Layered Architecture
+
+The total rudder force in a maneuvering simulation is:
+
+```
+F_rudder_total = F_rudder_baseline (AD flat-plate) + F_rudder_interaction (Söding)
+```
+
+This is consistent with McTaggart (2005), where hull force equations sum:
+hull derivatives + propeller thrust + rudder baseline + rudder-propeller interaction.
 
 | Decision | Value |
 |----------|-------|
-| **Primary method** | Söding/Brix slipstream-in-rudder (McTaggart 2005 implementation) |
-| **Fallback method** | Actuator-disk + flat-plate rudder (engine-off / no K_T data) |
-| **J range covered** | 0.0–1.1 (primary) + engine-off degenerate case (fallback) |
-| **Key inputs** | K_T(J) polynomial, t, w, C^(rp), D, rudder geometry |
-| **Expected accuracy** | ±10–20% on rudder interaction forces (single-screw) |
-| **Implementation estimate** | ~5 core equations, <100 lines Python |
-| **Next WRK** | WRK-1150 (implementation) — blocked by this selection |
+| **Interaction model** | Söding/Brix — propeller-augmented rudder force increment |
+| **Baseline rudder model** | AD + flat-plate — total rudder force from ship-speed inflow |
+| **Layered total** | F_total = AD_baseline + Söding_interaction |
+| **Engine-off** | Only AD baseline survives (Söding correctly returns zero) |
+| **Braking quadrant** | Guard clamp on C_th < -1; fall back to AD baseline only |
+| **J range covered** | 0.0–1.1 (both models) + engine-off (AD only) |
+| **Key inputs** | K_T(J), t, w, C^(rp), D, rudder area/AR/x_R |
+| **Expected accuracy** | ±10–20% on interaction; ±5–10% on baseline (single-screw) |
+| **Implementation** | `propeller_rudder.py` — 150 lines, 36 tests pass |
+| **Next WRK** | WRK-1150 (integration into maneuvering model) |
 
 ---
 
@@ -249,3 +294,6 @@ diameter against full-scale trial data or RANS simulation:
 
 See [propeller-rudder-literature.md](propeller-rudder-literature.md) (WRK-1148) for
 full formulae, applicability ranges, and source citations.
+
+Implementation: `src/digitalmodel/hydrodynamics/propeller_rudder.py`
+Tests: `tests/test_propeller_rudder_interaction.py` (36 pass)
