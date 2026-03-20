@@ -1,28 +1,21 @@
 """
-ABOUTME: Single and dual chute drag assessment with Stroud sizing logic
-ABOUTME: WRK-1362 — load cases, aero lift, tire traction sensitivity
+ABOUTME: Single and dual chute drag assessment with load case orchestrator
+ABOUTME: WRK-1362 — aero lift, tire traction, YAML export for downstream WRKs
 """
 
-import math
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+
+import yaml
 
 from digitalmodel.structural.parachute.parachute_drag import (
-    DragResult,
     LBS_TO_NEWTONS,
     calculate_drag_force,
-    chute_area,
     mph_to_fps,
 )
-
-
-@dataclass
-class StroudRecommendation:
-    """Stroud sizing chart recommendation."""
-
-    vehicle_weight_lbs: float
-    speed_mph: float
-    config: str  # "single" or "dual"
-    model: str  # e.g. "430 Std. 32", "430-28", "450"
+from digitalmodel.structural.parachute.stroud_sizing import (
+    StroudRecommendation,
+    recommend_stroud_chute,
+)
 
 
 @dataclass
@@ -58,27 +51,6 @@ class LoadCaseResult:
     is_governing: bool = False
 
 
-# -- Stroud sizing chart data (from WRK-5082) --
-# NHRA rule: dual chutes mandatory over 200 MPH (quarter mile)
-DUAL_CHUTE_SPEED_THRESHOLD_MPH = 200.0
-
-# Stroud single chute models by vehicle weight range (lbs)
-SINGLE_CHUTE_TABLE = [
-    (2200, "400"),
-    (2800, "410"),
-    (3200, "420"),
-    (4000, "430 Std. 32"),
-]
-
-# Stroud dual chute models by weight + speed range
-DUAL_CHUTE_TABLE = [
-    (2800, 260, "430-24 Pro Stock"),
-    (3200, 280, "430-24 Pro Stock / 430-30 Pro-Mod"),
-    (3800, 300, "430-28 / 430-30 Pro-Mod"),
-    (4000, 320, "430-26"),
-    (4000, 999, "450 / 470"),
-]
-
 # Default dual chute diameter (ft) — conservative estimate pending Stroud data
 DUAL_CHUTE_DEFAULT_DIAMETER_FT = 10.0
 
@@ -86,42 +58,6 @@ DUAL_CHUTE_DEFAULT_DIAMETER_FT = 10.0
 R35_CL = 0.35
 R35_FRONTAL_AREA_FT2 = 25.0
 DEFAULT_MU_DRY = 0.8
-
-
-def recommend_stroud_chute(
-    vehicle_weight_lbs: float, speed_mph: float
-) -> StroudRecommendation:
-    """Recommend single vs dual chute config per Stroud sizing charts."""
-    if speed_mph > DUAL_CHUTE_SPEED_THRESHOLD_MPH:
-        model = _lookup_dual_model(vehicle_weight_lbs, speed_mph)
-        return StroudRecommendation(
-            vehicle_weight_lbs=vehicle_weight_lbs,
-            speed_mph=speed_mph,
-            config="dual",
-            model=model,
-        )
-
-    model = _lookup_single_model(vehicle_weight_lbs)
-    return StroudRecommendation(
-        vehicle_weight_lbs=vehicle_weight_lbs,
-        speed_mph=speed_mph,
-        config="single",
-        model=model,
-    )
-
-
-def _lookup_single_model(weight_lbs: float) -> str:
-    for max_weight, model in SINGLE_CHUTE_TABLE:
-        if weight_lbs <= max_weight:
-            return model
-    return SINGLE_CHUTE_TABLE[-1][1]
-
-
-def _lookup_dual_model(weight_lbs: float, speed_mph: float) -> str:
-    for max_weight, max_speed, model in DUAL_CHUTE_TABLE:
-        if weight_lbs <= max_weight and speed_mph <= max_speed:
-            return model
-    return DUAL_CHUTE_TABLE[-1][2]
 
 
 def calculate_dual_chute_drag(
@@ -230,3 +166,31 @@ def assess_all_load_cases(
             break
 
     return cases
+
+
+def export_results_yaml(
+    vehicle_weight_lbs: float,
+    cases: list[LoadCaseResult],
+    wrk_ref: str = "WRK-1362",
+) -> str:
+    """Export load case results as YAML for downstream WRKs (1363/1364/1365)."""
+    governing = next(c for c in cases if c.is_governing)
+    load_case_dicts = []
+    for c in cases:
+        load_case_dicts.append({
+            "case_id": c.case_id,
+            "speed_mph": c.speed_mph,
+            "config": c.config,
+            "drag_force_lbs": round(c.drag_force_lbs, 1),
+            "drag_force_n": round(c.drag_force_n, 1),
+            "is_governing": c.is_governing,
+        })
+
+    data = {
+        "wrk_ref": wrk_ref,
+        "vehicle_weight_lbs": vehicle_weight_lbs,
+        "load_cases": load_case_dicts,
+        "governing_case_id": governing.case_id,
+        "governing_force_lbs": round(governing.drag_force_lbs, 1),
+    }
+    return yaml.dump(data, default_flow_style=False, sort_keys=False)
