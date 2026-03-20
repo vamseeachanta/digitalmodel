@@ -1655,6 +1655,9 @@ well = [
 ]
 
 [package.dev-dependencies]
+dev = [
+    { name = "loguru" },
+]
 docs = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
@@ -1825,6 +1828,7 @@ requires-dist = [
 provides-extras = ["dev", "test", "docs", "well", "nde"]
 
 [package.metadata.requires-dev]
+dev = [{ name = "loguru", specifier = ">=0.7.3" }]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.0" },
     { name = "mkdocs-material", specifier = ">=9.5.0" },
