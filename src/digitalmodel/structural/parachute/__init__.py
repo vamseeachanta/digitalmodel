@@ -1,6 +1,6 @@
 """
 ABOUTME: Parachute frame structural analysis package
-ABOUTME: Drag force, frame solver, and member acceptability checks
+ABOUTME: Drag force, frame geometry (2D/3D), solver, and member checks
 """
 
 from digitalmodel.structural.parachute.chute_assessment import (
