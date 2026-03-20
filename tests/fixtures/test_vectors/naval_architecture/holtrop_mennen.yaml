@@ -1,0 +1,78 @@
+source_type: journal_paper
+source_description: "Holtrop & Mennen (1982, 1984) statistical resistance prediction"
+extracted_date: "2026-03-20"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "resistance_prediction"
+
+constants:
+  rho_sw: 1025.0       # kg/m^3 seawater density
+  nu_sw: 1.1892e-6     # m^2/s kinematic viscosity at 15C
+  g: 9.80665           # m/s^2
+
+test_cases:
+  - id: series60_cb060
+    description: "Series 60 Cb=0.60 hull at Fn=0.224"
+    inputs:
+      lwl: 121.92
+      beam: 16.26
+      draft: 6.50
+      cb: 0.60
+      cm: 0.977
+      cwp: 0.70
+      cp: 0.614
+      lcb_pct: -2.02
+      cstern: 0
+      speed_ms: 7.72
+      abt: 0.0
+      tf: 6.50
+      at: 0.0
+      hb: 0.0
+    outputs:
+      froude_number: 0.224
+      ct_approx: 0.00385
+      ct_tolerance_pct: 15.0
+    use_as_test: true
+
+  - id: tanker_cb080
+    description: "Tanker form Cb=0.80 at Fn=0.172"
+    inputs:
+      lwl: 205.0
+      beam: 32.0
+      draft: 12.0
+      cb: 0.80
+      cm: 0.995
+      cwp: 0.88
+      cp: 0.804
+      lcb_pct: -0.5
+      cstern: 0
+      speed_ms: 7.72
+      abt: 0.0
+      tf: 12.0
+      at: 0.0
+      hb: 0.0
+    outputs:
+      froude_number: 0.172
+      ct_approx: 0.00175
+      ct_tolerance_pct: 15.0
+    use_as_test: true
+
+  - id: form_factor_validation
+    description: "Form factor (1+k1) validation"
+    inputs:
+      lwl: 150.0
+      beam: 20.0
+      draft: 8.0
+      cb: 0.65
+      cm: 0.98
+      cp: 0.663
+      lcb_pct: -1.5
+      cstern: 0
+    outputs:
+      k1_plus_1_min: 1.18
+      k1_plus_1_max: 1.25
+    use_as_test: true
+
+references:
+  - "Holtrop, J. & Mennen, G.G.J. (1982). An approximate power prediction method."
+  - "Holtrop, J. (1984). A statistical re-analysis of resistance and propulsion data."
