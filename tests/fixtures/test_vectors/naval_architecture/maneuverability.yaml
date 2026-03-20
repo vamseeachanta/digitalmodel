@@ -1,0 +1,72 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance, Chapter 9 — Maneuvering"
+extracted_date: "2026-03-20"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "maneuverability"
+
+test_cases:
+  - name: "rudder_normal_force"
+    description: "Rectangular rudder behind hull at 15 deg deflection"
+    inputs:
+      velocity_m_s: 10.0
+      rho_kg_m3: 1025.0
+      rudder_area_m2: 20.0
+      rudder_span_m: 6.0
+      rudder_angle_deg: 15.0
+      behind_hull: true
+    intermediates:
+      geometric_aspect_ratio: 1.8
+      effective_aspect_ratio: 3.6
+      # C_N = (6.13 * AR_eff) / (AR_eff + 2.25) * sin(delta)
+      # = (6.13 * 3.6) / (3.6 + 2.25) * sin(15) = 3.772 * 0.2588 = 0.976
+      lift_coefficient: 0.976
+    outputs:
+      normal_force_N: 1000750.0
+      cn_tolerance: 0.05
+      fn_tolerance: 0.05
+
+  - name: "turning_circle_ddg51"
+    description: "DDG-51 class approximate turning circle at 35 deg rudder"
+    inputs:
+      lwl_m: 142.0
+      velocity_m_s: 15.4
+      rudder_angle_deg: 35.0
+      nomoto_K_per_s: 0.30
+      nomoto_T_s: 15.0
+    outputs:
+      steady_yaw_rate_rad_s: 0.183
+      steady_turning_radius_m: 84.2
+      yaw_rate_tolerance: 0.01
+      radius_tolerance: 5.0
+
+  - name: "directional_stability"
+    description: "Linear stability criterion from hydrodynamic derivatives"
+    inputs:
+      Yv_prime: -0.015
+      Nr_prime: -0.005
+      Nv_prime: -0.008
+      Yr_prime: 0.003
+    outputs:
+      stability_criterion: 0.000099
+      is_stable: true
+      criterion_tolerance: 0.000005
+
+  - name: "speed_loss_in_turn"
+    description: "Speed reduction during steady turn"
+    inputs:
+      velocity_m_s: 15.0
+      rudder_angle_deg: 35.0
+      loss_factor: 0.4
+    outputs:
+      velocity_in_turn_m_s: 9.0
+      tolerance: 0.1
+
+  - name: "drift_angle"
+    description: "Approximate drift angle from ship length and turning radius"
+    inputs:
+      lwl_m: 142.0
+      turning_radius_m: 84.2
+    outputs:
+      drift_angle_deg: 40.15
+      tolerance: 1.0
