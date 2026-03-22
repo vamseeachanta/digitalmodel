@@ -1,0 +1,111 @@
+# Ship Dimensions Template
+# Fill in principal dimensions from ship plan PDFs.
+# Run: uv run python -c "from digitalmodel.naval_architecture.ship_dimensions import ..."
+#
+# Sources: USNA ship plan collection, Jane's Fighting Ships
+# Fields marked (required) must be filled before merging.
+#
+# Units: feet (ft) and long tons (LT)
+vessels:
+  # ── Battleships ────────────────────────────────────────────────
+  - hull_id: BB-42        # USS Missouri / Iowa-class
+    name: "Iowa-class battleship"
+    loa_ft: 887.0
+    lwl_ft: 860.0
+    beam_ft: 108.0
+    draft_ft: 36.0
+    displacement_lt: 45000.0
+    full_load_lt: 57500.0
+    source: "Jane's Fighting Ships"
+
+  - hull_id: BB-35
+    name: "Texas-class battleship"
+    loa_ft: 573.0
+    lwl_ft: 565.0
+    beam_ft: 95.0
+    draft_ft: 28.5
+    displacement_lt: 27000.0
+    source: "Jane's Fighting Ships"
+
+  # ── Carriers ───────────────────────────────────────────────────
+  - hull_id: CV-60        # USS Saratoga / Forrestal-class
+    name: "Forrestal-class carrier"
+    loa_ft: 1039.0
+    lwl_ft: 990.0
+    beam_ft: 129.0
+    draft_ft: 37.0
+    displacement_lt: 59000.0
+    full_load_lt: 75900.0
+    source: "Jane's Fighting Ships"
+
+  - hull_id: CVE-53       # Casablanca-class escort carrier
+    name: "Casablanca-class escort carrier"
+    loa_ft: 512.0
+    lwl_ft: 490.0
+    beam_ft: 65.0
+    draft_ft: 22.5
+    displacement_lt: 7800.0
+    source: "Jane's Fighting Ships"
+
+  # ── Destroyers ─────────────────────────────────────────────────
+  - hull_id: DD-710       # Gearing-class
+    name: "Gearing-class destroyer"
+    loa_ft: 390.0
+    lwl_ft: 383.0
+    beam_ft: 41.0
+    draft_ft: 18.0
+    displacement_lt: 2600.0
+    full_load_lt: 3400.0
+    source: "Jane's Fighting Ships"
+
+  # ── Submarines ─────────────────────────────────────────────────
+  - hull_id: SS-131       # S-class submarine
+    name: "S-class submarine"
+    loa_ft: 219.0
+    lwl_ft: 211.0
+    beam_ft: 21.0
+    draft_ft: 13.0
+    displacement_lt: 850.0
+    source: "Jane's Fighting Ships"
+
+  # ── Amphibious ─────────────────────────────────────────────────
+  - hull_id: AP-110       # General W.A. Mann transport
+    name: "Transport ship"
+    loa_ft: 622.0
+    lwl_ft: 608.0
+    beam_ft: 75.5
+    draft_ft: 26.0
+    displacement_lt: 17000.0
+    source: "NavSource Naval History"
+
+  # ── Auxiliaries ────────────────────────────────────────────────
+  - hull_id: AO-106       # Mispillion-class oiler
+    name: "Mispillion-class oiler"
+    loa_ft: 644.0
+    lwl_ft: 620.0
+    beam_ft: 75.0
+    draft_ft: 32.0
+    displacement_lt: 18000.0
+    full_load_lt: 34500.0
+    source: "Jane's Fighting Ships"
+
+  # ── Merchant / Liberty ─────────────────────────────────────────
+  - hull_id: EC2-S-C1     # Liberty ship
+    name: "Liberty ship (EC2-S-C1)"
+    loa_ft: 441.0
+    lwl_ft: 417.0
+    beam_ft: 57.0
+    draft_ft: 28.0
+    displacement_lt: 10800.0
+    cb: 0.75
+    source: "US Maritime Commission"
+
+  - hull_id: NS-SAVANNAH  # Nuclear ship Savannah
+    name: "NS Savannah"
+    loa_ft: 596.0
+    lwl_ft: 560.0
+    beam_ft: 78.0
+    draft_ft: 30.0
+    displacement_lt: 15600.0
+    full_load_lt: 22000.0
+    source: "MARAD records"
