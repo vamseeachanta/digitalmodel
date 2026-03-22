@@ -51,7 +51,7 @@ class TestFreeCADModelCreation:
         tubes = [
             o for o in self.doc.Objects if "tube_" in o.Name.lower()
         ]
-        assert len(tubes) >= 6
+        assert len(tubes) == 16  # 12 straight + 4 bends
 
     def test_tube_has_shape_with_volume(self):
         tubes = [
@@ -65,7 +65,7 @@ class TestFreeCADModelCreation:
         markers = [
             o for o in self.doc.Objects if "conn_" in o.Name.lower()
         ]
-        assert len(markers) > 0
+        assert len(markers) == 15  # 15 connections
 
 
 class TestSTEPExport:
