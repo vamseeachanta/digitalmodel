@@ -1,0 +1,90 @@
+# ABOUTME: GZ (righting arm) curve fixtures for stability validation
+# ABOUTME: DDG-51 from EN400 cross curves; generic tanker from stability theory
+source_type: textbook
+source_description: >
+  DDG-51 curves from USNA EN400 Chapter 4 cross curves of stability.
+  Generic tanker KN values from Rawson & Tupper Basic Ship Theory Ch 5.
+extracted_date: "2026-03-21"
+legal_scan_passed: true
+category: naval_architecture
+subcategory: gz_curves
+
+conditions:
+  - id: ddg51_full_load
+    description: "DDG-51 at 8600 LT displacement, KG=23.84 ft"
+    vessel: DDG-51
+    displacement_lt: 8600.0
+    kg_ft: 23.84
+    unit_system: imperial
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_ft: [0.0, 5.08, 10.10, 15.02, 19.67, 22.98, 24.42, 23.73, 21.23, 17.20]
+    # GZ = KN - KG * sin(heel)
+    gz_values_ft: [0.0, 0.940, 1.946, 3.100, 4.346, 4.718, 3.774, 1.328, -2.248, -6.640]
+    tolerance_ft: 0.15
+    gz_max_ft: 4.718
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 73  # approximate (interpolated where GZ crosses zero)
+    use_as_test: true
+
+  - id: ddg51_light
+    description: "DDG-51 at 8600 LT displacement, KG=21.0 ft (light condition)"
+    vessel: DDG-51
+    displacement_lt: 8600.0
+    kg_ft: 21.0
+    unit_system: imperial
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_ft: [0.0, 5.08, 10.10, 15.02, 19.67, 22.98, 24.42, 23.73, 21.23, 17.20]
+    # GZ = KN - KG * sin(heel) with KG=21.0
+    gz_values_ft: [0.0, 1.433, 2.918, 4.520, 6.172, 6.893, 6.234, 3.997, 0.549, -3.800]
+    tolerance_ft: 0.15
+    gz_max_ft: 6.893
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 82  # approximate
+    use_as_test: true
+
+  - id: generic_tanker_cb080
+    description: "Generic tanker Cb=0.80, B=45m, T=12m, KG=8.5m"
+    vessel: generic_tanker
+    displacement_t: 50000.0
+    kg_m: 8.5
+    cb: 0.80
+    beam_m: 45.0
+    draft_m: 12.0
+    unit_system: metric
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    # KN from Rawson & Tupper typical full-form tanker
+    kn_values_m: [0.0, 3.85, 7.55, 10.82, 13.25, 14.50, 14.60, 13.80, 12.20, 10.10]
+    gz_values_m: [0.0, 2.374, 4.643, 6.570, 7.786, 7.989, 7.239, 5.813, 3.829, 1.600]
+    tolerance_m: 0.15
+    gz_max_m: 7.989
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 95  # GZ still positive at 90 deg
+    use_as_test: true
+
+imo_intact_stability_criteria:
+  # IMO A.749(18) / MSC.267(85) Part A criteria
+  - name: "Area under GZ curve 0-30 deg"
+    symbol: "A_0_30"
+    minimum: 0.055  # m-rad (or ft-rad in imperial)
+    unit: "length-rad"
+  - name: "Area under GZ curve 0-40 deg"
+    symbol: "A_0_40"
+    minimum: 0.09
+    unit: "length-rad"
+  - name: "Area under GZ curve 30-40 deg"
+    symbol: "A_30_40"
+    minimum: 0.03
+    unit: "length-rad"
+  - name: "GZ at 30 deg or greater"
+    symbol: "GZ_30"
+    minimum: 0.20  # meters
+    unit: "m"
+  - name: "Maximum GZ angle"
+    symbol: "phi_GZmax"
+    minimum: 25.0  # degrees
+    unit: "deg"
+
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 4"
+  - "Rawson & Tupper, Basic Ship Theory, 5th ed, Chapter 5"
+  - "IMO Resolution A.749(18) / MSC.267(85) Part A"
