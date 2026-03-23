@@ -547,6 +547,42 @@ class TestResultParser:
 # FEMChain tests
 # ===========================================================================
 
+class TestCantileverAnalytical:
+    """Analytical verification of cantilever beam deflection (no solver needed).
+
+    Reference: Euler-Bernoulli beam theory, any structural mechanics text.
+    E.g. Gere & Timoshenko, "Mechanics of Materials", Table B-1.
+    Formula: δ = PL³ / 3EI for a cantilever with tip point load.
+    """
+
+    def test_cantilever_deflection_formula(self):
+        """Verify PL^3/3EI against known hand-calc values."""
+        # Case: Steel cantilever, L=1m, 100mm square, P=1000N
+        L, b, h = 1.0, 0.1, 0.1
+        E = 210e9  # Pa
+        P = 1000.0  # N
+        I = b * h**3 / 12.0  # 8.3333e-6 m^4
+        delta = P * L**3 / (3.0 * E * I)
+        # Hand calc: 1000 / (3 * 210e9 * 8.3333e-6) = 1.9048e-4 m
+        assert abs(delta - 1.9048e-4) / 1.9048e-4 < 0.001
+
+    def test_cantilever_deflection_scales_with_length_cubed(self):
+        """δ scales as L³ — doubling length gives 8× deflection."""
+        E, P, I = 210e9, 1000.0, 8.3333e-6
+        delta_1 = P * 1.0**3 / (3.0 * E * I)
+        delta_2 = P * 2.0**3 / (3.0 * E * I)
+        assert abs(delta_2 / delta_1 - 8.0) < 1e-10
+
+    def test_cantilever_deflection_scales_with_inertia(self):
+        """Doubling section height halves I⁻¹ → δ/8 (h³ in I)."""
+        L, E, P, b = 1.0, 210e9, 1000.0, 0.1
+        I_1 = b * 0.1**3 / 12.0
+        I_2 = b * 0.2**3 / 12.0
+        delta_1 = P * L**3 / (3.0 * E * I_1)
+        delta_2 = P * L**3 / (3.0 * E * I_2)
+        assert abs(delta_1 / delta_2 - 8.0) < 1e-10
+
+
 class TestFEMChain:
     """Tests for end-to-end FEM chain orchestration."""
 
@@ -593,6 +629,77 @@ class TestFEMChain:
         )
         status = chain.solve()
         assert status["success"] is True
+
+    @pytest.mark.skipif(
+        not is_calculix_available(),
+        reason="Requires CalculiX (ccx)",
+    )
+    def test_cantilever_beam_b31_deflection(self, tmp_dir):
+        """AC: Cantilever beam tip deflection within 1% of PL^3/3EI."""
+        # Cantilever: L=1m, rectangular 0.1x0.1m, E=210 GPa, P=1000 N at tip
+        L = 1.0
+        b, h = 0.1, 0.1
+        E = 210000e6  # Pa
+        P = 1000.0  # N
+        I = b * h**3 / 12.0  # Second moment of area
+        delta_exact = P * L**3 / (3.0 * E * I)
+
+        n_elems = 10
+        dx = L / n_elems
+        nodes = np.array([[i * dx, 0.0, 0.0] for i in range(n_elems + 1)])
+        elements = {
+            "Line 2": {
+                "connectivity": np.array(
+                    [[i, i + 1] for i in range(n_elems)]
+                ),
+                "dimension": 1,
+            }
+        }
+
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", E, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B31", "STEEL", "RECT", (b, h),
+            direction=(0.0, 0.0, 1.0),
+        )
+        writer.add_node_set("FIX", [0])
+        writer.add_node_set("TIP", [n_elems])
+        # Fix all 6 DOFs at root (3 translations + 3 rotations)
+        for dof in range(1, 7):
+            writer.add_boundary_condition("FIX", dof, 0.0)
+        # Tip load in Y direction
+        writer.add_load("TIP", "cload", P, direction=(0, 1, 0))
+        writer.add_step()
+
+        inp_path = writer.write(tmp_dir / "cantilever.inp")
+
+        # Run ccx
+        import subprocess, os
+        result = subprocess.run(
+            ["ccx", "-i", "cantilever"],
+            cwd=str(tmp_dir),
+            capture_output=True, text=True, timeout=60,
+            env={**os.environ, "OMP_NUM_THREADS": "1"},
+        )
+        assert result.returncode == 0, f"ccx failed: {result.stderr[-500:]}"
+
+        # Parse results — CalculiX expands beam nodes into 3D corners.
+        # Tip expanded nodes are at x=L; average their y-displacement.
+        parser = CalculiXResultParser("cantilever", tmp_dir)
+        frd = parser.parse_frd_file()
+        tip_dy_values = []
+        for nid, disp in frd["displacements"].items():
+            # All 4 corner nodes of the tip cross-section have same dy
+            if abs(disp["dy"]) > 0 and nid >= (n_elems - 1) * 8 + 12:
+                tip_dy_values.append(abs(disp["dy"]))
+        assert len(tip_dy_values) > 0, "No tip displacement found"
+        delta_ccx = max(tip_dy_values)
+
+        error_pct = abs(delta_ccx - delta_exact) / delta_exact * 100
+        assert error_pct < 1.0, (
+            f"Tip deflection error {error_pct:.2f}%: "
+            f"ccx={delta_ccx:.6e}, exact={delta_exact:.6e}"
+        )
 
     def test_setup_analysis_writes_inp(self, tmp_dir, simple_mesh):
         """setup_analysis produces a valid .inp file without needing ccx."""
