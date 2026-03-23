@@ -14,6 +14,10 @@ FIXTURE_PATH = (
     Path(__file__).parents[1]
     / "fixtures/test_vectors/naval_architecture/gz_curves.yaml"
 )
+SHARED_ARTIFACT_PATH = (
+    Path(__file__).parents[1]
+    / "data/doc-intelligence/digitized-curves/gz-curves.yaml"
+)
 
 
 @pytest.fixture(scope="module")
@@ -25,6 +29,12 @@ def gz_data():
 @pytest.fixture(scope="module")
 def conditions(gz_data):
     return gz_data["conditions"]
+
+
+@pytest.fixture(scope="module")
+def shared_gz_data():
+    with open(SHARED_ARTIFACT_PATH) as f:
+        return yaml.safe_load(f)
 
 
 def _get(conditions, cid):
@@ -168,3 +178,61 @@ class TestIMOCriteria:
         cond = _get(conditions, "generic_tanker_cb080")
         area = _area_between(cond["heel_angles_deg"], cond["gz_values_m"], 30, 40)
         assert area >= _imo_criterion(gz_data, "A_30_40")
+
+
+class TestFixtureCoverageContract:
+    """Contract tests for WRK-1381 fixture breadth and traceability."""
+
+    def test_has_at_least_ten_conditions(self, conditions):
+        assert len(conditions) >= 10, "WRK-1381 requires >= 10 traced GZ conditions"
+
+    def test_every_condition_declares_provenance_type(self, conditions):
+        allowed = {"figure_digitized", "tabulated_transcription"}
+        for cond in conditions:
+            provenance_type = cond.get("provenance_type")
+            assert provenance_type in allowed, (
+                f"{cond['id']}: provenance_type must be one of {sorted(allowed)}"
+            )
+
+    def test_figure_digitized_conditions_include_accuracy_metadata(self, conditions):
+        for cond in conditions:
+            if cond.get("provenance_type") != "figure_digitized":
+                continue
+            checkpoints = cond.get("source_checkpoints")
+            max_error_pct = cond.get("max_error_pct")
+            assert isinstance(checkpoints, list) and len(checkpoints) >= 5, (
+                f"{cond['id']}: figure_digitized conditions require >= 5 source_checkpoints"
+            )
+            assert max_error_pct is not None and max_error_pct <= 2.0, (
+                f"{cond['id']}: figure_digitized conditions require max_error_pct <= 2.0"
+            )
+
+
+class TestSharedDigitizedCurveArtifact:
+    """Contract tests for the shared digitized-curve artifact bridge."""
+
+    def test_shared_artifact_exists(self):
+        assert SHARED_ARTIFACT_PATH.exists(), (
+            "WRK-1381 requires data/doc-intelligence/digitized-curves/gz-curves.yaml"
+        )
+
+    def test_shared_artifact_covers_fixture_condition_ids(
+        self, conditions, shared_gz_data
+    ):
+        fixture_ids = {cond["id"] for cond in conditions}
+        artifact_ids = {curve["id"] for curve in shared_gz_data["curves"]}
+        assert artifact_ids == fixture_ids
+
+    def test_shared_artifact_declares_standard_curve_arrays(self, shared_gz_data):
+        for curve in shared_gz_data["curves"]:
+            heel_angles = curve.get("heel_angles_deg")
+            gz_values = curve.get("gz_values")
+            assert isinstance(heel_angles, list) and heel_angles, (
+                f"{curve['id']}: heel_angles_deg must be a non-empty list"
+            )
+            assert isinstance(gz_values, list) and gz_values, (
+                f"{curve['id']}: gz_values must be a non-empty list"
+            )
+            assert len(heel_angles) == len(gz_values), (
+                f"{curve['id']}: heel_angles_deg and gz_values must have equal length"
+            )

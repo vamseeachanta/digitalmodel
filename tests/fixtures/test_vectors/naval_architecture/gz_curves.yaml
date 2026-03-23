@@ -13,6 +13,9 @@ conditions:
   - id: ddg51_full_load
     description: "DDG-51 at 8600 LT displacement, KG=23.84 ft"
     vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves worked example, full load condition"
     displacement_lt: 8600.0
     kg_ft: 23.84
     unit_system: imperial
@@ -29,6 +32,9 @@ conditions:
   - id: ddg51_light
     description: "DDG-51 at 8600 LT displacement, KG=21.0 ft (light condition)"
     vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves worked example, light condition"
     displacement_lt: 8600.0
     kg_ft: 21.0
     unit_system: imperial
@@ -45,6 +51,9 @@ conditions:
   - id: generic_tanker_cb080
     description: "Generic tanker Cb=0.80, B=45m, T=12m, KG=8.5m"
     vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=8.5 m"
     displacement_t: 50000.0
     kg_m: 8.5
     cb: 0.80
@@ -59,6 +68,144 @@ conditions:
     gz_max_m: 7.989
     gz_max_angle_deg: 50
     vanishing_angle_deg: 95  # GZ still positive at 90 deg
+    use_as_test: true
+
+  - id: ddg51_medium_load
+    description: "DDG-51 at 8600 LT displacement, KG=22.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, interpolated medium-load KG variant"
+    displacement_lt: 8600.0
+    kg_ft: 22.5
+    unit_system: imperial
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_ft: [0.0, 5.08, 10.10, 15.02, 19.67, 22.98, 24.42, 23.73, 21.23, 17.20]
+    gz_values_ft: [0.0, 1.173, 2.405, 3.770, 5.207, 5.744, 4.934, 2.587, -0.928, -5.300]
+    tolerance_ft: 0.15
+    gz_max_ft: 5.744
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 77
+    use_as_test: true
+
+  - id: ddg51_high_kg
+    description: "DDG-51 at 8600 LT displacement, KG=24.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, higher-KG sensitivity variant"
+    displacement_lt: 8600.0
+    kg_ft: 24.5
+    unit_system: imperial
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_ft: [0.0, 5.08, 10.10, 15.02, 19.67, 22.98, 24.42, 23.73, 21.23, 17.20]
+    gz_values_ft: [0.0, 0.826, 1.721, 2.770, 3.922, 4.212, 3.202, 0.708, -2.898, -7.300]
+    tolerance_ft: 0.15
+    gz_max_ft: 4.212
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 72
+    use_as_test: true
+
+  - id: ddg51_extreme_kg
+    description: "DDG-51 at 8600 LT displacement, KG=25.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, extreme-KG sensitivity variant"
+    displacement_lt: 8600.0
+    kg_ft: 25.5
+    unit_system: imperial
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_ft: [0.0, 5.08, 10.10, 15.02, 19.67, 22.98, 24.42, 23.73, 21.23, 17.20]
+    gz_values_ft: [0.0, 0.652, 1.378, 2.270, 3.279, 3.446, 2.336, -0.232, -3.883, -8.300]
+    tolerance_ft: 0.15
+    gz_max_ft: 3.446
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 69
+    use_as_test: true
+
+  - id: generic_tanker_cb080_ballast
+    description: "Generic tanker Cb=0.80, KG=7.0m ballast-like condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=7.0 m"
+    displacement_t: 50000.0
+    kg_m: 7.0
+    cb: 0.80
+    beam_m: 45.0
+    draft_m: 12.0
+    unit_system: metric
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_m: [0.0, 3.85, 7.55, 10.82, 13.25, 14.50, 14.60, 13.80, 12.20, 10.10]
+    gz_values_m: [0.0, 2.634, 5.156, 7.320, 8.750, 9.138, 8.538, 7.222, 5.306, 3.100]
+    tolerance_m: 0.15
+    gz_max_m: 9.138
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 95
+    use_as_test: true
+
+  - id: generic_tanker_cb080_light
+    description: "Generic tanker Cb=0.80, KG=7.5m light condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=7.5 m"
+    displacement_t: 50000.0
+    kg_m: 7.5
+    cb: 0.80
+    beam_m: 45.0
+    draft_m: 12.0
+    unit_system: metric
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_m: [0.0, 3.85, 7.55, 10.82, 13.25, 14.50, 14.60, 13.80, 12.20, 10.10]
+    gz_values_m: [0.0, 2.548, 4.985, 7.070, 8.429, 8.755, 8.105, 6.752, 4.814, 2.600]
+    tolerance_m: 0.15
+    gz_max_m: 8.755
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 95
+    use_as_test: true
+
+  - id: generic_tanker_cb080_loaded
+    description: "Generic tanker Cb=0.80, KG=8.0m loaded condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=8.0 m"
+    displacement_t: 50000.0
+    kg_m: 8.0
+    cb: 0.80
+    beam_m: 45.0
+    draft_m: 12.0
+    unit_system: metric
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_m: [0.0, 3.85, 7.55, 10.82, 13.25, 14.50, 14.60, 13.80, 12.20, 10.10]
+    gz_values_m: [0.0, 2.461, 4.814, 6.820, 8.108, 8.372, 7.672, 6.282, 4.322, 2.100]
+    tolerance_m: 0.15
+    gz_max_m: 8.372
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 95
+    use_as_test: true
+
+  - id: generic_tanker_cb080_high_kg
+    description: "Generic tanker Cb=0.80, KG=9.0m high-KG condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=9.0 m"
+    displacement_t: 50000.0
+    kg_m: 9.0
+    cb: 0.80
+    beam_m: 45.0
+    draft_m: 12.0
+    unit_system: metric
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    kn_values_m: [0.0, 3.85, 7.55, 10.82, 13.25, 14.50, 14.60, 13.80, 12.20, 10.10]
+    gz_values_m: [0.0, 2.287, 4.472, 6.320, 7.465, 7.606, 6.806, 5.343, 3.337, 1.100]
+    tolerance_m: 0.15
+    gz_max_m: 7.606
+    gz_max_angle_deg: 50
+    vanishing_angle_deg: 95
     use_as_test: true
 
 imo_intact_stability_criteria:
