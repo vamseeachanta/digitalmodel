@@ -18,7 +18,7 @@
 #   priority: high              → most impactful gaps to fill
 #   blocked_modules: [...]      → what modules are waiting on this data?
 
-generated: "2026-03-13"
+generated: "2026-03-23"
 repo: digitalmodel
 description: >
   Data needs registry — tracks what data, calculations, standards, and analysis
@@ -224,6 +224,30 @@ needs:
     notes: >
       6,777 CSV files already extracted but not validated or integrated.
       Need schema validation and dataframe loading pipeline.
+
+  - id: NA-011
+    domain: naval-architecture
+    module: naval_architecture/stability
+    type: dataset
+    priority: medium
+    status: integrated
+    title: Shared GZ curve corpus for stability validation
+    description: >
+      Shared righting-arm curve corpus bridged from naval architecture
+      validation fixtures into a document-intelligence-friendly YAML artifact.
+      Provides traced heel-angle / GZ arrays for downstream reuse while source
+      figure-backed digitization remains a separate follow-on path.
+    current_count: 10
+    target_count: 10
+    blocked_modules: []
+    potential_sources:
+      - "data/doc-intelligence/digitized-curves/gz-curves.yaml"
+      - "tests/fixtures/test_vectors/naval_architecture/gz_curves.yaml"
+    notes: >
+      All currently integrated conditions are marked `tabulated_transcription`.
+      True `figure_digitized` curves with source checkpoints and
+      `max_error_pct <= 2.0` are still outstanding when source figures are
+      available.
 
   # =========================================================================
   # STRUCTURAL
