@@ -17,7 +17,12 @@ ELEMENT_TYPE_MAP = {
     "Hexahedron 20": "C3D20",
     "Wedge 6": "C3D6",
     "Wedge 15": "C3D15",
+    "Line 2": "B31",
+    "Line 3": "B32",
 }
+
+# CalculiX beam element types
+BEAM_ELEMENT_TYPES = {"B31", "B32"}
 
 
 class INPWriter:
@@ -34,6 +39,7 @@ class INPWriter:
         self._materials: list[dict] = []
         self._node_sets: list[dict] = []
         self._element_sets: list[dict] = []
+        self._beam_sections: list[dict] = []
         self._boundary_conditions: list[dict] = []
         self._loads: list[dict] = []
         self._steps: list[dict] = []
@@ -79,6 +85,32 @@ class INPWriter:
             "direction": direction,
         })
 
+    def add_beam_section(
+        self,
+        elset: str,
+        material: str,
+        section_type: str,
+        dimensions: tuple,
+        direction: tuple = (0.0, 0.0, 1.0),
+    ):
+        """Add a beam section definition.
+
+        Args:
+            elset: Element set name for the beam elements.
+            material: Material name (must match an add_material call).
+            section_type: Cross-section shape — RECT, CIRC, PIPE, etc.
+            dimensions: Section dimensions tuple (depends on section_type).
+                RECT: (width, height), CIRC: (radius,), PIPE: (outer_r, thickness).
+            direction: Normal direction vector for the beam cross-section.
+        """
+        self._beam_sections.append({
+            "elset": elset,
+            "material": material,
+            "section_type": section_type.upper(),
+            "dimensions": dimensions,
+            "direction": direction,
+        })
+
     def add_step(self, step_type: str = "static", description: str = ""):
         """Add an analysis step."""
         self._steps.append({"type": step_type, "description": description})
@@ -99,6 +131,7 @@ class INPWriter:
         self._write_element_sets(lines)
         self._write_materials(lines)
         self._write_solid_sections(lines)
+        self._write_beam_sections(lines)
         self._write_steps(lines)
 
         filepath.write_text("\n".join(lines) + "\n")
@@ -123,7 +156,11 @@ class INPWriter:
             ccx_type = ELEMENT_TYPE_MAP.get(gmsh_name)
             if ccx_type is None:
                 continue
-            lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET=EALL")
+            if ccx_type in BEAM_ELEMENT_TYPES:
+                elset = f"EBEAM_{ccx_type}"
+            else:
+                elset = "EALL"
+            lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET={elset}")
             for row in data["connectivity"]:
                 node_refs = ", ".join(str(int(n) + 1) for n in row)
                 lines.append(f"{elem_id}, {node_refs}")
@@ -150,9 +187,23 @@ class INPWriter:
             lines.append(f"{mat['E']}, {mat['nu']}")
 
     def _write_solid_sections(self, lines: list[str]):
-        if self._materials:
+        has_solid = any(
+            ELEMENT_TYPE_MAP.get(name) not in BEAM_ELEMENT_TYPES
+            for name in self.elements
+            if ELEMENT_TYPE_MAP.get(name) is not None
+        )
+        if self._materials and has_solid:
             mat_name = self._materials[0]["name"]
             lines.append(f"*SOLID SECTION, ELSET=EALL, MATERIAL={mat_name}")
+
+    def _write_beam_sections(self, lines: list[str]):
+        for bs in self._beam_sections:
+            lines.append(
+                f"*BEAM SECTION, ELSET={bs['elset']}, "
+                f"MATERIAL={bs['material']}, SECTION={bs['section_type']}"
+            )
+            lines.append(", ".join(str(d) for d in bs["dimensions"]))
+            lines.append(", ".join(str(v) for v in bs["direction"]))
 
     def _write_steps(self, lines: list[str]):
         for step in self._steps:

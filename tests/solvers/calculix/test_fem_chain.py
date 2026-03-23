@@ -348,6 +348,123 @@ class TestINPWriter:
         content = out.read_text()
         assert "TYPE=C3D10" in content
 
+    def test_b31_element_type(self, tmp_dir):
+        """Line 2 maps to B31 beam element."""
+        nodes = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=float)
+        elements = {
+            "Line 2": {
+                "connectivity": np.array([[0, 1], [1, 2]]),
+                "dimension": 1,
+            }
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B31", "STEEL", "RECT", (0.1, 0.1),
+        )
+        out = writer.write(tmp_dir / "b31.inp")
+        content = out.read_text()
+        assert "TYPE=B31" in content
+        assert "ELSET=EBEAM_B31" in content
+
+    def test_b32_element_type(self, tmp_dir):
+        """Line 3 maps to B32 beam element."""
+        nodes = np.array(
+            [[0, 0, 0], [0.5, 0, 0], [1, 0, 0]], dtype=float,
+        )
+        elements = {
+            "Line 3": {
+                "connectivity": np.array([[0, 1, 2]]),
+                "dimension": 1,
+            }
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B32", "STEEL", "CIRC", (0.05,),
+        )
+        out = writer.write(tmp_dir / "b32.inp")
+        content = out.read_text()
+        assert "TYPE=B32" in content
+
+    def test_beam_section_output(self, tmp_dir):
+        """Beam section writes correct keywords, dimensions, and direction."""
+        nodes = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
+        elements = {
+            "Line 2": {
+                "connectivity": np.array([[0, 1]]),
+                "dimension": 1,
+            }
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B31", "STEEL", "RECT", (0.1, 0.2),
+            direction=(0.0, 0.0, 1.0),
+        )
+        out = writer.write(tmp_dir / "beam_section.inp")
+        content = out.read_text()
+        assert "*BEAM SECTION, ELSET=EBEAM_B31, MATERIAL=STEEL, SECTION=RECT" in content
+        assert "0.1, 0.2" in content
+        assert "0.0, 0.0, 1.0" in content
+        # No solid section for beam-only mesh
+        assert "*SOLID SECTION" not in content
+
+    def test_mixed_solid_and_beam(self, tmp_dir):
+        """Mixed mesh writes both *SOLID SECTION and *BEAM SECTION."""
+        nodes = np.array([
+            [0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
+            [2, 0, 0],
+        ], dtype=float)
+        elements = {
+            "Tetrahedron 4": {
+                "connectivity": np.array([[0, 1, 2, 3]]),
+                "dimension": 3,
+            },
+            "Line 2": {
+                "connectivity": np.array([[1, 4]]),
+                "dimension": 1,
+            },
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B31", "STEEL", "RECT", (0.05, 0.05),
+        )
+        out = writer.write(tmp_dir / "mixed.inp")
+        content = out.read_text()
+        assert "*SOLID SECTION, ELSET=EALL, MATERIAL=STEEL" in content
+        assert "*BEAM SECTION, ELSET=EBEAM_B31, MATERIAL=STEEL, SECTION=RECT" in content
+        assert "TYPE=C3D4" in content
+        assert "TYPE=B31" in content
+
+    def test_beam_element_connectivity_1based(self, tmp_dir):
+        """Beam element node references must be 1-based."""
+        nodes = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=float)
+        elements = {
+            "Line 2": {
+                "connectivity": np.array([[0, 1], [1, 2]]),
+                "dimension": 1,
+            }
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section("EBEAM_B31", "STEEL", "RECT", (0.1, 0.1))
+        out = writer.write(tmp_dir / "beam_1based.inp")
+        content = out.read_text()
+        lines = content.split("\n")
+        in_elem = False
+        for line in lines:
+            if "TYPE=B31" in line:
+                in_elem = True
+                continue
+            if in_elem and line.strip().startswith("*"):
+                break
+            if in_elem and line.strip():
+                parts = [int(x.strip()) for x in line.split(",")]
+                for val in parts:
+                    assert val >= 1, f"0-based index in beam element: {line}"
+
 
 # ===========================================================================
 # CalculiXResultParser tests
