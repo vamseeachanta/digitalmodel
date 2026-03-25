@@ -1,0 +1,13 @@
+module: structural/fatigue
+description: "Fatigue analysis including S-N curves, rainflow, frequency domain, and scatter diagram methods"
+primary_standard:
+  id: DNV-RP-C203
+  edition: 2021
+  title: "Fatigue Design of Offshore Steel Structures"
+functions:
+  - name: scatter_fatigue_damage
+    clause: "Appendix C/D"
+    equation: "D_total = sum(D_i) where D_i = damage_rate_i * T * p_i"
+    description: "Cumulative fatigue damage from sea-state scatter diagram using spectral methods"
+    inputs: [scatter_table, stress_transfer_function, sn_curve, frequencies, method, design_life_years]
+    outputs: [ScatterFatigueResult]
