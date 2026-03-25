@@ -38,6 +38,7 @@ class DesignCode(Enum):
     PD_8010_2 = "PD-8010-2"
     ASME_B31_8 = "ASME-B31.8"
     ISO_13623 = "ISO-13623"
+    ASME_B31_4 = "ASME-B31.4"
 
 
 @dataclass(frozen=True)
