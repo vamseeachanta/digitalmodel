@@ -1,0 +1,31 @@
+module: structural/analysis/wall_thickness_codes
+description: "Pipeline wall thickness design checks per multiple codes"
+primary_standard:
+  id: ASME-B31.4
+  edition: 2019
+  title: "Pipeline Transportation Systems for Liquids and Slurries"
+functions:
+  - name: AsmeB314Strategy.run_checks
+    clause: "S403.2"
+    equation: ""
+    description: "Run all ASME B31.4 design checks (burst, collapse, propagation)"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads, DesignFactors]
+    outputs: [Dict of utilisation results]
+  - name: AsmeB314Strategy._check_burst
+    clause: "S403.2.1"
+    equation: "Barlow formula"
+    description: "Internal pressure containment (burst) check"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads]
+    outputs: [utilisation, details]
+  - name: AsmeB314Strategy._check_collapse
+    clause: "S403.2.2"
+    equation: "Elastic-plastic transition"
+    description: "External pressure collapse check"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads]
+    outputs: [utilisation, details]
+  - name: AsmeB314Strategy._check_propagation
+    clause: "S403.2.3"
+    equation: "Battelle/AGA"
+    description: "Propagation buckling check"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads]
+    outputs: [utilisation, details]

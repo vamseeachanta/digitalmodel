@@ -9,3 +9,4 @@ from .api_std_2rd import ApiStd2rdStrategy
 from .pd_8010_2 import Pd80102Strategy
 from .asme_b31_8 import AsmeB318Strategy
 from .iso_13623 import Iso13623Strategy
+from .asme_b31_4 import AsmeB314Strategy
