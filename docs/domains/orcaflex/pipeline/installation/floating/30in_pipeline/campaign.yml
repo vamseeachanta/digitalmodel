@@ -1,0 +1,130 @@
+# Campaign configuration for 30-inch floating pipeline installation
+# Builds on the base spec.yml in this directory
+#
+# Parametric variations:
+#   - Water depths: 6m, 8m (base), 12m
+#   - Environments: calm (operational) and storm (survival)
+#
+# Usage:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator campaign \
+#       campaign.yml --output generated/
+
+base:
+  metadata:
+    name: "30in_pipeline_installation"
+    description: "30-inch pipeline floating installation with 5 tugs"
+    structure: pipeline
+    operation: installation/floating
+    project: "SESA"
+
+  environment:
+    water:
+      depth: 8
+      density: 1.03
+    seabed:
+      slope: 0.57
+      stiffness:
+        normal: 1000
+        shear: 100
+    waves:
+      type: dean_stream
+      height: 0
+      period: 8
+      direction: 180
+    current:
+      speed: 1
+      direction: 270
+      profile:
+        - [0, 0.46]
+        - [6, 0.39]
+        - [15, 0.33]
+    wind:
+      speed: 8.87
+      direction: 270
+
+  pipeline:
+    name: "30'' Line"
+    material: X65
+    dimensions:
+      outer_diameter: 0.762
+      wall_thickness: 0.0254
+    coatings:
+      corrosion:
+        thickness: 0.0042
+        density: 0.95
+      weight:
+        - name: CWC120
+          thickness: 0.12
+          density: 2.978
+        - name: CWC90
+          thickness: 0.09
+          density: 2.978
+    segments:
+      - type: X65+coating+CWC120
+        length: 1894.4
+        segment_length: 3.9
+      - type: X65+coating+CWC90
+        length: 3005.6
+        segment_length: 5.4
+
+  equipment:
+    tugs:
+      count: 5
+      spacing: 816.6
+      first_position: [716.7, -20, 0]
+      properties:
+        mass: 30
+        volume: 100
+    rollers:
+      position: [5, 0, -2]
+      supports: 4
+    buoyancy_modules:
+      spacing: 3.9
+      properties:
+        mass: 0.05
+        volume: 4.91
+    ramps:
+      - name: "Ramp inclined"
+        type: block
+        origin: [-126.35, -25, -5]
+        Size: [150, 50, 10]
+        Rotation: [0, 2.27, 0]
+      - name: "Ramp-curve"
+        type: curved_plate
+        Size: [10, 10, 10]
+        Rotation: [0, 0, 0]
+
+  simulation:
+    time_step: 0.1
+    stages: [8, 16]
+    north_direction: 70
+
+campaign:
+  water_depths: [6, 8, 12]
+  environments:
+    - name: calm
+      waves:
+        type: airy
+        height: 0.5
+        period: 5
+        direction: 180
+      current:
+        speed: 0.3
+        direction: 270
+      wind:
+        speed: 3
+        direction: 270
+    - name: storm
+      waves:
+        type: jonswap
+        height: 2.5
+        period: 8
+        direction: 180
+      current:
+        speed: 1.2
+        direction: 270
+      wind:
+        speed: 15
+        direction: 270
+
+output_naming: "{base_name}_wd{water_depth}m_{environment}"

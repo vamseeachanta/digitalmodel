@@ -1,0 +1,182 @@
+# OrcaFlex Modular Model Generator - Riser Specification
+# A01 Pliant Wave Riser - Pliant wave riser with subsea buoy (simplified)
+#
+# Model Type: Riser (pliant wave configuration)
+# Source: OrcaFlex Examples - A01 Pliant wave riser.dat
+# Tier: 2 (Fast validation, <15s statics)
+#
+# This uses the "Simple" line variant from the monolithic model where the
+# full riser is modeled as a single continuous line from vessel to anchor.
+# The clamp/buoy connection is represented as a ClumpType attachment.
+#
+# The monolithic model also has a "Detailed" variant with 4 lines connected
+# through a 6D buoy, but the Simple variant captures the essential physics
+# and converges more reliably.
+#
+# Parameters extracted from: A01 Pliant wave riser.yml (monolithic)
+#
+# Usage:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "a01_pliant_wave_riser"
+  description: "Pliant wave riser - simplified single-line model"
+  structure: riser
+  operation: production
+  project: "OrcaFlex A01 Examples"
+
+environment:
+  water:
+    depth: 100                          # Water depth (m)
+    density: 1.025                      # Seawater density (te/m3)
+  seabed:
+    type: flat
+    stiffness:
+      normal: 100                       # Normal stiffness (kN/m/m2)
+      shear: 100                        # Shear stiffness (kN/m/m2)
+  waves:
+    type: dean_stream                   # Dean stream function
+    height: 6                           # Wave height (m)
+    period: 7                           # Wave period (s)
+    direction: 270                      # Wave direction (deg)
+    stream_order: 5                     # Stream function order
+  current:
+    speed: 0.7                          # Reference current speed (m/s)
+    direction: 180                      # Current direction (deg)
+    profile:                            # [depth (m), speed factor]
+      - [0, 1.0]                        # Surface: 100% of ref speed
+      - [70, 0.9]                       # 70m depth: 90% of ref speed
+      - [100, 0.3]                      # Seabed: 30% of ref speed
+  wind:
+    speed: 0                            # Wind speed (m/s)
+    direction: 0                        # Wind direction (deg)
+
+riser:
+  vessel:
+    name: "FPSO"
+    type_name: "Vessel Type1"
+    length: 103                         # Vessel length (m)
+    position: [0, -48, 0]              # Monolithic position [x, y, z] (m)
+    orientation: [0, 0, 90]            # Heading 90 deg
+    primary_motion: "None"
+    superimposed_motion: "RAOs + harmonics"
+    included_in_statics: "None"
+
+  line_types:
+    - name: "10in_product"
+      description: "10 inch product riser pipe"
+      outer_diameter: 0.3926            # OD (m) - from monolithic
+      inner_diameter: 0.254             # ID (m)
+      mass_per_length: 0.22135          # Mass per unit length (te/m)
+      bending_stiffness: 361.85         # EI (kN.m2) - from monolithic
+      axial_stiffness: 650000           # EA (kN) - from monolithic
+      torsional_stiffness: 0            # GJ (kN.m2) - monolithic has 0
+      poisson_ratio: 0.5
+      added_mass_coefficient: 1.0       # Ca
+      drag_coefficient: 1.2             # Cd (numeric, replaces "Generic Drag")
+      axial_drag_coefficient: 0.008     # Axial Cd
+
+    - name: "10in_with_small_buoys"
+      description: "10 inch with small distributed buoyancy"
+      outer_diameter: 0.8782653786      # Effective OD with floats (m)
+      inner_diameter: 0.254             # ID (m)
+      contact_diameter: 1.2             # Contact diameter (m)
+      mass_per_length: 0.42525391       # Mass per unit length (te/m)
+      bending_stiffness: 361.85         # EI (kN.m2)
+      axial_stiffness: 650000           # EA (kN)
+      torsional_stiffness: 0            # GJ (kN.m2)
+      poisson_ratio: 0.5
+      added_mass_coefficient: 1.0       # Ca
+      drag_coefficient: 1.2             # Cd (numeric, replaces variable data source)
+      axial_drag_coefficient: 0.346357  # Axial Cd from monolithic
+
+    - name: "10in_with_big_buoys"
+      description: "10 inch with large distributed buoyancy"
+      outer_diameter: 1.1332195724      # Larger OD with big floats (m)
+      inner_diameter: 0.254             # ID (m)
+      contact_diameter: 1.45            # Contact diameter (m)
+      mass_per_length: 0.58636626       # Mass per unit length (te/m)
+      bending_stiffness: 361.85         # EI (kN.m2)
+      axial_stiffness: 650000           # EA (kN)
+      torsional_stiffness: 0            # GJ (kN.m2)
+      poisson_ratio: 0.5
+      added_mass_coefficient: 1.0       # Ca
+      drag_coefficient: 1.2             # Cd (numeric, replaces variable data source)
+      axial_drag_coefficient: 0.521054  # Axial Cd from monolithic
+
+  clump_types:
+    - name: "Clamp Type"
+      mass: 0.470203849                 # Clamp mass (te)
+      volume: 0.059898579               # Displaced volume (m3)
+      height: 0.48                      # Clamp height (m)
+      drag_area: [0, 0]                 # No drag
+      drag_coefficient: [0, 0]          # No drag
+      added_mass_coefficient: [0, 0]    # No added mass
+
+  links:
+    - name: "Tether Pliant Simple"
+      link_type: tether
+      connections:
+        - object_name: "Anchored"
+          x: -116
+          y: 0
+          z: 1
+        - object_name: "10in Pliant Simple"
+          x: 0
+          y: 0
+          z: 176
+          z_relative_to: "End A"
+      unstretched_length: 9.9
+      stiffness: 367000
+
+  lines:
+    - name: "10in Pliant Simple"
+      configuration: pliant_wave
+      end_a:
+        type: vessel
+        name: "FPSO"
+        position: [33, 2, -7.5]         # Connection on vessel [x, y, z] (m)
+        declination: 180                 # Monolithic declination
+        azimuth: 0                       # Monolithic azimuth
+        bending_stiffness: 0
+      end_b:
+        type: anchor
+        position: [-169, 0, 0.1963]     # Anchor position [x, y, z] (m)
+        declination: 90
+        azimuth: 180                     # Monolithic azimuth
+        bending_stiffness: 0
+      sections:
+        - line_type: "10in_product"
+          length: 97.5                   # Upper riser
+          segment_length: 2
+        - line_type: "10in_with_small_buoys"
+          length: 65                     # Small buoyancy section
+          segment_length: 2
+        - line_type: "10in_with_big_buoys"
+          length: 10                     # Big buoyancy section
+          segment_length: 2
+        - line_type: "10in_product"
+          length: 3.5                    # Transition zone 1
+          segment_length: 0.5
+        - line_type: "10in_product"
+          length: 3.5                    # Transition zone 2
+          segment_length: 0.5
+        - line_type: "10in_product"
+          length: 53                     # Lower riser to seabed
+          segment_length: 2
+      clump_attachments:
+        clump_type: "Clamp Type"
+        start_arc_length: 176            # Single clamp at buoy location
+        end_arc_length: 176              # Same as start (single attachment)
+        spacing: 1                       # Only 1 attachment generated
+      contents:
+        density: 1.025                   # Contents density (te/m3) - seawater
+        pressure: 0                      # Internal pressure (kPa)
+      statics_method: "Catenary"
+      statics_step2: "Full statics"
+      lay_azimuth: 0
+
+simulation:
+  duration: 42                          # Total simulation time (s)
+  time_step: 0.1                        # Implicit time step (s)

@@ -1,0 +1,10 @@
+﻿BaseFile: _02_i02_cal.yml
+
+General:
+  StaticsTolerance: 10e-6
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 10
+
+6DBuoys:
+  UTA:
+    DegreesOfFreedomInStatics: All

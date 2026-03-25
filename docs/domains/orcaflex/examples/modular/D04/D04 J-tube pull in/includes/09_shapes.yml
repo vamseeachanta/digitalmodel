@@ -1,0 +1,165 @@
+# Shapes Configuration
+# Generated from: D04 J-tube pull in.yml
+# Date: 2026-01-18 22:18:09
+Shapes:
+- Name: Deck
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Vessel1
+  Origin:
+  - -50
+  - -8
+  - -6.66
+  Size:
+  - 60
+  - 16
+  - 13.32
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Moonpool Shielding
+  ShapeType: Trapped water
+  Shape: Cylinder
+  Connection: Vessel1
+  Origin:
+  - 13
+  - 0
+  - -6.67
+  Azimuth: 0
+  Declination: 0
+  Length: 13.35
+  OuterDiameter: 15
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: ChutePortSide
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Vessel1
+  Origin:
+  - 10
+  - 0.5
+  - 6.5
+  Azimuth: 90
+  Declination: 90
+  Length: 0.5
+  OuterDiameter: 7
+  InnerDiameter: 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: ChuteStbSide
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Vessel1
+  Origin:
+  - 10
+  - -1
+  - 6.5
+  Azimuth: 90
+  Declination: 90
+  Length: 0.5
+  OuterDiameter: 7
+  InnerDiameter: 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Lime
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Chute
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Vessel1
+  Origin:
+  - 10
+  - -0.95
+  - 6.5
+  Azimuth: 90
+  Declination: 90
+  Length: 1.9
+  OuterDiameter: 5.5
+  InnerDiameter: 0
+  NormalStiffness: 10e3
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell mouth
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: J Tube
+  Origin:
+  - 0
+  - 0
+  - 0
+  ConnectionzRelativeTo: End B
+  Orientation:
+  - 0
+  - 0
+  - -179.99999011051833
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.8
+  - - 2.5
+    - 2
+  - - 5
+    - 4.8
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Bell mouth guide
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: J Tube
+  Origin:
+  - 0
+  - 0
+  - 0
+  ConnectionzRelativeTo: End B
+  Orientation:
+  - 0
+  - 0
+  - -179.99999011051833
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 10
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.8
+  - - 2.5
+    - 2
+  - - 5
+    - 4.8
+  NormalStiffness: 100
+  ShearStiffness: 100
+  Hidden: Yes
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

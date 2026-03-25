@@ -1,0 +1,17 @@
+basename: ship_design
+
+inputs:
+  software: sesam
+  calculation: abs_combined_fatigue
+
+  stress:
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

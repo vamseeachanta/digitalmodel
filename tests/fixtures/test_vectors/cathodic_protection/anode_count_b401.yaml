@@ -1,0 +1,64 @@
+source_type: standard
+source_description: "DNV-RP-B401 anode count calculations with optional symmetric rounding"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "anode_count"
+equations:
+  - name: "Number of Anodes"
+    latex: "N = \\lceil M_{total} / m_{anode} \\rceil"
+    description: "Number of anodes required, rounded up with optional even-number rounding for symmetric placement"
+inputs:
+  - name: "Total net anode mass"
+    symbol: "M_total"
+    unit: "kg"
+    test_value: 2645.0
+  - name: "Net mass per anode"
+    symbol: "m_anode"
+    unit: "kg"
+    test_value: 119.0
+outputs:
+  - name: "Anode count (ceiling)"
+    symbol: "N"
+    unit: "count"
+    test_expected: 23
+    tolerance: 0
+worked_examples:
+  - description: "Buoyancy tank anode count (2645 kg / 119 kg per anode = ceil(22.23) = 23)"
+    inputs:
+      total_mass_kg: 2645.0
+      anode_net_mass_kg: 119.0
+      round_to_even: false
+    outputs:
+      anode_count: 23
+    use_as_test: true
+  - description: "Buoyancy tank anode count with symmetric rounding (ceil to even = 24)"
+    inputs:
+      total_mass_kg: 2645.0
+      anode_net_mass_kg: 119.0
+      round_to_even: true
+    outputs:
+      anode_count: 24
+    use_as_test: true
+  - description: "URA anode count (1030 kg / 119 kg per anode = ceil(8.66) = 9)"
+    inputs:
+      total_mass_kg: 1030.0
+      anode_net_mass_kg: 119.0
+      round_to_even: false
+    outputs:
+      anode_count: 9
+    use_as_test: true
+  - description: "URA anode count with symmetric rounding (ceil to even = 10)"
+    inputs:
+      total_mass_kg: 1030.0
+      anode_net_mass_kg: 119.0
+      round_to_even: true
+    outputs:
+      anode_count: 10
+    use_as_test: true
+assumptions:
+  - "AFA1190 anode with net mass 119 kg per anode"
+  - "Even-number rounding for symmetric placement on structures"
+references:
+  - "DNV-RP-B401 (2005/2017), Section 7.7"
+  - "Hybrid riser CP design report, Section 5.1.1"

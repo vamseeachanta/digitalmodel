@@ -1,0 +1,99 @@
+# General Configuration
+# Generated from: CALMBuoy_1YR_IM_BAL_R1_D2.yml
+# Date: 2026-01-18 22:20:04
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 100
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultShadedProjectionMode: Perspective
+  DefaultViewSize: 50
+  DefaultViewCentre:
+  - -0.4901810823880154
+  - -25.2402429964025
+  - -10.13813914296449
+  DefaultViewAzimuth: 257.1
+  DefaultViewElevation: -3.6
+ClumpTypes:
+- Name: EndFloat
+  Mass: 0.1398
+  Volume: 0.553
+  Height: 0.8
+  AlignWith: Line axes
+  DragArea:
+  - 1.08
+  - 1.08
+  - 1.43
+  Cd:
+  - 1.1
+  - 1.1
+  - 0.01
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 4
+  - Solid
+  - Fuchsia
+- Name: BodyFloat
+  Mass: 0.1143
+  Volume: 0.453
+  Height: 0.6
+  AlignWith: Line axes
+  DragArea:
+  - 0.81
+  - 0.81
+  - 1.43
+  Cd:
+  - 1.1
+  - 1.1
+  - 0.01
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 3
+  - Solid
+  - Yellow
+Groups:
+  Structure:
+    With Torsion: Model
+    Without Torsion: Model
+    CALM Buoy1: Without Torsion
+    Chain1: Without Torsion
+    Chain4: Without Torsion
+    Chain6: Without Torsion
+    Chain5: Without Torsion
+    Chain2: Without Torsion
+    Chain3: Without Torsion
+    Base1: Without Torsion
+    Hawser: Model
+    Vessel: Model
+  State:
+    Collapsed: []

@@ -1,0 +1,47 @@
+# General Configuration
+# Template: CALM Buoy Mooring System
+General:
+  # Units
+  UnitsSystem: SI
+
+  # Analysis settings
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+
+  # Statics
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 1.5
+
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 10    # Build-up stage
+    - 100   # Analysis stage
+
+  # Restart state
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ""
+
+  # Default view parameters
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 500
+  DefaultViewCentre: [0, 0, -50]
+  DefaultViewAzimuth: 315
+  DefaultViewElevation: 25

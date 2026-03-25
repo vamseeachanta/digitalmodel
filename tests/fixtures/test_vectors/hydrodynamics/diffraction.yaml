@@ -1,0 +1,149 @@
+source_type: python
+source_description: "Diffraction analysis vessel specifications — FPSO, semi-sub, and ship configurations from test fixtures"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "hydrodynamics"
+subcategory: "diffraction_analysis"
+equations:
+  - name: "Hydrodynamic matrix component access"
+    latex: "A_{ij} = M[\\text{DOF}_i, \\text{DOF}_j]"
+    description: "6x6 added mass or damping matrix indexed by DOF (surge=0, sway=1, heave=2, roll=3, pitch=4, yaw=5)"
+  - name: "Coefficient interpolation"
+    latex: "A(\\omega) = A(\\omega_1) + \\frac{\\omega - \\omega_1}{\\omega_2 - \\omega_1}(A(\\omega_2) - A(\\omega_1))"
+    description: "Linear interpolation of hydrodynamic coefficients between stored frequencies"
+
+inputs:
+  - name: "FPSO hull mass"
+    symbol: "m_fpso"
+    unit: "kg"
+    test_value: 250000000.0
+  - name: "FPSO centre of gravity z"
+    symbol: "z_cg_fpso"
+    unit: "m"
+    test_value: -5.0
+  - name: "FPSO radii of gyration"
+    symbol: "k_xx, k_yy, k_zz"
+    unit: "m"
+    test_value: [20.0, 80.0, 80.0]
+  - name: "OC4 semi-sub mass"
+    symbol: "m_semisub"
+    unit: "kg"
+    test_value: 13473000.0
+  - name: "OC4 semi-sub CG z"
+    symbol: "z_cg_semisub"
+    unit: "m"
+    test_value: -13.46
+  - name: "OC4 semi-sub Ixx"
+    symbol: "I_xx"
+    unit: "kg*m^2"
+    test_value: 6.827e9
+  - name: "Ship mass"
+    symbol: "m_ship"
+    unit: "kg"
+    test_value: 84387300.0
+
+outputs:
+  - name: "Matrix surge-surge component (0,0)"
+    symbol: "A_11"
+    unit: "-"
+    test_expected: 0
+    tolerance: 0.0
+  - name: "Matrix heave-heave component (2,2)"
+    symbol: "A_33"
+    unit: "-"
+    test_expected: 14
+    tolerance: 0.0
+  - name: "Interpolated added mass at midpoint"
+    symbol: "A_interp"
+    unit: "-"
+    test_expected: 150.0
+    tolerance: 0.01
+
+worked_examples:
+  - description: "Hydrodynamic matrix component — surge-surge is element (0,0) of sequential matrix"
+    inputs:
+      matrix: "np.arange(36).reshape(6,6)"
+      dof_i: "SURGE"
+      dof_j: "SURGE"
+    outputs:
+      component_value: 0
+    use_as_test: true
+
+  - description: "Hydrodynamic matrix component — heave-heave is element (2,2) of sequential matrix"
+    inputs:
+      matrix: "np.arange(36).reshape(6,6)"
+      dof_i: "HEAVE"
+      dof_j: "HEAVE"
+    outputs:
+      component_value: 14
+    use_as_test: true
+
+  - description: "Coefficient interpolation — midpoint between 100 and 200 at freq=0.5"
+    inputs:
+      freq_1_rad_s: 0.4
+      A_at_freq_1: 100.0
+      freq_2_rad_s: 0.6
+      A_at_freq_2: 200.0
+      target_freq_rad_s: 0.5
+    outputs:
+      A_interpolated: 150.0
+    use_as_test: true
+
+  - description: "RAO 1D interpolation — surge amplitude linear pattern at freq=0.4"
+    inputs:
+      frequencies_rad_s: [0.3, 0.5, 0.7]
+      amplitudes_at_freqs: [3.0, 5.0, 7.0]
+      target_freq_rad_s: 0.4
+      direction_deg: 0.0
+    outputs:
+      interpolated_amplitude: 4.0
+    use_as_test: true
+
+  - description: "FPSO turret spec — hull mass and CG verification"
+    inputs:
+      vessel_name: "FPSO_Hull"
+      vessel_type: "FPSO"
+    outputs:
+      mass_kg: 250000000.0
+      cg_z_m: -5.0
+      k_xx_m: 20.0
+      k_yy_m: 80.0
+      k_zz_m: 80.0
+    use_as_test: true
+
+  - description: "OC4 semi-sub spec — mass and inertia tensor verification"
+    inputs:
+      vessel_name: "OC4_Semisub"
+      vessel_type: "semi-sub"
+    outputs:
+      mass_kg: 13473000.0
+      cg_z_m: -13.46
+      Ixx_kgm2: 6.827e9
+      Iyy_kgm2: 6.827e9
+      Izz_kgm2: 1.226e10
+    use_as_test: true
+
+  - description: "Ship spec — mass and CG verification"
+    inputs:
+      vessel_name: "Ship_001"
+      vessel_type: "ship"
+    outputs:
+      mass_kg: 84387300.0
+      cg_z_m: -1.5
+      k_xx_m: 15.0
+      k_yy_m: 50.0
+      k_zz_m: 50.0
+    use_as_test: true
+
+assumptions:
+  - "6x6 hydrodynamic matrices follow DNV-RP-C205 DOF convention"
+  - "Linear interpolation between stored frequency points"
+  - "Symmetric added mass matrices expected for physical consistency"
+  - "All vessel specifications from test fixture YAML files"
+
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads"
+  - "OC4 semi-sub benchmark specification (DeepCwind consortium)"
+  - "digitalmodel/tests/hydrodynamics/diffraction/fixtures/spec_fpso_turret.yml"
+  - "digitalmodel/tests/hydrodynamics/diffraction/fixtures/spec_semisub.yml"
+  - "digitalmodel/tests/hydrodynamics/diffraction/fixtures/spec_ship_raos.yml"

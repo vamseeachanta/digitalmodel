@@ -1,0 +1,27 @@
+# Variation: Deep Water 2000m TTR
+# IMPORTANT: When overriding Lines, must include ALL properties
+
+Environment:
+  WaterDepth: 2000
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [500, 0.8, 0]
+    - [1000, 0.5, 0]
+    - [1500, 0.3, 0]
+    - [2000, 0.1, 0]
+
+Lines:
+  # TTR scaled for 2000m water depth
+  - Name: TTR_Main
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -2000
+    EndBConnection: TLP
+    EndBX: 5
+    EndBY: 0
+    EndBZ: -25
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TTR_Pipe, 1980, 20]

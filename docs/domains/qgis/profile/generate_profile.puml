@@ -1,0 +1,84 @@
+@startuml generate_profile
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Generate Profile | QGIS
+
+start
+
+    note right
+        Objective: Develop profile data
+    end note
+
+
+    partition "Data Transform" {
+
+        :Add new Column;
+            note right
+                z_value column gives profile in mm instead of m (i.e. 1000 factor difference)
+                Create new virtual column, z_m = z_value * 1000
+            end note
+
+    }
+
+
+    partition "TIN Interpoloation" {
+
+        :DEM;
+            note right
+                - develop DEM_m 
+                - save as permanent layer for future use
+
+            end note
+
+    }
+
+    partition "Profile Tool" {
+        :Select layer mapping;
+            note right
+                DEM_m
+            end note
+
+        :Map "Select Layer;
+            note right
+                select the line
+            end note
+
+        :Export 3D DXF;
+            note right
+                select the line
+            end note
+
+    }
+
+    partition "Provide DXF to Project with Scale" {
+        :Select layer mapping;
+            note right
+                DEM_m
+            end note
+
+        :Map "Select Layer;
+            note right
+                select the line
+            end note
+
+        :Export 3D DXF;
+            note right
+                select the line
+            end note
+
+    }
+
+
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

@@ -1,0 +1,17 @@
+capabilities:
+- query
+- explain
+- guide
+context_optimization:
+  cross_references: []
+  focused_domain: web-test-module
+  max_context_size: 16000
+created: '2025-08-10T17:55:47.701717'
+module_path: .
+name: web-test-module
+refresh_config:
+  auto_refresh: true
+  priority: low
+  refresh_interval: 7_days
+specialization: general-purpose
+version: 1.0.0

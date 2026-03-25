@@ -1,0 +1,59 @@
+# Waves
+KinematicStretchingMethod: Vertical stretching
+UserSpecifiedRandomWaveSeeds: Yes
+WaveFrequencySpectrumDiscretisationMethod: Equal energy
+WaveTrains:
+  - Name: Wave1
+    WaveType: JONSWAP
+    WaveDirection: 0
+    WaveOrigin: [0, 0]
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Partially specified
+    WaveHs: 0
+    WaveTz: 3.4812540000000003
+    WaveGamma: 3
+    WaveSeed: 1
+    WaveNumberOfComponents: 200
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+# Wave calculation
+WaveKinematicsCutoffDepth: Infinity
+WaveCalculationMethod: Instantaneous position (exact)
+WaveCalculationTimeInterval: 0
+WaveCalculationSpatialInterval: 0
+# Current
+MultipleCurrentDataCanBeDefined: No
+CurrentModel: Variation scheme
+CurrentRamped: No
+CurrentApplyVerticalStretching: No
+HorizontalCurrentFactor: ~
+VerticalCurrentVariationMethod: Interpolated
+RefCurrentSpeed: 0
+RefCurrentDirection: 0
+CurrentDepth, CurrentFactor, CurrentRotation:
+  - [0, 1, 0]
+  - [36, 1, 0]
+# Wind
+IncludeVesselWindLoads: Yes
+IncludeLineWindLoads: Yes
+IncludeBuoyWindLoads: Yes
+IncludeBuoyWingWindLoads: Yes
+WindRamping: From mean
+WindType: ESDU spectrum
+AirDensity: 0.00139
+AirSpeedOfSound: 343
+WindSpectrumElevation: ~
+WindSpectrumFMin: 0.0016666666666666668
+WindSpectrumFMax: 0.43
+WindSpectrumLatitude: 49.28
+WindTimeOrigin: 0
+WindSeed: 755434044
+NumberOfWindComponents: 1000
+WindSpeed: 0
+WindDirection: 0
+VerticalWindVariationFactor: ~
+# Drawing
+SeabedGridDensity: 10
+Seabed3DShowDataPoints: No

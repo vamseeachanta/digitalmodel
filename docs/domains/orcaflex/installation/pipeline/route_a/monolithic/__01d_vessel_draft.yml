@@ -1,0 +1,5 @@
+﻿BaseFile: __01c_stern_chute_bottom_work_platform.yml
+Vessels:
+  SevenArctic:
+    VesselType: C13_EndLaying_ARTempty
+    Draught: 7.09m

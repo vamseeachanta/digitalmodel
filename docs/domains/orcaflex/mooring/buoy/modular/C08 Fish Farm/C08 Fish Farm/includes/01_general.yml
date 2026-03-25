@@ -1,0 +1,3694 @@
+# General Configuration
+# Generated from: C08 Fish Farm.yml
+# Date: 2026-01-18 22:19:51
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 20
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+3DBuoys:
+- Name: Knot1,1
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 10.569190147410227
+  - 1.8554699929894768e-10
+  - -7.070229573524478
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,2
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.825274068912016
+  - 3.824540407101901
+  - -7.070724633419028
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,3
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.619703830971408
+  - 7.038461812931678
+  - -7.070632094359193
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,4
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.379677807933776
+  - 9.209649587350627
+  - -7.0716201718447875
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,5
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5493468745148481
+  - 9.951278414344431
+  - -7.07104192595915
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,6
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.2806133436623934
+  - 9.207357404217111
+  - -7.071774714619637
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,7
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.521468756929079
+  - 7.037206278887415
+  - -7.071128811671488
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,8
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.72736526875454
+  - 3.8234812916870555
+  - -7.071802508387061
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,9
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -9.475841695453157
+  - -6.750804649238281e-10
+  - -7.071083376899411
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,10
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.727365273476103
+  - -3.8234812823432898
+  - -7.071802506398863
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,11
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.521468760701949
+  - -7.037206276980178
+  - -7.071128813666974
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,12
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.2806133114430036
+  - -9.207357417242324
+  - -7.071774713958043
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,13
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.54934685846999
+  - -9.951278413108696
+  - -7.07104192356988
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,14
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.379677792948081
+  - -9.209649593888386
+  - -7.071620175010033
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,15
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.619703844998761
+  - -7.038461799318679
+  - -7.070632094591446
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,16
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.825274065883876
+  - -3.8245404133432777
+  - -7.0707246316126815
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,17
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 10.451685638240312
+  - 1.2920261928635658e-09
+  - -14.111562056897343
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,18
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.712325621307805
+  - 3.778265022472676
+  - -14.111987607152354
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,19
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.546514698432826
+  - 6.9662014825456895
+  - -14.112166865912878
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,20
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.340455762743904
+  - 9.115423673892733
+  - -14.113164419672573
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,21
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5493076410255902
+  - 9.857001190506896
+  - -14.112680978851174
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,22
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.2417337429009665
+  - 9.113911229734633
+  - -14.113329628012579
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,23
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.448520773314869
+  - 6.965239756165157
+  - -14.112668183326104
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,24
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.61455121278476
+  - 3.777359563886468
+  - -14.11306786364116
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,25
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -9.356823475389472
+  - -2.0635547256317466e-09
+  - -14.112392866435936
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,26
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.614551223098264
+  - -3.7773595419873116
+  - -14.113067861664382
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,27
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.448520783216463
+  - -6.965239749660359
+  - -14.112668185346502
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,28
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.2417336665236993
+  - -9.113911260748958
+  - -14.113329627344083
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,29
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5493076022058786
+  - -9.857001188118108
+  - -14.112680976438083
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,30
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.3404557276109
+  - -9.115423689303421
+  - -14.113164422846465
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,31
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.546514732105346
+  - -6.9662014496138145
+  - -14.11216686615274
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,32
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.712325613516397
+  - -3.7782650391987045
+  - -14.11198760533675
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,33
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 10.218784321529094
+  - 5.63274716326934e-09
+  - -21.12482062426821
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,34
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.488618073499367
+  - 3.6863853491470966
+  - -21.12495215744798
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,35
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.4016842590660765
+  - 6.822742352162472
+  - -21.126301163953823
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,36
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.262766015254085
+  - 8.92871087881881
+  - -21.127343627320563
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,37
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5492574223726838
+  - 9.670151093571405
+  - -21.127272235692367
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,38
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.1647131684724674
+  - 8.928754654850566
+  - -21.127555753400305
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,39
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.304190558896424
+  - 6.822351676681772
+  - -21.126823496452978
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,40
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.391125921160624
+  - 3.685726320720056
+  - -21.126043832448335
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,41
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -9.120921645411537
+  - -5.749844633346577e-09
+  - -21.125553764711633
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,42
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -8.39112593641353
+  - -3.6857262823538757
+  - -21.126043830418066
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,43
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -6.30419057877063
+  - -6.822351657483032
+  - -21.1268234984287
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,44
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -3.164713028798375
+  - -8.928754712709296
+  - -21.127555752743493
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,45
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5492573493281461
+  - -9.670151092863971
+  - -21.12727223331529
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,46
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 4.262765952668822
+  - -8.928710905725401
+  - -21.12734363049856
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,47
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 7.40168432199026
+  - -6.82274228902328
+  - -21.126301164181612
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,48
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 9.488618057812129
+  - -3.686385385881403
+  - -21.12495215564079
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Base centre
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5490340582276123
+  - 1.911635999290367e-11
+  - -23.635258910819907
+  Mass: 0.001
+  Volume: 0.001
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: connector2
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5201679116031864
+  - 29.03611999572231
+  - -0.3769496342940029
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: connector3
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - -28.629674473479124
+  - -1.5129933374205334e-10
+  - -0.26857905248050556
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: connector4
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 0.5201679119692922
+  - -29.03611999573656
+  - -0.3769496353198035
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: Knot1,49
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 49.47584169466769
+  - 6.190665242667033e-11
+  - -7.071083378523644
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,50
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.727365272997226
+  - 3.8234812815268686
+  - -7.07180250788391
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,51
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.52146876414258
+  - 7.037206273241016
+  - -7.071128811343726
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,52
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.280613335618455
+  - 9.207357408827924
+  - -7.071774713794522
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,53
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.4506531159147
+  - 9.951278414363005
+  - -7.071041925956812
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,54
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.620322183925
+  - 9.209649582726747
+  - -7.071620172663768
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,55
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.38029617614113
+  - 7.03846181849285
+  - -7.070632094677135
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,56
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.174725935433916
+  - 3.82454041753149
+  - -7.070724633903994
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,57
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 29.43080985180889
+  - -7.209608182412312e-10
+  - -7.070229571899877
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,58
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.174725930652144
+  - -3.8245404079989984
+  - -7.070724631958497
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,59
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.38029617246735
+  - -7.038461816658659
+  - -7.0706320966924086
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,60
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.62032221620586
+  - -9.209649595738874
+  - -7.071620172011795
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,61
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.450653099904486
+  - -9.95127841309193
+  - -7.071041923569322
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,62
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.28061332047071
+  - -9.207357415413835
+  - -7.071774716954385
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,63
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.52146877808457
+  - -7.037206259711255
+  - -7.071128811558294
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,64
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.72736527012296
+  - -3.8234812874059725
+  - -7.071802506039353
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,65
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 49.35682347414172
+  - 9.185958982974987e-10
+  - -14.112392868047055
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,66
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.61455122256656
+  - 3.7773595401643485
+  - -14.113067863137063
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,67
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.44852078969774
+  - 6.9652397424376264
+  - -14.112668183017615
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,68
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.24173372385591
+  - 9.113911239789445
+  - -14.113329627206122
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,69
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.45069233816867
+  - 9.857001190528933
+  - -14.112680978848974
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,70
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.65954421799466
+  - 9.115423663775562
+  - -14.113164420472847
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,71
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.45348531770771
+  - 6.966201496031872
+  - -14.112166866211373
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,72
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.287674388724657
+  - 3.7782650468027783
+  - -14.111987607638305
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,73
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 29.548314360518322
+  - -2.1611511076057256e-09
+  - -14.111562055285724
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,74
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.287674378272722
+  - -3.778265024554564
+  - -14.111987605704243
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,75
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.453485307996274
+  - -6.966201489706705
+  - -14.112166868251741
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,76
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.65954429450378
+  - -9.115423694803216
+  - -14.113164419813762
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,77
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.450692299411365
+  - -9.857001188098398
+  - -14.112680976437758
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,78
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.241733688362444
+  - -9.113911255331626
+  - -14.113329630374611
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,79
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.44852082310971
+  - -6.965239709778206
+  - -14.112668183240205
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,80
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.61455121515396
+  - -3.77735955599284
+  - -14.113067861283245
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,81
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 49.12092164599672
+  - 4.74093704912694e-09
+  - -21.12555376637883
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,82
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.39112593815479
+  - 3.6857262795891876
+  - -21.126043831945694
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,83
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.304190585246964
+  - 6.822351650331475
+  - -21.126823496099593
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,84
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.16471313293979
+  - 8.928754669519082
+  - -21.12755575254202
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,85
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.45074254565527
+  - 9.670151093582113
+  - -21.12727223568998
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,86
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.73723394887049
+  - 8.928710864030275
+  - -21.1273436281731
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,87
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.59831576681569
+  - 6.822742378059178
+  - -21.126301164297796
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,88
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.511381943953637
+  - 3.686385391396936
+  - -21.124952157932835
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,89
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 29.781215679053226
+  - -5.837111839098154e-09
+  - -21.124820622601593
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,90
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 30.51138192852109
+  - -3.686385352612136
+  - -21.12495215594529
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,91
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 32.59831574718607
+  - -6.822742359095587
+  - -21.126301166293192
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,92
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 35.73723408877403
+  - -8.928710921966182
+  - -21.12734362752621
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,93
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.4507424726991
+  - -9.6701510928508
+  - -21.127272233315665
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,94
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 43.16471306982074
+  - -8.928754696625091
+  - -21.12755575571455
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,95
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 46.304190647516585
+  - -6.822351587814616
+  - -21.126823496309658
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Knot1,96
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 48.39112592322743
+  - -3.685726314442787
+  - -21.12604383009925
+  Mass: 0.01
+  Volume: 0.006
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: Base centre1
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.45096594195139
+  - 2.9533622613814954e-11
+  - -23.63525891081431
+  Mass: 0.001
+  Volume: 0.001
+  BulkModulus: Infinity
+  Height: 0.2
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+  Pen:
+  - 4
+  - Solid
+  - Blue
+- Name: connector5
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 68.62967447348039
+  - 1.4280733857037833e-10
+  - -0.26857905215148775
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: connector6
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.479832087918794
+  - 29.036119995734648
+  - -0.3769496343146474
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+- Name: connector8
+  Connection: Free
+  IncludedInStatics: No
+  InitialPosition:
+  - 39.47983208829567
+  - -29.036119995725777
+  - -0.3769496352464677
+  Mass: 0.001
+  Volume: 0
+  BulkModulus: Infinity
+  Height: 1
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 0
+  - 0
+  - 0
+  Cd:
+  - 0
+  - 0
+  - 0
+  Ca:
+  - 0
+  - 0
+  - 0
+Groups:
+  Structure:
+    Cell1: Model
+    Surface Ring: Cell1
+    6D Buoy1: Surface Ring
+    Ring Line1: Surface Ring
+    6D Buoy2: Surface Ring
+    Ring Line2: Surface Ring
+    6D Buoy3: Surface Ring
+    Ring Line3: Surface Ring
+    6D Buoy4: Surface Ring
+    Ring Line4: Surface Ring
+    6D Buoy5: Surface Ring
+    Ring Line5: Surface Ring
+    6D Buoy6: Surface Ring
+    Ring Line6: Surface Ring
+    6D Buoy7: Surface Ring
+    Ring Line7: Surface Ring
+    6D Buoy8: Surface Ring
+    Ring Line8: Surface Ring
+    6D Buoy9: Surface Ring
+    Ring Line9: Surface Ring
+    6D Buoy10: Surface Ring
+    Ring Line10: Surface Ring
+    6D Buoy11: Surface Ring
+    Ring Line11: Surface Ring
+    6D Buoy12: Surface Ring
+    Ring Line12: Surface Ring
+    6D Buoy13: Surface Ring
+    Ring Line13: Surface Ring
+    6D Buoy14: Surface Ring
+    Ring Line14: Surface Ring
+    6D Buoy15: Surface Ring
+    Ring Line15: Surface Ring
+    6D Buoy16: Surface Ring
+    Ring Line16: Surface Ring
+    Verticals 1: Cell1
+    Vertical SRH1.1: Verticals 1
+    Vertical SRH1.2: Verticals 1
+    Vertical SRH1.3: Verticals 1
+    Vertical SRH1.4: Verticals 1
+    Vertical SRH1.5: Verticals 1
+    Vertical SRH1.6: Verticals 1
+    Vertical SRH1.7: Verticals 1
+    Vertical SRH1.8: Verticals 1
+    Vertical SRH1.9: Verticals 1
+    Vertical SRH1.10: Verticals 1
+    Vertical SRH1.11: Verticals 1
+    Vertical SRH1.12: Verticals 1
+    Vertical SRH1.13: Verticals 1
+    Vertical SRH1.14: Verticals 1
+    Vertical SRH1.15: Verticals 1
+    Vertical SRH1.16: Verticals 1
+    Hoop 1: Cell1
+    Knot1,1: Hoop 1
+    Knot1,2: Hoop 1
+    Knot1,3: Hoop 1
+    Knot1,4: Hoop 1
+    Knot1,5: Hoop 1
+    Knot1,6: Hoop 1
+    Knot1,7: Hoop 1
+    Knot1,8: Hoop 1
+    Knot1,9: Hoop 1
+    Knot1,10: Hoop 1
+    Knot1,11: Hoop 1
+    Knot1,12: Hoop 1
+    Knot1,13: Hoop 1
+    Knot1,14: Hoop 1
+    Knot1,15: Hoop 1
+    Knot1,16: Hoop 1
+    Hoop1,1: Hoop 1
+    Hoop1,2: Hoop 1
+    Hoop1,3: Hoop 1
+    Hoop1,4: Hoop 1
+    Hoop1,5: Hoop 1
+    Hoop1,6: Hoop 1
+    Hoop1,7: Hoop 1
+    Hoop1,8: Hoop 1
+    Hoop1,9: Hoop 1
+    Hoop1,10: Hoop 1
+    Hoop1,11: Hoop 1
+    Hoop1,12: Hoop 1
+    Hoop1,13: Hoop 1
+    Hoop1,14: Hoop 1
+    Hoop1,15: Hoop 1
+    Hoop1,16: Hoop 1
+    Verticals 2: Cell1
+    Vertical SRH1.17: Verticals 2
+    Vertical SRH1.18: Verticals 2
+    Vertical SRH1.19: Verticals 2
+    Vertical SRH1.20: Verticals 2
+    Vertical SRH1.21: Verticals 2
+    Vertical SRH1.22: Verticals 2
+    Vertical SRH1.23: Verticals 2
+    Vertical SRH1.24: Verticals 2
+    Vertical SRH1.25: Verticals 2
+    Vertical SRH1.26: Verticals 2
+    Vertical SRH1.27: Verticals 2
+    Vertical SRH1.28: Verticals 2
+    Vertical SRH1.29: Verticals 2
+    Vertical SRH1.30: Verticals 2
+    Vertical SRH1.31: Verticals 2
+    Vertical SRH1.32: Verticals 2
+    Hoop 2: Cell1
+    Knot1,17: Hoop 2
+    Knot1,18: Hoop 2
+    Knot1,19: Hoop 2
+    Knot1,20: Hoop 2
+    Knot1,21: Hoop 2
+    Knot1,22: Hoop 2
+    Knot1,23: Hoop 2
+    Knot1,24: Hoop 2
+    Knot1,25: Hoop 2
+    Knot1,26: Hoop 2
+    Knot1,27: Hoop 2
+    Knot1,28: Hoop 2
+    Knot1,29: Hoop 2
+    Knot1,30: Hoop 2
+    Knot1,31: Hoop 2
+    Knot1,32: Hoop 2
+    Hoop1,17: Hoop 2
+    Hoop1,18: Hoop 2
+    Hoop1,19: Hoop 2
+    Hoop1,20: Hoop 2
+    Hoop1,21: Hoop 2
+    Hoop1,22: Hoop 2
+    Hoop1,23: Hoop 2
+    Hoop1,24: Hoop 2
+    Hoop1,25: Hoop 2
+    Hoop1,26: Hoop 2
+    Hoop1,27: Hoop 2
+    Hoop1,28: Hoop 2
+    Hoop1,29: Hoop 2
+    Hoop1,30: Hoop 2
+    Hoop1,31: Hoop 2
+    Hoop1,32: Hoop 2
+    Verticals 3: Cell1
+    Vertical SRH1.33: Verticals 3
+    Vertical SRH1.34: Verticals 3
+    Vertical SRH1.35: Verticals 3
+    Vertical SRH1.36: Verticals 3
+    Vertical SRH1.37: Verticals 3
+    Vertical SRH1.38: Verticals 3
+    Vertical SRH1.39: Verticals 3
+    Vertical SRH1.40: Verticals 3
+    Vertical SRH1.41: Verticals 3
+    Vertical SRH1.42: Verticals 3
+    Vertical SRH1.43: Verticals 3
+    Vertical SRH1.44: Verticals 3
+    Vertical SRH1.45: Verticals 3
+    Vertical SRH1.46: Verticals 3
+    Vertical SRH1.47: Verticals 3
+    Vertical SRH1.48: Verticals 3
+    Hoop 3: Cell1
+    Knot1,33: Hoop 3
+    Knot1,34: Hoop 3
+    Knot1,35: Hoop 3
+    Knot1,36: Hoop 3
+    Knot1,37: Hoop 3
+    Knot1,38: Hoop 3
+    Knot1,39: Hoop 3
+    Knot1,40: Hoop 3
+    Knot1,41: Hoop 3
+    Knot1,42: Hoop 3
+    Knot1,43: Hoop 3
+    Knot1,44: Hoop 3
+    Knot1,45: Hoop 3
+    Knot1,46: Hoop 3
+    Knot1,47: Hoop 3
+    Knot1,48: Hoop 3
+    Hoop1,33: Hoop 3
+    Hoop1,34: Hoop 3
+    Hoop1,35: Hoop 3
+    Hoop1,36: Hoop 3
+    Hoop1,37: Hoop 3
+    Hoop1,38: Hoop 3
+    Hoop1,39: Hoop 3
+    Hoop1,40: Hoop 3
+    Hoop1,41: Hoop 3
+    Hoop1,42: Hoop 3
+    Hoop1,43: Hoop 3
+    Hoop1,44: Hoop 3
+    Hoop1,45: Hoop 3
+    Hoop1,46: Hoop 3
+    Hoop1,47: Hoop 3
+    Hoop1,48: Hoop 3
+    Base: Cell1
+    Base centre: Base
+    Base1: Base
+    Base2: Base
+    Base3: Base
+    Base4: Base
+    Base5: Base
+    Base6: Base
+    Base7: Base
+    Base8: Base
+    Base9: Base
+    Base10: Base
+    Base11: Base
+    Base12: Base
+    Base13: Base
+    Base14: Base
+    Base15: Base
+    Base16: Base
+    Mooring leg1: Cell1
+    Line1: Mooring leg1
+    Line2: Mooring leg1
+    Mooring leg2: Cell1
+    Line4: Mooring leg2
+    connector2: Mooring leg2
+    Line5: Mooring leg2
+    Line6: Mooring leg2
+    Mooring leg3: Cell1
+    Line7: Mooring leg3
+    connector3: Mooring leg3
+    Line8: Mooring leg3
+    Line9: Mooring leg3
+    Mooring leg4: Cell1
+    Line10: Mooring leg4
+    connector4: Mooring leg4
+    Line11: Mooring leg4
+    Line12: Mooring leg4
+    Cell2: Model
+    Surface Ring1: Cell2
+    6D Buoy17: Surface Ring1
+    Ring Line17: Surface Ring1
+    6D Buoy18: Surface Ring1
+    Ring Line18: Surface Ring1
+    6D Buoy19: Surface Ring1
+    Ring Line19: Surface Ring1
+    6D Buoy20: Surface Ring1
+    Ring Line20: Surface Ring1
+    6D Buoy21: Surface Ring1
+    Ring Line21: Surface Ring1
+    6D Buoy22: Surface Ring1
+    Ring Line22: Surface Ring1
+    6D Buoy23: Surface Ring1
+    Ring Line23: Surface Ring1
+    6D Buoy24: Surface Ring1
+    Ring Line24: Surface Ring1
+    6D Buoy25: Surface Ring1
+    Ring Line25: Surface Ring1
+    6D Buoy26: Surface Ring1
+    Ring Line26: Surface Ring1
+    6D Buoy27: Surface Ring1
+    Ring Line27: Surface Ring1
+    6D Buoy28: Surface Ring1
+    Ring Line28: Surface Ring1
+    6D Buoy29: Surface Ring1
+    Ring Line29: Surface Ring1
+    6D Buoy30: Surface Ring1
+    Ring Line30: Surface Ring1
+    6D Buoy31: Surface Ring1
+    Ring Line31: Surface Ring1
+    6D Buoy32: Surface Ring1
+    Ring Line32: Surface Ring1
+    Verticals 4: Cell2
+    Vertical SRH1.49: Verticals 4
+    Vertical SRH1.50: Verticals 4
+    Vertical SRH1.51: Verticals 4
+    Vertical SRH1.52: Verticals 4
+    Vertical SRH1.53: Verticals 4
+    Vertical SRH1.54: Verticals 4
+    Vertical SRH1.55: Verticals 4
+    Vertical SRH1.56: Verticals 4
+    Vertical SRH1.57: Verticals 4
+    Vertical SRH1.58: Verticals 4
+    Vertical SRH1.59: Verticals 4
+    Vertical SRH1.60: Verticals 4
+    Vertical SRH1.61: Verticals 4
+    Vertical SRH1.62: Verticals 4
+    Vertical SRH1.63: Verticals 4
+    Vertical SRH1.64: Verticals 4
+    Hoop 4: Cell2
+    Knot1,49: Hoop 4
+    Knot1,50: Hoop 4
+    Knot1,51: Hoop 4
+    Knot1,52: Hoop 4
+    Knot1,53: Hoop 4
+    Knot1,54: Hoop 4
+    Knot1,55: Hoop 4
+    Knot1,56: Hoop 4
+    Knot1,57: Hoop 4
+    Knot1,58: Hoop 4
+    Knot1,59: Hoop 4
+    Knot1,60: Hoop 4
+    Knot1,61: Hoop 4
+    Knot1,62: Hoop 4
+    Knot1,63: Hoop 4
+    Knot1,64: Hoop 4
+    Hoop1,49: Hoop 4
+    Hoop1,50: Hoop 4
+    Hoop1,51: Hoop 4
+    Hoop1,52: Hoop 4
+    Hoop1,53: Hoop 4
+    Hoop1,54: Hoop 4
+    Hoop1,55: Hoop 4
+    Hoop1,56: Hoop 4
+    Hoop1,57: Hoop 4
+    Hoop1,58: Hoop 4
+    Hoop1,59: Hoop 4
+    Hoop1,60: Hoop 4
+    Hoop1,61: Hoop 4
+    Hoop1,62: Hoop 4
+    Hoop1,63: Hoop 4
+    Hoop1,64: Hoop 4
+    Verticals 5: Cell2
+    Vertical SRH1.65: Verticals 5
+    Vertical SRH1.66: Verticals 5
+    Vertical SRH1.67: Verticals 5
+    Vertical SRH1.68: Verticals 5
+    Vertical SRH1.69: Verticals 5
+    Vertical SRH1.70: Verticals 5
+    Vertical SRH1.71: Verticals 5
+    Vertical SRH1.72: Verticals 5
+    Vertical SRH1.73: Verticals 5
+    Vertical SRH1.74: Verticals 5
+    Vertical SRH1.75: Verticals 5
+    Vertical SRH1.76: Verticals 5
+    Vertical SRH1.77: Verticals 5
+    Vertical SRH1.78: Verticals 5
+    Vertical SRH1.79: Verticals 5
+    Vertical SRH1.80: Verticals 5
+    Hoop 5: Cell2
+    Knot1,65: Hoop 5
+    Knot1,66: Hoop 5
+    Knot1,67: Hoop 5
+    Knot1,68: Hoop 5
+    Knot1,69: Hoop 5
+    Knot1,70: Hoop 5
+    Knot1,71: Hoop 5
+    Knot1,72: Hoop 5
+    Knot1,73: Hoop 5
+    Knot1,74: Hoop 5
+    Knot1,75: Hoop 5
+    Knot1,76: Hoop 5
+    Knot1,77: Hoop 5
+    Knot1,78: Hoop 5
+    Knot1,79: Hoop 5
+    Knot1,80: Hoop 5
+    Hoop1,65: Hoop 5
+    Hoop1,66: Hoop 5
+    Hoop1,67: Hoop 5
+    Hoop1,68: Hoop 5
+    Hoop1,69: Hoop 5
+    Hoop1,70: Hoop 5
+    Hoop1,71: Hoop 5
+    Hoop1,72: Hoop 5
+    Hoop1,73: Hoop 5
+    Hoop1,74: Hoop 5
+    Hoop1,75: Hoop 5
+    Hoop1,76: Hoop 5
+    Hoop1,77: Hoop 5
+    Hoop1,78: Hoop 5
+    Hoop1,79: Hoop 5
+    Hoop1,80: Hoop 5
+    Verticals 6: Cell2
+    Vertical SRH1.81: Verticals 6
+    Vertical SRH1.82: Verticals 6
+    Vertical SRH1.83: Verticals 6
+    Vertical SRH1.84: Verticals 6
+    Vertical SRH1.85: Verticals 6
+    Vertical SRH1.86: Verticals 6
+    Vertical SRH1.87: Verticals 6
+    Vertical SRH1.88: Verticals 6
+    Vertical SRH1.89: Verticals 6
+    Vertical SRH1.90: Verticals 6
+    Vertical SRH1.91: Verticals 6
+    Vertical SRH1.92: Verticals 6
+    Vertical SRH1.93: Verticals 6
+    Vertical SRH1.94: Verticals 6
+    Vertical SRH1.95: Verticals 6
+    Vertical SRH1.96: Verticals 6
+    Hoop 6: Cell2
+    Knot1,81: Hoop 6
+    Knot1,82: Hoop 6
+    Knot1,83: Hoop 6
+    Knot1,84: Hoop 6
+    Knot1,85: Hoop 6
+    Knot1,86: Hoop 6
+    Knot1,87: Hoop 6
+    Knot1,88: Hoop 6
+    Knot1,89: Hoop 6
+    Knot1,90: Hoop 6
+    Knot1,91: Hoop 6
+    Knot1,92: Hoop 6
+    Knot1,93: Hoop 6
+    Knot1,94: Hoop 6
+    Knot1,95: Hoop 6
+    Knot1,96: Hoop 6
+    Hoop1,81: Hoop 6
+    Hoop1,82: Hoop 6
+    Hoop1,83: Hoop 6
+    Hoop1,84: Hoop 6
+    Hoop1,85: Hoop 6
+    Hoop1,86: Hoop 6
+    Hoop1,87: Hoop 6
+    Hoop1,88: Hoop 6
+    Hoop1,89: Hoop 6
+    Hoop1,90: Hoop 6
+    Hoop1,91: Hoop 6
+    Hoop1,92: Hoop 6
+    Hoop1,93: Hoop 6
+    Hoop1,94: Hoop 6
+    Hoop1,95: Hoop 6
+    Hoop1,96: Hoop 6
+    Base33: Cell2
+    Base centre1: Base33
+    Base17: Base33
+    Base18: Base33
+    Base19: Base33
+    Base20: Base33
+    Base21: Base33
+    Base22: Base33
+    Base23: Base33
+    Base24: Base33
+    Base25: Base33
+    Base26: Base33
+    Base27: Base33
+    Base28: Base33
+    Base29: Base33
+    Base30: Base33
+    Base31: Base33
+    Base32: Base33
+    Mooring leg5: Cell2
+    Line13: Mooring leg5
+    connector5: Mooring leg5
+    Line14: Mooring leg5
+    Line15: Mooring leg5
+    Mooring leg6: Cell2
+    Line16: Mooring leg6
+    connector6: Mooring leg6
+    Line17: Mooring leg6
+    Line18: Mooring leg6
+    Mooring leg7: Cell2
+    Line22: Mooring leg7
+    connector8: Mooring leg7
+    Line23: Mooring leg7
+    Line24: Mooring leg7
+  State:
+    Collapsed:
+    - Surface Ring
+    - Verticals 1
+    - Hoop 1
+    - Verticals 2
+    - Hoop 2
+    - Verticals 3
+    - Hoop 3
+    - Base
+    - Mooring leg1
+    - Mooring leg2
+    - Mooring leg3
+    - Mooring leg4
+    - Surface Ring1
+    - Verticals 4
+    - Hoop 4
+    - Verticals 5
+    - Hoop 5
+    - Verticals 6
+    - Hoop 6
+    - Base33
+    - Mooring leg5
+    - Mooring leg6
+    - Mooring leg7

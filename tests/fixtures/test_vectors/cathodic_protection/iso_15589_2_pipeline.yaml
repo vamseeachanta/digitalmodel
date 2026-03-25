@@ -1,0 +1,130 @@
+source_type: standard
+source_description: "ISO 15589-2 offshore pipeline cathodic protection calculations with temperature-dependent current density"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "offshore_pipeline"
+equations:
+  - name: "Temperature-Interpolated Initial Current Density"
+    latex: "i_c = 150 + 50 \\cdot \\frac{\\max(0,\\, 15 - T)}{15 - 7}"
+    description: "Initial current density interpolated between warm (150 mA/m2) and cold (200 mA/m2) per ISO 15589-2 Table 1"
+  - name: "Coating Breakdown Factor"
+    latex: "f_c(t) = f_{ci} + (f_{cf} - f_{ci}) \\cdot \\frac{t}{T_{design}}"
+    description: "Linear interpolation of coating breakdown factor per ISO 15589-2 section 8.2"
+  - name: "Pipeline Current Demand"
+    latex: "I_c = \\pi D L f_c i_c"
+    description: "Current demand for a coated pipeline section per ISO 15589-2 section 8.3"
+  - name: "Simplified Slender Anode Resistance"
+    latex: "R_a = \\frac{\\rho}{2\\pi L_a} \\left( \\ln\\frac{2L_a}{r_a} - 0.5 \\right)"
+    description: "Anode-to-electrolyte resistance per ISO 15589-2 section 8.4, Annex A"
+  - name: "Anode Mass Requirement"
+    latex: "M_a = \\frac{I_{mean} \\cdot T \\cdot 8760}{\\varepsilon \\cdot u_f}"
+    description: "Total anode mass requirement per ISO 15589-2 section 8.5"
+inputs:
+  - name: "Pipeline outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.3239
+  - name: "Pipeline length"
+    symbol: "L"
+    unit: "m"
+    test_value: 1000.0
+  - name: "Coating breakdown factor"
+    symbol: "f_c"
+    unit: "dimensionless"
+    test_value: 0.15
+  - name: "Current density"
+    symbol: "i_c"
+    unit: "mA/m2"
+    test_value: 150.0
+outputs:
+  - name: "Pipeline current demand"
+    symbol: "I_c"
+    unit: "A"
+    test_expected: 22.90
+    tolerance: 0.1
+worked_examples:
+  - description: "Warm water initial current density (T=20 degC, above 15 degC threshold)"
+    inputs:
+      T_seawater_C: 20.0
+    outputs:
+      current_density_mA_m2: 150.0
+    use_as_test: true
+  - description: "Cold water initial current density (T=0 degC, below 7 degC threshold)"
+    inputs:
+      T_seawater_C: 0.0
+    outputs:
+      current_density_mA_m2: 200.0
+    use_as_test: true
+  - description: "Interpolated current density at 11 degC (150 + 50*(15-11)/(15-7) = 175)"
+    inputs:
+      T_seawater_C: 11.0
+    outputs:
+      current_density_mA_m2: 175.0
+    use_as_test: true
+  - description: "Coating breakdown at t=0 (fc_i=0.10)"
+    inputs:
+      fc_i: 0.10
+      fc_f: 0.30
+      t_years: 0.0
+      T_design_years: 25.0
+    outputs:
+      breakdown_factor: 0.10
+    use_as_test: true
+  - description: "Coating breakdown at midlife t=15 yr (fc = 0.10 + 0.20*(15/25) = 0.22)"
+    inputs:
+      fc_i: 0.10
+      fc_f: 0.30
+      t_years: 15.0
+      T_design_years: 25.0
+    outputs:
+      breakdown_factor: 0.22
+    use_as_test: true
+  - description: "Pipeline current demand benchmark (D=0.3239m, L=1000m, fc=0.15, ic=150 mA/m2)"
+    inputs:
+      D: 0.3239
+      L: 1000.0
+      fc: 0.15
+      ic_mA_m2: 150.0
+    outputs:
+      current_demand_A: 22.90
+    use_as_test: true
+  - description: "Anode resistance benchmark (rho=0.25, L_a=0.25m, r_a=0.015m)"
+    inputs:
+      rho: 0.25
+      L_a: 0.25
+      r_a: 0.015
+    outputs:
+      resistance_ohm: 0.4785
+    use_as_test: true
+  - description: "Anode output current (R_a=0.4785, driving voltage 0.250 V)"
+    inputs:
+      R_a: 0.4785
+      E_anode_V: -1.050
+      E_struct_V: -0.800
+    outputs:
+      output_current_A: 0.5225
+    use_as_test: true
+  - description: "Anode mass requirement (I=1.0 A, T=25 yr, epsilon=2000, u_f=0.90)"
+    inputs:
+      I_mean_A: 1.0
+      T_design_years: 25.0
+      E_capacity: 2000.0
+      u_f: 0.90
+    outputs:
+      anode_mass_kg: 121.67
+    use_as_test: true
+assumptions:
+  - "Al-Zn-In anode: open-circuit potential -1.050 V vs Ag/AgCl"
+  - "Protection potential -0.800 V vs Ag/AgCl"
+  - "Maximum protection potential -1.100 V (hydrogen embrittlement limit)"
+  - "Electrochemical capacity 2000 A-h/kg, utilization factor 0.90"
+  - "Temperature interpolation between 7 degC and 15 degC boundaries"
+references:
+  - "ISO 15589-2 (2004), Section 5.2 (protection potentials)"
+  - "ISO 15589-2, Table 1 (current densities)"
+  - "ISO 15589-2, Section 7.3 (temperature dependence)"
+  - "ISO 15589-2, Section 8.2 (coating breakdown)"
+  - "ISO 15589-2, Section 8.3 (pipeline current demand)"
+  - "ISO 15589-2, Section 8.4, Annex A (anode resistance)"
+  - "ISO 15589-2, Section 8.5 (mass requirement)"

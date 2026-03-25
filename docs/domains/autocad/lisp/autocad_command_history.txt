@@ -1,0 +1,61 @@
+Regenerating model.
+
+
+AutoCAD menu utilities loaded.*Cancel*
+
+Command:
+Command:
+
+Command:
+Command: Specify opposite corner or [Fence/WPolygon/CPolygon]:
+Command: '_ACTMANAGER
+
+Command: _ACTRECORD
+
+Command:
+Command:
+Command: _rectang
+Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]:
+Specify other corner point or [Area/Dimensions/Rotation]:
+Specify other corner point or [Area/Dimensions/Rotation]: 1500
+
+Command:
+Command:
+Command: _circle
+Specify center point for circle or [3P/2P/Ttr (tan tan radius)]:
+Specify radius of circle or [Diameter]: 500
+
+Command:
+Command:
+Command: _line
+Specify first point:
+Specify next point or [Undo]:
+Specify next point or [Undo]:
+Specify next point or [Close/Undo]:
+Specify next point or [Close/Undo]: *Cancel*
+
+Command: '_ACTSTOP
+
+Command: _ACTRECORD
+
+Command: '_ACTSTOP
+
+Command:
+Automatic save to C:\Users\CHINNI\AppData\Local\Temp\Drawing1_1_7114_a3308b41.sv$ ...
+
+Command:
+Command:
+Command:
+Command: _commandlinehide
+Command: COMMANDLINE
+
+Command: COMMANDLINE
+
+Command: APPLOAD
+makeprofile.lsp successfully loaded.
+
+
+Command:
+Command:
+Command: MAKE3DPOLYFROMCSV
+Unknown command "MAKE3DPOLYFROMCSV".  Press F1 for help.

@@ -1,0 +1,15 @@
+# LWR_12inch - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:11:31
+# Description: Lazy wave riser configuration
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.3239
+ID: 0.2909
+MassPerUnitLength: 115.8
+EA: 1210000000.0
+CompressionIsLimited: Yes
+EI:
+- 3520000.0
+- ~
+GJ: 0
+PoissonRatio: 0.3

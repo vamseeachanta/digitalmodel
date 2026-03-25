@@ -1,0 +1,34 @@
+# Vessels Configuration
+# Generated from: E03 Detailed hinged stinger.yml
+# Date: 2026-01-18 22:18:12
+Vessels:
+- Name: Vessel1
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 50
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  ImposedMotionConsistentWithSolver: No
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ShadedDrawingCullingMode: Anticlockwise

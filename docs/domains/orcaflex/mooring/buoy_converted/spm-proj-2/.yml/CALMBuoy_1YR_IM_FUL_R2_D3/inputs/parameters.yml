@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: CALMBuoy_1YR_IM_FUL_R2_D3.yml
+# Generated: 2026-01-18 21:53:37
+
+water_depth: 32.8
+current_speed: 1
+wind_speed: 14.5
+water_density: 1.025
+stage_durations:
+- 10
+- 100
+hs: 5.1
+tp: 6.5
+wave_direction: 0
+

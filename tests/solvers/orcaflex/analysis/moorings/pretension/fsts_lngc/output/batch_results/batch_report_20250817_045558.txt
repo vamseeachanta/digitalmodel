@@ -1,0 +1,51 @@
+================================================================================
+OrcaFlex Batch Processing Report
+FSTS LNGC Pretension Analysis - HWL 125km3 L100
+================================================================================
+
+Generated: 2025-08-17 04:55:58
+Configuration: fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof.yml
+Base Directory: tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc
+Output Directory: tests\modules\orcaflex\orcaflex_analysis\moorings\pretension\fsts_lngc\output\batch_results
+Mode: MOCK
+
+Configuration Parameters:
+  Section to Modify: Length[2]
+  Convergence Tolerance: 1.0%
+  Damping Factor: 0.7
+  Max Iterations: 10
+  Parallel Processing: True
+
+Summary Statistics:
+  Total Models: 2
+  Successful: 2
+  Failed: 0
+  Success Rate: 100.0%
+  Total Time: 0.20 seconds
+  Average Time per Model: 0.10 seconds
+
+Detailed Results:
+--------------------------------------------------------------------------------
+
+[1] Model: 01_qa/6dof/fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    Description: FSTS L095 MWL 125km3 L000 PB with 6DOF
+    Status: SUCCESS
+    Processing Time: 0.10 seconds
+    Tensions Converged: True
+    Iterations: 3
+    Max Tension Error: 0.800%
+    Simulation File: fsts_l095_mwl_125km3_l000_pb_pretension.sim
+    Results CSV: fsts_l095_mwl_125km3_l000_pb_pretension_results.csv
+
+[2] Model: 01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb_pretension.yml
+    Description: FSTS L095 MWL 125km3 L000 PB with No DOF
+    Status: SUCCESS
+    Processing Time: 0.10 seconds
+    Tensions Converged: True
+    Iterations: 3
+    Max Tension Error: 0.800%
+    Simulation File: fsts_l095_mwl_125km3_l000_pb_pretension.sim
+    Results CSV: fsts_l095_mwl_125km3_l000_pb_pretension_results.csv
+
+================================================================================
+End of Report

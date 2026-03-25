@@ -1,0 +1,22 @@
+%YAML 1.1
+# Base model for BaseFile + variation testing
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [10]
+
+Environment:
+  WaterDepth: 100
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  WindType: Constant
+  WindSpeed: 12
+  WindDirection: 180
+
+LineTypes:
+  - Name: TestLine
+    Category: General
+    OD: 0.1
+    ID: 0
+    MassPerUnitLength: 0.1
+    EA: 100000

@@ -1,0 +1,77 @@
+source_type: python
+source_description: "Bretschneider and ISSC spectrum tests from test_wave_spectra_extended.py — alternative two-parameter spectrum formulations"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "bretschneider_issc_spectra"
+equations:
+  - name: "Bretschneider Spectrum"
+    latex: "S(\\omega) = \\frac{5}{16} H_s^2 \\omega_p^4 / \\omega^5 \\cdot \\exp[-(5/4)(\\omega_p/\\omega)^4]"
+    description: "Two-parameter wave spectrum for sea states"
+  - name: "Bretschneider Peak Frequency"
+    latex: "\\omega_{peak} = \\omega_p \\cdot (5/4)^{1/4} \\approx 1.057 \\omega_p"
+    description: "Spectral peak of Bretschneider shifted from omega_p"
+  - name: "ISSC Spectrum"
+    latex: "S(f) = 0.11 H_s^2 T_1^{-4} f^{-5} \\exp[-0.44(T_1 f)^{-4}]"
+    description: "ISSC modified Pierson-Moskowitz spectrum with T1 = 0.772 Tp"
+inputs:
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 4.0
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 12.0
+outputs:
+  - name: "Bretschneider peak frequency"
+    symbol: "omega_peak"
+    unit: "rad/s"
+    test_expected: 0.5535
+    tolerance: 0.08
+worked_examples:
+  - description: "Bretschneider Hs=4m Tp=12s — peak near 1.057*omega_p"
+    inputs:
+      hs: 4.0
+      tp: 12.0
+    outputs:
+      omega_p: 0.5236
+      expected_peak: 0.5535
+    use_as_test: true
+  - description: "Bretschneider energy scales as Hs^2: ratio S(Hs=2)/S(Hs=1) = 4.0"
+    inputs:
+      hs_small: 1.0
+      hs_large: 2.0
+      tp: 10.0
+    outputs:
+      energy_ratio: 4.0
+    use_as_test: true
+  - description: "Bretschneider Hs=3.5m Tp=11.0s — recovered Hs within 25%"
+    inputs:
+      hs: 3.5
+      tp: 11.0
+    outputs:
+      hs_recovered: 3.5
+    use_as_test: true
+  - description: "ISSC energy scales as Hs^2: ratio S(Hs=4)/S(Hs=2) = 4.0"
+    inputs:
+      hs_small: 2.0
+      hs_large: 4.0
+      tp: 10.0
+    outputs:
+      energy_ratio: 4.0
+    use_as_test: true
+  - description: "ISSC T1 average period: T1 = 0.772 * Tp = 0.772 * 10 = 7.72"
+    inputs:
+      tp: 10.0
+    outputs:
+      t1: 7.72
+    use_as_test: true
+assumptions:
+  - "Bretschneider peak is shifted from omega_p by factor (5/4)^(1/4)"
+  - "ISSC uses average period T1 = 0.772 * Tp"
+  - "ISSC S(f) converted to S(omega) by dividing by 2*pi"
+  - "All spectra produce non-negative values and finite outputs"
+references:
+  - "digitalmodel/tests/unit/hydrodynamics/test_wave_spectra_extended.py"
+  - "digitalmodel/src/digitalmodel/hydrodynamics/wave_spectra.py"

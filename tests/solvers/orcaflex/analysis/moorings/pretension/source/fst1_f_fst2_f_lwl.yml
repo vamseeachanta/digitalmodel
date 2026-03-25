@@ -1,0 +1,10 @@
+- includefile: _01_general_fsts.yml
+- includefile: _02_environment.yml
+- includefile: _03_fst1_f.yml
+- includefile: _04_fst2_f.yml
+- includefile: _05_variable_data.yml
+- includefile: _06_line_types_fsts.yml
+- includefile: _07_lines_fsts.yml
+- includefile: _08a_multibody_fst1f_fst2f_lwl.yml
+- includefile: _09a_constraints_lwl.yml
+- includefile: _13_groups_fsts.yml

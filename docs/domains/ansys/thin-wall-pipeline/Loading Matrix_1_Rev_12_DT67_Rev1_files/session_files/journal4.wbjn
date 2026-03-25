@@ -1,0 +1,93 @@
+﻿# encoding: utf-8
+# Release 16.0
+SetScriptVersion(Version="16.0.361")
+system1 = GetSystem(Name="SYS")
+setup1 = system1.GetContainer(ComponentName="Setup")
+setup1.Edit()
+geometry1 = system1.GetContainer(ComponentName="Geometry")
+geometry1.Edit()
+geometry1.Exit()
+geometry1.Edit()
+geometry1.Exit()
+geometry1.Edit()
+geometry1.Exit()
+engineeringData1 = system1.GetContainer(ComponentName="Engineering Data")
+material1 = engineeringData1.GetMaterial(Name="Mecor - X65")
+matlProp1 = material1.GetProperty(Name="Elasticity")
+matlProp1.SetQualifier(
+    Qualifier="Field Variable Temperature",
+    Value="No")
+matlProp1.SetQualifier(
+    Qualifier="Field Variable Temperature",
+    Value="Yes")
+geometry1.Edit()
+geometry1.Exit()
+model1 = system1.GetContainer(ComponentName="Model")
+model1.Exit()
+Save(Overwrite=True)
+Save(Overwrite=True)
+Save(Overwrite=True)
+model1.Edit()
+model1.Exit()
+system2 = system1.Duplicate(RelativeTo=system1)
+system2.DisplayText = "Mesh Alteration"
+geometryComponent1 = system2.GetComponent(Name="Geometry")
+geometryComponent2 = system1.GetComponent(Name="Geometry")
+geometryComponent1.ReplaceWithShare(
+    TargetSystem=system2,
+    ComponentToShare=geometryComponent2,
+    SourceSystem=system1)
+modelComponent1 = system2.GetComponent(Name="Model")
+modelComponent1.Refresh()
+model2 = system2.GetContainer(ComponentName="Model")
+model2.Edit()
+model2.Exit()
+system3 = system2.Duplicate(RelativeTo=system2)
+system3.DisplayText = "Post-Processing"
+results1 = system3.GetContainer(ComponentName="Results")
+results1.Edit()
+designPoint1 = Parameters.GetDesignPoint(Name="0")
+designPoint2 = Parameters.GetDesignPoint(Name="1")
+backgroundSession1 = UpdateAllDesignPoints(DesignPoints=[designPoint1, designPoint2])
+Save(Overwrite=True)
+system1.Delete()
+system2.Delete()
+system3.DisplayText = "D/t = 45"
+setup2 = system3.GetContainer(ComponentName="Setup")
+setup2.Edit()
+model3 = system3.GetContainer(ComponentName="Model")
+model3.Exit()
+Save(Overwrite=True)
+Save(Overwrite=True)
+Save(Overwrite=True)
+Save(Overwrite=True)
+geometry2 = system3.GetContainer(ComponentName="Geometry")
+geometry2.Edit()
+geometry2.Exit()
+system4 = system3.Duplicate(RelativeTo=system3)
+system4.Delete()
+setup2.Edit()
+Save(Overwrite=True)
+model3.Exit()
+setup2.Edit()
+model3.Exit()
+setup2.Edit()
+model3.Exit()
+Save(Overwrite=True)
+designPoint2.Delete()
+parameter1 = Parameters.GetParameter(Name="P14")
+designPoint1.SetParameterExpression(
+    Parameter=parameter1,
+    Expression="0.0194")
+parameter2 = Parameters.GetParameter(Name="P15")
+designPoint1.SetParameterExpression(
+    Parameter=parameter2,
+    Expression="0.0194")
+model3.Edit()
+geometryComponent3 = system3.GetComponent(Name="Geometry")
+geometryComponent3.Update(AllDependencies=True)
+model3.Exit()
+system3.DisplayText = "D/t = 55"
+geometry2.Edit()
+geometry2.Exit()
+Save(Overwrite=True)

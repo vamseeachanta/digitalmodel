@@ -1,0 +1,17 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\_06_i04_br.yml
+# Created: 6:49 PM on 9/18/2023
+# User: 
+# Machine: 
+---
+BaseFile: _1006_i04_cal.yml
+
+Lines:
+  Umbilical:
+    NumberOfAttachments: 1
+    AttachmentType[1]: BR_Stiffener
+    AttachmentName[1]: Stiffener1
+    Attachmentz[1]: 6.4
+    AttachmentzRelativeTo[1]: End B

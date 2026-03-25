@@ -1,0 +1,35 @@
+# OrcaWave HTML Report Configuration
+# Usage: generate_orcawave_report(owr_path, output_html, config_yml="report_config_template.yml")
+
+title: "OrcaWave Analysis Report"
+include_plotlyjs: "cdn"  # or "inline" for fully offline HTML
+
+model_summary:
+  enabled: true
+
+rao_plots:
+  enabled: true
+  headings: null  # null = all headings; or specify e.g. [0, 90, 180]
+  dofs: ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+  include_phase: false
+
+hydro_matrices:
+  enabled: true
+  frequencies_to_show: null  # null = all
+
+mean_drift:
+  enabled: true
+  include_polar: true
+
+panel_pressures:
+  enabled: false  # Enable for L05 (OutputPanelPressures: Yes)
+
+multi_body:
+  enabled: false  # Enable for L03/L04 multi-body
+
+qtf_heatmap:
+  enabled: false  # Enable for L06 (Full QTF)
+  max_delta_omegas: 3
+
+qa_summary:
+  enabled: true

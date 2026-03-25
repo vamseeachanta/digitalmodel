@@ -1,0 +1,41 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+
+# TODO access database Not working
+#  source: accdb
+#  sets:
+#    -
+##      label: stack_up_table
+#      io: data_manager/data/bsee/2018 Atlas Update.accdb
+#      tables: []
+#      output:
+#        target: db
+#        drop: True
+
+  source: xlsx
+  sets:
+    -
+      label:
+      io: data_manager\data\bsee\2018 Atlas Update.xlsx
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: master

@@ -1,0 +1,32 @@
+<script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+<div class="sidebar-sticky">
+    <ul class="nav flex-column mb-2">
+        <li class="nav-item">
+            <a class="nav-link active" href="/services/bseedata/">
+                {{ context.project_title }}
+            </a>
+        </li>
+            {% if context.data %}
+            {% if context.sidebar_subitems %}
+        <li class="nav-item">
+            <form id="SideBarMenuListForm">
+                <a class="nav-link" href="#">
+                    {% for sidebar_subitem in context.sidebar_subitems %}
+                    <ul>
+                        <li>
+                            <p id="{{ sidebar_subitem.id }}">{{ sidebar_subitem.alias }}</p>
+                        </li>
+                    </ul>
+                        {% endfor %}
+                </a>
+            </form>
+        </li>
+        {% endif %}
+        {% endif %}
+        <li class="nav-item">
+            {% if context.methodology %}
+            <a class="nav-link active" href="{{ context.href_methodology }}">{{ context.methodology }}</a>
+            {% endif %}
+        </li>
+    </ul>
+</div>

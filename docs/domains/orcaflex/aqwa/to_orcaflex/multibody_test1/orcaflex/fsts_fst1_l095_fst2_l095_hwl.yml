@@ -1,0 +1,35 @@
+﻿BaseFile: template_fsts.dat
+
+VesselTypes:
+  Strt1_FST2type:
+    Draughts:
+      Draught1:
+        CentreOfMass: [101.092, 0.090, 19.252]
+        DisplacementRAOs:
+          RAOOrigin: [101.092, 0.090, 19.252]
+        LoadRAOs:
+          RAOOrigin: [101.092, 0.090, 19.252]
+        WaveDrift:
+          RAOOrigin: [101.092, 0.090, 19.252]
+        SumFrequencyQTFs:
+          RAOOrigin: [101.092, 0.090, 19.252]
+
+  Strt2_FST1type:
+    Draughts:
+      Draught1:
+        CentreOfMass: [99.459, -0.047, 19.012]
+        DisplacementRAOs:
+          RAOOrigin: [99.459, -0.047, 19.012]
+        LoadRAOs:
+          RAOOrigin: [99.459, -0.047, 19.012]
+        WaveDrift:
+          RAOOrigin: [99.459, -0.047, 19.012]
+        SumFrequencyQTFs:
+          RAOOrigin: [99.459, -0.047, 19.012]
+
+Vessels:
+  FST2:
+    InitialPosition: [-208.397, 0.000, -10.407]
+
+  FST1:
+    InitialPosition: [208.397, 0.248, -10.460]

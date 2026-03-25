@@ -1,0 +1,84 @@
+basename: orcaflex_analysis
+
+default:
+  Analysis:
+    Analyze:
+      flag: False
+      file_type: yml
+      simulation: False
+      statics: 
+        flag: False
+        UseCalculatedPositions: 
+          flag: True
+          overwrite: False
+          # Only 1 of settings below works. 
+          SetLinesToUserSpecifiedStartingShape: True
+          UseStaticLineEndOrientations: False
+  postprocess:
+    flag: False
+    Summary:
+      flag: True
+      AddMinimumToSummary: True
+      AddMaximumToSummary: True
+      AddMeanToSummary: True
+    RangeGraph:
+      flag: True
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: True
+      histogram: True
+      summation: True
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  iterate: 
+    flag: True
+    rerun: True
+    overwrite_data: False
+
+
+Files:
+  data_source: yml
+  csv_filename: ""
+
+    - Label: No Load
+      Name: C:\orl-858m\C180\467-ORL-NL-858m-100LB-0deg-090H2.00P7C180.yml
+      iterate_yml: 
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        delete: []
+        replace: []
+        add: []
+
+    - Label: No Load
+      Name: C:\orl-858m\C180\734-ORL-NL-858m-200LB-0deg-120H2.50P9C180.yml
+      iterate_yml: 
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        delete: []
+        replace: []
+        add: []
+
+    - Label: No Load
+      Name: C:\orl-858m\C180\957-ORL-NL-858m-300LB-0deg-090H2.50P9C180.yml
+      iterate_yml: 
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        delete: []
+        replace: []
+        add: []
+
+    - Label: No Load
+      Name: C:\orl-718m\C180\496-ORL-NL-718m-100LB-0deg-120H2.50P7C180.yml
+      iterate_yml: 
+        name: tests\test_data\orcaflex\variable_time_step.yml
+        delete: []
+        replace: []
+        add: []
+

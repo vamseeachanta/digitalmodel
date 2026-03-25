@@ -1,0 +1,200 @@
+default:
+  Constants:
+    g : 9.81
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+  extract: NULL
+
+  transform:
+    from_xlsx_to_yaml_file: False
+    repeat_patterns: True
+    replace: True
+
+  load: NULL
+
+Analysis:
+  custom_folder: C:\Users\achantv\Desktop\S7
+
+output_files:
+  -
+    settings:
+      basefile: results\app_vertical_riser_vertical_riser_shear7.dat
+      single_file: False
+      multiple_file: True
+      file_name:
+        prefix: NULL
+        suffix:
+          name: lid_02_cp{:02d}_2500ft_WT0750_064pcf
+          fields:
+            - from_range:
+                - 1
+                - 24
+
+        extension: dat
+      model_state_information:
+        from_ascii:
+          label: model_state_information
+          io: results\app_vertical_riser_vertical_riser_shear7.dat
+          line:
+            from:
+              number: 1
+          filter:
+            delimiter: NULL
+            column: 1
+            data_type: dict
+          scale: NULL
+
+    replace:
+      -
+        lines:
+          from:
+            containing_text: number of elements
+          to: NULL
+        template_line: "{0}		number of elements"
+        fields:
+          -
+            from_ascii:
+              label: number_of_elements
+              io: data_manager\data\orcaflex\common.mds
+              line:
+                from:
+                  number: 1
+              filter:
+                delimiter: " "
+                column: 2
+                data_type: float
+              scale: 1
+              transform: True
+      -
+        lines:
+          from:
+            containing_text: "  1.0   1      no. of profile data pts, probability, profile ID"
+          to: NULL
+        template_line: "{0}  1.0   1      no. of profile data pts, probability, profile ID"
+        fields: NULL
+      -
+        lines:
+          from:
+            containing_text: "{x_by_L}     {current_speed} Replace values"
+          to: NULL
+        template_line: "{:4f}     {:4f}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: depth
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: 2
+                  -
+                    column: loading_type
+                    value: long-term
+                  -
+                    column: current_profile_id
+                    value: 1
+
+                column: depth
+                loop_level: 0
+                scale: 1
+                transform: True
+
+          -
+            from_xlsx:
+              -
+                label: current_speed
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: 2
+                  -
+                    column: loading_type
+                    value: long-term
+                  -
+                    column: current_profile_id
+                    value: 1
+
+                column: current_speed
+                loop_level: 0
+                scale: 1
+                transform: False
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: viv_batch_process
+        fields: NULL
+        extension: bat
+
+    header:
+      -
+        text: COPY data_manager\data\orcaflex\common.mds C:\Users\achantv\Desktop\S7\common.mds
+        fields: NULL
+      -
+        text: CD C:\Users\achantv\Desktop\S7\
+        fields: NULL
+    repeat_patterns:
+      -
+        text: "CALL Shear746 lid_02_cp{:02d}_2500ft_WT0750_064pcf"
+        fields:
+          -
+            from_range:
+              - 1
+              - 24
+
+    footer:
+      -
+        text: DELETE C:\Users\achantv\Desktop\S7\common.mds
+        fields: NULL
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: viv_post_process
+        fields: NULL
+        extension: yml
+      model_state_information:
+        from_ascii:
+          label: model_state_information
+          io: results\app_vertical_riser_vertical_riser_shear7.dat
+          line:
+            from:
+              number: 1
+          filter:
+            delimiter: NULL
+            column: 1
+            data_type: dict
+          scale: NULL
+
+    header:
+      -
+        text: COPY TEMPLATE LINE
+        fields: NULL
+
+    repeat_patterns:
+      -
+        text: "Files: C:\\Users\\achantv\\Desktop\\S7\\lid02_cp{:02d}_2500ft_WT0750_064pcf"
+        fields:
+          -
+            from_range:
+              - 1
+              - 24

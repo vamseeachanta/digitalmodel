@@ -1,0 +1,31 @@
+basename: installation
+
+structure:
+  flag: True
+  
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+  Constants:
+    g : 9.81
+  units:
+    verticalDistance: m
+    declinationAngle: deg with vertical
+    Temperature: deg F
+    Pressure: psi
+    EffectiveTension: kN
+    BendingMoment: kNm
+    YieldStrength: psi
+    E: psi
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Rho: kg/m3
+    MassPerUnitLength: kg/m
+    WeightPerUnitLength: N/m
+    SoilStiffness: kN/m/m
+    BuoyancyCoverage: Percentage
+

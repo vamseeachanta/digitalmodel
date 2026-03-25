@@ -1,0 +1,318 @@
+# Lines Configuration
+# Generated from: J01 Deployment with sub.yml
+# Date: 2026-01-18 22:18:22
+Lines:
+- Name: Subline
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Submarine
+      - -62
+      - 0
+      - 0
+      - 0
+      - 90
+      - 0
+      - ~
+    - - Deployer
+      - 0
+      - 0
+      - -2.500000000000002
+      - 0
+      - 89.99999999999997
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Towline
+    - 50
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  FullStaticsMaxIterations: 200
+  FullStaticsTolerance: 10e-6
+  FullStaticsMinDamping: 1.5
+  FullStaticsMaxDamping: 50
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Sensor1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Float 1
+      - -0.006314423152488757
+      - 3.8663413566305946e-19
+      - -1.0468657763423934
+      - 0
+      - 0
+      - 0
+      - ~
+    - - Anchor1
+      - 0
+      - 0
+      - 0.9179124990175467
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Sensline
+    - 19.999999999999996
+    - 1
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Spline
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  AsLaidTension: 1
+  SplineOrder: 3
+  SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+  - - -96.92617449289503
+    - 2.4219826646883975
+    - -193.39389146116912
+  - - -136.556833241329
+    - 4.790962744932417
+    - -192.2375990378876
+  - - -138.06724905371163
+    - 4.757567452726441
+    - -180.00266570607775
+  - - -95.98270251711318
+    - 2.3637139939252827
+    - -193.23697621226535
+  FullStaticsConvergenceControlMethod: Mag. of std. error / change
+  FullStaticsMaxIterations: 500
+  FullStaticsMinDamping: 2
+  FullStaticsMaxDamping: 100
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  SegmentPen:
+  - 1
+  - Dot
+  - $00FF80
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Sensor2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Float2
+      - -0.08911686374388238
+      - 2.777277935778032e-16
+      - -1.1040826952606295
+      - 0
+      - 0
+      - 0
+      - ~
+    - - Anchor2
+      - -0.006174434833425835
+      - 2.2453378376648068e-15
+      - 0.9043081171614062
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Sensline
+    - 19.999999999999996
+    - 1
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Spline
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  AsLaidTension: 1
+  SplineOrder: 3
+  SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+  - - -94.44693438330252
+    - 2.4222093669515656
+    - -192.49256336587075
+  - - -141.08907137926235
+    - 4.615110540126578
+    - -185.60601167558332
+  - - -121.6597734245282
+    - 3.561745910610307
+    - -175.3709301850073
+  - - -93.30160288049751
+    - 2.363890689260103
+    - -192.24290944485665
+  FullStaticsConvergenceControlMethod: Mag. of std. error / change
+  FullStaticsMaxIterations: 200
+  FullStaticsTolerance: 10e-6
+  FullStaticsMinDamping: 1.5
+  FullStaticsMaxDamping: 50
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  SegmentPen:
+  - 1
+  - Dot
+  - $FFFF80
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Baseline
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchor1
+      - 0.9999999999999999
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - ~
+    - - Anchor2
+      - -0.9999999999999999
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Basline
+    - 59.99999999999999
+    - 0.5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  FullStaticsMaxIterations: 800
+  FullStaticsMinDamping: 1.5
+  FullStaticsMaxDamping: 50
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  SegmentPen:
+  - 1
+  - Dot
+  - Silver
+  ContactPen:
+  - 5
+  - Solid
+  - White

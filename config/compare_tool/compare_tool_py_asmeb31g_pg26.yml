@@ -1,0 +1,39 @@
+---
+parameters:
+  file_io_01: &file_io_01 data_manager\data\codes\asmeb31g\asme31gfile_pg_26.csv
+  label_01: &label_01 [0.219 in, 0.250 in, 0.344 in, 0.406 in, 0.500 in, 0.562 in, 0.625 in]
+  df_columns: &df_columns []
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: csv
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+    columns: NULL
+
+plot:
+  -
+    file_suffix: allowable_defect_length
+    suptitle: ASME B31G 2012, Allowable Defect Length
+    label: *label_01
+    x: ["d, in."]
+    y: ["0.219", "0.25", "0.344", "0.406", "0.5", "0.562", "0.625"]
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: OD 20 inch to 24 inch. Each line plot represents Nominal WT
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xlabel: Depth (inch)
+    ylabel: Flaw Length - Longitudinal or Circumferential (inch)
+    x_reverse: False
+    y_reverse: True

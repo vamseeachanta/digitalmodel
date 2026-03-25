@@ -1,0 +1,24 @@
+SLWR Config
+    Plot
+	OracaFlex.yml file
+	BenchMarking
+PipeUtilization
+	Method-1 (GSY)
+	Method-2 (GSY)
+	Method-3 (VA)
+	Method-4 (GSY)
+OracaFlex
+	1 Dia /1 WT
+	Strength
+	Fatigue
+Report
+
+Python Improvement
+	Plotting
+	Dictionary update @ Multiple levels
+	Plot
+		{HTML--Pyviz}
+		{PPT(HTML)
+		 Word(HTML)
+		 PDF(HTML)}
+	

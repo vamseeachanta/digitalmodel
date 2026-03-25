@@ -1,0 +1,12 @@
+current_direction: 180.0
+current_speed: 0.0
+hs: 0.0
+stage_durations:
+- 1
+- 10
+time_step: 0.1
+tp: 8.0
+water_density: 0.00128
+water_depth: 100.0
+wave_direction: 180.0
+wind_speed: 1.0

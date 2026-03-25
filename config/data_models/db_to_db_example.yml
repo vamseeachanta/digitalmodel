@@ -1,0 +1,37 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+
+  source: db
+  sets:
+    -
+      db_source:
+        server_type: mssql
+        server: SQLHYDY01-LSTNR
+        user: oxyread
+        password: abc
+        database: OXYLIFT
+      table:
+        source: control.WellControlAction
+        target: control.WellControlAction
+        query: SELECT * FROM control.WellControlAction
+      replace: True
+      output:
+        target: db
+        if_exists: replace
+
+db:
+  server_type: mssql
+  server: OHYWSQL8-D
+  user: OxyLift
+  password: abc
+  database: OXYLIFT

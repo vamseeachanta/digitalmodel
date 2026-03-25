@@ -1,0 +1,32 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\_04_i01_struc_at_port.yml
+# Created: 3:23 PM on 9/21/2023
+# User: 
+# Machine: 
+---
+BaseFile: __06__structure_at_port.yml
+General:
+  StaticsMaxIterations: 1600
+  StaticsMinDamping: 50
+  StaticsMaxDamping: 80
+Vessels:
+  SevenArctic:
+    InitialX: -56.86
+
+Lines:
+  900TeMainCraneWire:
+    EndBX: -91.2
+  Umbilical:
+    Length[5]: 602
+    Length[9]: 657
+    TargetSegmentLength[9]: 5
+    LayAzimuth: 0
+
+Shapes:
+  900TeMainCraneRadius:
+    OuterDiameter: 40
+    InnerDiameter: 39.9
+  900TeMainCraneMast:
+    Length: 20

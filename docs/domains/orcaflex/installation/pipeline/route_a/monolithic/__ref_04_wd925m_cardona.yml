@@ -1,0 +1,341 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT\__04_wd925m_cardona.yml
+# Created: 5:27 AM on 7/11/2023
+# User: 
+# Machine: 
+---
+BaseFile: __03_draft_wd925m_bgc.yml
+General:
+  ImplicitConstantTimeStep: 0.05
+LineTypes:
+  New: InfUmbVenice-4.13in-cardona
+  InfUmbVenice-4.13in-cardona:
+    Category: General
+    OD: 0.1047
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.0158
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [3.7, ~]
+    EI: [10.7, ~]
+    EA: 197.2e3
+    PoissonRatio: 0.5
+    GJ: 13.8
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: 0.105
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1.0081, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: 0.105
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.3
+    SeabedAxialFrictionCoefficient: 0.2
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [2, Solid, $0080FF]
+6DBuoys:
+  ChuteSupport1:
+    NumberOfSupportedLines: 1
+    SupportedLine[1]: Umbilical
+Lines:
+  900TeMainCraneWire:
+    EndBY: 27.1375
+    EndBZ: 29.298002086172048
+    StartingShapeY[2]: 27.1375
+    StartingShapeZ[2]: 38.29979730921233
+    StartingShapeY[3]: 27.1375
+    StartingShapeZ[3]: 37.29959526273686
+    StartingShapeY[4]: 27.1375
+    StartingShapeZ[4]: 36.29939386057358
+    StartingShapeY[5]: 27.1375
+    StartingShapeZ[5]: 35.29919310272249
+    StartingShapeY[6]: 27.1375
+    StartingShapeZ[6]: 34.2989929891836
+    StartingShapeY[7]: 27.1375
+    StartingShapeZ[7]: 33.2987935199569
+    StartingShapeY[8]: 27.1375
+    StartingShapeZ[8]: 32.2985946950424
+    StartingShapeY[9]: 27.1375
+    StartingShapeZ[9]: 31.298396514440086
+    StartingShapeY[10]: 27.1375
+    StartingShapeZ[10]: 30.29819897814997
+    StartingShapeY[11]: 27.1375
+    StartingShapeZ[11]: 29.298002086172048
+  A&RWire:
+    EndBZ: 44.34919318348563
+    StaticsStep1: User specified
+    StartingShapeX, StartingShapeY, StartingShapeZ:
+      - [7.950000000000005, 0, 54.349999999999994]
+      - [7.950000000000005, 0, 44.34919318348563]
+  New: Umbilical
+  Umbilical:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: SevenArctic
+    EndAX: -79.74895481481002
+    EndAY: -1.7043114854953163
+    EndAZ: 13.029554823555605
+    EndAAzimuth: 180
+    EndADeclination: 90
+    EndAGamma: 0
+    EndAReleaseStage: ~
+    EndBConnection: Free
+    EndBX: -85.91600865353884
+    EndBY: -2.3905440654181542
+    EndBZ: 0.7284796993408724
+    EndBAzimuth: 180
+    EndBDeclination: 90
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - []
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 9
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 1
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 1
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 1
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 2
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+      - LineType: InfUmbVenice-4.13in-cardona
+        Length: 1
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        PreBendBendAngle: 0
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: (none)
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: User specified
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 2.318485030024769
+    AsLaidTension: 0
+    StartingShapeX, StartingShapeY, StartingShapeZ:
+      - [-79.74895481481002, -1.7043114854953163, 13.029554823555605]
+      - [-79.93976553714447, -1.726092084601492, 12.973718948304446]
+      - [-80.1304363017353, -1.74785204529693, 12.917399052808548]
+      - [-80.32081617928331, -1.7695694439495415, 12.860087459669801]
+      - [-80.51073780305794, -1.7912204157796863, 12.801250668571033]
+      - [-80.70001105087138, -1.8127784030628824, 12.740327444760844]
+      - [-80.8884156949897, -1.834213287769979, 12.676727324812909]
+      - [-81.07569283973775, -1.855490389294968, 12.609829755361242]
+      - [-81.26153496516886, -1.8765693082625527, 12.538984151481433]
+      - [-81.44557440645474, -1.8974025993417871, 12.463511250878284]
+      - [-81.62737013025902, -1.9179342604167235, 12.3827062502853]
+      - [-81.80637980985662, -1.93809620106703, 12.295817285051811]
+      - [-81.98207885269188, -1.9578254411004987, 12.20232261654792]
+      - [-82.15417617401297, -1.9770933640624622, 12.102263140844181]
+      - [-82.32229445535211, -1.9958603877281744, 11.99556416083219]
+      - [-82.48619753031377, -2.0141056624553775, 11.882411536789487]
+      - [-82.64566558943089, -2.0318106552260216, 11.763008485817284]
+      - [-82.80045926200009, -2.048954508352029, 11.637526944255763]
+      - [-82.95037297818273, -2.065520528074377, 11.506179897751535]
+      - [-83.09515678889808, -2.0814868849101242, 11.369127657425674]
+      - [-83.23461286734947, -2.096837644494041, 11.226590149176273]
+      - [-83.36854973328467, -2.11155758390331, 11.078790234403447]
+      - [-83.49674304602334, -2.125627749442297, 10.925920778278853]
+      - [-83.61899327210371, -2.139031736034086, 10.76820023330537]
+      - [-83.73503574047443, -2.1517461096172386, 10.605802466659597]
+      - [-83.84481562518732, -2.163768887909673, 10.43905604421868]
+      - [-83.94844064659618, -2.1751147838117557, 10.268370192476576]
+      - [-84.04598393986096, -2.1857948119576784, 10.094095196467636]
+      - [-84.13781148242275, -2.1958490217942166, 9.916705385787488]
+      - [-84.22428039117267, -2.2053165140982416, 9.736610908343964]
+      - [-84.30573716727662, -2.2142352273292896, 9.554167021143941]
+      - [-84.38251503317086, -2.2226416460568865, 9.3696812290839]
+      - [-84.45493222035337, -2.2305706134906056, 9.183419607233281]
+      - [-84.5232909827405, -2.2380552234523914, 8.995612360466557]
+      - [-84.58787715630602, -2.2451267721613792, 8.806458685351226]
+      - [-84.6489601235222, -2.251814754340571, 8.61613100334993]
+      - [-84.70679307184655, -2.2581468915185927, 8.424778634059605]
+      - [-84.76161346021794, -2.264149183106422, 8.23253097410169]
+      - [-84.81364362725263, -2.2698459729888625, 8.039500242585339]
+      - [-84.86309149046144, -2.2752600260819364, 7.845783848598693]
+      - [-84.91015129811711, -2.2804126106549414, 7.651466430475132]
+      - [-84.95500440503659, -2.2853235832709635, 7.456621610971062]
+      - [-84.99782005104618, -2.290011474021138, 7.261313507183541]
+      - [-85.03875612670831, -2.2944935703641685, 7.065598029141247]
+      - [-85.07795991536264, -2.298785998372521, 6.869523996571371]
+      - [-85.11556880395975, -2.3029038005616935, 6.673134099388038]
+      - [-85.15171095776786, -2.306861009763946, 6.476465723950474]
+      - [-85.18650595599628, -2.3106707187228053, 6.2795516640722235]
+      - [-85.22006538684474, -2.3143451452450874, 6.082420733089892]
+      - [-85.25249340156878, -2.317895692865603, 5.8850982909816985]
+      - [-85.28388722793753, -2.3213330070657032, 5.687606698523234]
+      - [-85.31433764401856, -2.324667027148065, 5.48996570874245]
+      - [-85.34392941361267, -2.3279070339124868, 5.292192804453266]
+      - [-85.37274168491722, -2.331061693305606, 5.094303489375432]
+      - [-85.40084835415766, -2.334139096234955, 4.896311539259227]
+      - [-85.42831839601388, -2.3371467947473854, 4.698229218501977]
+      - [-85.45521616270408, -2.3400918347758077, 4.5000674669474865]
+      - [-85.48160165358753, -2.3429807856580305, 4.301836060880115]
+      - [-85.5075307571201, -2.3458197666284972, 4.103543751645881]
+      - [-85.53305546695249, -2.348614470478924, 3.905198384839511]
+      - [-85.55822407390738, -2.351370184577892, 3.7068070025765465]
+      - [-85.58308133551162, -2.354091809432952, 3.508375931013015]
+      - [-85.6076686246991, -2.35678387497213, 3.309910854972918]
+      - [-85.63202405924012, -2.3594505547151514, 3.111416881288253]
+      - [-85.65618261339577, -2.3620956779985067, 2.9128985922410107]
+      - [-85.68017621324381, -2.3647227404126907, 2.714360090316033]
+      - [-85.70403381707479, -2.3673349126047807, 2.5158050353230754]
+      - [-85.72778148221491, -2.369935047594886, 2.3172366748218516]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+      - [-85.75144241959634, -2.372525686751059, 2.1186578686817343]
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 1
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: No
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]
+...

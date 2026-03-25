@@ -1,0 +1,138 @@
+name: OrcaWave Module Agent
+version: 1.0.0
+description: Specialized agent for OrcaWave diffraction/radiation analysis
+
+core_capabilities:
+  diffraction_analysis:
+    description: Wave diffraction around marine structures
+    methods:
+      - panel_method
+      - source_formulation
+      - potential_formulation
+    output: wave_loads, pressure_distributions
+    frequency_range: 0.01-3.0 Hz
+    analysis_types:
+      - regular_waves
+      - irregular_seas
+      - directional_spreading
+  
+  radiation_analysis:
+    description: Radiation damping and added mass
+    calculations:
+      - added_mass_matrix
+      - damping_matrix
+      - response_amplitude_operators
+    degrees_of_freedom: 6
+    frequency_range: 0.01-3.0 Hz
+    output_formats:
+      - hydrodynamic_database
+      - rao_tables
+      - frequency_response
+  
+  multi_body_analysis:
+    description: Coupled multi-body interactions
+    features:
+      - body_to_body_effects
+      - hydrodynamic_coupling
+      - constraint_definitions
+    max_bodies: 10
+    interaction_methods:
+      - direct_matrix
+      - iterative_coupling
+  
+  mesh_handling:
+    formats: [gdf, stl, obj, wamit_gdf]
+    operations:
+      - mesh_generation
+      - quality_checks
+      - convergence_studies
+      - panel_refinement
+    quality_metrics:
+      - aspect_ratio
+      - panel_size
+      - surface_closure
+      - waterline_definition
+  
+  qtf_calculations:
+    description: Second-order wave forces (Quadratic Transfer Functions)
+    methods:
+      - full_qtf
+      - diagonal_qtf
+      - newman_approximation
+    output:
+      - sum_frequency
+      - difference_frequency
+      - mean_drift
+  
+  batch_processing:
+    parallel_workers: 4-8
+    queue_management: true
+    license_pooling: true
+    error_recovery: automatic
+    progress_tracking: real_time
+    resource_optimization:
+      - memory_management
+      - cpu_utilization
+      - disk_space_monitoring
+
+integration_points:
+  orcaflex:
+    - hydrodynamic_database_export
+    - vessel_type_creation
+    - rao_transfer
+    - motion_response_validation
+  aqwa:
+    - benchmark_validation
+    - result_comparison
+    - mesh_compatibility
+  excel:
+    - automated_reporting
+    - plot_generation
+    - summary_tables
+  cad_systems:
+    - mesh_import
+    - geometry_validation
+    - surface_preparation
+
+analysis_standards:
+  regulatory_compliance:
+    - API_RP_2SK
+    - DNV_OS_E301
+    - ABS_floating_structures
+  validation_requirements:
+    - benchmark_comparisons
+    - convergence_studies
+    - physical_reasonableness
+  quality_assurance:
+    - mesh_independence
+    - frequency_resolution
+    - truncation_effects
+
+workflow_automation:
+  preprocessing:
+    - configuration_validation
+    - mesh_quality_check
+    - parameter_optimization
+  execution:
+    - parallel_analysis
+    - progress_monitoring
+    - error_handling
+  postprocessing:
+    - result_validation
+    - report_generation
+    - database_export
+    - visualization_creation
+
+performance_optimization:
+  computational_efficiency:
+    - adaptive_meshing
+    - frequency_optimization
+    - parallel_processing
+  memory_management:
+    - result_streaming
+    - temporary_file_cleanup
+    - memory_pool_allocation
+  disk_io:
+    - compressed_storage
+    - batch_writing
+    - result_caching

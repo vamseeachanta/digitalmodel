@@ -1,0 +1,10 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\__03d_uth_all_dofs.yml
+# Created: 8:40 AM on 9/17/2023
+# User: 
+# Machine: 
+---
+BaseFile: __03c_uth_body interface.yml
+

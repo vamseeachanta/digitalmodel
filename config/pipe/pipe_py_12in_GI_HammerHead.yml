@@ -1,0 +1,71 @@
+default:
+  config:
+    overwrite:
+      output: True
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 6.625
+    Design_WT : 0.875
+    Corrosion_Allowance: 0.118
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X65
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Code:
+     - API STD 2RD-2013 Section 5
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 9000}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: API STD 2RD-2013 Section 5}
+  -
+    Load Condition: {Outer_Pipe: external_pressure}
+    InternalPressure: {Outer_Pipe: 0}
+    InternalFluid: {Outer_Pipe: 0.0}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: API STD 2RD-2013 Section 5}
+
+  -
+    Load Condition: {Outer_Pipe: collapse_propagation}
+    InternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: {pressure: NULL, fluid_column: 2460.63, fluid_density: 0.03703047}}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Code:
+       - {Outer_Pipe: API RP 1111-2009 Risers}
+Inner_Pipe: NULL
+

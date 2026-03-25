@@ -1,0 +1,98 @@
+source_type: python
+source_description: "RAO analysis test vectors from test_rao_analysis.py — 6-DOF response amplitude operators with frequency and direction data"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "rao_analysis"
+equations:
+  - name: "RAO definition"
+    latex: "RAO(\\omega, \\theta) = \\frac{X_0(\\omega, \\theta)}{A(\\omega)}"
+    description: "Response amplitude operator as ratio of structural response to wave amplitude"
+inputs:
+  - name: "Wave directions"
+    symbol: "theta"
+    unit: "deg"
+    test_value: 0
+  - name: "Frequencies"
+    symbol: "f"
+    unit: "Hz"
+    test_value: 0.1
+  - name: "RAO amplitude"
+    symbol: "RAO"
+    unit: "m/m or deg/m"
+    test_value: 0.5
+outputs:
+  - name: "Surge RAO peak"
+    symbol: "RAO_surge_max"
+    unit: "m/m"
+    test_expected: 2.1
+    tolerance: 0.01
+  - name: "Heave RAO peak"
+    symbol: "RAO_heave_max"
+    unit: "m/m"
+    test_expected: 1.6
+    tolerance: 0.01
+  - name: "Pitch RAO peak"
+    symbol: "RAO_pitch_max"
+    unit: "deg/m"
+    test_expected: 1.1
+    tolerance: 0.01
+worked_examples:
+  - description: "6-DOF RAO data: 7 directions (0-180 deg), 6 frequencies (0.1-0.6 Hz)"
+    inputs:
+      wave_directions: [0, 30, 60, 90, 120, 150, 180]
+      frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    outputs:
+      n_directions: 7
+      first_direction: 0
+      last_direction: 180
+    use_as_test: true
+  - description: "Surge RAO values across frequencies"
+    inputs:
+      dof: "surge"
+      frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    outputs:
+      surge_raos: [1.2, 1.5, 1.8, 2.1, 1.9, 1.6]
+      surge_peak: 2.1
+    use_as_test: true
+  - description: "Heave RAO values across frequencies"
+    inputs:
+      dof: "heave"
+      frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    outputs:
+      heave_raos: [0.8, 1.0, 1.3, 1.6, 1.4, 1.1]
+      heave_peak: 1.6
+    use_as_test: true
+  - description: "Pitch RAO values across frequencies"
+    inputs:
+      dof: "pitch"
+      frequencies: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    outputs:
+      pitch_raos: [0.5, 0.7, 0.9, 1.1, 1.0, 0.8]
+      pitch_peak: 1.1
+    use_as_test: true
+  - description: "RAO physical constraints: all values non-negative, peaks in 0.1-3.0"
+    inputs:
+      dof: "all"
+    outputs:
+      all_non_negative: true
+      peak_range_min: 0.1
+      peak_range_max: 3.0
+    use_as_test: true
+  - description: "RAOData fixture: uniform amplitude 0.5 across 20 freqs, 3 dirs, 6 DOF"
+    inputs:
+      n_freq: 20
+      n_dir: 3
+      n_dof: 6
+      uniform_amplitude: 0.5
+    outputs:
+      get_rao_amplitude: 0.5
+    use_as_test: true
+assumptions:
+  - "RAO values are non-negative (amplitude ratios)"
+  - "Frequency range 0.05-1.0 Hz is realistic for offshore structures"
+  - "Wave directions span 0-180 degrees (symmetric vessel)"
+  - "Surge resonance peak >= 1.5, Heave >= 1.3, Pitch >= 0.9 for typical FPSO"
+references:
+  - "digitalmodel/tests/hydrodynamics/rao_analysis/test_rao_analysis.py"
+  - "digitalmodel/tests/unit/hydrodynamics/test_rao_analysis.py"

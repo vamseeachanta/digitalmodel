@@ -1,0 +1,248 @@
+# 6DBuoys Configuration
+# Generated from: M01 Pipeline lateral buckling.yml
+# Date: 2026-01-18 22:19:27
+6DBuoys:
+- Name: Sleepers 1
+  BuoyType: Lumped buoy
+  Connection: Anchored
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 250
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - -1.05
+  - 0
+  Mass: 0
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SupportGeometrySpecification: Explicit
+  SupportReleaseStage: ~
+  SupportCoordinateSystems:
+  - SupportCoordinateSystemName: Coordinate system1
+    SupportCoordinateSystemPos:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystemOrientation:
+    - 0
+    - 0
+    - 0
+  SupportedLine:
+  - Pipeline
+  Supports:
+  - SupportType: Sleeper type
+    SupportCoordinateSystem: Coordinate system1
+    SupportPosition:
+    - -10
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: Sleeper type
+    SupportCoordinateSystem: Coordinate system1
+    SupportPosition:
+    - 10
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ: []
+  EdgeFrom, EdgeTo, EdgeDiameter: []
+- Name: Sleepers 2
+  BuoyType: Lumped buoy
+  Connection: Anchored
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 750
+  - 0
+  - 0
+  InitialAttitude:
+  - 0
+  - -2.4
+  - 0
+  Mass: 0
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SupportGeometrySpecification: Explicit
+  SupportReleaseStage: ~
+  SupportCoordinateSystems:
+  - SupportCoordinateSystemName: Coordinate system1
+    SupportCoordinateSystemPos:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystemOrientation:
+    - 0
+    - 0
+    - 0
+  SupportedLine:
+  - Pipeline
+  Supports:
+  - SupportType: Sleeper type
+    SupportCoordinateSystem: Coordinate system1
+    SupportPosition:
+    - -10
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  - SupportType: Sleeper type
+    SupportCoordinateSystem: Coordinate system1
+    SupportPosition:
+    - 10
+    - 0
+    - 1
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ: []
+  EdgeFrom, EdgeTo, EdgeDiameter: []

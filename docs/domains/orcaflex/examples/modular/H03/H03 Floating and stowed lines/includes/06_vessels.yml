@@ -1,0 +1,33 @@
+# Vessels Configuration
+# Generated from: H03 Floating and stowed lines.yml
+# Date: 2026-01-18 22:18:21
+Vessels:
+- Name: FSU
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: None
+  PrimaryMotion: None
+  SuperimposedMotion: RAOs + harmonics
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: No
+  IncludeWaveDriftLoad2ndOrder: No
+  IncludeWaveDriftDamping: No
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: No
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  ShadedDrawingCullingMode: Anticlockwise

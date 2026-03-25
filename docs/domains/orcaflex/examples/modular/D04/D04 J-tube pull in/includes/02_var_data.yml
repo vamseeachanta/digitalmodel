@@ -1,0 +1,42 @@
+# VariableData Configuration
+# Generated from: D04 J-tube pull in.yml
+# Date: 2026-01-18 22:18:09
+VariableData:
+  Payoutrate:
+  - Name: Haul In J Tube
+    IndependentValue, DependentValue:
+    - - -8
+      - 0
+    - - 0
+      - 0
+    - - 10
+      - -0.1
+    - - 430
+      - -0.1
+  - Name: Payout Vessel
+    IndependentValue, DependentValue:
+    - - -8
+      - 0
+    - - 0
+      - 0
+    - - 10
+      - 0.1
+    - - 430
+      - 0.1
+  Linetypediameter:
+  - Name: bellmouth inner
+    IndependentValue, DependentValue:
+    - - 0
+      - 0.8
+    - - 2.5
+      - 2
+    - - 5
+      - 4.8
+  - Name: bellmouth outer
+    IndependentValue, DependentValue:
+    - - 0
+      - 1.8
+    - - 2.5
+      - 3
+    - - 5
+      - 5.8

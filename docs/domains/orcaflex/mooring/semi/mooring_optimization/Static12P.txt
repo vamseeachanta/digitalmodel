@@ -1,0 +1,103 @@
+﻿// Example script table.
+// The script generates separate data files for 2 wave directions, 2 wave heights and 2 line lengths.
+
+// Case  1
+LoadData "SS_Off_0_12P.dat"
+Select "Line1"
+EndBX = 1824.9
+Select "Line1"
+EndBY = 1665.6
+Select "Line1"
+Length[2] =  2580.0
+Select "Line1"
+Length[3] =  250.0
+Select "Line2"
+EndBX = 1673.6
+Select "Line2"
+EndBY = 1814.9
+Select "Line2"
+Length[2] =  2580.0
+Select "Line2"
+Length[3] =  250.0
+Select "Line3"
+EndBX = 1509.8
+Select "Line3"
+EndBY = 1950.7
+Select "Line3"
+Length[2] =  2580.0
+Select "Line3"
+Length[3] =  250.0
+Select "Line4"
+EndBX = -1336.8
+Select "Line4"
+EndBY = 2071.9
+Select "Line4"
+Length[2] =  2580.0
+Select "Line4"
+Length[3] =  250.0
+Select "Line5"
+EndBX = -1511.8
+Select "Line5"
+EndBY = 1950.7
+Select "Line5"
+Length[2] =  2580.0
+Select "Line5"
+Length[3] =  250.0
+Select "Line6"
+EndBX = -1675.6
+Select "Line6"
+EndBY = 1814.9
+Select "Line6"
+Length[2] =  2580.0
+Select "Line6"
+Length[3] =  250.0
+Select "Line7"
+EndBX = -1824.9
+Select "Line7"
+EndBY = -1665.6
+Select "Line7"
+Length[2] =  2580.0
+Select "Line7"
+Length[3] =  250.0
+Select "Line8"
+EndBX = -1673.6
+Select "Line8"
+EndBY = -1814.9
+Select "Line8"
+Length[2] =  2580.0
+Select "Line8"
+Length[3] =  250.0
+Select "Line9"
+EndBX = -1509.8
+Select "Line9"
+EndBY = -1950.7
+Select "Line9"
+Length[2] =  2580.0
+Select "Line9"
+Length[3] =  250.0
+Select "Line10"
+EndBX = 1336.8
+Select "Line10"
+EndBY = -2071.9
+Select "Line10"
+Length[2] =  2580.0
+Select "Line10"
+Length[3] =  250.0
+Select "Line11"
+EndBX = 1511.8
+Select "Line11"
+EndBY = -1950.7
+Select "Line11"
+Length[2] =  2580.0
+Select "Line11"
+Length[3] =  250.0
+Select "Line12"
+EndBX = 1675.6
+Select "Line12"
+EndBY = -1814.9
+Select "Line12"
+Length[2] =  2580.0
+Select "Line12"
+Length[3] =  250.0
+SaveData SS_Off_0_Static_12P.dat
+

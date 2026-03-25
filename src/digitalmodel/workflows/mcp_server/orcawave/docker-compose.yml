@@ -1,0 +1,192 @@
+version: '3.8'
+
+services:
+  # OrcaWave MCP Server
+  orcawave-mcp:
+    build:
+      context: ../../..
+      dockerfile: src/mcp/orcawave/Dockerfile
+    container_name: orcawave-mcp-server
+    hostname: orcawave-mcp
+    restart: unless-stopped
+    ports:
+      - "3100:3100"  # MCP API
+      - "8765:8765"  # WebSocket
+    environment:
+      - LOG_LEVEL=INFO
+      - ORCAWAVE_LICENSE_SERVER=${ORCAWAVE_LICENSE_SERVER:-localhost:5053}
+      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_URL=postgresql://orcawave:password@postgres:5432/orcawave
+    volumes:
+      - ./config.yml:/app/mcp/orcawave/config.yml:ro
+      - orcawave-logs:/app/logs
+      - orcawave-data:/app/data
+      - orcawave-cache:/app/cache
+    networks:
+      - orcawave-net
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Dashboard Server
+  dashboard:
+    build:
+      context: ../../..
+      dockerfile: src/mcp/orcawave/Dockerfile.dashboard
+    container_name: orcawave-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_HOST=orcawave-mcp
+      - MCP_PORT=3100
+      - WS_HOST=orcawave-mcp
+      - WS_PORT=8765
+    volumes:
+      - ./client:/app/client:ro
+    networks:
+      - orcawave-net
+    depends_on:
+      - orcawave-mcp
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: orcawave-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - orcawave-net
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # PostgreSQL for persistent storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: orcawave-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=orcawave
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=orcawave
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - orcawave-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orcawave"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: orcawave-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - orcawave-net
+    depends_on:
+      - orcawave-mcp
+      - dashboard
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: orcawave-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - orcawave-net
+    depends_on:
+      - orcawave-mcp
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: orcawave-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - orcawave-net
+    depends_on:
+      - prometheus
+      - redis
+
+  # Jupyter for analysis
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: orcawave-jupyter
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=orcawave
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - orcawave-data:/home/jovyan/data:ro
+    networks:
+      - orcawave-net
+    depends_on:
+      - postgres
+
+networks:
+  orcawave-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  orcawave-logs:
+    driver: local
+  orcawave-data:
+    driver: local
+  orcawave-cache:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

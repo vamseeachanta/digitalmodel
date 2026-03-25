@@ -1,0 +1,134 @@
+default:
+  Analysis:
+    GML:
+      Circumference: True
+      Length: False
+    LML: False
+    B31G: False
+  Units: inch
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 10.75
+    Design_WT : 0.625
+    Corrosion_Allowance: 0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X65
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Code:
+     - ASME B31.8-2016 Chapter VIII Risers
+  Manufacturing:
+    Coupling Mass Ratio: 0.0
+Inner_Pipe: NULL
+
+
+API579Parameters:
+  Age: 15
+  FCARateFloor: 0.00118
+
+Geometry:
+   NominalID: NULL
+   NominalOD: 6.625
+   DesignWT : 0.50
+   StartWTFactor : 1
+   tmin: 0.757
+   AssessmentLengthCeilingFactor_Circumference: NULL
+   AssessmentLengthCeilingFactor_Length: 1.0
+   CorrosionAllowance: 0.0
+
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 2200}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: 30 CFR Part 250}
+
+
+Material:
+   Steel:
+     E: 30000000.00
+     Rho: 0.2817929
+     Poissionsratio: 0.30
+     ThermalExpansionCoefficient: 6.5E-6
+     Grades:
+       API 5L X65:
+          SMYS: 65000
+          SMUS: 77500
+          Reference:
+
+DesignFactors:
+   ASME B31.8-2016 Chapter VIII Risers:
+      internal_pressure : 0.50
+      Longitudinal : 0.80
+      EquivalentStress : 0.90
+      D_over_T_Trasition_Ratio: 30
+
+ReadingSets:
+  -
+    io: tests\data\518_north_for_analysis.xlsx
+    sheet_name: C-scans - scan 1
+    index_col: 0
+    skiprows: 71
+    skipfooter: 34
+    DataCorrectionFactor: 1.00
+    DataFill: True
+    Label: Area 1
+    Contour:
+      xlim: NULL
+      ylim: NULL
+      zlim: [1.00, 1.50]
+    FCARate: Historical
+    FCA:
+      - 0.00
+      - 0.04
+      - 0.08
+      - 0.12
+      - 0.16
+      - 0.20
+      - 0.24
+      - 0.28
+      - 0.32
+      - 0.36
+      - 0.40
+
+
+
+
+PlotSettings:
+  Data:
+    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltTitle: Measured WT
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltTitle: Local Metal Loss, Levels 1 & 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [5000, 12000]
+  GML:
+    PltSupTitle: Marco Polo, GC 518, 6 inch FFS
+    PltTitle: General Metal Loss, Level 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [5000, 12000]

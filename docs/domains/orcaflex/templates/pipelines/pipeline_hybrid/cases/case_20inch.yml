@@ -1,0 +1,3 @@
+# Case: 20-inch Trunk Line
+BaseFile: ../base/pipeline_base.yml
+IncludeFile: ../variations/pipe_20inch.yml

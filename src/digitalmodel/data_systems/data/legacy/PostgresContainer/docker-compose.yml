@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./1.0.common_schema.sql:/docker-entrypoint-initdb.d/1.0.common_schema.sql
+      - ./1.1.common_data.sql:/docker-entrypoint-initdb.d/1.1.common_data.sql
+      - ./2.0.current_schema.sql:/docker-entrypoint-initdb.d/2.0.current_schema.sql
+      - ./2.1.current_data.sql:/docker-entrypoint-initdb.d/2.1.current_data.sql
+      - ./3.0.wave_schema.sql:/docker-entrypoint-initdb.d/3.0.wave_schema.sql
+      - ./3.1.wave_data.sql:/docker-entrypoint-initdb.d/3.1.wave_data.sql
+      - ./4.0.pipe_schema.sql:/docker-entrypoint-initdb.d/4.0.pipe_schema.sql
+      - ./4.1.pipe_data.sql:/docker-entrypoint-initdb.d/4.1.pipe_data.sql      
+    ports:
+      - 5000:5432
+    environment:
+       POSTGRES_PASSWORD: docker
+       POSTGRES_DB: acedb
+       SCHEMA: public
+       ANON: web_anon
+       AUTHENTICATOR: authenticator
+
+  
+
+

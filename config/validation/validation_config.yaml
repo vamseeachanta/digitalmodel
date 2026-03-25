@@ -1,0 +1,84 @@
+# Data Validation Configuration Template
+# Copy this to your project's config/ directory and customize
+
+validation:
+  # Fields that must be present in the DataFrame
+  required_fields:
+    - id
+    - timestamp
+    - value
+
+  # Fields that should have unique values (no duplicates)
+  unique_fields:
+    - id
+
+  # Fields that should contain numeric data
+  numeric_fields:
+    - year_built
+    - length_m
+    - beam_m
+    - depth_m
+    - draft_m
+    - displacement_tonnes
+    - water_depth_m
+    - count
+    - amount
+    - quantity
+    - value
+
+  # Date fields (ISO 8601 format expected)
+  date_fields:
+    - timestamp
+    - created_at
+    - updated_at
+    - start_date
+    - end_date
+
+  # Quality thresholds
+  thresholds:
+    max_missing_pct: 0.2         # Maximum 20% missing data per column
+    min_quality_score: 60         # Minimum passing score
+    max_duplicates: 0             # Maximum allowed duplicate records
+    max_type_issues_per_field: 5  # Maximum type validation errors per field
+
+  # Validation behavior
+  behavior:
+    fail_on_empty: true           # Fail if DataFrame is empty
+    fail_on_missing_required: true # Fail if required fields missing
+    warn_on_type_issues: true     # Warn (not fail) on type issues
+    auto_fix_types: false         # Attempt to coerce types automatically
+
+# Reporting configuration
+reporting:
+  # Output settings
+  output:
+    format: html                  # html, json, or both
+    path: reports/validation/
+
+  # Dashboard customization
+  dashboard:
+    title: "Data Validation Report"
+    theme: plotly_white           # plotly, plotly_dark, plotly_white, ggplot2
+    height: 800
+    show_legend: false
+
+  # Chart colors
+  colors:
+    quality_good: green           # Score >= 80
+    quality_warning: yellow       # Score 60-80
+    quality_fail: red             # Score < 60
+    missing_data: indianred
+    type_issues: orange
+
+# Logging configuration
+logging:
+  level: INFO                     # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    - console
+    - file
+
+  file:
+    path: logs/validation.log
+    max_bytes: 10485760           # 10 MB
+    backup_count: 5

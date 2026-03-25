@@ -1,0 +1,20 @@
+{
+  "revision": "r4_per_dof_report",
+  "timestamp": "2026-02-09T08:50:31.977932",
+  "description": "r4: Single-page report with per-DOF two-column layout (text/conclusions left, plot right). Individual legends per plot. Solver-column comparison tables. Alternating row colors. All fixes from r2/r3 carried forward.",
+  "changes": [
+    "Per-DOF sections: text left, inline Plotly plot right",
+    "Individual legend per DOF plot",
+    "Solver-column comparison tables (headings as rows)",
+    "Alternating row colors, hover highlight, dark header",
+    "Consensus badges with color coding",
+    "Auto-generated observations per DOF",
+    "Carried forward: r2 phase/M24 fix, r3 input comparison"
+  ],
+  "source_files": {
+    "orcawave": "benchmark_output\\barge_final\\orcawave\\Barge_Benchmark.owr",
+    "aqwa": "benchmark_output\\barge_final\\aqwa\\WRK-031_3WAY_BENCHMARK.LIS",
+    "spec": "specs\\modules\\benchmark\\barge_benchmark_spec.yml"
+  },
+  "previous_revision": "r3_input_comparison"
+}

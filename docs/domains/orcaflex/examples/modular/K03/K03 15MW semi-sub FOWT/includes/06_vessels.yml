@@ -1,0 +1,53 @@
+# Vessels Configuration
+# Generated from: K03 15MW semi-sub FOWT.yml
+# Date: 2026-01-18 22:18:31
+Vessels:
+- Name: VolturnUS-S
+  VesselType: VolturnUS-S type
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 0
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: Yes
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: No
+  IncludeWindLoad: No
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 40
+  CalculationMode: Filtering
+  CalculateHydrostaticStiffnessAnglesBy: Orientation
+  CompensatingMass: 2433.19
+  CentreOfCompensatingMass:
+  - 2.796
+  - 0.0388
+  - 92.613
+  CompensatingMomentOfInertiaX, CompensatingMomentOfInertiaY, CompensatingMomentOfInertiaZ:
+  - - 6.684e6
+    - -163.684
+    - -368.6e3
+  - - -163.684
+    - 6.561e6
+    - -5281.179
+  - - -368.6e3
+    - -5281.179
+    - 269.8e3
+  Pen:
+  - 1
+  - Solid
+  - Yellow

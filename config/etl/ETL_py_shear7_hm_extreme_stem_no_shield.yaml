@@ -1,0 +1,390 @@
+---
+parameters:
+  model_id: &model_id 2500ft_WT0750_064pcf
+  location_id: &location_id 6
+  location_id_str: &location_id_str "6"
+  load_range: &load_range 2
+
+  viv_file_prep_basefile_text_io_1: &viv_file_prep_basefile_text_io_1 data_manager\data\risers\ttr\shear7\hm_metric_stem_no_shield.dat
+  viv_file_prep_basefile_text_io_2: &viv_file_prep_basefile_text_io_2 ["lid0", *location_id_str, "_cp{:03d}_", "hm_stm_0"]
+  viv_file_prep_model_state_information_text_io_1: &viv_file_prep_model_state_information_text_io_1 data_manager\data\risers\ttr\shear7\hm_metric_stem_no_shield.dat
+  viv_file_prep_replace_text_io_1: &viv_file_prep_replace_text_io_1 data_manager\data\risers\ttr\modes\Common_A5_Low_TTF.mds
+
+  combined_viv_batch_process_header_text_1: &combined_viv_batch_process_header_text_1 ["COPY \"", "K:\\aceengineer\\data_manager\\data\\risers\\ttr\\modes\\Common_A5_Low_TTF.mds\""," ", "M:\\0192\\D4\\common.mds"]
+  combined_viv_batch_process_repeat_patterns_text_2: &combined_viv_batch_process_repeat_patterns_text_2 ["CALL Shear746 lid0", *location_id_str, "_cp{:02d}_", "hm"]
+
+  combined_fatigue_header_text_2: &combined_fatigue_header_text_2 ["      io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", "app_vertical_riser_", *model_id, "_stack_up_properties.csv"]
+  combined_histogram_header_text_2: &combined_histogram_header_text_2 ["      io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\results\\", "app_fatigue_analysis_app_ETL_shear7_lid00", *location_id_str, "_", *model_id, "_combined_damage_damage_results.csv"]
+  combined_header_text_4: &combined_header_text_4 ["    io: M:\\0185\\WaveFatigue\\", "app_ETL_fe_fatigue_models_lid00", "2", "_", "2500ft_WT0750_064pcf", "_orcaflex_fatigue_analysis.xlsx"]
+  combined_repeat_patterns_text_2: &combined_repeat_patterns_text_2 ["    io: M:\\0185\\Shear7\\Rev2\\", "lid0", "2", "_cp{:02d}_", "2500ft_WT0750_064pcf", ".plt"]
+  combined_footer_text_2: &combined_footer_text_2 ["    io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\results\\", "app_orcaflex_analysis_app_ETL_fe_fatigue_models_lid00", "2", "_", "2500ft_WT0750_064pcf", "_wave_histogram_histograms.xlsx"]
+
+default:
+  Constants:
+    g : 9.81
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+  extract: NULL
+
+  transform:
+    from_xlsx_to_yaml_file: False
+    repeat_patterns: True
+    replace: True
+
+  load: NULL
+
+Analysis:
+  custom_folder: C:\Users\achantv\Desktop\S7\HM\D6\EX
+
+output_files:
+  -
+    settings:
+      basefile: *viv_file_prep_basefile_text_io_1
+      single_file: False
+      multiple_file: True
+      file_name:
+        prefix: NULL
+        suffix:
+          name: *viv_file_prep_basefile_text_io_2
+          fields:
+            - from_range:
+                - 1
+                - *load_range
+
+        extension: dat
+      model_state_information:
+        from_ascii:
+          label: model_state_information
+          io: *viv_file_prep_model_state_information_text_io_1
+          line:
+            from:
+              number: 1
+          filter:
+            delimiter: NULL
+            column: 1
+            data_type: dict
+          scale: NULL
+
+    replace:
+      -
+        lines:
+          from:
+            containing_text: number of elements
+          to: NULL
+        template_line: "{0}		number of elements"
+        fields:
+          -
+            from_ascii:
+              label: number_of_elements
+              io: *viv_file_prep_replace_text_io_1
+              line:
+                from:
+                  number: 1
+              filter:
+                delimiter: " "
+                column: 2
+                data_type: float
+              scale: 1
+              transform: True
+      -
+        lines:
+          from:
+            containing_text: "  1.0   1      no. of profile data pts, probability, profile ID"
+          to: NULL
+        template_line: "{0}  1.0   1      no. of profile data pts, probability, profile ID"
+        fields: NULL
+      -
+        lines:
+          from:
+            containing_text: "{x_by_L}     {current_speed} Replace values"
+          to: NULL
+        template_line: "{:4f}     {:4f}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: depth
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: extreme
+                  -
+                    column: current_profile_id
+                    value: 1
+
+                column: depth
+                loop_level: 0
+                scale: 1
+                transform: True
+
+          -
+            from_xlsx:
+              -
+                label: current_speed
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: extreme
+                  -
+                    column: current_profile_id
+                    value: 1
+
+                column: current_speed
+                loop_level: 0
+                scale: 1
+                transform: False
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: viv_batch_process
+        fields: NULL
+        extension: bat
+
+    header:
+      -
+        text: *combined_viv_batch_process_header_text_1
+        fields: NULL
+      -
+        text: CD M:\0192\D4
+        fields: NULL
+      -
+        text: "M:"
+        fields: NULL
+    repeat_patterns:
+      -
+        text: *combined_viv_batch_process_repeat_patterns_text_2
+        fields:
+          -
+            from_range:
+              - 1
+              - *load_range
+
+    footer:
+      -
+        text: DEL M:\0192\D4\common.mds
+        fields: NULL
+      -
+        text: "K:"
+        fields: NULL
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: combined_damage
+        fields: NULL
+        extension: yml
+
+    header:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\fatigue_analysis_py_combined_damage_1.yml
+          start_line: 1
+          end_line: 19
+      -
+        text: *combined_fatigue_header_text_2
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\\cfg\\fatigue_analysis_py_combined_damage_1.yml
+          start_line: 21
+          end_line: 25
+      -
+        text: *combined_header_text_4
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\\cfg\\fatigue_analysis_py_combined_damage_1.yml
+          start_line: 27
+          end_line: 48
+
+    repeat_patterns:
+      -
+        text: "  -"
+        fields: NULL
+      -
+        text: *combined_repeat_patterns_text_2
+        fields:
+          -
+            from_range:
+              - 1
+              - *load_range
+      -
+        text: "    delimiter: space"
+        fields: NULL
+      -
+        text: "    columns: [x/L, RMS Displacement, unknown, RMS Accleration, RMS Stress, Damage (1/year), Cf]"
+        fields: NULL
+      -
+        text: "    DataFrame: True"
+        fields: NULL
+      -
+        text: "    probability: {:.5f}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: probability
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                  -
+                    column: depth
+                    value: 0
+                column: probability
+                loop_level: 0
+                scale: 1
+                transform: True
+    footer:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\fatigue_analysis_py_combined_damage_1.yml
+          start_line: 93
+          end_line: 115
+
+  -
+    settings:
+      single_file: True
+      multiple_file: False
+      file_name:
+        prefix: NULL
+        suffix: combined_histograms
+        fields: NULL
+        extension: yml
+
+    header:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\fatigue_analysis_py_combined_histograms_1.yml
+          start_line: 1
+          end_line: 20
+      -
+        text: *combined_histogram_header_text_2
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\\cfg\\fatigue_analysis_py_combined_histograms_1.yml
+          start_line: 21
+          end_line: 25
+      -
+        text: *combined_header_text_4
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\\cfg\\fatigue_analysis_py_combined_histograms_1.yml
+          start_line: 27
+          end_line: 48
+
+    repeat_patterns:
+      -
+        text: "  -"
+        fields: NULL
+      -
+        text: *combined_repeat_patterns_text_2
+        fields:
+          -
+            from_range:
+              - 1
+              - *load_range
+      -
+        text: "    delimiter: space"
+        fields: NULL
+      -
+        text: "    columns: [x/L, RMS Displacement, unknown, RMS Accleration, RMS Stress, Damage (1/year), Cf]"
+        fields: NULL
+      -
+        text: "    DataFrame: True"
+        fields: NULL
+      -
+        text: "    probability: {:.5f}"
+        fields:
+          -
+            from_xlsx:
+              -
+                label: probability
+                io: data_manager\data\metocean_data_template.xlsx
+                sheet_name: Current
+                index_col: NULL
+                skiprows: 0
+                skipfooter: 0
+                filter:
+                  -
+                    column: location_id
+                    value: *location_id
+                  -
+                    column: loading_type
+                    value: long-term
+                  -
+                    column: depth
+                    value: 0
+                column: probability
+                loop_level: 0
+                scale: 1
+                transform: True
+    footer:
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\fatigue_analysis_py_combined_histograms_1.yml
+          start_line: 62
+          end_line: 85
+      -
+        text: *combined_footer_text_2
+        fields: NULL
+      -
+        text: NULL
+        from_file:
+          flag: True
+          io: tests\cfg\fatigue_analysis_py_combined_histograms_1.yml
+          start_line: 87
+          end_line: 115
+...

@@ -1,0 +1,9 @@
+RiserID,RiserName,OD,ID,WallThickness,Material,Mass,EI,EA,PoissonRatio,MaxTension,MinBendRadius,Description
+SCR_10inch_X65,10-inch SCR X65,0.2731,0.2461,0.0135,X65_STEEL,80.5,1.85e6,7.85e8,0.3,2500.0,15.0,Standard 10-inch steel catenary riser
+SCR_12inch_X65,12-inch SCR X65,0.3239,0.2909,0.0165,X65_STEEL,115.8,3.52e6,1.21e9,0.3,3500.0,18.0,12-inch steel catenary riser
+SCR_10inch_X70,10-inch SCR X70,0.2731,0.2461,0.0135,X70_STEEL,80.5,1.92e6,8.15e8,0.3,2700.0,15.0,High strength 10-inch X70 riser
+TTR_9inch_X80,9-inch TTR X80,0.2445,0.2190,0.0128,X80_STEEL,67.2,1.32e6,7.12e8,0.3,3000.0,12.0,Top-tensioned riser high strength
+HYBRID_10inch,10-inch Hybrid Riser,0.2731,0.2461,0.0135,TITANIUM,52.3,1.68e6,6.85e8,0.34,2800.0,12.0,Titanium hybrid riser system
+LWR_12inch,12-inch Lazy Wave,0.3239,0.2909,0.0165,X65_STEEL,115.8,3.52e6,1.21e9,0.3,3500.0,20.0,Lazy wave riser configuration
+PWR_10inch,10-inch Pliant Wave,0.2731,0.2461,0.0135,X65_STEEL,80.5,1.85e6,7.85e8,0.3,2500.0,18.0,Pliant wave riser configuration
+FLEX_6inch,6-inch Flexible Riser,0.1524,0.1016,0.0254,COMPOSITE,25.4,0.45e6,2.85e8,0.35,1500.0,8.0,Flexible composite riser

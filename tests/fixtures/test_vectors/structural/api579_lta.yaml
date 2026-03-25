@@ -1,0 +1,183 @@
+source_type: python
+source_description: "Extracted from digitalmodel test_api579_calculations_standalone.py, test_calculations.py, and test_rsf_calculations.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "structural"
+subcategory: "api579_local_thin_area"
+equations:
+  - name: "MAWP Cylindrical Pipe (ASME B31.8)"
+    latex: "MAWP = \\frac{2 \\cdot SMYS \\cdot E \\cdot F \\cdot T \\cdot t}{D}"
+    description: "Maximum Allowable Working Pressure for cylindrical pipe per ASME B31.8"
+  - name: "RSF (API 579 Part 5)"
+    latex: "RSF = \\frac{t_{measured}}{t_{nominal}}"
+    description: "Remaining Strength Factor for general metal loss assessment"
+  - name: "Remaining Life (Linear)"
+    latex: "RL = \\frac{t_{measured} - t_{min}}{CR}"
+    description: "Linear remaining life from measured thickness, minimum required thickness, and corrosion rate"
+  - name: "B31G Modified Safe Pressure"
+    latex: "P_{safe} = \\frac{1.1 \\cdot SMYS \\cdot 2t}{D} \\cdot \\frac{1 - A}{1 - A/M}"
+    description: "Modified B31G safe operating pressure with bulging factor M"
+  - name: "B31G Bulging Factor M"
+    latex: "M = \\sqrt{1 + 0.6275 \\cdot \\frac{L^2}{Dt} - 0.003375 \\cdot \\left(\\frac{L^2}{Dt}\\right)^2}"
+    description: "Modified B31G bulging factor for longitudinal defects"
+  - name: "Folias Factor Interpolation"
+    latex: "M_t = interp(\\lambda, Table5.2)"
+    description: "Folias factor Mt from API 579 Table 5.2 by linear interpolation"
+  - name: "GML WT Acceptability Ratio"
+    latex: "WTR = \\frac{t_{mm} - FCA_{ml}}{\\max(0.5 t_{min}, \\max(0.2 t_{nom}, 0.1))}"
+    description: "Wall thickness acceptability ratio per API 579 Part 4"
+  - name: "LML MAWPr Evaluation"
+    latex: "RSF = \\frac{R_t}{1 - \\frac{1 - R_t}{M_t}}"
+    description: "Local metal loss RSF with Folias factor for MAWP reduction"
+inputs:
+  - name: "Specified Minimum Yield Strength"
+    symbol: "SMYS"
+    unit: "psi"
+    test_value: 65000
+  - name: "Weld joint efficiency"
+    symbol: "E"
+    unit: "dimensionless"
+    test_value: 1.0
+  - name: "Design factor"
+    symbol: "F"
+    unit: "dimensionless"
+    test_value: 0.5
+  - name: "Temperature derating factor"
+    symbol: "T"
+    unit: "dimensionless"
+    test_value: 1.0
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "inch"
+    test_value: 0.625
+  - name: "Nominal outside diameter"
+    symbol: "D"
+    unit: "inch"
+    test_value: 16.0
+outputs:
+  - name: "MAWP"
+    symbol: "MAWP"
+    unit: "psi"
+    test_expected: 2539.06
+    tolerance: 1.0
+worked_examples:
+  - description: "MAWP for 16in X65 gas pipe per ASME B31.8"
+    inputs:
+      SMYS: 65000
+      E: 1.0
+      F: 0.5
+      T: 1.0
+      t: 0.625
+      D: 16.0
+    outputs:
+      MAWP: 2539.06
+    use_as_test: true
+  - description: "Remaining life with linear corrosion model"
+    inputs:
+      t_measured: 0.580
+      t_min: 0.526
+      corrosion_rate: 0.010
+    outputs:
+      remaining_life_years: 5.4
+    use_as_test: true
+  - description: "RSF calculation — lightly corroded pipe (acceptable)"
+    inputs:
+      t_measured: 0.350
+      t_required: 0.150
+      t_nominal: 0.375
+    outputs:
+      rsf: 0.93333
+      ffs_acceptable: true
+    use_as_test: true
+  - description: "RSF calculation — heavy corrosion (not acceptable, RSF < 0.9)"
+    inputs:
+      t_measured: 0.300
+      t_required: 0.150
+      t_nominal: 0.375
+    outputs:
+      rsf: 0.800
+      ffs_acceptable: false
+    use_as_test: true
+  - description: "FFS Level 1 check — 12.75in X65 pipe, MAWP via Barlow"
+    inputs:
+      t_measured: 0.350
+      t_required: 0.150
+      t_nominal: 0.375
+      design_pressure_psi: 1000.0
+      smys_psi: 65000
+      outer_diameter_in: 12.75
+      weld_efficiency: 1.0
+    outputs:
+      mawp_psi: 3568.63
+      acceptable: true
+    use_as_test: true
+  - description: "Remaining life — linear model, margin/rate"
+    inputs:
+      t_current: 0.375
+      t_minimum: 0.150
+      corrosion_rate_in_per_yr: 0.010
+    outputs:
+      remaining_years: 22.5
+      already_below_minimum: false
+    use_as_test: true
+  - description: "B31G critical defect length for 16in pipe"
+    inputs:
+      D: 16.0
+      t: 0.625
+    outputs:
+      L_critical: 14.14
+    use_as_test: true
+  - description: "Folias factor interpolation at lambda=1.25"
+    inputs:
+      lambda: 1.25
+      flaw_params: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+      Mt_cylindrical: [1.001, 1.056, 1.199, 1.394, 1.618, 1.857, 2.103]
+    outputs:
+      Mt: 1.2965
+    use_as_test: true
+  - description: "GML WT acceptability ratio and remaining life"
+    inputs:
+      tmm: 0.50
+      FCAml: 0.034
+      tmin: 0.526
+      NominalWT: 0.625
+      Age: 15
+      tam: 0.56
+      FCARateFloor: 0.00118
+    outputs:
+      WTAcceptabilityRatio: 1.7719
+      HistoricalCorrosionRate: 0.004333
+      remaining_life_years: 7.846
+    use_as_test: true
+  - description: "LML MAWPr with Folias factor at lambda=2.0, Rt=0.75"
+    inputs:
+      LongitudinalFlawLengthParameter: 2.0
+      Rt: 0.75
+      RSFa: 0.9
+      MAWP: 2539.0
+    outputs:
+      Mt: 1.618
+      RSF: 0.887
+      MAWPr: 2499.8
+    use_as_test: true
+  - description: "Remaining life with historical rate below floor — floor rate used"
+    inputs:
+      NominalWT: 0.625
+      tam: 0.620
+      tmin: 0.526
+      Age: 15
+      FCARateFloor: 0.00118
+    outputs:
+      futureCorrosionRate: 0.00118
+      remaining_life_years: 79.66
+    use_as_test: true
+assumptions:
+  - "Thin-wall assumption for Barlow formula (D/t >= 20)"
+  - "Linear corrosion rate model (constant metal loss per year)"
+  - "RSF allowable = 0.9 per API 579-1 Part 4/5 default"
+  - "Folias factor table from API 579 Table 5.2 for cylindrical geometry"
+  - "B31G Modified method uses 1.1 flow stress factor"
+references:
+  - "API 579-1/ASME FFS-1 Fitness-For-Service, 3rd Edition"
+  - "ASME B31.8-2016, Gas Transmission and Distribution Piping"
+  - "ASME B31G-2012, Manual for Determining the Remaining Strength of Corroded Pipelines"

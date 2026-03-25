@@ -1,0 +1,91 @@
+﻿BaseFile: __03__structure.yml
+
+LineTypes:
+  New:
+    - 20Te Soft sling
+  20Te Soft sling:
+    Category: General
+    OD: 0.06536
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.0046080928
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [0, ~]
+    EA: 6295.84
+    PoissonRatio: 0.5
+    GJ: 79.99999999999989
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [1, Solid, Fuchsia]

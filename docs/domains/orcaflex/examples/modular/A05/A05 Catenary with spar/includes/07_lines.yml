@@ -1,0 +1,160 @@
+# Lines Configuration
+# Generated from: A05 Catenary with spar.yml
+# Date: 2026-01-18 22:18:00
+Lines:
+- Name: Riser
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Spar
+      - 56
+      - 0
+      - -308.75
+      - 0
+      - 172
+      - 0
+      - ~
+    - - Anchored
+      - 6085
+      - 0
+      - 0.37906
+      - 0
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Flexjoint Stiffness
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Flexjoint
+    - 9
+    - 1
+  - - Straked
+    - 1
+    - 1
+  - - Straked
+    - 10
+    - 2
+  - - Straked
+    - 20
+    - 4
+  - - Straked
+    - 10
+    - 5
+  - - Straked
+    - 20
+    - 10
+  - - Straked
+    - 40
+    - 20
+  - - Straked
+    - 3800
+    - 40
+  - - Straked
+    - 40
+    - 20
+  - - Straked
+    - 20
+    - 10
+  - - Straked
+    - 10
+    - 5
+  - - Straked
+    - 20
+    - 4
+  - - Straked
+    - 10
+    - 2
+  - - Riser Pipe
+    - 10
+    - 2
+  - - Riser Pipe
+    - 20
+    - 4
+  - - Riser Pipe
+    - 10
+    - 5
+  - - Riser Pipe
+    - 50
+    - 10
+  - - Riser Pipe
+    - 100
+    - 20
+  - - Riser Pipe
+    - 1100
+    - 20
+  - - Riser Pipe
+    - 100
+    - 20
+  - - Riser Pipe
+    - 50
+    - 10
+  - - Riser Pipe
+    - 10
+    - 5
+  - - Riser Pipe
+    - 20
+    - 4
+  - - Riser Pipe
+    - 10
+    - 2
+  - - Riser Pipe
+    - 800
+    - 2
+  - - Riser Pipe
+    - 10
+    - 2
+  - - Riser Pipe
+    - 20
+    - 4
+  - - Riser Pipe
+    - 10
+    - 5
+  - - Riser Pipe
+    - 50
+    - 10
+  - - Riser Pipe
+    - 120
+    - 12
+  - - Riser Pipe
+    - 1300
+    - 20
+  - - Flowline
+    - 410
+    - 40
+  - - Flowline
+    - 1600
+    - 80
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 19.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 720
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  DrawShadedNodesAsSpheres: Yes

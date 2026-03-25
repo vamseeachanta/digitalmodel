@@ -1,0 +1,29 @@
+# Variation: Rigid Steel Pipe Jumper
+# IMPORTANT: When overriding Lines, must include ALL properties
+#
+# Rigid steel jumper using 10-inch pipe-in-pipe bundle
+# Higher stiffness requires longer length for same span to achieve sag
+
+Lines:
+  # Rigid jumper - 10-inch steel bundle
+  # Requires more length for M-shape due to higher stiffness
+  # 65m length for 50m span
+  - Name: Jumper_Main
+    EndAConnection: Anchored
+    EndAAzimuth: 90
+    EndADeclination: 90
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -497
+    EndBConnection: Anchored
+    EndBAzimuth: 270
+    EndBDeclination: 90
+    EndBX: 50
+    EndBY: 0
+    EndBZ: -497
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    # Longer length for rigid pipe to achieve M-shape
+    LineType, Length, TargetSegmentLength:
+      - [Pipe_10inch_Bundle, 65, 1]
+

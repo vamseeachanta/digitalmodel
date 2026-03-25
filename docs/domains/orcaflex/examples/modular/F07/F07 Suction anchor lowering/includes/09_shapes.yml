@@ -1,0 +1,613 @@
+# Shapes Configuration
+# Generated from: F07 Suction anchor lowering.yml
+# Date: 2026-01-18 22:18:20
+Shapes:
+- Name: Suction can bottom
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Suction anchor
+  Origin:
+  - 0
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 0
+  Length: 27
+  OuterDiameter: 5
+  InnerDiameter: 4.9
+  OutsidePen:
+  - 1
+  - Solid
+  - $002E8C
+- Name: Suction can top
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Suction anchor
+  Origin:
+  - 0
+  - 0
+  - 27
+  Azimuth: 0
+  Declination: 0
+  Length: 3
+  OuterDiameter: 5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can vent 1
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Suction anchor
+  Origin:
+  - -0.8111595753452718
+  - -1.1584559306791382
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction can vent 2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Suction anchor
+  Origin:
+  - -1.158455930679139
+  - 0.8111595753452772
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction cap cross beam
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Suction anchor
+  Origin:
+  - -2.4186073381137874
+  - -0.6803223824203777
+  - 30
+  Size:
+  - 5
+  - 0.5
+  - 1
+  Orientation:
+  - 0
+  - 0
+  - 9.999999999999998
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Crane base
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Installation vessel
+  Origin:
+  - -46.92294750111529
+  - -0.01674344225773794
+  - 0.0802141686150688
+  Azimuth: 0
+  Declination: 0
+  Length: 5
+  OuterDiameter: 10
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+- Name: Suction can bottom1
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 1
+  Origin:
+  - 0
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 0
+  Length: 27
+  OuterDiameter: 5
+  InnerDiameter: 4.9
+  OutsidePen:
+  - 1
+  - Solid
+  - $002E8C
+- Name: Suction can top1
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 1
+  Origin:
+  - -1.230836605513236e-16
+  - 0
+  - 27
+  Azimuth: 0
+  Declination: 0
+  Length: 3
+  OuterDiameter: 5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can vent 3
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 1
+  Origin:
+  - -0.8111595753452717
+  - -1.1584559306791382
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction can vent 4
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 1
+  Origin:
+  - -1.158455930679139
+  - 0.8111595753452772
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction cap cross beam1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Deck can - main 1
+  Origin:
+  - -2.4186073381137874
+  - -0.6803223824203775
+  - 30
+  Size:
+  - 5
+  - 0.5
+  - 1
+  Orientation:
+  - 0
+  - 0
+  - 9.999999999999998
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can bottom2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 2
+  Origin:
+  - 0
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 0
+  Length: 27
+  OuterDiameter: 5
+  InnerDiameter: 4.9
+  OutsidePen:
+  - 1
+  - Solid
+  - $002E8C
+- Name: Suction can top2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 2
+  Origin:
+  - -1.230836605513236e-16
+  - 0
+  - 27
+  Azimuth: 0
+  Declination: 0
+  Length: 3
+  OuterDiameter: 5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can vent 5
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 2
+  Origin:
+  - -0.8111595753452717
+  - -1.1584559306791378
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction can vent 6
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 2
+  Origin:
+  - -1.158455930679139
+  - 0.8111595753452772
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction cap cross beam2
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Deck can - main 2
+  Origin:
+  - -2.4186073381137874
+  - -0.6803223824203779
+  - 30
+  Size:
+  - 5
+  - 0.5
+  - 1
+  Orientation:
+  - 0
+  - 0
+  - 9.999999999999998
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can bottom3
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 3
+  Origin:
+  - 0
+  - 0
+  - 0
+  Azimuth: 0
+  Declination: 0
+  Length: 27
+  OuterDiameter: 5
+  InnerDiameter: 4.9
+  OutsidePen:
+  - 1
+  - Solid
+  - $002E8C
+- Name: Suction can top3
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 3
+  Origin:
+  - -1.230836605513236e-16
+  - 0
+  - 27
+  Azimuth: 0
+  Declination: 0
+  Length: 3
+  OuterDiameter: 5
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Suction can vent 7
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 3
+  Origin:
+  - -0.8111595753452717
+  - -1.1584559306791373
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction can vent 8
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Deck can - main 3
+  Origin:
+  - -1.158455930679139
+  - 0.8111595753452772
+  - 30
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 0.75
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - White
+- Name: Suction cap cross beam3
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Deck can - main 3
+  Origin:
+  - -2.4186073381137874
+  - -0.6803223824203766
+  - 30
+  Size:
+  - 5
+  - 0.5
+  - 1
+  Orientation:
+  - 0
+  - 0
+  - 9.999999999999998
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+- Name: Sea fastening 1
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 1
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 2
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 1
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 3
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 1
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 4
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 1
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 5
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 2
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 6
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 2
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 7
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 2
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 8
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 2
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 9
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 3
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 10
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 3
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - 40
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 11
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 3
+  Origin:
+  - 0.038264984991981436
+  - -0.03370904608625924
+  - 18.93090781542223
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5
+- Name: Sea fastening 12
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: Deck can - main 3
+  Origin:
+  - 0.03826498499198052
+  - -0.033709046086258354
+  - 3.9309078154222306
+  Orientation:
+  - 0
+  - 0
+  - -100
+  IncludedAngleOfRevolution: 60
+  IsHollow: Yes
+  Thickness: 1
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 5
+  - - 2
+    - 5

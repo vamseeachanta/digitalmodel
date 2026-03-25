@@ -1,0 +1,715 @@
+[
+  {
+    "file_name": "ship_rao",
+    "file_path": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+    "timestamp": "2025-10-03T06:49:54.757266",
+    "routes": {
+      "unified_v2": {
+        "available_types": [
+          "displacement",
+          "velocity",
+          "acceleration"
+        ],
+        "metadata": {
+          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+          "vessel_name": "Unknown Vessel",
+          "format": "aqwa_lis"
+        },
+        "displacement": {
+          "n_frequencies": 14,
+          "n_headings": 20,
+          "frequencies": [
+            0.283,
+            0.371,
+            0.484,
+            0.572,
+            0.628,
+            0.697,
+            0.741,
+            0.785,
+            0.836,
+            0.898,
+            0.968,
+            1.049,
+            1.257,
+            1.571
+          ],
+          "headings": [
+            -180.0,
+            0.0,
+            0.283,
+            0.371,
+            0.484,
+            0.572,
+            0.628,
+            0.697,
+            0.741,
+            0.785,
+            0.836,
+            0.898,
+            0.968,
+            1.049,
+            1.257,
+            1.571,
+            45.0,
+            90.0,
+            135.0,
+            180.0
+          ],
+          "surge": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 0.1099,
+              "mean": 0.010945714285714286,
+              "sample_values": [
+                0.0733,
+                0.0733,
+                0.0
+              ]
+            },
+            "phase": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": -170.92,
+              "max": 175.78,
+              "sample_values": [
+                89.79,
+                -89.85,
+                0.0
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 6.7,
+              "mean": 0.07614821428571429
+            }
+          }
+        },
+        "velocity": {
+          "n_frequencies": 14,
+          "n_headings": 20,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.1099,
+            "mean": 0.010945714285714286
+          }
+        },
+        "acceleration": {
+          "n_frequencies": 2,
+          "n_headings": 20,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.0266,
+            "mean": 0.0037324999999999997
+          }
+        }
+      },
+      "legacy_processor": {
+        "available_types": [
+          "displacement"
+        ],
+        "n_frequencies": 14,
+        "n_headings": 20,
+        "frequencies": [
+          0.283,
+          0.371,
+          0.484,
+          0.572,
+          0.628,
+          0.697,
+          0.741,
+          0.785,
+          0.836,
+          0.898,
+          0.968,
+          1.049,
+          1.257,
+          1.571
+        ],
+        "headings": [
+          -180.0,
+          0.0,
+          0.283,
+          0.371,
+          0.484,
+          0.572,
+          0.628,
+          0.697,
+          0.741,
+          0.785,
+          0.836,
+          0.898,
+          0.968,
+          1.049,
+          1.257,
+          1.571,
+          45.0,
+          90.0,
+          135.0,
+          180.0
+        ],
+        "displacement": {
+          "surge": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 0.1099,
+              "mean": 0.010945714285714286,
+              "sample_values": [
+                0.0733,
+                0.0733,
+                0.0
+              ]
+            },
+            "phase": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": -170.92,
+              "max": 175.78,
+              "sample_values": [
+                89.79,
+                -89.85,
+                0.0
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 6.7,
+              "mean": 0.07614821428571429
+            }
+          }
+        }
+      },
+      "convenience": {
+        "available_types": [
+          "displacement",
+          "velocity",
+          "acceleration"
+        ],
+        "metadata": {
+          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+          "vessel_name": "Unknown Vessel",
+          "format": "aqwa_lis"
+        },
+        "displacement": {
+          "n_frequencies": 14,
+          "n_headings": 20,
+          "frequencies": [
+            0.283,
+            0.371,
+            0.484,
+            0.572,
+            0.628,
+            0.697,
+            0.741,
+            0.785,
+            0.836,
+            0.898,
+            0.968,
+            1.049,
+            1.257,
+            1.571
+          ],
+          "headings": [
+            -180.0,
+            0.0,
+            0.283,
+            0.371,
+            0.484,
+            0.572,
+            0.628,
+            0.697,
+            0.741,
+            0.785,
+            0.836,
+            0.898,
+            0.968,
+            1.049,
+            1.257,
+            1.571,
+            45.0,
+            90.0,
+            135.0,
+            180.0
+          ],
+          "surge": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 0.1099,
+              "mean": 0.010945714285714286,
+              "sample_values": [
+                0.0733,
+                0.0733,
+                0.0
+              ]
+            },
+            "phase": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": -170.92,
+              "max": 175.78,
+              "sample_values": [
+                89.79,
+                -89.85,
+                0.0
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                14,
+                20
+              ],
+              "min": 0.0,
+              "max": 6.7,
+              "mean": 0.07614821428571429
+            }
+          }
+        },
+        "velocity": {
+          "n_frequencies": 14,
+          "n_headings": 20,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.1099,
+            "mean": 0.010945714285714286
+          }
+        },
+        "acceleration": {
+          "n_frequencies": 2,
+          "n_headings": 20,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.0266,
+            "mean": 0.0037324999999999997
+          }
+        }
+      }
+    },
+    "comparison": {
+      "all_succeeded": true,
+      "displacement_consistency": {
+        "frequencies_match": false,
+        "headings_match": false,
+        "amplitudes_match": true,
+        "details": [
+          "Frequency count mismatch: unified_v2=14, legacy_processor=0",
+          "Heading count mismatch: unified_v2=20, legacy_processor=0"
+        ]
+      },
+      "differences": []
+    }
+  },
+  {
+    "file_name": "fst_hwl",
+    "file_path": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+    "timestamp": "2025-10-03T06:49:55.264220",
+    "routes": {
+      "unified_v2": {
+        "available_types": [
+          "displacement",
+          "velocity",
+          "acceleration"
+        ],
+        "metadata": {
+          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+          "vessel_name": "Unknown Vessel",
+          "format": "aqwa_lis"
+        },
+        "displacement": {
+          "n_frequencies": 1,
+          "n_headings": 14,
+          "frequencies": [
+            2.756
+          ],
+          "headings": [
+            -180.0,
+            0.0,
+            15.0,
+            30.0,
+            45.0,
+            60.0,
+            75.0,
+            90.0,
+            105.0,
+            120.0,
+            135.0,
+            150.0,
+            165.0,
+            180.0
+          ],
+          "surge": {
+            "amplitude": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": 0.0003,
+              "max": 0.0018,
+              "mean": 0.0008285714285714285,
+              "sample_values": [
+                0.0018,
+                0.0005,
+                0.0005
+              ]
+            },
+            "phase": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": -158.44,
+              "max": 140.22,
+              "sample_values": [
+                -158.44,
+                67.68,
+                -12.93
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": 0.0,
+              "max": 0.002,
+              "mean": 0.0003857142857142857
+            }
+          }
+        },
+        "velocity": {
+          "n_frequencies": 1,
+          "n_headings": 14,
+          "surge_amplitude_stats": {
+            "min": 0.0008,
+            "max": 0.0049,
+            "mean": 0.00225
+          }
+        },
+        "acceleration": {
+          "n_frequencies": 1,
+          "n_headings": 67,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.0136,
+            "mean": 0.0012985074626865672
+          }
+        }
+      },
+      "legacy_processor": {
+        "available_types": [
+          "displacement"
+        ],
+        "n_frequencies": 53,
+        "n_headings": 67,
+        "frequencies": [
+          0.18,
+          0.23,
+          0.28,
+          0.33,
+          0.38,
+          0.43,
+          0.48,
+          0.53,
+          0.58,
+          0.63,
+          0.68,
+          0.73,
+          0.78,
+          0.83,
+          0.88,
+          0.93,
+          0.98,
+          1.03,
+          1.08,
+          1.13,
+          1.18,
+          1.23,
+          1.28,
+          1.33,
+          1.38,
+          1.43,
+          1.48,
+          1.53,
+          1.58,
+          1.629,
+          1.68,
+          1.73,
+          1.78,
+          1.83,
+          1.88,
+          1.93,
+          1.98,
+          2.03,
+          2.079,
+          2.13,
+          2.18,
+          2.23,
+          2.279,
+          2.33,
+          2.38,
+          2.43,
+          2.48,
+          2.53,
+          2.58,
+          2.629,
+          2.68,
+          2.73,
+          2.756
+        ],
+        "headings": [
+          -180.0,
+          0.0,
+          0.18,
+          0.23,
+          0.28,
+          0.33,
+          0.38,
+          0.43,
+          0.48,
+          0.53,
+          0.58,
+          0.63,
+          0.68,
+          0.73,
+          0.78,
+          0.83,
+          0.88,
+          0.93,
+          0.98,
+          1.03,
+          1.08,
+          1.13,
+          1.18,
+          1.23,
+          1.28,
+          1.33,
+          1.38,
+          1.43,
+          1.48,
+          1.53,
+          1.58,
+          1.629,
+          1.68,
+          1.73,
+          1.78,
+          1.83,
+          1.88,
+          1.93,
+          1.98,
+          2.03,
+          2.079,
+          2.13,
+          2.18,
+          2.23,
+          2.279,
+          2.33,
+          2.38,
+          2.43,
+          2.48,
+          2.53,
+          2.58,
+          2.629,
+          2.68,
+          2.73,
+          2.756,
+          15.0,
+          30.0,
+          45.0,
+          60.0,
+          75.0,
+          90.0,
+          105.0,
+          120.0,
+          135.0,
+          150.0,
+          165.0,
+          180.0
+        ],
+        "displacement": {
+          "surge": {
+            "amplitude": {
+              "shape": [
+                53,
+                67
+              ],
+              "min": 0.0,
+              "max": 0.0908,
+              "mean": 0.004565361869895804,
+              "sample_values": [
+                0.0741,
+                0.0742,
+                0.0
+              ]
+            },
+            "phase": {
+              "shape": [
+                53,
+                67
+              ],
+              "min": -179.48,
+              "max": 179.95,
+              "sample_values": [
+                82.77,
+                -82.47,
+                0.0
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                53,
+                67
+              ],
+              "min": 0.0,
+              "max": 98.0,
+              "mean": 0.11735333708814417
+            }
+          }
+        }
+      },
+      "convenience": {
+        "available_types": [
+          "displacement",
+          "velocity",
+          "acceleration"
+        ],
+        "metadata": {
+          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+          "vessel_name": "Unknown Vessel",
+          "format": "aqwa_lis"
+        },
+        "displacement": {
+          "n_frequencies": 1,
+          "n_headings": 14,
+          "frequencies": [
+            2.756
+          ],
+          "headings": [
+            -180.0,
+            0.0,
+            15.0,
+            30.0,
+            45.0,
+            60.0,
+            75.0,
+            90.0,
+            105.0,
+            120.0,
+            135.0,
+            150.0,
+            165.0,
+            180.0
+          ],
+          "surge": {
+            "amplitude": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": 0.0003,
+              "max": 0.0018,
+              "mean": 0.0008285714285714285,
+              "sample_values": [
+                0.0018,
+                0.0005,
+                0.0005
+              ]
+            },
+            "phase": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": -158.44,
+              "max": 140.22,
+              "sample_values": [
+                -158.44,
+                67.68,
+                -12.93
+              ]
+            }
+          },
+          "heave": {
+            "amplitude": {
+              "shape": [
+                1,
+                14
+              ],
+              "min": 0.0,
+              "max": 0.002,
+              "mean": 0.0003857142857142857
+            }
+          }
+        },
+        "velocity": {
+          "n_frequencies": 1,
+          "n_headings": 14,
+          "surge_amplitude_stats": {
+            "min": 0.0008,
+            "max": 0.0049,
+            "mean": 0.00225
+          }
+        },
+        "acceleration": {
+          "n_frequencies": 1,
+          "n_headings": 67,
+          "surge_amplitude_stats": {
+            "min": 0.0,
+            "max": 0.0136,
+            "mean": 0.0012985074626865672
+          }
+        }
+      }
+    },
+    "comparison": {
+      "all_succeeded": true,
+      "displacement_consistency": {
+        "frequencies_match": false,
+        "headings_match": false,
+        "amplitudes_match": false,
+        "details": [
+          "Frequency count mismatch: unified_v2=1, legacy_processor=0",
+          "Heading count mismatch: unified_v2=14, legacy_processor=0",
+          "Surge amplitude min mismatch: unified_v2=0.000300, legacy_processor=0.000000 (diff=0.000300)",
+          "Surge amplitude max mismatch: unified_v2=0.001800, legacy_processor=0.090800 (diff=0.089000)",
+          "Surge amplitude mean mismatch: unified_v2=0.000829, legacy_processor=0.004565 (diff=0.003737)"
+        ]
+      },
+      "differences": []
+    }
+  }
+]

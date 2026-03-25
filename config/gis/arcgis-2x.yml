@@ -1,0 +1,9 @@
+name: arcgis-2
+channels:
+  - defaults
+#  - esri arcgis
+dependencies:
+  - python=2.7
+  - pip:
+    - ArcGIS
+    

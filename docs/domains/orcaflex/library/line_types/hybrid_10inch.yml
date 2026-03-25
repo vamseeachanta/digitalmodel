@@ -1,0 +1,15 @@
+# HYBRID_10inch - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:11:31
+# Description: Titanium hybrid riser system
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.2731
+ID: 0.2461
+MassPerUnitLength: 52.3
+EA: 685000000.0
+CompressionIsLimited: Yes
+EI:
+- 1680000.0
+- ~
+GJ: 0
+PoissonRatio: 0.34

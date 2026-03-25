@@ -1,0 +1,305 @@
+---
+
+default:
+  Analysis:
+    common.mds: True
+    viv_fatigue:
+      shear7: False
+      factor_of_safety: 20
+    current_data:
+      plot: False
+    wave_data:
+      plot: False
+    combined:
+      fatigue: False
+      histograms: False
+  plot_damage_distribution: True
+  plot_fatigue_life: False
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+
+modal_sets:
+  - io: data_manager\data\shear7\modal\2500ft_WT1000_120pcf_inline.mds
+    label: 2500 ft, 16 ppg
+    x_by_L_range: [0.00625, 0.88]
+  - io: data_manager\data\shear7\modal\5000ft_WT1000_120pcf_inline.mds
+    label: 5000 ft, 16 ppg
+    x_by_L_range: [0.004, 0.92]
+  - io: data_manager\data\shear7\modal\8000ft_WT1000_120pcf_inline.mds
+    label: 8000 ft, 16 ppg
+    x_by_L_range: [0.003, 0.94]
+  - io: data_manager\data\shear7\modal\10000ft_WT1000_120pcf_inline.mds
+    label: 10000 ft, 16 ppg
+    x_by_L_range: [0.002, 0.95]
+
+modal_plots:
+  -
+    file_name: NULL
+    file_extension: frequency
+    array_label: NULL
+    label: NULL
+    x: [Mode Number]
+    y: [Frequency]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: Frequency (Hz)
+    suptitle: FFS Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: [1, 50]
+    ylim: [0, 2.5]
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature
+    array_label: NULL
+    label: NULL
+    x: [Mode Number]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: curvature (1/unit length)
+    suptitle: FFS Analysis
+    title: Curvature with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: [1, 50]
+    ylim: [0, 0.0075]
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature_with_frequency
+    array_label: NULL
+    label: NULL
+    x: [Frequency]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Frequency (Hz)
+    ylabel: curvature (1/unit length)
+    suptitle: FFS Analysis
+    title: Curvature with Frequency
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: [0, 1.0]
+    ylim: [0, 0.0075]
+    xscale:
+      log: False
+
+mode_shape_plots:
+  each_modal_set:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: FFS Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_shape_10s
+      label: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: FFS Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_shape_20s
+      label: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: FFS Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+#    -
+#      file_name: NULL
+#      file_extension: mode_slope
+#      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#      y: [x]
+#      x: [Mode Slope]
+#      size: half_letter
+#      orientation: portrait
+#      plt_kind: scatter
+#      xlabel: Elevation Above Mudline (ft)
+#      ylabel: Mode Slope, Shape normalized to unit length
+#      suptitle: Horn Mountain TTR VIV Analysis
+#      title: Mode Slope
+#      xticklabels: NULL
+#      grid: True
+#      legend: True
+#      legend_location: best
+#      marker: NULL
+#      ylim: NULL
+#      xscale:
+#        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature
+      suptitle: FFS Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+#      xlim: [-0.0001, 0.0001]
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature_10s
+      label: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature
+      suptitle: FFS Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+#      xlim: [-0.0001, 0.0001]
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature_20s
+      label: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature
+      suptitle: FFS Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+#      xlim: [-0.0001, 0.0001]
+      xscale:
+        log: False
+  between_modal_sets:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [1]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: FFS Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [1]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature (1/ unit length)
+      suptitle: FFS Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+
+

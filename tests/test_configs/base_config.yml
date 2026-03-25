@@ -1,0 +1,15 @@
+# Base configuration for tests
+test_settings:
+  timeout: 300  # seconds
+  parallel: true
+  verbose: false
+  
+paths:
+  input_dir: ./test_data
+  output_dir: ./test_output
+  temp_dir: ./temp
+  
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: test_log.txt

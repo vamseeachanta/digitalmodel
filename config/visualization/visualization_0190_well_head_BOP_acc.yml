@@ -1,0 +1,128 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: BOP_Acc
+    nrows: 2
+    ncols: 1
+    suptitle: Yellowtail Well, Noble Bob Douglas
+    sets:
+    -
+      title: BOP Acceleration
+      xlabel: Date
+      ylabel: Count (#)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          statistic: Maximum
+          label: [After Upgrade]
+          x: [StartTime]
+          y: [TableRows]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU_ACCMRU
+          statistic: Maximum
+          label: [Before Upgrade]
+          x: [StartTime]
+          y: [TableRows]
+          plt_kind: scatter
+          marker: NULL
+
+
+#  -
+#    file_name_extension: BOP_Blue_Accelerations
+#    df: input_data_table_statistics
+#    table_name: YT_BOPYELLOWMRU_ACCMRU
+#    statistic: Maximum
+#    label: [Forward, Starboard]
+#    x: [StartTime]
+#    y: [ACCMRU_FWD, ACCMRU_STBD]
+#    size: half_letter
+#    orientation: portrait
+#    plt_kind: scatter
+#    xlabel: Date
+#    ylabel: BOP Acceleration (Unit Unknown)
+#    suptitle: BOP Accelerations, Blue Pod
+#    title: Yellowtail Well, Noble Bob Douglas
+#    xticklabels: NULL
+#    grid: True
+#    legend: True
+#    legend_location: best
+#    marker: NULL
+#    autofmt:
+#      xdate: True
+#    axvspan:
+#      x: [2019-05-30 22:00:00, 2019-06-30 22:00:00]
+#      x_datatype: datetime
+#      facecolor: g
+#      alpha: 0.3
+#      label: Peak Response

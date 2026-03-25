@@ -1,0 +1,939 @@
+# General Configuration
+# Generated from: E02 Rigid hinged stinger with piggyback line.yml
+# Date: 2026-01-18 22:18:11
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 50
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.5
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 100
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 795.6
+  DefaultViewCentre:
+  - 228.5
+  - 8.881784197001252e-16
+  - -44.072292100629994
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+SupportTypes:
+- Name: Support Type1
+  Geometry: V shaped
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  Diameter: 0.35
+  VSupportLength: 1
+  VSupportAngle: 25
+  WireFrameDrawEnds: $000001
+CodeChecks:
+  DNVOSF201GammaF: 1.1
+  DNVOSF201GammaE: 1.3
+  DNVOSF201GammaC: 1
+  DNVOSF201GammaCM: 0
+  DNVOSF201GammaRF: 0.90909
+  DNVOSF201GammaRE: 0.7693
+LineContactData:
+  PenetratorData:
+  - PenetratorLocationsDataSetName: Clamps
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - -0.3
+        - 0
+        - 35
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 40
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 45
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 50
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 55
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 60
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 65
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 70
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 75
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 80
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 85
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 90
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 95
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 100
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 105
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 110
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 115
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 120
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 125
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 130
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 135
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 140
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 145
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 150
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 155
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 160
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 165
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 170
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 175
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 180
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 185
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 190
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 195
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 200
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 205
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 210
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 215
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 220
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 225
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 230
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 235
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 240
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 245
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 250
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 255
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 260
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 265
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 270
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 275
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 280
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 285
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 290
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 295
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 300
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 305
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 310
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 315
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 320
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 325
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 330
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 335
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 340
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 345
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 350
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 355
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 360
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 365
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 370
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 375
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 380
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 385
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 390
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 395
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 400
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 405
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 410
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 415
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 420
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 425
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 430
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 435
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 440
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 445
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 450
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 455
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 460
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 465
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 470
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 475
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 480
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 485
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 490
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 495
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 500
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 505
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 510
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 515
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 520
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 525
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 530
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 535
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 540
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 545
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 550
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 555
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 560
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 565
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 570
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 575
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 580
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 585
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 590
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 595
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 600
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 605
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+      - - -0.3
+        - 0
+        - 610
+        - End A
+        - 0.15
+        - 0.175
+        - ~
+  Relationships:
+  - Name: Relationship1
+    Enabled: Yes
+    PenetratingLine: Pipe
+    PenetratingLineIs: Around
+    SplinedLine: Cable
+    PenetratorLocations: Clamps
+    PenetratorCount: 3
+    PenetratorScale: 1.2
+    ContainmentEnabled: No
+    NormalStiffness: 1000
+    ShearStiffness: 100
+    LateralFrictionCoefficient: 0.5
+    AxialFrictionCoefficient: 10
+  - Name: Relationship2
+    Enabled: Yes
+    PenetratingLine: Cable
+    PenetratingLineIs: Outside
+    SplinedLine: Pipe
+    PenetratorLocations: (each node)
+    ContainmentEnabled: No
+    NormalStiffness: 1000
+    ShearStiffness: 100
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+Groups:
+  Structure:
+    LayBarge and Pipe: Model
+    Vessel1: LayBarge and Pipe
+    Pipe: LayBarge and Pipe
+    Pipe Tensioner1: LayBarge and Pipe
+    Pipe Tensioner2: LayBarge and Pipe
+    Cable: LayBarge and Pipe
+    Cable Tensioner: LayBarge and Pipe
+    Stinger: Model
+    Stinger Buoy: Stinger
+    Hinge: Stinger
+    Runners: Stinger
+    Port Side: Runners
+    Port Runner1: Port Side
+    Port Runner2: Port Side
+    Port Runner3: Port Side
+    Port Runner4: Port Side
+    Port Runner5: Port Side
+    Port Runner6: Port Side
+    Port Runner7: Port Side
+    Port Runner8: Port Side
+    Port Runner9: Port Side
+    Port Runner10: Port Side
+    Port Runner11: Port Side
+    Port Runner12: Port Side
+    Port Runner13: Port Side
+    Starboard Side: Runners
+    Starboard Runner1: Starboard Side
+    Starboard Runner2: Starboard Side
+    Starboard Runner3: Starboard Side
+    Starboard Runner4: Starboard Side
+    Starboard Runner5: Starboard Side
+    Starboard Runner6: Starboard Side
+    Starboard Runner7: Starboard Side
+    Starboard Runner8: Starboard Side
+    Starboard Runner9: Starboard Side
+    Starboard Runner10: Starboard Side
+    Starboard Runner11: Starboard Side
+    Starboard Runner12: Starboard Side
+    Starboard Runner13: Starboard Side
+  State:
+    Collapsed:
+    - Variable data

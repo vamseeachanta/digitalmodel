@@ -1,0 +1,34 @@
+# Vessels Configuration
+# Generated from: C06 Discretised CALM Buoy.yml
+# Date: 2026-01-18 22:19:50
+Vessels:
+- Name: Vessel
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - -89.84920094687584
+  - 127.01024359819651
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - -54.42182314480139
+  IncludedInStatics: None
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: No
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: Yes
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: No
+  IncludeCurrentLoad: Yes
+  IncludeWindLoad: Yes
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 80
+  CalculationMode: QTF modification
+  ShadedDrawingCullingMode: Anticlockwise

@@ -1,0 +1,9 @@
+name: pipeUtilization
+channels:
+  - defaults
+dependencies:
+  - python=3.5.5=h0c2934d_2
+  - yaml=0.1.7
+  - matplotlib=2.2.3
+  - pandas=0.23.4
+  - numpy

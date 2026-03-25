@@ -1,0 +1,9 @@
+# Sea
+WaterSurfaceZ: 0
+KinematicViscosity: 1.35e-6
+SeaTemperature: 10
+ReynoldsNumberCalculation: Flow direction
+# Sea density
+HorizontalWaterDensityFactor: ~
+VerticalDensityVariation: Constant
+Density: 1.025

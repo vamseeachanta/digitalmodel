@@ -1,0 +1,47 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\_12_i01_dl0030.yml
+# Created: 9:25 PM on 9/22/2023
+# User: 
+# Machine: 
+---
+BaseFile: __11__350kg_buoyancy_no_br.yml
+
+General:
+  StaticsMaxIterations: 2000
+  StaticsMinDamping: 50
+  StaticsMaxDamping: 80
+
+Vessels:
+  SevenArctic:
+    InitialX: 691.14
+
+6DBuoys:
+  UTA:
+    InitialX: 659
+    InitialZ: -723
+
+Lines:
+  900TeMainCraneWire:
+    Length[1]: 741
+    EndBX: 566.8
+    EndBZ: -701.7
+  Umbilical:
+    Length[4]: 9.5
+    TargetSegmentLength[4]: 0.5
+    Length[5]: 32
+    TargetSegmentLength[5]: 0.5
+    Length[6]: 9.5
+    TargetSegmentLength[6]: 0.5
+    Length[9]: 657
+    TargetSegmentLength[9]: 5
+    LayAzimuth: 0
+    EndBX: -314.5
+
+Shapes:
+  900TeMainCraneRadius:
+    OuterDiameter: 40
+    InnerDiameter: 39.9
+  900TeMainCraneMast:
+    Length: 20

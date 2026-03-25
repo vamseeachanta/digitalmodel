@@ -1,0 +1,145 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>OCIMF Database Extraction Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+            h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+            h2 { color: #34495e; margin-top: 30px; }
+            .stats { background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #3498db; color: white; }
+            tr:nth-child(even) { background-color: #f2f2f2; }
+            .chart { margin: 20px 0; text-align: center; }
+            .chart img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .success { color: #27ae60; font-weight: bold; }
+            .warning { color: #e74c3c; }
+        </style>
+    </head>
+    <body>
+        <h1>OCIMF Database Extraction Report</h1>
+
+        <div class="stats">
+            <h2>Database Statistics</h2>
+            <p><strong>Total Entries:</strong> 156</p>
+            <p><strong>Vessel Types:</strong> 4</p>
+            <p><strong>Displacement Range:</strong> 306k - 1800k tonnes</p>
+            <p><strong>Heading Range:</strong> 0.0° - 180.0°</p>
+        </div>
+
+        <div class="stats">
+            <h2>Data Quality</h2>
+            <table>
+                <tr>
+                    <th>Coefficient</th>
+                    <th>Complete (%)</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Mean</th>
+                    <th>Std Dev</th>
+                </tr>
+    
+                <tr>
+                    <td>CXw</td>
+                    <td class="warning">83.3%</td>
+                    <td>-0.222</td>
+                    <td>0.353</td>
+                    <td>0.042</td>
+                    <td>0.103</td>
+                </tr>
+            
+                <tr>
+                    <td>CYw</td>
+                    <td class="warning">83.3%</td>
+                    <td>0.000</td>
+                    <td>3.383</td>
+                    <td>1.052</td>
+                    <td>0.938</td>
+                </tr>
+            
+                <tr>
+                    <td>CMw</td>
+                    <td class="warning">83.3%</td>
+                    <td>-0.357</td>
+                    <td>0.360</td>
+                    <td>-0.013</td>
+                    <td>0.149</td>
+                </tr>
+            
+                <tr>
+                    <td>CXc</td>
+                    <td class="success">100.0%</td>
+                    <td>-0.344</td>
+                    <td>0.305</td>
+                    <td>0.001</td>
+                    <td>0.221</td>
+                </tr>
+            
+                <tr>
+                    <td>CYc</td>
+                    <td class="success">100.0%</td>
+                    <td>-0.135</td>
+                    <td>0.000</td>
+                    <td>-0.069</td>
+                    <td>0.052</td>
+                </tr>
+            
+                <tr>
+                    <td>CMc</td>
+                    <td class="success">100.0%</td>
+                    <td>-0.040</td>
+                    <td>0.000</td>
+                    <td>-0.017</td>
+                    <td>0.014</td>
+                </tr>
+            
+            </table>
+        </div>
+
+        <h2>Visualization Charts</h2>
+
+        <div class="chart">
+            <h3>3D Surface Plots - Wind Coefficients</h3>
+            <img src="3d_cxw.png" alt="CXw 3D Surface">
+            <img src="3d_cyw.png" alt="CYw 3D Surface">
+            <img src="3d_cmw.png" alt="CMw 3D Surface">
+        </div>
+
+        <div class="chart">
+            <h3>3D Surface Plots - Current Coefficients</h3>
+            <img src="3d_cxc.png" alt="CXc 3D Surface">
+            <img src="3d_cyc.png" alt="CYc 3D Surface">
+            <img src="3d_cmc.png" alt="CMc 3D Surface">
+        </div>
+
+        <div class="chart">
+            <h3>Polar Diagrams</h3>
+            <img src="polar_diagrams.png" alt="Polar Diagrams">
+        </div>
+
+        <div class="chart">
+            <h3>Force Vector Fields</h3>
+            <img src="vector_field.png" alt="Vector Field">
+        </div>
+
+        <div class="chart">
+            <h3>Coefficient Heatmaps</h3>
+            <img src="heatmaps.png" alt="Heatmaps">
+        </div>
+
+        <div class="chart">
+            <h3>Heading Sensitivity Analysis</h3>
+            <img src="heading_sensitivity.png" alt="Heading Sensitivity">
+        </div>
+
+        <div class="stats">
+            <h2>Validation Status</h2>
+            <p class="success">✓ Database successfully extracted from Excel</p>
+            <p class="success">✓ All visualization charts generated</p>
+            <p class="success">✓ Data quality checks passed</p>
+        </div>
+    </body>
+    </html>
+    

@@ -1,0 +1,114 @@
+{% extends 'StockAnalysis/index.html' %}
+
+{% block subitem_page %}
+	{% if context %}
+	<br>
+		<p>Based on data as of : {{context.cfg.updated_time | safe}}</p>
+		<h4 class="h4">Insider Insights | {{context.cfg.ticker | safe}}</h4>
+		<br>
+
+		<h4 class="h4">Insider Summary | {{context.cfg.ticker | safe}}</h4>
+		<div class="chart" id="insider">
+			<script>
+				var insider = {{context.plot_data.insider | safe}};
+				Plotly.newPlot('insider', insider.data, insider.layout);
+			</script>
+		</div>
+		<br>
+		Interpreting the plot:
+			<ul>
+			  <li>Size of bubble is normalized based on maximum number of shares bought/sold in a single transaction.</li>
+			  <li>For shares sold, difference between cost and Share price represents profit/loss differentials.</li>
+			  <li>			For shares bought, difference between cost and Share price can indicate derivative or option excercised. Equal cost and price indicates at market transaction.</li>
+			</ul>
+		<br>
+
+		<h4 class="h4">Insider Sale Relative to Starting Volume | {{context.cfg.ticker | safe}}</h4>
+		<div class="chart" id="insider_relative_sale">
+			<script>
+				var insider_relative_sale = {{context.plot_data.insider_relative_sale | safe}};
+				Plotly.newPlot('insider_relative_sale', insider_relative_sale.data, insider_relative_sale.layout);
+			</script>
+		</div>
+		<br>
+
+		<h4 class="h4">Insider Buy Relative to Ending Volume | {{context.cfg.ticker | safe}}</h4>
+		<div class="chart" id="insider_relative_buy">
+			<script>
+				var insider_relative_buy = {{context.plot_data.insider_relative_buy | safe}};
+				Plotly.newPlot('insider_relative_buy', insider_relative_buy.data, insider_relative_buy.layout);
+			</script>
+		</div>
+		<br>
+
+
+		<h4 class="h4">Insider By Relationship | {{context.cfg.ticker | safe}}</h4>
+		<div class="chart" id="insiderByRelation">
+			<script>
+				var insiderByRelation = {{context.plot_data.insiderByRelation | safe}};
+				Plotly.newPlot('insiderByRelation', insiderByRelation.data, insiderByRelation.layout);
+			</script>
+		</div>
+		<br>
+
+		<h4 class="h4">Insider Timeline | {{context.cfg.ticker | safe}}</h4>
+		<div class="chart" id="insiderByTimeline">
+			<script>
+				var insiderByTimeline = {{context.plot_data.insiderByTimeline | safe}};
+				Plotly.newPlot('insiderByTimeline', insiderByTimeline.data, insiderByTimeline.layout);
+			</script>
+		</div>
+		<br>
+
+		<h4 class="h4">Insider Info By Relationship | {{context.cfg.ticker | safe}}</h4>
+		<table id="insiderInsightsByRelation" class="table">
+			<thead class="thead-light">
+				<tr>
+					<th scope="col">Relationship</th>
+					<th scope="col">End to Start Share Ratio</th>
+					<th scope="col">Actions </th>
+					<th scope="col">Average Price </th>
+					<th scope="col">Description </th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+
+		<h4 class="h4">Insider Info By Timeline | {{context.cfg.ticker | safe}}</h4>
+		<table id="insiderInsightsByTimeline" class="table">
+			<thead class="thead-light">
+				<tr>
+					<th scope="col">Year-Month</th>
+					<th scope="col">End to Start Share Ratio</th>
+					<th scope="col">Actions </th>
+					<th scope="col">Average Price </th>
+					<th scope="col">Description </th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/1.4.0/json2html.min.js"></script>
+	<script>
+
+		var transform = {tag: 'tr',
+			children: [{"tag": "td","html": "${Relationship}"},{"tag": "td","html": "${Share Holding Ratio}"},{"tag": "td","html": "${Average Cost}"},{"tag": "td","html": "${Actions}"},{"tag": "td","html": "${Tooltip}"}]
+			};
+		var data = {{context.cfg.insider_by_relation | safe}};
+		$('#insiderInsightsByRelation > tbody ').json2html(data, transform);
+
+		var transform = {tag: 'tr',
+			children: [{"tag": "td","html": "${tradeDate}"},{"tag": "td","html": "${Share Holding Ratio}"},{"tag": "td","html": "${Actions}"},{"tag": "td","html": "${Average Cost}"},{"tag": "td","html": "${Tooltip}"}]
+			};
+		var data = {{context.cfg.insider_by_timeline | safe}};
+		$('#insiderInsightsByTimeline > tbody ').json2html(data, transform);
+
+		var template = {'<>':'div','html':'${Description} ${Value}'};
+		var data = {{context.cfg.status | safe}};
+		$("#dataQuality").json2html(data,template);
+	</script>
+
+
+	{% endif %}
+{% endblock %} {# subitem_page #}
+

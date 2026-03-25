@@ -1,0 +1,14 @@
+The file how-to-find-custom-replay.png shows how to find it in O/F's interface.  
+
+The files 
+ custom-replay-wiz_step1(general).png, 
+ custom-replay-wiz_step2(from-view).png,
+ custom-replay-wiz_step3(to-view).png &
+ custom-replay-wiz_step4(view-mode&save).png, 
+are intended to give you some advice about how to use the wizard.
+
+Those files and this text accompany an example of a custom replay.  It uses a model which is actually one of the official examples.  It's H02 (a Chinese-lantern offloading system).  The data file (H01 Chinese Lantern.dat) is attached for you.  The parameters which control the replay are in a text file (H01 Chinese Lantern.txt).  
+
+Please save all files in the same folder as each other, then run the simulation.  After doing that, please click on the O/F icon for edit replay parameters.  In the data cell for replay specification you will need to alter the path for the text file (attached here) which controls the replay (browse for the text file).
+
+By the way, the text file can be opened in a programme such as Notepad++, edited manually and then saved.  That can be done with the OrcaFlex window and model active.  After saving the text file, simply click on the start-replay icon again and the revised data in the text file will be loaded to show a modified replay.   Please feel free to adjust the data and then see what changes are made to the replay.

@@ -1,0 +1,39 @@
+﻿BaseFile: __11__350kg_buoyancy_no_br.yml
+
+General:
+  StaticsMaxIterations: 2000
+  StaticsMinDamping: 50
+  StaticsMaxDamping: 80
+
+Vessels:
+  SevenArctic:
+    InitialX: 697.14
+
+6DBuoys:
+  UTA:
+    InitialX: 665
+    InitialZ: -729
+
+Lines:
+  900TeMainCraneWire:
+    Length[1]: 747
+    EndBX: 562.8
+    EndBZ: -707.7
+  Umbilical:
+    Length[4]: 9.5
+    TargetSegmentLength[4]: 0.5
+    Length[5]: 32
+    TargetSegmentLength[5]: 0.5
+    Length[6]: 9.5
+    TargetSegmentLength[6]: 0.5
+    Length[9]: 657
+    TargetSegmentLength[9]: 5
+    LayAzimuth: 0
+    EndBX: -314.5
+
+Shapes:
+  900TeMainCraneRadius:
+    OuterDiameter: 40
+    InnerDiameter: 39.9
+  900TeMainCraneMast:
+    Length: 20

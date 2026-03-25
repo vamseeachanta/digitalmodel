@@ -1,0 +1,6 @@
+name: pipeUtilization
+channels:
+  - defaults
+dependencies:
+  - python=3.6
+  - yaml

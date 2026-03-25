@@ -1,0 +1,794 @@
+# Lines Configuration
+# Generated from: A02 Lazy S simple.yml
+# Date: 2026-01-18 22:17:58
+Lines:
+- Name: 10" riser N
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 0.965925826289064
+      - 0.258819045102518
+      - -7.5
+      - 45
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - -203.5
+      - 3
+      - 0.1778
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 135
+      - End A
+      - 10" riser N clamp
+      - 0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+    - - 136
+      - End A
+      - 10" riser N clamp
+      - -0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10"
+    - 123
+    - 4
+  - - 10"
+    - 12
+    - 0.5
+  - - 10"
+    - 1
+    - 1
+  - - 10"
+    - 5
+    - 0.5
+  - - 10"
+    - 70
+    - 2
+  - - 10"
+    - 20
+    - 0.5
+  - - 10"
+    - 30
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0.429
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Umbilical
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 0.819152044580081
+      - 0.573576436091888
+      - -7.5
+      - 45
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - -203.5
+      - 1
+      - 0.127
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 138
+      - End A
+      - Umbilical clamp
+      - 0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+    - - 139
+      - End A
+      - Umbilical clamp
+      - -0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - Umb
+    - 126
+    - 4
+  - - Umb
+    - 12
+    - 0.5
+  - - Umb
+    - 1
+    - 1
+  - - Umb
+    - 5
+    - 0.5
+  - - Umb
+    - 70
+    - 2
+  - - Umb
+    - 20
+    - 0.5
+  - - Umb
+    - 30
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: 8" riser
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 0.573576436154988
+      - 0.819152044560973
+      - -7.5
+      - 45
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - -203.5
+      - -1
+      - 0.14224
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 132
+      - End A
+      - 8" riser clamp
+      - 0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+    - - 133
+      - End A
+      - 8" riser clamp
+      - -0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - 8"
+    - 120
+    - 4
+  - - 8"
+    - 12
+    - 0.5
+  - - 8"
+    - 1
+    - 1
+  - - 8"
+    - 5
+    - 0.5
+  - - 8"
+    - 70
+    - 2
+  - - 8"
+    - 20
+    - 0.5
+  - - 8"
+    - 30
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0.3984
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: 10" riser S
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 0.258819045046733
+      - 0.965925826497286
+      - -7.5
+      - 45
+      - 170
+      - 0
+      - ~
+    - - Anchored
+      - -203.5
+      - -3
+      - 0.1778
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 135
+      - End A
+      - 10" riser S clamp
+      - 0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+    - - 136
+      - End A
+      - 10" riser S clamp
+      - -0.5
+      - 0
+      - 0
+      - 180
+      - 90
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10"
+    - 123
+    - 4
+  - - 10"
+    - 12
+    - 0.5
+  - - 10"
+    - 1
+    - 1
+  - - 10"
+    - 5
+    - 0.5
+  - - 10"
+    - 70
+    - 2
+  - - 10"
+    - 20
+    - 0.5
+  - - 10"
+    - 30
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0.429
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Bridle_NE
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Arch
+      - -3.5
+      - -5
+      - -6.5
+      - 357.753039931377
+      - 180
+      - -2.24696006862301
+      - ~
+    - - ArchTie_N
+      - 0
+      - 0
+      - 0
+      - 180
+      - 1.020574512821744
+      - -180
+      - ~
+      - End A
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 8
+    - 4
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Bridle_NW
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Arch
+      - 3.49999999999999
+      - -5
+      - -6.5
+      - 357.753039931377
+      - 180
+      - -2.24696006862301
+      - ~
+    - - ArchTie_N
+      - 0
+      - 0
+      - 0
+      - 180
+      - 1.020574512821744
+      - -180
+      - ~
+      - End A
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 8
+    - 4
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Bridle_SE
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Arch
+      - -3.50000000000001
+      - 5
+      - -6.5
+      - 357.753039931377
+      - 180
+      - -2.24696006862301
+      - ~
+    - - ArchTie_S
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0.6036892714160796
+      - -180
+      - ~
+      - End A
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 8
+    - 4
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Bridle_SW
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Arch
+      - 3.50000000000001
+      - 5
+      - -6.5
+      - 357.753039931377
+      - 180
+      - -2.24696006862301
+      - ~
+    - - ArchTie_S
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0.6036892714160796
+      - -180
+      - ~
+      - End A
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 8
+    - 4
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: ArchTie_S
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - -101.80636907105861
+      - -4.895716138477788
+      - -58.31482150834541
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Anchored
+      - -103.5
+      - -5
+      - 4.99999999999999
+      - 60
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - []
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 34
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: ArchTie_N
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - -101.15178596346348
+      - 5.0978465861196085
+      - -58.53541404918093
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Anchored
+      - -103.5
+      - 5
+      - 4.99999999999999
+      - 60
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - []
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 2" chain
+    - 34
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White

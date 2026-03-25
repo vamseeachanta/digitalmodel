@@ -1,0 +1,113 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: S:\IAT\SURF\Chevron_deepwater_field_a\03-Struct_SUT\02-DETAILED\03-DZ-00deg_AHC\SUT_DZ_00deg_1990m.yml
+# Created: 11:40 AM on 4/28/2023
+# User: 
+# Machine: 
+---
+BaseFile: SUT_MM_DZ_00deg_properties.yml
+General:
+  ImplicitVariableMaxTimeStep: 0.05
+  StageCount: 3
+  StageDuration[1]: 50
+  StageDuration[2]: 50
+  StageDuration[3]: 50
+VariableData:
+  Externalfunctions:
+    New: PIDWinchControl
+    PIDWinchControl:
+      Source: External file
+      FileName: ExternalFunction64.dll
+      FunctionName: PIDController
+      InitialValue: 0
+      TimeStep: Outer time step
+Environment:
+  WaveTrains:
+    Wave1:
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 0.001
+      WavePeriod: 9
+      WaveStreamFunctionOrder: 5
+LineTypes:
+  MainHoistLine_68mm_12x3LANKO:
+    EA: 97.6e3
+6DBuoys:
+  SUT_DZ_30deg:
+    InitialX: 25.22990998661725
+    InitialY: -20.759000000004885
+    InitialZ: -1992.2684635361368
+3DBuoys:
+  Masterlink:
+    InitialX: 25.200000000000003
+    InitialZ: -1983.8878779574552
+Lines:
+  CraneWire#1:
+    EndBConnection: Free
+    EndBZ: 24.621906307762373
+    Length[1]: 10
+  CraneWire#2:
+    EndAX: 25.199999999999992
+    EndAY: -20.758999999999997
+    EndAZ: 14.614204189610286
+    EndBX: 25.200000000000003
+    EndBY: -20.759
+    EndBZ: -1980.9322944579144
+    NumberOfSections: 3
+    Length[1]: 10
+    LineType[2]: MainHoistLine_68mm_12x3LANKO
+    Length[2]: 1974
+    ExpansionFactor[2]: ~
+    TargetSegmentLength[2]: 5
+    ClashCheck[2]: No
+    PreBendCurvaturex[2]: 0
+    PreBendCurvaturey[2]: 0
+    ReactsToWake[2]: No
+    WakeModel[2]: (none)
+    DisturbanceVessel[2]: (none)
+    LineType[3]: MainHoistLine_68mm_12x3LANKO
+    Length[3]: 10
+    ExpansionFactor[3]: ~
+    TargetSegmentLength[3]: 1
+    ClashCheck[3]: No
+    PreBendCurvaturex[3]: 0
+    PreBendCurvaturey[3]: 0
+    ReactsToWake[3]: No
+    WakeModel[3]: (none)
+    DisturbanceVessel[3]: (none)
+Winches:
+  New: HeaveCompWinch
+  HeaveCompWinch:
+    Locked: No
+    WinchType: Simple
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [CraneWire#1, 0, 0, 0, End B]
+      - [CraneWire#2, 0, 0, 0, End A]
+    Stiffness: 97.6e3
+    Damping: 0.05
+    ReleaseStage: ~
+    WinchControlType: Whole simulation
+    StaticMode: Specified length
+    StaticValue: 10
+    WholeSimulationControlMode: Specified payout rate
+    WholeSimulationPayoutRate: PIDWinchControl
+    Hidden: No
+    Pen: [4, Solid, $80FF80]
+    ShadedDrawingDiameter: 0.22
+    Tags:
+      ControlledVariableObjectName: HeaveCompWinch
+      ControlledVariableResultName: Z
+      ObjectExtra.WinchConnectionPoint: 1
+      DesiredValue: ! "24.9\r\n"
+      kI: 0.0
+      kP: 0.0
+      kD: -0.9
+      k0: 0.0
+      ControlStartTime: -100
+      Initial e/D: 0.0
+      Initial De: 0.0
+      MaxValue: 10
+      MinValue: -10
+      OutputDiagnostics: No
+...

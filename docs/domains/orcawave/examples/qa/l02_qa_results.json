@@ -1,0 +1,39 @@
+{
+  "example_id": "L02",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L02 OC4 Semi-sub\\L02 OC4 Semi-sub.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 4,
+  "n_passed": 4,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "positive_damping_diagonal",
+      "passed": true,
+      "message": "Min diagonal damping = 0.02462",
+      "value": 0.02462111142843656,
+      "threshold": 0.0
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "heave_rao_quasi_static",
+      "passed": true,
+      "message": "Heave RAO at T=30.0s = 1.044 (expected ~1.0 \u00b1 0.2)",
+      "value": 1.0442581873991592,
+      "threshold": 1.0
+    }
+  ]
+}

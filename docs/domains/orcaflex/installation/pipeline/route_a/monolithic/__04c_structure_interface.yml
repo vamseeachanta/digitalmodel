@@ -1,0 +1,36 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\__04c_structure_interface.yml
+# Created: 4:32 PM on 9/20/2023
+# User: 
+# Machine: 
+---
+BaseFile: __04b_add_riggings.yml
+6DBuoys:
+  UTA:
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+Lines:
+  900TeMainCraneWire:
+    EndAX: -89
+    EndAY: 0
+    EndBX: -89
+    EndBY: 0
+    EndBZ: 34.3
+    Length[1]: 5
+  Rigging2ndCrane1:
+    EndBConnection: UTA
+    EndBX: 0.7305
+    EndBY: 0
+    EndBZ: 0.106
+    ConnectionxBendingStiffness[2]: 0
+    ConnectionyBendingStiffness[2]: ~
+Shapes:
+  900TeMainCraneRadius:
+    OuterDiameter: 116
+    InnerDiameter: 115.9
+  900TeMainCraneMast:
+    Azimuth: 192
+    Length: 58
+...

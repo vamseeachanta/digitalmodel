@@ -1,0 +1,7 @@
+test103a.frc
+1 1 1 1 0  0 0 0 0 1  1 1 0 0 0  0  IOPTN(1..16)
+1.0                                 RHO
+test103c.frc                        FRC(1)
+test103s.frc                        FRC(2)
+0                                   NBETAH
+0                                   NFIELD

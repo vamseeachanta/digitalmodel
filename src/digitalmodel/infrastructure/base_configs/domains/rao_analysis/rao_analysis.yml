@@ -1,0 +1,53 @@
+basename: rao_analysis
+
+default:
+  log_level: DEBUG
+
+  config:
+    overwrite:
+      output: True
+
+rao_plot:
+  displacement:
+    flag: False
+    xaxis_range: [4, 10]
+    RAODirections: [0, 30, 45, 90]
+  seastate:
+    flag: True
+    filter:
+      cog: 
+        x: -32.65
+        y: 38.14
+        z: 7.1
+      l: 11.3
+      w: 11.3
+      beyond_boundary: 2
+    xaxis_range: [4, 10]
+    RAODirections: [0, 30, 45, 90]
+
+
+Files:
+- Label: seastate_raos
+  Name: my_ss_raos.yml
+  vessel_name: SevenArctic
+  draughts: []
+
+qa_criteria:
+
+  conventions:
+    - name: DNVGL-ST-0111
+      version: 2018-01
+      rule: 5-1
+      tolerance: 0.02
+
+  heave:
+    heading: 0
+    amplitude: 1.0
+    period: maximum
+    tolerance: 0.02
+
+  pitch:
+    heading: 0
+    amplitude: 1.0
+    period: maximum
+    tolerance: 0.02

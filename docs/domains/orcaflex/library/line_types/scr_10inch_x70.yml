@@ -1,0 +1,15 @@
+# SCR_10inch_X70 - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:11:31
+# Description: High strength 10-inch X70 riser
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.2731
+ID: 0.2461
+MassPerUnitLength: 80.5
+EA: 815000000.0
+CompressionIsLimited: Yes
+EI:
+- 1920000.0
+- ~
+GJ: 0
+PoissonRatio: 0.3

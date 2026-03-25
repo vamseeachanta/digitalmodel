@@ -1,0 +1,216 @@
+Lines:
+- Name: 10in Lazy Wave Distributed
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 36.0
+      - 1.732
+      - -7.5
+      - 60.0
+      - 170.0
+      - 0
+      - ~
+    - - Anchored
+      - 89.5
+      - -35.0
+      - 0.178
+      - 0.0
+      - 90.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0.0
+    - ~
+    - ~
+  - - 0.0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10in_flexible
+    - 50.0
+    - 4.0
+  - - 10in_flexible
+    - 30.0
+    - 1.0
+  - - 10in_flexible_with_floats
+    - 50.0
+    - 1.0
+  - - 10in_flexible
+    - 40.0
+    - 1.0
+  - - 10in_flexible
+    - 20.0
+    - 4.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180.5
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
+- Name: 10in Lazy Wave Discrete
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 36.0
+      - 1.732
+      - -7.5
+      - 60.0
+      - 170.0
+      - 0
+      - ~
+    - - Anchored
+      - 89.5
+      - -35.0
+      - 0.178
+      - 0.0
+      - 90.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0.0
+    - ~
+    - ~
+  - - 0.0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10in_flexible
+    - 50.0
+    - 4.0
+  - - 10in_flexible
+    - 30.0
+    - 1.0
+  - - 10in_flexible
+    - 50.0
+    - 0.625
+  - - 10in_flexible
+    - 40.0
+    - 1.0
+  - - 10in_flexible
+    - 20.0
+    - 4.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180.5
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Module
+    - 0
+    - 0
+    - 81.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 83.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 86.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 88.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 91.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 93.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 96.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 98.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 101.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 103.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 106.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 108.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 111.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 113.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 116.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 118.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 121.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 123.75
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 126.25
+    - End A
+  - - Module
+    - 0
+    - 0
+    - 128.75
+    - End A

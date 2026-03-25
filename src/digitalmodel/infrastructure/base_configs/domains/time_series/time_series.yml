@@ -1,0 +1,39 @@
+basename: time_series
+
+calculation:
+  statistics: True
+  fft: False
+  ifft: True
+
+filter:
+  low_pass:
+    flag: False
+    frequency_maximum: NULL
+  high_pass:
+    flag: False
+    frequency_minimum: NULL
+  band_pass:
+    flag: False
+    frequency_minimum: NULL
+    frequency_maximum: NULL
+
+master_settings:
+  groups:
+    columns:
+      time: time
+      signal: POSITION OF COG_in Y direction
+
+data:
+  type: csv
+  groups:
+    - label: PMS1
+      file_name: results/D_D_F2L95_HWL_100Y_D060_strut_f.csv
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL

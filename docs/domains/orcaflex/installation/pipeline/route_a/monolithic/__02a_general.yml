@@ -1,0 +1,5 @@
+﻿BaseFile: __01__vessel.yml
+General:
+  StaticsMinDamping: 2
+  StaticsTolerance: 0.025
+  ImplicitConstantTimeStep: 0.05

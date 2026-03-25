@@ -1,0 +1,17 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\_15_i03_uta_dof_all.yml
+# Created: 1:36 AM on 9/30/2023
+# User: 
+# Machine: 
+---
+BaseFile: _15_i02_cal.yml
+General:
+  StaticsTolerance: 10e-6
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 10
+6DBuoys:
+  UTA:
+    InitialZ: -722
+...

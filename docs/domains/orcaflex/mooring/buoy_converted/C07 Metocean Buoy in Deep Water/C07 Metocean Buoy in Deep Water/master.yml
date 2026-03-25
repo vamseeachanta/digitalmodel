@@ -1,0 +1,28 @@
+%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.5e
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\C07 Metocean Buoy in Deep Water\C07 Metocean Buoy in Deep Water.yml
+# Created: 10:13 AM on 10/22/2025
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Input Parameters (for parametric analysis)
+_inputs:
+  water_depth: 500
+  current_speed: 1.125
+  wind_speed: 0
+  water_density: 1.025
+  stage_durations:
+  - 11.5
+  - 100
+  hs: 13
+  tp: 11.5
+  wave_direction: 0
+
+# Include files
+- includefile: includes/01_general.yml
+- includefile: includes/02_var_data.yml
+- includefile: includes/03_environment.yml
+- includefile: includes/05_line_types.yml
+- includefile: includes/07_lines.yml
+- includefile: includes/08_buoys.yml

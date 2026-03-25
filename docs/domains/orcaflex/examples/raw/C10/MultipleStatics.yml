@@ -1,0 +1,8 @@
+Model: C10 Multiple statics.dat
+VesselName: Vessel1
+AzimuthFrom: 0
+AzimuthTo: 90
+AzimuthStep: 15
+OffsetFrom: 0
+OffsetTo: 30
+OffsetStep: 2

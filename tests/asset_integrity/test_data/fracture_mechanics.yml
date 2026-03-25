@@ -1,0 +1,281 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  Analysis:
+    fracture_mechanics:
+      flaw_limits: True
+      flaw_growth: True
+  units:
+    theta: degrees
+    a: mm
+    c: mm
+    ctod: mm
+    stress: psi
+
+  geometry:
+    deep_notched_plates: False
+    plates: False
+    curved_shells: False
+    sphere: False
+    tubular_joints: False
+    round_bars_and_bolts: False
+    welded_joints: False
+    thin_pipe: True
+    cylinder: False
+
+  settings:
+    multi_process: True
+    ctod: 0.254
+    service_life:
+      values: [2, 5]
+      solution_step: 0.1
+    factor_of_safety: 3
+    yield_discontinuity: False
+    scf_bending: 1.1
+    a_array:
+      start: 0.5
+      end: 25
+      step: 0.1
+    #    c_array: [5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 80, 100, 120, 150, 180, 200]
+    c_array: [5, 20, 100, 200]
+    location_array: [embedded]
+    #    location_array: [external_surface]
+    orientation_array: [circumferential]
+    #    orientation_array: [circumferential]
+    #    theta_array: [0, 90]
+    theta_array: [90]
+    fad_properties_columns:
+      [
+        flaw_geometry,
+        flaw_orientation,
+        flaw_location,
+        flaw_theta,
+        flaw_depth,
+        flaw_length,
+        K_r,
+        L_r,
+        K_r_allowable,
+      ]
+    flaw_growth_properties_columns:
+      [
+        component,
+        service_life,
+        flaw_geometry,
+        flaw_orientation,
+        flaw_location,
+        flaw_theta,
+        final_flaw_depth,
+        final_flaw_length,
+        K_r,
+        L_r,
+        K_r_allowable,
+      ]
+    approximate_initial_flaw_properties_columns:
+      [
+        component,
+        service_life,
+        flaw_geometry,
+        flaw_orientation,
+        flaw_location,
+        flaw_theta,
+        initial_flaw_depth,
+        initial_flaw_length,
+        final_flaw_depth,
+        final_flaw_length,
+        K_r,
+        L_r,
+        K_r_allowable,
+      ]
+    save_detailed_results: False
+  fracture_resistance:
+    option_1: True
+    option_2: False
+    option_3: False
+  stress_intensity_factor_solution_tables:
+    from_xlsx:
+      - label: bs7910_stress_intensity_tables
+        io: tests/test_data/fracture_mechanics/bs7910_stress_intensity_solutions.xlsx
+
+flaw:
+  geometry: thin_pipe
+  orientation: axial # circumferential, axial
+  location: internal_surface # internal, external, embedded
+  dimensions:
+    a: 2
+    c: 4
+    p: 1
+  theta: 90
+
+paris_curve:
+  label: Steel In Marine Environment With CP at -850 mV (Ag/AgCl)
+  A_1: 4.8E-18
+  m_1: 5.1
+  transfer_delta_K: 323
+  A_2: 6.00E-12
+  m_2: 2.67
+
+loading:
+  primary_membrane_stress:
+    value: 64000
+    membrane_factor: 0.5
+    bending_factor: 0.5
+
+  secondary_membrane_stress:
+    stress_to_yield:
+      axial: 0.3
+      circumferential: 0.2
+    membrane_factor: 1
+    bending_factor: 0
+  histograms:
+    from_xlsx:
+      - label: combined_histograms
+        io: tests/test_data/histograms/2500ft_WT0750_064pcf_combined_histograms.xlsx
+        sheet_name: combined_fatigue
+        #        component_index: [10, 11]
+        component_index: [11]
+        #        component_label: [Buoyancy Jt. at Bottom, Slick jt. at bottom]
+        component_label: [Slick jt. at bottom]
+        bending_factor: 1.0
+        index_col: NULL
+        skiprows: 0
+        skipfooter: 0
+        columns: NULL
+        replace: NULL
+        column_to_analyze: NULL
+
+Outer_Pipe:
+  Geometry:
+    Nominal_OD: 21
+    Nominal_ID: NULL
+    Design_WT: 1.00
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X80
+    WeldFactor:
+      Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+  Manufacturing:
+    Coupling Mass Ratio: 0.1
+
+Inner_Pipe: NULL
+
+Material:
+  Steel:
+    E: 30000000.00
+    Rho: 0.2817929
+    Poissionsratio: 0.30
+    ThermalExpansionCoefficient: 6.5E-6
+    Grades:
+      API 5L X80:
+        SMYS: 80000
+        SMUS: 95000
+        Reference: Assumed
+    cov:
+      E: 0.05
+      SMYS: 0.07
+      SMUS: 0.05
+
+weld:
+  Steel:
+    cov:
+      E: 0.05
+      SMYS: 0.10
+      SMUS: 0.10
+
+plot_settings:
+  - file_name_extension: FAD
+    label: ["Option 1"]
+    x: [L_r]
+    y: [K_r]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Lr (Load Ratio)
+    ylabel: Kr (Fracture Ratio)
+    suptitle: Fatigue Assessment Diagram
+    title: BS 7910, Option 1
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+    xlim: [0, 1.6]
+    ylim: [0, 1.6]
+    xscale:
+      log: False
+    text_fields:
+      - x: 0.4
+        y: 0.4
+        text: Acceptable
+        color: g
+      - x: 0.8
+        y: 1.0
+        text: Unacceptable
+        color: r
+
+  - file_name_extension: unstable_fracture_limits
+    label: ["Option 1"]
+    x: [flaw_length]
+    y: [flaw_depth]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Flaw Length, 2c (mm)
+    ylabel: Flaw Depth, a (mm)
+    suptitle: Unstable Fracture Limits
+    title: BS 7910, Fracture Load at End of Life = 0.8 Yield
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: NULL
+    ylim: [0, 16]
+    xscale:
+      log: False
+
+  - file_name_extension: minimum_initial_flaw
+    label: ["Option 1"]
+    x: [final_flaw_length]
+    y: [final_flaw_depth]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Flaw Length, 2c (mm)
+    ylabel: Flaw Depth, a (mm)
+    suptitle: Minimum Allowable Initial Flaw
+    title: BS 7910, {}
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: NULL
+    ylim: [0, 16]
+    xscale:
+      log: False
+
+  - file_name_extension: flaw_growth_rate
+    label: ["Option 1"]
+    x: [service_life]
+    y: [final_flaw_depth]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Service Life (years)
+    ylabel: Flaw Depth, a (mm)
+    suptitle: Flaw Growth Profiles
+    title: BS 7910, {}, {}, {}
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    xlim: NULL
+    ylim: [0, 25]
+    xscale:
+      log: False

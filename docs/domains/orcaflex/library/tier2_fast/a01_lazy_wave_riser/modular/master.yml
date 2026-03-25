@@ -1,0 +1,12 @@
+%YAML 1.1
+# Type: Model
+# Generated from: in-memory spec
+
+---
+- includefile: includes/01_general.yml
+- includefile: includes/03_environment.yml
+- includefile: includes/04_riser_clump_types.yml
+- includefile: includes/05_riser_line_types.yml
+- includefile: includes/06_riser_vessels.yml
+- includefile: includes/07_riser_lines.yml
+- includefile: includes/10_groups.yml

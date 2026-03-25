@@ -1,0 +1,24 @@
+meta:
+  label: 'fsts_l015_lwl_180km3_l100_pb'
+  basename: 'orcaflex_post_process'  # Based on the engine.py router
+
+file_management:
+  input_directory: '../02c_005yr'
+  output_directory: '../output/csv/02c_005yr'
+  filename:
+    pattern: 'fsts_l015_lwl_180km3_l100_pb'
+
+# Parallel processing configuration
+parallel_processing:
+  enabled: true
+  max_workers: 4  # Number of parallel workers (adjust based on your CPU cores)
+  task_type: 'mixed'  # Can be 'cpu_bound', 'io_bound', or 'mixed'
+  auto_optimize: true  # Automatically optimize worker count based on file sizes
+  timeout_per_file: 3600  # Timeout in seconds per file
+  save_error_reports: true  # Save error reports for failed files
+
+# OrcaFlex specific settings (if needed)
+orcaflex:
+  post_process:
+    enabled: true
+    output_format: 'csv'

@@ -1,0 +1,352 @@
+# General Configuration
+# Generated from: calm_floating_hose.yml
+# Date: 2026-01-18 21:53:21
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 30
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.01
+  ImplicitConstantMaxNumOfIterations: 10
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 11
+  - 65
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultShadedProjectionMode: Perspective
+  DefaultViewSize: 50
+  DefaultViewCentre:
+  - -0.4901810823880154
+  - -25.2402429964025
+  - -10.13813914296449
+  DefaultViewAzimuth: 257.1
+  DefaultViewElevation: -3.6
+ClumpTypes:
+- Name: Buoyancy
+  Mass: 0.139825
+  Volume: 0.553
+  Height: 0.8
+  AlignWith: Line axes
+  DragArea:
+  - 1.08
+  - 1.08
+  - 1.431388153
+  Cd:
+  - 1.1
+  - 1.1
+  - 0.01
+  Ca:
+  - 1
+  - 1
+  - 1
+  Pen:
+  - 3
+  - Solid
+  - Yellow
+LineContactData:
+  PenetratorData: []
+  Relationships:
+  - Name: Relationship1
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: Outer String
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 100
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship2
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact1
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship3
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact2
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship4
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact3
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship5
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact4
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship6
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact5
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship7
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact6
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship8
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact6
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship9
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact8
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship10
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact9
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship11
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact10
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship12
+    Enabled: Yes
+    PenetratingLine: Inner String
+    PenetratingLineIs: Outside
+    SplinedLine: contact11
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship13
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact1
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship14
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact2
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship15
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact3
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship16
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact4
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship17
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact5
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship18
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact6
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship19
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact6
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship20
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact8
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship21
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact9
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship22
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact10
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+  - Name: Relationship23
+    Enabled: Yes
+    PenetratingLine: Outer String
+    PenetratingLineIs: Outside
+    SplinedLine: contact11
+    PenetratorLocations: (each node)
+    ContainmentEnabled: Yes
+    NormalStiffness: 500
+    ShearStiffness: 0
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+Groups:
+  Structure:
+    With Torsion: Model
+    Without Torsion: Model
+    CALM Buoy1: Without Torsion
+    Chain1: Without Torsion
+    Chain4: Without Torsion
+    Chain6: Without Torsion
+    Chain5: Without Torsion
+    Chain2: Without Torsion
+    Chain3: Without Torsion
+    Base1: Without Torsion
+    Hawser: Model
+    Vessel: Model
+    Outer String: Model
+    Inner String: Model
+    CONTACTGP: Model
+    Shape1: CONTACTGP
+    contact1: CONTACTGP
+    contact2: CONTACTGP
+    contact3: CONTACTGP
+    contact4: CONTACTGP
+    contact5: CONTACTGP
+    contact6: CONTACTGP
+    contact7: CONTACTGP
+    contact8: CONTACTGP
+    contact9: CONTACTGP
+    contact10: CONTACTGP
+    contact11: CONTACTGP
+  State:
+    Collapsed: []

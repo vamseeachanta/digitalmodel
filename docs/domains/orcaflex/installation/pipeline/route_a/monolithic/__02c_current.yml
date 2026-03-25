@@ -1,0 +1,45 @@
+﻿BaseFile: __02b_water_depth.yml
+
+Environment:
+  CurrentRamped: Yes
+  RefCurrentDirection: 0
+  NumberOfCurrentLevels: 14
+  CurrentFactor[1]: 0.38
+  CurrentDepth[2]: 60
+  CurrentFactor[2]: 0.35
+  CurrentDepth[3]: 124
+  CurrentFactor[3]: 0.33
+  CurrentRotation[3]: 0
+  CurrentDepth[4]: 188
+  CurrentFactor[4]: 0.32
+  CurrentRotation[4]: 0
+  CurrentDepth[5]: 252
+  CurrentFactor[5]: 0.32
+  CurrentRotation[5]: 0
+  CurrentDepth[6]: 316
+  CurrentFactor[6]: 0.26
+  CurrentRotation[6]: 0
+  CurrentDepth[7]: 380
+  CurrentFactor[7]: 0.24
+  CurrentRotation[7]: 0
+  CurrentDepth[8]: 444
+  CurrentFactor[8]: 0.24
+  CurrentRotation[8]: 0
+  CurrentDepth[9]: 508
+  CurrentFactor[9]: 0.22
+  CurrentRotation[9]: 0
+  CurrentDepth[10]: 572
+  CurrentFactor[10]: 0.2
+  CurrentRotation[10]: 0
+  CurrentDepth[11]: 636
+  CurrentFactor[11]: 0.19
+  CurrentRotation[11]: 0
+  CurrentDepth[12]: 700
+  CurrentFactor[12]: 0.17
+  CurrentRotation[12]: 0
+  CurrentDepth[13]: 764
+  CurrentFactor[13]: 0.13
+  CurrentRotation[13]: 0
+  CurrentDepth[14]: 925
+  CurrentFactor[14]: 0
+  CurrentRotation[14]: 0

@@ -1,0 +1,546 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\yml\D02\D02 Pull in analysis.yml
+# Created: 9:49 PM on 1/17/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+General:
+  # Units
+  UnitsSystem: SI
+  # Analysis data
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 2400
+  StaticsMinDamping: 2
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.05
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 1
+    - 46
+    - 40
+    - 5
+  # Restart state
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+  # Default view parameters
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 563.3995550746948
+  DefaultViewCentre: [152.48182650354414, 702.2754512462228, -133.507155305292]
+  DefaultViewAzimuth: 315
+  DefaultViewElevation: 90
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  SeabedOriginDepth: 137
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 500
+  SeabedShearStiffness: 100
+  # Waves
+  KinematicStretchingMethod: Vertical stretching
+  WaveTrains:
+    - Name: Wave 1
+      WaveType: Airy
+      WaveDirection: 180
+      WaveHeight: 0
+      WavePeriod: 10
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 0, 0]
+    - [100, 0, 0]
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+  # Drawing
+  SeabedTranslucency: 0
+LineTypes:
+  - Name: Pipe Type
+    Category: General
+    # Geometry and mass
+    OD: 0.142
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.02548
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [60, ~]
+    EA: 269e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 10e3
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: 0.3
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+  - Name: Pullhead
+    Category: General
+    # Geometry and mass
+    OD: 0.3
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 1
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [60, ~]
+    EA: 269e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 10e3
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: 0.3
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Drawing
+    Pen: [1, Solid, $00FF80]
+  - Name: Gateway
+    Category: General
+    # Geometry and mass
+    OD: 0.5
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 10e-6
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [60, ~]
+    EA: 269e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 10e3
+    # Added mass, inertia and slam
+    Ca: [0, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [0, ~, 0]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Drawing
+    Pen: [3, Solid, Blue]
+Lines:
+  - Name: Pipe
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Free, 66.38999999999999, 610.949, -136.85, 50.78, 90, 0, ~]
+      - [Free, 363.50150620402354, 825.9268264163715, -136.929, 34.391000000000005, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - []
+      - []
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    Sections:
+      - LineType: Pullhead
+        Length: 2
+        NumberOfSegments: 1
+        ClashCheck: Yes
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 28
+        TargetSegmentLength: 1
+        ClashCheck: Yes
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 490
+        TargetSegmentLength: 5
+        DisturbanceVessel: (none)
+      - LineType: Pipe Type
+        Length: 30
+        TargetSegmentLength: 10
+        DisturbanceVessel: (none)
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Prescribed
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    AsLaidTension: 0
+    # Prescribed starting shape
+    TrackEndAAzimuth: 50.779999999999994
+    TrackSectionLength, TrackSectionTurn:
+      - [71.30438609334925, 0]
+      - [30.049, 43.041999999999994]
+      - [31.804699999999997, 0]
+      - [113.833, -163.05399999999997]
+      - [42.595, 0]
+      - [125.0041, 179.05499999999998]
+      - [4.906, 0]
+      - [52.657, -75.42599999999999]
+      - [39.9980458600998, -0.006318996680519717]
+    # Full statics convergence
+    FullStaticsConvergenceControlMethod: Mag. of std. error / change
+    FullStaticsMaxIterations: 2000
+    FullStaticsMinDamping: 2
+    FullStaticsMaxDamping: 20
+    FullStaticsMagOfStdChange: 0.01
+    # Drawing
+    NodePen: [3, Solid, $0080FF]
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+  - Name: Gateway 1
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Anchored, 44.9, 526.3, 1, 0, 180, 0, ~]
+      - [Anchored, 44.9, 526.3, 0, 0, 180, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    Sections:
+      - LineType: Gateway
+        Length: 0.9
+        NumberOfSegments: 1
+        ClashCheck: Yes
+        DisturbanceVessel: (none)
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    DrawContact: No
+    ContactPen: [5, Solid, White]
+  - Name: Gateway 2
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Anchored, 46.3, 524.9, 1, 0, 180, 0, ~]
+      - [Anchored, 46.3, 524.9, 0, 0, 180, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    Sections:
+      - LineType: Gateway
+        Length: 0.9
+        NumberOfSegments: 1
+        ClashCheck: Yes
+        DisturbanceVessel: (none)
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: None
+    # Drawing
+    DrawContact: No
+    ContactPen: [5, Solid, White]
+Winches:
+  - Name: To Gate
+    WinchType: Simple
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Anchored, 45.6, 525.6, 2]
+      - [Anchored, 45.6, 525.6, 0]
+      - [Pipe, 0, 0, 0, End A]
+    Stiffness: 200
+    Damping: 0.05
+    ReleaseStage: 2
+    # Control
+    WinchControlType: By stage
+    StageMode, StageValue:
+      - [Specified tension, 0]
+      - [Specified payout, 0]
+      - [Specified payout, -87.84]
+      - [Specified tension, 0]
+      - [Specified payout, 0]
+    # Drawing
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.05
+  - Name: To Hub
+    WinchType: Simple
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Anchored, 35, 515, 5.5]
+      - [Anchored, 35, 515, 3.5]
+      - [Pipe, 0, 0, 0, End A]
+    Stiffness: 200
+    Damping: 0.05
+    ReleaseStage: ~
+    # Control
+    WinchControlType: By stage
+    StageMode, StageValue:
+      - [Specified tension, 0]
+      - [Specified tension, 0]
+      - [Specified tension, 0]
+      - [Specified payout, -15]
+      - [Specified payout, 0]
+    # Drawing
+    Pen: [1, Solid, Red]
+    ShadedDrawingDiameter: 0.05
+Shapes:
+  - Name: Funnel
+    ShapeType: Elastic solid
+    Shape: Curved plate
+    Connection: Anchored
+    # Geometry
+    Origin: [35, 515, 3.5]
+    Orientation: [45, 105, 90]
+    IncludedAngleOfRevolution: 360
+    IsHollow: Yes
+    Thickness: 0.5
+    ProfileDistanceAlongAxis, ProfileDiameter:
+      - [0, 1.4]
+      - [3, 1.8]
+      - [6.5, 4]
+    # Stiffness and damping
+    NormalStiffness: 1000
+    ShearStiffness: 100
+    # Drawing
+    OutsidePen: [1, Solid, Olive]
+    NumberOfLines: 4
+    # Shaded drawing
+    ShadedDrawingCullingMode: Anticlockwise
+  - Name: Wellhead
+    ShapeType: Drawing
+    Shape: Block
+    Connection: Anchored
+    # Geometry
+    Origin: [31, 505, 0]
+    Size: [10, 10, 10]
+    Orientation: [0, 0, 45]
+    # Drawing
+    OutsidePen: [1, Solid, Blue]
+    NumberOfLines: 2
+    # Shaded drawing
+    ShadedDrawingFileName: ! '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+    ShadedDrawingDrawSize: 25
+    ShadedDrawingCullingMode: Anticlockwise
+    ShadedDrawingOrigin: [3, 0.9, -0.25]
+    ShadedDrawingOrientation: [0, 0, 90]
+  - Name: Pullhead camera
+    ShapeType: Drawing
+    Shape: Cylinder
+    Connection: Pipe
+    # Geometry
+    Origin: [0, 0, 35]
+    ConnectionzRelativeTo: End A
+    Azimuth: 0
+    Declination: 0
+    Length: 0.2
+    OuterDiameter: 0.1
+    InnerDiameter: 0
+FrictionCoefficients:
+  FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient:
+    - [Pullhead, Funnel, 0.5, ~]
+Groups:
+  Structure:
+    Pipe: Model
+    Wellhead Structure: Model
+    Wellhead: Wellhead Structure
+    Funnel: Wellhead Structure
+    To Hub: Wellhead Structure
+    Gateway Structure: Model
+    To Gate: Gateway Structure
+    Gateway 1: Gateway Structure
+    Gateway 2: Gateway Structure
+    Pullhead camera: Model
+  State:
+    Collapsed:
+      - Variable data
+...

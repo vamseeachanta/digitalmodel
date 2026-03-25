@@ -1,0 +1,114 @@
+analysis:
+  name: Sea Cypress_Diffraction
+  type: diffraction
+  description: Hydrodynamic diffraction analysis
+  vessel:
+    name: Sea Cypress
+    geometry: Sea Cypress_0.25 Mesh_Binary.stl
+    geometry_path: specs/modules/orcawave/diffraction-analysis/inputs/geometry
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.81
+  kinematic_viscosity: 1.19e-06
+mesh_settings:
+  panel_size: 0.25
+  max_aspect_ratio: 3.0
+  min_panel_area: 0.01
+  waterline_refinement: true
+  convergence_check: true
+  refinement_zones: []
+frequency_range:
+  start: 0.01
+  end: 3.0
+  steps: 100
+  distribution: logarithmic
+wave_directions:
+  start: 0
+  end: 180
+  increment: 15
+  reference: vessel_heading
+  symmetry: true
+analysis_options:
+  radiation_analysis: true
+  diffraction_analysis: true
+  qtf_calculation: false
+  remove_irregular_frequencies: true
+  irregular_frequency_method: extended_boundary
+solver_settings:
+  method: direct
+  precision: double
+  tolerance: 1.0e-06
+  max_iterations: 1000
+  preconditioner: diagonal
+outputs:
+  formats:
+  - type: spreadsheet
+    format: xlsx
+    include_plots: true
+    filename: Sea Cypress_hydrodynamics.xlsx
+  - type: csv
+    separate_files: true
+    directory: ./csv_outputs/
+  - type: database
+    format: hdf5
+    compression: true
+    filename: Sea Cypress.h5
+  - type: orcaflex
+    format: yml
+    vessel_type: true
+    filename: Sea Cypress_vessel_type.yml
+  directory: ./results/
+  create_subdirectories: true
+  timestamp_outputs: true
+  result_components:
+  - added_mass_matrix
+  - damping_matrix
+  - excitation_forces
+  - excitation_moments
+  - response_amplitude_operators
+  - mean_drift_forces
+  - pressure_distribution
+  - wave_elevation
+computation:
+  parallel_workers: 4
+  memory_limit: 16GB
+  disk_cache: true
+  cache_directory: ./cache/
+  gpu_acceleration: false
+  resource_management:
+    priority: normal
+    cpu_affinity: auto
+    memory_allocation: adaptive
+quality_checks:
+  mesh_quality:
+    check_closure: true
+    check_normals: true
+    check_duplicates: true
+    check_aspect_ratio: true
+  physics_validation:
+    check_displacement: true
+    check_waterplane: true
+    check_symmetry: true
+    check_stability: true
+  results_validation:
+    check_reciprocity: true
+    check_energy: true
+    check_asymptotes: true
+    benchmark_comparison: false
+logging:
+  level: INFO
+  file: orcawave_analysis.log
+  console: true
+  detailed_progress: true
+  performance_metrics: true
+metadata:
+  project: B1512 Sea Cypress Analysis
+  author: OrcaWave Module Agent
+  version: 1.0.0
+  created: '2026-01-03'
+  description: Diffraction analysis configuration
+  tags:
+  - diffraction
+  - hydrodynamics
+  - orcaflex_integration

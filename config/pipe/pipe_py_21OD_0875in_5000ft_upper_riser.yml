@@ -1,0 +1,59 @@
+default:
+  config:
+    overwrite:
+      output: True
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: NULL
+    Nominal_OD: 21
+    Design_WT : 0.875
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X80
+    WeldFactor:
+       Seamless: 1.0
+    Insulation: NULL
+    Buoyancy: NULL
+#  Code:
+#     - API STD 2RD-2013 Section 5
+Design:
+  -
+    Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 0}
+    ExternalPressure: {Outer_Pipe: 0}
+    BendingMoment: 100
+    EffectiveTension: 6300
+    AxialForce: NULL
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    Torsion: 0
+    Condition: Restrained
+    allowable_stress_to_yield_ratio: 0.67
+    Code:
+       - {Outer_Pipe: API RP 16Q-2017}
+  -
+    Load Condition: {Outer_Pipe: external_pressure}
+    ExternalPressure: {Outer_Pipe: 100}
+    InternalPressure: {Outer_Pipe: 0}
+    AxialForce: NULL
+    EffectiveTension: 0
+    InternalFluid: {Outer_Pipe: 0.0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: NULL
+    BendingMoment: 0
+    Torsion: 0
+    Condition: Restrained
+    Code:
+       - {Outer_Pipe: API TR 5C3-2018}
+
+Inner_Pipe: NULL
+

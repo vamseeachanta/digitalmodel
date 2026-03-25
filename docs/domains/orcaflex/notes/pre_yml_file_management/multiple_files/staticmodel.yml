@@ -1,0 +1,54 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.4c
+# File: Q:\Support\Saipem\Location unknown\Vamsee Achanta\2024 03 18 yml query\untitled.yml
+# Created: 10:29 on 18/03/2024
+# User: ian
+# Machine: WS-ARM69
+---
+General:
+  # Units
+  UnitsSystem: SI
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 2
+  StaticsMaxDamping: 20
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 8
+    - 16
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  WaterDepth: 100
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100

@@ -1,0 +1,923 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: NULL
+    nrows: 5
+    ncols: 1
+    suptitle: Riser Pitch (deg)
+    sets:
+
+    -
+      title: Upper Flexible Jt.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Lower Riser Jt - Blue MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Lower Riser Jt - Yellow MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP - Blue MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP - Yellow MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+  -
+    file_name_extension: exp_range
+    nrows: 5
+    ncols: 1
+    suptitle: Riser Pitch (deg)
+    sets:
+
+    -
+      title: Upper Flexible Jt.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-4, 4]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCHBEF]
+          scale:
+            columns: [PITCHBEF]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_UFJPrimaryMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Lower Riser Jt - Blue MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-4, 4]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LRJBLUEMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Lower Riser Jt - Yellow MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-4, 4]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LRJ_YELLOW_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_LRJYELLOWMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP - Blue MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-4, 4]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_BLUE_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOPBLUEMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP - Yellow MRU.
+      xlabel: Date
+      ylabel: Angle (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-4, 4]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_YELLOW_INCLINATIONS
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: YT_BOPYELLOWMRU
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [PITCH]
+          scale:
+            columns: [PITCH]
+            factors: [57.3]
+          plt_kind: line
+          marker: NULL

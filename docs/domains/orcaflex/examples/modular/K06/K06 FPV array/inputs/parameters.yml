@@ -1,0 +1,14 @@
+# Input Parameters for Parametric Analysis
+# Source: K06 FPV array.yml
+# Generated: 2026-01-18 22:18:44
+
+current_speed: 0.5
+wind_speed: 10
+water_density: 1025
+stage_durations:
+- 10
+- 50
+hs: 0.5
+tp: 5
+wave_direction: 185
+

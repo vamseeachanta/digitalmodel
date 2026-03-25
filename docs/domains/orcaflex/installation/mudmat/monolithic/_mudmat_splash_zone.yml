@@ -1,0 +1,2411 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\mudmat_tool\rev3\mudmat\mudmat_splash_zone.yml
+# Created: 1:42 PM on 9/7/2023
+# User: 
+# Machine: 
+---
+General:
+  Comments: ! '########################################
+
+    # Start of mudmat application comments #
+
+    ########################################
+
+
+    Created using mudmat v2.0.0
+
+    User alias: 
+
+    Date: 7-Sep-2023
+
+
+    ########################################
+
+    #  End of mudmat application comments  #
+
+    ########################################
+
+'
+  # Units
+  UnitsSystem: SI
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  StageDuration:
+    - 8
+    - 16
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  WaterDepth: 2000
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  # Waves
+  SimulationTimeOrigin: 0
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 7
+      WavePeriod: 8
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentRamped: No
+  HorizontalCurrentFactor: ~
+  CurrentApplyVerticalStretching: No
+  CurrentMethod: Interpolated
+  RefCurrentSpeed: 0
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1, 0]
+    - [100, 1, 0]
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindType: Constant
+  AirDensity: 0.00128
+  VerticalWindVariationFactor: ~
+  WindSpeed: 0
+  WindDirection: 0
+6DBuoys:
+  - Name: Manifold Mudmat Primary Buoy - Splash Zone
+    BuoyType: Lumped buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0, 0, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 21.6934628657262
+    MomentsOfInertia: [232.1, 232.1, 461.9]
+    CentreOfMass: [0.02, 0.032, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [8.756, 8.756, 121.37]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [0, 0, 0]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0, 0, 0]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [0, 0, 0]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [0, 0, 0]
+    LumpedBuoySlamArea: 121.37
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [5.6515, 5.6515, 0.3875]
+      - [-5.6515, 5.6515, 0.3875]
+      - [-5.6515, -5.6515, 0.3875]
+      - [5.6515, -5.6515, 0.3875]
+      - [5.6515, 5.6515, -0.3875]
+      - [-5.6515, 5.6515, -0.3875]
+      - [-5.6515, -5.6515, -0.3875]
+      - [5.6515, -5.6515, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 1
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 2
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 3
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 4
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 5
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 6
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, -4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 7
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 8
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 9
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 10
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 11
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 12
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, -2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 13
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 14
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 15
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 16
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 17
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 18
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, -0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 19
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 20
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 21
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 22
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 23
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 24
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, 0.941916666666667, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 25
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 26
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 27
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 28
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 29
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 30
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, 2.82575, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 0, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 31
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-4.70958333333333, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 32
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-2.82575, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 33
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-0.941916666666667, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 34
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.941916666666667, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 35
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [2.82575, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+  - Name: 36
+    BuoyType: Lumped buoy
+    Connection: Manifold Mudmat Primary Buoy - Splash Zone
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [4.70958333333333, 4.70958333333333, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 1e-6
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.076
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [1.45940568333333, 1.45940568333333, 3.37138662638889]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [2.839, 2.839, 3.48]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0.078, 0.078, 0.078]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 3.371
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.942, 0.942, 0.3875]
+      - [-0.942, 0.942, 0.3875]
+      - [-0.942, -0.942, 0.3875]
+      - [0.942, -0.942, 0.3875]
+      - [0.942, 0.942, -0.3875]
+      - [-0.942, 0.942, -0.3875]
+      - [-0.942, -0.942, -0.3875]
+      - [0.942, -0.942, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+Groups:
+  Structure:
+    Primary buoy group: Model
+    Manifold Mudmat Primary Buoy - Splash Zone: Primary buoy group
+    Secondary buoys group: Model
+    1: Secondary buoys group
+    2: Secondary buoys group
+    3: Secondary buoys group
+    4: Secondary buoys group
+    5: Secondary buoys group
+    6: Secondary buoys group
+    7: Secondary buoys group
+    8: Secondary buoys group
+    9: Secondary buoys group
+    10: Secondary buoys group
+    11: Secondary buoys group
+    12: Secondary buoys group
+    13: Secondary buoys group
+    14: Secondary buoys group
+    15: Secondary buoys group
+    16: Secondary buoys group
+    17: Secondary buoys group
+    18: Secondary buoys group
+    19: Secondary buoys group
+    20: Secondary buoys group
+    21: Secondary buoys group
+    22: Secondary buoys group
+    23: Secondary buoys group
+    24: Secondary buoys group
+    25: Secondary buoys group
+    26: Secondary buoys group
+    27: Secondary buoys group
+    28: Secondary buoys group
+    29: Secondary buoys group
+    30: Secondary buoys group
+    31: Secondary buoys group
+    32: Secondary buoys group
+    33: Secondary buoys group
+    34: Secondary buoys group
+    35: Secondary buoys group
+    36: Secondary buoys group
+  State:
+    Collapsed:
+      - Variable data
+...

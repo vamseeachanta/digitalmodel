@@ -1,0 +1,23 @@
+# Agent Index for digitalmodel
+
+agents:
+  total: 0  # Will be populated as agents are added
+  categories:
+    security: []
+    performance: []
+    testing: []
+    documentation: []
+    devops: []
+    data: []
+    code_quality: []
+
+custom_agents: []  # Repository-specific custom agents
+
+integration:
+  enabled: true
+  auto_select: true
+  commands:
+    - /spec
+    - /task
+    - /test
+    - /project

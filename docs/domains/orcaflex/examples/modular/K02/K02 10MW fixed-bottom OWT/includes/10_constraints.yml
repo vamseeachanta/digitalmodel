@@ -1,0 +1,1194 @@
+# Constraints Configuration
+# Generated from: K02 10MW fixed-bottom OWT.yml
+# Date: 2026-01-18 22:18:26
+Constraints:
+- Name: 'Soil-h=0m: Rz'
+  InFrameConnection: 'Soil-h=0m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=0m: Ry-Rx'
+  InFrameConnection: 'Soil-h=0m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 989.601686e3
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=0m: z'
+  InFrameConnection: 'Soil-h=0m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 4.2e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=0m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 3.183157895e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=5m: Rz'
+  InFrameConnection: 'Soil-h=5m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=5m: Ry-Rx'
+  InFrameConnection: 'Soil-h=5m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 2.215676093e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=5m: z'
+  InFrameConnection: 'Soil-h=5m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 5.88e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=5m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -5
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 6.295578947e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=10m: Rz'
+  InFrameConnection: 'Soil-h=10m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=10m: Ry-Rx'
+  InFrameConnection: 'Soil-h=10m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 6.048108849e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=10m: z'
+  InFrameConnection: 'Soil-h=10m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 7.56e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=10m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -10
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 9.408e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=15m: Rz'
+  InFrameConnection: 'Soil-h=15m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=15m: Ry-Rx'
+  InFrameConnection: 'Soil-h=15m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 15.093258305e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=15m: z'
+  InFrameConnection: 'Soil-h=15m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 9.24e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=15m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -15
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 12.520421053e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=20m: Rz'
+  InFrameConnection: 'Soil-h=20m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=20m: Ry-Rx'
+  InFrameConnection: 'Soil-h=20m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 31.95748281e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=20m: z'
+  InFrameConnection: 'Soil-h=20m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 10.92e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=20m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -20
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 15.632842105e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=25m: Rz'
+  InFrameConnection: 'Soil-h=25m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=25m: Ry-Rx'
+  InFrameConnection: 'Soil-h=25m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 59.247140714e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=25m: z'
+  InFrameConnection: 'Soil-h=25m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 12.6e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=25m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -25
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 18.745263158e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=30m: Rz'
+  InFrameConnection: 'Soil-h=30m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=30m: Ry-Rx'
+  InFrameConnection: 'Soil-h=30m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 99.568590365e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=30m: z'
+  InFrameConnection: 'Soil-h=30m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 14.28e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=30m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -30
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 21.857684211e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=35m: Rz'
+  InFrameConnection: 'Soil-h=35m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=35m: Ry-Rx'
+  InFrameConnection: 'Soil-h=35m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 155.528190115e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=35m: z'
+  InFrameConnection: 'Soil-h=35m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 15.96e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=35m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -35
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 24.970105263e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=40m: Rz'
+  InFrameConnection: 'Soil-h=40m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=40m: Ry-Rx'
+  InFrameConnection: 'Soil-h=40m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 229.732298312e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=40m: z'
+  InFrameConnection: 'Soil-h=40m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 17.64e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=40m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -40
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 28.082526316e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=45m: Rz'
+  InFrameConnection: 'Soil-h=45m: Ry-Rx'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 1.187522023e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  AllowRotationalWinding: Yes
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=45m: Ry-Rx'
+  InFrameConnection: 'Soil-h=45m: z'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 0
+  RotationalStiffness: 324.787273306e6
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=45m: z'
+  InFrameConnection: 'Soil-h=45m: y-x'
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - 0
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 0
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 19.32e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No
+- Name: 'Soil-h=45m: y-x'
+  InFrameConnection: Anchored
+  InFrameInitialPosition:
+  - 0
+  - 0
+  - -45
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - 180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - Yes
+    - 0
+  - - Yes
+    - 0
+  - - No
+  - - No
+  - - No
+  - - No
+  StiffnessAndDampingMethod: Coefficients
+  TranslationalStiffness: 31.194947368e6
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  InFrameLabelsDrawn: No
+  HideAfterOutFrameRelease: No

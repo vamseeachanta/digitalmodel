@@ -1,0 +1,34 @@
+! ANSYS APDL input excerpt — structural steel beam/rod model
+! Material and section definitions for FEA preprocessing test fixture
+! Units: N, mm, MPa
+
+/PREP7
+
+! --- Material definitions ---
+! Steel material properties (generic structural steel)
+MP,EX,1,206000      ! Elastic modulus [MPa]
+MP,NUXY,1,0.3       ! Poisson's ratio [-]
+MP,DENS,1,7.85e-09  ! Density [tonne/mm^3]
+
+! Second material (aluminium-like, for test coverage)
+MP,EX,2,70000       ! Elastic modulus [MPa]
+MP,NUXY,2,0.33      ! Poisson's ratio [-]
+MP,DENS,2,2.7e-09   ! Density [tonne/mm^3]
+
+! --- Rod element real constants ---
+R,101,1.963e+04,1.0,1.0,1.0,1.0,1.0  ! Rod cross-section area [mm^2]
+
+! --- Beam section definitions ---
+! Beam section 1: arbitrary solid asymmetric cross-section (ASEC)
+SECTYPE,1,BEAM,ASEC,beam_section_1
+SECDATA,1.963e+04,9.817e+07,4.909e+07,1.0e+08,0.0,0.0,0.0
+
+! Beam section 2: second section for multi-section model
+SECTYPE,2,BEAM,ASEC,beam_section_2
+SECDATA,5.0e+03,2.0e+07,1.5e+07,3.0e+07,0.0,0.0,0.0
+
+! comment line should be ignored
+! another comment
+
+! End of material/section definitions
+FINISH

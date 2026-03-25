@@ -1,0 +1,55 @@
+@startuml rigging_assets
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Rigging | Assets
+
+start
+
+    note right
+        Objective: Architecture for rigging assets
+    end note
+
+    partition "Input Data" {
+
+        :Prepare yaml Data (yml);
+            note right
+                category
+                subcategory
+                manufacturer
+                wll
+            end note
+
+    }
+
+    partition "Analytical model" {
+        :TBA;
+
+    }
+
+    partition "Computational models" {
+        :OrcaFlex;
+            note right
+                Finite element model
+                outputs
+            end note
+    }
+
+    partition "Analysis" {
+        :TBA;
+    }
+
+    partition "Visualizations" {
+        :TBA;
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

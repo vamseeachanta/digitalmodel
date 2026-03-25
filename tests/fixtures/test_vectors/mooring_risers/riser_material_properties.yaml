@@ -1,0 +1,70 @@
+source_type: standard
+source_description: "Riser material and fluid properties from test_catenary_riser_unit.py — API 5L pipe grades and seawater density"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "riser_materials"
+equations:
+  - name: "Inner diameter"
+    latex: "ID = OD - 2t"
+    description: "Inner diameter from outer diameter and wall thickness"
+  - name: "Effective weight"
+    latex: "w_{eff} = w_{steel} + w_{coating} + w_{contents} - w_{buoyancy}"
+    description: "Effective submerged weight per unit length"
+inputs:
+  - name: "Outer diameter"
+    symbol: "OD"
+    unit: "m"
+    test_value: 0.508
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.025
+outputs:
+  - name: "Inner diameter"
+    symbol: "ID"
+    unit: "m"
+    test_expected: 0.458
+    tolerance: 1.0e-9
+worked_examples:
+  - description: "API 5L X65 steel pipe properties"
+    inputs:
+      material: "API 5L X65"
+    outputs:
+      youngs_modulus_MPa: 207000
+      density_kg_m3: 7850
+      yield_strength_MPa: 448
+    use_as_test: true
+  - description: "API 5L X70 steel pipe properties"
+    inputs:
+      material: "API 5L X70"
+    outputs:
+      yield_strength_MPa: 483
+    use_as_test: true
+  - description: "Seawater fluid properties"
+    inputs:
+      fluid: "seawater"
+    outputs:
+      density_kg_m3: 1025
+    use_as_test: true
+  - description: "Production oil fluid properties"
+    inputs:
+      fluid: "oil"
+    outputs:
+      density_kg_m3: 850
+    use_as_test: true
+  - description: "Inner diameter calculation for 20-inch riser"
+    inputs:
+      outer_diameter_m: 0.508
+      wall_thickness_m: 0.025
+    outputs:
+      inner_diameter_m: 0.458
+    use_as_test: true
+assumptions:
+  - "Material properties per API 5L specification"
+  - "Seawater density 1025 kg/m3 is standard offshore value"
+  - "Production oil density 850 kg/m3 is typical for crude"
+references:
+  - "digitalmodel/tests/subsea/catenary_riser/test_catenary_riser_unit.py"
+  - "API Specification 5L — Line Pipe"
+  - "DNV-OS-F201 — Dynamic Risers"

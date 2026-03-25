@@ -1,0 +1,220 @@
+# LineTypes Configuration
+# Generated from: C06 CALM Buoy.yml
+# Date: 2026-01-18 22:19:50
+LineTypes:
+- Name: 2.5" Chain
+  Category: General
+  OD: 0.120015
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.088306275
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 407.25725e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.2286
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.07
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1
+  - ~
+  - 0.4
+  Cl: 0
+  NormalDragLiftDiameter: 0.14351
+  AxialDragLiftDiameter: 0.012127606663602426
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $80FF00
+- Name: Hose
+  Category: General
+  OD: 0.64
+  ID: 0.5
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.1821
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 1.9499999284744263
+  - ~
+  EI:
+  - 75
+  - ~
+  EA: 17e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+- Name: HawserLine
+  Category: General
+  OD: 0.0765
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.005245559999999999
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 955.8
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.009999999999999998
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - White
+- Name: Pivot
+  Category: General
+  OD: 0.35
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 100e-6
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 1e6
+  - ~
+  EA: 700e6
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)

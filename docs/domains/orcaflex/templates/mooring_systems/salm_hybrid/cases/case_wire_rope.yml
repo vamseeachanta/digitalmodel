@@ -1,0 +1,71 @@
+%YAML 1.1
+# Case: Wire Rope SALM
+# Standalone case using wire rope instead of chain
+# Based on base model with wire rope line type
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [10, 100]
+  StaticsMinDamping: 5
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 50
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 4.0
+      WavePeriod: 9.0
+      WaveOrigin: [0, 0]
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 0.8
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [25, 0.8, 0]
+    - [50, 0.5, 0]
+  WindType: Constant
+  WindSpeed: 10
+  WindDirection: 180
+  IncludeBuoyWindLoads: Yes
+
+LineTypes:
+  # Wire rope instead of chain
+  - Name: SALM_WireRope
+    Category: General
+    IncludeFile: ../../../../library/line_types/wire_rope_76mm.yml
+
+3DBuoys:
+  - Name: SALM_Buoy
+    Connection: Free
+    InitialX: 0
+    InitialY: 0
+    InitialZ: -1.5
+    Mass: 45000
+    Volume: 250
+    Height: 5
+
+Lines:
+  - Name: Anchor_Leg
+    EndAConnection: Anchored
+    EndAX: 15
+    EndAY: 0
+    EndAZ: -50
+    EndBConnection: SALM_Buoy
+    EndBX: 0
+    EndBY: 0
+    EndBZ: -4
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [SALM_WireRope, 55, 2]

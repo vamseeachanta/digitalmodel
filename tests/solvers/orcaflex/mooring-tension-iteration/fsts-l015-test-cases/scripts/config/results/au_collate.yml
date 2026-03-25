@@ -1,0 +1,57 @@
+basename: excel_utilities
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+task: csv_copy_to_excel
+files:
+  target:
+    path: C:\Users\ss7a2365\Desktop\
+    workbook: Summary_1.xlsx
+    worksheet: Sheet1
+    cell_range: ~
+  source:
+    path: C:\Users\ss7a2365\Desktop\
+    workbook: S01-Dyn-FC180-2.5mHs.xlsx
+    worksheet: EditingTable
+    cell_range: ~
+meta:
+  basename: excel_utilities
+  library: assetutilities
+file_management:
+  flag: false
+data:
+  input_format: csv
+  groups:
+  - label: dm_fsts_pretension
+    target:
+      template: template_pretension_analysis_summary.xlsx
+      filename: ../../output/collate/pretension_analysis_summary.xlsx
+    csvs:
+    - input:
+        filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_moorings_static_eff_tension_max.csv
+      target:
+        sheet_name: mooring
+    - input:
+        filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_fenders_static.csv
+      target:
+        sheet_name: fender
+    - input:
+        filename: ../../output/collate/csv/dm_ofx_post_fsts_lngc_lngc_6dof_stat.csv
+      target:
+        sheet_name: lngc
+Analysis:
+  basename: excel_utilities
+  analysis_root_folder: config
+  file_name: au_collate
+  file_name_for_overwrite: au_collate
+  log_folder: config\logs
+  start_time: 2025-09-02 16:46:55.063146
+  cfg_array_file_names: ~
+  DefaultInputFile: ~
+  CustomInputFile: config/au_collate.yml
+  result_folder: config\results
+  result_data_folder: config\results\Data
+  result_plot_folder: config\results\Plot
+  fe_folder: config\results

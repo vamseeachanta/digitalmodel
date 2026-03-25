@@ -1,0 +1,43 @@
+# Shapes Configuration
+# Generated from: 5 tug_env - 6D buoys.yml
+# Date: 2026-01-21 14:02:15
+Shapes:
+- Name: Ramp inclined
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Fixed
+  Origin:
+  - -126.35
+  - -25
+  - -5
+  Size:
+  - 150
+  - 50
+  - 10
+  Orientation:
+  - 0
+  - 2.2699999999999987
+  - 0
+  NormalStiffness: 10e3
+  ShearStiffness: 100
+- Name: Ramp-curve
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: Fixed
+  Origin:
+  - 4.1
+  - -25
+  - -500.55
+  Orientation:
+  - 90
+  - 90
+  - 182.27
+  IncludedAngleOfRevolution: 10
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1000
+  - - 50
+    - 1000
+  NormalStiffness: 10e3
+  ShearStiffness: 100

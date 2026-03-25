@@ -1,0 +1,133 @@
+source_type: standard
+source_description: "DNV-RP-C203 (2016) S-N curve parameters and power-law calculations extracted from test_sn_curves.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "fatigue"
+subcategory: "sn_curves"
+equations:
+  - name: "Power-law S-N curve (allowable cycles)"
+    latex: "N = A \\cdot S^{-m}"
+    description: "Allowable number of cycles N for a given stress range S"
+  - name: "Power-law S-N curve (stress range)"
+    latex: "S = \\left(\\frac{A}{N}\\right)^{1/m}"
+    description: "Stress range S for a given number of allowable cycles N"
+  - name: "Bilinear S-N curve transition stress"
+    latex: "S_t = \\left(\\frac{A_1}{N_t}\\right)^{1/m_1}"
+    description: "Stress at which the bilinear curve transitions from slope m1 to m2"
+inputs:
+  - name: "S-N curve intercept"
+    symbol: "A"
+    unit: "MPa^m * cycles"
+    test_value: 1.0e12
+  - name: "S-N curve slope"
+    symbol: "m"
+    unit: "dimensionless"
+    test_value: 3.0
+  - name: "Stress range"
+    symbol: "S"
+    unit: "MPa"
+    test_value: 100.0
+outputs:
+  - name: "Allowable cycles at S=100 MPa"
+    symbol: "N"
+    unit: "cycles"
+    test_expected: 1.0e6
+    tolerance: 1.0e-3
+  - name: "Stress range at N=1e6"
+    symbol: "S"
+    unit: "MPa"
+    test_expected: 100.0
+    tolerance: 1.0e-3
+worked_examples:
+  - description: "Simple power-law: N at S=100 MPa (A=1e12, m=3)"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_range: 100.0
+    outputs:
+      allowable_cycles: 1.0e6
+    use_as_test: true
+  - description: "Simple power-law: N at S=1000 MPa (A=1e12, m=3)"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_range: 1000.0
+    outputs:
+      allowable_cycles: 1000.0
+    use_as_test: true
+  - description: "DNV-RP-C203 D-curve parameters"
+    inputs:
+      standard: "DNV"
+      curve_class: "D"
+    outputs:
+      A: 5.73e11
+      m: 3.0
+      fatigue_limit: 52.63
+    use_as_test: true
+  - description: "API X-curve parameters"
+    inputs:
+      standard: "API"
+      curve_class: "X"
+    outputs:
+      A: 1.01e12
+      m: 3.0
+    use_as_test: true
+  - description: "BS 7608 D-curve parameter"
+    inputs:
+      standard: "BS"
+      curve_class: "D"
+    outputs:
+      A: 3.9e11
+    use_as_test: true
+  - description: "AWS A-curve parameter"
+    inputs:
+      standard: "AWS"
+      curve_class: "A"
+    outputs:
+      A: 8.11e11
+    use_as_test: true
+  - description: "Bilinear S-N curve: transition stress (A1=1e12, m1=3, Nt=1e6)"
+    inputs:
+      A1: 1.0e12
+      m1: 3.0
+      A2: 1.0e16
+      m2: 5.0
+      transition_cycles: 1.0e6
+    outputs:
+      transition_stress: 100.0
+    use_as_test: true
+  - description: "Bilinear: high-stress regime N at S=200 MPa"
+    inputs:
+      A1: 1.0e12
+      m1: 3.0
+      stress_range: 200.0
+    outputs:
+      allowable_cycles: 125000.0
+    use_as_test: true
+  - description: "Bilinear: low-stress regime N at S=50 MPa (A2=1e16, m2=5)"
+    inputs:
+      A2: 1.0e16
+      m2: 5.0
+      stress_range: 50.0
+    outputs:
+      allowable_cycles: 32000000.0
+    use_as_test: true
+  - description: "Cutoff cycles cap: A=1e20, m=3, S=1 MPa, cutoff=1e7"
+    inputs:
+      A: 1.0e20
+      m: 3.0
+      stress_range: 1.0
+      cutoff_cycles: 1.0e7
+    outputs:
+      allowable_cycles: 1.0e7
+    use_as_test: true
+assumptions:
+  - "Power-law S-N curve: N = A * S^(-m)"
+  - "Fatigue limit: stress below CAFL yields infinite life"
+  - "Cutoff cycles cap N at the specified maximum"
+  - "Bilinear curve uses slope m1 above transition, m2 below"
+references:
+  - "DNV-RP-C203 (2016) Table 2-1 — S-N curves in air"
+  - "API RP 2A-WSD (2014) Table 5.5-2 — Fatigue S-N curves"
+  - "BS 7608:2014 — Fatigue design and assessment of steel structures"
+  - "AWS D1.1/D1.1M:2015 — Structural Welding Code"

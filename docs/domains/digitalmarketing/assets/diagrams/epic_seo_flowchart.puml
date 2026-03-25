@@ -1,0 +1,59 @@
+@startuml epic_seo_flowchart
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title SEO Analysis\n Workflow 
+
+start
+
+    partition "Inputs" {
+
+        :Website link (url);
+
+        :Industry or vertical;
+            note right
+                Read from config
+            end note
+        :Location;
+            note right
+                From URL or config
+            end note
+        :Competition Data;
+            note right
+                Read from config
+            end note
+
+    }
+
+    partition "Analysis" {
+    : Analyze website;
+            note right
+                seoaudit, seo-analyze, seolib used
+                Anaysis include:
+                    Audits
+                    Keywords
+                    etc.
+            end note
+    : Competition Analysis;
+        note right
+            Result saved as parquet
+            Reanalysis once a month
+        end note
+    : Determine SEO Rank;
+            note right
+                Based on competitor comparison
+            end note
+    }
+
+: Save Output as parquet;
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

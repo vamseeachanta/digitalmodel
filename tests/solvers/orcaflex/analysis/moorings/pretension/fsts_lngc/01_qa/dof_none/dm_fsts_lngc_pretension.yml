@@ -1,0 +1,244 @@
+library: digitalmodel
+basename: orcaflex_post_process
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  analysis:
+    static: False
+    simulation: False
+    iterate:
+      flag: False
+    save_sim: False
+    save_dat: False
+
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+      statistics:
+        Minimum: False
+        Maximum: False
+        Mean: False
+        StdDev: False
+    RangeGraph:
+      flag: False
+    time_series:
+      flag: False
+    RAOs:
+      flag: False
+    cummulative_histograms:
+      flag: False
+    rain_flow:
+      bins: 10
+      range:
+        - 0
+        - 10
+
+summary_settings_master:
+  groups:
+
+    - Label: inputs
+      Columns:
+        - Command: GetData
+
+    - Label: lngc_moorings_static_eff_tension_max
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+          Variable: Effective Tension
+
+    - Label: lngc_moorings_dynamic_length
+      Columns:
+        - Command: TimeHistory
+          SimulationPeriod: StaticState
+          objectExtra:
+            - End B
+          Variable: Arc Length
+
+summary_settings:
+  groups:
+
+    - Label: inputs
+      Columns:
+        - Command: GetData
+          ObjectName: FST1
+          Variable: [InitialHeading, -1]
+          Label: FST1_Heading
+        - Command: GetData
+          ObjectName: FST2
+          Variable: [InitialHeading, -1]
+          Label: FST2_Heading
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindDirection, -1]
+          Label: WindDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WindSpeed, -1]
+          Label: WindSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveDirection, -1]
+          Label: WaveDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveHs, -1]
+          Label: Hs
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveTz, -1]
+          Label: WaveTz
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [WaveGamma, -1]
+          Label: WaveGamma
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentSpeed, 0]
+          Label: RefCurrentSpeed
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [RefCurrentDirection, 0]
+          Label: RefCurrentDirection
+        - Command: GetData
+          ObjectName: Environment
+          Variable: [CurrentFactor, 0]
+          Label: CurrentFactor[0]
+
+    - Label: lngc_moorings_static_eff_tension_max
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line01
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line02
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line03
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line04
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line05
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line06
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line07
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line08
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line09
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18
+
+    - Label: lngc_moorings_dynamic_length
+      Columns:
+        - ObjectName: Line01
+          Statistic_Type: Max
+          Label: Line01
+        - ObjectName: Line02
+          Statistic_Type: Max
+          Label: Line02
+        - ObjectName: Line03
+          Statistic_Type: Max
+          Label: Line03
+        - ObjectName: Line04
+          Statistic_Type: Max
+          Label: Line04
+        - ObjectName: Line05
+          Statistic_Type: Max
+          Label: Line05
+        - ObjectName: Line06
+          Statistic_Type: Max
+          Label: Line06
+        - ObjectName: Line07
+          Statistic_Type: Max
+          Label: Line07
+        - ObjectName: Line08
+          Statistic_Type: Max
+          Label: Line08
+        - ObjectName: Line09
+          Statistic_Type: Max
+          Label: Line09
+        - ObjectName: Line10
+          Statistic_Type: Max
+          Label: Line10
+        - ObjectName: Line11
+          Statistic_Type: Max
+          Label: Line11
+        - ObjectName: Line12
+          Statistic_Type: Max
+          Label: Line12
+        - ObjectName: Line13
+          Statistic_Type: Max
+          Label: Line13
+        - ObjectName: Line14
+          Statistic_Type: Max
+          Label: Line14
+        - ObjectName: Line15
+          Statistic_Type: Max
+          Label: Line15
+        - ObjectName: Line16
+          Statistic_Type: Max
+          Label: Line16
+        - ObjectName: Line17
+          Statistic_Type: Max
+          Label: Line17
+        - ObjectName: Line18
+          Statistic_Type: Max
+          Label: Line18
+
+RangeGraph_settings:
+  add_effective_tension_to_cfg: False
+
+file_management:
+  flag: True
+
+  input_directory: NULL
+  output_directory: NULL
+
+  filename:
+    extension: [yml, sim]
+    pattern: NULL
+    filters:
+      contains: []
+      not_contains: [includefile]

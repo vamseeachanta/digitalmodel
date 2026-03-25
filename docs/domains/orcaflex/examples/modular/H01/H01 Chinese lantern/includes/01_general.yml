@@ -1,0 +1,111 @@
+# General Configuration
+# Generated from: H01 Chinese lantern.yml
+# Date: 2026-01-18 22:18:20
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.005
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 30
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 50
+  DefaultViewCentre:
+  - -0.4901810823880154
+  - -25.2402429964025
+  - -10.13813914296449
+  DefaultViewAzimuth: 257.1
+  DefaultViewElevation: -3.6
+ClumpTypes:
+- Name: EndFloat
+  Mass: 0.12
+  Volume: 0.38
+  Height: 0.5
+  AlignWith: Line axes
+  DragArea:
+  - 0.2
+  - 0.2
+  - 0.2
+  Cd:
+  - 1.1
+  - 1.1
+  - 0.01
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: BodyFloat
+  Mass: 0.095
+  Volume: 0.285
+  Height: 0.5
+  AlignWith: Line axes
+  DragArea:
+  - 0.2
+  - 0.2
+  - 0.2
+  Cd:
+  - 1.1
+  - 1.1
+  - 0.01
+  Ca:
+  - 1
+  - 1
+  - 1
+StiffenerTypes:
+- Name: Sheath End A
+  LineType: Sheath Type End A
+  ConnectionArclength: 0
+  ConnectionArclengthRelativeTo: End A
+  AxialLoadInertiaTransfer: over full length
+- Name: Sheath End B
+  LineType: Sheath Type End B
+  ConnectionArclength: 0
+  ConnectionArclengthRelativeTo: End B
+  AxialLoadInertiaTransfer: over full length
+Groups:
+  Structure:
+    With Torsion: Model
+    CALM Buoy: With Torsion
+    Chain1: With Torsion
+    Chain2: With Torsion
+    Chain3: With Torsion
+    Chain4: With Torsion
+    Chain5: With Torsion
+    Chain6: With Torsion
+    Riser 1 with torsion: With Torsion
+    Riser 2 with torsion: With Torsion
+    Base: With Torsion
+    Without Torsion: Model
+    CALM Buoy1: Without Torsion
+    Chain7: Without Torsion
+    Chain8: Without Torsion
+    Chain9: Without Torsion
+    Chain10: Without Torsion
+    Chain11: Without Torsion
+    Chain12: Without Torsion
+    Riser 1 without torsion: Without Torsion
+    Riser 2 without torsion: Without Torsion
+    Base1: Without Torsion
+  State:
+    Collapsed:
+    - Variable data

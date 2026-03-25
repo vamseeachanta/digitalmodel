@@ -1,0 +1,32 @@
+{
+  "example_id": "L06",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L06 Full QTF diffraction analysis\\L06 Time varying quadratic loads.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 3,
+  "n_passed": 3,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "qtf_data_present",
+      "passed": true,
+      "message": "QTF frequency grid shape (10, 3); 2 heading pair(s)",
+      "value": 20.0,
+      "threshold": null
+    }
+  ]
+}

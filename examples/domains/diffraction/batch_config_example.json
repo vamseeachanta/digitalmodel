@@ -1,0 +1,51 @@
+{
+  "configurations": [
+    {
+      "vessel_name": "FPSO_A",
+      "source_type": "aqwa",
+      "source_path": "./data/aqwa/fpso_a_analysis",
+      "water_depth": 1200.0,
+      "output_dir": "./output/fpso_a",
+      "validate": true,
+      "formats": ["all"]
+    },
+    {
+      "vessel_name": "TLP_B",
+      "source_type": "orcawave",
+      "source_path": "./data/orcawave/tlp_b_model.sim",
+      "water_depth": 800.0,
+      "output_dir": "./output/tlp_b",
+      "validate": true,
+      "formats": ["vessel_type", "excel", "summary"]
+    },
+    {
+      "vessel_name": "SPAR_C",
+      "source_type": "aqwa",
+      "source_path": "./data/aqwa/spar_c_analysis",
+      "water_depth": 1500.0,
+      "output_dir": "./output/spar_c",
+      "validate": true,
+      "formats": ["vessel_type", "rao_csv", "added_mass_csv", "damping_csv"]
+    },
+    {
+      "vessel_name": "SEMI_D",
+      "source_type": "orcawave",
+      "source_path": "./data/orcawave/semi_d_model.sim",
+      "water_depth": 1000.0,
+      "output_dir": "./output/semi_d",
+      "validate": false,
+      "formats": ["excel", "summary"]
+    },
+    {
+      "vessel_name": "SHIP_E",
+      "source_type": "aqwa",
+      "source_path": "./data/aqwa/ship_e_analysis",
+      "water_depth": 500.0,
+      "output_dir": "./output/ship_e",
+      "validate": true,
+      "formats": ["all"]
+    }
+  ],
+  "parallel": true,
+  "max_workers": 4
+}

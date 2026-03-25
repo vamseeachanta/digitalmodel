@@ -1,0 +1,123 @@
+@startuml aqwa_highlevel_workflow
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title AQWA Highlevel \nWorkflow
+
+start
+
+    note right
+        Objective: Provide high-level workflow as follows
+        - software access
+        - working guidelines
+    Running all batches:
+    - Goto command miniconda powershell
+    - change to relevant folder
+    - run_all.bat
+    - temp.bat (run specific batches)
+    end note
+
+    partition "Preprocess: Geometry" {
+
+        :.dat files;
+            note right
+            - No License Req.
+            define geometry format directly 
+            i.e. nodes, elements
+            end note
+
+        :SpaceClaim;
+            note right
+            - **License** Req.
+             Import from various software (or)
+             Prepare geometry from scratch
+            end note
+
+        :FreeCAD;
+            note right
+            - No License Req.
+             Import from various software (or)
+             Prepare geometry from scratch
+            end note
+
+    }
+
+    partition "Preprocess: Model Setup" {
+
+        : .dat files;
+            note right
+            - No License Req.
+            - Manual. Note Stringent format
+            - Programming 
+              - assetutilities au_*.yml
+              - run_prep_*.bat
+            end note
+
+        :Workbench UI;
+            note right
+            - **License** Req.
+            - visual and helpful
+            - Manual operations
+            end note
+
+    }
+
+    partition "Run AQWA" {
+        :Workbench UI;
+        note right
+            Tools:
+            - **License** Req.
+        end note
+
+        :Batch Mode;
+        note right
+            Tools:
+            - **License** Req.
+            - AQWA.exe with .dat files
+             - Batch :run_aqwa.bat
+             - EF batch : run_aqwa_ef.bat
+        end note
+
+    }
+
+    partition "Postprocess" {
+
+        :AQWAReader;
+            note right
+            - AQWAReader (.csv files)
+            - run_post_dm.bat
+            - aqr_*.yml
+            end note
+
+        :AQWA output file (.LIS);
+            note right
+             Reading/Programming from .LIS files
+            - run_post_dm.bat
+            - lis_*.yml
+            end note
+
+        :AQL - Excel Interface;
+            note right
+             None
+            end note
+
+        :Workbench - UI;
+            note right
+            - Dummy geometry
+            - **Prepare process**
+            - Manual process
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

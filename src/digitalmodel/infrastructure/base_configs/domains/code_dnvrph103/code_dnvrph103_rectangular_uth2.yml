@@ -1,0 +1,33 @@
+basename: code_dnvrph103
+
+calculation_type: simplified
+zones: [deep]
+
+inputs:
+  name: uta2
+  m_air: 1622.6
+  m_water: 282.4
+
+  shape: rectangular # rectangular, circular
+  l: 3.045
+  w: 1.153
+  r: NULL
+  h: 0.902
+
+  cog:
+    x: -0.0615
+    y: 0
+    z: 0.141
+
+  cov:
+    x: -0.5285
+    y: 0
+    z: 0.009
+
+  perforation_ratio:
+    x: 0
+    y: 0
+    z: 0
+
+  output_dir: 'src\digitalmodel\tests\test_data\6d_buoy'
+  output_filename: 'buoy_6d_rectangular_px_0_uth2'

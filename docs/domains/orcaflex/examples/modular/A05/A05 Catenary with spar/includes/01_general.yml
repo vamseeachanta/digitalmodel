@@ -1,0 +1,72 @@
+# General Configuration
+# Generated from: A05 Catenary with spar.yml
+# Date: 2026-01-18 22:18:00
+General:
+  UnitsSystem: User
+  LengthUnits: ft
+  MassUnits: lb
+  ForceUnits: kpf
+  g: 32.1740485564304
+  TemperatureUnits: °C
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 14
+  - 70
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  NorthDirectionDefined: Yes
+  NorthDirection: 180
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 6876.07110749906
+  DefaultViewCentre:
+  - 3036.7759158406
+  - -209.960272164533
+  - -3163.59612468947
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+CodeChecks:
+  APIRP2RDDesignCaseFactor: 1.2
+Groups:
+  Structure:
+    Spar Group: Model
+    Spar: Spar Group
+    Soft Tank: Spar Group
+    Hull: Spar Group
+    Deck: Spar Group
+    topdeck: Spar Group
+    Heave Plate Set: Spar Group
+    Heave Plate1: Heave Plate Set
+    Heave Plate2: Heave Plate Set
+    Heave Plate3: Heave Plate Set
+    Leg Set: Spar Group
+    Leg1: Leg Set
+    Leg2: Leg Set
+    Leg3: Leg Set
+    Leg4: Leg Set
+    Stab Set: Spar Group
+    stab1: Stab Set
+    stab2: Stab Set
+    stab3: Stab Set
+    stab4: Stab Set
+    Riser: Model
+  State:
+    Collapsed:
+    - Variable data
+    - Heave Plate Set

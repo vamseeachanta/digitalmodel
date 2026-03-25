@@ -1,0 +1,19 @@
+﻿BaseFile: __02b_water_depth.yml
+
+Environment:
+  # Seabed
+  SeabedType: Profile
+  SeabedOrigin: [605, 0]
+  SeabedSlopeDirection: 180
+  SeabedProfileInterpolation: Cubic Bessel
+  SeabedProfileDistanceFromSeabedOrigin, SeabedProfileZ:
+    - [0, -724]
+    - [710, -748]
+    - [769, -750]
+    - [909, -757]
+    - [1062, -765]
+    - [1366, -780]
+    - [1671, -796]
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 2000.0
+  SeabedShearStiffness: 100.0

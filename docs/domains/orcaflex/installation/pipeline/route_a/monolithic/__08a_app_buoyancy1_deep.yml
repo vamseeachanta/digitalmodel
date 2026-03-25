@@ -1,0 +1,92 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\__08a_app_buoyancy1_deep.yml
+# Created: 10:06 PM on 9/22/2023
+# User: 
+# Machine: 
+---
+BaseFile: __06__structure_at_port.yml
+6DBuoys:
+  New: 0.3TeBuoyancy1
+  0.3TeBuoyancy1:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: X,Y,Z
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [600, -0.5453777636487963, -702]
+    InitialAttitude: [0, 90, 0]
+    Mass: 0.286
+    MomentsOfInertia: [0.03, 0.03, 0.02]
+    CentreOfMass: [0, 0, 0]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0.572
+    BulkModulus: Infinity
+    Height: 1
+    CentreOfVolume: [-0.215, 0, 0.209]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0.73, 0.73, 0.42]
+    DragAreaMoment: [0.021, 0.021, 0.014]
+    DragForceCoefficient: [0.8, 0.8, 0.89]
+    DragMomentCoefficient: [1, 1, 1]
+    HydrodynamicMass: [~, ~, ~]
+    HydrodynamicInertia: [0.126, 0.126, 0.039]
+    AddedMassCoefficient: [0.47, 0.47, 0.36]
+    AddedInertiaCoefficient: [0.053, 0.053, 0.025]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: ~
+    SupportCoordinateSystems: []
+    SupportedLine: []
+    Supports: []
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    Wings: []
+    Hidden: No
+    Pen: [2, Solid, $8000FF]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.943, 0.4, 0.4175]
+      - [-0.943, 0.4, 0.4175]
+      - [-0.943, -0.4, 0.4175]
+      - [0.943, -0.4, 0.4175]
+      - [0.943, 0.4, -0.4175]
+      - [-0.943, 0.4, -0.4175]
+      - [-0.943, -0.4, -0.4175]
+      - [0.943, -0.4, -0.4175]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]
+...

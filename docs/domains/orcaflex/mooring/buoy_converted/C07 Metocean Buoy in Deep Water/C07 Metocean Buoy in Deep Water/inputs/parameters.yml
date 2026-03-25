@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: C07 Metocean Buoy in Deep Water.yml
+# Generated: 2026-01-18 21:53:16
+
+water_depth: 500
+current_speed: 1.125
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 11.5
+- 100
+hs: 13
+tp: 11.5
+wave_direction: 0
+

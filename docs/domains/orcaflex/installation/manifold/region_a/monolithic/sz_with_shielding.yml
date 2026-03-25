@@ -1,0 +1,283 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\manifold\region_a\monolithic\sz_with_shielding.yml
+# Created: 9:08 AM on 2/11/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+BaseFile: __04_mudmat_position.yml
+General:
+  RigidConnectionsSolutionMethod: Direct
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  RestartStateRecordingTimeStart, RestartStateRecordingTimeStop, RestartStateRecordingTimeInterval: []
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+  NorthDirection: ~
+VariableData:
+  Pythonappliedload: []
+  Coverloadmodel: []
+  Coverresistancescale: []
+  Covernormalisedresistance: []
+  Covermobilisationscale: []
+  Coverratchetinglength: []
+  Axialstaticdynamicstiffness: []
+  Coverheight: []
+  Coverheightmodel: []
+  Coveraslaidseabedpenetration: []
+  Constraintstiffnessanddampingmodel: []
+Environment:
+  NominalDepth: ~
+  CurrentModel: Variation scheme
+  WindRamping: From mean
+  AirSpeedOfSound: 343
+  WindHidden: No
+  NominalDepthHidden: Yes
+  NominalDepthPen: [1, Dash, $0060B8]
+  NominalDepthGridDensity: 1
+  SunAzimuth: 215
+  SunAltitude: 27
+  SunShadows: Yes
+  SeaSurfaceClarity: 0
+  SeaSurfaceGridResolution: 16
+  SeaSurfaceUnderwaterPOV: No
+  SeaSurfaceRippleEffect: 50
+  SeaSurfaceRippleSpeed: 0
+  SeaSurfaceRippleChoppiness: 50
+  LowAltitudeCloudCoverage: 25
+  HighAltitudeCloudCoverage: 40
+  CloudSpeed: 0
+  ShadedSeabedDrawType: Solid fill
+  SeabedSolidFillGridShown: Yes
+  SeabedSolidFillGridDensity: 1
+  SeabedSolidFillGridColour: Black
+VesselTypes:
+  C13_EndLay_SSRAO_MadDog2:
+    Draughts:
+      Draught7.09m_Hs2.0m:
+        HydrostaticStiffnessMethod: Displacement
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - [0, 0, 0]
+          - [0, 0, 0]
+          - [0, 0, 0]
+LineTypes:
+  900TeMainCrane MainHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  90mm-Wire Rope:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  SynthRoundSling200MBLx2:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+Vessels:
+  SevenArctic:
+    ImposedMotionConsistentWithSolver: No
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+6DBuoys:
+  mudmat:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  1:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  2:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  3:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  4:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  5:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  6:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  7:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  8:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  9:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  10:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  11:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  12:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  13:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  14:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  15:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  16:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  17:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  18:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  19:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  20:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  21:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  22:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  23:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  24:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  26:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  27:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  28:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  29:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  30:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  31:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  32:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  33:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  34:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  35:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  36:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  structure:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+3DBuoys:
+  Masterlink:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+Lines:
+  _01_main_crane_wire_top:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  _02_main_crane_wire_bot:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  TopRigging:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Sling1:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Sling2:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Sling3:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Sling4:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+Winches:
+  Winch:
+    NameLabelColorMode: Use specified colour
+    NameLabelColour: White
+    ShadedDrawingShowConnections: Yes
+Shapes:
+  900TeMainCranePedestal:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCranePedestalTop:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCraneRadius:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCraneMast:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  SSRAOs_MadDog_Pos:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+...

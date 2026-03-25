@@ -1,0 +1,3 @@
+# Test file for correction hook capture
+# First write at timestamp 1
+test_value = "initial"

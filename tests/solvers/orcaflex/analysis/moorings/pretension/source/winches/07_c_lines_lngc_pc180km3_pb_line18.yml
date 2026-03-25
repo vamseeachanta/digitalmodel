@@ -1,0 +1,11 @@
+﻿New: Line18
+Line18:
+    Connection, ConnectionX, ConnectionY, ConnectionZ:
+      - [FST1, 40.70, 21.83, 14.62]
+      - [LNGC, 288.23, -2.54, 17.06]
+    WinchControlType: By stage
+    StageMode, StageValue:
+      - [Specified Tension, 10]
+      - [Specified payout, 0]
+      - [Specified payout, 0]
+    includefile: winches/07_d_lines_lngc_common.yml

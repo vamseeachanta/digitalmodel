@@ -1,0 +1,122 @@
+source_type: standard
+source_description: "Extracted from digitalmodel/tests/well/tubulars/test_design_envelope.py — API TR 5C3 / ISO 10400 and SPE 48330"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "casing_design"
+equations:
+  - name: "Thin-wall hoop stress"
+    latex: "\\sigma_t = \\frac{p_{diff} \\times D_{mean}}{2 t}"
+    description: "Hoop stress from differential pressure using thin-wall approximation"
+  - name: "Von Mises equivalent stress"
+    latex: "\\sigma_{VME} = \\sqrt{\\sigma_a^2 + \\sigma_t^2 - \\sigma_a \\sigma_t + 3 \\tau^2}"
+    description: "Triaxial von Mises equivalent stress for casing design"
+  - name: "Wall thickness"
+    latex: "t = \\frac{OD - ID}{2}"
+    description: "Wall thickness from outer and inner diameters"
+  - name: "Cross-sectional area"
+    latex: "A = \\frac{\\pi}{4} (OD^2 - ID^2)"
+    description: "Tubular cross-sectional area"
+  - name: "API biaxial burst correction"
+    latex: "p_{burst,axial} = p_{burst} \\left( \\sqrt{1 - 0.75 \\left(\\frac{\\sigma_a}{Y}\\right)^2} - 0.5 \\frac{\\sigma_a}{Y} \\right)"
+    description: "API TR 5C3 biaxial correction for burst under tensile axial load"
+inputs:
+  - name: "Outer diameter"
+    symbol: "OD"
+    unit: "in"
+    test_value: 7.0
+  - name: "Inner diameter"
+    symbol: "ID"
+    unit: "in"
+    test_value: 6.276
+  - name: "SMYS"
+    symbol: "Y"
+    unit: "psi"
+    test_value: 80000.0
+  - name: "Burst rating"
+    symbol: "p_burst"
+    unit: "psi"
+    test_value: 5180.0
+  - name: "Collapse rating"
+    symbol: "p_collapse"
+    unit: "psi"
+    test_value: 5550.0
+outputs:
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "in"
+    test_expected: 0.362
+    tolerance: 0.000001
+worked_examples:
+  - description: "7-inch 26 lb/ft L-80 casing wall thickness"
+    inputs:
+      od_in: 7.0
+      id_in: 6.276
+    outputs:
+      wall_thickness_in: 0.362
+    use_as_test: true
+  - description: "Hoop stress at 1000 psi for 7-inch casing (thin-wall)"
+    inputs:
+      differential_pressure_psi: 1000.0
+      od_in: 7.0
+      id_in: 6.276
+    outputs:
+      hoop_stress_psi: 9168.51
+    use_as_test: true
+  - description: "VME stress: pure axial 50000 psi gives 50000 psi"
+    inputs:
+      sigma_axial_psi: 50000.0
+      sigma_hoop_psi: 0.0
+      tau_psi: 0.0
+    outputs:
+      vme_psi: 50000.0
+    use_as_test: true
+  - description: "VME stress: pure hoop 40000 psi gives 40000 psi"
+    inputs:
+      sigma_axial_psi: 0.0
+      sigma_hoop_psi: 40000.0
+      tau_psi: 0.0
+    outputs:
+      vme_psi: 40000.0
+    use_as_test: true
+  - description: "VME stress: equal biaxial 30000 psi gives 30000 psi"
+    inputs:
+      sigma_axial_psi: 30000.0
+      sigma_hoop_psi: 30000.0
+      tau_psi: 0.0
+    outputs:
+      vme_psi: 30000.0
+    use_as_test: true
+  - description: "VME stress: sa=40000 psi, st=20000 psi, no torsion"
+    inputs:
+      sigma_axial_psi: 40000.0
+      sigma_hoop_psi: 20000.0
+      tau_psi: 0.0
+    outputs:
+      vme_psi: 34641.02
+    use_as_test: true
+  - description: "Zero pressure gives zero hoop stress"
+    inputs:
+      differential_pressure_psi: 0.0
+      od_in: 7.0
+      id_in: 6.276
+    outputs:
+      hoop_stress_psi: 0.0
+    use_as_test: true
+  - description: "Hoop stress scales linearly: 500 psi vs 1000 psi"
+    inputs:
+      differential_pressure_psi: 500.0
+      od_in: 7.0
+      id_in: 6.276
+    outputs:
+      hoop_stress_psi: 4584.25
+    use_as_test: true
+assumptions:
+  - "Thin-wall approximation valid for D/t > 10"
+  - "Isotropic material for standard steel grades (J-55, L-80, P-110)"
+  - "Anisotropic yield for CRA grades: Y_hoop ~ 1.05 * Y_axial for 25Cr duplex"
+  - "API biaxial correction uses sqrt form (not simplified approximation)"
+references:
+  - "API TR 5C3 / ISO 10400 — Casing design calculations"
+  - "SPE 48330 — Casing design for directional wells"
+  - "Bourgoyne et al., Applied Drilling Engineering, SPE Textbook Vol 2"

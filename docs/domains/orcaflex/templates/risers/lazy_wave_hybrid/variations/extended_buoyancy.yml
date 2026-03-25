@@ -1,0 +1,26 @@
+# Variation: Extended Buoyancy Section
+# IMPORTANT: When overriding Lines, must include ALL properties
+# because OrcaFlex replaces the entire object definition
+#
+# This variation uses a longer buoyancy section for greater
+# decoupling between vessel motion and touchdown point
+
+Lines:
+  # Lazy Wave Riser with extended buoyancy
+  # Buoyancy section increased from 200m to 350m
+  - Name: LWR_Main
+    EndAConnection: FPSO
+    EndAX: -140
+    EndAY: 0
+    EndAZ: -20
+    EndBConnection: Anchored
+    EndBX: -1200
+    EndBY: 0
+    EndBZ: -1000
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [LWR_12inch, 350, 10]
+      - [LWR_12inch_Buoyancy, 350, 5]
+      - [LWR_12inch, 550, 10]
+

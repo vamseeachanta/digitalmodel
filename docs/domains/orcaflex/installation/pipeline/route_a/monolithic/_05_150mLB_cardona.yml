@@ -1,0 +1,273 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ms\STAT\_05_150mLB_cardona.yml
+# Created: 10:48 AM on 6/11/2023
+# User: 
+# Machine: 
+---
+BaseFile: _04_wd858m_cardona.yml
+General:
+  StaticsMaxIterations: 800
+  StaticsTolerance: 0.001
+  StaticsMinDamping: 10
+  StaticsMaxDamping: 20
+VariableData:
+  Bendingstiffness:
+    New: br_stiffness_curve
+    br_stiffness_curve:
+      IndependentValue, DependentValue:
+        - [0, 0]
+        - [0.001, 100e-6]
+        - [0.003, 200e-6]
+        - [0.013, 300e-6]
+        - [0.065, 400e-6]
+        - [0.129, 0.001]
+        - [0.161, 4.68]
+        - [0.263, 30]
+        - [0.289, 300]
+        - [0.304, 550]
+        - [0.319, 1000]
+      Hysteretic: No
+      ExternalResults: (none)
+Environment:
+  WaveTrains:
+    Wave1:
+      WaveHeight: 0.001
+      WavePeriod: 6
+LineTypes:
+  New:
+    - BendRestrictor_LineType
+    - LineArmorPot
+  BendRestrictor_LineType:
+    Category: General
+    OD: 0.336
+    ID: 0.139
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.036
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [2.1, ~]
+    EI: [br_stiffness_curve, ~]
+    EA: 2000
+    PoissonRatio: 0.5
+    GJ: 10
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: 0.25
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [5, Solid, $AC51F0]
+  LineArmorPot:
+    Category: General
+    OD: 0.273
+    ID: 0.07
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.456
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [266.4070570244146e3, ~]
+    EA: 26.640705702441446e6
+    PoissonRatio: 0.293
+    GJ: 206.03794046745135e3
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: 0.51
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    APIRP2RDTcorr: 0
+    APIRP2RDSMYS: 360e3
+    APISTD2RDE: 0
+    APISTD2RDS: 0
+    APISTD2RDU: 0
+    APISTD2RDDelta: 0
+    APISTD2RDFd1: 0
+    APISTD2RDFd2: 0
+    APISTD2RDAlphaFab: 0
+    APISTD2RDk: 0
+    APISTD2RDTca: 0
+    APIRP1111E: 0
+    APIRP1111S: 0
+    APIRP1111U: 0
+    APIRP1111Delta: 0
+    APIRP1111Fa: 0
+    APIRP1111Fc: 0
+    APIRP1111Fbs: 0
+    APIRP1111SAF: 0
+    DNVOSF101Pmin: ~
+    DNVOSF101T2: ~
+    DNVOSF101Fy: 0
+    DNVOSF101Fu: 0
+    DNVOSF101E: 0
+    DNVOSF101AlphaH: 0
+    DNVOSF101F0: 0
+    DNVOSF101GammaSC: 0
+    DNVOSF101GammaEpsilon: 0
+    DNVOSF101GammaM: 0
+    DNVOSF101AlphaFab: 0
+    DNVOSF101AlphaGW: 0
+    DNVOSF101AlphaPm: 0
+    DNVOSF101SimplifiedStrainLimit: 0
+    DNVOSF201Pmin: ~
+    DNVOSF201T2: ~
+    DNVOSF201Fy: 0
+    DNVOSF201Fu: 0
+    DNVOSF201E: 0
+    DNVOSF201F0: 0
+    DNVOSF201GammaSC: 0
+    DNVOSF201GammaM: 0
+    DNVOSF201AlphaFab: 0
+    DNVOSF201Eta: 0
+    PD8010Tcorr: 0
+    PD8010E: 0
+    PD8010SigmaY: 0
+    PD8010AlphaFab: 0
+    PD8010F0: 0
+    PD8010Fd: 0
+    Pen: [6, Solid, $0080FF]
+StiffenerTypes:
+  New: BR_Stiffener_car
+  BR_Stiffener_car:
+    LineType: BendRestrictor_LineType
+    Length: 3.1
+    ConnectionArclength: 0
+    ConnectionArclengthRelativeTo: End A
+    AxialLoadInertiaTransfer: at connection point
+6DBuoys:
+  Tensioner Support1:
+    NumberOfSupportedLines: 1
+    SupportedLine[1]: Umbilical-car
+Lines:
+  Umbilical-car:
+    EndAConnection: Tensioner Support1
+    EndAX: 20.000000000000004
+    EndAY: -1
+    EndAZ: 4.000000000000003
+    EndBX: -734.5
+    EndBY: -25
+    NumberOfSections: 10
+    LineType[1]: LineArmorPot
+    Length[1]: 0.5
+    TargetSegmentLength[1]: 0.1
+    Length[2]: 10
+    TargetSegmentLength[2]: 0.1
+    Length[3]: 24.8
+    TargetSegmentLength[3]: 0.2
+    Length[4]: 5
+    TargetSegmentLength[4]: 0.5
+    Length[6]: 806.2
+    TargetSegmentLength[6]: 2
+    Length[7]: 10
+    Length[8]: 180
+    TargetSegmentLength[8]: 0.5
+    LineType[9]: InfUmbVenice-4.13in-cardona
+    Length[9]: 20
+    ExpansionFactor[9]: ~
+    TargetSegmentLength[9]: 1
+    ClashCheck[9]: No
+    PreBendBendAngle[9]: 0
+    ReactsToWake[9]: No
+    WakeModel[9]: (none)
+    DisturbanceVessel[9]: (none)
+    LineType[10]: InfUmbVenice-4.13in-cardona
+    Length[10]: 350
+    ExpansionFactor[10]: ~
+    TargetSegmentLength[10]: 2
+    ClashCheck[10]: No
+    PreBendBendAngle[10]: 0
+    ReactsToWake[10]: No
+    WakeModel[10]: (none)
+    DisturbanceVessel[10]: (none)
+    NumberOfAttachments: 1
+    AttachmentType[1]: BR_Stiffener_car
+    AttachmentName[1]: Stiffener1
+    Attachmentz[1]: 0.5
+    AttachmentzRelativeTo[1]: End A
+    StaticsStep1: Catenary
+...

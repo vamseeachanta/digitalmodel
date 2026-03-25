@@ -1,0 +1,12 @@
+name: PipeCapacity
+channels:
+  - defaults
+dependencies:
+  - python=3.6
+  - pyyaml
+  - yaml
+  - oyaml
+  - matplotlib
+  - scipy
+  - pandas
+  - imgkit

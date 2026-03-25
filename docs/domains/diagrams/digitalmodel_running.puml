@@ -1,0 +1,76 @@
+@startuml digitalmodel_running
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Digital Model | Quick Start
+
+start
+
+    note right
+        Objective: Different Ways to Run 
+    end note
+
+    partition "Quick Start" {
+
+        :Command line using .yml file;
+            note right
+                **yaml**
+                In python digitalmodel environment
+                Use .yml as argument
+            end note
+
+        :using .py file;
+            note right
+                **see example .py file**
+                In python digitalmodel environment
+                Utilizes filename or args to run
+            end note
+
+
+        :as module;
+            note right
+                **python -m digitalmodel .\wd_924m.yml**
+                In python digitalmodel environment
+                Use .yml as argument
+                Utilizes args to run
+            end note
+
+        :Command line using dictionary 
+        (NOT IMPLEMENTED);
+            note right
+                **NOT IMPLEMENTED**
+                In python digitalmodel environment
+                Use .yml as argument
+                Utilizes args to run
+            end note
+
+        :Command line using 3-4 level of args
+        for out of the box analysis
+        (NOT IMPLEMENTED);
+            note right
+                **NOT IMPLEMENTED**
+                eg: run analysis on a folder using basename, option1, option 2.
+                python -m diditalmodel -aqwa -aqwareader -raos
+            end note
+    }
+
+    partition "Results" {
+        :Visual model;
+            note right
+                input file location
+                Results folder
+            end note
+
+    }
+
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

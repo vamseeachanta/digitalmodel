@@ -1,0 +1,85 @@
+# General Configuration
+# Generated from: D03 Lay on tower.yml
+# Date: 2026-01-18 22:18:09
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.02
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 16
+  - 16
+  - 16
+  - 16
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 25
+  DefaultViewCentre:
+  - 4
+  - 0
+  - -240
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+FrictionCoefficients:
+  ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient
+  : - - Riser
+      - (all shapes)
+      - 0.3
+      - ~
+  FrictionCoefficient6DBuoyName, 6DBuoyFrictionCoefficientShapeName, 6DBuoyFrictionCoefficient:
+  - - (all 6D buoys)
+    - (all shapes)
+    - 0.3
+Groups:
+  Structure:
+    Vessel Structure: Model
+    Lay vessel: Vessel Structure
+    Moonpool Top: Vessel Structure
+    Moonpool Top X+: Moonpool Top
+    Moonpool Top X-: Moonpool Top
+    Moonpool Top Y+: Moonpool Top
+    Moonpool Top Y-: Moonpool Top
+    Moonpool Shielding: Vessel Structure
+    Moonpool Bottom: Vessel Structure
+    Moonpool Bot X+: Moonpool Bottom
+    Moonpool Bot X-: Moonpool Bottom
+    Moonpool Bot Y+: Moonpool Bottom
+    Moonpool Bot Y-: Moonpool Bottom
+    Winches and Flowline: Model
+    MainWinch: Winches and Flowline
+    Flowline: Winches and Flowline
+    Upper Flowline: Flowline
+    clamp buoy: Flowline
+    Lower Flowline: Flowline
+    Clamp Control Winch: Winches and Flowline
+    Aux Winch: Clamp Control Winch
+    Aux Winch Wire: Clamp Control Winch
+    Tower Structure: Model
+    Tower: Tower Structure
+    tower top gear: Tower Structure
+    Left Arch: tower top gear
+    Right arch: tower top gear
+    sea-side block: tower top gear
+    vessel-side block: tower top gear
+    mid block: tower top gear
+    mid block1: tower top gear
+  State:
+    Collapsed:
+    - Variable data

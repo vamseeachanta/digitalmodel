@@ -1,0 +1,32 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+
+  source: zip
+  sets:
+    -
+      label: [directionalsurveys]
+      header: NULL
+      df_columns:
+        - [API_WELL_NUMBER, INCL_ANG_DEG_VAL, INCL_ANG_MIN_VAL, SURVEY_POINT_MD, WELL_N_S_CODE, DIR_DEG_VAL, DIR_MINS_VAL, WELL_E_W_CODE, SURVEY_POINT_TVD, DELTA_X, DELTA_Y, SURF_LONGITUDE, SURF_LATITUDE]
+      io: data_manager\data\bsee\dsptsdelimit.ZIP
+      encoding: ISO-8859-1
+      output:
+        target: db
+        if_exists: 'replace'
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: bsee

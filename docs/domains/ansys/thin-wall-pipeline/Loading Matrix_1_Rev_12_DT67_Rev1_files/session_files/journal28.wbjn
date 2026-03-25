@@ -1,0 +1,20 @@
+﻿# encoding: utf-8
+# Release 16.2
+SetScriptVersion(Version="16.2.176")
+designPoint1 = Parameters.GetDesignPoint(Name="2")
+backgroundSession1 = UpdateAllDesignPoints(DesignPoints=[designPoint1])
+system1 = GetSystem(Name="SYS 2")
+geometry1 = system1.GetContainer(ComponentName="Geometry")
+geometry1.Edit(Interactive=False)
+geometry1.Export(FilePath="C:/Users/AceEngineer/Desktop/21-10-2016/Loading Matrix_1_Rev_12_DT67_RB2_files/user_files/2_SYS 2_Geometry.x_t")
+geometry1.Exit()
+results1 = system1.GetContainer(ComponentName="Results")
+results1.Exit()
+results1.Edit(Hidden=True)
+results1.SendCommand(
+    Command="""
+extension = ExtAPI.ExtensionManager.GetExtensionByName(\"CustomUpdate\").GetModule()
+extension.SaveImages(r\"C:\\Users\\AceEngineer\\Desktop\\21-10-2016\\Loading Matrix_1_Rev_12_DT67_RB2_files\\user_files\", 2, \"SYS 2\")""",
+    Language="Python")
+results1.Exit()
+Save(Overwrite=True)

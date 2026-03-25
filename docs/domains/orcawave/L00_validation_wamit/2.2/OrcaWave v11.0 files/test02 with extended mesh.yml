@@ -1,0 +1,202 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.2\OrcaWave v11.0 files\test02 with extended mesh.yml
+# Created: 10:08 AM on 2/19/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Potential and source formulations
+HasResonanceDampingLid: No
+OutputPanelPressures: Yes
+OutputPanelVelocities: Yes
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadPressureIntegration: Yes
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+PreferredQuadraticLoadCalculationMethod: Pressure integration
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - 2
+  - 2.1
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
+  - 2.6
+  - 2.7
+  - 2.8
+  - 2.9
+  - 3
+  - 3.1
+  - 3.2
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9
+  - 4
+  - 4.1
+  - 4.2
+  - 4.3
+  - 4.4
+  - 4.5
+  - 4.6
+  - 4.7
+  - 4.8
+  - 4.9
+  - 5
+  - 5.1
+  - 5.2
+  - 5.3
+  - 5.4
+  - 5.5
+  - 5.6
+  - 5.7
+  - 5.8
+  - 5.9
+  - 6
+  - 6.1
+  - 6.2
+  - 6.3
+  - 6.4
+  - 6.5
+  - 6.6
+  - 6.7
+  - 6.8
+  - 6.9
+  - 7
+  - 7.1
+  - 7.2
+  - 7.3
+  - 7.4
+  - 7.5
+  - 7.6
+  - 7.7
+  - 7.8
+  - 7.9
+  - 8
+  - 8.1
+  - 8.2
+  - 8.3
+  - 8.4
+  - 8.5
+  - 8.6
+  - 8.7
+  - 8.8
+  - 8.9
+  - 9
+  - 9.1
+  - 9.2
+  - 9.3
+  - 9.4
+  - 9.5
+  - 9.6
+  - 9.7
+  - 9.8
+  - 9.9
+  - 10
+WaveHeading:
+  - 0
+  - 27
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Test01 cylinder
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: test01.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Radial method
+    BodyOrcaFlexImportSymmetry: Circular
+    BodyOrcaFlexImportLength: 2
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, $80FF80]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...

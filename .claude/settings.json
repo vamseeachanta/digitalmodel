@@ -1,0 +1,155 @@
+{
+  "env": {
+    "CLAUDE_SESSION_LOGGING": "true",
+    "CLAUDE_CAPTURE_CORRECTIONS": "true",
+    "WORKSPACE_HUB": "/d/workspace-hub"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx claude-flow:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:*)",
+      "Bash(npm test:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git config:*)",
+      "Bash(git tag:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(jq:*)",
+      "Bash(node:*)",
+      "Bash(which:*)",
+      "Bash(pwd)",
+      "Bash(ls:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|MultiEdit|Grep|Glob|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Logging session activity",
+            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"pre\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|MultiEdit|Grep|Glob|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Logging session activity (post)",
+            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"post\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Capturing correction patterns for RAGS learning",
+            "command": "cat | bash -c 'HOOK=\"\"; [ -f \"/d/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -n \"$HOOK\" ] && cat | \"$HOOK\" || cat > /dev/null'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Initializing session logging",
+            "command": "bash -c 'LOG_DIR=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/skills/session-logs\"; mkdir -p \"$LOG_DIR\"; echo \"{\\\"event\\\":\\\"session_start\\\",\\\"timestamp\\\":\\\"$(date -Iseconds)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\",\\\"cwd\\\":\\\"$(pwd)\\\"}\" >> \"$LOG_DIR/session_$(date +%Y%m%d).jsonl\" 2>/dev/null || true'"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash -c 'INPUT=$(cat); CUSTOM=$(echo \"$INPUT\" | jq -r \".custom_instructions // \\\"\\\"\"); echo \"🔄 PreCompact Guidance:\"; echo \"📋 IMPORTANT: Review CLAUDE.md in project root for:\"; echo \"   • 54 available agents and concurrent usage patterns\"; echo \"   • Swarm coordination strategies (hierarchical, mesh, adaptive)\"; echo \"   • SPARC methodology workflows with batchtools optimization\"; echo \"   • Critical concurrent execution rules (GOLDEN RULE: 1 MESSAGE = ALL OPERATIONS)\"; if [ -n \"$CUSTOM\" ]; then echo \"🎯 Custom compact instructions: $CUSTOM\"; fi; echo \"✅ Ready for compact operation\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash -c 'echo \"🔄 Auto-Compact Guidance (Context Window Full):\"; echo \"📋 CRITICAL: Before compacting, ensure you understand:\"; echo \"   • All 54 agents available in .claude/agents/ directory\"; echo \"   • Concurrent execution patterns from CLAUDE.md\"; echo \"   • Batchtools optimization for 300% performance gains\"; echo \"   • Swarm coordination strategies for complex tasks\"; echo \"⚡ Apply GOLDEN RULE: Always batch operations in single messages\"; echo \"✅ Auto-compact proceeding with full agent context\"'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Finalizing session logs",
+            "command": "bash -c 'LOG_DIR=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/skills/session-logs\"; echo \"{\\\"event\\\":\\\"session_end\\\",\\\"timestamp\\\":\\\"$(date -Iseconds)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG_DIR/session_$(date +%Y%m%d).jsonl\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Extracting session transcript for RAG",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/extract-session-for-rag.sh\"; [ -f \"$SCRIPT\" ] && source \"$SCRIPT\" --current 2>/dev/null || true'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Session stopped - logs saved",
+            "command": "bash -c 'LOG_DIR=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/skills/session-logs\"; echo \"{\\\"event\\\":\\\"session_stop\\\",\\\"timestamp\\\":\\\"$(date -Iseconds)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG_DIR/session_$(date +%Y%m%d).jsonl\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Reviewing session for skills & memory enhancement",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/session-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Post-task learning check",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/post-task-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
+          },
+          {
+            "type": "command",
+            "statusMessage": "Processing session signals",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/hooks/consume-signals.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
+          }
+        ]
+      }
+    ]
+  },
+  "plansDirectory": "specs/modules",
+  "includeCoAuthoredBy": true,
+  "enabledMcpjsonServers": [
+    "claude-flow",
+    "ruv-swarm"
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline-command.sh"
+  }
+}

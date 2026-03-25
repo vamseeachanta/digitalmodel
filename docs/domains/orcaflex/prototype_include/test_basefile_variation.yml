@@ -1,0 +1,5 @@
+%YAML 1.1
+# Prototype: Test BaseFile + IncludeFile pattern
+---
+BaseFile: base_model.yml
+IncludeFile: variation_deep.yml

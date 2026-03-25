@@ -1,0 +1,182 @@
+source_type: python
+source_description: "Wang (1975) passing ship force calculations — MathCAD validation and benchmark tests"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "hydrodynamics"
+subcategory: "passing_ship_forces"
+equations:
+  - name: "Sectional area function S1"
+    latex: "S_1(x) = 1 - \\left(\\frac{2x}{L}\\right)^2"
+    description: "Parabolic longitudinal distribution of sectional area, normalized to 1 at midship"
+  - name: "Sectional area derivative dS1/dx"
+    latex: "\\frac{dS_1}{dx} = -\\frac{8x}{L^2}"
+    description: "Derivative of parabolic sectional area distribution"
+  - name: "Wang sway force (infinite depth)"
+    latex: "F_y = \\frac{2}{3} \\rho U^2 A_1 A_2 \\iint \\frac{dS_1}{d\\xi} \\frac{dS_1}{d\\eta} \\frac{y}{r^3} d\\xi\\,d\\eta"
+    description: "Lateral hydrodynamic force on moored vessel from passing ship"
+
+inputs:
+  - name: "Moored vessel length"
+    symbol: "L1"
+    unit: "ft"
+    test_value: 950.0
+  - name: "Moored vessel midship area"
+    symbol: "A1"
+    unit: "ft^2"
+    test_value: 3192.0
+  - name: "Passing vessel length"
+    symbol: "L2"
+    unit: "ft"
+    test_value: 475.0
+  - name: "Passing vessel midship area"
+    symbol: "A2"
+    unit: "ft^2"
+    test_value: 6413.0
+  - name: "Water density"
+    symbol: "rho"
+    unit: "slug/ft^3"
+    test_value: 1.9905
+  - name: "Passing ship velocity"
+    symbol: "U"
+    unit: "ft/s"
+    test_value: 11.2
+  - name: "Lateral separation"
+    symbol: "y"
+    unit: "ft"
+    test_value: 190.0
+  - name: "Water depth"
+    symbol: "h"
+    unit: "ft"
+    test_value: 95.0
+
+outputs:
+  - name: "Sway force at abeam (stagger=0)"
+    symbol: "F_sway"
+    unit: "lbf"
+    test_expected: 76440.0
+    tolerance: 0.05
+  - name: "Surge force at abeam (stagger=0)"
+    symbol: "F_surge"
+    unit: "lbf"
+    test_expected: 0.0
+    tolerance: 764.4
+  - name: "Yaw moment at abeam (stagger=0)"
+    symbol: "M_yaw"
+    unit: "ft-lbf"
+    test_expected: 0.0
+    tolerance: 1.0e-3
+
+worked_examples:
+  - description: "MathCAD Document 1 — VLCC sway force at abeam, finite depth h=95ft"
+    inputs:
+      L1_ft: 950.0
+      A1_ft2: 3192.0
+      L2_ft: 475.0
+      A2_ft2: 6413.0
+      rho_slug_ft3: 1.9905
+      U_ft_s: 11.2
+      separation_ft: 190.0
+      stagger_ft: 0.0
+      depth_ft: 95.0
+    outputs:
+      sway_force_lbf: 76440.0
+      surge_force_lbf: 0.0
+      yaw_moment_ft_lbf: 0.0
+    use_as_test: true
+
+  - description: "S1 function at midship — maximum value equals 1.0"
+    inputs:
+      x: 0.0
+      L: 100.0
+    outputs:
+      S1: 1.0
+    use_as_test: true
+
+  - description: "S1 function at vessel ends — value equals 0.0"
+    inputs:
+      x: 50.0
+      L: 100.0
+    outputs:
+      S1: 0.0
+    use_as_test: true
+
+  - description: "S1 function at quarter length — parabolic value 0.75"
+    inputs:
+      x: 25.0
+      L: 100.0
+    outputs:
+      S1: 0.75
+    use_as_test: true
+
+  - description: "S1 outside vessel bounds returns zero"
+    inputs:
+      x: 60.0
+      L: 100.0
+    outputs:
+      S1: 0.0
+    use_as_test: true
+
+  - description: "dS1/dx at midship is zero (flat peak)"
+    inputs:
+      x: 0.0
+      L: 100.0
+    outputs:
+      dS1_dx: 0.0
+    use_as_test: true
+
+  - description: "dS1/dx analytical value at x=-25, L=100: -8*(-25)/100^2 = 0.02"
+    inputs:
+      x: -25.0
+      L: 100.0
+    outputs:
+      dS1_dx: 0.02
+    use_as_test: true
+
+  - description: "dS1/dx analytical value at x=10, L=100: -8*(10)/100^2 = -0.008"
+    inputs:
+      x: 10.0
+      L: 100.0
+    outputs:
+      dS1_dx: -0.008
+    use_as_test: true
+
+  - description: "dS1/dx analytical value at x=40, L=100: -8*(40)/100^2 = -0.032"
+    inputs:
+      x: 40.0
+      L: 100.0
+    outputs:
+      dS1_dx: -0.032
+    use_as_test: true
+
+  - description: "Velocity squared scaling — doubling U quadruples sway force (ratio=4.0)"
+    inputs:
+      U1_factor: 1.0
+      U2_factor: 2.0
+    outputs:
+      force_ratio: 4.0
+    use_as_test: true
+
+  - description: "Zero velocity gives zero force on all DOFs"
+    inputs:
+      U_m_s: 0.0
+      separation_m: 57.912
+      stagger_m: 0.0
+    outputs:
+      surge_N: 0.0
+      sway_N: 0.0
+      yaw_Nm: 0.0
+    use_as_test: true
+
+assumptions:
+  - "Parabolic sectional area distribution (Wang 1975)"
+  - "Slender body theory — vessel length >> beam"
+  - "Vessels are rigid bodies"
+  - "Low Froude number assumption"
+  - "5% tolerance on sway force comparison to MathCAD (simplified kernel vs VBA exact)"
+  - "Surge and yaw are exactly zero at stagger=0 by antisymmetry"
+
+references:
+  - "Wang, S. (1975). Hydrodynamic Forces on a Vessel Moving Along a Bank or in a Narrow Channel. Journal of Ship Research, Vol. 19, No. 4"
+  - "MathCAD PDF: Calculation of forces and moments from Wang.pdf"
+  - "MathCAD PDF: Wang Paper calculations 3.pdf"
+  - "VBA reference: modPassingShip.bas (Nick Barczak, July 2016)"

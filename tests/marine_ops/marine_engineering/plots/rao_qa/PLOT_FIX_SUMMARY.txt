@@ -1,0 +1,15 @@
+RAO PLOT FIX SUMMARY
+================================================================================
+
+Generated 4 plots with ALL 14 periods
+Period range: 4.0s to 22.2s
+Periods: [np.float64(22.202068223249423), np.float64(16.93580945331425), np.float64(12.981787824751212), np.float64(10.98458969786641), np.float64(10.005072145190423), np.float64(9.014613066254787), np.float64(8.479332398353018), np.float64(8.004057716152339), np.float64(7.515771898540176), np.float64(6.99686559819553), np.float64(6.490893912375606), np.float64(5.989690473955755), np.float64(4.998556330294023), np.float64(3.999481417682741)]
+
+Number of headings: 9
+Headings: [np.float64(-180.0), np.float64(-135.0), np.float64(-90.0), np.float64(-45.0), np.float64(0.0), np.float64(45.0), np.float64(90.0), np.float64(135.0), np.float64(180.0)]
+
+Generated plots:
+  1. rao_amplitude_all_dof.png
+  2. rao_phase_all_dof.png
+  3. rao_heading_comparison.png
+  4. rao_translation_rotation.png

@@ -1,0 +1,341 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: NULL
+    nrows: 4
+    ncols: 1
+    suptitle: Vessel Northing, Noble Bob Douglas
+    sets:
+
+    -
+      title: North
+      xlabel: Date
+      ylabel: Northing (m)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: North, Range1
+      xlabel: Date
+      ylabel: Northing (m)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [890000, 900000]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+
+
+    -
+      title: North, Range2
+      xlabel: Date
+      ylabel: Northing (m)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [890500, 892000]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+
+
+    -
+      title: North, Range3
+      xlabel: Date
+      ylabel: Northing (m)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [898000, 899000]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [POSNORTH]
+          plt_kind: line
+          marker: NULL
+

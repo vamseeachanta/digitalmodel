@@ -1,0 +1,115 @@
+source_type: textbook
+source_description: "Extracted from digitalmodel/tests/well/drilling/test_rop_models.py — SPE textbook baseline parameters"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "rate_of_penetration"
+equations:
+  - name: "Warren ROP model"
+    latex: "ROP = K \\left(\\frac{WOB}{d_b}\\right)^a \\times RPM^b"
+    description: "Warren power-law ROP model with weight on bit, RPM, and bit diameter"
+  - name: "Bourgoyne-Young ROP model"
+    latex: "ROP = e^{a_1} \\cdot f(d, WOB, RPM, \\Delta p, h)"
+    description: "Eight-parameter exponential ROP model with formation, compaction, and bit wear terms"
+inputs:
+  - name: "Drillability constant"
+    symbol: "K"
+    unit: "dimensionless"
+    test_value: 10.0
+  - name: "WOB exponent"
+    symbol: "a"
+    unit: "dimensionless"
+    test_value: 0.6
+  - name: "RPM exponent"
+    symbol: "b"
+    unit: "dimensionless"
+    test_value: 0.5
+  - name: "Weight on bit"
+    symbol: "WOB"
+    unit: "klb"
+    test_value: 20.0
+  - name: "Rotary speed"
+    symbol: "RPM"
+    unit: "rev/min"
+    test_value: 100.0
+  - name: "Bit diameter"
+    symbol: "d_b"
+    unit: "in"
+    test_value: 8.5
+outputs:
+  - name: "Rate of penetration"
+    symbol: "ROP"
+    unit: "ft/hr"
+    test_expected: 167.10
+    tolerance: 0.000001
+worked_examples:
+  - description: "Warren power-law formula: K=10, a=0.6, b=0.5, WOB=20 klb, RPM=100, d_b=8.5 in"
+    inputs:
+      K: 10.0
+      a: 0.6
+      b: 0.5
+      wob_klb: 20.0
+      rpm: 100.0
+      bit_dia_in: 8.5
+    outputs:
+      rop_ft_hr: 167.10
+    use_as_test: true
+  - description: "Zero WOB gives zero ROP (Warren model)"
+    inputs:
+      K: 10.0
+      a: 0.6
+      b: 0.5
+      wob_klb: 0.0
+      rpm: 100.0
+      bit_dia_in: 8.5
+    outputs:
+      rop_ft_hr: 0.0
+    use_as_test: true
+  - description: "Zero RPM gives zero ROP (Warren model)"
+    inputs:
+      K: 10.0
+      a: 0.6
+      b: 0.5
+      wob_klb: 20.0
+      rpm: 0.0
+      bit_dia_in: 8.5
+    outputs:
+      rop_ft_hr: 0.0
+    use_as_test: true
+  - description: "Bourgoyne-Young zero WOB gives zero ROP"
+    inputs:
+      a1: 0.5
+      a2: 0.0
+      a3: 0.0
+      a4: 0.3
+      a5: 0.5
+      a6: 0.6
+      a7: 0.5
+      a8: 0.3
+      depth_ft: 5000.0
+      wob_klb: 0.0
+      rpm: 100.0
+      bit_dia_in: 8.5
+      overbalance_kpsi: 0.5
+      bit_wear: 0.0
+    outputs:
+      rop_ft_hr: 0.0
+    use_as_test: true
+  - description: "Warren fit recovery: noiseless synthetic data with K=8.5, a=0.55, b=0.45"
+    inputs:
+      K_true: 8.5
+      a_true: 0.55
+      b_true: 0.45
+    outputs:
+      K_fitted: 8.5
+      a_fitted: 0.55
+      b_fitted: 0.45
+    use_as_test: true
+assumptions:
+  - "Steady-state drilling conditions (no transients)"
+  - "Warren model assumes power-law relationship between ROP, WOB/d_b, and RPM"
+  - "Bourgoyne-Young model uses 8 empirically fitted parameters (a1-a8)"
+  - "Fit recovery test uses noiseless synthetic data with 20 points"
+references:
+  - "Bourgoyne et al., Applied Drilling Engineering, SPE Textbook Vol 2"
+  - "Warren, T.M., Drilling Model Based on Rock-Strength Concepts, JPT 1981"

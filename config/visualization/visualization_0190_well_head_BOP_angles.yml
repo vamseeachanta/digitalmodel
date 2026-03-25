@@ -1,0 +1,104 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings:
+
+  -
+    file_name_extension: BOP_Yellow_Angles
+    df: input_data_table_statistics
+    table_name: YT_BOPYELLOWMRU
+    statistic: Maximum
+    label: [PITCH, ROLL]
+    x: [StartTime]
+    y: [PITCH, ROLL]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: BOP Accelerations
+    suptitle: BOP Accelerations. Yellow Pod
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+
+  -
+    file_name_extension: BOP_Blue_Angles
+    df: input_data_table_statistics
+    table_name: BD_BOPBLUEMRU
+    statistic: Maximum
+    label: [PITCH, ROLL]
+    x: [StartTime]
+    y: [PITCH, ROLL]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Date
+    ylabel: BOP Accelerations
+    suptitle: BOP Accelerations. Blue Pod
+    title: Yellowtail Well, Noble Bob Douglas
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL

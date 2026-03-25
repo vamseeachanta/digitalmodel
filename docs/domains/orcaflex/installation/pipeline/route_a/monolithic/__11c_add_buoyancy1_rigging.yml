@@ -1,0 +1,123 @@
+﻿BaseFile: __11b_define_riggings.yml
+
+Lines:
+  New:
+    - rigging_buoyancy1
+  rigging_buoyancy1:
+    Locked: No
+    IncludeTorsion: No
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    EndAConnection: UTA
+    EndAX: 1.243
+    EndAY: 0
+    EndAZ: 1.2865
+    EndAAzimuth: 180.00000309713073
+    EndADeclination: 80.72312769324793
+    EndAGamma: -1.3597838050383152e-6
+    EndAReleaseStage: ~
+    EndBConnection: 0.3TeBuoyancy1
+    EndBX: 0.9
+    EndBY: 0
+    EndBZ: 0
+    EndBAzimuth: 180
+    EndBDeclination: 90
+    EndBGamma: 0
+    EndBReleaseStage: ~
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo: []
+    Sections:
+      - LineType: Masterlink1.5in
+        Length: 0.2
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: SevenArctic
+      - LineType: Hook.Nautilus22te
+        Length: 0.68
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.68
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: SevenArctic
+      - LineType: Soft_sling_MBL20
+        Length: 3
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.313
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: SevenArctic
+      - LineType: Masterlink1.5in
+        Length: 0.2
+        ExpansionFactor: ~
+        TargetSegmentLength: 0.2
+        ClashCheck: No
+        PreBend: [0, 0]
+        ReactsToWake: No
+        WakeModel: (none)
+        DisturbanceVessel: SevenArctic
+    Attachments: []
+    DecoupleLateralAndAxialSeabedFriction: No
+    ResistanceProfiles: []
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    AppliedLoads: []
+    IncludedInStatics: Yes
+    StaticsStep1: User specified
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    StartingShapeX, StartingShapeY, StartingShapeZ:
+      - [579.7135, 0, -710.757]
+      - [-85.73216844212669, -2.4055128434093147, -915.2905838734288]
+      - [-85.732168442261, -2.4055128433003645, -914.6105965698505]
+      - [-85.7321684423201, -2.4055128432524238, -914.3099537748238]
+      - [-85.73216844237882, -2.405512843204796, -914.0093108159111]
+      - [-85.73216844243724, -2.4055128431573927, -913.7086676931125]
+      - [-85.73216844249549, -2.40551284311015, -913.4080244064278]
+      - [-85.73216844255359, -2.4055128430630255, -913.1073809558571]
+      - [-85.73216844261157, -2.4055128430159893, -912.8067373414005]
+      - [-85.73216844266948, -2.4055128429690216, -912.5060935630579]
+      - [-85.73216844272731, -2.4055128429221098, -912.2054496208292]
+      - [-85.73216844278508, -2.4055128428752472, -911.9048055147146]
+      - [-85.73216844284279, -2.405512842828433, -911.604161244714]
+      - [581, 0, -705.9]
+    FullStaticsConvergenceControlMethod: Line search
+    FullStaticsMaxIterations: 400
+    FullStaticsTolerance: 1e-6
+    FullStaticsMinDamping: 10
+    FullStaticsMaxDamping: 10
+    LogResults: Yes
+    LogVelocity: No
+    LogAcceleration: No
+    Hidden: No
+    DrawNodesAsDiscs: No
+    NodePen: [1, Solid, $0080FF]
+    SegmentPenMode: Use line type pen
+    DrawShadedNodesAsSpheres: Yes
+    NodeAxesColours: [Red, Lime, $0080FF]
+    DrawContact: Yes
+    ContactPen: [3, Solid, White]

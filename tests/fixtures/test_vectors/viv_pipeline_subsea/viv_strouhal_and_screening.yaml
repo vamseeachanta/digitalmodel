@@ -1,0 +1,91 @@
+source_type: python
+source_description: "VIV analysis unit tests — Strouhal numbers, reduced velocity, lock-in screening per DNV-RP-C205 / DNV-RP-F105"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "viv_screening"
+equations:
+  - name: "Strouhal vortex shedding frequency"
+    latex: "f_s = \\frac{St \\cdot V}{D}"
+    description: "Vortex shedding frequency from Strouhal relationship"
+  - name: "Reynolds number"
+    latex: "Re = \\frac{V \\cdot D}{\\nu}"
+    description: "Reynolds number for flow around cylinder"
+  - name: "Reduced velocity"
+    latex: "V_r = \\frac{V}{f_n \\cdot D}"
+    description: "Reduced velocity for VIV lock-in assessment"
+inputs:
+  - name: "Outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.5
+  - name: "Current velocity"
+    symbol: "V"
+    unit: "m/s"
+    test_value: 1.0
+  - name: "Strouhal number (smooth)"
+    symbol: "St"
+    unit: "-"
+    test_value: 0.2
+  - name: "Kinematic viscosity (seawater)"
+    symbol: "nu"
+    unit: "m2/s"
+    test_value: 1.35e-6
+outputs:
+  - name: "Shedding frequency"
+    symbol: "f_s"
+    unit: "Hz"
+    test_expected: 0.4
+    tolerance: 1.0e-9
+  - name: "Reynolds number"
+    symbol: "Re"
+    unit: "-"
+    test_expected: 555555.556
+    tolerance: 1.0e-3
+worked_examples:
+  - description: "Strouhal shedding frequency — smooth cylinder D=0.5 m, V=1.0 m/s, St=0.2"
+    inputs:
+      D: 0.5
+      V: 1.0
+      St: 0.2
+    outputs:
+      f_s: 0.4
+    use_as_test: true
+  - description: "Reduced velocity calculation — V=1.5 m/s, fn=0.5 Hz, D=0.5 m"
+    inputs:
+      V: 1.5
+      f_n: 0.5
+      D: 0.5
+    outputs:
+      V_r: 6.0
+    use_as_test: true
+  - description: "Lock-in detection — V_r=6.0 inside cross-flow range [4, 8]"
+    inputs:
+      V_r: 6.0
+    outputs:
+      in_lock_in: true
+      status: "lock-in"
+    use_as_test: true
+  - description: "Safe region — V_r=2.0 below lock-in range, margin=2.0"
+    inputs:
+      V_r: 2.0
+    outputs:
+      in_lock_in: false
+      status: "safe"
+      margin: 2.0
+    use_as_test: true
+  - description: "Cross-flow lock-in range bounds per DNV-RP-F105"
+    inputs:
+      range_type: "cross_flow"
+    outputs:
+      V_r_min: 4.0
+      V_r_max: 8.0
+    use_as_test: true
+assumptions:
+  - "Smooth circular cylinder (no marine growth or strakes)"
+  - "Steady current, no wave-current interaction"
+  - "Strouhal number 0.2 for smooth cylinders per DNV-RP-C205"
+  - "Lock-in range [4, 8] for cross-flow VIV per DNV-RP-F105"
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads"
+  - "DNV-RP-F105 Free Spanning Pipelines"

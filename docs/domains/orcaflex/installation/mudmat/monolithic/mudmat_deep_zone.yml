@@ -1,0 +1,191 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\mudmat\monolithic\mudmat_deep_zone.yml
+# Created: 9:08 AM on 2/11/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+General:
+  Comments: ! '########################################
+
+    # Start of mudmat application comments #
+
+    ########################################
+
+
+    Created using mudmat v2.0.0
+
+    User alias: 
+
+    Date: 7-Sep-2023
+
+
+    ########################################
+
+    #  End of mudmat application comments  #
+
+    ########################################
+
+'
+  # Units
+  UnitsSystem: SI
+  # Analysis data
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 8
+    - 16
+  # Restart state
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  SeabedOriginDepth: 2000
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  # Waves
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 7
+      WavePeriod: 8
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0
+  RefCurrentDirection: 180
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1, 0]
+    - [100, 1, 0]
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+6DBuoys:
+  - Name: Manifold Mudmat Primary Buoy - Deep Zone
+    BuoyType: Lumped buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0, 0, 0]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 21.6934628657262
+    MomentsOfInertia: [232.1, 232.1, 461.9]
+    CentreOfMass: [0.02, 0.032, 0]
+    # Properties
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 2.751
+    BulkModulus: Infinity
+    Height: 0.775
+    CentreOfVolume: [0.02, 0.032, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [8.756, 8.756, 121.37]
+    DragAreaMoment: [6687.818, 6687.818, 747.929]
+    DragForceCoefficient: [0.946, 0.946, 1.16]
+    DragMomentCoefficient: [1, 1, 1]
+    HydrodynamicMass: [2.82, 2.82, 2.82]
+    HydrodynamicInertia: [30.166, 30.166, 60.049]
+    AddedMassCoefficient: [3.077, 3.077, 282.093]
+    AddedInertiaCoefficient: [0.537, 0.537, 6.886]
+    FluidAccelerationForceCoefficient: [~, ~, ~]
+    LumpedBuoySlamArea: 121.37
+    LumpedBuoySlamForceDataEntry: 5
+    LumpedBuoySlamForceDataExit: 5
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [5.6515, 5.6515, 0.3875]
+      - [-5.6515, 5.6515, 0.3875]
+      - [-5.6515, -5.6515, 0.3875]
+      - [5.6515, -5.6515, 0.3875]
+      - [5.6515, 5.6515, -0.3875]
+      - [-5.6515, 5.6515, -0.3875]
+      - [-5.6515, -5.6515, -0.3875]
+      - [5.6515, -5.6515, -0.3875]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+Groups:
+  Structure:
+    Primary buoy group: Model
+    Manifold Mudmat Primary Buoy - Deep Zone: Primary buoy group
+  State:
+    Collapsed:
+      - Variable data
+...

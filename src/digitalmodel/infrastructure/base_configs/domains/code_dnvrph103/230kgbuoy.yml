@@ -1,0 +1,33 @@
+basename: code_dnvrph103
+
+calculation_type: simplified
+zones: [deep]
+
+inputs:
+  name: 230kgbuoy
+  m_air: 333
+  m_water: -230
+
+  shape: rectangular # rectangular, circular
+  l: 0.819
+  w: 0.819
+  r: NULL
+  h: 0.819
+
+  cog:
+    x: 0
+    y: 0
+    z: 0
+
+  cov:
+    x: 0
+    y: 0
+    z: 0
+
+  perforation_ratio:
+    x: 0
+    y: 0
+    z: 0
+
+  output_dir: 'src\digitalmodel\tests\test_data\6d_buoy'
+  output_filename: '230kgbuoy'

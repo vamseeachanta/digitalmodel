@@ -1,0 +1,238 @@
+{
+  "model_name": "a01_pliant_wave_riser",
+  "timestamp": "2026-02-08T15:04:44",
+  "spec_info": {
+    "spec_lines": 183,
+    "line_type_count": 3,
+    "line_count": 1,
+    "link_count": 1,
+    "clump_type_count": 1,
+    "configuration": "pliant_wave",
+    "water_depth_m": 100.0,
+    "total_riser_length_m": 232.5
+  },
+  "monolithic": {
+    "source_type": "monolithic",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_pliant_wave_riser\\monolithic\\A01 Pliant wave riser.dat",
+    "statics_converged": true,
+    "statics_time_seconds": 0.914,
+    "object_count": 26,
+    "lines": {
+      "10\" Pliant Simple": {
+        "line_name": "10\" Pliant Simple",
+        "total_length_m": 232.5,
+        "num_sections": 6,
+        "num_segments": 126,
+        "end_a_tension_kN": 116.641,
+        "end_b_tension_kN": 28.692,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 116.641,
+        "min_tension_kN": 28.66,
+        "max_bending_kNm": 36.267
+      },
+      "10\" Pliant Detailed Up": {
+        "line_name": "10\" Pliant Detailed Up",
+        "total_length_m": 175.5,
+        "num_sections": 4,
+        "num_segments": 92,
+        "end_a_tension_kN": 116.683,
+        "end_b_tension_kN": 98.144,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 42.243,
+        "max_tension_kN": 116.683,
+        "min_tension_kN": 30.214,
+        "max_bending_kNm": 42.243
+      },
+      "10\" Pliant Detailed Dn": {
+        "line_name": "10\" Pliant Detailed Dn",
+        "total_length_m": 56.0,
+        "num_sections": 2,
+        "num_segments": 32,
+        "end_a_tension_kN": 41.157,
+        "end_b_tension_kN": 27.812,
+        "end_a_bending_kNm": 37.226,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 41.157,
+        "min_tension_kN": 27.779,
+        "max_bending_kNm": 37.226
+      },
+      "Tether Pliant Detailed": {
+        "line_name": "Tether Pliant Detailed",
+        "total_length_m": 9.7,
+        "num_sections": 1,
+        "num_segments": 10,
+        "end_a_tension_kN": 59.699,
+        "end_b_tension_kN": 62.559,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 62.559,
+        "min_tension_kN": 59.699,
+        "max_bending_kNm": 0.0
+      }
+    },
+    "links": {
+      "Tether Pliant Simple": {
+        "link_name": "Tether Pliant Simple",
+        "link_type": "Tether",
+        "tension_kN": 59.183
+      }
+    }
+  },
+  "modular": {
+    "source_type": "spec-modular",
+    "source_path": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_pliant_wave_riser\\modular\\master.yml",
+    "statics_converged": true,
+    "statics_time_seconds": 0.414,
+    "object_count": 15,
+    "lines": {
+      "10in Pliant Simple": {
+        "line_name": "10in Pliant Simple",
+        "total_length_m": 232.5,
+        "num_sections": 6,
+        "num_segments": 126,
+        "end_a_tension_kN": 115.651,
+        "end_b_tension_kN": 22.0,
+        "end_a_bending_kNm": 0.0,
+        "end_b_bending_kNm": 0.0,
+        "max_tension_kN": 115.651,
+        "min_tension_kN": 21.963,
+        "max_bending_kNm": 36.303
+      }
+    },
+    "links": {
+      "Tether Pliant Simple": {
+        "link_name": "Tether Pliant Simple",
+        "link_type": "Tether",
+        "tension_kN": 62.091
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "line_name_mono": "10\" Pliant Simple",
+      "line_name_mod": "10in Pliant Simple",
+      "end_a_tension_mono_kN": 116.641,
+      "end_a_tension_mod_kN": 115.651,
+      "end_a_tension_diff_pct": 0.85,
+      "end_b_tension_mono_kN": 28.692,
+      "end_b_tension_mod_kN": 22.0,
+      "end_b_tension_diff_pct": 23.32,
+      "max_tension_mono_kN": 116.641,
+      "max_tension_mod_kN": 115.651,
+      "max_tension_diff_pct": 0.85,
+      "end_a_bending_mono_kNm": 0.0,
+      "end_a_bending_mod_kNm": 0.0,
+      "end_b_bending_mono_kNm": 0.0,
+      "end_b_bending_mod_kNm": 0.0,
+      "max_bending_mono_kNm": 36.267,
+      "max_bending_mod_kNm": 36.303,
+      "length_mono_m": 232.5,
+      "length_mod_m": 232.5,
+      "length_diff_pct": 0.0,
+      "tension_pass": true,
+      "bending_pass": true
+    }
+  ],
+  "mesh_levels": {
+    "coarse": {
+      "level": "coarse",
+      "bare_seg_m": 5.0,
+      "buoy_seg_m": 5.0,
+      "statics_converged": true,
+      "statics_time_seconds": 0.335,
+      "total_segments": 48,
+      "lines": {
+        "10in Pliant Simple": {
+          "line_name": "10in Pliant Simple",
+          "total_length_m": 232.5,
+          "num_sections": 6,
+          "num_segments": 48,
+          "end_a_tension_kN": 115.585,
+          "end_b_tension_kN": 21.29,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 115.585,
+          "min_tension_kN": 21.265,
+          "max_bending_kNm": 25.18
+        }
+      }
+    },
+    "medium": {
+      "level": "medium",
+      "bare_seg_m": 2.0,
+      "buoy_seg_m": 2.0,
+      "statics_converged": true,
+      "statics_time_seconds": 0.495,
+      "total_segments": 116,
+      "lines": {
+        "10in Pliant Simple": {
+          "line_name": "10in Pliant Simple",
+          "total_length_m": 232.5,
+          "num_sections": 6,
+          "num_segments": 116,
+          "end_a_tension_kN": 115.646,
+          "end_b_tension_kN": 21.874,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 115.646,
+          "min_tension_kN": 21.837,
+          "max_bending_kNm": 31.107
+        }
+      }
+    },
+    "fine": {
+      "level": "fine",
+      "bare_seg_m": 1.0,
+      "buoy_seg_m": 0.5,
+      "statics_converged": true,
+      "statics_time_seconds": 1.517,
+      "total_segments": 309,
+      "lines": {
+        "10in Pliant Simple": {
+          "line_name": "10in Pliant Simple",
+          "total_length_m": 232.5,
+          "num_sections": 6,
+          "num_segments": 309,
+          "end_a_tension_kN": 115.659,
+          "end_b_tension_kN": 22.011,
+          "end_a_bending_kNm": 0.0,
+          "end_b_bending_kNm": 0.0,
+          "max_tension_kN": 115.659,
+          "min_tension_kN": 21.972,
+          "max_bending_kNm": 34.786
+        }
+      }
+    }
+  },
+  "mesh_convergence": [
+    {
+      "line_name": "10in Pliant Simple",
+      "metric": "end_a_tension_kN",
+      "coarse": 115.585,
+      "medium": 115.646,
+      "fine": 115.659,
+      "coarse_to_fine_pct": 0.06,
+      "converged": "True"
+    },
+    {
+      "line_name": "10in Pliant Simple",
+      "metric": "max_tension_kN",
+      "coarse": 115.585,
+      "medium": 115.646,
+      "fine": 115.659,
+      "coarse_to_fine_pct": 0.06,
+      "converged": "True"
+    },
+    {
+      "line_name": "10in Pliant Simple",
+      "metric": "max_bending_kNm",
+      "coarse": 25.18,
+      "medium": 31.107,
+      "fine": 34.786,
+      "coarse_to_fine_pct": 27.61,
+      "converged": "False"
+    }
+  ],
+  "overall_pass": true
+}

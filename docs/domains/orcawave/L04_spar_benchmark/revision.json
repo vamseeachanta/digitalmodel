@@ -1,0 +1,17 @@
+{
+  "revision": "r1_spar_benchmark",
+  "timestamp": "2026-02-09T08:50:46.636152",
+  "description": "r1: Spar cylinder (D=25m, draft=110m) benchmark. AQWA (200m depth, 3 freq, 9 headings) vs OrcaWave (200m depth, 20 freq, 5 headings). Frequency interpolation used (3 AQWA freq as target grid). r4 report format.",
+  "changes": [
+    "Initial spar benchmark generation",
+    "AQWA mesh (8,283 panels) imported in both solvers",
+    "Frequency harmonization via interpolation (AQWA 3 -> OrcaWave 20)",
+    "Phase convention normalization (ISO 6954 -> Orcina)"
+  ],
+  "source_files": {
+    "orcawave_yml": "docs\\modules\\orcawave\\spar_benchmark\\spar_benchmark.yml",
+    "orcawave_owr": "benchmark_output\\spar_benchmark\\r1_spar_benchmark\\spar_benchmark.owr",
+    "aqwa_lis": "docs\\modules\\aqwa\\examples\\spar-example\\SIMPLE.LIS"
+  },
+  "previous_revision": null
+}

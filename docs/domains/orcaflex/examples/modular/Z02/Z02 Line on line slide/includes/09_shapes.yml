@@ -1,0 +1,261 @@
+# Shapes Configuration
+# Generated from: Z02 Line on line slide.yml
+# Date: 2026-01-18 22:19:28
+Shapes:
+- Name: Platform
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - -1.5060996624178324
+  - -1
+  - 8.101426444735452
+  Size:
+  - 2
+  - 2
+  - 0.19999999999999998
+  Orientation:
+  - 0
+  - 0
+  - 0
+  NormalStiffness: 100
+  ShearStiffness: 100
+  Damping: 50
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Nose
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: DogBuoy
+  Origin:
+  - -0.26977950553435515
+  - -0.01
+  - 0.051978760152616266
+  Orientation:
+  - 90
+  - 89.99999999999999
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.02
+  - - 0.02
+    - 0.02
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Tongue1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: DogBuoy
+  Origin:
+  - -0.24954212083603244
+  - -0.02
+  - -0.036245643561917645
+  Size:
+  - 0.1
+  - 0.04
+  - 0.01
+  Orientation:
+  - 0
+  - -70
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Tongue2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: DogBuoy
+  Origin:
+  - -0.24954212083603244
+  - -9.090389337507753e-31
+  - -0.036245643561917645
+  Azimuth: 180
+  Declination: 69.99999999999996
+  Length: 0.01
+  OuterDiameter: 0.04
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Red
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Eye1
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: DogBuoy
+  Origin:
+  - -0.181705857467603
+  - 0.04659594741552611
+  - 0.14569580146514635
+  Orientation:
+  - 300.00000000000006
+  - 135
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.03
+  - - 0.01
+    - 0.03
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Eye2
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: DogBuoy
+  Origin:
+  - -0.18170585746760298
+  - -0.04659594741552647
+  - 0.14569580146514638
+  Orientation:
+  - 60.00000000000001
+  - 135.00000000000003
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: No
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.03
+  - - 0.01
+    - 0.03
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Shades1
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: DogBuoy
+  Origin:
+  - -0.21771482679145102
+  - 0.04
+  - 0.14500000000000474
+  Azimuth: 0
+  Declination: 90.00000000000001
+  Length: 0.01
+  OuterDiameter: 0.05
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Shades2
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: DogBuoy
+  Origin:
+  - -0.21771482679145093
+  - -0.04
+  - 0.1450000000000048
+  Azimuth: 0
+  Declination: 90.00000000000001
+  Length: 0.01
+  OuterDiameter: 0.05
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Shades3
+  ShapeType: Drawing
+  Shape: Curved plate
+  Connection: DogBuoy
+  Origin:
+  - -0.2177148267914491
+  - -2.742524240807424e-31
+  - 0.14000000000000268
+  Orientation:
+  - 0
+  - 90.00000000000001
+  - 119.99999999999999
+  IncludedAngleOfRevolution: 120
+  IsHollow: Yes
+  Thickness: 0.01
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.035
+  - - 0.01
+    - 0.035
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Shades4
+  ShapeType: Drawing
+  Shape: Block
+  Connection: DogBuoy
+  Origin:
+  - -0.21771482679144913
+  - 0.065
+  - 0.14000000000000268
+  Size:
+  - 0.16
+  - 0.005
+  - 0.01
+  Orientation:
+  - 0
+  - 0
+  - 4.000000000000056
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Shades5
+  ShapeType: Drawing
+  Shape: Block
+  Connection: DogBuoy
+  Origin:
+  - -0.2177148267914491
+  - -0.07
+  - 0.14000000000000268
+  Size:
+  - 0.16
+  - 0.005
+  - 0.01
+  Orientation:
+  - 0
+  - 0
+  - -4.000000000000032
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Hole
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Block connection
+  Origin:
+  - 0
+  - 0
+  - -0.255
+  Azimuth: 0
+  Declination: 0
+  Length: 0.51
+  OuterDiameter: 0.08
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Black
+  ShadedDrawingCullingMode: Anticlockwise

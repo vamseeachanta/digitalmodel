@@ -1,0 +1,84 @@
+basename: cathodic_protection
+
+inputs:
+  calculation_type: ABS_gn_ships_2018 # DNV_rp_b401_2011, DNV_rp_b401_2021_05, ABS_gn_ships_2018
+
+  environment:
+    seawater:
+      max_temperature: 10 # °C
+      resistivity:
+        input: 0.5875 # or float_value or .csv
+        csv_filename: NULL
+
+  design_data:
+    design_life: 5 # yr
+    biofouling:
+      type: aerobic #aerobic or anaerobic
+
+  anode:
+    material: aluminium #  aluminium or zinc
+    protection_potential: 0.8 # V
+    closed_circuit_anode_potential: -1.09 # V
+    anode_density: 2750 # kg/m3
+    anode_current_capacity: 2270 # (Ca*N) , Q
+    anode_Utilisation_factor: 0.85 # factor, u
+    physical_properties:
+      mean_length: 1.4 # m
+      width: 0.15 # m
+      height: 0.06 # m
+      volume: 0.0126 # m3
+      net_weight: 27.5 # kg
+      ratio_of_gross_to_net_weight: 1.1 #
+      gross_weight: 30.25 # kg
+    geometry:
+      type: long_flush # slender_offset | long_flush | short_flush
+      length_m: 1.4
+      width_m: 0.15
+      radius_m: null
+      exposed_area_m2: null
+      offset_m: null
+      final_length_m: 1.281 # L_final = L_initial - 0.1*u*L_initial
+      final_width_m: 0.15
+      final_radius_m: null
+      final_exposed_area_m2: null
+
+  structure:
+    coating: Yes # Yes or No
+    area_coverage: 100 # %
+    coating_yearly_breakdown_factor: 3 # % per year
+    coating_initial_breakdown_factor: 2 # % initial breakdown factor
+    coating_initial_breakdown_duration: 2 # years
+    coating_breakdown_factor_max: 2.0 # cap for final breakdown factor
+    steel_coated_area: 13446.04 # m2
+    steel_total_area: 13446.04 # m2
+
+  design_current:
+    input: csv
+    csv_filename: 
+    coated_steel_mA_m2: 13.5
+    uncoated_steel_mA_m2: 200
+
+ABS_gn_ships_2018:
+  v_ssc: # Protection potential (V) with respect to Ag/AgCl/seawater reference electrode, Section 2, Chapter 3.1, Table 1
+      - steel:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - iron:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - high_strength_steel:
+          aerobic: -0.8
+          anaerobic: -0.9
+      - austenitic_stainless_steel_n_pre_10_to_1000:
+          aerobic: -0.3
+          anaerobic: -0.3
+      - austenitic_stainless_steel_n_pre_0_to_10:
+          aerobic: -0.6
+          anaerobic: -0.6
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

@@ -1,0 +1,360 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\pipeline\route_a\monolithic\step01.yml
+# Created: 9:08 AM on 2/11/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+BaseFile: 04_wd718m_orlov.yml
+General:
+  RigidConnectionsSolutionMethod: Direct
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  RestartStateRecordingTimeStart, RestartStateRecordingTimeStop, RestartStateRecordingTimeInterval: []
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+  NorthDirection: ~
+VariableData:
+  Pythonappliedload: []
+  Coverloadmodel: []
+  Coverresistancescale: []
+  Covernormalisedresistance: []
+  Covermobilisationscale: []
+  Coverratchetinglength: []
+  Axialstaticdynamicstiffness: []
+  Coverheight: []
+  Coverheightmodel: []
+  Coveraslaidseabedpenetration: []
+  Constraintstiffnessanddampingmodel: []
+Environment:
+  NominalDepth: ~
+  WaveTrains:
+    Wave1:
+      WaveHeight: 0.001
+      WavePeriod: 6
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  CurrentModel: Variation scheme
+  WindRamping: From mean
+  AirSpeedOfSound: 343
+  WindHidden: No
+  NominalDepthHidden: Yes
+  NominalDepthPen: [1, Dash, $0060B8]
+  NominalDepthGridDensity: 1
+  SunAzimuth: 215
+  SunAltitude: 27
+  SunShadows: Yes
+  SeaSurfaceClarity: 0
+  SeaSurfaceGridResolution: 16
+  SeaSurfaceUnderwaterPOV: No
+  SeaSurfaceRippleEffect: 50
+  SeaSurfaceRippleSpeed: 0
+  SeaSurfaceRippleChoppiness: 50
+  LowAltitudeCloudCoverage: 25
+  HighAltitudeCloudCoverage: 40
+  CloudSpeed: 0
+  ShadedSeabedDrawType: Solid fill
+  SeabedSolidFillGridShown: Yes
+  SeabedSolidFillGridDensity: 1
+  SeabedSolidFillGridColour: Black
+VesselTypes:
+  C11_StartLaying_ARTempty:
+    Draughts:
+      8.7m:
+        HydrostaticStiffnessMethod: Displacement
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - [14e3, 0, 29e3]
+          - [0, 270e3, 0]
+          - [29e3, 0, 10e6]
+  C13_EndLaying_ARTempty:
+    Draughts:
+      7.09m:
+        HydrostaticStiffnessMethod: Displacement
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - [0, 0, 0]
+          - [0, 0, 0]
+          - [0, 0, 0]
+  EC2_CraneOperationLoad_ARTempty:
+    Draughts:
+      8.15m:
+        HydrostaticStiffnessMethod: Displacement
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - [14.4444599512e3, 0, 28.744475303e3]
+          - [0, 162.279838639e3, 0]
+          - [28.744475303e3, 0, 10.1141462156e6]
+LineTypes:
+  900TeMainCrane MainHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  900TeMainCrane WhipHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  100TeAuxCrane MainHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  100TeAuxCrane WhipHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  25TeAuxCrane MainHoist:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  Dummy:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  600TeA&RTractionWinch:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  200TeA&RTractionWinch:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+  InfUmbVenice-3.84in-Orlov:
+    ExpansionTable: None
+    DNVSTF101AlphaEpsilonC: 0
+    DNVSTF101AlphaMat: ~
+    DNVSTF101TCRA: 0
+    DNVSTF101FyCRA: 0
+    DNVSTF101FuCRA: 0
+Vessels:
+  SevenArctic:
+    ImposedMotionConsistentWithSolver: No
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+6DBuoys:
+  Tensioner Support1:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  ChuteSupport1:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+Lines:
+  100TeAuxCraneWire:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCraneWire:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  DummyLine_Bow:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  DummyLine_Stern:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  DummyLine_Starboard:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  DummyLine_Port:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25TeAuxCraneWire:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  A&RWire:
+    LengthAndEndOrientations: Explicit
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Umbilical:
+    LengthAndEndOrientations: Explicit
+    EndBX: -634.5
+    Length[4]: 639
+    CoveredSections: []
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    ContentsTemperature: ~
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+Winches:
+  MainLine 330Te:
+    NameLabelColorMode: Use specified colour
+    NameLabelColour: White
+    ShadedDrawingShowConnections: Yes
+  Whipline 40Te:
+    NameLabelColorMode: Use specified colour
+    NameLabelColour: White
+    ShadedDrawingShowConnections: Yes
+  Whipline 20Te:
+    NameLabelColorMode: Use specified colour
+    NameLabelColour: White
+    ShadedDrawingShowConnections: Yes
+Shapes:
+  Moonpool_stern:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_bow:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_starboard:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_portside:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_stern_hull:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_bow_hull:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Hang-Off:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCranePedestal:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCranePedestalTop:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCraneRadius:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  900TeMainCraneMast:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25TeAuxCranePedestal:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25TeAuxCranePedestalTop:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25TeAuxCraneRadius:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  25TeAuxCraneMast:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  AP:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  CoG - StartLay:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  CoG - CraneLoad:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  CoG - EndLay:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  FP:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  100TeAuxCranePedestal:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  100TeAuxCranePedestalTop:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  100TeAuxCraneRadius:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  100TeAuxCraneMast:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Trapped Water:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_starboard_hull:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Moonpool_port_hull:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  HyundaiFlare:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  A&RSheave:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Chute1:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Chute2:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Tensioner:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Starboard Outer Hatch:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Top Carousel:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  False Core:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Bottom Carousel:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Fw Outer Hatch:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Starboard Inner Hatch:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+  Fw Inner Hatch:
+    NameLabelColourMode: Use specified colour
+    NameLabelColour: White
+...

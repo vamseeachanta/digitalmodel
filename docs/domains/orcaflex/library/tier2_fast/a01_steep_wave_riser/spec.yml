@@ -1,0 +1,151 @@
+# OrcaFlex Modular Model Generator - Riser Specification
+# A01 Steep Wave Riser - Steep wave riser (simplified single-line)
+#
+# Model Type: Riser (steep wave configuration)
+# Source: OrcaFlex Examples - A01 Steep wave riser.dat
+# Tier: 2 (Fast validation, <10s statics)
+#
+# The steep wave configuration uses a buoyant section in the middle of
+# the riser to create an S-shape with the touchdown point steep (near-
+# vertical approach to seabed anchor).
+#
+# This uses the "10" Steep Wave1" standalone line variant from the
+# monolithic model — a single continuous line from vessel to anchor
+# without separate BSR line objects. The monolithic model also has a
+# multi-line "Detailed" variant with BSR + stiffener lines, but this
+# simplified variant captures the essential physics.
+#
+# Parameters extracted from: A01 Steep wave riser.yml (monolithic)
+# Reference line: "10" Steep Wave1" (standalone, Hidden=Yes)
+#
+# Key differences from monolithic Detailed variant:
+#   - Single line vs 4 lines (riser + 2 BSRs + stiffeners)
+#   - No separate BSR objects (bend protection zones modeled as fine mesh)
+#   - No line contact/containment constraints
+#   - 12 objects vs 31 objects
+#
+# Usage:
+#   uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "a01_steep_wave_riser"
+  description: "Steep wave riser with bend stiffeners at both ends"
+  structure: riser
+  operation: production
+  project: "OrcaFlex A01 Examples"
+
+environment:
+  water:
+    depth: 100                          # Water depth (m)
+    density: 1.025                      # Seawater density (te/m3)
+  seabed:
+    type: flat
+    stiffness:
+      normal: 100                       # Normal stiffness (kN/m/m2)
+      shear: 100                        # Shear stiffness (kN/m/m2)
+  waves:
+    type: dean_stream                   # Dean stream function
+    height: 6                           # Wave height (m)
+    period: 7                           # Wave period (s)
+    direction: 90                       # Wave direction (deg)
+    stream_order: 5                     # Stream function order
+  current:
+    speed: 0.7                          # Reference current speed (m/s)
+    direction: 180                      # Current direction (deg)
+    profile:                            # [depth (m), speed factor]
+      - [0, 1.0]                        # Surface: 100% of ref speed
+      - [70, 0.9]                       # 70m depth: 90% of ref speed
+      - [100, 0.3]                      # Seabed: 30% of ref speed
+  wind:
+    speed: 0                            # Wind speed (m/s)
+    direction: 0                        # Wind direction (deg)
+
+riser:
+  vessel:
+    name: "FPSO"
+    type_name: "Vessel Type1"
+    length: 103                         # Vessel length (m)
+    position: [-10, 10, 0]             # Monolithic position [x, y, z] (m)
+    orientation: [0, 0, 270]            # Heading 270 deg
+    primary_motion: "None"
+    superimposed_motion: "RAOs + harmonics"
+    included_in_statics: "None"
+
+  line_types:
+    - name: "10in_flexible"
+      description: "10 inch flexible riser pipe"
+      outer_diameter: 0.3556            # OD (m) - 14 inch
+      inner_diameter: 0.254             # ID (m) - 10 inch
+      mass_per_length: 0.1842262        # Mass per unit length (te/m)
+      bending_stiffness: 124.87         # EI (kN.m2)
+      axial_stiffness: 711200           # EA (kN)
+      torsional_stiffness: 10           # GJ (kN.m2)
+      poisson_ratio: 0.5
+      added_mass_coefficient: 1.0       # Ca
+      drag_coefficient: 1.2             # Cd normal (constant approximation)
+      axial_drag_coefficient: 0.008     # Axial Cd
+      allowable_tension: 5000           # Maximum allowable tension (kN)
+      min_bend_radius: 3.675            # Minimum bend radius (m)
+
+    - name: "10in_flexible_with_floats"
+      description: "10 inch with distributed buoyancy modules"
+      outer_diameter: 0.8074            # OD with buoyancy (m)
+      inner_diameter: 0.254             # ID (m) - 10 inch
+      contact_diameter: 1.2             # Contact diameter for clash detection (m)
+      mass_per_length: 0.3593           # Mass per unit length (te/m)
+      bending_stiffness: 124.87         # EI (kN.m2)
+      axial_stiffness: 711200           # EA (kN)
+      torsional_stiffness: 10           # GJ (kN.m2)
+      poisson_ratio: 0.5
+      added_mass_coefficient: 1.0       # Ca
+      drag_coefficient: 1.2             # Cd normal (constant approximation)
+      axial_drag_coefficient: 0.008     # Axial Cd
+      stress_od: 0.3556                 # Stress calculation OD (m)
+      stress_id: 0.254                  # Stress calculation ID (m)
+
+  lines:
+    - name: "10in Steep Wave"
+      configuration: steep_wave
+      end_a:
+        type: vessel
+        name: "FPSO"
+        position: [10, 11.9132, -7.0076]  # Monolithic connection [x, y, z] (m)
+        declination: 170                # Declination angle (deg)
+        azimuth: 90                     # Monolithic azimuth (deg)
+        bending_stiffness: 0
+      end_b:
+        type: anchor
+        position: [67, 0, 4.5]         # Monolithic anchor position [x, y, z] (m)
+        declination: 180                # Line approaches from above (critical for S-shape)
+        azimuth: 0
+        bending_stiffness: 0
+      sections:
+        - line_type: "10in_flexible"
+          length: 5.5                   # BSR zone - fine mesh
+          segment_length: 0.25
+        - line_type: "10in_flexible"
+          length: 45                    # Upper catenary
+          segment_length: 4
+        - line_type: "10in_flexible"
+          length: 30                    # Transition zone
+          segment_length: 1
+        - line_type: "10in_flexible_with_floats"
+          length: 60                    # Buoyancy section
+          segment_length: 1
+        - line_type: "10in_flexible"
+          length: 5                     # Lower transition
+          segment_length: 1
+        - line_type: "10in_flexible"
+          length: 5.5                   # BSR zone - fine mesh
+          segment_length: 0.25
+      contents:
+        density: 1.0                    # Contents density (te/m3)
+        pressure: 0                     # Internal pressure (kPa)
+      statics_method: "Catenary"
+      statics_step2: "Full statics"
+      lay_azimuth: 180
+
+simulation:
+  duration: 42                          # Total simulation time (s)
+  time_step: 0.1                        # Implicit time step (s)

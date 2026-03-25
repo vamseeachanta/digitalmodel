@@ -1,0 +1,32 @@
+# Shapes Configuration
+# Generated from: CALMBuoy_100YR_FM_R1_D1.yml
+# Date: 2026-01-18 21:53:26
+Shapes:
+- Name: Base1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - -3
+  - -3
+  - 0
+  Size:
+  - 6
+  - 6
+  - 3.622
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+  ShadedDrawingDrawSize: 11
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingOrigin:
+  - 3
+  - 3
+  - 0

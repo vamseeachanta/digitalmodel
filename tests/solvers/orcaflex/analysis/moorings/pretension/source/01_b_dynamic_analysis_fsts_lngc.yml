@@ -1,0 +1,21 @@
+# Dynamics
+DynamicsSolutionMethod: Implicit time domain
+ImplicitUseVariableTimeStep: No
+ImplicitConstantTimeStep: 0.1
+ImplicitConstantMaxNumOfIterations: 150
+LogPrecision: Single
+TargetLogSampleInterval: 0.1
+LogStartTime: ~
+# Stages
+StartTime: ~
+FirstStage: 0
+RampStartTime: ~
+RampFinishTime: ~
+TimeHistoryImportFrom: ~
+TimeHistoryImportTo: ~
+StageDuration:
+  - 1000
+  - 3600
+# Restart state
+RestartStateRecordingPeriodicCount: 0
+RestartStateRecordingTest:

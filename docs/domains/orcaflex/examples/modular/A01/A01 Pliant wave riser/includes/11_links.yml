@@ -1,0 +1,23 @@
+# Links Configuration
+# Generated from: A01 Pliant wave riser.yml
+# Date: 2026-01-18 22:17:57
+Links:
+- Name: Tether Pliant Simple
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Anchored
+    - -116
+    - 0
+    - 1
+  - - 10" Pliant Simple
+    - 0
+    - 0
+    - 176.00000000000006
+    - End A
+  ReleaseStage: ~
+  UnstretchedLength: 9.9
+  Stiffness: 367.00000000000006e3
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00

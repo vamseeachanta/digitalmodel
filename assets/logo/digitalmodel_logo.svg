@@ -1,0 +1,41 @@
+<svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clip">
+      <rect x="0" y="0" width="800" height="220" rx="16"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <!-- Icon -->
+    <g transform="translate(20 10)">
+      <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
+      <path d="M38 72c20-32 64-32 84 0v76c-20 32-64 32-84 0z" fill="#2BB2A6" opacity=".85"/>
+      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" stroke="#6FE8D4" stroke-width="6" stroke-linecap="round"/>
+      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" stroke="#12A6B0" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" stroke="#0B3D91" stroke-width="6" stroke-linecap="round" opacity=".45"/>
+      <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
+      <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
+    </g>
+
+    <!-- Wordmark -->
+    <g transform="translate(200 40)">
+      <text x="0" y="70" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="600" fill="#0B3D91" letter-spacing="0.5">
+        Digital <tspan fill="#2BB2A6">Model</tspan>
+      </text>
+      <g transform="translate(72 96)" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="500" fill="#1C3557">
+        <g transform="translate(0 0)">
+          <circle cx="8" cy="8" r="6" fill="#2BB2A6" opacity=".9"/>
+          <text x="24" y="12">Asset Lifecycle</text>
+        </g>
+        <g transform="translate(-21 32)">
+          <circle cx="8" cy="8" r="6" fill="#0B3D91" opacity=".9"/>
+          <text x="24" y="12">Offshore · Subsea · Marine</text>
+        </g>
+        <g transform="translate(-40 64)" font-size="17">
+          <circle cx="8" cy="8" r="6" fill="#6FE8D4" opacity=".9"/>
+          <text x="24" y="12">Automation: ASCII Data to Engineering Insights</text>
+        </g>
+      </g>
+    </g>
+
+  </g>
+</svg>

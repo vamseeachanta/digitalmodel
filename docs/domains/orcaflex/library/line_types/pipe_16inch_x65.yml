@@ -1,0 +1,15 @@
+# PIPE_16inch_X65 - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:13:33
+# Description: Standard 16-inch export pipeline
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.4064
+ID: 0.3734
+MassPerUnitLength: 145.2
+EA: 1850000000.0
+CompressionIsLimited: Yes
+EI:
+- 6850000.0
+- ~
+GJ: 0
+PoissonRatio: 0.3

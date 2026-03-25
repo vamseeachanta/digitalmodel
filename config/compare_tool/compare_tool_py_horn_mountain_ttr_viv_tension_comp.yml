@@ -1,0 +1,81 @@
+---
+parameters:
+  file_io_01: &file_io_01 C:\Users\achantv\Desktop\S7\HM\D3\100yr_Med_Shear_1126kips.plt
+  label_01: &label_01 1126 kips
+  file_io_02: &file_io_02 C:\Users\achantv\Desktop\S7\HM\D3\100yr_Med_Shear_1006kips.plt
+  label_02: &label_02 1006 kips
+  file_io_03: &file_io_03 C:\Users\achantv\Desktop\S7\HM\D3\100yr_Med_Shear_0886kips.plt
+  label_03: &label_03 886 kips
+
+  ascii_data_columns_parameter: &ascii_data_columns_parameter [x/L, unknown1, unknown2, unknown3, unknown4, Damage, unknown5]
+
+  plot_suptitle: &plot_suptitle Unfactored VIV Fatigue Damage Along the Length
+  plot_title: &plot_title 100 year Loop Current
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: ascii
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+    ascii_data_columns: *ascii_data_columns_parameter
+    delimiter: space
+    lines:
+      start: 1
+      end: 1106
+    columns: *ascii_data_columns_parameter
+  -
+    file_type: ascii
+    io: *file_io_02
+    label: *label_02
+    data_type: DataFrame
+    ascii_data_columns: *ascii_data_columns_parameter
+    delimiter: space
+    lines:
+      start: 1
+      end: 1106
+    columns: *ascii_data_columns_parameter
+  -
+    file_type: ascii
+    io: *file_io_03
+    label: *label_03
+    data_type: DataFrame
+    ascii_data_columns: *ascii_data_columns_parameter
+    delimiter: space
+    lines:
+      start: 1
+      end: 1106
+    columns: *ascii_data_columns_parameter
+
+plot:
+  -
+    file_suffix: fatigue_damage
+    suptitle: *plot_suptitle
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: *plot_title
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    x: [Damage]
+    y: [x/L]
+    xlim: [0.00001, 100]
+    xlabel: Fatigue Damage (1/year)
+    ylabel: x/L
+    x_reverse: False
+    y_reverse: False
+    xscale:
+      log: True
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

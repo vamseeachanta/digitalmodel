@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="400" viewBox="0 0 700 400">
+<rect width="700" height="400" fill="#ffffff"/>
+<text x="350.0" y="25.0" font-family="sans-serif" font-size="16" font-weight="bold" fill="#333333" text-anchor="middle">ML Diagnostic: Fluid Pound</text>
+<text x="350.0" y="42.0" font-family="sans-serif" font-size="10" font-weight="normal" fill="#2e7d32" text-anchor="middle">AI-Driven Pump Diagnosis — Tier 1 — Core Conditions</text>
+<rect x="60.0" y="60.0" width="305.0" height="290.0" stroke="#666666" stroke-width="1.0" fill="none"/>
+<line x1="60.0" y1="60.0" x2="60.0" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="60.0" y="364.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">-6</text>
+<line x1="136.2" y1="60.0" x2="136.2" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="136.2" y="364.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">26</text>
+<line x1="212.5" y1="60.0" x2="212.5" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="212.5" y="364.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">57</text>
+<line x1="288.8" y1="60.0" x2="288.8" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="288.8" y="364.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">89</text>
+<line x1="365.0" y1="60.0" x2="365.0" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="365.0" y="364.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">120</text>
+<line x1="60.0" y1="350.0" x2="365.0" y2="350.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="56.0" y="353.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">-2595</text>
+<line x1="60.0" y1="277.5" x2="365.0" y2="277.5" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="56.0" y="280.5" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">2571</text>
+<line x1="60.0" y1="205.0" x2="365.0" y2="205.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="56.0" y="208.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">7737</text>
+<line x1="60.0" y1="132.5" x2="365.0" y2="132.5" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="56.0" y="135.5" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">12902</text>
+<line x1="60.0" y1="60.0" x2="365.0" y2="60.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="56.0" y="63.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">18068</text>
+<text x="212.5" y="376.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle">Position (in)</text>
+<text x="30.0" y="205.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle" transform="rotate(-90,30.0,205.0)">Load (lbs)</text>
+<polygon points="73.9,236.0 74.1,205.4 75.0,163.6 76.4,119.3 78.4,81.0 80.9,80.0 84.0,82.7 87.6,77.2 91.7,77.5 96.3,79.8 101.4,76.4 106.9,78.5 112.9,82.7 119.3,78.8 126.1,83.0 133.2,77.2 140.6,80.1 148.4,80.6 156.4,82.2 164.6,76.1 173.1,80.5 181.7,81.4 190.4,81.1 199.2,78.3 208.1,78.8 216.9,78.7 225.8,78.6 234.6,73.2 243.3,81.3 251.9,81.6 260.4,82.6 268.6,78.0 276.6,76.4 284.4,80.4 291.8,82.7 298.9,82.6 305.7,77.9 312.1,77.6 318.1,78.3 323.6,82.1 328.7,79.3 333.3,79.6 337.4,79.3 341.0,77.2 344.1,79.3 346.6,77.8 348.6,79.8 350.0,79.1 350.9,78.0 351.1,84.6 351.1,81.0 350.9,121.2 350.0,161.5 348.6,200.1 346.6,234.2 344.1,241.7 341.0,235.9 337.4,244.3 333.3,240.0 328.7,238.4 323.6,237.1 318.1,236.7 312.1,236.4 305.7,240.1 298.9,240.4 291.8,336.8 284.4,336.8 276.6,333.4 268.6,330.1 260.4,326.7 251.9,323.3 243.3,320.0 234.6,316.6 225.8,313.2 216.9,309.9 208.1,306.5 199.2,303.1 190.4,299.8 181.7,296.4 173.1,293.0 164.6,289.7 156.4,286.3 148.4,282.9 140.6,279.5 133.2,276.2 126.1,272.8 119.3,269.4 112.9,266.1 106.9,262.7 101.4,259.3 96.3,256.0 91.7,252.6 87.6,249.2 84.0,245.9 80.9,242.5 78.4,239.1 76.4,235.7 75.0,232.4 74.1,229.0 73.9,225.6" stroke="#1a3a5c" stroke-width="2.5" fill="none"/>
+<line x1="298.9" y1="240.4" x2="328.9" y2="215.4" stroke="#6a1b9a" stroke-width="1.5" fill="none"/>
+<rect x="328.9" y="202.4" width="90.0" height="18.0" stroke="#6a1b9a" stroke-width="1.0" fill="#f3e5f5" rx="3.0"/>
+<text x="373.9" y="215.4" font-family="sans-serif" font-size="8" font-weight="normal" fill="#6a1b9a" text-anchor="middle">Sharp load drop</text>
+<rect x="405.0" y="55.0" width="280.0" height="40.0" stroke="#2e7d32" stroke-width="1.0" fill="#f8f8f8" rx="5.0"/>
+<text x="545.0" y="75.0" font-family="sans-serif" font-size="12" font-weight="bold" fill="#2e7d32" text-anchor="middle">Classification: Fluid Pound</text>
+<text x="410.0" y="110.0" font-family="sans-serif" font-size="10" font-weight="normal" fill="#333333" text-anchor="start">Confidence:</text>
+<rect x="410.0" y="115.0" width="230.0" height="14.0" stroke="#666666" stroke-width="1.0" fill="#eeeeee" rx="3.0"/>
+<rect x="410.0" y="115.0" width="212.3" height="14.0" stroke="none" stroke-width="1.0" fill="#2e7d32" rx="3.0"/>
+<text x="645.0" y="126.0" font-family="sans-serif" font-size="10" font-weight="bold" fill="#2e7d32" text-anchor="start">92.3%</text>
+<text x="410.0" y="150.0" font-family="sans-serif" font-size="10" font-weight="bold" fill="#333333" text-anchor="start">Differential Diagnosis:</text>
+<text x="415.0" y="170.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">1.</text>
+<text x="430.0" y="170.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">Fluid Pound</text>
+<rect x="410.0" y="174.0" width="130.0" height="8.0" stroke="#e0e0e0" stroke-width="1.0" fill="#f0f0f0" rx="2.0"/>
+<rect x="410.0" y="174.0" width="120.0" height="8.0" stroke="none" stroke-width="1.0" fill="#2e7d32" rx="2.0"/>
+<text x="545.0" y="181.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#666666" text-anchor="start">92.3%</text>
+<text x="415.0" y="192.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">2.</text>
+<text x="430.0" y="192.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">Gas Interference</text>
+<rect x="410.0" y="196.0" width="130.0" height="8.0" stroke="#e0e0e0" stroke-width="1.0" fill="#f0f0f0" rx="2.0"/>
+<rect x="410.0" y="196.0" width="5.3" height="8.0" stroke="none" stroke-width="1.0" fill="#2e7d32" rx="2.0"/>
+<text x="545.0" y="203.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#666666" text-anchor="start">4.1%</text>
+<text x="415.0" y="214.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">3.</text>
+<text x="430.0" y="214.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="start">Delayed TV Closure</text>
+<rect x="410.0" y="218.0" width="130.0" height="8.0" stroke="#e0e0e0" stroke-width="1.0" fill="#f0f0f0" rx="2.0"/>
+<rect x="410.0" y="218.0" width="2.3" height="8.0" stroke="none" stroke-width="1.0" fill="#2e7d32" rx="2.0"/>
+<text x="545.0" y="225.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#666666" text-anchor="start">1.8%</text>
+<rect x="405.0" y="250.0" width="280.0" height="70.0" stroke="#e0e0e0" stroke-width="1.0" fill="#fafafa" rx="4.0"/>
+<text x="415.0" y="266.0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#666666" text-anchor="start">Model:</text>
+<text x="470.0" y="266.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="start">GradientBoosting v1.0</text>
+<text x="415.0" y="280.0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#666666" text-anchor="start">Features:</text>
+<text x="470.0" y="280.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="start">Bezerra Projections</text>
+<text x="415.0" y="294.0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#666666" text-anchor="start">Training:</text>
+<text x="470.0" y="294.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="start">5,400 synthetic cards</text>
+<text x="415.0" y="308.0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#666666" text-anchor="start">Accuracy:</text>
+<text x="470.0" y="308.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="start">89.4% cross-validated</text>
+</svg>

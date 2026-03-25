@@ -1,0 +1,34 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+  source: csv
+  sets:
+    -
+      label: API-SPEC-5CT
+      io: data_manager\data\pipe\API-SPEC-5CT.csv
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+    -
+      label: API-SPEC-5L
+      io: data_manager\data\pipe\API-SPEC-5L.csv
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: master

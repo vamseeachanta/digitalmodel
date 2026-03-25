@@ -1,0 +1,133 @@
+source_type: python
+source_description: "Palmgren-Miner linear damage accumulation test vectors extracted from test_damage_accumulation.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "fatigue"
+subcategory: "palmgren_miner"
+equations:
+  - name: "Palmgren-Miner linear damage"
+    latex: "D = \\sum_{i=1}^{k} \\frac{n_i}{N_i}"
+    description: "Total fatigue damage as sum of cycle ratios"
+  - name: "Allowable cycles (power-law)"
+    latex: "N_i = A \\cdot S_i^{-m}"
+    description: "Allowable cycles from power-law S-N curve"
+  - name: "Safety factor"
+    latex: "SF = \\frac{1}{D}"
+    description: "Safety factor as inverse of total damage"
+inputs:
+  - name: "S-N curve intercept"
+    symbol: "A"
+    unit: "MPa^m * cycles"
+    test_value: 1.0e12
+  - name: "S-N curve slope"
+    symbol: "m"
+    unit: "dimensionless"
+    test_value: 3.0
+  - name: "Stress range level 1"
+    symbol: "S_1"
+    unit: "MPa"
+    test_value: 100.0
+  - name: "Applied cycles level 1"
+    symbol: "n_1"
+    unit: "cycles"
+    test_value: 10000.0
+outputs:
+  - name: "Total damage (single level)"
+    symbol: "D"
+    unit: "dimensionless"
+    test_expected: 0.01
+    tolerance: 1.0e-6
+  - name: "Safety factor (single level)"
+    symbol: "SF"
+    unit: "dimensionless"
+    test_expected: 100.0
+    tolerance: 1.0e-6
+worked_examples:
+  - description: "Single stress level: S=100 MPa, n=10000, A=1e12, m=3 => D=0.01"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_range: 100.0
+      applied_cycles: 10000.0
+    outputs:
+      allowable_cycles: 1.0e6
+      total_damage: 0.01
+      safety_factor: 100.0
+    use_as_test: true
+  - description: "Two stress levels: S1=100 (n=5000), S2=200 (n=1000)"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_ranges: [100.0, 200.0]
+      applied_cycles: [5000.0, 1000.0]
+    outputs:
+      N1: 1.0e6
+      N2: 125000.0
+      D1: 0.005
+      D2: 0.008
+      total_damage: 0.013
+    use_as_test: true
+  - description: "Life fraction at 50% damage: S=100, n=500000"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_range: 100.0
+      applied_cycles: 500000.0
+    outputs:
+      total_damage: 0.5
+      life_fraction_used: 0.5
+      life_fraction_remaining: 0.5
+      estimated_remaining_cycles: 500000.0
+    use_as_test: true
+  - description: "Single cycle at S=100 MPa gives very small damage"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      stress_range: 100.0
+      applied_cycles: 1.0
+    outputs:
+      total_damage: 1.0e-6
+    use_as_test: true
+  - description: "Below fatigue limit gives zero damage (DNV-D, S=30 MPa)"
+    inputs:
+      A: 5.73e11
+      m: 3.0
+      fatigue_limit: 52.63
+      stress_range: 30.0
+      applied_cycles: 1.0e9
+    outputs:
+      total_damage: 0.0
+      safety_factor: .inf
+    use_as_test: true
+  - description: "Custom failure criterion affects life fraction (criterion=0.5)"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      failure_criterion: 0.5
+      stress_range: 100.0
+      applied_cycles: 5000.0
+    outputs:
+      total_damage: 0.005
+      life_fraction_used: 0.01
+    use_as_test: true
+  - description: "Double-linear propagation phase: D above initiation_fraction=0.1"
+    inputs:
+      A: 1.0e12
+      m: 3.0
+      model: "double_linear"
+      initiation_fraction: 0.1
+      propagation_rate: 2.0
+      stress_ranges: [100.0, 100.0]
+      applied_cycles: [200000.0, 100000.0]
+    outputs:
+      second_block_damage: 0.2
+      second_block_phase: "propagation"
+    use_as_test: true
+assumptions:
+  - "Linear damage accumulation (Palmgren-Miner rule)"
+  - "Failure at D = 1.0 (default criterion)"
+  - "Stress ranges below fatigue limit contribute zero damage"
+  - "Zero or negative stress ranges are skipped"
+references:
+  - "Miner, M.A. (1945) Cumulative Damage in Fatigue, J. Applied Mechanics, 12(3), A159-A164"
+  - "DNV-RP-C203 (2016) Section 3 — Damage accumulation"

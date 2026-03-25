@@ -1,0 +1,7 @@
+(prompt "\nLoading coordinat programi...")
+(load "xy")
+(load "b600")
+(load "sg2")
+(load "xyz")
+(load "nodes")
+(princ)

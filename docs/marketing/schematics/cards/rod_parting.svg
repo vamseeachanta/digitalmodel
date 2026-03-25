@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="200" viewBox="0 0 280 200">
+<rect width="280" height="200" fill="#ffffff"/>
+<text x="140.0" y="18.0" font-family="sans-serif" font-size="13" font-weight="bold" fill="#f57f17" text-anchor="middle">Rod Parting</text>
+<text x="140.0" y="30.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#f57f17" text-anchor="middle">[Tier 2 — Common Field Failures]</text>
+<rect x="45.0" y="35.0" width="220.0" height="120.0" stroke="#666666" stroke-width="1.0" fill="none"/>
+<line x1="45.0" y1="35.0" x2="45.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="45.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">-6</text>
+<line x1="118.3" y1="35.0" x2="118.3" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="118.3" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">35</text>
+<line x1="191.7" y1="35.0" x2="191.7" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="191.7" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">76</text>
+<line x1="265.0" y1="35.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="265.0" y="169.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="middle">116</text>
+<line x1="45.0" y1="155.0" x2="265.0" y2="155.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="158.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">1001</text>
+<line x1="45.0" y1="115.0" x2="265.0" y2="115.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="118.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">1592</text>
+<line x1="45.0" y1="75.0" x2="265.0" y2="75.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="78.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">2183</text>
+<line x1="45.0" y1="35.0" x2="265.0" y2="35.0" stroke="#e0e0e0" stroke-width="0.5" fill="none"/>
+<text x="41.0" y="38.0" font-family="sans-serif" font-size="8" font-weight="normal" fill="#333333" text-anchor="end">2773</text>
+<text x="155.0" y="181.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle">Position (in)</text>
+<text x="15.0" y="95.0" font-family="sans-serif" font-size="9" font-weight="normal" fill="#333333" text-anchor="middle" transform="rotate(-90,15.0,95.0)">Load (lbs)</text>
+<polygon points="55.0,89.3 55.2,102.7 55.8,92.3 56.8,76.8 58.2,74.2 60.0,67.1 62.2,68.0 64.7,52.1 67.6,49.2 70.9,51.2 74.5,41.8 78.4,44.8 82.6,53.1 87.2,44.9 92.0,54.7 97.0,43.9 102.3,52.6 107.8,56.6 113.5,63.7 119.3,55.1 125.3,69.2 131.4,76.4 137.7,81.5 143.9,81.4 150.3,88.6 156.6,94.4 163.0,100.4 169.3,94.8 175.5,117.8 181.7,124.0 187.7,131.1 193.7,126.0 199.4,126.5 205.0,138.4 210.4,146.0 215.6,147.9 220.5,139.2 225.2,139.0 229.6,140.1 233.7,147.2 237.4,139.3 240.8,137.5 243.9,133.6 246.7,125.3 249.0,125.3 251.0,117.2 252.6,116.0 253.8,108.8 254.6,100.5 255.0,108.6 255.0,94.7 254.6,89.7 253.8,84.9 252.6,76.7 251.0,59.3 249.0,70.4 246.7,53.5 243.9,67.6 240.8,55.2 237.4,49.3 233.7,44.6 229.6,42.7 225.2,41.9 220.5,50.1 215.6,52.1 210.4,45.2 205.0,55.0 199.4,65.8 193.7,68.8 187.7,71.9 181.7,67.4 175.5,75.3 169.3,77.3 163.0,90.9 156.6,93.0 150.3,96.0 143.9,108.4 137.7,109.1 131.4,122.3 125.3,125.6 119.3,130.5 113.5,140.3 107.8,132.7 102.3,142.2 97.0,141.3 92.0,139.8 87.2,140.9 82.6,139.5 78.4,144.0 74.5,144.8 70.9,140.2 67.6,148.2 64.7,143.0 62.2,138.0 60.0,131.1 58.2,116.5 56.8,119.8 55.8,110.4 55.2,93.0 55.0,98.1" stroke="#1a3a5c" stroke-width="2.0" fill="none"/>
+</svg>

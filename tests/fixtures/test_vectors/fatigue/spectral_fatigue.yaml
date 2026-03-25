@@ -1,0 +1,119 @@
+source_type: python
+source_description: "Spectral fatigue analysis test vectors from test_frequency_domain.py — narrow-band, Dirlik, SDOF transfer function"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "fatigue"
+subcategory: "spectral_fatigue"
+equations:
+  - name: "Spectral moment m_n"
+    latex: "m_n = \\int_0^{\\infty} f^n \\cdot G(f) \\, df"
+    description: "n-th spectral moment of stress PSD G(f)"
+  - name: "Narrow-band equivalent stress"
+    latex: "S_{eq} = 2 \\sqrt{m_0}"
+    description: "Equivalent stress range for narrow-band process (2x RMS)"
+  - name: "White noise m0"
+    latex: "m_0 = S_0 \\cdot (f_2 - f_1)"
+    description: "Zeroth spectral moment for constant PSD S0 over bandwidth"
+  - name: "SDOF transfer function magnitude at resonance"
+    latex: "|H(f_n)| = \\frac{1}{2 \\zeta \\omega_n^2}"
+    description: "Transfer function magnitude at natural frequency for SDOF system"
+  - name: "SDOF low-frequency limit"
+    latex: "|H(0)| = \\frac{1}{\\omega_n^2}"
+    description: "Static transfer function magnitude for SDOF oscillator"
+inputs:
+  - name: "PSD level (white noise)"
+    symbol: "S_0"
+    unit: "MPa^2/Hz"
+    test_value: 2.5
+  - name: "Lower frequency"
+    symbol: "f_1"
+    unit: "Hz"
+    test_value: 1.0
+  - name: "Upper frequency"
+    symbol: "f_2"
+    unit: "Hz"
+    test_value: 10.0
+  - name: "Natural frequency"
+    symbol: "f_n"
+    unit: "Hz"
+    test_value: 10.0
+  - name: "Damping ratio"
+    symbol: "zeta"
+    unit: "dimensionless"
+    test_value: 0.05
+outputs:
+  - name: "Zeroth spectral moment (white noise)"
+    symbol: "m_0"
+    unit: "MPa^2"
+    test_expected: 22.5
+    tolerance: 0.1
+  - name: "SDOF |H| at resonance"
+    symbol: "|H(f_n)|"
+    unit: "1/N"
+    test_expected: 2.533e-4
+    tolerance: 1.0e-6
+worked_examples:
+  - description: "White noise m0: S0=2.5 MPa^2/Hz over [1,10] Hz => m0=22.5"
+    inputs:
+      psd_level: 2.5
+      f_min: 1.0
+      f_max: 10.0
+    outputs:
+      m0: 22.5
+    use_as_test: true
+  - description: "Narrow-band equivalent stress: S0=10 MPa^2/Hz, BW=10 Hz => sigma_rms=10, S_eq=20"
+    inputs:
+      psd_level: 10.0
+      f_min: 1.0
+      f_max: 11.0
+    outputs:
+      sigma_rms: 10.0
+      equivalent_stress: 20.0
+    use_as_test: true
+  - description: "SDOF transfer function at resonance: fn=10 Hz, zeta=0.05"
+    inputs:
+      natural_frequency: 10.0
+      damping_ratio: 0.05
+    outputs:
+      H_magnitude_at_resonance: 2.533e-4
+    use_as_test: true
+  - description: "SDOF low-frequency limit: fn=10 Hz => |H(0)|=1/omega_n^2"
+    inputs:
+      natural_frequency: 10.0
+      damping_ratio: 0.05
+      test_frequency: 0.01
+    outputs:
+      H_magnitude_low_freq: 2.533e-4
+    use_as_test: true
+  - description: "Dirlik coefficients D1+D2+D3=1 (normalization constraint)"
+    inputs:
+      method: "Dirlik"
+      psd_type: "broadband"
+    outputs:
+      D1_plus_D2_plus_D3: 1.0
+    use_as_test: true
+  - description: "Zero PSD gives zero damage rate and infinite life"
+    inputs:
+      psd_level: 0.0
+      A: 1.0e12
+      m: 3.0
+    outputs:
+      damage_rate: 0.0
+      fatigue_life: .inf
+    use_as_test: true
+  - description: "Zero PSD spectral moment m0 clamped to 1e-10"
+    inputs:
+      psd_level: 0.0
+    outputs:
+      m0: 1.0e-10
+    use_as_test: true
+assumptions:
+  - "PSD in units of MPa^2/Hz; stress range in MPa"
+  - "Narrow-band approximation: all cycles have range = 2*sqrt(m0)"
+  - "Dirlik method: empirical PDF of stress ranges from spectral moments"
+  - "SDOF transfer function: H(f) = 1/(-omega^2 + 2j*zeta*omega_n*omega + omega_n^2)"
+references:
+  - "Dirlik, T. (1985) Application of Computers in Fatigue Analysis, PhD thesis, Univ. of Warwick"
+  - "Benasciutti, D. and Tovo, R. (2005) Spectral methods for lifetime prediction"
+  - "DNV-RP-C203 (2016) Section 4 — Spectral fatigue analysis"
+  - "Wirsching, P.H. and Light, M.C. (1980) Fatigue under wide-band random stresses"

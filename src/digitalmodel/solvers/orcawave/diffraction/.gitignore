@@ -1,0 +1,12 @@
+# Generated analysis results
+results/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary files
+*.tmp
+*.log

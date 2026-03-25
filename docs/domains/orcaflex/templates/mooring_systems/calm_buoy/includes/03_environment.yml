@@ -1,0 +1,64 @@
+# Environment Configuration
+# Template: CALM Buoy Mooring System
+Environment:
+  # Sea properties
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  WaterDepth: 100              # Parametric: _inputs.water_depth
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+
+  # Waves - Dean Stream (regular wave for statics)
+  KinematicStretchingMethod: Vertical stretching
+  WaveTrains:
+    - Name: Wave 1
+      WaveType: Dean stream
+      WaveDirection: 180       # Parametric: _inputs.wave_direction
+      WaveHeight: 3.5          # Parametric: _inputs.hs (use as regular wave height)
+      WavePeriod: 12.0         # Parametric: _inputs.tp
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1.2         # Parametric: _inputs.current_speed
+  RefCurrentDirection: 120
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [50, 0.7, 10]
+    - [100, 0.3, 20]
+
+  # Wind - Constant
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindType: Constant
+  AirDensity: 0.00128
+  WindSpeed: 12                # Parametric: _inputs.wind_speed
+  WindDirection: 165

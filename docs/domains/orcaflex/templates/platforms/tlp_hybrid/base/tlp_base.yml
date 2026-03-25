@@ -1,0 +1,284 @@
+%YAML 1.1
+# TLP (Tension Leg Platform) Base Model - Hybrid Template
+# Uses library components via IncludeFile for reusable line types
+#
+# Configuration: 4-column TLP with 8 tension legs
+# Water depth: 1000m
+# Tendons: 2 per corner (8 total), high pretension
+# Station-keeping: Vertically compliant, horizontally stiff
+#
+# Platform arrangement (plan view):
+#
+#        +-----+           +-----+
+#        |Col 1|--[T]--[T]--|Col 2|
+#        +--+--+           +--+--+
+#           |                 |
+#           +-----------------+
+#                   |
+#           +-----------------+
+#           |                 |
+#        +--+--+           +--+--+
+#        |Col 3|--[T]--[T]--|Col 4|
+#        +-----+           +-----+
+#
+# Tendon arrangement (side view):
+#
+#   ========================== TLP Hull
+#     ||    ||    ||    ||
+#     ||    ||    ||    ||     Tendons (pretensioned)
+#     ||    ||    ||    ||
+#   ----[]----[]----[]----[]-- Seabed foundations
+#
+# Usage:
+#   1. Use directly for basic analysis
+#   2. Use with BaseFile + variation for parametric studies
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [30, 300]
+  StaticsMinDamping: 10
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 1000
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  # Seabed
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  # Waves
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 10.0
+      WavePeriod: 13.0
+      WaveOrigin: [0, 0]
+  # Current
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 1.2
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [250, 0.8, 0]
+    - [500, 0.5, 0]
+    - [750, 0.3, 0]
+    - [1000, 0.1, 0]
+
+LineTypes:
+  # TLP tendon - high strength steel tube
+  - Name: TLP_Tendon
+    Category: General
+    IncludeFile: ../../../../../library/line_types/tlp_tendon_24inch.yml
+
+VesselTypes:
+  - Name: TLP_Type
+    Length: 70
+    RAOResponseUnits: degrees
+    RAOWaveUnit: amplitude
+    WavesReferredToBy: period (s)
+    RAOPhaseConvention: lags
+    RAOPhaseUnitsConvention: degrees
+    SurgePositive: forward
+    SwayPositive: port
+    HeavePositive: up
+    Symmetry: xz plane
+
+Vessels:
+  - Name: TLP
+    VesselType: TLP_Type
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+    Orientation: [0, 0, 0]
+    IncludedInStatics: None
+    PrimaryMotion: None
+    SuperimposedMotion: None
+
+3DBuoys:
+  # Corner connection points for tendons (4 corners)
+  - Name: Corner_1
+    BuoyType: Towed fish
+    Connection: TLP
+    InitialX: 30
+    InitialY: 30
+    InitialZ: -25
+    Mass: 200000
+    Volume: 200
+    Height: 3
+    Diameter: 8
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 50.3
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+  - Name: Corner_2
+    BuoyType: Towed fish
+    Connection: TLP
+    InitialX: 30
+    InitialY: -30
+    InitialZ: -25
+    Mass: 200000
+    Volume: 200
+    Height: 3
+    Diameter: 8
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 50.3
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+  - Name: Corner_3
+    BuoyType: Towed fish
+    Connection: TLP
+    InitialX: -30
+    InitialY: 30
+    InitialZ: -25
+    Mass: 200000
+    Volume: 200
+    Height: 3
+    Diameter: 8
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 50.3
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+  - Name: Corner_4
+    BuoyType: Towed fish
+    Connection: TLP
+    InitialX: -30
+    InitialY: -30
+    InitialZ: -25
+    Mass: 200000
+    Volume: 200
+    Height: 3
+    Diameter: 8
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 50.3
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+Lines:
+  # Tendons from corners to seabed foundations
+  # Corner 1 (forward starboard) - 2 tendons
+  - Name: Tendon_1A
+    EndAConnection: Anchored
+    EndAX: 33
+    EndAY: 33
+    EndAZ: -1000
+    EndBConnection: Corner_1
+    EndBX: 3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  - Name: Tendon_1B
+    EndAConnection: Anchored
+    EndAX: 27
+    EndAY: 33
+    EndAZ: -1000
+    EndBConnection: Corner_1
+    EndBX: -3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  # Corner 2 (forward port) - 2 tendons
+  - Name: Tendon_2A
+    EndAConnection: Anchored
+    EndAX: 33
+    EndAY: -33
+    EndAZ: -1000
+    EndBConnection: Corner_2
+    EndBX: 3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  - Name: Tendon_2B
+    EndAConnection: Anchored
+    EndAX: 27
+    EndAY: -33
+    EndAZ: -1000
+    EndBConnection: Corner_2
+    EndBX: -3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  # Corner 3 (aft starboard) - 2 tendons
+  - Name: Tendon_3A
+    EndAConnection: Anchored
+    EndAX: -27
+    EndAY: 33
+    EndAZ: -1000
+    EndBConnection: Corner_3
+    EndBX: 3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  - Name: Tendon_3B
+    EndAConnection: Anchored
+    EndAX: -33
+    EndAY: 33
+    EndAZ: -1000
+    EndBConnection: Corner_3
+    EndBX: -3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  # Corner 4 (aft port) - 2 tendons
+  - Name: Tendon_4A
+    EndAConnection: Anchored
+    EndAX: -27
+    EndAY: -33
+    EndAZ: -1000
+    EndBConnection: Corner_4
+    EndBX: 3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]
+
+  - Name: Tendon_4B
+    EndAConnection: Anchored
+    EndAX: -33
+    EndAY: -33
+    EndAZ: -1000
+    EndBConnection: Corner_4
+    EndBX: -3
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TLP_Tendon, 975, 15]

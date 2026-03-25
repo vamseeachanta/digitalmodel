@@ -1,0 +1,153 @@
+# =============================================================================
+# Field Development Case Study Catalog — Schema Definition
+# =============================================================================
+# Version: 1.0
+# All field YAML files in this catalog must conform to this schema.
+# Required fields are marked with [REQUIRED].
+# =============================================================================
+
+schema_version: "1.0"
+description: >
+  Schema for individual field development case study entries.
+  Each file represents one field or development phase.
+
+fields:
+  id:
+    type: string
+    required: true
+    description: "Unique slug identifier. Use kebab-case."
+
+  name:
+    type: string
+    required: true
+    description: "Human-readable field / project name."
+
+  operator:
+    type: string
+    required: true
+    description: "Operating company name."
+
+  partners:
+    type: list
+    required: false
+    description: "List of non-operating partners with equity interests."
+    item_schema:
+      name: string
+      interest_pct: number
+
+  basin:
+    type: string
+    required: true
+    description: "Short basin code. Examples: NCS, GoM, Guyana-Suriname."
+
+  subregion:
+    type: string
+    required: false
+    description: "More descriptive geographic label."
+
+  country:
+    type: string
+    required: true
+    description: "Host country (ISO common name)."
+
+  water_depth_m:
+    type: number
+    required: true
+    description: "Water depth in metres. Use 0 for onshore."
+
+  field_type:
+    type: enum
+    required: true
+    values: [deepwater, shallow_water, onshore]
+    description: "deepwater = >300 m; shallow_water = 0-300 m; onshore = land"
+
+  development_type:
+    type: enum
+    required: true
+    values:
+      - FPSO
+      - TLP
+      - SPAR
+      - semi_submersible
+      - fixed_platform
+      - subsea_tieback
+      - jack_up
+      - onshore_conventional
+    description: "Primary production system / host facility type."
+
+  host_facility:
+    type: string
+    required: false
+    description: "Name of host facility (for tiebacks)."
+
+  tieback_distance_km:
+    type: number
+    required: false
+    description: "Flowline distance to host (subsea tiebacks only)."
+
+  sanction_year:
+    type: integer
+    required: false
+    description: "Final investment decision (FID) year."
+
+  production_start_year:
+    type: integer
+    required: true
+    description: "Year first oil / gas was produced."
+
+  reserves_mmboe:
+    type: number
+    required: true
+    description: "Recoverable reserves or resources in MMboe."
+
+  peak_production_mboe_d:
+    type: number
+    required: false
+    description: "Peak plateau production rate in thousand boe/day."
+
+  capex_bn_usd:
+    type: number
+    required: true
+    description: "Total development CAPEX in billion USD."
+
+  capex_confidence:
+    type: enum
+    required: false
+    values: [disclosed, proxy, estimate]
+    description: >
+      disclosed = directly stated in public operator filing
+      proxy     = derived from comparable project benchmarks
+      estimate  = analyst / industry estimate
+
+  npv_assumptions:
+    type: object
+    required: false
+    description: "Reference NPV model assumptions."
+    properties:
+      oil_price_usd_bbl:
+        type: number
+      discount_rate_pct:
+        type: number
+      npv_bn_usd:
+        type: number
+      source:
+        type: string
+
+  data_sources:
+    type: list
+    required: false
+    description: "Authoritative public data sources for this entry."
+    item_schema:
+      name: string
+      url: string
+      accessed: string
+
+  notes:
+    type: string
+    required: false
+    description: "Key technical or economic facts; 2-5 sentences."
+
+  tags:
+    type: list
+    required: false
+    description: "Free-form tags for filtering."

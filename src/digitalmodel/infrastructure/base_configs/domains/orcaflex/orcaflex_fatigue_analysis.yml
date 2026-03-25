@@ -1,0 +1,179 @@
+basename: orcaflex_fatigue_analysis
+
+inputs:
+  software: orcaflex
+
+
+parameters:
+  plot_suptitle: &plot_suptitle Unfactored Combined VIV Fatigue Damage Along the Length
+  plot_title: &plot_title Long Term Current Data
+
+default:
+  Analysis:
+    wave_fatigue:
+      orcaflex: False
+    viv_fatigue:
+      shear7: True
+    combined:
+      fatigue: True
+      histograms: True
+  plot_damage_distribution: True
+  plot_fatigue_life: False
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  model_state_information:
+    flag: True
+    from_csv:
+      label: riser_stack_up_properties
+      io: src\digitalmodel\tests\test_data\results\app_vertical_riser_vertical_riser_stack_up_properties.csv
+      DataFrame: True
+      scale: NULL
+
+WaveFatigue_Sets:
+  - io: src\digitalmodel\tests\test_data\orcaflex\2500ft_WT0750_064pcf_orcaflex_fatigue_analysis.xlsx
+    sheet_name: Damage Tables
+    start_row:
+      key_words: ["Arc Length"]
+      transform:
+        scale: 1
+        shift: 2
+    end_row:
+      key_words: ["Damage over Total Exposure"]
+      transform:
+        scale: 1
+        shift: -3
+    column:
+      names:
+        ["Arc Length", "S-N Curve", "Theta", "Overall Damage", "Life (years)"]
+      drop_unwanted_columns: True
+      filter:
+        - column: "S-N Curve"
+          value: "DNV 84 F, Seawater with CP, Outer, 1.300, 1.000"
+    scale: 1
+
+Shear7_sets:
+  - io: src\digitalmodel\tests\test_data\shear7\lid_02_cp01_2500ft_WT0750_064pcf.plt
+    label: cp01
+    probability: 10
+  - io: src\digitalmodel\tests\test_data\shear7\lid_02_cp03_2500ft_WT0750_064pcf.plt
+    label: cp02
+    probability: 5
+
+histogram:
+  shear7:
+    bins: 1000
+    range:
+      - 0
+      - 1000000
+    flag: True
+    fundamental_natural_frequency:
+      from_ascii:
+        label: natural_frequency
+        io: .out
+        line:
+          key_words: ["5. Fundamental natural frequency"]
+          transform:
+            scale: 1
+            shift: 0
+        filter:
+          delimiter: " "
+          column: 6
+          data_type: str
+        scale: 1
+
+  wave:
+    flag: True
+    io: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\results\app_orcaflex_analysis_app_ETL_ETL_histogram_test_histograms.xlsx
+    sheet_name: cummulative_histograms
+    skiprows: 0
+    skipfooter: 0
+    index_col: 0
+  combined:
+    flag: True
+
+plot_settings:
+  - file_name: combined_fatigue_damage
+    label: [Wave, VIV, Combined]
+    x:
+      [
+        total_wave_fatigue_damage,
+        total_viv_fatigue_damage,
+        total_combined_fatigue_damage,
+      ]
+    y: [elevation_above_mudline]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Fatigue Damage (1/year)
+    ylabel: Elevation Above Mudline (m)
+    suptitle: Unfactored Fatigue Damage Along Length of Riser
+    title: "2500 ft Water Depth, WT 0.75 inch, 64 pcf int. Fluid "
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: True
+
+viv_plots:
+  combined:
+    - file_suffix: viv_combined_damage
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [total_damage]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+      #      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        - x: 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        - x: 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center
+
+  individual:
+    - file_suffix: individual
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [Damage (1/year)]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+      #      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        - x: 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        - x: 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center

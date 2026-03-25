@@ -1,0 +1,111 @@
+%YAML 1.1
+# Lazy Wave Riser Base Model - Hybrid Template
+# Uses library components via IncludeFile for reusable line types
+#
+# Configuration: Lazy wave riser from FPSO to seabed
+# Water depth: 1000m (deep water)
+# Riser: 12-inch X65 steel with buoyancy section
+#
+# Lazy wave configuration:
+#   - Upper catenary: Hangoff to sag bend
+#   - Buoyancy section: Creates wave shape (sag bend to hog bend)
+#   - Lower catenary: Hog bend to touchdown
+#
+# Usage:
+#   1. Use directly for basic analysis
+#   2. Use with BaseFile + variation for parametric studies
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [30, 300]
+  StaticsMinDamping: 10
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 1000
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  # Seabed
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  # Waves - Dean Stream for statics
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 8.0
+      WavePeriod: 12.0
+      WaveOrigin: [0, 0]
+  # Current - Deep water profile
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 1.0
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [200, 0.8, 0]
+    - [500, 0.5, 0]
+    - [800, 0.3, 0]
+    - [1000, 0.1, 0]
+
+LineTypes:
+  # Main riser pipe (non-buoyancy sections)
+  - Name: LWR_12inch
+    Category: General
+    IncludeFile: ../../../../library/line_types/lwr_12inch.yml
+
+  # Buoyancy section (with distributed buoyancy modules)
+  - Name: LWR_12inch_Buoyancy
+    Category: General
+    IncludeFile: ../../../../library/line_types/lwr_12inch_buoyancy.yml
+
+VesselTypes:
+  - Name: FPSO_Type
+    Length: 280
+    RAOResponseUnits: degrees
+    RAOWaveUnit: amplitude
+    WavesReferredToBy: period (s)
+    RAOPhaseConvention: lags
+    RAOPhaseUnitsConvention: degrees
+    SurgePositive: forward
+    SwayPositive: port
+    HeavePositive: up
+    Symmetry: xz plane
+
+Vessels:
+  - Name: FPSO
+    VesselType: FPSO_Type
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+    Orientation: [0, 0, 180]
+    # Static vessel - no motion
+    IncludedInStatics: None
+    PrimaryMotion: None
+    SuperimposedMotion: None
+
+Lines:
+  # Lazy Wave Riser - 12-inch with buoyancy section
+  # Configuration:
+  #   Section 1: Upper catenary (hangoff to sag bend) - 400m
+  #   Section 2: Buoyancy section - 200m
+  #   Section 3: Lower catenary (to touchdown) - 600m
+  - Name: LWR_Main
+    EndAConnection: FPSO
+    EndAX: -140
+    EndAY: 0
+    EndAZ: -20
+    EndBConnection: Anchored
+    EndBX: -1200
+    EndBY: 0
+    EndBZ: -1000
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [LWR_12inch, 400, 10]
+      - [LWR_12inch_Buoyancy, 200, 5]
+      - [LWR_12inch, 600, 10]
+

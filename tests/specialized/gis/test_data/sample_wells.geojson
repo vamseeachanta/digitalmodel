@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-90.5, 28.1, -150.0]
+      },
+      "properties": {
+        "name": "MC-252-A",
+        "field": "Mississippi Canyon",
+        "block": "252",
+        "water_depth_m": 1500.0,
+        "status": "active",
+        "installation_date": "2010-03-15"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-90.3, 28.2, -120.0]
+      },
+      "properties": {
+        "name": "MC-253-B",
+        "field": "Mississippi Canyon",
+        "block": "253",
+        "water_depth_m": 1200.0,
+        "status": "active",
+        "installation_date": "2012-07-22"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-89.8, 28.5, -80.0]
+      },
+      "properties": {
+        "name": "VK-915-C",
+        "field": "Viosca Knoll",
+        "block": "915",
+        "water_depth_m": 800.0,
+        "status": "active",
+        "installation_date": "2015-01-10"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-91.2, 27.8, -200.0]
+      },
+      "properties": {
+        "name": "GC-640-D",
+        "field": "Green Canyon",
+        "block": "640",
+        "water_depth_m": 2000.0,
+        "status": "decommissioned",
+        "installation_date": "2005-11-30"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-90.0, 28.3, -100.0]
+      },
+      "properties": {
+        "name": "MC-311-E",
+        "field": "Mississippi Canyon",
+        "block": "311",
+        "water_depth_m": 1000.0,
+        "status": "active",
+        "installation_date": "2018-04-05"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-89.5, 28.7, -60.0]
+      },
+      "properties": {
+        "name": "MP-306-F",
+        "field": "Main Pass",
+        "block": "306",
+        "water_depth_m": 600.0,
+        "status": "active",
+        "installation_date": "2020-09-18"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-91.5, 27.6, -250.0]
+      },
+      "properties": {
+        "name": "GC-338-G",
+        "field": "Green Canyon",
+        "block": "338",
+        "water_depth_m": 2500.0,
+        "status": "active",
+        "installation_date": "2008-06-12"
+      }
+    }
+  ]
+}

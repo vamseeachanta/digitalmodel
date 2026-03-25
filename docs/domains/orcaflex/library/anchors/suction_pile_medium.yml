@@ -1,0 +1,42 @@
+# Suction Pile Anchor Medium - Library Component
+# Category: anchors
+# Description: Medium suction pile anchor (4m diameter x 15m length)
+# Application: Semi-sub/Spar moorings, soft to medium clay (200-1000m)
+# Holding Capacity: ~5000 kN vertical, ~2500 kN horizontal
+# NOTE: No section header - properties only for IncludeFile
+# Modeled as 6D Buoy with fixed connection for mooring termination
+BuoyType: Spar buoy
+Connection: Fixed
+InitialPosition:
+- 0
+- 0
+- 0
+InitialAttitude:
+- 0
+- 0
+- 0
+Mass: 95000
+Volume: 188.5
+MomentsOfInertia:
+- 2137500
+- 2137500
+- 380000
+CentreOfMass:
+- 0
+- 0
+- -7.5
+Height: 15.0
+Pen: [2, Solid, $404040]
+# Pile geometry: 4m OD x 15m length, wall thickness 40mm
+# Steel weight ~80 tonnes, installed with suction
+Cylinders:
+- CylinderOuterDiameter: 4.0
+  CylinderInnerDiameter: 3.92
+  CylinderLength: 15.0
+  CylinderAxialDragArea: 12.6
+  DragForceCoefficient:
+  - 1.2
+  - 0.7
+  AddedMassForceCoefficient:
+  - 1.0
+  - 1.0

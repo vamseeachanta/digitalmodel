@@ -1,0 +1,560 @@
+# LineTypes Configuration
+# Generated from: C03 Turret moored FPSO.yml
+# Date: 2026-01-18 22:18:03
+LineTypes:
+- Name: 10"Product
+  Category: General
+  OD: 0.3926
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.22135
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 361.85
+  - ~
+  EA: 650e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.8
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.65
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Red
+- Name: 10"P+Buoys
+  Category: General
+  OD: 0.8888
+  ID: 0.254
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.42224
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 174.21
+  - ~
+  EA: 640e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.902
+  - ~
+  - 0.163
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.712
+  - ~
+  - 0.36
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Red
+- Name: 10"P+2Buoy
+  Category: General
+  OD: 1.136
+  ID: 0.2542
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.56694
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.85
+  - ~
+  EI:
+  - 174.21
+  - ~
+  EA: 640e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.91
+  - ~
+  - 0.342
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.771
+  - ~
+  - 0.39
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Red
+- Name: 5"Gas Lift
+  Category: General
+  OD: 0.2572
+  ID: 0.127
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.15596
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 2.5
+  - ~
+  EI:
+  - 45.56
+  - ~
+  EA: 710e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.8
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.65
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $FF8000
+- Name: 5"GL+Buoys
+  Category: General
+  OD: 0.7754
+  ID: 0.127
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.33206
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 2.5
+  - ~
+  EI:
+  - 15.37
+  - ~
+  EA: 710e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.9
+  - ~
+  - 0.25
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.692
+  - ~
+  - 0.39
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $FF8000
+- Name: Umbilical
+  Category: General
+  OD: 0.248
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.1592
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.299999952316284
+  - ~
+  EI:
+  - 64.9
+  - ~
+  EA: 217e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.8
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.65
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: Umb+Buoys
+  Category: General
+  OD: 0.8038
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.364
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - 3.299999952316284
+  - ~
+  EI:
+  - 64.9
+  - ~
+  EA: 217e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0.89
+  - ~
+  - 0.48
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0.73
+  - ~
+  - 0.41
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: 13" Wire
+  Category: General
+  OD: 0.26416
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.435005129988
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 4.404894416e6
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.06
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.1
+  - ~
+  - 0.04
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+- Name: Dummy friction line
+  Category: General
+  OD: 1
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 1e-9
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 1
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 0
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 0
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Lime
+- Name: 12" Chain
+  Category: General
+  OD: 0.576072
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 2.034576576
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 9.383207040000001e6
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.07
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.04
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $0080FF

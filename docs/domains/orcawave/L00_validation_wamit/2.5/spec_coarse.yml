@@ -1,0 +1,96 @@
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: Body1
+  type: tlp
+  geometry:
+    mesh_file: ../../../../../data/hull_library/panels/semi_subs/val_issc_tlp_coarse.gdf
+    mesh_format: gdf
+    symmetry: xz+yz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mode: explicit
+    mass: 53066400.0
+    centre_of_gravity: [0.0, 0.0, 3.0]
+    inertia_tensor:
+      Ixx: 80201552000.0
+      Iyy: 80201552000.0
+      Izz: 95490673100.0
+  fixed_dofs: [heave, roll, pitch]
+
+environment:
+  water_depth: 450.0
+  water_density: 1000.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: period
+  values:
+    - 10.0
+    - 10.1
+    - 10.2
+    - 10.3
+    - 10.4
+    - 10.5
+    - 10.6
+    - 10.7
+    - 10.8
+    - 10.9
+    - 11.0
+    - 11.1
+    - 11.2
+    - 11.3
+    - 11.4
+    - 11.5
+    - 11.6
+    - 11.7
+    - 11.8
+    - 11.9
+    - 12.0
+    - 12.1
+    - 12.2
+    - 12.3
+    - 12.4
+    - 12.5
+    - 12.6
+    - 12.7
+    - 12.8
+    - 12.9
+    - 13.0
+    - 13.1
+    - 13.2
+    - 13.3
+    - 13.4
+    - 13.5
+    - 13.6
+    - 13.7
+    - 13.8
+    - 13.9
+    - 14.0
+    - 14.1
+    - 14.2
+    - 14.3
+    - 14.4
+    - 14.5
+    - 14.6
+    - 14.7
+    - 14.8
+    - 14.9
+    - 15.0
+
+wave_headings:
+  values: [35.0]
+
+solver_options:
+  solve_type: potential_only
+  remove_irregular_frequencies: false
+  qtf_calculation: false
+  precision: double
+
+metadata:
+  project: OrcaWave WAMIT Validation
+  description: "Case 2.5 - ISSC TLP coarse mesh (128 panels), finite depth 450m, fixed heave/roll/pitch, WAMIT v7.3 validation"
+  tags: [validation, wamit, tlp, issc, coarse, L00]

@@ -1,0 +1,80 @@
+# Shapes Configuration
+# Generated from: D02 Pull in analysis.yml
+# Date: 2026-01-18 22:18:08
+Shapes:
+- Name: Funnel
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: Anchored
+  Origin:
+  - 35
+  - 515
+  - 3.5
+  Orientation:
+  - 45
+  - 105
+  - 90
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.5
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 1.4
+  - - 3
+    - 1.8
+  - - 6.5
+    - 4
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Olive
+  NumberOfLines: 4
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Wellhead
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - 31
+  - 505
+  - 0
+  Size:
+  - 10
+  - 10
+  - 10
+  Orientation:
+  - 0
+  - 0
+  - 45
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+  ShadedDrawingDrawSize: 25
+  ShadedDrawingCullingMode: Anticlockwise
+  ShadedDrawingOrigin:
+  - 3
+  - 0.9
+  - -0.25
+  ShadedDrawingOrientation:
+  - 0
+  - 0
+  - 90
+- Name: Pullhead camera
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Pipe
+  Origin:
+  - 0
+  - 0
+  - 35
+  ConnectionzRelativeTo: End A
+  Azimuth: 0
+  Declination: 0
+  Length: 0.2
+  OuterDiameter: 0.1
+  InnerDiameter: 0

@@ -1,0 +1,69 @@
+@startuml multibody_model
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Multibody \n OrcaFlex Hydrodynamics
+
+start
+
+    note right
+        Objective: Multibody Analysis
+        - Each Block is feature
+    end note
+
+
+    partition "Vessel - Diffraction" {
+
+    note right
+        Objective: Diffraction Analysis
+        - Software: OrcaWave
+        - Status: <font color=red>Not Planned</font>
+    end note
+
+        :RAOs;
+        :QTFs;
+        :Others;
+
+    }
+
+    partition "Vessel Shielding" {
+
+    note right
+        Objective: Seastate RAOs to take shielding effects
+        - Software: OrcaWave
+        - Define areas with shielding beside a vessel
+        - Status: <font color=red>Not Planned</font>
+    end note
+
+        :Seastate RAOs;
+
+    }
+
+    partition "Connected Model Dynamics" {
+    note right
+        Objective: Perform dynamic analysis
+        - Software: OrcaFlex
+        - Define multiple bodies, structures etc.
+        - Define boundary conditions, constraints etc.
+        - Define wind coeffs, current coefficients etc.
+        - Define: wind, wave and current <font color=red>Wood inputs</font>
+        - Postprocess to get results
+        - etc.
+        - Status: <font color=green>On going</font>
+    end note
+
+        :Detailed Model;
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

@@ -1,0 +1,185 @@
+basename: aqwa
+
+software:
+  version: []
+  # ANSYSInstallDir: C:\Program Files\ANSYS Inc\v181
+  ANSYSInstallDir: C:\Program Files\ANSYS Inc\v222
+  # "C:\Program Files\ANSYS Inc\v222\aisol\workbench.bat" -cmd "C:\Program Files\ANSYS Inc\v222\aisol\bin\winx64\AqwaReader.exe" --Type 2
+  # "C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /nowind .\02_s04_hr_ext_force
+type:
+  preprocess: False
+  analysis: True
+  results: false
+
+analysis_settings:
+  method: raos
+  split_to_decks:
+    template: tests/test_data/aqwa/templates/aqwa_dat_split_to_decks.yml
+    output: NULL
+
+  drafts:
+    - label: L00
+      template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
+      inputs:
+        - file_prefix: 180K_LNGC_L99_COG_ONLY_
+          file_extension: deck
+          data:
+            category: 1
+            raw:
+              [
+                {
+                  structure: 1,
+                  node: 98000,
+                  X: 141.0,
+                  Y: -52.0,
+                  Z: 14.0,
+                  comment:COG,
+                },
+              ]
+        - file_prefix: 180K_LNGC_L99_
+          file_extension: deck
+          data:
+            category: 3
+            raw: [{ node: 98000, mass: 117000000 }]
+        - file_prefix: 180K_LNGC_L99_
+          file_extension: deck
+          data:
+            category: 4
+            element_type: PMAS
+            raw:
+              [
+                {
+                  node: 98000,
+                  Ixx: 21170000000,
+                  Iyy: 539900000000,
+                  Izz: 551900000000,
+                },
+              ]
+        - file_prefix: _SIMP
+          file_extension: deck
+          data:
+            category: 6
+            element_type: HRTZ
+            raw:
+              {
+                period:
+                  [4, 6, 7, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 14, 16, 20],
+              }
+        - file_prefix: _
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+  damp_no:
+    template: tests/test_data/aqwa/templates/pre_process_rao_dat.yml
+    directions: [1, 2, 3]
+    input:
+      - output_filename: NULL
+        input_file_labels: [180K_LNGC_L99_DAMPNO]
+        output_basename: F
+        output_dir: raos
+        file_extension: dat
+        input_files:
+          [
+            [
+              tests/test_data/aqwa/raos/decks/_F_00.deck,
+              raos/decks/180K_LNGC_L99_01.deck,
+              raos/decks/WB_180K_LNGC_02.deck,
+              raos/decks/180K_LNGC_L99_03.deck,
+              raos/decks/180K_LNGC_L99_04.deck,
+              tests/test_data/aqwa/raos/decks/_05.deck,
+              raos/decks/_SIMP06.deck,
+              raos/decks/_07.deck,
+              tests/test_data/aqwa/raos/decks/_08.deck,
+              tests/test_data/aqwa/raos/decks/_09_17.deck,
+              tests/test_data/aqwa/raos/decks/_18.deck,
+            ],
+          ]
+
+        batch:
+          flag: False
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+    output: NULL
+
+  damping:
+    flag: True
+    target_damping: { roll: 10, pitch: 8, unit: percentage }
+    template:
+      natural_period: tests/test_data/aqwa/templates/post_lis_rao_natural_period.yml
+      critical_damping: tests/test_data/aqwa/templates/post_lis_rao_critical_damping.yml
+      absolute_damping: tests/test_data/aqwa/templates/post_aqr_rao_absolute_damping.yml
+      no_damp_raos: tests/test_data/aqwa/templates/post_aqr_rao_raos.yml
+
+    additional_damping:
+      template: tests/test_data/aqwa/templates/pre_process_rao_decks.yml
+      inputs:
+        - file_prefix: _COMP
+          file_extension: deck
+          data:
+            category: 6
+            element_type: HRTZ
+            raw: { period: [2.5, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 18, 24, 30] }
+        - file_prefix: 180K_LNGC_L99_
+          file_extension: deck
+          data:
+            element_type: FIDP
+            category: 7
+            raw: { added_damping: { rxx: 5729.578, ryy: 5729.578 } }
+
+    output: NULL
+
+  damp_ad:
+    directions: [1, 2, 3]
+    template: tests/test_data/aqwa/templates/pre_process_rao_dat.yml
+    input:
+      - output_filename: NULL
+        input_file_labels: [180K_LNGC_L99_DAMPAD]
+        output_basename: F
+        output_dir: raos
+        file_extension: dat
+        input_files:
+          [
+            [
+              tests/test_data/aqwa/raos/decks/_F_00.deck,
+              raos/decks/180K_LNGC_L99_01.deck,
+              raos/decks/WB_180K_LNGC_02.deck,
+              raos/decks/180K_LNGC_L99_03.deck,
+              raos/decks/180K_LNGC_L99_04.deck,
+              tests/test_data/aqwa/raos/decks/_05.deck,
+              raos/decks/_COMP06.deck,
+              raos/decks/180K_LNGC_L99_07.deck,
+              tests/test_data/aqwa/raos/decks/_08.deck,
+              tests/test_data/aqwa/raos/decks/_09_17.deck,
+              tests/test_data/aqwa/raos/decks/_18.deck,
+            ],
+          ]
+
+        batch:
+          flag: False
+          extension: no
+          content: C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind
+    output: NULL
+
+file_management:
+  flag: True
+  update_unfinished:
+    flag: False
+
+  files:
+    files_in_current_directory:
+      flag: False
+      auto_read: True
+      directory: raos
+      file_extensions: [DAT]
+      filename_pattern: WB_
+    output_directory: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

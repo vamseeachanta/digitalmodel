@@ -1,0 +1,43 @@
+source_type: textbook
+source_description: "PNA Vol I — Hull Form Coefficients; EN400 Chapter 2"
+extracted_date: "2026-03-20"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "hull_form"
+equations:
+  - name: "Block Coefficient"
+    latex: "C_b = \\frac{\\nabla}{L \\cdot B \\cdot T}"
+    description: "Ratio of displaced volume to bounding box"
+  - name: "Prismatic Coefficient"
+    latex: "C_p = \\frac{C_b}{C_m}"
+    description: "Longitudinal distribution of displacement"
+  - name: "Froude Number"
+    latex: "F_n = \\frac{V}{\\sqrt{g \\cdot L}}"
+    description: "Speed-length ratio for resistance scaling"
+worked_examples:
+  - description: "Block coefficient for tanker hull — V=80000 m³, L=250, B=40, T=15"
+    inputs:
+      displacement_m3: 80000.0
+      lwl_m: 250.0
+      beam_m: 40.0
+      draft_m: 15.0
+    outputs:
+      cb: 0.533
+    use_as_test: true
+  - description: "Prismatic coefficient from Cb=0.65, Cm=0.98"
+    inputs:
+      cb: 0.65
+      cm: 0.98
+    outputs:
+      cp: 0.663
+    use_as_test: true
+  - description: "Froude number — V=7.72 m/s, L=121.92 m"
+    inputs:
+      speed_ms: 7.72
+      lwl_m: 121.92
+    outputs:
+      fn: 0.223
+    use_as_test: true
+references:
+  - "PNA Vol I — Principles of Naval Architecture"
+  - "USNA EN400 Chapter 2 — Hull Form Geometry"

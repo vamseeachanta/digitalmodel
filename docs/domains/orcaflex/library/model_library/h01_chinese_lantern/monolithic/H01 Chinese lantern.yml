@@ -1,0 +1,1642 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\H01\H01 Chinese lantern.yml
+# Created: 7:13 PM on 2/10/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+General:
+  # Units
+  UnitsSystem: SI
+  # Analysis data
+  JacobianBufferingPolicy: 01
+  JacobianPerturbationFactor: 0
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.005
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+    - 10
+    - 30
+  # Restart state
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: 
+  # Default view parameters
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultShadedProjectionMode: Perspective
+  DefaultViewSize: 50
+  DefaultViewCentre: [-0.4901810823880154, -25.2402429964025, -10.13813914296449]
+  DefaultViewAzimuth: 257.1
+  DefaultViewElevation: -3.6
+VariableData:
+  Dragcoefficient:
+    - Name: Re vs Cd
+      IndependentValue, DependentValue:
+        - [10e3, 1.2]
+        - [50e3, 1.2]
+        - [240e3, 1.2]
+        - [255e3, 1.19]
+        - [300e3, 1.16]
+        - [340e3, 1.05]
+        - [380e3, 0.8]
+        - [425e3, 0.42]
+        - [510e3, 0.4]
+        - [600e3, 0.42]
+        - [675e3, 0.48]
+        - [850e3, 0.57]
+        - [1.3e6, 0.68]
+        - [1.7e6, 0.7]
+        - [8.5e6, 0.7]
+        - [25e6, 0.7]
+  Linetypediameter:
+    - Name: Flange Profile End A
+      IndependentValue, DependentValue:
+        - [0, 0.69]
+        - [0.1, 0.69]
+        - [0.101, 0.6]
+        - [0.25, 0.56]
+        - [0.6, 0.56]
+    - Name: Flange Profile End B
+      IndependentValue, DependentValue:
+        - [0, 0.56]
+        - [0.35, 0.56]
+        - [0.499, 0.6]
+        - [0.5, 0.69]
+        - [0.6, 0.69]
+    - Name: Sheath Profile End A
+      IndependentValue, DependentValue:
+        - [0, 0.59]
+        - [0.1, 0.64]
+        - [0.2, 0.69]
+        - [0.5, 0.69]
+        - [1.1, 0.62]
+        - [1.6, 0.57]
+    - Name: Sheath Profile End B
+      IndependentValue, DependentValue:
+        - [0, 0.57]
+        - [0.5, 0.62]
+        - [1.1, 0.69]
+        - [1.4000000000000001, 0.69]
+        - [1.5, 0.64]
+        - [1.6, 0.59]
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.024
+  # Seabed
+  SeabedType: Flat
+  SeabedOrigin: [0, 0]
+  SeabedOriginDepth: 28
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  # Waves
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 350
+      WaveHeight: 8
+      WavePeriod: 10
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: ~
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: Yes
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 0.75
+  RefCurrentDirection: 350
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1, 0]
+    - [21.5, 0.2, 0]
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 0
+  WindDirection: 0
+  VerticalWindVariationFactor: ~
+LineTypes:
+  - Name: Chain
+    Category: General
+    # Geometry and mass
+    OD: 0.0945
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.05475000000000001
+    # Limits
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [0, ~]
+    EA: 252.50000000000006e3
+    PoissonRatio: 0
+    ExpansionTable: None
+    GJ: 10
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: 0.18000000000000002
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0.5]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [2.6, ~, 1.4]
+    Cl: 0
+    NormalDragLiftDiameter: 0.05
+    AxialDragLiftDiameter: 0.015915494309189534
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Drawing
+    Pen: [1, Solid, Lime]
+  - Name: Body
+    Category: General
+    # Geometry and mass
+    OD: 0.56
+    ID: 0.49
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.203
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [85, ~]
+    EA: 20e3
+    PoissonRatio: 0
+    ExpansionTable: None
+    GJ: 160
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [Re vs Cd, ~, 0.04]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+  - Name: Flange End A
+    Category: Homogeneous pipe
+    # Geometry and density
+    OD: Flange Profile End A
+    ID: 0.49
+    MaterialDensity: 7.85
+    # Structure
+    E: 212e6
+    PoissonRatio: 0.293
+    ExpansionTable: None
+    # Drag, lift, added mass and slam
+    Cdn: 1.2
+    Cdz: 0.008
+    Cl: 0
+    Can: 1
+    Caz: 0
+    Cs: 0
+    Ce: 0
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Contact
+    ClashStiffness: 0
+    # Stress
+    AllowableStress: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Coating and lining
+    CoatingThickness: 0
+    LiningThickness: 0
+    # Additional stiffness
+    AdditionalEI: 0
+    # Drawing
+    Pen: [1, Solid, Gray]
+  - Name: Flange End B
+    Category: Homogeneous pipe
+    # Geometry and density
+    OD: Flange Profile End B
+    ID: 0.49
+    MaterialDensity: 7.85
+    # Structure
+    E: 212e6
+    PoissonRatio: 0.293
+    ExpansionTable: None
+    # Drag, lift, added mass and slam
+    Cdn: 1.2
+    Cdz: 0.008
+    Cl: 0
+    Can: 1
+    Caz: 0
+    Cs: 0
+    Ce: 0
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Contact
+    ClashStiffness: 0
+    # Stress
+    AllowableStress: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Coating and lining
+    CoatingThickness: 0
+    LiningThickness: 0
+    # Additional stiffness
+    AdditionalEI: 0
+    # Drawing
+    Pen: [1, Solid, Gray]
+  - Name: Sheath Type End A
+    Category: Homogeneous pipe
+    # Geometry and density
+    OD: Sheath Profile End A
+    ID: 0.56
+    MaterialDensity: 1.1
+    # Structure
+    E: 100e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    # Drag, lift, added mass and slam
+    Cdn: 1.2
+    Cdz: 0.008
+    Cl: 0
+    Can: 1
+    Caz: 0
+    Cs: 0
+    Ce: 0
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Contact
+    ClashStiffness: 0
+    # Stress
+    AllowableStress: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Coating and lining
+    CoatingThickness: 0
+    LiningThickness: 0
+    # Additional stiffness
+    AdditionalEI: 0
+    # Drawing
+    Pen: [1, Solid, Red]
+  - Name: Sheath Type End B
+    Category: Homogeneous pipe
+    # Geometry and density
+    OD: Sheath Profile End B
+    ID: 0.56
+    MaterialDensity: 1.1
+    # Structure
+    E: 100e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    # Drag, lift, added mass and slam
+    Cdn: 1.2
+    Cdz: 0.008
+    Cl: 0
+    Can: 1
+    Caz: 0
+    Cs: 0
+    Ce: 0
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Contact
+    ClashStiffness: 0
+    # Stress
+    AllowableStress: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Coating and lining
+    CoatingThickness: 0
+    LiningThickness: 0
+    # Additional stiffness
+    AdditionalEI: 0
+    # Drawing
+    Pen: [1, Solid, Red]
+ClumpTypes:
+  - Name: EndFloat
+    Mass: 0.12
+    Volume: 0.38
+    Height: 0.5
+    AlignWith: Line axes
+    DragArea: [0.2, 0.2, 0.2]
+    Cd: [1.1, 1.1, 0.01]
+    Ca: [1, 1, 1]
+  - Name: BodyFloat
+    Mass: 0.095
+    Volume: 0.285
+    Height: 0.5
+    AlignWith: Line axes
+    DragArea: [0.2, 0.2, 0.2]
+    Cd: [1.1, 1.1, 0.01]
+    Ca: [1, 1, 1]
+StiffenerTypes:
+  - Name: Sheath End A
+    LineType: Sheath Type End A
+    ConnectionArclength: 0
+    ConnectionArclengthRelativeTo: End A
+    AxialLoadInertiaTransfer: over full length
+  - Name: Sheath End B
+    LineType: Sheath Type End B
+    ConnectionArclength: 0
+    ConnectionArclengthRelativeTo: End B
+    AxialLoadInertiaTransfer: over full length
+6DBuoys:
+  - Name: CALM Buoy1
+    BuoyType: Spar buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [-8.67739131374829, -49.24038779727874, 1.4837553260623337]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 197
+    MomentsOfInertia: [3000, 3000, 1000]
+    CentreOfMass: [0, 0, 0]
+    # Stacked buoy cylinder data
+    StackBaseCentre: [0, 0, -5.5]
+    BulkModulus: Infinity
+    MunkMomentCoefficient: 0
+    NormalDragAreaCalculatedFromGeometry: No
+    StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+    # Drag, added mass and damping [normal, axial]
+    Cylinders:
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.638
+        DragArea: [18.7, 0]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.638
+        DragArea: [18.7, 0]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 14.935
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.09
+        DragArea: [1.3, 72.6]
+        DragForceCoefficient: [0.723, 50]
+        DragAreaMoment: [500e3, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0, 1]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.9
+        DragArea: [10.3, 83]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 5
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.9
+        DragArea: [9.5, 19.6]
+        DragForceCoefficient: [0.6, 0.85]
+        DragAreaMoment: [0.4, 0]
+        DragMomentCoefficient: [0.6, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.45, 1.1]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+    # Applied loads
+    GlobalAppliedLoads:
+      - Origin: [0, 0, 0]
+        Force: [0, 0, 0]
+        Moment: [0, 0, 0]
+    LocalAppliedLoads:
+      - Origin: [0, 0, 0]
+        Force: [0, 0, 0]
+        Moment: [0, 0, 0]
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    Pen: [1, Solid, $FF80C0]
+    # Shaded drawing
+    ShadedDrawingCullingMode: Anticlockwise
+  - Name: CALM Buoy
+    BuoyType: Spar buoy
+    Connection: Free
+    DegreesOfFreedomInStatics: All
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0.005017569598227207, -146.668343497782e-9, 1.4837553260623306]
+    InitialAttitude: [0, 0, 0]
+    # Inertia
+    Mass: 197
+    MomentsOfInertia: [3000, 3000, 1000]
+    CentreOfMass: [0, 0, 0]
+    # Stacked buoy cylinder data
+    StackBaseCentre: [0, 0, -5.5]
+    BulkModulus: Infinity
+    MunkMomentCoefficient: 0
+    NormalDragAreaCalculatedFromGeometry: No
+    StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+    # Drag, added mass and damping [normal, axial]
+    Cylinders:
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.638
+        DragArea: [18.7, 0]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.638
+        DragArea: [18.7, 0]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 14.935
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.09
+        DragArea: [1.3, 72.6]
+        DragForceCoefficient: [0.723, 50]
+        DragAreaMoment: [500e3, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0, 1]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 11.43
+        CylinderInnerDiameter: 0
+        CylinderLength: 0.9
+        DragArea: [10.3, 83]
+        DragForceCoefficient: [0.696, 0.85]
+        DragAreaMoment: [1.6, 0]
+        DragMomentCoefficient: [0.7, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.04, 0.9]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderOuterDiameter: 5
+        CylinderInnerDiameter: 0
+        CylinderLength: 1.9
+        DragArea: [9.5, 19.6]
+        DragForceCoefficient: [0.6, 0.85]
+        DragAreaMoment: [0.4, 0]
+        DragMomentCoefficient: [0.6, 0]
+        CylinderSlamForceDataEntry: 0
+        CylinderSlamForceDataExit: 0
+        AddedMassForceCoefficient: [0.45, 1.1]
+        InertiaForceCoefficient: [~, ~]
+        AddedMomentOfInertia: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+    # Applied loads
+    GlobalAppliedLoads:
+      - Origin: [0, 0, 0]
+        Force: [0, 0, 0]
+        Moment: [0, 0, 0]
+    LocalAppliedLoads:
+      - Origin: [0, 0, 0]
+        Force: [0, 0, 0]
+        Moment: [0, 0, 0]
+    # Contact
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: ~
+    # Drawing
+    Pen: [1, Solid, $FF80C0]
+    # Shaded drawing
+    ShadedDrawingCullingMode: Anticlockwise
+Lines:
+  - Name: Chain7
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, 0, 6, -3.5, 90, 180, 0, ~]
+      - [Anchored, -8.682408883346517, 220.7596123493896, 0.05000000000000426, 90, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 270
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain8
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, 0, -6, -3.5, 270, 180, 0, ~]
+      - [Anchored, -8.682408883346517, -319.2403876506104, 0.05000000000000426, 270, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 90
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain9
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, 5.2, 3, -3.5, 30.000000000000004, 180, 0, ~]
+      - [Anchored, 225.3175911166535, 85.7596123493896, 0.05000000000000426, 30.000000000000004, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 210
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain10
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, 5.2, -3, -3.5, 329.99999999999994, 180, 0, ~]
+      - [Anchored, 225.3175911166535, -184.2403876506104, 0.05000000000000426, 329.99999999999994, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 150
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain11
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, -5.200000000000001, 3, -3.5, 150, 180, 0, ~]
+      - [Anchored, -242.6824088833465, 85.7596123493896, 0.05000000000000426, 150, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 330
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain12
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, -5.200000000000001, -3, -3.5, 209.99999999999997, 180, 0, ~]
+      - [Anchored, -242.6824088833465, -184.2403876506104, 0.05000000000000426, 209.99999999999997, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 30
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Riser 1 without torsion
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, 1.870000000000001, 0, -5.500000000000001, 0, 150, -180, ~]
+      - [Anchored, -7.1824088833465165, -49.2403876506104, 3.400000000000002, 180, 165, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, ~]
+      - [Infinity, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+    # Attachments
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+      - [Sheath End A, 0, 0, 0.4, End A, Stiffener1]
+      - [Sheath End B, 0, 0, 8.74, End A, Stiffener2]
+      - [Sheath End A, 0, 0, 9.54, End A, Stiffener3]
+      - [Sheath End B, 0, 0, 9.54, End B, Stiffener4]
+      - [Sheath End A, 0, 0, 8.74, End B, Stiffener5]
+      - [Sheath End B, 0, 0, 0.4, End B, Stiffener6]
+      - [BodyFloat, 0, 0, 6, End A]
+      - [EndFloat, 0, 0, 8.34, End A]
+      - [EndFloat, 0, 0, 9.94, End A]
+      - [BodyFloat, 0, 0, 13, End A]
+      - [BodyFloat, 0, 0, 13, End B]
+      - [EndFloat, 0, 0, 9.94, End B]
+      - [EndFloat, 0, 0, 8.34, End B]
+      - [BodyFloat, 0, 0, 6, End B]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Spline
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    AsLaidTension: 0
+    # Spline starting shape
+    SplineOrder: 3
+    SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+      - [-6.807391313748289, -49.24038779727874, -4.016244673937667]
+      - [-4.698289050752617, -49.240387738740885, -7.5276830443471034]
+      - [-1.0648223732422641, -49.24038771552341, -14.1177652127559]
+      - [-6.90166067165467, -49.24038769230593, -19.022454122737756]
+      - [-7.1824088833465165, -49.2403876506104, -24.599999999999998]
+    # Results
+    RangeGraphArclengthAxisOrientation: Vertical
+    RangeGraphArclengthAxisInverted: Yes
+    # Drawing
+    ContactPen: [5, Solid, White]
+  - Name: Riser 2 without torsion
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy1, -1.8699999999999992, 0, -5.500000000000001, 180, 150, -180, ~]
+      - [Anchored, -10.182408883346517, -49.2403876506104, 3.400000000000002, 0, 165, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [Infinity, ~]
+      - [Infinity, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+    # Attachments
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+      - [Sheath End A, 0, 0, 0.4, End A, Stiffener7]
+      - [Sheath End B, 0, 0, 8.74, End A, Stiffener8]
+      - [Sheath End A, 0, 0, 9.54, End A, Stiffener9]
+      - [Sheath End B, 0, 0, 9.54, End B, Stiffener10]
+      - [Sheath End A, 0, 0, 8.74, End B, Stiffener11]
+      - [Sheath End B, 0, 0, 0.4, End B, Stiffener12]
+      - [BodyFloat, 0, 0, 6, End A]
+      - [EndFloat, 0, 0, 8.34, End A]
+      - [EndFloat, 0, 0, 9.94, End A]
+      - [BodyFloat, 0, 0, 13, End A]
+      - [BodyFloat, 0, 0, 13, End B]
+      - [EndFloat, 0, 0, 9.94, End B]
+      - [EndFloat, 0, 0, 8.34, End B]
+      - [BodyFloat, 0, 0, 6, End B]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Spline
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    AsLaidTension: 0
+    # Spline starting shape
+    SplineOrder: 3
+    SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+      - [-10.547391313748289, -49.24038779727874, -4.016244673937667]
+      - [-12.820478914657958, -49.24038773840182, -7.684368749488316]
+      - [-15.452304760649334, -49.24038771517216, -13.552002516013081]
+      - [-11.021530285613418, -49.24038769194251, -20.78400225364537]
+      - [-10.182408883346517, -49.2403876506104, -24.599999999999998]
+    # Drawing
+    NodePen: [1, Solid, Red]
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+  - Name: Chain1
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, 0, 6, -3.5, 90, 180, 0, ~]
+      - [Anchored, 0, 270, 0.05, 90, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 270
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain2
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, 0, -6, -3.5, -90, 180, 0, ~]
+      - [Anchored, 0, -270, 0.05, -90, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 90
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain3
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, 5.2, 3, -3.5, 30, 180, 0, ~]
+      - [Anchored, 234, 135, 0.05, 30, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 210
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain4
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, 5.2, -3, -3.5, -30, 180, 0, ~]
+      - [Anchored, 234, -135, 0.05, -30, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 150
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain5
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, -5.2, 3, -3.5, 150, 180, 0, ~]
+      - [Anchored, -234, 135, 0.05, 150, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 330
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Chain6
+    IncludeTorsion: No
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, -5.2, -3, -3.5, 210, 180, 0, ~]
+      - [Anchored, -234, -135, 0.05, 210, 90, 0, ~]
+    # End connection stiffness
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+      - [0, ~]
+      - [0, ~]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Chain, 76, 4]
+      - [Chain, 195, 10]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: None
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 30
+    AsLaidTension: 0
+    # Drawing
+    DrawNodesAsDiscs: No
+    SegmentPenMode: Use whole line pen
+    DrawShadedNodesAsSpheres: Yes
+    LinePen: [1, Solid, Lime]
+    ContactPen: [5, Solid, White]
+  - Name: Riser 1 with torsion
+    IncludeTorsion: Yes
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, 1.87, 0, -5.5, 0, 150, -180, ~]
+      - [Anchored, 1.5, 0, 3.4, 180, 165, 0, ~]
+    # End connection stiffness and damping
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - [Infinity, ~, Infinity]
+      - [Infinity, ~, Infinity]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+    # Attachments
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+      - [Sheath End A, 0, 0, 0.4, End A, Stiffener13]
+      - [Sheath End B, 0, 0, 8.74, End A, Stiffener14]
+      - [Sheath End A, 0, 0, 9.54, End A, Stiffener15]
+      - [Sheath End B, 0, 0, 9.54, End B, Stiffener16]
+      - [Sheath End A, 0, 0, 8.74, End B, Stiffener17]
+      - [Sheath End B, 0, 0, 0.4, End B, Stiffener18]
+      - [BodyFloat, 0, 0, 6, End A]
+      - [EndFloat, 0, 0, 8.34, End A]
+      - [EndFloat, 0, 0, 9.94, End A]
+      - [BodyFloat, 0, 0, 13, End A]
+      - [BodyFloat, 0, 0, 13, End B]
+      - [EndFloat, 0, 0, 9.94, End B]
+      - [EndFloat, 0, 0, 8.34, End B]
+      - [BodyFloat, 0, 0, 6, End B]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    ApplySeabedContactLoadsAtCentreline: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxIterations: 800
+    FullStaticsMinDamping: 1.5
+    FullStaticsMaxDamping: 15
+    # Results
+    RangeGraphArclengthAxisOrientation: Vertical
+    RangeGraphArclengthAxisInverted: Yes
+    # Drawing
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+  - Name: Riser 2 with torsion
+    IncludeTorsion: Yes
+    TopEnd: End A
+    LengthAndEndOrientations: Explicit
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Curvature
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [CALM Buoy, -1.87, 0, -5.5, 180, 150, 180, ~]
+      - [Anchored, -1.5, 0, 3.4, 0, 165, 0, ~]
+    # End connection stiffness and damping
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - [Infinity, ~, Infinity]
+      - [Infinity, ~, Infinity]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+      - [Flange End A, 0.6, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Body, 5.14, 0.2]
+      - [Body, 1.4, 0.2]
+      - [Flange End B, 0.6, 0.2]
+    # Attachments
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
+      - [Sheath End A, 0, 0, 0.4, End A, Stiffener19]
+      - [Sheath End B, 0, 0, 8.74, End A, Stiffener20]
+      - [Sheath End A, 0, 0, 9.54, End A, Stiffener21]
+      - [Sheath End B, 0, 0, 9.54, End B, Stiffener22]
+      - [Sheath End A, 0, 0, 8.74, End B, Stiffener23]
+      - [Sheath End B, 0, 0, 0.4, End B, Stiffener24]
+      - [BodyFloat, 0, 0, 6, End A]
+      - [EndFloat, 0, 0, 8.34, End A]
+      - [EndFloat, 0, 0, 9.94, End A]
+      - [BodyFloat, 0, 0, 13, End A]
+      - [BodyFloat, 0, 0, 13, End B]
+      - [EndFloat, 0, 0, 9.94, End B]
+      - [EndFloat, 0, 0, 8.34, End B]
+      - [BodyFloat, 0, 0, 6, End B]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    ApplySeabedContactLoadsAtCentreline: No
+    CoveredSectionsWarnIfLineLeavesCover: Yes
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 1
+    ContentsTemperature: ~
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: None
+    # Full statics convergence
+    FullStaticsMaxIterations: 800
+    FullStaticsMinDamping: 1.5
+    FullStaticsMaxDamping: 15
+    # Drawing
+    NodePen: [1, Solid, Red]
+    DrawShadedNodesAsSpheres: Yes
+    ContactPen: [5, Solid, White]
+Shapes:
+  - Name: Base1
+    ShapeType: Drawing
+    Shape: Block
+    Connection: Anchored
+    # Geometry
+    Origin: [-11.682408883346517, -52.2403876506104, 3.552713678800501e-15]
+    Size: [6, 6, 2.4]
+    Orientation: [0, 0, 0]
+    # Drawing
+    OutsidePen: [1, Solid, Blue]
+    NumberOfLines: 2
+    # Shaded drawing
+    ShadedDrawingFileName: ! '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+    ShadedDrawingDrawSize: 11
+    ShadedDrawingCullingMode: Anticlockwise
+    ShadedDrawingOrigin: [3, 3, 0]
+  - Name: Base
+    ShapeType: Drawing
+    Shape: Block
+    Connection: Anchored
+    # Geometry
+    Origin: [-3, -3, 0]
+    Size: [6, 6, 2.4]
+    Orientation: [0, 0, 0]
+    # Drawing
+    OutsidePen: [1, Solid, Blue]
+    NumberOfLines: 2
+    # Shaded drawing
+    ShadedDrawingFileName: ! '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\Subsea Template.x'
+    ShadedDrawingDrawSize: 11
+    ShadedDrawingCullingMode: Anticlockwise
+    ShadedDrawingOrigin: [3, 3, 0]
+Groups:
+  Structure:
+    With Torsion: Model
+    CALM Buoy: With Torsion
+    Chain1: With Torsion
+    Chain2: With Torsion
+    Chain3: With Torsion
+    Chain4: With Torsion
+    Chain5: With Torsion
+    Chain6: With Torsion
+    Riser 1 with torsion: With Torsion
+    Riser 2 with torsion: With Torsion
+    Base: With Torsion
+    Without Torsion: Model
+    CALM Buoy1: Without Torsion
+    Chain7: Without Torsion
+    Chain8: Without Torsion
+    Chain9: Without Torsion
+    Chain10: Without Torsion
+    Chain11: Without Torsion
+    Chain12: Without Torsion
+    Riser 1 without torsion: Without Torsion
+    Riser 2 without torsion: Without Torsion
+    Base1: Without Torsion
+  State:
+    Collapsed:
+      - Variable data
+...

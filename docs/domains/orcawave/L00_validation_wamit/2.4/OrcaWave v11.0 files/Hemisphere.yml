@@ -1,0 +1,118 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaFlex 11.6b
+# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\2.4\OrcaWave v11.0 files\Hemisphere.yml
+# Created: 10:08 AM on 2/19/2026
+# User: ansystech
+# Machine: ACMA-ANSYS05
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Potential formulation only
+HasResonanceDampingLid: No
+OutputPanelPressures: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadControlSurface: No
+QuadraticLoadMomentumConservation: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 0.9902853124226371
+  - 1.400474919446971
+  - 1.7152244751052266
+  - 1.9805706248452741
+  - 2.2143452756966333
+  - 2.4256937152080846
+  - 2.6200486636702
+  - 2.800949838893942
+  - 2.970855937267911
+  - 3.1315571206669692
+  - 3.430448950210453
+  - 3.7053083542399
+  - 3.9611412496905483
+  - 4.201424758340913
+  - 4.428690551393267
+  - 5.424016039799293
+  - 6.2631142413339385
+  - 7.002374597234855
+  - 7.6707170460133645
+  - 8.285321357678288
+  - 8.857381102786533
+  - 9.394671362000908
+  - 9.90285312422637
+WaveHeading:
+  - 0
+# Constraints
+EnableMultibodyConstraints: No
+# Bodies
+Bodies:
+  - BodyName: Floating hemisphere
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: HemisphereAndLid0814.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz and yz planes
+    BodyMeshDipolePanels: 
+    BodyOriginType: Free surface
+    BodyAddInteriorSurfacePanels: No
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyHydrostaticStiffnessMethod: Displacement
+    BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
+    BodyCentreOfMassZRelativeToFreeSurface: 0
+    BodyRadiiOfGyrationRx, BodyRadiiOfGyrationRy, BodyRadiiOfGyrationRz:
+      - [1, 0, 0]
+      - [0, 1, 0]
+      - [0, 0, 1]
+    BodyRadiiOfGyrationOriginType: Body origin
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+# Field points
+DetectAndSkipFieldPointsInsideBodies: Yes
+# Drawing
+InteriorSurfacePanelsPen: [1, Solid, $80FF80]
+FreeSurfaceMeshPen: [1, Solid, Aqua]
+...

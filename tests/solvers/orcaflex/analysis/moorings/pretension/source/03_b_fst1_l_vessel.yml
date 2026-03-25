@@ -1,0 +1,26 @@
+﻿New: FST1
+FST1:
+    VesselType: Strt2_FST1type
+    Draught: Light
+    Length: ~
+    Connection: Free
+    InitialPosition: [208.397, 0.248178593, -3.84]
+    Orientation: [0, 0, 180]
+    # Calculation
+    IncludedInStatics: 6 DOF
+    PrimaryMotion: Calculated (6 DOF)
+    SuperimposedMotion: None
+    IncludeAppliedLoads: Yes
+    IncludeWaveLoad1stOrder: Yes
+    IncludeWaveDriftLoad2ndOrder: Yes
+    IncludeWaveDriftDamping: Yes
+    IncludeSumFrequencyLoad: No
+    IncludeAddedMassAndDamping: Yes
+    IncludeManoeuvringLoad: No
+    IncludeOtherDamping: Yes
+    IncludeCurrentLoad: Yes
+    IncludeWindLoad: Yes
+    PrimaryMotionIsTreatedAs: Both low and wave frequency
+    PrimaryMotionDividingPeriod: 30
+    CalculationMode: Filtering
+    CalculateHydrostaticStiffnessAnglesBy: Subtraction, legacy

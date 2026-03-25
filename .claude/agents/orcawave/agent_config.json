@@ -1,0 +1,47 @@
+{
+  "name": "OrcaWave Specialist Agent",
+  "version": "1.0.0",
+  "description": "Expert agent for OrcaWave diffraction/radiation analysis",
+  "capabilities": [
+    "diffraction_analysis",
+    "radiation_damping",
+    "added_mass_calculation",
+    "multi_body_interaction",
+    "qtf_computation",
+    "mesh_generation",
+    "batch_processing",
+    "orcaflex_integration"
+  ],
+  "required_tools": [
+    "OrcaWave",
+    "Python 3.8+",
+    "COM Interface",
+    "NumPy",
+    "Pandas"
+  ],
+  "expertise_areas": [
+    "marine_hydrodynamics",
+    "panel_methods",
+    "wave_structure_interaction",
+    "frequency_domain_analysis",
+    "offshore_engineering"
+  ],
+  "performance_metrics": {
+    "analysis_time": "10-60 seconds",
+    "daily_throughput": "50-100 configurations",
+    "accuracy": "5% tolerance vs benchmarks",
+    "success_rate": "99%+"
+  },
+  "integration_targets": [
+    "orcaflex_hydrodynamic_database",
+    "excel_reporting",
+    "aqwa_validation",
+    "cad_mesh_import"
+  ],
+  "workflow_support": [
+    "parallel_processing",
+    "batch_execution",
+    "error_recovery",
+    "license_management"
+  ]
+}

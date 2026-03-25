@@ -1,0 +1,216 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: bm_stats
+    nrows: 3
+    ncols: 1
+    suptitle: Wellhead Bending Moment
+    sets:
+
+    -
+      title: Bending Moment
+      xlabel: Date
+      ylabel: Moment (ft-kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+
+    -
+      title: Bending Moment, Range 0 - 2000 ft-kips
+      xlabel: Date
+      ylabel: Moment (ft-kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      ylim: [0, 2000]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [MAGNITUDE]
+          scale:
+            columns: [MAGNITUDE]
+            factors: [0.000737562]
+          plt_kind: scatter
+          marker: NULL
+
+    -
+      title: Bending Moment Orientation
+      xlabel: Date
+      ylabel: Orientation (deg)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-180, 180]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [ORIENTATION]
+          scale:
+            columns: [ORIENTATION]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [ORIENTATION]
+          scale:
+            columns: [ORIENTATION]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_WHBENDINGMOMENT
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [ORIENTATION]
+          scale:
+            columns: [ORIENTATION]
+            factors: [57.3]
+          plt_kind: scatter
+          marker: NULL

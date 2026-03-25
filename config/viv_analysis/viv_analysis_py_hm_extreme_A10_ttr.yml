@@ -1,0 +1,307 @@
+---
+parameters:
+  file_io_01: &file_io_01 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A10_Low_TTF.plt
+  label_01: &label_01 A10, Low TTF
+  file_io_02: &file_io_02 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A10_Nom_TTF.plt
+  label_02: &label_02 A10, Nominal TTF
+  file_io_03: &file_io_03 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A10_High_TTF.plt
+  label_03: &label_03 A10, High TTF
+
+  ascii_data_columns_parameter: &ascii_data_columns_parameter [x/L, unknown1, unknown2, unknown3, unknown4, Damage, unknown5]
+
+  plot_suptitle: &plot_suptitle Unfactored Combined VIV Fatigue Damage Along the Length
+  plot_title: &plot_title 100yr Low Shear Current
+
+default:
+  Analysis:
+    common.mds: False
+    viv_fatigue:
+      shear7: True
+      factor_of_safety: 20
+    combined:
+      fatigue: False
+      histograms: False
+  plot_damage_distribution: True
+  plot_fatigue_life: False
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+model_state_information:
+  flag: True
+  from_dict: {water_depth: 5418.5, model_length: 5523.5, model_start: 0, scale: NULL, reference: mud_line}
+
+modal_sets:
+  - io: data_manager\data\risers\ttr\modes\Common-A6-High-TTF-linear_springs-at-centralizers.mds
+    label: Superseded BCs
+  - io: data_manager\data\risers\ttr\modes\Common_A6_High_TTF.mds
+    label: Centralizer BCs
+
+viv_tables:
+  length:
+    -
+      label: StressJoint
+      start: 0
+      end: 60
+    -
+      label: AboveKeelJoint
+      start: 4950
+      end: 5600
+    -
+      label: KeelJoint
+      start: 4850
+      end: 4950
+  plot:
+    - file_suffix: event_damage
+      suptitle: Single Extreme VIV Event Acceptance Criteria
+      size: default
+      orientation: portrait
+      plt_kind: bar
+      title: 100 yr Current Data
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [label]
+      y: [event_damage, event_damage_with_fos]
+      label: [Damage, Damage with FOS]
+      #      xlim: [0.0000001, 1]
+      xlabel: Profile
+      ylabel: Cummultaive Damage (%)
+      x_reverse: False
+      y_reverse: False
+      yscale:
+        log: True
+      ayhline: 0.1
+      text_fields:
+        - x: 0.0000001
+          y: 0.1
+          text: Event Damage Limit
+    - file_suffix: damage_contribution
+      suptitle: Damage Contribution
+      size: default
+      orientation: portrait
+      plt_kind: bar
+      title: Long Term Currents
+      grid: True
+      legend: False
+      legend_location: best
+      marker: NULL
+      x: [file_index]
+      y: [percent_damage]
+      label: [Damage Percentage]
+      #      xlim: [0.0000001, 1]
+      xlabel: Profile
+      ylabel: Damage Contribution (%)
+      x_reverse: False
+      y_reverse: False
+
+
+Shear7_sets:
+  -
+    io: *file_io_01
+    label: *label_01
+    probability: 10
+    duration: 0.049
+  -
+    io: *file_io_02
+    label: *label_02
+    probability: 10
+    duration: 0.049
+  -
+    io: *file_io_03
+    label: *label_03
+    probability: 5
+    duration: 0.049
+
+
+modal_plots:
+  -
+    file_name: NULL
+    file_extension: frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Frequency]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: Frequency (Hz)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature_with_frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Frequency]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Frequency (Hz)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+
+viv_plots:
+  combined:
+    -
+      file_suffix: viv_combined_damage
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [total_damage]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+#      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        -
+          x : 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center
+  individual:
+    -
+      file_suffix: individual
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [Damage (1/year)]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+#      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        -
+          x : 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center
+    -
+      file_suffix: individual_top
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [Damage (1/year)]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+      xlim: [0.0000000000001, 0.000001]
+      ylim: [4800, 5600]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center
+        -
+          x : 0.0000001
+          y: 5423
+          text: Water Line
+    -
+      file_suffix: individual_bot
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [Damage (1/year)]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+      xlim: [0.0000000000001, 0.000001]
+      ylim: [0, 100]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 33
+          text: Stress Jt. Center

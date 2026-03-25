@@ -1,0 +1,33 @@
+﻿BaseFile: __06__structure_at_port.yml
+General:
+  StaticsMaxIterations: 1600
+  StaticsMinDamping: 50
+  StaticsMaxDamping: 80
+
+Vessels:
+  SevenArctic:
+    InitialX: 297.14
+
+6DBuoys:
+  UTA:
+    InitialX: 265
+    InitialZ: -326
+
+Lines:
+  900TeMainCraneWire:
+    Length[1]: 344
+    EndBX: 232.8
+    EndBZ: -304.7
+  Umbilical:
+    Length[5]: 263
+    Length[9]: 657
+    TargetSegmentLength[9]: 5
+    LayAzimuth: 0
+    EndBX: -545.5
+
+Shapes:
+  900TeMainCraneRadius:
+    OuterDiameter: 40
+    InnerDiameter: 39.9
+  900TeMainCraneMast:
+    Length: 20

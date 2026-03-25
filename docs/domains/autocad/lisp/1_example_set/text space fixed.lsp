@@ -1,0 +1,17 @@
+(defun c:isbt ()
+  (setq	a  (entget (car (entsel)))
+	a2 (assoc 1 a)
+	a1 (cdr a2)
+	el (strlen a1)
+	c  1
+	n  ""
+  )
+  (while (<= c el)
+    (setq n (strcat n (substr a1 c 1) " ")
+	  c (+ 1 c)
+    )
+  )
+  (setq addsp (cons 1 n))
+  (entmod (subst addsp a2 a))
+  (princ)
+)

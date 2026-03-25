@@ -1,0 +1,88 @@
+# General Configuration
+# Generated from: K06 FPV module.yml
+# Date: 2026-01-18 22:18:45
+General:
+  UnitsSystem: User
+  LengthUnits: m
+  MassUnits: kg
+  ForceUnits: kN
+  g: 9.80665
+  TemperatureUnits: °C
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 50
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultShadedProjectionMode: Perspective
+  DefaultViewSize: 7
+  DefaultViewCentre:
+  - 5.5724278015981366
+  - 5.7637019562651215
+  - 0.6296364007933455
+  DefaultViewAzimuth: 316.95007540122054
+  DefaultViewElevation: 12.293536886692577
+  Tags:
+    refObj: AC
+    top: ABout
+    bottom: CDout
+    left: AC
+    right: BD
+    move: Float
+Groups:
+  Structure:
+    Raft: Model
+    BuoyancyFloats: Raft
+    FloatA: BuoyancyFloats
+    FloatB: BuoyancyFloats
+    FloatC: BuoyancyFloats
+    FloatD: BuoyancyFloats
+    Frame: Raft
+    Main: Frame
+    ABout: Main
+    ABinn: Main
+    CDinn: Main
+    CDout: Main
+    Parallel: Frame
+    AC: Parallel
+    BD: Parallel
+    ABCD: Parallel
+    PanelSupport: Frame
+    ACsupport: PanelSupport
+    ABCDsupport: PanelSupport
+    BDsupport: PanelSupport
+    ABsupport: PanelSupport
+    Vertical: Frame
+    Avert: Vertical
+    ABvert: Vertical
+    Bvert: Vertical
+    Panels: Raft
+    PanelA: Panels
+    PanelB: Panels
+    PanelC: Panels
+    PanelD: Panels
+    PanelTilt: Panels
+    Label: Panels
+    temporary constraint: Model
+  State:
+    Collapsed:
+    - Variable data

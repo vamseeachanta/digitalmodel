@@ -1,0 +1,68 @@
+source_type: standard
+source_description: "DNV-RP-B401 current demand calculations verified against hybrid riser CP design report"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "current_demand"
+equations:
+  - name: "Current Demand"
+    latex: "I_c = A_c \\cdot i_c \\cdot f_c"
+    description: "Current demand for a coated structure per DNV-RP-B401 section 7.4.1"
+inputs:
+  - name: "Surface area"
+    symbol: "A_c"
+    unit: "m2"
+    test_value: 1021.0
+  - name: "Current density"
+    symbol: "i_c"
+    unit: "A/m2"
+    test_value: 0.440
+  - name: "Breakdown factor"
+    symbol: "f_c"
+    unit: "dimensionless"
+    test_value: 0.02
+outputs:
+  - name: "Current demand"
+    symbol: "I_c"
+    unit: "A"
+    test_expected: 8.98
+    tolerance: 0.05
+worked_examples:
+  - description: "Buoyancy tank initial current demand (A_c=1021, i_c=0.440, f_c=0.02)"
+    inputs:
+      surface_area_m2: 1021.0
+      current_density_A_m2: 0.440
+      breakdown_factor: 0.02
+    outputs:
+      current_demand_A: 8.98
+    use_as_test: true
+  - description: "Buoyancy tank mean current demand (A_c=1021, i_c=0.220, f_c=0.11)"
+    inputs:
+      surface_area_m2: 1021.0
+      current_density_A_m2: 0.220
+      breakdown_factor: 0.11
+    outputs:
+      current_demand_A: 24.71
+    use_as_test: true
+  - description: "Buoyancy tank final current demand (A_c=1021, i_c=0.220, f_c=0.20)"
+    inputs:
+      surface_area_m2: 1021.0
+      current_density_A_m2: 0.220
+      breakdown_factor: 0.20
+    outputs:
+      current_demand_A: 44.92
+    use_as_test: true
+  - description: "Foundation buried bare metal current demand (A_c=152.7, i_c=0.020, f_c=1.0)"
+    inputs:
+      surface_area_m2: 152.7
+      current_density_A_m2: 0.020
+      breakdown_factor: 1.0
+    outputs:
+      current_demand_A: 3.054
+    use_as_test: true
+assumptions:
+  - "Uniform current density across entire surface area"
+  - "Breakdown factor accounts for coating degradation at the given time point"
+references:
+  - "DNV-RP-B401 (2005/2017), Section 7.4.1, Eq 1"
+  - "Hybrid riser CP design report, Section 5.1.1"

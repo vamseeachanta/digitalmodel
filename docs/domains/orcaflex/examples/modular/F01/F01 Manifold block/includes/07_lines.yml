@@ -1,0 +1,1834 @@
+# Lines Configuration
+# Generated from: F01 Manifold block.yml
+# Date: 2026-01-18 22:18:15
+Lines:
+- Name: Frame 1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 2.999999999999999
+      - 2.999999999999999
+      - 1
+      - 180
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - 2.168404344971009e-19
+      - 3
+      - 1.0000000000000002
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 2.168404344971009e-19
+      - 3
+      - 1.0000000000000002
+      - 180.00000000000003
+      - 90.00000000000001
+      - 0
+      - ~
+    - - Main Buoy
+      - -3
+      - 3
+      - 0.9999999999999997
+      - 180.00000000000003
+      - 90.00000000000001
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 3
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.0000000000000004
+      - -3.0000000000000004
+      - 0.9999999999999998
+      - 180
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - 5.421010862427522e-20
+      - -2.9999999999999996
+      - 1
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 4
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 5.421010862427522e-20
+      - -2.9999999999999996
+      - 1
+      - 180
+      - 89.99999999999999
+      - 0
+      - ~
+    - - Main Buoy
+      - -3
+      - -2.9999999999999987
+      - 1.0000000000000002
+      - 180
+      - 89.99999999999999
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 5
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.5
+      - 3
+      - -2
+      - 180
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - -2.168404344971009e-19
+      - 2.9999999999999996
+      - -2
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.5
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 6
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -2.168404344971009e-19
+      - 2.9999999999999996
+      - -2
+      - 180.00000000000003
+      - 90.00000000000003
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - 2.999999999999999
+      - -2.0000000000000013
+      - 180.00000000000003
+      - 90.00000000000003
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.5
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 7
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.5
+      - -2.999999999999999
+      - -2
+      - 180.00000000000003
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - -2.168404344971009e-19
+      - -3
+      - -2
+      - 180.00000000000003
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.5
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 8
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -2.168404344971009e-19
+      - -3
+      - -2
+      - 180.00000000000003
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5000000000000013
+      - -3.000000000000001
+      - -2
+      - 180.00000000000003
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.5
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 9
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3.5
+      - -8.396061623727746e-16
+      - -1.9999999999999998
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5000000000000013
+      - -3.000000000000001
+      - -2
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 10
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3.5
+      - 2.999999999999999
+      - -2.0000000000000013
+      - 270
+      - 89.99999999999997
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - -8.396061623727746e-16
+      - -1.9999999999999998
+      - 270
+      - 89.99999999999997
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 11
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.5
+      - 4.926614671774132e-16
+      - -2
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - -2.999999999999999
+      - -2
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 12
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.5
+      - 3
+      - -2
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - 4.926614671774132e-16
+      - -2
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 13
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3.0000000000000013
+      - 7.771561172376096e-16
+      - 1
+      - 270
+      - 89.99999999999999
+      - 0
+      - ~
+    - - Main Buoy
+      - -3
+      - -2.9999999999999987
+      - 1.0000000000000002
+      - 270
+      - 89.99999999999999
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 14
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3
+      - 3
+      - 0.9999999999999997
+      - 270
+      - 89.99999999999999
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.0000000000000013
+      - 7.771561172376096e-16
+      - 1
+      - 270
+      - 89.99999999999999
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 15
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3.0000000000000004
+      - -6.002143226879753e-16
+      - 1.0000000000000002
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.0000000000000004
+      - -3.0000000000000004
+      - 0.9999999999999998
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 16
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 2.999999999999999
+      - 2.999999999999999
+      - 1
+      - 270
+      - 90.00000000000001
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.0000000000000004
+      - -6.002143226879753e-16
+      - 1.0000000000000002
+      - 270
+      - 90.00000000000001
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 17
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3
+      - -2.9999999999999987
+      - 1.0000000000000002
+      - 180.00000000000026
+      - 170.53767779197443
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5000000000000013
+      - -3.000000000000001
+      - -2
+      - 180.00000000000026
+      - 170.53767779197443
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 18
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3
+      - 3
+      - 0.9999999999999997
+      - 180.00000000000006
+      - 170.53767779197437
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - 2.999999999999999
+      - -2.0000000000000013
+      - 180.00000000000006
+      - 170.53767779197437
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 19
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 2.9999999999999987
+      - 2.999999999999999
+      - 1
+      - 359.9999999999999
+      - 170.53767779197437
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - 3
+      - -2
+      - 359.9999999999999
+      - 170.53767779197437
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 20
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3
+      - -3.0000000000000004
+      - 0.9999999999999998
+      - 1.2817095232805699e-13
+      - 170.53767779197435
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - -2.999999999999999
+      - -2
+      - 1.2817095232805699e-13
+      - 170.53767779197435
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 21
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 1
+      - -2.999999999999999
+      - 1
+      - 0
+      - 179.99999914622634
+      - 0
+      - ~
+    - - Main Buoy
+      - 1
+      - -3.000000000000001
+      - -2
+      - 0
+      - 179.99999914622634
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 22
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3.0000000000000013
+      - 7.771561172376096e-16
+      - 1
+      - 180.00000000000026
+      - 170.53767779197443
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - -8.396061623727746e-16
+      - -1.9999999999999998
+      - 180.00000000000026
+      - 170.53767779197443
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 23
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3
+      - -6.002143226879753e-16
+      - 1.0000000000000002
+      - 1.2817095232805699e-13
+      - 170.53767779197435
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - 4.926614671774132e-16
+      - -2
+      - 1.2817095232805699e-13
+      - 170.53767779197435
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3.041
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 24
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 0.9999999999999999
+      - 3.000000000000001
+      - 0.9999999999999998
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Main Buoy
+      - 1.0000000000000007
+      - 2.9999999999999982
+      - -2
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 25
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3
+      - -2.9999999999999987
+      - 1.0000000000000002
+      - 99.46232220802564
+      - 134.60755087935974
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - -8.396061623727746e-16
+      - -1.9999999999999998
+      - 99.46232220802564
+      - 134.60755087935974
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 4.272
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 26
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -3
+      - 3
+      - 0.9999999999999997
+      - 260.5376777919744
+      - 134.60755087935968
+      - 0
+      - ~
+    - - Main Buoy
+      - -3.5
+      - -8.396061623727746e-16
+      - -1.9999999999999998
+      - 260.5376777919744
+      - 134.60755087935968
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 4.272
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 27
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 3
+      - -3.0000000000000004
+      - 0.9999999999999998
+      - 80.53767779197437
+      - 134.60755087935968
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - 4.926614671774132e-16
+      - -2
+      - 80.53767779197437
+      - 134.60755087935968
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 4.272
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 28
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - 2.9999999999999987
+      - 2.999999999999999
+      - 1
+      - 279.4623222080257
+      - 134.6075508793597
+      - 0
+      - ~
+    - - Main Buoy
+      - 3.5
+      - 4.926614671774132e-16
+      - -2
+      - 279.4623222080257
+      - 134.6075508793597
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 4.272
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Crane Wire
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Orca-Installer 2
+      - 0
+      - 12.5
+      - 19
+      - 180
+      - 180
+      - 0
+      - ~
+    - - Shackle
+      - 0
+      - 0
+      - 0
+      - 180
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - 8
+      - Winch Payout
+      - 0.001
+      - No
+      - Yes
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Wire
+    - 20
+    - 2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 29
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -0.9999999999999999
+      - -3.0000000000000004
+      - 1
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Main Buoy
+      - -1
+      - -2.9999999999999987
+      - -1.9999999999999993
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+- Name: Frame 30
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Main Buoy
+      - -0.9999999999999999
+      - 2.9999999999999987
+      - 0.9999999999999997
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Main Buoy
+      - -1
+      - 3
+      - -2
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Steel Tube#2
+    Length: 3
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes

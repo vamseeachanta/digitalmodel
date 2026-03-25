@@ -1,0 +1,82 @@
+﻿[OrcaFlex Workspace]
+LengthUnits=m
+TileMode=TileHorizontal
+
+[2]
+FormType=Values
+Minimized=False
+ResultType=TimeHistory
+Period=StaticState
+
+[2_Var0]
+ObjectType=Constraint
+ObjectName=KS-FP Ry
+VarName=In-frame connection Ly moment
+
+[2_Var1]
+ObjectType=Constraint
+ObjectName=FP-FC Ry
+VarName=In-frame connection Ly moment
+
+[2_Var2]
+ObjectType=Constraint
+ObjectName=KS-PP Ry
+VarName=In-frame connection Ly moment
+
+[2_Var3]
+ObjectType=Constraint
+ObjectName=PP-PC Ry
+VarName=In-frame connection Ly moment
+
+[2_Var4]
+ObjectType=Constraint
+ObjectName=KS-SP Ry
+VarName=In-frame connection Ly moment
+
+[2_Var5]
+ObjectType=Constraint
+ObjectName=SP-SC Ry
+VarName=In-frame connection Ly moment
+
+[2_Var6]
+ObjectType=Line
+ObjectName=Fore strut
+VarName=Effective tension
+Arclength=-Infinity
+
+[2_Var7]
+ObjectType=Line
+ObjectName=Port strut
+VarName=Effective tension
+Arclength=-Infinity
+
+[2_Var8]
+ObjectType=Line
+ObjectName=Stbd strut
+VarName=Effective tension
+Arclength=-Infinity
+
+[1]
+FormType=View
+Minimized=False
+CentreX=6.154432284391084
+CentreY=0
+CentreZ=-7.789931267458119
+Azimuth=90
+Elevation=0
+Gamma=0
+Size=66.97959533607681
+Shaded=False
+
+[0]
+FormType=View
+Minimized=False
+CentreX=0.8612323755498039
+CentreY=0.6337443992271912
+CentreZ=96.07219573451391
+Azimuth=90
+Elevation=90
+Gamma=0
+Size=138.88888888888886
+Shaded=False
+

@@ -1,0 +1,56 @@
+﻿New: LNGC_contact
+LNGC_contact:
+    ShapeType: Elastic solid
+    Shape: Block
+    Connection: LNGC
+    # Geometry
+    Origin: [50, -21.7, 0]
+    Size: [150, 43.4, 30]
+    Orientation: [0, 0, 0]
+    # Stiffness and damping
+    NormalStiffness: 10e4
+    ShearStiffness: ~
+    # Drawing
+    InsidePen: [2, Solid, $FF6000]
+New: LNGC_contact_FST2L1
+LNGC_contact_FST2L1:
+    ShapeType: Elastic solid
+    Shape: Block
+    Connection: LNGC
+    # Geometry
+    Origin: [31, -23.7, 0]
+    Size: [10, 42.4, 30]
+    Orientation: [0, 0, 25]
+    # Stiffness and damping
+    NormalStiffness: 10e4
+    ShearStiffness: ~
+    # Drawing
+    InsidePen: [2, Solid, $FF6000]
+New: LNGC_contact_FST1L1
+LNGC_contact_FST1L1:
+    ShapeType: Elastic solid
+    Shape: Block
+    Connection: LNGC
+    # Geometry
+    Origin: [206.5, -21.2, 0]
+    Size: [10, 42.4, 30]
+    Orientation: [0, 0, 0]
+    # Stiffness and damping
+    NormalStiffness: 10e4
+    ShearStiffness: ~
+    # Drawing
+    InsidePen: [2, Solid, $FF6000]
+New: LNGC_contact_FST1L2
+LNGC_contact_FST1L2:
+    ShapeType: Elastic solid
+    Shape: Block
+    Connection: LNGC
+    # Geometry
+    Origin: [210, -21.7, 0]
+    Size: [10, 41.4, 30]
+    Orientation: [-10, 0, -13]
+    # Stiffness and damping
+    NormalStiffness: 10e4
+    ShearStiffness: ~
+    # Drawing
+    InsidePen: [2, Solid, $FF6000]

@@ -1,0 +1,29 @@
+basename: modal_analysis
+
+default:
+  log_level: DEBUG
+
+  Analysis:
+    Analyze :
+      flag: True
+      simulation: False
+      statics: False
+      modal: 
+        flag: True
+        lastMode: 40
+        simulation: False
+        statics: True
+        ObjectName: [SUT_DZ_30deg, CraneWire#2, Masterlink]
+        dof_analysis: 
+          dofs: [1,2,3]
+          threshold_percentages: 
+            1: 20
+            2: 20
+            3: 5
+        mode_shapes: False
+        mode_summary: True
+
+  config:
+    overwrite:
+      output: True
+

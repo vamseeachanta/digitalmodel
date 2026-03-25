@@ -1,0 +1,3 @@
+# Case: Deep Water Pipeline (1000m)
+BaseFile: ../base/pipeline_base.yml
+IncludeFile: ../variations/deep_water_1000m.yml

@@ -1,0 +1,580 @@
+# OrcaFlex Library Index
+# Generated: 2026-01-19 13:38:09
+#
+# Usage in model files:
+#   LineTypes:
+#     - Name: Chain_84mm
+#       IncludeFile: library/line_types/chain_84mm_r4.yml
+#
+buoy_types:
+- file: calm_10m_100m.yml
+  path: buoy_types\calm_10m_100m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_12m_100m.yml
+  path: buoy_types\calm_12m_100m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_15m_200m.yml
+  path: buoy_types\calm_15m_200m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: calm_18m_300m.yml
+  path: buoy_types\calm_18m_300m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: metocean_3m.yml
+  path: buoy_types\metocean_3m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: metocean_5m.yml
+  path: buoy_types\metocean_5m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: navigation_2m.yml
+  path: buoy_types\navigation_2m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: pick_up_1m.yml
+  path: buoy_types\pick_up_1m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spar_10m.yml
+  path: buoy_types\spar_10m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spar_6m.yml
+  path: buoy_types\spar_6m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spm_10m.yml
+  path: buoy_types\spm_10m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+- file: spm_8m.yml
+  path: buoy_types\spm_8m.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - MomentsOfInertia
+  - CentreOfMass
+  - StackBaseCentre
+  - BulkModulus
+  - NormalDragAreaCalculatedFromGeometry
+  - Cylinders
+anchors:
+- file: drag_embedment_15t.yml
+  path: anchors\drag_embedment_15t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: drag_embedment_25t.yml
+  path: anchors\drag_embedment_25t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: suction_pile_large.yml
+  path: anchors\suction_pile_large.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: suction_pile_medium.yml
+  path: anchors\suction_pile_medium.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: driven_pile.yml
+  path: anchors\driven_pile.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: gravity_anchor.yml
+  path: anchors\gravity_anchor.yml
+  properties:
+  - BuoyType
+  - Connection
+  - InitialPosition
+  - InitialAttitude
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+connectors:
+- file: chain_stopper_200t.yml
+  path: connectors\chain_stopper_200t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: swivel_150t.yml
+  path: connectors\swivel_150t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: shackle_bow_100t.yml
+  path: connectors\shackle_bow_100t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: shackle_anchor_150t.yml
+  path: connectors\shackle_anchor_150t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+- file: quick_release_100t.yml
+  path: connectors\quick_release_100t.yml
+  properties:
+  - BuoyType
+  - Connection
+  - DampingRelativeTo
+  - Mass
+  - Volume
+  - MomentsOfInertia
+  - CentreOfMass
+  - Height
+  - Pen
+  - Cylinders
+line_types:
+- file: chain_84mm_r4.yml
+  path: line_types\chain_84mm_r4.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - CompressionIsLimited
+  - EA
+  - EI
+  - GJ
+  - PoissonRatio
+  - Cd
+  - Ca
+  - NormalDragLiftDiameter
+  - AxialDragLiftDiameter
+  - SeabedLateralFrictionCoefficient
+  - RayleighDampingCoefficients
+  - Pen
+- file: flex_6inch.yml
+  path: line_types\flex_6inch.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: hawser_hmpe_80mm.yml
+  path: line_types\hawser_hmpe_80mm.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - CompressionIsLimited
+  - EA
+  - EI
+  - GJ
+  - PoissonRatio
+  - Cd
+  - Ca
+  - SeabedLateralFrictionCoefficient
+  - RayleighDampingCoefficients
+  - Pen
+- file: hybrid_10inch.yml
+  path: line_types\hybrid_10inch.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: lwr_12inch.yml
+  path: line_types\lwr_12inch.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: lwr_12inch_buoyancy.yml
+  path: line_types\lwr_12inch_buoyancy.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - CompressionIsLimited
+  - EA
+  - EI
+  - GJ
+  - PoissonRatio
+  - Cd
+  - Ca
+  - NormalDragLiftDiameter
+  - AxialDragLiftDiameter
+  - SeabedLateralFrictionCoefficient
+  - OuterContactDiameter
+  - StressOD
+  - StressID
+- file: pipe_10inch_bundle.yml
+  path: line_types\pipe_10inch_bundle.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: pipe_12inch_x65.yml
+  path: line_types\pipe_12inch_x65.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: pipe_16inch_x65.yml
+  path: line_types\pipe_16inch_x65.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: pipe_20inch_x70.yml
+  path: line_types\pipe_20inch_x70.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: pipe_24inch_x70.yml
+  path: line_types\pipe_24inch_x70.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: pwr_10inch.yml
+  path: line_types\pwr_10inch.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: scr_10inch_x65.yml
+  path: line_types\scr_10inch_x65.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: scr_10inch_x70.yml
+  path: line_types\scr_10inch_x70.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: scr_12inch_x65.yml
+  path: line_types\scr_12inch_x65.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: ttr_9inch_x80.yml
+  path: line_types\ttr_9inch_x80.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_bundle_large.yml
+  path: line_types\umb_bundle_large.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_fiber_only.yml
+  path: line_types\umb_fiber_only.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_flex_dynamic.yml
+  path: line_types\umb_flex_dynamic.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_hybrid.yml
+  path: line_types\umb_hybrid.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_static.yml
+  path: line_types\umb_static.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+- file: umb_steel_tube.yml
+  path: line_types\umb_steel_tube.yml
+  properties:
+  - OD
+  - ID
+  - MassPerUnitLength
+  - EA
+  - CompressionIsLimited
+  - EI
+  - GJ
+  - PoissonRatio
+vessel_types: []

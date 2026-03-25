@@ -1,0 +1,608 @@
+# Lines Configuration
+# Generated from: Z02 Line on line slide.yml
+# Date: 2026-01-18 22:19:28
+Lines:
+- Name: Ropeway
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchored
+      - -0.12285743086929182
+      - 0
+      - 10.046739240004626
+      - 360
+      - 118.83592305918849
+      - 0
+      - ~
+    - - Anchored
+      - 29.73569543748088
+      - 0
+      - 6.2086425044328735
+      - 0
+      - 79.20580018541548
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Wire
+    - 30
+    - 0.2
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  SegmentPenMode: Use segment pen
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Tube
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Block connection
+      - 0
+      - 0
+      - -0.25
+      - 132.1943795476596
+      - 0
+      - -132.19437954765957
+      - ~
+    - - Block connection
+      - 0
+      - 0
+      - 0.25
+      - 0
+      - 0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Slider
+    Length: 0.5
+    NumberOfSegments: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Free flooding
+  IncludeAxialContentsInertia: Yes
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawContact: No
+- Name: TBar vertical
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Block connection
+      - 0.10000000000000575
+      - 1.5130105643106125e-30
+      - 3.316791286067655e-15
+      - 0
+      - 60.00000000000001
+      - -180
+      - ~
+    - - TBar connection
+      - 0
+      - 0
+      - 0
+      - 320.53407546922654
+      - 180
+      - -120.04561814517344
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Cross bar
+    Length: 0.4
+    NumberOfSegments: 1
+    ClashCheck: Yes
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  DrawShadedNodesAsSpheres: Yes
+- Name: TBar horizontal
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - TBar connection
+      - 0
+      - 0.25
+      - 0
+      - 270
+      - 90
+      - -80.57969361439994
+      - ~
+    - - TBar connection
+      - 0
+      - -0.25
+      - 0
+      - 270
+      - 90
+      - -80.57969361439994
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - - Infinity
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Cross bar
+    Length: 0.5
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawNodesAsDiscs: No
+  DrawShadedNodesAsSpheres: Yes
+- Name: Tail
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - DogBuoy
+      - 0.34999999999999604
+      - 0
+      - 0.10000000000000468
+      - 360
+      - 34.99999999999999
+      - 0
+      - ~
+    - - Free
+      - -0.6170759142410749
+      - 0.004603680867516946
+      - -91.15956431682183
+      - 180
+      - 74.99999999999997
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Tail line
+    - 0.15
+    - 0.15
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  FullStaticsMinDamping: 2.5
+  FullStaticsMaxDamping: 25
+  DrawShadedNodesAsSpheres: Yes
+- Name: Ear1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - DogBuoy
+      - -0.10505364597029367
+      - 0.050609852244596173
+      - 0.19471730106826457
+      - 89.99999999999999
+      - 19.999999999999996
+      - 0
+      - ~
+    - - Free
+      - -0.2952264657916258
+      - -0.1358513984496323
+      - -90.81334581955652
+      - 180
+      - 40.00000000000001
+      - 0
+      - 0
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Ear line
+    Length: 0.18
+    NumberOfSegments: 10
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: Ear2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - DogBuoy
+      - -0.10505364597029349
+      - -0.05060985224459585
+      - 0.1947173010682647
+      - 270
+      - 20.00000000000003
+      - 0
+      - ~
+    - - Free
+      - -0.2952264657916259
+      - 0.1358513984496321
+      - -90.81334581955652
+      - 180
+      - 40.00000000000001
+      - 0
+      - 0
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Ear line
+    Length: 0.18
+    NumberOfSegments: 10
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: Paw1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - DogBuoy
+      - -0.03059567264499653
+      - -0.05000000000000001
+      - -0.025672817632037385
+      - 180
+      - 39.99999999999999
+      - 0
+      - ~
+    - - TBar connection
+      - 0
+      - 0.15
+      - 0
+      - 270
+      - 0
+      - 90
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Arm Line
+    - 0.3
+    - 0.02
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  DrawNodesAsDiscs: No
+  DrawShadedNodesAsSpheres: Yes
+- Name: Paw2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - DogBuoy
+      - -0.030595672644996543
+      - 0.049999999999999996
+      - -0.025672817632037385
+      - 180
+      - 39.99999999999999
+      - 0
+      - ~
+    - - TBar connection
+      - 0
+      - -0.15
+      - 0
+      - 270
+      - 0
+      - 90
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Arm Line
+    - 0.3
+    - 0.02
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  DrawNodesAsDiscs: No
+  DrawShadedNodesAsSpheres: Yes
+- Name: BrakeLine
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 24
+      - -5
+      - -94
+      - 360
+      - 118.83592305918849
+      - 0
+      - ~
+    - - Fixed
+      - 24
+      - 5
+      - -94
+      - 0
+      - 79.20580018541548
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength, ClashCheck:
+  - - Brake wire
+    - 10
+    - 0.5
+    - Yes
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  ContactPen:
+  - 5
+  - Solid
+  - White

@@ -1,0 +1,116 @@
+# Passing Ship Analysis — Sample Specification
+# Scenario: large tanker (passing) alongside a moored VLCC
+# All values are illustrative; not derived from any client project.
+
+name: tanker_passing_vlcc_sample
+description: >
+  Sample passing ship analysis: 160,000 DWT Suezmax tanker passing a
+  320,000 DWT VLCC moored at a single-buoy terminal.
+  Water depth 40 m, parallel passing at 5 knots, 120 m CL separation.
+
+moored_vessel:
+  hull:
+    loa: 330.0          # Length overall (m)
+    beam: 60.0          # Breadth moulded (m)
+    draft: 21.5         # Design draft (m) — full load
+    block_coefficient: 0.83
+    displacement_tonnes: 320000.0
+  loading_condition: full_load
+  mooring_lines:
+    - line_id: L1
+      line_type: chain
+      length: 250.0
+      pretension: 800.0
+      fairlead_x:  155.0
+      fairlead_y:   30.5
+      anchor_x:  350.0
+      anchor_y:  120.0
+    - line_id: L2
+      line_type: chain
+      length: 250.0
+      pretension: 800.0
+      fairlead_x:  155.0
+      fairlead_y:  -30.5
+      anchor_x:  350.0
+      anchor_y: -120.0
+    - line_id: L3
+      line_type: wire
+      length: 180.0
+      pretension: 600.0
+      fairlead_x:    0.0
+      fairlead_y:   31.0
+      anchor_x:  200.0
+      anchor_y:  150.0
+    - line_id: L4
+      line_type: wire
+      length: 180.0
+      pretension: 600.0
+      fairlead_x:    0.0
+      fairlead_y:  -31.0
+      anchor_x:  200.0
+      anchor_y: -150.0
+    - line_id: L5
+      line_type: chain
+      length: 250.0
+      pretension: 800.0
+      fairlead_x: -155.0
+      fairlead_y:   30.5
+      anchor_x: -350.0
+      anchor_y:  120.0
+    - line_id: L6
+      line_type: chain
+      length: 250.0
+      pretension: 800.0
+      fairlead_x: -155.0
+      fairlead_y:  -30.5
+      anchor_x: -350.0
+      anchor_y: -120.0
+
+passing_ship:
+  vessel_type: tanker
+  dimensions:
+    loa: 275.0          # Length overall (m)
+    beam: 48.0          # Breadth moulded (m)
+    draft: 17.0         # Full-load draft (m)
+    block_coefficient: 0.80
+    displacement_tonnes: 160000.0
+  track:
+    speed_knots: 5.0     # Typical port transit speed
+    separation_m: 120.0  # Centreline-to-centreline (m)
+    angle_deg: 0.0       # Parallel passing
+    closest_approach_offset_m: 0.0
+
+environment:
+  water_depth: 40.0     # metres
+  water_density: 1025.0 # kg/m³
+  wind_speed: 10.0      # m/s (~20 knots)
+  wind_direction_deg: 270.0  # from west
+
+analysis_cases:
+  - name: passing_only_5kn_120m
+    include_wind: false
+    include_passing_ship: true
+
+  - name: wind_plus_passing_5kn_120m
+    include_wind: true
+    include_passing_ship: true
+
+  - name: passing_only_3kn_120m
+    include_wind: false
+    include_passing_ship: true
+    passing_speed_knots: 3.0
+
+  - name: passing_close_5kn_80m
+    include_wind: false
+    include_passing_ship: true
+    separation_m: 80.0
+
+  - name: wind_only_baseline
+    include_wind: true
+    include_passing_ship: false
+
+outputs:
+  line_tensions: true
+  vessel_motions: true
+  fender_loads: false
+  force_time_histories: true

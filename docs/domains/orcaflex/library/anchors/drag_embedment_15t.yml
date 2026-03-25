@@ -1,0 +1,43 @@
+# Drag Embedment Anchor 15 Tonne - Library Component
+# Category: anchors
+# Description: 15 tonne drag embedment anchor (Stevpris or equivalent)
+# Application: CALM buoy moorings, shallow water (50-150m), soft clay/sand
+# Holding Capacity: ~450 kN (soft clay) to ~600 kN (sand)
+# NOTE: No section header - properties only for IncludeFile
+# Modeled as 6D Buoy with fixed connection for mooring termination
+BuoyType: Spar buoy
+Connection: Fixed
+InitialPosition:
+- 0
+- 0
+- 0
+InitialAttitude:
+- 0
+- 0
+- 0
+Mass: 15000
+Volume: 2.0
+MomentsOfInertia:
+- 12000
+- 45000
+- 45000
+CentreOfMass:
+- 0
+- 0
+- 0.3
+Height: 2.8
+Pen: [2, Solid, $800000]
+# Anchor geometry (approximate fluke dimensions)
+# Length: 4.5m, Width: 3.0m, Height: 2.8m
+# Drag coefficients for seabed interaction
+Cylinders:
+- CylinderOuterDiameter: 3.0
+  CylinderInnerDiameter: 0
+  CylinderLength: 2.8
+  CylinderAxialDragArea: 0
+  DragForceCoefficient:
+  - 2.0
+  - 1.5
+  AddedMassForceCoefficient:
+  - 1.0
+  - 1.0

@@ -1,0 +1,100 @@
+default:
+  Analysis:
+    Analyze :
+      flag: False
+      file_type: yaml
+      simulation: False
+      statics: False
+    Summary:
+      flag: False
+      AddMinimumToSummary: True
+      AddMaximumToSummary: True
+      AddMeanToSummary: True
+    RangeGraph:
+      flag: False
+      add_effective_tension_to_cfg: False
+    time_series:
+      flag: True
+      histogram: True
+      summation: True
+  model_state_information:
+    flag: True
+    from_csv:
+      label: riser_stack_up_properties
+      io: results\app_fatigue_analysis_fatigue_analysis_damage_results.csv
+      DataFrame: True
+      scale: NULL
+  rain_flow:
+    bins: 1000
+    range:
+      - 0
+      - 1000000
+
+  log_level: DEBUG
+
+  config:
+    overwrite:
+      output: True
+
+PostProcessUnits:
+    System : US
+    Effective Tension:
+        US: 1
+        SI: 1
+    Bend Moment:
+        US: 1
+        SI: 1
+    API STD 2RD Method 1:
+        US: 1
+        SI: 1
+Files:
+-
+  Label: Dr000_Hs 00.25 m Tp 02.50 s
+  Name: M:\0185\WaveFatigue\Rev2\lid02_000_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp02.50s.dat
+  ObjectName: vertical
+  probability: 0.6610576923076922
+  simulation_duration: 3500
+ 
+-
+  Label: Dr000_Hs 00.25 m Tp 03.50 s
+  Name: M:\0185\WaveFatigue\Rev2\lid02_001_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp03.50s.dat
+  ObjectName: vertical
+  probability: 7.852564102564101
+  simulation_duration: 3500
+
+PlotSettings:
+  Name: Buoyancy Element Hydrodynamic Coefficients
+  SupTitle: Buoyancy Element Hydrodynamic Coefficients
+  Title: SLWR Configuration Development
+
+RangeGraph:
+-
+  Command: Range Graph
+  AdditionalData:
+    - ArcLength 7.4; Outer; Theta 180
+  SimulationPeriod: SpecifiedPeriod(30.0, 120.0)
+  ArcLength:
+    - 0
+    - 7000
+  Variable: Effective Tension
+  xlabel: Arc Length (m)
+  ylabel: Effective Tension (kN)
+  Title: Effective Tension at Top of Riser
+  Subtitle: All Riser
+  FileName: Effective_Tension
+  axhline: NULL
+
+time_series:
+-
+  AdditionalData: NULL
+  SimulationPeriod: SpecifiedPeriod(100.0, 3600.0)
+  ArcLength:
+    - 25
+  RadialPos: Outer
+  Theta: 0
+  Variable: ZZ Stress
+  Title: Histograms at arc length
+  Subtitle: " "
+  Label: Histogram, al 255, rp Outer Tehta 0
+  axhline: NULL
+

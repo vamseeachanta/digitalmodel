@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: 10line-T25-3000sec.yml
+# Generated: 2026-01-18 21:53:18
+
+water_depth: 350
+current_speed: 1.9679999999999997
+wind_speed: 53.464
+water_density: 0.06398865959054845
+stage_durations:
+- 10
+- 3000
+wave_direction: 80
+

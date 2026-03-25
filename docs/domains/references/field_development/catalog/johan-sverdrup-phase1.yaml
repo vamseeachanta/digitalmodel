@@ -1,0 +1,70 @@
+# =============================================================================
+# Field Development Case Study: Johan Sverdrup Phase 1
+# Schema version: 1.0
+# =============================================================================
+
+id: johan-sverdrup-phase1
+name: "Johan Sverdrup Phase 1"
+operator: "Equinor ASA"
+
+partners:
+  - name: "Lundin Energy Norway AS"
+    interest_pct: 20
+  - name: "Petoro AS"
+    interest_pct: 17.36
+  - name: "Aker BP ASA"
+    interest_pct: 11.57
+  - name: "TotalEnergies EP Norge AS"
+    interest_pct: 8.44
+
+basin: NCS
+subregion: "Norwegian North Sea — Utsira High"
+country: Norway
+water_depth_m: 120
+field_type: shallow_water
+
+development_type: fixed_platform
+
+sanction_year: 2015
+production_start_year: 2019
+
+reserves_mmboe: 2700
+peak_production_mboe_d: 535
+
+capex_bn_usd: 11.5
+capex_confidence: disclosed
+
+npv_assumptions:
+  oil_price_usd_bbl: 60
+  discount_rate_pct: 8
+  npv_bn_usd: 38.0
+  source: >
+    Equinor Capital Markets Day 2018; Rystad Energy public analysis;
+    based on 60 USD/bbl flat real, 8% nominal discount rate.
+
+data_sources:
+  - name: "Equinor — Johan Sverdrup field page"
+    url: "https://www.equinor.com/energy/johan-sverdrup"
+    accessed: "2026-02-10"
+  - name: "NPD Factpages — Johan Sverdrup"
+    url: "https://factpages.npd.no/en/field/pageview/all/26300"
+    accessed: "2026-02-10"
+
+notes: >
+  Largest NCS discovery since Statfjord. Phase 1 involves four platforms
+  connected by bridges: riser/living quarters, processing, drilling, and
+  power-from-shore. Breakeven oil price below 20 USD/bbl at plateau. Among
+  the lowest CO2 intensity oil fields globally (0.67 kg CO2/boe) due to
+  electrification. Phase 2 added processing capacity; combined plateau of
+  ~535 mboe/d achieved in 2022. Benchmark for large platform-based NCS
+  development economics.
+
+tags:
+  - NCS
+  - fixed_platform
+  - shallow_water
+  - Equinor
+  - large_field
+  - low_breakeven
+  - benchmark
+  - WRK-191

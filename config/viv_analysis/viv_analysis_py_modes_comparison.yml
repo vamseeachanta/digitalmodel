@@ -1,0 +1,214 @@
+default:
+  Analysis:
+    common.mds: True
+    viv_fatigue:
+      shear7: True
+    combined:
+      fatigue: True
+      histograms: True
+  plot_damage_distribution: True
+  plot_fatigue_life: False
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+model_state_information:
+  flag: True
+  from_dict: {water_depth: NULL, model_length: 5523.5, scale: NULL}
+
+modal_sets:
+  - io: data_manager\data\risers\ttr\modes\Common_A5_Low_TTF.mds
+    label: A5, TTF-Low
+  - io: data_manager\data\risers\ttr\modes\Common_A5_Nom_TTF.mds
+    label: A5, TTF-Nom
+  - io: data_manager\data\risers\ttr\modes\Common_A6_Low_TTF.mds
+    label: A6, TTF-Low
+  - io: data_manager\data\risers\ttr\modes\Common_A6_Nom_TTF.mds
+    label: A6, TTF-Nom
+  - io: data_manager\data\risers\ttr\modes\Common_A6_High_TTF.mds
+    label: A6, TTF-Hi
+  - io: data_manager\data\risers\ttr\modes\Common_A10_Low_TTF.mds
+    label: A10, TTF-Low
+  - io: data_manager\data\risers\ttr\modes\Common_A10_Nom_TTF.mds
+    label: A10, TTF-Nom
+  - io: data_manager\data\risers\ttr\modes\Common_A10_High_TTF.mds
+    label: A10, TTF-Hi
+
+modal_plots:
+  -
+    file_name: NULL
+    file_extension: frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Frequency]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: Frequency (Hz)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Mode Number (#)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Curvature with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature_with_frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Frequency]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Frequency (Hz)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Curvature with Frequency
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+
+mode_shape_plots:
+  each_modal_set:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+#    -
+#      file_name: NULL
+#      file_extension: mode_slope
+#      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#      y: [x]
+#      x: [Mode Slope]
+#      size: half_letter
+#      orientation: portrait
+#      plt_kind: scatter
+#      xlabel: Elevation Above Mudline (ft)
+#      ylabel: Mode Slope, Shape normalized to unit length
+#      suptitle: Horn Mountain TTR VIV Analysis
+#      title: Mode Slope
+#      xticklabels: NULL
+#      grid: True
+#      legend: True
+#      legend_location: best
+#      marker: NULL
+#      ylim: NULL
+#      xscale:
+#        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xlim: [-0.0001, 0.0001]
+      xscale:
+        log: False
+  between_modal_sets:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [1]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [1]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature (1/ unit length)
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False

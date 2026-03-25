@@ -1,0 +1,1546 @@
+generated: '2026-02-24'
+repo: digitalmodel
+description: Structured registry of all digitalmodel sub-modules for agent discovery
+modules:
+
+  # ── STRUCTURAL ─────────────────────────────────────────────────────────────
+
+  - id: structural/fatigue
+    path: src/digitalmodel/structural/fatigue/
+    description: >
+      Comprehensive S-N curve fatigue life calculation for offshore and marine
+      steel structures. Covers time-domain rainflow counting and frequency-domain
+      spectral methods.
+    maturity: production
+    capabilities:
+      - S-N curve models per DNV-RP-C203, API RP 2A, BS 7608, AWS D1.1 (221 curves, 17 standards)
+      - Rainflow cycle counting per ASTM E1049-85
+      - Linear damage accumulation (Palmgren-Miner rule)
+      - Nonlinear damage accumulation models
+      - Frequency-domain spectral methods (Dirlik, Tovo-Benasciutti)
+      - Mean stress corrections (Goodman, Gerber, Soderberg)
+      - Thickness correction factors
+      - Critical plane analysis for multiaxial loading
+      - SCF lookup via Efthymiou parametric equations
+      - Statistical safety factor calculations
+    standards:
+      - id: DNVGL-RP-C203
+        status: implemented
+      - id: API-RP-2A
+        status: implemented
+      - id: BS-7608
+        status: implemented
+      - id: AWS-D1.1
+        status: implemented
+      - id: ASTM-E1049-85
+        status: implemented
+      - id: ISO-19902
+        status: partial
+    gaps:
+      - Spectral fatigue from irregular wave loading (sea-state scatter approach)
+      - Biaxial stress interaction correction
+    test_coverage: high
+    related_wrk: []
+
+  - id: structural/fatigue_apps
+    path: src/digitalmodel/structural/fatigue_apps/
+    description: >
+      Applied fatigue analysis workflows for offshore structures. Implements
+      reference seastate scaling methodology for strut/pile foundations with
+      batch CLI processing.
+    maturity: stable
+    capabilities:
+      - Reference seastate scaling for strut/pile foundations
+      - Rainflow counting (ASTM E1049 compatible)
+      - Fatigue damage with Miner's rule per S-N curve parameters
+      - Multi-vessel configuration support with operational weighting
+      - Tension-to-stress conversion with lookup tables
+      - Batch CLI interface for campaign processing
+      - Parametric sweep visualizations
+    standards:
+      - id: ASTM-E1049-85
+        status: implemented
+      - id: DNVGL-RP-C203
+        status: partial
+    gaps:
+      - Frequency-domain spectral methods not wired into CLI
+    test_coverage: medium
+    related_wrk: []
+
+  - id: structural/structural_analysis
+    path: src/digitalmodel/structural/structural_analysis/
+    description: >
+      Structural analysis for offshore and marine structures: Von Mises stress,
+      plate buckling (DNV-RP-C201), column buckling (Eurocode 3), member capacity,
+      and combined loading checks.
+    maturity: stable
+    capabilities:
+      - Von Mises stress computation under combined loading
+      - Plate buckling analysis per DNV-RP-C201
+      - Column/member buckling per Eurocode 3
+      - Member capacity verification with safety factor reporting
+      - Combined axial-bending-shear interaction checks
+      - Standard steel material library (S275, S355, S420)
+    standards:
+      - id: DNV-RP-C201
+        status: implemented
+      - id: Eurocode-3
+        status: implemented
+      - id: ISO-19902
+        status: partial
+    gaps:
+      - Dynamic amplification factors not integrated
+      - Jacket joint punching shear checks
+    test_coverage: medium
+    related_wrk: []
+
+  - id: structural/pipe_capacity
+    path: src/digitalmodel/structural/pipe_capacity/
+    description: >
+      Pipe capacity calculations for offshore pipelines and risers including
+      burst, collapse, and combined load interaction diagrams.
+    maturity: stable
+    capabilities:
+      - Internal pressure burst capacity
+      - External pressure collapse capacity
+      - Combined load interaction (moment-tension-pressure)
+      - Pipe sizing and wall thickness selection
+      - CLI interface for single and batch checks
+    standards:
+      - id: DNV-ST-F101
+        status: partial
+      - id: API-5L
+        status: partial
+      - id: API-RP-1111
+        status: unknown
+    gaps:
+      - Full DNV-ST-F101 code edition selection not exposed via CLI
+    test_coverage: medium
+    related_wrk: []
+
+  - id: structural/pipe_cross_section
+    path: src/digitalmodel/structural/pipe_cross_section/
+    description: >
+      Multi-layer coated pipe cross-section geometry analysis. Calculates
+      weight in air, submerged weight, buoyancy, and section properties for
+      offshore pipelines and risers.
+    maturity: stable
+    capabilities:
+      - Multi-layer geometry (steel + FBE + concrete + marine growth)
+      - Weight in air and submerged weight per layer
+      - Buoyancy analysis for subsea applications
+      - Interactive HTML and static PNG/SVG reports
+      - CSV/JSON data export
+      - Imperial and metric unit input via CLI
+    standards:
+      - id: DNV-ST-F101
+        status: partial
+      - id: API-5L
+        status: partial
+      - id: ISO-21809
+        status: partial
+    gaps:
+      - Corrosion allowance trending not implemented
+    test_coverage: low
+    related_wrk: []
+
+  - id: structural/stress
+    path: src/digitalmodel/structural/stress/
+    description: >
+      Stress and strain analysis module covering Von Mises yield criteria,
+      Ramberg-Osgood nonlinear models, and combined loading conditions for
+      pipes and structural members.
+    maturity: stable
+    capabilities:
+      - Von Mises stress calculation for arbitrary loading states
+      - Principal stress computation
+      - Pipe stress analysis under combined loads
+      - Stress-strain curve modeling (linear elastic, Ramberg-Osgood)
+      - Nonlinear plasticity analysis (Von Mises yield + linear hardening)
+    standards:
+      - id: ISO-19902
+        status: partial
+      - id: DNV-ST-F101
+        status: partial
+    gaps:
+      - Fatigue post-processing not linked from this module
+    test_coverage: low
+    related_wrk: []
+
+  - id: structural/analysis
+    path: src/digitalmodel/structural/analysis/
+    description: >
+      Pipeline wall thickness design analysis per multiple international codes.
+      Supports parametric sweeps, multi-phase comparisons, and interactive
+      HTML reports with M-T lookup generation.
+    maturity: production
+    capabilities:
+      - Wall thickness design per DNV-ST-F101, API RP 1111, ASME B31.4/B31.8
+      - Multi-code comparison with tabular and interactive reports
+      - Phase analysis (installation, hydrotest, operation, shutdown)
+      - Parametric sweep over wall thickness, grade, or design pressure
+      - Safety class and fabrication type selection
+      - API 5L grade library
+      - M-T lookup table generation
+    standards:
+      - id: DNV-ST-F101
+        status: implemented
+      - id: API-RP-1111
+        status: implemented
+      - id: ASME-B31.4
+        status: implemented
+      - id: ASME-B31.8
+        status: implemented
+      - id: API-5L
+        status: implemented
+    gaps:
+      - Dynamic risers not in scope of wall thickness analysis
+    test_coverage: medium
+    related_wrk: []
+
+  # ── SUBSEA ─────────────────────────────────────────────────────────────────
+
+  - id: subsea/pipeline
+    path: src/digitalmodel/subsea/pipeline/
+    description: >
+      Subsea pipeline analysis covering wall thickness design, lateral and
+      upheaval buckling, thermal buckling, pressure loss, and pipe properties.
+    maturity: stable
+    capabilities:
+      - Wall thickness design (pressure containment, collapse)
+      - Lateral buckling analysis
+      - Upheaval buckling assessment
+      - Thermal buckling evaluation
+      - Pressure loss calculations along pipeline
+      - Pipe sizing and property calculations
+      - Stress calculations under operational loads
+    standards:
+      - id: DNV-ST-F101
+        status: partial
+      - id: API-RP-1111
+        status: partial
+    gaps:
+      - On-bottom stability (hydrodynamic stability) not included
+      - Free-span VIV not included (see subsea/viv_analysis)
+    test_coverage: medium
+    related_wrk: []
+
+  - id: subsea/catenary_riser
+    path: src/digitalmodel/subsea/catenary_riser/
+    description: >
+      Catenary and lazy wave flexible riser static configuration analysis with
+      effective weight calculations and OrcaFlex model generation.
+    maturity: stable
+    capabilities:
+      - Simple catenary static shape and force calculation
+      - Lazy wave riser configuration design
+      - Effective weight calculation for buoyed sections
+      - OrcaFlex model generation from catenary parameters
+      - Material and fluid libraries (API 5L X65/X70, seawater, crude)
+      - CLI interface for single and batch runs
+    standards:
+      - id: DNV-OS-F201
+        status: partial
+      - id: API-RP-1111
+        status: partial
+    gaps:
+      - Dynamic analysis (time-domain fatigue) requires OrcaFlex
+      - Installation analysis not included
+    test_coverage: high
+    related_wrk: []
+
+  - id: subsea/vertical_riser
+    path: src/digitalmodel/subsea/vertical_riser/
+    description: >
+      Vertical riser stackup geometry and OrcaFlex model assembly for top-tensioned
+      risers (TTR). Legacy and current implementations available.
+    maturity: beta
+    capabilities:
+      - Top-tensioned riser stackup geometry assembly
+      - Layer-by-layer riser component definition
+      - OrcaFlex stackup model output
+    standards:
+      - id: API-RP-2RD
+        status: unknown
+    gaps:
+      - No public __init__.py API (legacy module pattern)
+      - Unit tests sparse
+    test_coverage: low
+    related_wrk: []
+
+  - id: subsea/catenary
+    path: src/digitalmodel/subsea/catenary/
+    description: >
+      Placeholder / stub directory for catenary solver. Canonical catenary
+      logic lives in marine_ops/marine_analysis and marine_ops/marine_engineering.
+    maturity: stub
+    capabilities: []
+    standards: []
+    gaps:
+      - No source files; acts as namespace placeholder
+    test_coverage: none
+    related_wrk: []
+
+  - id: subsea/mooring_analysis
+    path: src/digitalmodel/subsea/mooring_analysis/
+    description: >
+      Mooring system design and analysis including CALM/SALM buoys, spread
+      mooring, catenary line analysis, and OrcaFlex model generation.
+    maturity: stable
+    capabilities:
+      - Catenary line analysis (shape, tension, stiffness)
+      - Spread mooring and CALM/SALM buoy design
+      - Environmental load computation for design load cases
+      - Safety factor checks (intact and damaged conditions)
+      - Material library (chain R3/R4, wire, polyester)
+      - OrcaFlex model generation from mooring system definition
+      - CLI interface
+    standards:
+      - id: DNV-OS-E301
+        status: implemented
+      - id: API-RP-2SK
+        status: implemented
+      - id: ABS-MMS
+        status: partial
+    gaps:
+      - Fatigue of mooring lines not implemented
+      - Clump weight / buoy optimisation not automated
+    test_coverage: medium
+    related_wrk: []
+
+  - id: subsea/viv_analysis
+    path: src/digitalmodel/subsea/viv_analysis/
+    description: >
+      Vortex-induced vibration screening and fatigue assessment for risers and
+      tubular members. Computes natural frequencies, vortex shedding, reduced
+      velocity, and VIV-induced fatigue damage.
+    maturity: stable
+    capabilities:
+      - Natural frequency calculation for beams under various boundary conditions
+      - Vortex shedding frequency estimation (Strouhal number)
+      - Reduced velocity and lock-in range screening
+      - VIV susceptibility screening
+      - VIV-induced fatigue damage estimation
+      - Material and current profile libraries
+      - CLI interface
+    standards:
+      - id: DNV-RP-C205
+        status: implemented
+      - id: DNV-RP-F105
+        status: implemented
+    gaps:
+      - SHEAR7 / VIVA time-domain VIV simulation not integrated
+      - Straked suppression effectiveness model not included
+    test_coverage: medium
+    related_wrk: []
+
+  # ── HYDRODYNAMICS ──────────────────────────────────────────────────────────
+
+  - id: hydrodynamics
+    path: src/digitalmodel/hydrodynamics/
+    description: >
+      Top-level hydrodynamics package managing hydrodynamic coefficient matrices,
+      wave spectra, OCIMF environmental loading, and coefficient interpolation.
+    maturity: production
+    capabilities:
+      - 6x6 added mass and damping matrix management
+      - Wave spectrum modeling (JONSWAP, PM, ISSC)
+      - OCIMF wind and current coefficient loading
+      - RAO interpolation across headings and frequencies
+      - Vessel property management
+    standards:
+      - id: OCIMF-MEG4
+        status: implemented
+      - id: ITTC-2002
+        status: partial
+    gaps:
+      - Second-order drift forces not directly in this module
+    test_coverage: medium
+    related_wrk: []
+
+  - id: hydrodynamics/rao_analysis
+    path: src/digitalmodel/hydrodynamics/rao_analysis/
+    description: >
+      RAO (Response Amplitude Operator) reading, interpolation, and processing
+      from AQWA and OrcaFlex sources.
+    maturity: stable
+    capabilities:
+      - RAO file parsing (AQWA .LIS/.ANL, OrcaFlex .yml)
+      - Unified RAO data model (displacement, velocity, acceleration)
+      - Cross-heading and cross-frequency interpolation
+      - Phase convention handling
+      - Vessel type characterisation
+    standards:
+      - id: ITTC-2002
+        status: partial
+    gaps:
+      - Direct panel-method computation not in this module
+    test_coverage: medium
+    related_wrk: []
+
+  - id: hydrodynamics/diffraction
+    path: src/digitalmodel/hydrodynamics/diffraction/
+    description: >
+      Unified diffraction analysis output schemas and converters for AQWA and
+      OrcaWave. Provides standardised RAO, added mass, damping, and QTF data
+      with OrcaFlex export.
+    maturity: production
+    capabilities:
+      - Unified schema for RAO, added mass, and damping (AQWA and OrcaWave)
+      - AQWA-to-unified converter
+      - OrcaWave-to-unified converter (optional; requires OrcFxAPI)
+      - OrcaFlex YAML/CSV/Excel exporter
+      - Physical validity and completeness validation
+      - AQWA vs OrcaWave comparison framework
+      - Batch processing for multiple vessels
+      - Geometry quality validation
+    standards:
+      - id: ISO-19901-1
+        status: partial
+    gaps:
+      - QTF (second-order) export to OrcaFlex not fully automated
+    test_coverage: high
+    related_wrk: []
+
+  - id: hydrodynamics/hull_library
+    path: src/digitalmodel/hydrodynamics/hull_library/
+    description: >
+      Library of vessel hull hydrodynamic properties and panel mesh management
+      for hydrodynamic analysis.
+    maturity: beta
+    capabilities:
+      - Hull geometry and principal dimension storage
+      - Panel mesh file management (GDF format)
+      - Hull property retrieval by vessel type
+    standards:
+      - id: ITTC-2002
+        status: unknown
+    gaps:
+      - Limited vessel types in library
+      - Mesh quality checks not integrated
+    test_coverage: low
+    related_wrk: []
+
+  - id: hydrodynamics/aqwa
+    path: src/digitalmodel/hydrodynamics/aqwa/
+    description: >
+      AQWA integration module for parsing diffraction outputs (.LIS, .AQR, .ANL,
+      .DAT, .MES), extracting RAOs, added mass, damping, and pre-processing
+      AQWA deck files.
+    maturity: production
+    capabilities:
+      - AQWA .LIS file parsing (added mass, damping, RAO)
+      - AQWA .AQR and .ANL RAO extraction
+      - AQWA .DAT deck preprocessing
+      - AQWA .MES mesh file handling
+      - Damping coefficient extraction and plotting
+      - CLI interface and server endpoint
+      - Batch processing across headings and frequencies
+    standards:
+      - id: AQWA-User-Manual
+        status: implemented
+    gaps:
+      - QTF extraction from AQWA not complete
+    test_coverage: high
+    related_wrk: []
+
+  - id: hydrodynamics/bemrosetta
+    path: src/digitalmodel/hydrodynamics/bemrosetta/
+    description: >
+      BEMRosetta integration for hydrodynamic coefficient conversion,
+      primarily AQWA-to-OrcaFlex workflow. Handles RAOs, added mass, damping,
+      QTF, and mesh format conversions.
+    maturity: stable
+    capabilities:
+      - AQWA .LIS/.DAT/.QTF parsing
+      - OrcaFlex YAML export
+      - Physical data validation (symmetry, causality, physical limits)
+      - Mesh format conversion (GDF, DAT, STL)
+      - Optional BEMRosetta_cl.exe integration for extended features
+    standards:
+      - id: DNVGL-RP-C205
+        status: partial
+    gaps:
+      - BEMRosetta executable required for full QTF features
+    test_coverage: medium
+    related_wrk: []
+
+  - id: hydrodynamics/wave_spectra
+    path: src/digitalmodel/hydrodynamics/wave_spectra.py
+    description: >
+      Wave spectrum modeling and generation (JONSWAP, Pierson-Moskowitz, ISSC,
+      Bretschneider). Single-file module.
+    maturity: stable
+    capabilities:
+      - JONSWAP spectrum generation with gamma parameter
+      - Pierson-Moskowitz (PM) spectrum
+      - ISSC and Bretschneider spectra
+      - Significant wave height and peak period parameterisation
+    standards:
+      - id: ITTC-2002
+        status: implemented
+      - id: ISO-19901-1
+        status: partial
+    gaps:
+      - Directional spreading function not implemented
+    test_coverage: medium
+    related_wrk: []
+
+  - id: hydrodynamics/passing_ship
+    path: src/digitalmodel/hydrodynamics/passing_ship/
+    description: >
+      Hydrodynamic forces and moments on moored vessels due to passing ships,
+      implementing Wang's methodology for surge, sway, and yaw.
+    maturity: stable
+    capabilities:
+      - Surge force calculation (infinite and finite depth)
+      - Sway force calculation (infinite and finite depth)
+      - Yaw moment calculation (infinite and finite depth)
+      - Finite water depth correction
+      - Parametric study and comparison visualizations
+      - YAML-based configuration input
+      - Interactive HTML output
+    standards:
+      - id: Wang-1975-methodology
+        status: implemented
+    gaps:
+      - Multi-body shielding effects not modelled
+    test_coverage: low
+    related_wrk: []
+
+  # ── MARINE OPS ─────────────────────────────────────────────────────────────
+
+  - id: marine_ops/marine_engineering
+    path: src/digitalmodel/marine_ops/marine_engineering/
+    description: >
+      Comprehensive marine engineering analysis tools: catenary solvers,
+      OCIMF environmental loading, hydrodynamic coefficient management, and
+      mooring analysis utilities.
+    maturity: stable
+    capabilities:
+      - Catenary and lazy wave riser solver (re-exported from marine_analysis)
+      - OCIMF wind and current coefficient calculations
+      - Hydrodynamic coefficient database (added mass, damping, AQWA parsing)
+      - Spread mooring quasi-static analysis
+    standards:
+      - id: OCIMF-MEG4
+        status: implemented
+      - id: DNV-OS-E301
+        status: partial
+    gaps:
+      - Wave spectra canonical location is hydrodynamics/wave_spectra (not re-exported here)
+    test_coverage: medium
+    related_wrk: []
+
+  - id: marine_ops/marine_analysis
+    path: src/digitalmodel/marine_ops/marine_analysis/
+    description: >
+      Unified RAO reading, validation, and visualisation for AQWA and OrcaFlex
+      outputs. Includes catenary solver, performance profiling, and data extraction.
+    maturity: production
+    capabilities:
+      - Unified RAO reader (AQWA .LIS, OrcaFlex .yml)
+      - RAO data models (displacement, velocity, acceleration, 6-DOF)
+      - Physical and statistical RAO validation
+      - Phase convention analysis and vessel-type characterisation
+      - RAO plotting and visualisation
+      - Catenary and lazy wave solver
+      - Performance profiling utilities
+      - OCIMF / hydro coefficient extraction
+    standards:
+      - id: OCIMF-MEG4
+        status: partial
+      - id: ITTC-2002
+        status: partial
+    gaps:
+      - Coupled multi-body RAO reading not supported
+    test_coverage: medium
+    related_wrk: []
+
+  - id: marine_ops/artificial_lift
+    path: src/digitalmodel/marine_ops/artificial_lift/
+    description: >
+      Artificial lift monitoring and analysis, including dynacard data
+      processing for rod-pump surveillance and queue-based analysis workflows.
+    maturity: beta
+    capabilities:
+      - Dynacard load and position data processing
+      - Rod pump performance analysis
+      - Queue-based batch analysis workflow
+    standards:
+      - id: API-11E
+        status: unknown
+    gaps:
+      - No public __init__.py exports found
+      - Limited test coverage
+    test_coverage: low
+    related_wrk: []
+
+  - id: marine_ops/reservoir
+    path: src/digitalmodel/marine_ops/reservoir/
+    description: >
+      Reservoir engineering analysis: rock and fluid properties, material balance,
+      well test analysis, production forecasting, and stratigraphic correlation.
+    maturity: beta
+    capabilities:
+      - Rock property calculations (porosity, permeability, water saturation)
+      - PVT and fluid property modelling
+      - Material balance analysis
+      - Well test analysis (pressure transient)
+      - Production forecasting
+      - Reservoir characterisation and mapping
+      - Stratigraphic correlation and log analysis
+    standards:
+      - id: SPE-standard
+        status: unknown
+    gaps:
+      - Numerical reservoir simulation not integrated (external simulators)
+    test_coverage: low
+    related_wrk: []
+
+  - id: marine_ops/ct_hydraulics
+    path: src/digitalmodel/marine_ops/ct_hydraulics/
+    description: >
+      Coiled tubing (CT) hydraulics calculations for well intervention
+      operations.
+    maturity: beta
+    capabilities:
+      - CT hydraulics pressure loss and circulating pressure modelling
+    standards:
+      - id: API-RP-5C7
+        status: unknown
+    gaps:
+      - Single-class API; depth of implementation unknown
+      - No test files found
+    test_coverage: unknown
+    related_wrk: []
+
+  # ── ASSET INTEGRITY ────────────────────────────────────────────────────────
+
+  - id: asset_integrity
+    path: src/digitalmodel/asset_integrity/
+    description: >
+      Fitness-for-service (FFS) assessment for metallic pressure-containing
+      equipment per API 579-1/ASME FFS-1. Formerly pyintegrity.
+    maturity: stable
+    capabilities:
+      - API 579 Level 1/2 fitness-for-service assessment
+      - Remaining strength factor (RSF) calculations for corrosion metal loss
+      - Fracture mechanics: K-solutions, FAD (Failure Assessment Diagram)
+      - BS 7910 critical flaw size limits
+      - Pipe capacity under combined loading
+      - Material property database
+      - Visualization of FAD diagrams and assessment results
+      - Pipeline skill integration for batch FFS runs
+    standards:
+      - id: API-579-1/ASME-FFS-1
+        status: implemented
+      - id: BS-7910
+        status: implemented
+      - id: Palmgren-Miner
+        status: partial
+    gaps:
+      - Level 3 (elastic-plastic fracture) assessment not automated
+      - Creep damage (Part 10) not implemented
+    test_coverage: medium
+    related_wrk: []
+
+  # ── SPECIALIZED ────────────────────────────────────────────────────────────
+
+  - id: specialized/api_analysis
+    path: src/digitalmodel/specialized/api_analysis/
+    description: >
+      API standard design checks for structural members and pipelines. Includes
+      API STD 2RD (risers) stress checks.
+    maturity: beta
+    capabilities:
+      - API STD 2RD riser stress design checks
+    standards:
+      - id: API-STD-2RD
+        status: partial
+    gaps:
+      - Scope of API codes covered is narrow
+      - Limited test coverage
+    test_coverage: low
+    related_wrk: []
+
+  - id: specialized/rigging
+    path: src/digitalmodel/specialized/rigging/
+    description: >
+      Rigging analysis for offshore lift and installation operations.
+    maturity: beta
+    capabilities:
+      - Rigging geometry and load calculations
+      - Sling/shackle force distribution
+    standards:
+      - id: DNV-ST-N001
+        status: unknown
+    gaps:
+      - Single re-export class; thin public API
+      - No dedicated tests found
+    test_coverage: low
+    related_wrk: []
+
+  - id: specialized/project_management
+    path: src/digitalmodel/specialized/project_management/
+    description: >
+      Project schedule and FFS timeline visualisation tools.
+    maturity: stub
+    capabilities:
+      - FFS project schedule plotting (Gantt / timeline)
+    standards: []
+    gaps:
+      - Minimal implementation; no package init
+    test_coverage: none
+    related_wrk: []
+
+  - id: specialized/gis
+    path: src/digitalmodel/specialized/gis/
+    description: >
+      GIS and geospatial data handling for offshore field layout, well positions,
+      and UTM coordinate conversion.
+    maturity: beta
+    capabilities:
+      - ArcGIS / open-source GIS integration
+      - UTM coordinate conversion
+      - Well location mapping and output
+      - Geospatial layer management
+    standards: []
+    gaps:
+      - No package-level __init__.py with public API
+      - Depends on ArcGIS license for full functionality
+    test_coverage: none
+    related_wrk: []
+
+  - id: specialized/finance
+    path: src/digitalmodel/specialized/finance/
+    description: >
+      Financial analysis and stock market data utilities including stock
+      analysis and project finance drivers.
+    maturity: stub
+    capabilities:
+      - Stock price data retrieval and analysis
+      - Project finance driver calculations
+    standards: []
+    gaps:
+      - No package-level __init__.py
+      - Utility/exploratory code; not engineering-grade
+    test_coverage: none
+    related_wrk: []
+
+  - id: specialized/digitalmarketing
+    path: src/digitalmodel/specialized/digitalmarketing/
+    description: >
+      Digital marketing utilities. Non-engineering support module.
+    maturity: stub
+    capabilities: []
+    standards: []
+    gaps:
+      - Out-of-scope for core engineering use
+    test_coverage: none
+    related_wrk: []
+
+  # ── DATA SYSTEMS ────────────────────────────────────────────────────────────
+
+  - id: data_systems/data
+    path: src/digitalmodel/data_systems/data/
+    description: >
+      Engineering reference data catalog: rigging (Crosby), mudmats, slings,
+      steel material properties, and legacy data hooks.
+    maturity: stable
+    capabilities:
+      - Crosby rigging hardware catalog lookup
+      - Mudmat geometry and capacity data
+      - Sling break strength and weight tables
+      - Steel material property retrieval (ASTM, API grades)
+      - Data catalog and migration utilities
+    standards:
+      - id: API-5L
+        status: partial
+    gaps:
+      - Catalog completeness varies by equipment category
+    test_coverage: low
+    related_wrk: []
+
+  - id: data_systems/data_manager
+    path: src/digitalmodel/data_systems/data_manager/
+    description: >
+      Configuration and data loading management: YAML-based configuration
+      parsing, deep-merge updates, and file loading utilities.
+    maturity: stable
+    capabilities:
+      - YAML configuration loading and parsing
+      - Deep nested config update (customUpdate)
+      - Configuration manager class for project-level settings
+    standards: []
+    gaps:
+      - Schema validation for config files not enforced
+    test_coverage: low
+    related_wrk: []
+
+  - id: data_systems/data_procurement
+    path: src/digitalmodel/data_systems/data_procurement/
+    description: >
+      Automated data procurement clients for mooring, riser, vessel, and
+      metocean databases. Includes BSEE rig database refresh.
+    maturity: beta
+    capabilities:
+      - Mooring component database clients (chain R3/R4, wire, anchors)
+      - Riser pipe database client (API 5L grades, coatings)
+      - Vessel and FPSO database clients
+      - BSEE drilling rig data refresh
+      - Rig name matching (OpenWells)
+      - Metocean data retrieval clients
+    standards:
+      - id: API-5L
+        status: partial
+      - id: DNV-OS-E301
+        status: partial
+    gaps:
+      - External database connectivity required; mocked in tests
+    test_coverage: low
+    related_wrk: []
+
+  - id: data_systems/data_scraping
+    path: src/digitalmodel/data_systems/data_scraping/
+    description: >
+      Web scraping and automated data collection for marine engineering
+      datasets: vessels, FPSOs, drilling rigs, pipelay vessels, and
+      fender/equipment PDF extraction.
+    maturity: beta
+    capabilities:
+      - Vessel database scraping (VesselScraper, FPSOScraper)
+      - Drilling rig scraper (DrillingRigScraper)
+      - Pipelay vessel scraper
+      - PDF table extraction for equipment catalogs
+      - Fender manufacturer data scraping
+      - Data validation post-scrape
+    standards: []
+    gaps:
+      - Selenium dependency required for some scrapers
+      - Rate limiting and robots.txt compliance not enforced
+    test_coverage: low
+    related_wrk: []
+
+  - id: data_systems/pyintegrity
+    path: src/digitalmodel/data_systems/pyintegrity/
+    description: >
+      Legacy alias / compatibility shim for the asset_integrity module.
+      Historical reference per pyintegrity open-source library.
+    maturity: stub
+    capabilities:
+      - Re-exports from asset_integrity (legacy path)
+    standards: []
+    gaps:
+      - New code should use asset_integrity directly
+    test_coverage: none
+    related_wrk: []
+
+  # ── INFRASTRUCTURE ──────────────────────────────────────────────────────────
+
+  - id: infrastructure/core
+    path: src/digitalmodel/infrastructure/core/
+    description: >
+      Core framework services: database manager, cache, provenance tracking,
+      and legacy SQLite database interface.
+    maturity: stable
+    capabilities:
+      - SQLite database manager for local result storage
+      - In-memory and disk cache management
+      - Data provenance tracking (lineage metadata)
+    standards: []
+    gaps:
+      - No public __init__.py; internal framework use
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/services
+    path: src/digitalmodel/infrastructure/services/
+    description: >
+      Service layer: plugin registry, application settings, and compat shims
+      for cross-module service discovery.
+    maturity: stable
+    capabilities:
+      - Plugin/module registry for dynamic discovery
+      - Application settings management
+      - Cross-module compatibility shims
+    standards: []
+    gaps:
+      - Documentation sparse
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/base_solvers
+    path: src/digitalmodel/infrastructure/base_solvers/
+    description: >
+      Base solver configurations and abstractions used across structural and
+      subsea analysis modules.
+    maturity: stable
+    capabilities:
+      - Solver configuration schema (convergence criteria, tolerances)
+      - Base solver class interface
+      - Shared solver utility functions
+    standards:
+      - id: DNV-RP-C205
+        status: partial
+    gaps:
+      - Parallelisation strategy not abstracted at this level
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/common
+    path: src/digitalmodel/infrastructure/common/
+    description: >
+      Shared engineering utilities: material properties, plate buckling,
+      cathodic protection, hydrodynamic loading per DNV-RP-H103, SHEAR7 model
+      components.
+    maturity: stable
+    capabilities:
+      - Material property library (steel grades, coatings)
+      - Plate buckling calculations per DNV-RP-C201
+      - Cathodic protection design per DNV-RP-B401 and DNV-RP-F103
+      - Hydrodynamic loading on circular and rectangular sections (DNV-RP-H103)
+      - SHEAR7 VIV model component utilities
+    standards:
+      - id: DNV-RP-C201
+        status: implemented
+      - id: DNV-RP-B401
+        status: implemented
+      - id: DNV-RP-F103
+        status: implemented
+      - id: DNV-RP-H103
+        status: implemented
+    gaps:
+      - Modules are standalone utilities; no single public __init__.py
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/domains
+    path: src/digitalmodel/infrastructure/domains/
+    description: >
+      Domain-specific calculation modules: plate capacity/buckling (detailed),
+      reservoir domain utilities.
+    maturity: stable
+    capabilities:
+      - Detailed plate buckling calculation series (G through K per DNV)
+      - Plate capacity and effective width calculations
+      - Reservoir domain helper utilities
+    standards:
+      - id: DNV-RP-C201
+        status: implemented
+    gaps:
+      - Domain modules accessed directly; no unified domain index
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/templates
+    path: src/digitalmodel/infrastructure/templates/
+    description: >
+      Template framework for analysis input validation, output formatting, and
+      report generation across modules.
+    maturity: stable
+    capabilities:
+      - YAML input template validation
+      - Analysis template schema enforcement
+      - Report output template management
+    standards: []
+    gaps:
+      - Template library coverage varies by module
+    test_coverage: low
+    related_wrk: []
+
+  - id: infrastructure/calculations
+    path: src/digitalmodel/infrastructure/calculations/
+    description: >
+      Shared numerical calculation utilities used across multiple analysis
+      modules (plate buckling, etc.).
+    maturity: stable
+    capabilities:
+      - Plate buckling shared calculation routines
+      - Numerical solver helper utilities
+    standards:
+      - id: DNV-RP-C201
+        status: partial
+    gaps:
+      - Scope limited to common calculation blocks
+    test_coverage: low
+    related_wrk: []
+
+  # ── WORKFLOWS ────────────────────────────────────────────────────────────────
+
+  - id: workflows/agents
+    path: src/digitalmodel/workflows/agents/
+    description: >
+      AI agent orchestration framework: intelligent agent selection, memory
+      lifecycle management, quality gates, rollback management, workflow
+      checkpoints, and work-stealing scheduler.
+    maturity: beta
+    capabilities:
+      - Intelligent agent selector for analysis routing
+      - Memory lifecycle management (context persistence)
+      - Quality gates CLI and programmatic interface
+      - Rollback manager for failed workflow steps
+      - Workflow checkpoint and resume
+      - Work-stealing task scheduler for parallel agent execution
+      - OrcaFlex and OrcaWave case-study agent workflows
+    standards: []
+    gaps:
+      - Agent selection heuristics not fully documented
+      - Integration with production WRK queue pending
+    test_coverage: low
+    related_wrk: []
+
+  - id: workflows/ai_workflows
+    path: src/digitalmodel/workflows/ai_workflows/
+    description: >
+      Pre-built AI-assisted engineering workflows for OrcaFlex and OrcaWave
+      including go-by folder patterns and standalone analysis runners.
+    maturity: beta
+    capabilities:
+      - OrcaFlex batch analysis workflow
+      - OrcaWave diffraction analysis workflow
+      - Go-by folder workflow pattern
+      - Standalone analysis runner scripts
+    standards: []
+    gaps:
+      - Workflows require OrcFxAPI (commercial license)
+    test_coverage: low
+    related_wrk: []
+
+  - id: workflows/automation
+    path: src/digitalmodel/workflows/automation/
+    description: >
+      Workflow automation utilities including circuit breaker pattern for
+      resilient automation pipelines.
+    maturity: beta
+    capabilities:
+      - Circuit breaker for fault-tolerant automation
+      - Workflow executor with retry and error handling
+    standards: []
+    gaps:
+      - Limited test coverage
+    test_coverage: low
+    related_wrk: []
+
+  - id: workflows/mcp_server
+    path: src/digitalmodel/workflows/mcp_server/
+    description: >
+      Model Context Protocol (MCP) server integration for exposing digitalmodel
+      analysis capabilities to AI agent frameworks.
+    maturity: beta
+    capabilities:
+      - MCP server endpoint for analysis tool discovery
+      - Skill resolver for routing agent requests to analysis modules
+    standards: []
+    gaps:
+      - MCP spec compliance level unknown
+    test_coverage: unknown
+    related_wrk: []
+
+  - id: workflows/skills
+    path: src/digitalmodel/workflows/skills/
+    description: >
+      Skill resolver and registry for on-demand analysis skill invocation
+      within agent workflows.
+    maturity: beta
+    capabilities:
+      - Skill resolver routing analysis requests by capability type
+      - Integration with workspace-hub skill definitions
+    standards: []
+    gaps:
+      - Skill registry completeness depends on workspace-hub CLAUDE.md sync
+    test_coverage: low
+    related_wrk: []
+
+  # ── SIGNAL PROCESSING ───────────────────────────────────────────────────────
+
+  - id: signal_processing/signal_analysis
+    path: src/digitalmodel/signal_processing/signal_analysis/
+    description: >
+      Comprehensive signal processing for fatigue and time-series analysis:
+      rainflow counting, FFT/PSD, spectral analysis, OrcaFlex signal adapters,
+      and frequency/time-domain filtering.
+    maturity: production
+    capabilities:
+      - Rainflow cycle counting (ASTM E1049-85 compliant)
+      - FFT and power spectral density (PSD) computation
+      - Spectral analysis (zero-crossing, peak counting)
+      - Time series processing (windowing, decimation, resampling)
+      - OrcaFlex tension time-series adapters
+      - Frequency and time-domain filtering
+      - Fatigue damage from signal via S-N curves
+      - Histogram generation for cycle distributions
+      - CLI interface for batch OrcaFlex signal analysis
+    standards:
+      - id: ASTM-E1049-85
+        status: implemented
+      - id: DNVGL-RP-C203
+        status: partial
+    gaps:
+      - Multi-channel cross-correlation not implemented
+    test_coverage: high
+    related_wrk: []
+
+  - id: signal_processing/time_series
+    path: src/digitalmodel/signal_processing/time_series/
+    description: >
+      Time series analysis utilities for BOP (blowout preventer) and general
+      engineering sensor data processing.
+    maturity: beta
+    capabilities:
+      - General time series analysis routines
+      - BOP sensor data component analysis
+      - FFT-based feature extraction from time traces
+      - CSV window-based FFT analysis
+    standards: []
+    gaps:
+      - BOP-specific components tightly coupled to sensor format
+    test_coverage: medium
+    related_wrk: []
+
+  # ── PRODUCTION ENGINEERING ──────────────────────────────────────────────────
+
+  - id: production_engineering
+    path: src/digitalmodel/production_engineering/
+    description: >
+      Well test quality scoring, nodal analysis (IPR/VLP), GIGO detection, and
+      production data reconciliation workflow. Founded on data-quality-first
+      principle (WRK-164).
+    maturity: production
+    capabilities:
+      - Production test quality scorer (0-100 score + quality flags)
+      - Nonlinearity detection in flow test data
+      - IPR models: Vogel, Fetkovich, Composite, Linear
+      - VLP correlations: Hagedorn-Brown, Beggs-Brill
+      - Nodal solver (IPR/VLP intersection with confidence bounds)
+      - GIGO detector (model vs test divergence with physics diagnosis)
+      - End-to-end reconciliation workflow (QC → calibrate → confidence)
+    standards:
+      - id: SPE-standard
+        status: partial
+    gaps:
+      - Multiphase flow correlations beyond Hagedorn-Brown not included
+    test_coverage: high
+    related_wrk: [WRK-164]
+
+  # ── SOLVERS ─────────────────────────────────────────────────────────────────
+
+  - id: solvers
+    path: src/digitalmodel/solvers/
+    description: >
+      Top-level solvers directory containing OrcaFlex, Blender, GMSH, and
+      OrcaWave integration modules.
+    maturity: stable
+    capabilities:
+      - OrcaFlex model generation, post-processing, batch management
+      - Blender 3D automation for engineering visualisation
+      - GMSH finite element mesh generation
+      - OrcaWave diffraction analysis integration
+    standards: []
+    gaps:
+      - Sub-module depth varies; see individual solver registrations
+    test_coverage: medium
+    related_wrk: []
+
+  # ── VISUALIZATION ────────────────────────────────────────────────────────────
+
+  - id: visualization
+    path: src/digitalmodel/visualization/
+    description: >
+      Visualisation and reporting framework: interactive agent health dashboards,
+      3D CAD/Blender integration, and standardised HTML/JSON/CSV report generation.
+    maturity: stable
+    capabilities:
+      - Agent health monitoring dashboard (AgentDashboard)
+      - Standardised report models (parameters, results, validation, parametric study)
+      - HTML, JSON, CSV export for all report types
+      - Interactive parametric study HTML reports
+      - CAD integration via Blender and FreeCAD
+      - CP (cathodic protection) HTML report generation
+    standards: []
+    gaps:
+      - 3D visualisation requires Blender installation
+    test_coverage: low
+    related_wrk: []
+
+  # ── GIS ──────────────────────────────────────────────────────────────────────
+
+  - id: gis
+    path: src/digitalmodel/gis/
+    description: >
+      Geospatial analysis and field layout tools for offshore asset positioning.
+      Provides UTM coordinate conversion, CRS management, well location mapping,
+      and feature layer management.
+    maturity: stable
+    capabilities:
+      - WGS84 to UTM coordinate transformation
+      - UTM zone auto-detection from longitude
+      - Coordinate reference system (CRS) definition and type management
+      - Spatial query over feature collections
+      - Well location layer management
+      - Feature layer creation and output
+      - GIS I/O (read/write spatial datasets)
+      - Integration hooks for ArcGIS and open-source GIS stacks
+    standards: []
+    gaps:
+      - ArcGIS license required for full ArcPy functionality
+      - Bathymetry raster analysis not implemented
+    test_coverage: low
+    related_wrk: []
+
+  # ── FIELD DEVELOPMENT ────────────────────────────────────────────────────────
+
+  - id: field_development
+    path: src/digitalmodel/field_development/
+    description: >
+      Field development layout, schematic generation, and development type
+      modelling for offshore oil and gas fields. Generates field schematic
+      diagrams from phase-based configuration data.
+    maturity: beta
+    capabilities:
+      - Field layout schematic generation from YAML configuration
+      - Phase-based development type modelling
+      - Schematic element library (wells, flowlines, manifolds)
+      - SVG/HTML field schematic export
+    standards: []
+    gaps:
+      - Single schematic generator implementation; limited element types
+      - Integration with reservoir / production engineering modules pending
+    test_coverage: low
+    related_wrk: [WRK-192]
+
+  # ── WELL ─────────────────────────────────────────────────────────────────────
+
+  - id: well/drilling
+    path: src/digitalmodel/well/drilling/
+    description: >
+      Wellbore hydraulics and drilling engineering calculations. Generalised
+      steady-state annular hydraulics for arbitrary pipe-in-hole geometry
+      using the Bingham Plastic rheological model.
+    maturity: stable
+    capabilities:
+      - Annular velocity calculation (ft/min)
+      - Annular frictional pressure loss over TVD interval (psi)
+      - Equivalent circulating density (ECD) in ppg
+      - Cuttings transport ratio (annular velocity vs minimum cleaning velocity)
+      - Bingham Plastic rheology (plastic viscosity + yield point)
+      - Arbitrary multi-section pipe-in-hole geometry
+    standards:
+      - id: API-RP-13D
+        status: implemented
+    inputs:
+      - name: pipe_od
+        type: float
+        unit: inches
+      - name: hole_diameter
+        type: float
+        unit: inches
+      - name: mud_weight
+        type: float
+        unit: ppg
+      - name: flow_rate
+        type: float
+        unit: gal/min
+    outputs:
+      - name: annular_velocity
+        type: float
+        unit: ft/min
+      - name: ecd
+        type: float
+        unit: ppg
+    gaps:
+      - Non-Newtonian models beyond Bingham Plastic not implemented
+      - Dynamic surge/swab analysis not included
+    test_coverage: medium
+    related_wrk: []
+
+  - id: well/tubulars
+    path: src/digitalmodel/well/tubulars/
+    description: >
+      Casing and tubing string design checks: triaxial stress envelope,
+      Von Mises equivalent (VME) stress criteria, API burst/collapse ellipse,
+      and anisotropic VME design envelope.
+    maturity: stable
+    capabilities:
+      - Isotropic VME design envelope computation
+      - Anisotropic VME design envelope for directional loading
+      - API burst/collapse ellipse design check
+      - Hoop and axial stress calculation for tubular under combined loads
+      - Design envelope points generation for load path validation
+    standards:
+      - id: API-5C3
+        status: implemented
+    inputs:
+      - name: TubularGeometry
+        type: dataclass
+        description: OD, ID, grade, yield strength
+      - name: axial_load
+        type: float
+        unit: kN
+      - name: internal_pressure
+        type: float
+        unit: MPa
+    outputs:
+      - name: vme_stress
+        type: float
+        unit: MPa
+      - name: design_envelope_points
+        type: array
+        description: Burst/collapse interaction boundary
+    gaps:
+      - Wear and fatigue interaction not modelled
+      - Connection rating checks not included
+    test_coverage: medium
+    related_wrk: [WRK-376]
+
+  # ── STRUCTURAL (ADDITIONAL) ───────────────────────────────────────────────────
+
+  - id: structural/jacket_topside
+    path: src/digitalmodel/structural/jacket_topside/
+    description: >
+      Jacket and topside structural member and joint capacity checks per API RP 2A
+      WSD. Covers tubular member strength, combined loading interaction, and
+      tubular joint classification with punching shear checks.
+    maturity: stable
+    capabilities:
+      - Axial tension unity check (API RP 2A Section 3.2)
+      - Axial compression unity check (API RP 2A Section 3.3)
+      - Bending unity check (API RP 2A Section 3.2)
+      - Combined axial-bending interaction check (API RP 2A Eq 3.2.2)
+      - Tubular joint classification (K, T, Y, X types)
+      - Punching shear unity check for tubular joints
+    standards:
+      - id: API-RP-2A-WSD
+        status: implemented
+    inputs:
+      - name: TubularSection
+        type: dataclass
+        description: OD, wall thickness, yield strength, length
+      - name: MemberLoads
+        type: dataclass
+        unit: kips / ksi
+    outputs:
+      - name: MemberCheckResult
+        type: dataclass
+        description: Unity checks per API RP 2A (pass/fail + UC value)
+    gaps:
+      - Wave loading and storm load combination not automated
+      - Fatigue of jacket joints not linked from this module
+    test_coverage: medium
+    related_wrk: []
+
+  - id: structural/offshore_resilience
+    path: src/digitalmodel/structural/offshore_resilience/
+    description: >
+      Structural health monitoring templates and digital twin integration
+      framework for fixed and floating offshore structures. Provides sensor
+      configuration, alert thresholds linked to fatigue budgets, and
+      minimum-facility resilience planning tools.
+    maturity: beta
+    capabilities:
+      - Structural health monitoring sensor templates (fixed platform, floating, wind)
+      - Alert threshold configuration linked to fatigue damage budget
+      - Digital twin data record model for sensor integration
+      - Minimum-facility resilience lifecycle planning
+      - Multi-severity alert framework (info / warning / critical)
+    standards:
+      - id: DNV-ST-0126
+        status: partial
+      - id: API-RP-2SIM
+        status: partial
+    gaps:
+      - Real-time data ingestion pipeline not implemented
+      - Machine learning anomaly detection not included
+    test_coverage: low
+    related_wrk: []
+
+  # ── HYDRODYNAMICS (ADDITIONAL) ───────────────────────────────────────────────
+
+  - id: hydrodynamics/planing_hull
+    path: src/digitalmodel/hydrodynamics/planing_hull/
+    description: >
+      Seakeeping analysis for high-speed planing vessels using nonlinear 2D+t
+      strip theory (Wagner water-entry). Computes heave and pitch RAOs for
+      planing hulls at high forward speed.
+    maturity: beta
+    capabilities:
+      - Planing hull geometry definition (length, beam, deadrise, LCG)
+      - Nonlinear Wagner water-entry strip model
+      - Heave and pitch RAO computation at given speed and wave frequency
+      - PlaningMotionSolver for coupled heave-pitch dynamics
+    standards:
+      - id: ITTC-2002
+        status: partial
+    gaps:
+      - Resistance and propulsion not included
+      - Irregular sea state response not implemented
+    test_coverage: low
+    related_wrk: []
+
+  # ── SOLVERS (EXPANDED) ───────────────────────────────────────────────────────
+
+  - id: solvers/orcaflex
+    path: src/digitalmodel/solvers/orcaflex/
+    description: >
+      Comprehensive OrcaFlex integration: model generation, execution, post-
+      processing, batch management, file format conversion, and AI-assisted
+      analysis workflows. Requires commercial OrcaFlex (OrcFxAPI) license.
+    maturity: production
+    capabilities:
+      - Universal model runner for YAML and DAT input files
+      - Parallel batch job execution with status reporting
+      - Post-processing of .sim files (time traces, statistics)
+      - Model generation from structured YAML/TOML config
+      - Modular model generator (riser, mooring, vessel components)
+      - Input validation prior to run submission
+      - Format converter (YAML ↔ DAT ↔ structured YAML)
+      - Mooring analysis with comprehensive load extraction
+      - Mooring tension iteration (top tension targeting)
+      - Reporting models (design checks, utilisation tables)
+      - OrcaFlex post-result extraction and aggregation
+      - Browser-based model inspection interface
+    standards:
+      - id: DNV-OS-F201
+        status: partial
+      - id: API-RP-2SK
+        status: partial
+    gaps:
+      - OrcFxAPI commercial license required
+      - Advanced fatigue post-processing not fully automated
+    test_coverage: medium
+    related_wrk: []
+
+  - id: solvers/openfoam
+    path: src/digitalmodel/solvers/openfoam/
+    description: >
+      OpenFOAM CFD case setup, mesh generation, solver configuration, and
+      post-processing for marine and offshore engineering applications.
+    maturity: beta
+    capabilities:
+      - OpenFOAM case builder (domain, boundary conditions, solver config)
+      - Domain geometry builder for offshore structures
+      - Turbulence model selection (RANS, LES, laminar)
+      - Boundary condition management (inlet, outlet, wall, symmetry)
+      - Case type enumeration (external flow, internal, free surface)
+    standards: []
+    gaps:
+      - OpenFOAM installation required
+      - Free-surface (VOF) case templates not fully developed
+    test_coverage: low
+    related_wrk: []
+
+  - id: solvers/gmsh_meshing
+    path: src/digitalmodel/solvers/gmsh_meshing/
+    description: >
+      GMSH-based finite element mesh generation, quality assessment, and
+      multi-format export (ANSYS, OpenFOAM, Abaqus, VTK) for offshore
+      structural and CFD analysis.
+    maturity: beta
+    capabilities:
+      - Geometry mesh generation (GMSH Python API)
+      - Mesh quality analysis (skewness, aspect ratio, Jacobian)
+      - Multi-format mesh export (ANSYS CDB, OpenFOAM, Abaqus INP, VTK)
+      - Element type selection (tetra, hex, prism, quad, tri)
+      - Mesh algorithm selection (Delaunay, Frontal, etc.)
+    standards: []
+    gaps:
+      - GMSH Python package required
+      - Automated boundary-layer inflation meshing not implemented
+    test_coverage: low
+    related_wrk: []
+
+  - id: solvers/blender_automation
+    path: src/digitalmodel/solvers/blender_automation/
+    description: >
+      Blender 3D automation for offshore engineering visualisation. Provides
+      Python wrapper for headless Blender operations, CAD import, scene
+      management, and batch render pipelines.
+    maturity: beta
+    capabilities:
+      - BlenderWrapper for headless Blender operation
+      - Scene manager (object hierarchy, lighting, camera)
+      - CAD file import (STEP, OBJ, FBX)
+      - Mesh export in multiple formats
+      - Batch processing for multi-model render campaigns
+      - Blender executable discovery and verification
+    standards: []
+    gaps:
+      - Blender installation required
+      - Marine growth and coating visualisation templates not available
+    test_coverage: low
+    related_wrk: []
+
+  - id: solvers/orcawave
+    path: src/digitalmodel/solvers/orcawave/
+    description: >
+      OrcaWave diffraction analysis integration module. Exposes the OrcaWave
+      runner and result extraction for hydrodynamic diffraction workflows.
+    maturity: beta
+    capabilities:
+      - OrcaWave case runner via diffraction module integration
+      - Diffraction result extraction and format conversion
+    standards: []
+    gaps:
+      - Thin adapter; core logic lives in hydrodynamics/diffraction
+      - OrcFxAPI commercial license required
+    test_coverage: low
+    related_wrk: []
+
+  # ── BENCHMARKS ───────────────────────────────────────────────────────────────
+
+  - id: benchmarks
+    path: src/digitalmodel/benchmarks/
+    description: >
+      Performance benchmarking suite for digitalmodel analysis modules.
+      Measures execution time and memory usage for key calculation workflows.
+    maturity: beta
+    capabilities:
+      - Timing benchmarks for analysis modules
+      - Memory usage profiling
+    standards: []
+    gaps:
+      - Benchmark coverage is sparse
+      - CI integration for regression tracking not wired up
+    test_coverage: low
+    related_wrk: []
+
+  # ── INFRASTRUCTURE (ADDITIONAL) ──────────────────────────────────────────────
+
+  - id: infrastructure/validation
+    path: src/digitalmodel/infrastructure/validation/
+    description: >
+      Unified validation pipeline for engineering data: range checks, matrix
+      symmetry validation, physical plausibility, unit consistency, polar data
+      validation, and time-series sanity checks.
+    maturity: stable
+    capabilities:
+      - Range validator (min/max bounds with tolerance)
+      - Matrix validator (symmetry, positive-definiteness)
+      - Physical plausibility validator for engineering quantities
+      - Unit consistency checker across input sets
+      - Polar data validator (heading / frequency completeness)
+      - Time series validator (monotonicity, NaN/Inf checks)
+      - Composable validation pipeline with caching
+      - HTML validation report generation
+    standards: []
+    gaps:
+      - Schema-level validation (JSON Schema / Pydantic) not enforced
+    test_coverage: medium
+    related_wrk: []
+
+  - id: infrastructure/transformation
+    path: src/digitalmodel/infrastructure/transformation/
+    description: >
+      Data transformation utilities for engineering data pipelines: unit
+      conversion, coordinate system transformation, and data normalisation.
+    maturity: beta
+    capabilities:
+      - Unit conversion utilities (SI ↔ imperial)
+      - Coordinate system transformations
+      - Engineering data normalisation helpers
+    standards: []
+    gaps:
+      - No public __init__.py; internal use only
+      - Scope not fully documented
+    test_coverage: low
+    related_wrk: []

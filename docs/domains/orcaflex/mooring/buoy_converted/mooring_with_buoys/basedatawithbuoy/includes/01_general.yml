@@ -1,0 +1,418 @@
+# General Configuration
+# Generated from: basedatawithbuoy.yml
+# Date: 2026-01-18 21:53:19
+General:
+  Comments: "\r\n\r\nThe CALM buoy is modelled using a Spar Buoy."
+  UnitsSystem: US
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Explicit time domain
+  AlwaysUseRecommendedTimeSteps: No
+  InnerTimeStep: 0.001
+  TargetOuterTimeStep: 0.01
+  RecommendedInnerTimeStepRatio: 10
+  RecommendedOuterTimeStepToInnerMultiple: 30
+  RecommendedOuterTimeStepToWavePeriodRatio: 40
+  TensionTargetDamping: 10
+  BendingTargetDamping: 10
+  TorsionTargetDamping: 10
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.5
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 500
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 682.6518673117668
+  DefaultViewCentre:
+  - -169.72401614847865
+  - 25.34837963507439
+  - -182.15117867491043
+  DefaultViewAzimuth: 90
+  DefaultViewElevation: 25
+ClumpTypes:
+- Name: Clump Type1
+  Mass: 0.22046226218487758
+  Volume: 7.06293334429771
+  Height: 13.123359580052488
+  Offset: 0
+  AlignWith: Global axes
+  DragArea:
+  - 6.458346250025831
+  - ~
+  - 6.458346250025831
+  Cd:
+  - 1.1
+  - ~
+  - 1.1
+  Ca:
+  - 1
+  - ~
+  - 1
+3DBuoys:
+- Name: 3D Buoy1
+  Connection: Free
+  InitialPosition:
+  - 557
+  - -203.59999999999997
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy2
+  Connection: Free
+  InitialPosition:
+  - 515.8
+  - -238.79999999999998
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy3
+  Connection: Free
+  InitialPosition:
+  - 466.19999999999993
+  - -262.9
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy4
+  Connection: Free
+  InitialPosition:
+  - -466.19999999999993
+  - -262.9
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy5
+  Connection: Free
+  InitialPosition:
+  - -515.8
+  - -238.79999999999998
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy6
+  Connection: Free
+  InitialPosition:
+  - -557
+  - -203.59999999999997
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy7
+  Connection: Free
+  InitialPosition:
+  - -557
+  - 203.59999999999997
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy8
+  Connection: Free
+  InitialPosition:
+  - -515.8
+  - 238.79999999999998
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy9
+  Connection: Free
+  InitialPosition:
+  - -466.19999999999993
+  - 262.9
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy10
+  Connection: Free
+  InitialPosition:
+  - 466.19999999999993
+  - 262.9
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy11
+  Connection: Free
+  InitialPosition:
+  - 515.8
+  - 238.79999999999998
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+- Name: 3D Buoy12
+  Connection: Free
+  InitialPosition:
+  - 557
+  - 203.59999999999997
+  - 0
+  Mass: 25
+  Volume: 2308.9999999999977
+  BulkModulus: Infinity
+  Height: 14.999999999999998
+  SeabedFrictionCoefficient: 0
+  ContactArea: ~
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  DragArea:
+  - 26.909776041774297
+  - 26.909776041774297
+  - 2.1527820833419433
+  Cd:
+  - 1
+  - 1
+  - 1
+  Ca:
+  - 1
+  - 1
+  - 1
+Groups:
+  Structure:
+    Vessel: Model
+    1st Moor: Model
+    2nd Moor: Model
+    3rd Moor: Model
+    4th Moor: Model
+    5th Moor: Model
+    6th Moor: Model
+    7th Moor: Model
+    8th Moor: Model
+    Line1: Model
+    Line2: Model
+    Line3: Model
+    Line4: Model
+    Line5: Model
+    Line6: Model
+    Line7: Model
+    Line8: Model
+    3D Buoy1: Model
+    3D Buoy2: Model
+    3D Buoy3: Model
+    3D Buoy4: Model
+    3D Buoy5: Model
+    3D Buoy6: Model
+    3D Buoy7: Model
+    3D Buoy8: Model
+    Line9: Model
+    Line10: Model
+    Line11: Model
+    Line12: Model
+    9th Moor: Model
+    10th Moor: Model
+    11th Moor: Model
+    12th Moor: Model
+    3D Buoy9: Model
+    3D Buoy10: Model
+    3D Buoy11: Model
+    3D Buoy12: Model
+  State:
+    Collapsed: []

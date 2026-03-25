@@ -1,0 +1,56 @@
+# Buoys Configuration
+# Template: CALM Buoy Mooring System
+6DBuoys:
+  - Name: CALM Buoy
+    BuoyType: Spar buoy
+    Connection: Free
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    InitialPosition: [0, 0, -0.8]   # Draft ~0.8m at rest
+    InitialAttitude: [0, 0, 0]
+
+    # Inertia properties (12m CALM buoy)
+    Mass: 95000                      # kg
+    MomentsOfInertia: [3500000, 3500000, 5400000]  # kg.m^2
+    CentreOfMass: [0, 0, 0]
+
+    # Stacked buoy cylinder data
+    StackBaseCentre: [0, 0, -2.25]   # Bottom of buoy
+    BulkModulus: Infinity
+    MunkMomentCoefficient: 0
+    NormalDragAreaCalculatedFromGeometry: Yes
+    StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+
+    # Cylinder data (simplified 12m buoy)
+    Cylinders:
+      # Main hull
+      - CylinderOuterDiameter: 12.0
+        CylinderInnerDiameter: 0
+        CylinderLength: 4.5
+        CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.8, 1.13]
+        DragAreaMoment: [0, 0]
+        DragMomentCoefficient: [0, 0]
+        CylinderSlamForceDataEntry: 0
+        AddedMassForceCoefficient: [1.0, 0.07]
+        AddedMassAreaMoment: [0, 0]
+        AddedMassMomentCoefficient: [0, 0]
+        DampingForceCoefficient: [0, 0]
+        DampingAreaMoment: [0, 0]
+        DampingMomentCoefficient: [0, 0]
+
+    # Include in statics
+    IncludedInStatics: Yes
+    PrimaryMotion: Calculated (6 DOF)
+    SuperimposedMotion: None
+    IncludeAppliedLoads: No
+    IncludeWaveLoad1stOrder: Yes
+    IncludeWaveDriftLoad2ndOrder: Yes
+    IncludeWaveDriftDamping: Yes
+    IncludeSumFrequencyLoad: No
+    IncludeAddedMassAndDamping: Yes
+    IncludeManoeuvringLoad: No
+    IncludeOtherDamping: Yes
+    IncludeCurrentLoad: Yes
+    IncludeWindLoad: Yes

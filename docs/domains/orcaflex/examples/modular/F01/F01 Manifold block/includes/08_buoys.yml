@@ -1,0 +1,9078 @@
+# 6DBuoys Configuration
+# Generated from: F01 Manifold block.yml
+# Date: 2026-01-18 22:18:15
+6DBuoys:
+- Name: Main Buoy
+  BuoyType: Lumped buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0.0013435195857502958
+  - 12.579570206533052
+  - 2
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.001
+  MomentsOfInertia:
+  - 0
+  - 0
+  - 0
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0
+  Height: 0.001
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - 0
+  - 0
+  - 0
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: 0
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ: []
+  EdgeFrom, EdgeTo, EdgeDiameter: []
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 1
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1875
+  - 2.2499999999999996
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Processor
+  BuoyType: Spar buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.8000000000000007
+  - 2.7499999999999996
+  - -0.9999999999999999
+  InitialAttitude:
+  - 90
+  - 0
+  - 0
+  Mass: 52
+  MomentsOfInertia:
+  - 129.432
+  - 129.432
+  - 24
+  CentreOfMass:
+  - 0
+  - 0
+  - 2.8
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: No
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 2
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.8
+    DragArea:
+    - 0
+    - 3.14
+    DragForceCoefficient:
+    - 0
+    - 0.4
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2
+    CylinderInnerDiameter: 0
+    CylinderLength: 2
+    DragArea:
+    - 0
+    - 0
+    DragForceCoefficient:
+    - 0
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.8
+    DragArea:
+    - 0
+    - 3.14
+    DragForceCoefficient:
+    - 0
+    - 0.4
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - Aqua
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Block A
+  BuoyType: Spar buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.6000000000000008
+  - 1.5999999999999994
+  - -2
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 25
+  MomentsOfInertia:
+  - 14.455
+  - 14.455
+  - 19.55
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.5
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 2
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.85
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.8
+    - 0.2
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $8000FF
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Block B
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.6999999999999993
+  - -1.7999999999999992
+  - -1.0000000000000007
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 31.4
+  MomentsOfInertia:
+  - 20.935
+  - 20.935
+  - 20.935
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 8
+  BulkModulus: Infinity
+  Height: 4
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 4
+  - 4
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 1.15
+  - 1.15
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0.68
+  - 0.68
+  - 0.68
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 1
+    - 1
+    - 1
+  - - -1
+    - 1
+    - 1
+  - - -1
+    - -1
+    - 1
+  - - 1
+    - -1
+    - 1
+  - - 1
+    - 1
+    - -1
+  - - -1
+    - 1
+    - -1
+  - - -1
+    - -1
+    - -1
+  - - 1
+    - -1
+    - -1
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 2
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.0625000000000013
+  - 2.2499999999999996
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 3
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.9375
+  - 2.2499999999999996
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 4
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -4.8125
+  - 2.249999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 5
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1875
+  - 3.7499999999999996
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 6
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.0625000000000013
+  - 3.749999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 7
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.9374999999999987
+  - 3.749999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 8
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -4.812499999999997
+  - 3.7499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 9
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999987
+  - -3.75
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 10
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.0625
+  - -3.75
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 11
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.9375
+  - -3.7499999999999964
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 12
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -4.812500000000003
+  - -3.7499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 13
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999987
+  - -2.25
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 14
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.0625
+  - -2.2500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 15
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -3.9375
+  - -2.2500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Port 16
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -4.8125
+  - -2.250000000000001
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 9
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 4.8125
+  - -3.7499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 10
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.9375000000000004
+  - -3.7499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 11
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.0625000000000004
+  - -3.7499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 12
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - -3.749999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 13
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 4.8125
+  - -2.2499999999999987
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 14
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.9375000000000004
+  - -2.249999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 15
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.0625000000000004
+  - -2.249999999999999
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 16
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - -2.2499999999999996
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 1
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 4.8125
+  - 2.250000000000001
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 2
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.937499999999999
+  - 2.250000000000001
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 3
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.0625000000000018
+  - 2.25
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 4
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - 2.25
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 5
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 4.8125
+  - 3.7500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 6
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.9375000000000004
+  - 3.7500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 7
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.0625000000000018
+  - 3.7500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: MudMat Starboard 8
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - 3.7500000000000004
+  - -2.1
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.25
+  MomentsOfInertia:
+  - 0.047
+  - 0.016
+  - 0.063
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.065625
+  BulkModulus: Infinity
+  Height: 0.05
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $0080FF
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - 0.75
+    - 0.025
+  - - -0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - -0.75
+    - 0.025
+  - - 0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - 0.75
+    - -0.025
+  - - -0.4375
+    - -0.75
+    - -0.025
+  - - 0.4375
+    - -0.75
+    - -0.025
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 1
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - -2.249999999999999
+  - 1.0999999999999985
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 2
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3125000000000004
+  - -2.25
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 3
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0.43750000000000044
+  - -2.25
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 4
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.43749999999999956
+  - -2.25
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 5
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.3124999999999996
+  - -2.25
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 6
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999982
+  - -2.25
+  - 1.0999999999999985
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 7
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 8
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3125000000000004
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 9
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0.43750000000000044
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 10
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.43749999999999956
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 11
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.3124999999999996
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 12
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999996
+  - -0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 13
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 14
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3125000000000004
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 15
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0.43750000000000044
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 16
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.43749999999999956
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 17
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.3124999999999996
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 18
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999996
+  - 0.75
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 19
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 2.1875000000000004
+  - 2.2500000000000004
+  - 1.099999999999999
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 20
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.3125000000000004
+  - 2.2499999999999996
+  - 1.099999999999999
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 21
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0.43750000000000044
+  - 2.2499999999999996
+  - 1.099999999999999
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 22
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -0.43749999999999956
+  - 2.2499999999999996
+  - 1.099999999999999
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 23
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.3124999999999996
+  - 2.2499999999999996
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Roof 24
+  BuoyType: Lumped buoy
+  Connection: Main Buoy
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -2.1874999999999996
+  - 2.2499999999999996
+  - 1.0999999999999988
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 0.12
+  MomentsOfInertia:
+  - 0.023
+  - 0.008
+  - 0.03
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.013125
+  BulkModulus: Infinity
+  Height: 0.01
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.3125
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.14
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 29.21681168
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 1.3125
+  LumpedBuoySlamForceDataEntry: 5
+  LumpedBuoySlamForceDataExit: 2.5
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $00B9B9
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - 0.75
+    - 0.005
+  - - -0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - -0.75
+    - 0.005
+  - - 0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - 0.75
+    - -0.005
+  - - -0.4375
+    - -0.75
+    - -0.005
+  - - 0.4375
+    - -0.75
+    - -0.005
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+  ShadedDrawingCullingMode: Anticlockwise

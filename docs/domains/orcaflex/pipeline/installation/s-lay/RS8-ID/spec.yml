@@ -1,0 +1,68 @@
+metadata:
+  name: "prpp_rs8_id_10in"
+  description: "10-inch RS8-ID pipeline S-lay installation from Eclipse"
+  structure: pipeline
+  operation: installation/s-lay
+  project: "PRPP"
+
+environment:
+  water:
+    depth: 20                    # TBD
+    density: 1.025
+  seabed:
+    slope: 0                     # TBD
+    stiffness: {normal: 100, shear: 10}  # TBD
+  waves:
+    type: airy
+    height: 0                    # TBD - base case (0), dynamics use 0.25-1.75m
+    period: 8
+    direction: 0
+  current:
+    speed: 1.0
+    direction: 0
+    profile: [[0, 1.0]]         # TBD
+  wind:
+    speed: 0                     # TBD
+    direction: 0
+
+pipeline:
+  name: "RS8-ID Pipeline"
+  material: X60
+  dimensions:
+    outer_diameter: 0.2731
+    wall_thickness: 0.0143
+  coatings:
+    corrosion: {thickness: 0.005, density: 1.3}  # TBD exact
+    weight:
+      - {name: CWC40, thickness: 0.04, density: 3.04}  # TBD exact
+  segments:
+    - {type: X60+coating+CWC40, length: 1000, segment_length: 2.0}  # TBD length
+
+equipment:
+  vessel:
+    name: "Eclipse"
+    properties:
+      loa: 130
+      beam: 28
+      depth: 9.5
+      draft: 4.0
+      gmt: 14.7
+      cog: [68.6, 0.0, 9.6]
+      gyration_radii: [10.3, 37.8, 37.8]
+      rao_reference: "TBD"
+    mooring: {drums: 8, winch_capacity: 735.75}
+    position: [0, 0, 0]         # TBD
+  stinger:
+    radius: 150
+    sections: [{length: 40, bend_radius: 150}]  # TBD
+    rollers: []                  # TBD - exact positions from OrcaFlex model
+    origin_position: [-30, 0, 7]  # TBD
+    origin_orientation: [180, 0, 0]
+  tensioner:
+    capacity_kn: 490
+    tension_value: 566.9         # From touchdown tension
+
+simulation:
+  time_step: 0.1
+  stages: [8, 200]
+  north_direction: 0            # TBD

@@ -1,0 +1,81 @@
+%YAML 1.1
+# Case: 12-inch TTR
+# Standalone case using 12-inch pipe
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [30, 300]
+  StaticsMinDamping: 10
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 1500
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 8.0
+      WavePeriod: 13.0
+      WaveOrigin: [0, 0]
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 1.0
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [375, 0.8, 0]
+    - [750, 0.5, 0]
+    - [1125, 0.3, 0]
+    - [1500, 0.1, 0]
+
+LineTypes:
+  # 12-inch pipe
+  - Name: TTR_Pipe_12inch
+    Category: General
+    IncludeFile: ../../../../library/line_types/scr_12inch_x65.yml
+
+VesselTypes:
+  - Name: TLP_Type
+    Length: 80
+    RAOResponseUnits: degrees
+    RAOWaveUnit: amplitude
+    WavesReferredToBy: period (s)
+    RAOPhaseConvention: lags
+    RAOPhaseUnitsConvention: degrees
+    SurgePositive: forward
+    SwayPositive: port
+    HeavePositive: up
+    Symmetry: xz plane
+
+Vessels:
+  - Name: TLP
+    VesselType: TLP_Type
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+    Orientation: [0, 0, 0]
+    IncludedInStatics: None
+    PrimaryMotion: None
+    SuperimposedMotion: None
+
+Lines:
+  - Name: TTR_Main
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -1500
+    EndBConnection: TLP
+    EndBX: 5
+    EndBY: 0
+    EndBZ: -25
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [TTR_Pipe_12inch, 1480, 15]

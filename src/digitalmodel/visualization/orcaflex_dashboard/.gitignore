@@ -1,0 +1,224 @@
+# OrcaFlex Dashboard - Git Ignore Rules
+
+# Operating Systems
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.nvim/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.next/
+out/
+.nuxt
+dist
+.cache/
+.parcel-cache
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+*.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Application Data
+uploads/
+results/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# SSL Certificates
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+ssl/
+
+# Backups
+backup/
+*.backup
+*.bak
+backup_*
+
+# Test Coverage
+coverage/
+.nyc_output
+lcov.info
+.coverage
+htmlcov/
+coverage.xml
+
+# TypeScript
+*.tsbuildinfo
+
+# Jest
+jest-coverage/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmyp.json
+dmyp.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Local configuration
+config.local.yml
+config.local.yaml
+local_settings.py
+
+# OrcaFlex specific files
+*.dat.bak
+*.sim
+*.yml.bak
+*.yaml.bak
+orcaflex_temp/
+analysis_temp/
+
+# Monitoring and metrics
+prometheus_data/
+grafana_data/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Secrets
+secrets/
+*.secret
+secret.yml
+secret.yaml

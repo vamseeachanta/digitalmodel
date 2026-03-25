@@ -1,0 +1,27 @@
+BaseFile: SUT_MM_DZ_30deg_properties.yml
+General:
+  StageCount: 1
+LineTypes:
+  MainHoistLine_68mm_12x3LANKO:
+    EA: 97.6e3
+6DBuoys:
+  SUT_DZ_30deg:
+    InitialZ: -600.0
+3DBuoys:
+  Masterlink:
+    InitialZ: -593.0
+Lines:
+  CraneWire#2:
+    EndBZ: -590.1
+    Sections:
+    - Length: 5
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5
+    - Length: 613.7
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5
+    - Length: 5
+      LineType: MainHoistLine_68mm_12x3LANKO
+      TargetSegmentLength: 5
+  Tilt4:
+    EndBZ: -594.9000000000001

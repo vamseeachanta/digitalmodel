@@ -1,0 +1,76 @@
+﻿J:\0113 Drilling Riser Development\Rev2
+StA - ?? (Harsha!!)
+
+again run all simulations files and getting below results,
+
+                                       stretched length(m)                Tension                    
+
+1.offset-o,current-0,waveheight-0                9.9769                      1000
+2.offset-4,current-0,waveheight-0               65.0364                      1000
+3.offset-0.current-3,waveheight-0               10.037                       1000
+4.offset-0,current-0,waveheight-5                9.97                        1000
+5.offset-4,current-3,waveheight-5               64.9863                      1000   
+
+15/03/2016
+
+we are changing the boundary condition the results will be updated like this,
+
+
+                                       stretched length(m)                Tension                    
+
+1.offset-o,current-0,waveheight-0                9.9769                      1000
+2.offset-4,current-0,waveheight-0               11.394                       1000
+3.offset-0.current-3,waveheight-0               10.037                       1000
+4.offset-0,current-0,waveheight-5                9.97                        1000
+5.offset-4,current-3,waveheight-5               11.279                       1000 
+        
+
+
+J:\0113 Drilling Riser Development\Rev1
+new - 
+new2 - 
+
+
+Dear Vamsee,
+
+I will do the following changes as discussed below:
+Short Term:
+1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with Harsha/Manoj.
+a/ Where is the seabed. Annotate this in all charts
+b/ Where is the MSL. Annotate this in all charts
+2/ Data is not referencing the right spreadsheet. I will ensure I correct them.
+3/ We increased wave height and also time period. This will help us latch on to higher RAOS. I will review the latest results
+4/ Link up objectives in sheet from TItle sheet.
+5/ I will summarize results again
+6/ Ask Manoj for a Stack-up drawing?
+
+Long Term:
+1/ Tensioners are not defined at the right location. Usually, the tension ring is located at approximately 5 m above mean sea level (MSL). Discuss with MP and correct it
+2/ I have not done tension matching. I will learn from Manoj/Harsha on why we should do tension matching.
+
+Dear Vamsee sir,
+
+I will do the following changes as discussed below:
+Short Term:
+1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with Harsha/Manoj.
+a/ Where is the seabed. Annotate this in all charts
+b/ Where is the MSL. Annotate this in all charts
+2/ Data is not referencing the right spreadsheet. I will ensure I correct them.
+3/ We increased wave height and also time period. This will help us latch on to higher RAOS. I will review the latest results
+4/ Link up objectives in sheet from TItle sheet.
+5/ I will summarize results again
+
+by changing the tensioner length 1 in 10 and another one in 15 with same tension 1500KN but results are getting like this
+
+                                              Flex joint-1               Flex joint-2
+
+1.offset-o,current-0,waveheight-0              0.001                       0.00
+2.offset-4,current-0,waveheight-0              0.003                       0.87
+3.offset-0.current-3,waveheight-0              0.002                       0.06
+4.offset-0,current-0,waveheight-5              0.003                       0.13
+5.offset-4,current-3,waveheight-5              0.008                       0.81 
+
+
+        
+		
+	

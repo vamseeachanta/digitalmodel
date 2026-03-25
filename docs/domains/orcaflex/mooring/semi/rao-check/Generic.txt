@@ -1,0 +1,36 @@
+﻿// Analyze Generic Models to understand Load RAOs
+// 
+
+// Case  12/31/1899
+LoadData LR_0R.dat
+Select "Vessel Type1"
+Select Draught "Draught1"
+Mass= 43000
+Select Environment
+WaveHeight= 49
+Select Environment
+WavePeriod= 15.5
+SaveData LR_1000yr_WH_0R.dat
+
+// Case  1/1/1900
+LoadData LR_1R.dat
+Select "Vessel Type1"
+Select Draught "Draught1"
+Mass= 43000
+Select Environment
+WaveHeight= 49
+Select Environment
+WavePeriod= 15.5
+SaveData LR_1000yr_WH_1R.dat
+
+// Case  1/2/1900
+LoadData LR_2R.dat
+Select "Vessel Type1"
+Select Draught "Draught1"
+Mass= 43000
+Select Environment
+WaveHeight= 49
+Select Environment
+WavePeriod= 15.5
+SaveData LR_1000yr_WH_2R.dat
+

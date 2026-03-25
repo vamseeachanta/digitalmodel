@@ -1,0 +1,1106 @@
+object_types:
+  LineTypes:
+    section_type: list
+    schema_class: GenericLineType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      category:
+        orcaflex_key: Category
+        type: str | None
+        required: false
+        description: LineType category
+      outer_diameter:
+        orcaflex_key: OD
+        type: float | str | None
+        required: false
+        description: OD (m) or data name ref
+      inner_diameter:
+        orcaflex_key: ID
+        type: float | str | None
+        required: false
+        description: ID (m) or data name ref
+      mass_per_length:
+        orcaflex_key: MassPerUnitLength
+        type: float | str | None
+        required: false
+        description: Mass per length (te/m) or data name ref
+      bending_stiffness:
+        orcaflex_key: EI
+        type: float | str | list | None
+        required: false
+        description: EI (kN.m2) or data name ref
+      axial_stiffness:
+        orcaflex_key: EA
+        type: float | str | None
+        required: false
+        description: EA (kN) or data name ref
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 53
+      common_properties:
+      - PoissonRatio
+      - ExpansionTable
+      - ClashStiffness
+      - Cs
+      - Ce
+      - Cl
+      - AllowableStress
+      - SeabedLateralFrictionCoefficient
+      - SeabedAxialFrictionCoefficient
+      - RayleighDampingCoefficients
+  VesselTypes:
+    section_type: list
+    schema_class: GenericVesselType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      length:
+        orcaflex_key: Length
+        type: float | None
+        required: false
+        description: Vessel length (m)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 51
+      common_properties:
+      - RAOResponseUnits
+      - RAOWaveUnit
+      - WavesReferredToBy
+      - RAOPhaseConvention
+      - RAOPhaseUnitsConvention
+      - RAOPhaseRelativeToConvention
+      - SurgePositive
+      - SwayPositive
+      - HeavePositive
+      - RollPositiveStarboard
+  Vessels:
+    section_type: list
+    schema_class: GenericVessel
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      vessel_type:
+        orcaflex_key: VesselType
+        type: str | None
+        required: false
+        description: VesselType reference
+      connection:
+        orcaflex_key: Connection
+        type: str | None
+        required: false
+        description: Connection
+      initial_position:
+        orcaflex_key: InitialPosition
+        type: list[float] | None
+        required: false
+        description: Initial position [x, y, z] (m)
+      length:
+        orcaflex_key: Length
+        type: float | None
+        required: false
+        description: Vessel length (m)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 51
+      common_properties:
+      - Draught
+      - Orientation
+      - IncludeAppliedLoads
+      - IncludeWaveLoad1stOrder
+      - IncludeWaveDriftLoad2ndOrder
+      - IncludeWaveDriftDamping
+      - IncludeSumFrequencyLoad
+      - IncludeAddedMassAndDamping
+      - IncludeManoeuvringLoad
+      - IncludeOtherDamping
+  Lines:
+    section_type: list
+    schema_class: GenericLine
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 53
+      common_properties:
+      - IncludeTorsion
+      - TopEnd
+      - LengthAndEndOrientations
+      - Representation
+      - PyModel
+      - PreBendSpecifiedBy
+      - DragFormulation
+      - StaticsVIV
+      - DynamicsVIV
+      - WaveCalculationMethod
+  6DBuoys:
+    section_type: list
+    schema_class: GenericBuoy6D
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      connection:
+        orcaflex_key: Connection
+        type: str | None
+        required: false
+        description: Connection
+      initial_position:
+        orcaflex_key: InitialPosition
+        type: list[float] | None
+        required: false
+        description: Initial position [x, y, z] (m)
+      buoy_type:
+        orcaflex_key: BuoyType
+        type: str | None
+        required: false
+        description: Buoy type reference
+      mass:
+        orcaflex_key: Mass
+        type: float | None
+        required: false
+        description: Mass (te)
+      volume:
+        orcaflex_key: Volume
+        type: float | None
+        required: false
+        description: Displaced volume (m3)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 44
+      common_properties:
+      - DampingRelativeTo
+      - DisturbanceVessel
+      - WaveCalculationMethod
+      - InitialAttitude
+      - MomentsOfInertia
+      - CentreOfMass
+      - SeabedFrictionCoefficient
+      - TotalContactArea
+      - ShadedDrawingCullingMode
+      - LumpedBuoyAddedMassMethod
+  3DBuoys:
+    section_type: list
+    schema_class: GenericBuoy3D
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      connection:
+        orcaflex_key: Connection
+        type: str | None
+        required: false
+        description: Connection
+      initial_position:
+        orcaflex_key: InitialPosition
+        type: list[float] | None
+        required: false
+        description: Initial position [x, y, z] (m)
+      mass:
+        orcaflex_key: Mass
+        type: float | None
+        required: false
+        description: Mass (te)
+      volume:
+        orcaflex_key: Volume
+        type: float | None
+        required: false
+        description: Displaced volume (m3)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 30
+      common_properties:
+      - BulkModulus
+      - Height
+      - SeabedFrictionCoefficient
+      - ContactArea
+      - DisturbanceVessel
+      - WaveCalculationMethod
+      - DragArea
+      - Cd
+      - Ca
+      - IncludedInStatics
+  Shapes:
+    section_type: list
+    schema_class: GenericShape
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      connection:
+        orcaflex_key: Connection
+        type: str | None
+        required: false
+        description: Connection
+      shape_type:
+        orcaflex_key: ShapeType
+        type: str | None
+        required: false
+        description: Shape type
+      shape:
+        orcaflex_key: Shape
+        type: str | None
+        required: false
+        description: Shape geometry
+      origin:
+        orcaflex_key: Origin
+        type: list[float] | None
+        required: false
+        description: Shape origin [x, y, z] (m)
+      mass:
+        orcaflex_key: Mass
+        type: float | None
+        required: false
+        description: Shape mass (te)
+      volume:
+        orcaflex_key: Volume
+        type: float | None
+        required: false
+        description: Shape volume (m3)
+      length:
+        orcaflex_key: Length
+        type: float | None
+        required: false
+        description: Shape length (m)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 40
+      common_properties:
+      - OutsidePen
+      - ShadedDrawingCullingMode
+      - Orientation
+      - Azimuth
+      - Declination
+      - OuterDiameter
+      - InnerDiameter
+      - IncludedAngleOfRevolution
+      - IsHollow
+      - ProfileDistanceAlongAxis, ProfileDiameter
+  Constraints:
+    section_type: list
+    schema_class: GenericConstraint
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      in_frame_connection:
+        orcaflex_key: InFrameConnection
+        type: str | None
+        required: false
+        description: In-frame connection
+      constraint_type:
+        orcaflex_key: ConstraintType
+        type: str | None
+        required: false
+        description: Constraint type
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 31
+      common_properties:
+      - InFrameInitialPosition
+      - InFrameInitialAttitude
+      - SolutionMethod
+      - CalculatedModelType
+      - OutFrameReleaseStage
+      - DOFFree, DOFInitialValue
+      - TranslationalStiffness
+      - RotationalStiffness
+      - TranslationalDamping
+      - RotationalDamping
+  Links:
+    section_type: list
+    schema_class: GenericLink
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      link_type:
+        orcaflex_key: LinkType
+        type: str | None
+        required: false
+        description: Link type
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 32
+      common_properties:
+      - Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo
+      - ReleaseStage
+      - UnstretchedLength
+      - Stiffness
+      - Pen
+      - Hidden
+      - LinearSpring
+      - LinearDamper
+      - DampingConstant
+      - SpringLength, SpringTension
+  Winches:
+    section_type: list
+    schema_class: GenericWinch
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 34
+      common_properties:
+      - WinchType
+      - Stiffness
+      - Damping
+      - ReleaseStage
+      - WinchControlType
+      - StageMode, StageValue
+      - Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo
+      - Pen
+      - Connection, ConnectionX, ConnectionY, ConnectionZ
+      - ShadedDrawingDiameter
+  ClumpTypes:
+    section_type: list
+    schema_class: GenericClumpType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      mass:
+        orcaflex_key: Mass
+        type: float | None
+        required: false
+        description: Mass (te)
+      volume:
+        orcaflex_key: Volume
+        type: float | None
+        required: false
+        description: Displaced volume (m3)
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 31
+      common_properties:
+      - Height
+      - AlignWith
+      - DragArea
+      - Cd
+      - Ca
+      - Pen
+      - Offset
+  WingTypes:
+    section_type: list
+    schema_class: GenericWingType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 30
+      common_properties:
+      - Angle, Lift, Drag, Moment
+      - UAEnabled
+      - UAAlpha0
+      - UACd0
+      - UACm0
+      - UACn1
+      - UACn2
+      - UACnAlpha
+      - UAb1
+      - UAb2
+  FlexJointTypes:
+    section_type: list
+    schema_class: GenericFlexJointType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  FlexJoints:
+    section_type: list
+    schema_class: GenericFlexJoint
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  DragChainTypes:
+    section_type: list
+    schema_class: GenericDragChainType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  DragChains:
+    section_type: list
+    schema_class: GenericDragChain
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  StiffenerTypes:
+    section_type: list
+    schema_class: GenericStiffenerType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 28
+      common_properties:
+      - LineType
+      - ConnectionArclength
+      - ConnectionArclengthRelativeTo
+      - AxialLoadInertiaTransfer
+  SupportTypes:
+    section_type: list
+    schema_class: GenericSupportType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 28
+      common_properties:
+      - Geometry
+      - NormalStiffness
+      - ShearStiffness
+      - Diameter
+      - WireFrameDrawEnds
+      - USupportHorizontalLength
+      - USupportVerticalLength
+      - VSupportLength
+      - VSupportAngle
+      - FlatSupportLength
+  MorisonElementTypes:
+    section_type: list
+    schema_class: GenericMorisonElementType
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties:
+      - NormalDragDiameter
+      - AxialDragDiameter
+      - Cd
+      - NormalHydrodynamicDiameter
+      - AxialHydrodynamicDiameter
+      - Ca
+      - Cm
+      - Pen
+  Turbines:
+    section_type: list
+    schema_class: GenericTurbine
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      connection:
+        orcaflex_key: Connection
+        type: str | None
+        required: false
+        description: Connection
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 30
+      common_properties:
+      - ImposedMotionConsistentWithSolver
+      - InitialAttitude
+      - GeneratorMode
+      - InitialRotorAngle
+      - GeneratorGearRatio
+      - GeneratorInertia
+      - InitialRotorAngVel
+      - HubRadius
+      - HubMass
+      - HubAxialMomentOfInertia
+  AttachedBuoys:
+    section_type: list
+    schema_class: GenericAttachedBuoy
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  VariableData:
+    section_type: list
+    schema_class: GenericVariableData
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+      data_type:
+        orcaflex_key: DataType
+        type: str | None
+        required: false
+        description: Variable data type
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 47
+      common_properties:
+      - IndependentValue, DependentValue
+      - DataSource
+      - Hysteretic
+      - Source
+      - FunctionName
+      - InitialValue
+      - TimeStep
+      - FileName
+      - LayerThickness, LayerMaterialDensity
+      - UnloadingStiffness
+  ExpansionTables:
+    section_type: list
+    schema_class: GenericObject
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties:
+      - ExpansionTableTemperature, ExpansionTablePressure, ExpansionTableExpansionFactor
+  PyModels:
+    section_type: list
+    schema_class: GenericObject
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  WakeModels:
+    section_type: list
+    schema_class: GenericObject
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  MultibodyGroups:
+    section_type: list
+    schema_class: GenericObject
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 29
+      common_properties:
+      - Bodies
+      - AMDTimeStep
+      - AMDCutoffTime
+      - AMDCutoffTolerance
+      - MultibodyAddedMassAndDamping
+  BrowserGroups:
+    section_type: list
+    schema_class: GenericObject
+    typed_fields:
+      name:
+        orcaflex_key: Name
+        type: str
+        required: true
+        description: Object name
+    priority_keys:
+    - Name
+    - Category
+    - ShapeType
+    - Shape
+    - BuoyType
+    - Connection
+    - InFrameConnection
+    - ConstraintType
+    - LinkType
+    skip_keys:
+    - ApplySeabedContactLoadsAtCentreline
+    - SeabedDamping
+    usage:
+      spec_count: 27
+      common_properties: []
+  FrictionCoefficients:
+    section_type: singleton
+    field_name: friction_coefficients
+  LineContactData:
+    section_type: singleton
+    field_name: line_contact_data
+  CodeChecks:
+    section_type: singleton
+    field_name: code_checks
+  Shear7Data:
+    section_type: singleton
+    field_name: shear7_data
+  VIVAData:
+    section_type: singleton
+    field_name: viva_data
+  RayleighDampingCoefficients:
+    section_type: singleton
+    field_name: rayleigh_damping
+  Groups:
+    section_type: singleton
+    field_name: groups
+dormancy_rules:
+  WindSpectrumFMax:
+    dormant_when: WindType != ESDU spectrum
+  WindTimeOrigin:
+    dormant_when: WindType != Full field
+  WindSpectrumFMin:
+    dormant_when: WindType != ESDU spectrum
+  NumberOfWindComponents:
+    dormant_when: WindType != ESDU spectrum
+  VerticalWindVariationFactor:
+    dormant_when: WindType != ESDU spectrum
+  WindSeed:
+    dormant_when: WindType != ESDU spectrum
+  WindSpectrumElevation:
+    dormant_when: WindType != ESDU spectrum
+  WindFullFieldTurbSimFileName:
+    dormant_when: WindType != Full field
+  WindFullFieldFormat:
+    dormant_when: WindType != Full field
+  WindOrigin:
+    dormant_when: WindType != Full field
+  WindSpeed:
+    dormant_when: WindType == Full field
+  WaveGamma:
+    dormant_when: WaveJONSWAPParameters == Automatic
+  CurrentExponent:
+    dormant_when: VerticalCurrentVariationMethod != Power law
+  CurrentSpeedAtSurface:
+    dormant_when: VerticalCurrentVariationMethod != Power law
+  CurrentSpeedAtSeabed:
+    dormant_when: VerticalCurrentVariationMethod != Power law
+metadata:
+  section_count: 27
+  singleton_count: 7
+  typed_field_count: 21
+  priority_key_count: 13
+  skip_general_key_count: 23
+  skip_object_key_count: 2
+  section_order:
+  - General
+  - VariableData
+  - ExpansionTables
+  - RayleighDampingCoefficients
+  - LineTypes
+  - VesselTypes
+  - ClumpTypes
+  - WingTypes
+  - FlexJointTypes
+  - DragChainTypes
+  - StiffenerTypes
+  - SupportTypes
+  - MorisonElementTypes
+  - PyModels
+  - WakeModels
+  - Vessels
+  - Lines
+  - Shapes
+  - 6DBuoys
+  - 3DBuoys
+  - Constraints
+  - Links
+  - Winches
+  - FlexJoints
+  - DragChains
+  - Turbines
+  - AttachedBuoys
+  - MultibodyGroups
+  - FrictionCoefficients
+  - LineContactData
+  - CodeChecks
+  - Shear7Data
+  - VIVAData
+  - BrowserGroups
+  - Groups

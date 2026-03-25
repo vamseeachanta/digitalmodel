@@ -1,0 +1,70 @@
+source_type: standard
+source_description: "DNV-RP-B401 anode resistance calculations for slender stand-off and flush-mount anodes"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "anode_resistance"
+equations:
+  - name: "Slender Stand-off Anode Resistance"
+    latex: "R_a = \\frac{\\rho}{2\\pi L_a} \\left( \\ln\\frac{4L_a}{r_a} - 1 \\right) \\cdot k_{prox}"
+    description: "Anode-to-electrolyte resistance for long slender stand-off anodes per DNV-RP-B401 Table 10-7"
+  - name: "Flush-mount Anode Resistance (Sunde half-space)"
+    latex: "R_a = \\frac{\\rho}{\\pi L} \\left( \\ln\\frac{2L}{r} - 0.5 \\right)"
+    description: "Resistance for flush-mount hull anodes using Sunde half-space formula"
+inputs:
+  - name: "Seawater resistivity"
+    symbol: "rho"
+    unit: "ohm-cm"
+    test_value: 31.0
+  - name: "Anode length"
+    symbol: "L_a"
+    unit: "inches"
+    test_value: 24.0
+  - name: "Equivalent radius"
+    symbol: "r_eq"
+    unit: "inches"
+    test_value: 2.39
+outputs:
+  - name: "Anode resistance"
+    symbol: "R_a"
+    unit: "ohm"
+    test_expected: 0.4209
+    tolerance: 0.021
+worked_examples:
+  - description: "Flush-mount 29lb anode on suction pile (rho=31 ohm-cm, L=24 in, r_eq=2.39 in)"
+    inputs:
+      rho_ohm_cm: 31.0
+      L_a_in: 24.0
+      W_in: 5.0
+      H_in: 2.5
+      r_eq_in: 2.39
+    outputs:
+      resistance_ohm: 0.4209
+    use_as_test: true
+  - description: "Flush-mount 29lb anode on buoyancy can (rho=24 ohm-cm, L=24 in, r_eq=2.39 in)"
+    inputs:
+      rho_ohm_cm: 24.0
+      L_a_in: 24.0
+      W_in: 5.0
+      H_in: 2.5
+      r_eq_in: 2.39
+    outputs:
+      resistance_ohm: 0.3258
+    use_as_test: true
+  - description: "Flush-mount depleted anode on suction pile (rho=31 ohm-cm, L=24 in, r_eq=0.90 in)"
+    inputs:
+      rho_ohm_cm: 31.0
+      L_a_in: 24.0
+      W_in: 5.0
+      H_in: 2.5
+      r_eq_in: 0.90
+    outputs:
+      resistance_ohm: 0.5114
+    use_as_test: true
+assumptions:
+  - "Sunde half-space formula for flush-mount hull anodes"
+  - "Cross-section information collapsed into equivalent radius r_eq"
+  - "Imperial units (ohm-cm, inches) per standard CP design spreadsheet convention"
+references:
+  - "DNV-RP-B401 (2005/2017), Table 10-7"
+  - "Riser modification CP calculation, Appendix 2"

@@ -1,0 +1,32 @@
+# Basic vessel configuration template for passing ship calculations
+# Standard cargo vessel scenario
+
+moored_vessel:
+  length: 150.0         # meters
+  beam: 25.0           # meters
+  draft: 9.0           # meters
+  block_coefficient: 0.75
+  name: "Generic Cargo Vessel"
+
+passing_vessel:
+  length: 120.0        # meters
+  beam: 20.0          # meters
+  draft: 7.0          # meters
+  block_coefficient: 0.72
+  name: "Supply Vessel"
+
+environment:
+  water_depth: 40.0    # meters (set to null for infinite depth)
+  water_density: 1025.0  # kg/m³ (seawater)
+  current_velocity: 0.0  # m/s
+
+calculation:
+  stagger_distance: 75.0    # meters (longitudinal separation)
+  lateral_separation: 40.0   # meters (transverse separation)
+  passing_velocity: 5.0      # m/s (~10 knots)
+  num_points: 50            # Integration points
+  integration_tolerance: 1.0e-4  # Integration tolerance
+  max_iterations: 1000      # Maximum iterations for convergence
+
+output_units: "SI"  # Options: SI, Imperial
+description: "Basic cargo vessel passing scenario for moderate conditions"

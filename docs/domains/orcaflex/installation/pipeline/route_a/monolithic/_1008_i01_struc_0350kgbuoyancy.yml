@@ -1,0 +1,45 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\_06_i01_struc_el_-0900m_l0910m.yml
+# Created: 6:23 PM on 9/18/2023
+# User: 
+# Machine: 
+---
+BaseFile: __07__with_cw_350kgbuoyancy_no_br.yml
+
+General:
+  StaticsMaxIterations: 2000
+  StaticsTolerance: 100e-6
+  StaticsMinDamping: 3
+  StaticsMaxDamping: 5
+
+Vessels:
+  SevenArctic:
+    InitialX: 17
+
+6DBuoys:
+  UTA:
+    DegreesOfFreedomInStatics: X,Y,Z
+    InitialZ: -922
+  2.5teclump-wt:
+    Connection: Anchored
+    InitialX: -90
+    InitialZ: 0
+    InitialRotation1: 0
+    InitialRotation2: -90
+    InitialRotation3: 0
+Lines:
+  Umbilical:
+    Length[2]: 2
+    TargetSegmentLength[2]: 0.5
+    Length[3]: 5
+    TargetSegmentLength[3]: 1
+    Length[4]: 908
+    TargetSegmentLength[4]: 3
+    Length[5]: 5
+    TargetSegmentLength[5]: 1
+    Length[6]: 2
+    TargetSegmentLength[6]: 0.5
+    Length[7]: 7
+...

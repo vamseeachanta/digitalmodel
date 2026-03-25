@@ -1,0 +1,143 @@
+# Variation: External Turret Configuration
+# Turret mounted on external cantilever structure at bow
+# IMPORTANT: When overriding 3DBuoys and Lines, must include ALL properties
+
+3DBuoys:
+  # External turret forward of bow
+  - Name: Turret
+    BuoyType: Towed fish
+    Connection: FPSO
+    InitialX: 160
+    InitialY: 0
+    InitialZ: -12
+    Mass: 1500000
+    Volume: 2000
+    Height: 10
+    Diameter: 15
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 176.7
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+Lines:
+  # Adjusted anchor positions for external turret location
+  # Mooring Line 1 - 0 degrees
+  - Name: Mooring_L1
+    EndAConnection: Anchored
+    EndAX: 930
+    EndAY: 0
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 2 - 45 degrees
+  - Name: Mooring_L2
+    EndAConnection: Anchored
+    EndAX: 657
+    EndAY: 657
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 3 - 90 degrees
+  - Name: Mooring_L3
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 930
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 4 - 135 degrees
+  - Name: Mooring_L4
+    EndAConnection: Anchored
+    EndAX: -657
+    EndAY: 657
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 5 - 180 degrees
+  - Name: Mooring_L5
+    EndAConnection: Anchored
+    EndAX: -930
+    EndAY: 0
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 6 - 225 degrees
+  - Name: Mooring_L6
+    EndAConnection: Anchored
+    EndAX: -657
+    EndAY: -657
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 7 - 270 degrees
+  - Name: Mooring_L7
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: -930
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]
+
+  # Mooring Line 8 - 315 degrees
+  - Name: Mooring_L8
+    EndAConnection: Anchored
+    EndAX: 657
+    EndAY: -657
+    EndAZ: -300
+    EndBConnection: Turret
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1000, 10]

@@ -1,0 +1,48 @@
+# Example Batch Configuration for Universal OrcaFlex Runner
+# Save this file and run: /orcaflex-universal --config batch_config_example.yml
+
+processing:
+  # File discovery settings
+  pattern: 'fsts_*.yml'              # File pattern to match
+  input_directory: './models'        # Directory containing models
+  output_directory: './sim'          # Output directory for .sim files
+  recursive: true                    # Search subdirectories
+  
+  # Exclusion patterns
+  exclude_patterns:
+    - '*backup*'
+    - '*test*'
+    - '*includefile*'
+    - '*.tmp'
+    - '*.bak'
+  
+  # Processing settings
+  parallel: true                     # Enable parallel processing
+  max_workers: 20                    # Maximum parallel threads
+  chunk_size: null                   # Auto-determine chunk size
+
+# Specific model files (optional - overrides pattern)
+models:
+  specific_files: []
+  # - model1.yml
+  # - path/to/model2.dat
+  # - another/model3.yml
+
+# Runtime options
+options:
+  mock_mode: false                   # Set to true for testing without license
+  verbose: true                      # Enable detailed logging
+  save_report: true                  # Save JSON report
+  report_path: './simulation_report.json'
+  
+# Advanced settings
+advanced:
+  license_timeout: 300               # Seconds to wait for license
+  retry_attempts: 3                  # Retry failed models
+  continue_on_error: true           # Continue if some models fail
+  
+# Resource limits
+resources:
+  max_memory_gb: null               # Limit memory usage (null = auto)
+  cpu_affinity: null                # CPU cores to use (null = all)
+  priority: 'normal'                # Process priority: low, normal, high

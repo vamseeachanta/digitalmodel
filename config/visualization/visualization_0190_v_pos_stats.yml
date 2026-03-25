@@ -1,0 +1,633 @@
+---
+parameters:
+  start_datetime_range1: &start_datetime_range1 "2019-03-01 00:00:00"
+  end_datetime_range1: &end_datetime_range1 "2019-12-31 00:00:00"
+  start_datetime_range2: &start_datetime_range2 "2019-10-01 00:00:00"
+  end_datetime_range2: &end_datetime_range2 "2019-10-31 00:00:00"
+  start_datetime_range3: &start_datetime_range3 "2019-11-02 03:00:00"
+  end_datetime_range3: &end_datetime_range3 "2019-11-02 09:00:00"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: v_pos_stats
+    suptitle: Vessel Motions, Noble Bob Douglas
+    sets:
+
+    -
+      title: Northing
+      xlabel: Date
+      ylabel: Northing (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+
+    -
+      title: Easting
+      xlabel: Date
+      ylabel: Easting (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+
+  -
+    file_name_extension: v_pos_stats_range1
+    suptitle: Vessel Motions, Noble Bob Douglas
+    sets:
+
+    -
+      title: Northing
+      xlabel: Date
+      ylabel: Northing (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range1, *end_datetime_range1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+
+    -
+      title: Easting
+      xlabel: Date
+      ylabel: Easting (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range1, *end_datetime_range1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+
+  -
+    file_name_extension: v_pos_stats_range2
+    suptitle: Vessel Motions, Noble Bob Douglas
+    sets:
+
+    -
+      title: Northing
+      xlabel: Date
+      ylabel: Northing (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range2, *end_datetime_range2]
+      ylim: [2909000, 2959900]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONNORTH]
+          scale:
+            columns: [POSITIONNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSNORTH]
+          scale:
+            columns: [POSNORTH]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+
+    -
+      title: Easting
+      xlabel: Date
+      ylabel: Easting (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      xlim: [*start_datetime_range2, *end_datetime_range2]
+      ylim: [10490, 14590]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Maximum
+          label: [Maximum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Maximum
+          label: ['']
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: blue
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Minimum
+          label: [Minimum]
+          x: [StartTime]
+          y: [POSITIONEAST]
+          scale:
+            columns: [POSITIONEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Minimum
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: darkorange
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_VESSEL
+          statistic: Average
+          label: [Mean]
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_VESSEL
+          statistic: Average
+          label: ['']
+          x: [StartTime]
+          y: [POSEAST]
+          scale:
+            columns: [POSEAST]
+            factors: [3.281]
+          plt_kind: line
+          color: seagreen
+          marker: NULL

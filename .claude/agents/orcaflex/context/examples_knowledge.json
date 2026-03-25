@@ -1,0 +1,3232 @@
+{
+  "last_updated": "2025-08-20T13:10:22.009915",
+  "source": "Orcina Examples Portal - Complete Download",
+  "total_examples": 54,
+  "examples": {
+    "A06 SHEAR7 import drag amplification.sim": {
+      "metadata": {
+        "name": "A06 SHEAR7 import drag amplification.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": true,
+        "installation_analysis": false,
+        "viv_analysis": true
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "SHEAR7 VIV analysis interface",
+        "Drag amplification modeling"
+      ]
+    },
+    "A06 SHEAR7 interface.sim": {
+      "metadata": {
+        "name": "A06 SHEAR7 interface.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": true,
+        "installation_analysis": false,
+        "viv_analysis": true
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "SHEAR7 VIV analysis interface"
+      ]
+    },
+    "A01 Catenary riser.sim": {
+      "metadata": {
+        "name": "A01 Catenary riser.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 2,
+          "types": [
+            "Riser",
+            "Catenary"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Catenary configuration"
+      ]
+    },
+    "A01 Lazy wave riser.sim": {
+      "metadata": {
+        "name": "A01 Lazy wave riser.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 2,
+          "types": [
+            "Riser",
+            "Lazy Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": "Wave",
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Lazy wave configuration"
+      ]
+    },
+    "A01 Pliant wave riser.sim": {
+      "metadata": {
+        "name": "A01 Pliant wave riser.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 2,
+          "types": [
+            "Riser",
+            "Pliant Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": "Wave",
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Pliant wave configuration"
+      ]
+    },
+    "A01 Steep wave riser.sim": {
+      "metadata": {
+        "name": "A01 Steep wave riser.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 2,
+          "types": [
+            "Riser",
+            "Steep Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": "Wave",
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Steep wave configuration"
+      ]
+    },
+    "A04 Disconnecting turret system.sim": {
+      "metadata": {
+        "name": "A04 Disconnecting turret system.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Turret mooring system",
+        "Disconnectable system"
+      ]
+    },
+    "A02 Lazy S detailed.sim": {
+      "metadata": {
+        "name": "A02 Lazy S detailed.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Lazy Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Lazy wave configuration"
+      ]
+    },
+    "A02 Lazy S simple.sim": {
+      "metadata": {
+        "name": "A02 Lazy S simple.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Lazy Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Lazy wave configuration"
+      ]
+    },
+    "A02 Pliant S.sim": {
+      "metadata": {
+        "name": "A02 Pliant S.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Pliant Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Pliant wave configuration"
+      ]
+    },
+    "A02 Steep S.sim": {
+      "metadata": {
+        "name": "A02 Steep S.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Steep Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Steep wave configuration"
+      ]
+    },
+    "C07 Metocean buoy in deep water.sim": {
+      "metadata": {
+        "name": "C07 Metocean buoy in deep water.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 1,
+          "types": [
+            "Buoy"
+          ]
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": "Deep",
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "C10 Multiple statics.sim": {
+      "metadata": {
+        "name": "C10 Multiple statics.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "MultipleStatics.yml": {
+      "metadata": {
+        "name": "MultipleStatics.yml",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".yml",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "C05 Single point mooring.sim": {
+      "metadata": {
+        "name": "C05 Single point mooring.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Mooring"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "B01 Drilling riser.sim": {
+      "metadata": {
+        "name": "B01 Drilling riser.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Riser"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Drilling operations"
+      ]
+    },
+    "C08 Fish farm.sim": {
+      "metadata": {
+        "name": "C08 Fish farm.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Aquaculture application"
+      ]
+    },
+    "C06 CALM buoy.sim": {
+      "metadata": {
+        "name": "C06 CALM buoy.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 1,
+          "types": [
+            "CALM Buoy"
+          ]
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "C06 Discretised CALM buoy.sim": {
+      "metadata": {
+        "name": "C06 Discretised CALM buoy.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 1,
+          "types": [
+            "CALM Buoy"
+          ]
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "C09 Fenders.sim": {
+      "metadata": {
+        "name": "C09 Fenders.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "basecase.dat": {
+      "metadata": {
+        "name": "basecase.dat",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".dat",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "PipelayConfig.yml": {
+      "metadata": {
+        "name": "PipelayConfig.yml",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".yml",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "HeaveCompensatedWinch.sim": {
+      "metadata": {
+        "name": "HeaveCompensatedWinch.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 1
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "I01 Streamer array.sim": {
+      "metadata": {
+        "name": "I01 Streamer array.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "L01 Default vessel.sim": {
+      "metadata": {
+        "name": "L01 Default vessel.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 1,
+          "types": [
+            "Vessel"
+          ]
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "Z02 Line on line slide.sim": {
+      "metadata": {
+        "name": "Z02 Line on line slide.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Line"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "D02 Pull in analysis.sim": {
+      "metadata": {
+        "name": "D02 Pull in analysis.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": true,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "F06 Spool piece manoeuvring.sim": {
+      "metadata": {
+        "name": "F06 Spool piece manoeuvring.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "Z09 Vessel time history.sim": {
+      "metadata": {
+        "name": "Z09 Vessel time history.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 1,
+          "types": [
+            "Vessel"
+          ]
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "F02 Passive compensation.sim": {
+      "metadata": {
+        "name": "F02 Passive compensation.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Heave compensation"
+      ]
+    },
+    "F04 Payload transfer.sim": {
+      "metadata": {
+        "name": "F04 Payload transfer.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "J01 Deployment with sub.sim": {
+      "metadata": {
+        "name": "J01 Deployment with sub.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "D03 Lay on tower.sim": {
+      "metadata": {
+        "name": "D03 Lay on tower.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "H03 Floating and stowed lines.sim": {
+      "metadata": {
+        "name": "H03 Floating and stowed lines.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Line"
+          ]
+        },
+        "buoys": {
+          "count": 1,
+          "types": [
+            "Buoy"
+          ]
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "G04 Anchor-last deployment.sim": {
+      "metadata": {
+        "name": "G04 Anchor-last deployment.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "E01 Explicit geometry stinger.sim": {
+      "metadata": {
+        "name": "E01 Explicit geometry stinger.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "E01 Simple geometry stinger.sim": {
+      "metadata": {
+        "name": "E01 Simple geometry stinger.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "E02 Rigid hinged stinger with piggyback line.sim": {
+      "metadata": {
+        "name": "E02 Rigid hinged stinger with piggyback line.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Line"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "H01 Chinese lantern.sim": {
+      "metadata": {
+        "name": "H01 Chinese lantern.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Chinese lantern configuration"
+      ]
+    },
+    "L03 Semi-sub multibody analysis.sim": {
+      "metadata": {
+        "name": "L03 Semi-sub multibody analysis.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Multibody dynamics"
+      ]
+    },
+    "L02 OC4 Semi-sub.sim": {
+      "metadata": {
+        "name": "L02 OC4 Semi-sub.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "E03 Detailed hinged stinger.sim": {
+      "metadata": {
+        "name": "E03 Detailed hinged stinger.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "H02 Jacket to semisub.sim": {
+      "metadata": {
+        "name": "H02 Jacket to semisub.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "E05 Pipe davit lift.sim": {
+      "metadata": {
+        "name": "E05 Pipe davit lift.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "D04 J-tube pull in.sim": {
+      "metadata": {
+        "name": "D04 J-tube pull in.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": true,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "J-tube pull-in"
+      ]
+    },
+    "A05 Catenary with semisub.sim": {
+      "metadata": {
+        "name": "A05 Catenary with semisub.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Catenary"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Catenary configuration"
+      ]
+    },
+    "A05 Catenary with spar.sim": {
+      "metadata": {
+        "name": "A05 Catenary with spar.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Catenary"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Catenary configuration"
+      ]
+    },
+    "A05 Lazy wave with FPSO.sim": {
+      "metadata": {
+        "name": "A05 Lazy wave with FPSO.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 1,
+          "types": [
+            "FPSO"
+          ]
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Lazy Wave"
+          ]
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": "Wave",
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "Lazy wave configuration"
+      ]
+    },
+    "B06 Running BOP.sim": {
+      "metadata": {
+        "name": "B06 Running BOP.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": [
+        "BOP handling"
+      ]
+    },
+    "E04 Articulated stinger.sim": {
+      "metadata": {
+        "name": "E04 Articulated stinger.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "K01 5MW spar FOWT.sim": {
+      "metadata": {
+        "name": "K01 5MW spar FOWT.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "F01 Lowered cone.sim": {
+      "metadata": {
+        "name": "F01 Lowered cone.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "F01 Manifold block.sim": {
+      "metadata": {
+        "name": "F01 Manifold block.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    },
+    "F01 Trapped water.sim": {
+      "metadata": {
+        "name": "F01 Trapped water.sim",
+        "category": "unknown",
+        "category_title": "Unknown",
+        "file_type": ".sim",
+        "size_bytes": 0,
+        "source": "Orcina Examples Portal - Category UNKNOWN"
+      },
+      "components": {
+        "vessels": {
+          "count": 0,
+          "types": []
+        },
+        "lines": {
+          "count": 0,
+          "types": []
+        },
+        "buoys": {
+          "count": 0,
+          "types": []
+        },
+        "winches": {
+          "count": 0
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": false,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": null,
+        "waves": {
+          "type": null,
+          "height": null,
+          "period": null
+        },
+        "current": {
+          "profile": null,
+          "speed": null
+        },
+        "wind": {
+          "speed": null
+        }
+      },
+      "features": []
+    }
+  },
+  "patterns": {
+    "component_combinations": {
+      "lines": 14,
+      "buoys": 3,
+      "winches": 1,
+      "vessels": 2,
+      "buoys+lines": 1,
+      "lines+vessels": 1
+    },
+    "analysis_combinations": {
+      "fatigue_analysis+static_analysis+viv_analysis": 2,
+      "static_analysis": 50,
+      "installation_analysis+static_analysis": 2
+    },
+    "configuration_types": {
+      "Catenary configuration": 3,
+      "Lazy wave configuration": 4,
+      "Pliant wave configuration": 2,
+      "Steep wave configuration": 2,
+      "Chinese lantern configuration": 1
+    }
+  },
+  "best_practices": [
+    "Most common setup: lines",
+    "Examples cover 1 distinct application categories",
+    "15 unique features/configurations demonstrated"
+  ],
+  "common_configurations": {
+    "riser_types": {
+      "Riser": 5,
+      "Lazy Wave": 4,
+      "Pliant Wave": 2,
+      "Steep Wave": 2
+    },
+    "mooring_types": {},
+    "vessel_types": {
+      "Vessel": 2,
+      "FPSO": 1
+    },
+    "analysis_types": {
+      "static_analysis": 54,
+      "fatigue_analysis": 2,
+      "viv_analysis": 2,
+      "installation_analysis": 2
+    }
+  },
+  "categories": {
+    "unknown": {
+      "title": "Unknown",
+      "examples": [
+        "A06 SHEAR7 import drag amplification.sim",
+        "A06 SHEAR7 interface.sim",
+        "A01 Catenary riser.sim",
+        "A01 Lazy wave riser.sim",
+        "A01 Pliant wave riser.sim",
+        "A01 Steep wave riser.sim",
+        "A04 Disconnecting turret system.sim",
+        "A02 Lazy S detailed.sim",
+        "A02 Lazy S simple.sim",
+        "A02 Pliant S.sim",
+        "A02 Steep S.sim",
+        "C07 Metocean buoy in deep water.sim",
+        "C10 Multiple statics.sim",
+        "MultipleStatics.yml",
+        "C05 Single point mooring.sim",
+        "B01 Drilling riser.sim",
+        "C08 Fish farm.sim",
+        "C06 CALM buoy.sim",
+        "C06 Discretised CALM buoy.sim",
+        "C09 Fenders.sim",
+        "basecase.dat",
+        "PipelayConfig.yml",
+        "HeaveCompensatedWinch.sim",
+        "I01 Streamer array.sim",
+        "L01 Default vessel.sim",
+        "Z02 Line on line slide.sim",
+        "D02 Pull in analysis.sim",
+        "F06 Spool piece manoeuvring.sim",
+        "Z09 Vessel time history.sim",
+        "F02 Passive compensation.sim",
+        "F04 Payload transfer.sim",
+        "J01 Deployment with sub.sim",
+        "D03 Lay on tower.sim",
+        "H03 Floating and stowed lines.sim",
+        "G04 Anchor-last deployment.sim",
+        "E01 Explicit geometry stinger.sim",
+        "E01 Simple geometry stinger.sim",
+        "E02 Rigid hinged stinger with piggyback line.sim",
+        "H01 Chinese lantern.sim",
+        "L03 Semi-sub multibody analysis.sim",
+        "L02 OC4 Semi-sub.sim",
+        "E03 Detailed hinged stinger.sim",
+        "H02 Jacket to semisub.sim",
+        "E05 Pipe davit lift.sim",
+        "D04 J-tube pull in.sim",
+        "A05 Catenary with semisub.sim",
+        "A05 Catenary with spar.sim",
+        "A05 Lazy wave with FPSO.sim",
+        "B06 Running BOP.sim",
+        "E04 Articulated stinger.sim",
+        "K01 5MW spar FOWT.sim",
+        "F01 Lowered cone.sim",
+        "F01 Manifold block.sim",
+        "F01 Trapped water.sim"
+      ]
+    }
+  },
+  "index": {
+    "by_component": {
+      "lines": [
+        "A01 Catenary riser.sim",
+        "A01 Lazy wave riser.sim",
+        "A01 Pliant wave riser.sim",
+        "A01 Steep wave riser.sim",
+        "A02 Lazy S detailed.sim",
+        "A02 Lazy S simple.sim",
+        "A02 Pliant S.sim",
+        "A02 Steep S.sim",
+        "C05 Single point mooring.sim",
+        "B01 Drilling riser.sim",
+        "Z02 Line on line slide.sim",
+        "H03 Floating and stowed lines.sim",
+        "E02 Rigid hinged stinger with piggyback line.sim",
+        "A05 Catenary with semisub.sim",
+        "A05 Catenary with spar.sim",
+        "A05 Lazy wave with FPSO.sim"
+      ],
+      "buoys": [
+        "C07 Metocean buoy in deep water.sim",
+        "C06 CALM buoy.sim",
+        "C06 Discretised CALM buoy.sim",
+        "H03 Floating and stowed lines.sim"
+      ],
+      "winches": [
+        "HeaveCompensatedWinch.sim"
+      ],
+      "vessels": [
+        "L01 Default vessel.sim",
+        "Z09 Vessel time history.sim",
+        "A05 Lazy wave with FPSO.sim"
+      ]
+    },
+    "by_analysis": {
+      "static_analysis": [
+        "A06 SHEAR7 import drag amplification.sim",
+        "A06 SHEAR7 interface.sim",
+        "A01 Catenary riser.sim",
+        "A01 Lazy wave riser.sim",
+        "A01 Pliant wave riser.sim",
+        "A01 Steep wave riser.sim",
+        "A04 Disconnecting turret system.sim",
+        "A02 Lazy S detailed.sim",
+        "A02 Lazy S simple.sim",
+        "A02 Pliant S.sim",
+        "A02 Steep S.sim",
+        "C07 Metocean buoy in deep water.sim",
+        "C10 Multiple statics.sim",
+        "MultipleStatics.yml",
+        "C05 Single point mooring.sim",
+        "B01 Drilling riser.sim",
+        "C08 Fish farm.sim",
+        "C06 CALM buoy.sim",
+        "C06 Discretised CALM buoy.sim",
+        "C09 Fenders.sim",
+        "basecase.dat",
+        "PipelayConfig.yml",
+        "HeaveCompensatedWinch.sim",
+        "I01 Streamer array.sim",
+        "L01 Default vessel.sim",
+        "Z02 Line on line slide.sim",
+        "D02 Pull in analysis.sim",
+        "F06 Spool piece manoeuvring.sim",
+        "Z09 Vessel time history.sim",
+        "F02 Passive compensation.sim",
+        "F04 Payload transfer.sim",
+        "J01 Deployment with sub.sim",
+        "D03 Lay on tower.sim",
+        "H03 Floating and stowed lines.sim",
+        "G04 Anchor-last deployment.sim",
+        "E01 Explicit geometry stinger.sim",
+        "E01 Simple geometry stinger.sim",
+        "E02 Rigid hinged stinger with piggyback line.sim",
+        "H01 Chinese lantern.sim",
+        "L03 Semi-sub multibody analysis.sim",
+        "L02 OC4 Semi-sub.sim",
+        "E03 Detailed hinged stinger.sim",
+        "H02 Jacket to semisub.sim",
+        "E05 Pipe davit lift.sim",
+        "D04 J-tube pull in.sim",
+        "A05 Catenary with semisub.sim",
+        "A05 Catenary with spar.sim",
+        "A05 Lazy wave with FPSO.sim",
+        "B06 Running BOP.sim",
+        "E04 Articulated stinger.sim",
+        "K01 5MW spar FOWT.sim",
+        "F01 Lowered cone.sim",
+        "F01 Manifold block.sim",
+        "F01 Trapped water.sim"
+      ],
+      "fatigue_analysis": [
+        "A06 SHEAR7 import drag amplification.sim",
+        "A06 SHEAR7 interface.sim"
+      ],
+      "viv_analysis": [
+        "A06 SHEAR7 import drag amplification.sim",
+        "A06 SHEAR7 interface.sim"
+      ],
+      "installation_analysis": [
+        "D02 Pull in analysis.sim",
+        "D04 J-tube pull in.sim"
+      ]
+    },
+    "by_feature": {
+      "SHEAR7 VIV analysis interface": [
+        "A06 SHEAR7 import drag amplification.sim",
+        "A06 SHEAR7 interface.sim"
+      ],
+      "Drag amplification modeling": [
+        "A06 SHEAR7 import drag amplification.sim"
+      ],
+      "Catenary configuration": [
+        "A01 Catenary riser.sim",
+        "A05 Catenary with semisub.sim",
+        "A05 Catenary with spar.sim"
+      ],
+      "Lazy wave configuration": [
+        "A01 Lazy wave riser.sim",
+        "A02 Lazy S detailed.sim",
+        "A02 Lazy S simple.sim",
+        "A05 Lazy wave with FPSO.sim"
+      ],
+      "Pliant wave configuration": [
+        "A01 Pliant wave riser.sim",
+        "A02 Pliant S.sim"
+      ],
+      "Steep wave configuration": [
+        "A01 Steep wave riser.sim",
+        "A02 Steep S.sim"
+      ],
+      "Turret mooring system": [
+        "A04 Disconnecting turret system.sim"
+      ],
+      "Disconnectable system": [
+        "A04 Disconnecting turret system.sim"
+      ],
+      "Drilling operations": [
+        "B01 Drilling riser.sim"
+      ],
+      "Aquaculture application": [
+        "C08 Fish farm.sim"
+      ],
+      "Heave compensation": [
+        "F02 Passive compensation.sim"
+      ],
+      "Chinese lantern configuration": [
+        "H01 Chinese lantern.sim"
+      ],
+      "Multibody dynamics": [
+        "L03 Semi-sub multibody analysis.sim"
+      ],
+      "J-tube pull-in": [
+        "D04 J-tube pull in.sim"
+      ],
+      "BOP handling": [
+        "B06 Running BOP.sim"
+      ]
+    },
+    "by_category": {}
+  }
+}

@@ -1,0 +1,14 @@
+# Input Parameters for Parametric Analysis
+# Source: CALMBuoy_Vessel_2Drafts.yml
+# Generated: 2026-01-18 21:53:24
+
+current_speed: 0
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 8
+- 200
+hs: 7
+tp: 8
+wave_direction: 180
+

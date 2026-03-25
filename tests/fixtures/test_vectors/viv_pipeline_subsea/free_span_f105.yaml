@@ -1,0 +1,169 @@
+source_type: python
+source_description: "Free-spanning pipeline VIV per DNV-RP-F105 — natural frequency, onset screening, amplitude, fatigue damage, allowable span length"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "free_span_viv"
+equations:
+  - name: "Added mass coefficient (seabed proximity)"
+    latex: "C_a(e/D) = 1.5 - 0.5 \\cdot \\min(e/D, 1.0) \\quad \\text{for } e/D \\leq 0.8"
+    description: "Seabed proximity correction for added mass per F105"
+  - name: "DNV-RP-C203 F-class S-N curve (in air)"
+    latex: "N = 1.73 \\times 10^{11} \\cdot S^{-3}"
+    description: "Allowable fatigue cycles for F-class weld detail in air"
+  - name: "CF onset velocity (large gap)"
+    latex: "V_{r,onset,CF} = \\frac{3.0}{\\gamma_{on,CF}}"
+    description: "Cross-flow onset reduced velocity when gap > 0.8D"
+  - name: "IL onset velocity (low Ks)"
+    latex: "V_{r,onset,IL} = \\frac{1.0}{\\gamma_{on,IL}} \\quad \\text{for } K_s < 0.4"
+    description: "In-line onset reduced velocity when stability parameter Ks < 0.4"
+inputs:
+  - name: "Pipe OD"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.2731
+  - name: "Pipe wall thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.0127
+  - name: "Span length"
+    symbol: "L"
+    unit: "m"
+    test_value: 34.0
+  - name: "Young's modulus"
+    symbol: "E"
+    unit: "Pa"
+    test_value: 207.0e9
+  - name: "Steel density"
+    symbol: "rho_s"
+    unit: "kg/m3"
+    test_value: 7850.0
+  - name: "Content density"
+    symbol: "rho_content"
+    unit: "kg/m3"
+    test_value: 900.0
+  - name: "Water density"
+    symbol: "rho_w"
+    unit: "kg/m3"
+    test_value: 1025.0
+  - name: "Current velocity"
+    symbol: "U_c"
+    unit: "m/s"
+    test_value: 0.8
+  - name: "Seabed gap"
+    symbol: "e"
+    unit: "m"
+    test_value: 0.5
+  - name: "Structural damping"
+    symbol: "zeta_s"
+    unit: "-"
+    test_value: 0.005
+  - name: "Hydrodynamic damping"
+    symbol: "zeta_h"
+    unit: "-"
+    test_value: 0.010
+  - name: "Gamma on IL"
+    symbol: "gamma_on_IL"
+    unit: "-"
+    test_value: 1.1
+  - name: "Gamma on CF"
+    symbol: "gamma_on_CF"
+    unit: "-"
+    test_value: 1.3
+  - name: "Gamma k"
+    symbol: "gamma_k"
+    unit: "-"
+    test_value: 1.15
+outputs:
+  - name: "In-line natural frequency (PP, L=34m)"
+    symbol: "fn_IL"
+    unit: "Hz"
+    test_expected: 0.42
+    tolerance: 0.06
+  - name: "Added mass coefficient at e/D=0"
+    symbol: "Ca_0"
+    unit: "-"
+    test_expected: 1.5
+    tolerance: 1.0e-9
+  - name: "Added mass coefficient at e/D=0.4"
+    symbol: "Ca_04"
+    unit: "-"
+    test_expected: 1.25
+    tolerance: 1.0e-9
+  - name: "Added mass coefficient at e/D >= 0.8"
+    symbol: "Ca_08"
+    unit: "-"
+    test_expected: 1.0
+    tolerance: 1.0e-9
+worked_examples:
+  - description: "Added mass coefficient Ca at seabed (e/D=0) = 1.5"
+    inputs:
+      e_over_D: 0.0
+    outputs:
+      Ca: 1.5
+    use_as_test: true
+  - description: "Added mass coefficient Ca at e/D=0.4 (midpoint interpolation) = 1.25"
+    inputs:
+      e_over_D: 0.4
+    outputs:
+      Ca: 1.25
+    use_as_test: true
+  - description: "Added mass coefficient Ca far from seabed (e/D >= 0.8) = 1.0"
+    inputs:
+      e_over_D: 1.0
+    outputs:
+      Ca: 1.0
+    use_as_test: true
+  - description: "10.75-inch PP span L=34m — fn_IL in range [0.36, 0.48] Hz"
+    inputs:
+      od_m: 0.2731
+      wt_m: 0.0127
+      span_length_m: 34.0
+      bc: "PINNED_PINNED"
+      E_pa: 207.0e9
+      rho_steel: 7850.0
+      rho_content: 900.0
+      rho_water: 1025.0
+    outputs:
+      fn_IL_hz_min: 0.36
+      fn_IL_hz_max: 0.48
+    use_as_test: true
+  - description: "DNV F-class S-N allowable cycles at 100 MPa (in air)"
+    inputs:
+      stress_range_MPa: 100.0
+      sn_curve: "F"
+      environment: "IN_AIR"
+      A: 1.73e11
+      m: 3.0
+    outputs:
+      N_allowable: 173000.0
+    use_as_test: true
+  - description: "CF onset velocity at large seabed gap (e/D > 0.8)"
+    inputs:
+      gamma_on_CF: 1.3
+    outputs:
+      Vr_onset_CF: 2.308
+    use_as_test: true
+  - description: "IL onset velocity at low Ks (< 0.4)"
+    inputs:
+      gamma_on_IL: 1.1
+    outputs:
+      Vr_onset_IL: 0.909
+    use_as_test: true
+  - description: "VIV amplitude bounded — IL < 0.25 D, CF < 1.5 D per F105"
+    inputs:
+      reference: "DNV-RP-F105 amplitude limits"
+    outputs:
+      max_IL_amplitude_over_D: 0.25
+      max_CF_amplitude_over_D: 1.5
+    use_as_test: true
+assumptions:
+  - "Pinned-pinned boundary condition unless stated otherwise"
+  - "No wave-induced velocity (wave_velocity_ms = 0.0)"
+  - "Sag = 0 (no static deflection correction)"
+  - "Seawater with cathodic protection environment for fatigue"
+  - "S-N curve class F per DNV-RP-C203"
+references:
+  - "DNV-RP-F105 Free Spanning Pipelines (2017)"
+  - "DNV-RP-C203 Fatigue Design of Offshore Steel Structures"
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads"

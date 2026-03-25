@@ -1,0 +1,39 @@
+{
+  "example_id": "L03",
+  "owr_path": "D:\\workspace-hub\\digitalmodel\\docs\\domains\\orcawave\\examples\\L03 Semi-sub multibody analysis\\L03 Semi-sub multibody analysis.owr",
+  "passed": true,
+  "skipped": false,
+  "skip_reason": "",
+  "n_checks": 4,
+  "n_passed": 4,
+  "checks": [
+    {
+      "name": "raos_finite",
+      "passed": true,
+      "message": "All displacement RAOs are finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "positive_damping_diagonal",
+      "passed": true,
+      "message": "Min diagonal damping = 7.816e-33",
+      "value": 7.815633578196653e-33,
+      "threshold": 0.0
+    },
+    {
+      "name": "added_mass_finite",
+      "passed": true,
+      "message": "Added mass is finite",
+      "value": null,
+      "threshold": null
+    },
+    {
+      "name": "coupling_symmetry_A12_A21",
+      "passed": true,
+      "message": "Max |A12 - A21^T| = 24.28 (connected bodies: asymmetry expected); coupling magnitude = 8.995e+04",
+      "value": 24.28462949753157,
+      "threshold": null
+    }
+  ]
+}

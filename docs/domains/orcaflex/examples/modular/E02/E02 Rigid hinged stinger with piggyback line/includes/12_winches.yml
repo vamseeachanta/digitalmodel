@@ -1,0 +1,73 @@
+# Winches Configuration
+# Generated from: E02 Rigid hinged stinger with piggyback line.yml
+# Date: 2026-01-18 22:18:11
+Winches:
+- Name: Pipe Tensioner1
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Vessel1
+    - -10
+    - 0
+    - 14
+  - - Pipe
+    - 0
+    - 0
+    - 19.99999999999905
+    - End A
+  Stiffness: 10e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 240
+  - - Specified tension
+    - 240
+  - - Specified tension
+    - 240
+- Name: Cable Tensioner
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Vessel1
+    - -10
+    - 0
+    - 18
+  - - Cable
+    - 0
+    - 0
+    - 20.000139184635245
+    - End A
+  Stiffness: 10e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 200
+  - - Specified tension
+    - 200
+  - - Specified tension
+    - 200
+- Name: Pipe Tensioner2
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Vessel1
+    - -10
+    - 0
+    - 14
+  - - Pipe
+    - 0
+    - 0
+    - 29.999999999998664
+    - End A
+  Stiffness: 10e3
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 240
+  - - Specified tension
+    - 240
+  - - Specified tension
+    - 240

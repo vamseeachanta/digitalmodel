@@ -1,0 +1,9 @@
+﻿BaseFile: _06_cal_02.yml
+Lines:
+  Umbilical:
+    NumberOfAttachments: 1
+    AttachmentType[1]: BR_Stiffener
+    AttachmentName[1]: Stiffener1
+    Attachmentz[1]: 7
+    AttachmentzRelativeTo[1]: End A
+...

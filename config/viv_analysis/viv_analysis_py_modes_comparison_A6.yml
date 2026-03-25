@@ -1,0 +1,369 @@
+---
+parameters:
+  file_io_01: &file_io_01 data_manager\data\shear7\lid_02_cp01_2500ft_WT0750_064pcf.plt
+  label_01: &label_01 label 1
+  file_io_02: &file_io_02 data_manager\data\shear7\lid_02_cp03_2500ft_WT0750_064pcf.plt
+  label_02: &label_02 label 2
+  file_io_03: &file_io_03 data_manager\data\shear7\lid_02_cp03_2500ft_WT0750_064pcf.plt
+  label_03: &label_03 label 3
+
+  ascii_data_columns_parameter: &ascii_data_columns_parameter [x/L, unknown1, unknown2, unknown3, unknown4, Damage, unknown5]
+
+  plot_suptitle: &plot_suptitle Unfactored Combined VIV Fatigue Damage Along the Length
+  plot_title: &plot_title Long Term Current Data
+
+default:
+  Analysis:
+    common.mds: True
+    viv_fatigue:
+      shear7: False
+    combined:
+      fatigue: True
+      histograms: True
+  plot_damage_distribution: True
+  plot_fatigue_life: False
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+model_state_information:
+  flag: True
+  from_dict: {water_depth: NULL, model_length: 5523.5, scale: NULL}
+
+modal_sets:
+  - io: data_manager\data\risers\ttr\modes\Common_A6_Low_TTF.mds
+    label: A6, TTF-Low
+  - io: data_manager\data\risers\ttr\modes\Common_A6_Nom_TTF.mds
+    label: A6, TTF-Nom
+  - io: data_manager\data\risers\ttr\modes\Common_A6_High_TTF.mds
+    label: A6, TTF-Hi
+
+modal_plots:
+  -
+    file_name: NULL
+    file_extension: frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Frequency]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Mode Number (#)
+    ylabel: Frequency (Hz)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Frequency with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Mode Number]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Mode Number (#)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Curvature with Mode Number
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+  -
+    file_name: NULL
+    file_extension: curvature_with_frequency
+    array_label: [[1126 kips], [1006 kips], [886 kips]]
+    label: NULL
+    x: [Frequency]
+    y: [Mode Curvature]
+    size: half_letter
+    orientation: portrait
+    plt_kind: line
+    xlabel: Frequency (Hz)
+    ylabel: curvature (1/unit length)
+    suptitle: Horn Mountain TTR VIV Analysis
+    title: Curvature with Frequency
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xscale:
+      log: False
+
+mode_shape_plots:
+  each_modal_set:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: line
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+#    -
+#      file_name: NULL
+#      file_extension: mode_slope
+#      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#      y: [x]
+#      x: [Mode Slope]
+#      size: half_letter
+#      orientation: portrait
+#      plt_kind: scatter
+#      xlabel: Elevation Above Mudline (ft)
+#      ylabel: Mode Slope, Shape normalized to unit length
+#      suptitle: Horn Mountain TTR VIV Analysis
+#      title: Mode Slope
+#      xticklabels: NULL
+#      grid: True
+#      legend: True
+#      legend_location: best
+#      marker: NULL
+#      ylim: NULL
+#      xscale:
+#        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: line
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xlim: [-0.0001, 0.0001]
+      xscale:
+        log: False
+  between_modal_sets:
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [2, 3]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: line
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_shape
+      label: [2, 3]
+      y: [x]
+      x: [Mode Shape]
+      size: half_letter
+      orientation: portrait
+      plt_kind: line
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Shape, Normalized to unit length
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Shapes
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: [4800, 5600]
+      xscale:
+        log: False
+      text_fields:
+        -
+          x : -0.00001
+          y: 4908.5
+          text: Keel Jt. Center
+        -
+          x : -0.00001
+          y: 5423
+          text: Water Line
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [2, 3]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature (1/ unit length)
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: NULL
+      xscale:
+        log: False
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [2, 3]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature (1/ unit length)
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: [4800, 5600]
+      xlim: [-0.00003, 0.00003]
+      xscale:
+        log: False
+      text_fields:
+        -
+          x : -0.00001
+          y: 4908.5
+          text: Keel Jt. Center
+        -
+          x : -0.00001
+          y: 5423
+          text: Water Line
+    -
+      file_name: NULL
+      file_extension: mode_curvature
+      label: [2]
+      y: [x]
+      x: [Mode Curvature]
+      size: half_letter
+      orientation: portrait
+      plt_kind: scatter
+      ylabel: Elevation Above Mudline (ft)
+      xlabel: Mode Curvature (1/ unit length)
+      suptitle: Horn Mountain TTR VIV Analysis
+      title: Mode Curvature
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      ylim: [0, 100]
+      xscale:
+        log: False
+      text_fields:
+        -
+          x : -0.00001
+          y: 33
+          text: Stress Jt. Center
+
+viv_plots:
+  combined:
+    -
+      file_suffix: viv_combined_damage
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [total_damage]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+#      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        -
+          x : 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center
+  individual:
+    -
+      file_suffix: individual
+      suptitle: *plot_suptitle
+      size: default
+      orientation: portrait
+      plt_kind: line
+      title: *plot_title
+      grid: True
+      legend: True
+      legend_location: best
+      marker: NULL
+      x: [Damage (1/year)]
+      y: [elevation_above_mudline]
+      label: [overall fatigue damage]
+#      xlim: [0.0000001, 1]
+      xlabel: Fatigue Damage (1/year)
+      ylabel: Elevation Above Mudline (ft)
+      x_reverse: False
+      y_reverse: False
+      xscale:
+        log: True
+      text_fields:
+        -
+          x : 0.0000001
+          y: 33
+          text: Stress Jt. Center
+        -
+          x : 0.0000001
+          y: 4908.5
+          text: Keel Jt. Center

@@ -1,0 +1,1500 @@
+# 6DBuoys Configuration
+# Generated from: K06 FPV module.yml
+# Date: 2026-01-18 22:18:45
+6DBuoys:
+- Name: PanelA
+  BuoyType: Lumped buoy
+  Connection: PanelTilt
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.02
+  - 2
+  - 0.06
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 20
+  MomentsOfInertia:
+  - 1.64
+  - 6.41
+  - 8.04
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.078
+  BulkModulus: Infinity
+  Height: 0.04
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.94
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.17
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $408000
+  CentreOfMassOriginColour: Blue
+  CentreOfVolumeOriginColour: Red
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - -0.495
+    - -0.02
+  - - 0.98
+    - -0.495
+    - -0.02
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+- Name: PanelB
+  BuoyType: Lumped buoy
+  Connection: PanelTilt
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.02
+  - 2
+  - 0.06
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 20
+  MomentsOfInertia:
+  - 1.64
+  - 6.41
+  - 8.04
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.078
+  BulkModulus: Infinity
+  Height: 0.04
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.94
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.17
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $408000
+  CentreOfMassOriginColour: Blue
+  CentreOfVolumeOriginColour: Red
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - -0.495
+    - -0.02
+  - - 0.98
+    - -0.495
+    - -0.02
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+- Name: PanelC
+  BuoyType: Lumped buoy
+  Connection: PanelTilt
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - -1.0199999999999998
+  - 0.98
+  - 0.06
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 20
+  MomentsOfInertia:
+  - 1.64
+  - 6.41
+  - 8.04
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.078
+  BulkModulus: Infinity
+  Height: 0.04
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.94
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.17
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $408000
+  CentreOfMassOriginColour: Blue
+  CentreOfVolumeOriginColour: Red
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - -0.495
+    - -0.02
+  - - 0.98
+    - -0.495
+    - -0.02
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+- Name: PanelD
+  BuoyType: Lumped buoy
+  Connection: PanelTilt
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 1.0200000000000002
+  - 0.98
+  - 0.06
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 20
+  MomentsOfInertia:
+  - 1.64
+  - 6.41
+  - 8.04
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 0.078
+  BulkModulus: Infinity
+  Height: 0.04
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 1.94
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 1.17
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - 0
+  - 0
+  - 0
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $408000
+  CentreOfMassOriginColour: Blue
+  CentreOfVolumeOriginColour: Red
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - 0.495
+    - 0.02
+  - - -0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - -0.495
+    - 0.02
+  - - 0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - 0.495
+    - -0.02
+  - - -0.98
+    - -0.495
+    - -0.02
+  - - 0.98
+    - -0.495
+    - -0.02
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~
+- Name: FloatA
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.1499999999999995
+  - 7.019167388793147
+  - 0
+  InitialAttitude:
+  - 0
+  - 90
+  - 45
+  Mass: 10
+  MomentsOfInertia:
+  - 1.43
+  - 1.43
+  - 0.45
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.6
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  CylinderNumLinesDrawn: 13
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: FloatB
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 5.6499999999999995
+  - 7.019167388793147
+  - 0
+  InitialAttitude:
+  - 0
+  - 90
+  - 45
+  Mass: 10
+  MomentsOfInertia:
+  - 1.43
+  - 1.43
+  - 0.45
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.6
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  CylinderNumLinesDrawn: 13
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: FloatC
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 3.1500000000000004
+  - 5
+  - 0
+  InitialAttitude:
+  - 0
+  - 90
+  - -135
+  Mass: 10
+  MomentsOfInertia:
+  - 1.43
+  - 1.43
+  - 0.45
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.6
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  CylinderNumLinesDrawn: 13
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
+- Name: FloatD
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 5.6499999999999995
+  - 5
+  - 0
+  InitialAttitude:
+  - 0
+  - 90
+  - -135
+  Mass: 10
+  MomentsOfInertia:
+  - 1.43
+  - 1.43
+  - 0.45
+  CentreOfMass:
+  - 0
+  - 0
+  - 0.6
+  StackBaseCentre:
+  - 0
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.6
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.2
+    CylinderAxialDragArea: 0.14
+    DragForceCoefficient:
+    - 0.7
+    - 0.85
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.72
+    - 0.21
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  CylinderNumLinesDrawn: 13
+  Pen:
+  - 1
+  - Solid
+  - $C080FF
