@@ -1,0 +1,28 @@
+# Guard rails — prevent large binary re-introduction (WRK-1341)
+# These file types were relocated to /mnt/ace/<repo>/
+# Mark as binary so git does not attempt diff/merge
+*.pdf binary
+*.sim binary
+*.dat binary
+*.pptx binary
+*.docx binary
+*.doc binary
+*.xlsx binary
+*.xls binary
+*.xlsm binary
+*.jar binary
+*.zip binary
+*.gz binary
+*.exe binary
+*.chm binary
+*.bin binary
+*.dxf binary
+*.dwg binary
+*.3dm binary
+*.shp binary
+*.sldprt binary
+*.sldasm binary
+*.wbpz binary
+*.o binary
+*.a binary
+
