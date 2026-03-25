@@ -1,0 +1,38 @@
+# manifest.yaml -- Machine-readable traceability for CI and website (D-05/D-06)
+module: subsea/on_bottom_stability
+description: "Pipeline on-bottom stability design per DNV-RP-F109"
+primary_standard:
+  id: DNV-RP-F109
+  edition: 2021
+  title: "On-Bottom Stability Design of Submarine Pipelines"
+functions:
+  - name: hydrodynamic_force_per_meter
+    clause: "S3.2.1"
+    equation: "Eq 3.1"
+    description: "Inline hydrodynamic force per unit length (drag + inertia)"
+    inputs: [rho_w_kg_m3, D_outer_m, U_m_s, a_m_s2, C_D, C_M]
+    outputs: [force_N_per_m]
+  - name: lift_force_per_meter
+    clause: "S3.2.1"
+    equation: "Eq 3.2"
+    description: "Lift force per unit length"
+    inputs: [rho_w_kg_m3, D_outer_m, U_m_s, C_L]
+    outputs: [force_N_per_m]
+  - name: submerged_weight_per_meter
+    clause: "S2.2"
+    equation: ""
+    description: "Net submerged weight per unit length"
+    inputs: [D_outer_m, t_wall_m, rho_steel_kg_m3, rho_coat_kg_m3, t_coat_m, rho_contents_kg_m3, rho_w_kg_m3]
+    outputs: [weight_N_per_m]
+  - name: absolute_stability_check
+    clause: "S4.3.1"
+    equation: "Eq 4.1"
+    description: "Absolute lateral stability check"
+    inputs: [W_s_N_m, F_H_N_m, F_L_N_m, mu_soil]
+    outputs: [StabilityResult]
+  - name: generalized_stability_check
+    clause: "S4.3.2"
+    equation: "Eq 4.5"
+    description: "Generalized lateral stability with soil resistance"
+    inputs: [W_s_N_m, F_H_N_m, F_L_N_m, mu_soil, F_R_N_m]
+    outputs: [StabilityResult]
