@@ -281,3 +281,126 @@ class TestResultStructure:
         assert hasattr(result, "design_life_years")
         assert result.method == "dirlik"
         assert result.design_life_years == 25.0
+
+
+# ---------------------------------------------------------------------------
+# Test: unknown method raises ValueError
+# ---------------------------------------------------------------------------
+
+
+class TestUnknownMethod:
+    """Unknown spectral method must raise ValueError."""
+
+    def test_unknown_method_raises(self, simple_sn, freqs, flat_tf):
+        table = [SeaStateEntry(hs_m=2.0, tp_s=8.0, probability=1.0)]
+
+        def wave_spec_func(f, hs_val, tp_val):
+            return _jonswap_hz(f, hs_val, tp_val)
+
+        with pytest.raises(ValueError, match="Unknown method"):
+            scatter_fatigue_damage(
+                scatter_table=table,
+                stress_transfer_function=flat_tf,
+                sn_curve=simple_sn,
+                frequencies=freqs,
+                method="bogus_method",
+                wave_spectrum_func=wave_spec_func,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Test: array transfer function (not callable)
+# ---------------------------------------------------------------------------
+
+
+class TestArrayTransferFunction:
+    """Pass ndarray instead of callable as transfer function."""
+
+    def test_array_tf_matches_callable(self, simple_sn, freqs, flat_tf):
+        """Array TF with all ones should match callable flat TF."""
+        table = [SeaStateEntry(hs_m=2.0, tp_s=8.0, probability=1.0)]
+
+        def wave_spec_func(f, hs_val, tp_val):
+            return _jonswap_hz(f, hs_val, tp_val)
+
+        # Use array instead of callable
+        tf_array = np.ones_like(freqs)
+
+        result_arr = scatter_fatigue_damage(
+            scatter_table=table,
+            stress_transfer_function=tf_array,
+            sn_curve=simple_sn,
+            frequencies=freqs,
+            wave_spectrum_func=wave_spec_func,
+        )
+
+        result_fn = scatter_fatigue_damage(
+            scatter_table=table,
+            stress_transfer_function=flat_tf,
+            sn_curve=simple_sn,
+            frequencies=freqs,
+            wave_spectrum_func=wave_spec_func,
+        )
+
+        np.testing.assert_allclose(
+            result_arr.total_damage, result_fn.total_damage, rtol=1e-10
+        )
+
+    def test_array_tf_wrong_shape_raises(self, simple_sn, freqs):
+        """Array TF with wrong shape must raise ValueError."""
+        table = [SeaStateEntry(hs_m=2.0, tp_s=8.0, probability=1.0)]
+
+        def wave_spec_func(f, hs_val, tp_val):
+            return _jonswap_hz(f, hs_val, tp_val)
+
+        wrong_shape = np.ones(10)  # freqs has 200 points
+
+        with pytest.raises(ValueError, match="shape"):
+            scatter_fatigue_damage(
+                scatter_table=table,
+                stress_transfer_function=wrong_shape,
+                sn_curve=simple_sn,
+                frequencies=freqs,
+                wave_spectrum_func=wave_spec_func,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Test: duration_hours override
+# ---------------------------------------------------------------------------
+
+
+class TestDurationHours:
+    """SeaStateEntry with explicit duration_hours overrides probability scaling."""
+
+    def test_duration_hours_overrides_probability(self, simple_sn, freqs, flat_tf):
+        """When duration_hours > 0, damage uses explicit duration not probability."""
+        # 1 hour duration
+        table = [SeaStateEntry(hs_m=2.0, tp_s=8.0, probability=1.0, duration_hours=1.0)]
+
+        def wave_spec_func(f, hs_val, tp_val):
+            return _jonswap_hz(f, hs_val, tp_val)
+
+        result_hours = scatter_fatigue_damage(
+            scatter_table=table,
+            stress_transfer_function=flat_tf,
+            sn_curve=simple_sn,
+            frequencies=freqs,
+            design_life_years=25.0,
+            wave_spectrum_func=wave_spec_func,
+        )
+
+        # With probability scaling, duration would be 25 * 365.25 * 24 * 3600 seconds
+        # With explicit 1 hour, it's 3600 seconds -- much less damage
+        result_prob = scatter_fatigue_damage(
+            scatter_table=[SeaStateEntry(hs_m=2.0, tp_s=8.0, probability=1.0)],
+            stress_transfer_function=flat_tf,
+            sn_curve=simple_sn,
+            frequencies=freqs,
+            design_life_years=25.0,
+            wave_spectrum_func=wave_spec_func,
+        )
+
+        # Duration_hours=1 should give much less damage than 25-year probability=1
+        assert result_hours.total_damage < result_prob.total_damage
+        assert result_hours.total_damage > 0
