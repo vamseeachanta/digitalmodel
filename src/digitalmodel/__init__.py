@@ -17,6 +17,8 @@ Domain groups::
     digitalmodel.workflows           - Automation & agent orchestration
 """
 
+import warnings
+
 # Version of package
 __version__ = "0.0.9"
 
@@ -53,13 +55,24 @@ try:
     from digitalmodel.infrastructure.transformation.transformation import Transformation
     from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
     from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
-except ImportError as e:
-    import warnings
+except Exception as e:
+    # Optional compatibility imports should not make the package unimportable.
+    Aqwa = None
+    MooringDesigner = None
+    OrcaFlex = None
+    CTHydraulics = None
+    PipeCapacity = None
+    Pipeline = None
+    RAOAnalysis = None
+    TimeSeriesAnalysis = None
+    Transformation = None
+    vertical_riser = None
+    VIVAnalysis = None
     warnings.warn(f"Could not import some digitalmodel modules: {e}")
 
 try:
     from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
-except ImportError:
+except Exception:
     DigitalMarketing = None
 
 

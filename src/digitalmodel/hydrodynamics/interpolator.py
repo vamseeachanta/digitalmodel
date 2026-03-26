@@ -23,6 +23,39 @@ class CoefficientsInterpolator:
         """Initialize interpolator"""
         self.rao_data: Optional[RAOData] = None
 
+    @staticmethod
+    def _resolve_interp1d_kind(method: str, n_points: int) -> str:
+        """Degrade cubic interpolation when the source grid is too sparse."""
+        if method not in ['linear', 'cubic']:
+            raise ValueError(f"Method '{method}' not supported. Use 'linear' or 'cubic'.")
+        if method == 'cubic' and n_points < 4:
+            return 'linear'
+        return method
+
+    @classmethod
+    def _interpolate_values(
+        cls,
+        source_freqs: np.ndarray,
+        source_values: np.ndarray,
+        target_freqs: np.ndarray,
+        method: str
+    ) -> np.ndarray:
+        """Interpolate a 1D value series across frequency."""
+        if len(source_freqs) == 0:
+            raise ValueError("At least one source frequency is required for interpolation.")
+        if len(source_freqs) == 1:
+            return np.full(np.shape(target_freqs), source_values[0], dtype=float)
+
+        interp_kind = cls._resolve_interp1d_kind(method, len(source_freqs))
+        interpolator = interp1d(
+            source_freqs,
+            source_values,
+            kind=interp_kind,
+            bounds_error=False,
+            fill_value='extrapolate'
+        )
+        return interpolator(target_freqs)
+
     def load_raos(self, rao_data: RAOData) -> None:
         """
         Load RAO data for interpolation
@@ -61,29 +94,18 @@ class CoefficientsInterpolator:
         rao_amp = self.rao_data.amplitudes[:, dir_idx, dof.value]
         rao_phase = self.rao_data.phases[:, dir_idx, dof.value]
 
-        # Interpolate amplitudes
-        if method in ['linear', 'cubic']:
-            f_amp = interp1d(
-                self.rao_data.frequencies,
-                rao_amp,
-                kind=method,
-                bounds_error=False,
-                fill_value='extrapolate'
-            )
-            amp_interp = f_amp(target_frequencies)
-
-            # Interpolate phases
-            f_phase = interp1d(
-                self.rao_data.frequencies,
-                rao_phase,
-                kind=method,
-                bounds_error=False,
-                fill_value='extrapolate'
-            )
-            phase_interp = f_phase(target_frequencies)
-
-        else:
-            raise ValueError(f"Method '{method}' not supported. Use 'linear' or 'cubic'.")
+        amp_interp = self._interpolate_values(
+            self.rao_data.frequencies,
+            rao_amp,
+            target_frequencies,
+            method
+        )
+        phase_interp = self._interpolate_values(
+            self.rao_data.frequencies,
+            rao_phase,
+            target_frequencies,
+            method
+        )
 
         return amp_interp, phase_interp
 
@@ -203,17 +225,7 @@ class CoefficientsInterpolator:
         Returns:
             Interpolated values at target frequencies
         """
-        if method in ['linear', 'cubic']:
-            f_interp = interp1d(
-                source_freqs,
-                source_values,
-                kind=method,
-                bounds_error=False,
-                fill_value='extrapolate'
-            )
-            return f_interp(target_freqs)
-        else:
-            raise ValueError(f"Method '{method}' not supported")
+        return self._interpolate_values(source_freqs, source_values, target_freqs, method)
 
     def extract_rao_at_frequency(
         self,

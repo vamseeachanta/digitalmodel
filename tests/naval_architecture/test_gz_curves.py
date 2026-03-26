@@ -10,13 +10,12 @@ import yaml
 
 from digitalmodel.naval_architecture.stability import gz_from_cross_curves
 
+REPO_ROOT = Path(__file__).parents[2]
 FIXTURE_PATH = (
-    Path(__file__).parents[1]
-    / "fixtures/test_vectors/naval_architecture/gz_curves.yaml"
+    REPO_ROOT / "tests/fixtures/test_vectors/naval_architecture/gz_curves.yaml"
 )
 SHARED_ARTIFACT_PATH = (
-    Path(__file__).parents[1]
-    / "data/doc-intelligence/digitized-curves/gz-curves.yaml"
+    REPO_ROOT / "data/doc-intelligence/digitized-curves/gz-curves.yaml"
 )
 
 
@@ -60,6 +59,14 @@ def _imo_criterion(gz_data, symbol):
         for c in gz_data["imo_intact_stability_criteria"]
         if c["symbol"] == symbol
     )
+
+
+def _condition_gz_values(condition):
+    if condition["unit_system"] == "imperial":
+        return condition["gz_values_ft"]
+    if condition["unit_system"] == "metric":
+        return condition["gz_values_m"]
+    raise ValueError(f"Unsupported unit system: {condition['unit_system']}")
 
 
 class TestDDG51FullLoad:
@@ -207,6 +214,31 @@ class TestFixtureCoverageContract:
                 f"{cond['id']}: figure_digitized conditions require max_error_pct <= 2.0"
             )
 
+    def test_every_condition_has_monotonic_heel_angles(self, conditions):
+        for cond in conditions:
+            heel_angles = cond["heel_angles_deg"]
+            assert heel_angles[0] == 0, (
+                f"{cond['id']}: heel_angles_deg must start at 0 degrees"
+            )
+            assert heel_angles == sorted(heel_angles), (
+                f"{cond['id']}: heel_angles_deg must be increasing"
+            )
+            assert len(heel_angles) == len(set(heel_angles)), (
+                f"{cond['id']}: heel_angles_deg must not repeat values"
+            )
+
+    def test_gz_max_metadata_matches_curve_values(self, conditions):
+        for cond in conditions:
+            gz_values = _condition_gz_values(cond)
+            max_key = "gz_max_ft" if cond["unit_system"] == "imperial" else "gz_max_m"
+            assert max(gz_values) == pytest.approx(cond[max_key], abs=0.01), (
+                f"{cond['id']}: {max_key} must match the fixture curve maximum"
+            )
+            max_angle = cond["heel_angles_deg"][gz_values.index(max(gz_values))]
+            assert max_angle == cond["gz_max_angle_deg"], (
+                f"{cond['id']}: gz_max_angle_deg must match the curve maximum location"
+            )
+
 
 class TestSharedDigitizedCurveArtifact:
     """Contract tests for the shared digitized-curve artifact bridge."""
@@ -216,12 +248,33 @@ class TestSharedDigitizedCurveArtifact:
             "WRK-1381 requires data/doc-intelligence/digitized-curves/gz-curves.yaml"
         )
 
+    def test_shared_artifact_declares_fixture_source(self, shared_gz_data):
+        assert shared_gz_data["generated_from"] == (
+            "tests/fixtures/test_vectors/naval_architecture/gz_curves.yaml"
+        )
+
     def test_shared_artifact_covers_fixture_condition_ids(
         self, conditions, shared_gz_data
     ):
         fixture_ids = {cond["id"] for cond in conditions}
         artifact_ids = {curve["id"] for curve in shared_gz_data["curves"]}
         assert artifact_ids == fixture_ids
+
+    def test_shared_artifact_matches_fixture_curve_values(
+        self, conditions, shared_gz_data
+    ):
+        fixture_conditions = {cond["id"]: cond for cond in conditions}
+        for curve in shared_gz_data["curves"]:
+            fixture_condition = fixture_conditions[curve["id"]]
+            assert curve["heel_angles_deg"] == fixture_condition["heel_angles_deg"], (
+                f"{curve['id']}: heel angle grid differs from fixture"
+            )
+            assert curve["gz_values"] == _condition_gz_values(fixture_condition), (
+                f"{curve['id']}: shared artifact GZ values differ from fixture"
+            )
+            assert curve["unit_system"] == fixture_condition["unit_system"], (
+                f"{curve['id']}: shared artifact unit system differs from fixture"
+            )
 
     def test_shared_artifact_declares_standard_curve_arrays(self, shared_gz_data):
         for curve in shared_gz_data["curves"]:

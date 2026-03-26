@@ -410,6 +410,44 @@ class TestINPWriter:
         # No solid section for beam-only mesh
         assert "*SOLID SECTION" not in content
 
+    @pytest.mark.parametrize(
+        ("section_type", "dimensions", "expected_dimensions"),
+        [
+            ("CIRC", (0.05,), "0.05"),
+            ("PIPE", (0.08, 0.01), "0.08, 0.01"),
+        ],
+    )
+    def test_beam_section_output_for_circular_sections(
+        self,
+        tmp_dir,
+        section_type,
+        dimensions,
+        expected_dimensions,
+    ):
+        """Beam section output supports CIRC and PIPE cross-sections."""
+        nodes = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
+        elements = {
+            "Line 2": {
+                "connectivity": np.array([[0, 1]]),
+                "dimension": 1,
+            }
+        }
+        writer = INPWriter(nodes, elements)
+        writer.add_material("STEEL", 210000.0, 0.3)
+        writer.add_beam_section(
+            "EBEAM_B31", "STEEL", section_type, dimensions,
+            direction=(0.0, 0.0, 1.0),
+        )
+        out = writer.write(tmp_dir / f"beam_section_{section_type.lower()}.inp")
+        content = out.read_text()
+        assert (
+            f"*BEAM SECTION, ELSET=EBEAM_B31, MATERIAL=STEEL, SECTION={section_type}"
+            in content
+        )
+        assert expected_dimensions in content
+        assert "0.0, 0.0, 1.0" in content
+        assert "*SOLID SECTION" not in content
+
     def test_mixed_solid_and_beam(self, tmp_dir):
         """Mixed mesh writes both *SOLID SECTION and *BEAM SECTION."""
         nodes = np.array([

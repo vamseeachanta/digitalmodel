@@ -26,6 +26,23 @@ class WaveSpectra:
         """Initialize wave spectra generator"""
         self.g = 9.81  # m/s²
 
+    def _normalize_to_significant_height(
+        self,
+        frequencies: np.ndarray,
+        spectrum: np.ndarray,
+        hs: float
+    ) -> np.ndarray:
+        """Scale a discrete spectrum so its integrated energy matches the target Hs."""
+        target_m0 = hs**2 / 16.0
+        if target_m0 <= 0.0:
+            return np.zeros_like(spectrum)
+
+        current_m0 = self.spectral_moment(frequencies, spectrum, n=0)
+        if current_m0 <= 0.0:
+            return np.zeros_like(spectrum)
+
+        return spectrum * (target_m0 / current_m0)
+
     def jonswap(
         self,
         hs: float,
@@ -76,7 +93,7 @@ class WaveSpectra:
         # Complete JONSWAP spectrum
         S_jonswap = S_PM * enhancement
 
-        return omega, S_jonswap
+        return omega, self._normalize_to_significant_height(omega, S_jonswap, hs)
 
     def pierson_moskowitz(
         self,
@@ -117,7 +134,7 @@ class WaveSpectra:
         # PM spectrum
         S_pm = alpha * self.g**2 / omega**5 * np.exp(-beta * (omega_p / omega)**4)
 
-        return omega, S_pm
+        return omega, self._normalize_to_significant_height(omega, S_pm, hs)
 
     def bretschneider(
         self,
@@ -154,7 +171,7 @@ class WaveSpectra:
 
         S_bs = A / omega**5 * np.exp(-B)
 
-        return omega, S_bs
+        return omega, self._normalize_to_significant_height(omega, S_bs, hs)
 
     def issc(
         self,
@@ -193,7 +210,7 @@ class WaveSpectra:
         # Convert to rad/s: S(ω) = S(f) / (2π)
         S_omega = S_f / (2 * np.pi)
 
-        return omega, S_omega
+        return omega, self._normalize_to_significant_height(omega, S_omega, hs)
 
     def generate_spectrum(
         self,

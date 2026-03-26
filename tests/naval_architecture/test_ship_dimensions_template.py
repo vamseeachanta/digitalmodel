@@ -38,6 +38,15 @@ SAMPLE_TEMPLATE = {
 class TestTemplateLoading:
     """Load and validate ship dimension templates."""
 
+    def test_load_default_template(self):
+        from digitalmodel.naval_architecture.ship_dimensions import (
+            load_dimension_template,
+        )
+
+        vessels = load_dimension_template()
+        assert len(vessels) >= 1
+        assert any(v["hull_id"] == "BB-42" for v in vessels)
+
     def test_load_template(self):
         from digitalmodel.naval_architecture.ship_dimensions import (
             load_dimension_template,
@@ -95,6 +104,21 @@ class TestTemplateLoading:
         errors = validate_vessel_entry(bad)
         assert any("loa_ft" in e for e in errors)
 
+    def test_validate_hull_number_alias(self):
+        from digitalmodel.naval_architecture.ship_dimensions import (
+            validate_vessel_entry,
+        )
+
+        valid = {
+            "hull_number": "TEST-4",
+            "name": "Alias Ship",
+            "loa_ft": 120.0,
+            "beam_ft": 20.0,
+            "draft_ft": 8.0,
+        }
+        errors = validate_vessel_entry(valid)
+        assert len(errors) == 0
+
 
 class TestMergeIntoRegistry:
     """Merge template data into ship_data registry."""
@@ -118,3 +142,28 @@ class TestMergeIntoRegistry:
         added, skipped = merge_template_into_registry(vessels)
         assert skipped == 1
         assert added == 0
+
+    def test_merge_normalizes_registry_shape(self):
+        from digitalmodel.naval_architecture.ship_data import get_ship
+        from digitalmodel.naval_architecture.ship_dimensions import (
+            merge_template_into_registry,
+        )
+
+        vessels = [
+            {
+                "hull_id": "LSD-41",
+                "name": "Whidbey Island-class dock landing ship",
+                "loa_ft": 610.0,
+                "beam_ft": 84.0,
+                "draft_ft": 20.0,
+                "source": "NavSource Naval History",
+            }
+        ]
+        added, skipped = merge_template_into_registry(vessels)
+        assert added == 1
+        assert skipped == 0
+
+        ship = get_ship("LSD-41")
+        assert ship is not None
+        assert ship["hull_number"] == "LSD-41"
+        assert "source" not in ship
