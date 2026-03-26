@@ -23,6 +23,7 @@ modules:
       - Critical plane analysis for multiaxial loading
       - SCF lookup via Efthymiou parametric equations
       - Statistical safety factor calculations
+      - Scatter diagram fatigue damage via spectral methods (DNV-RP-C203 Appendix C/D)
     standards:
       - id: DNVGL-RP-C203
         status: implemented
@@ -37,7 +38,6 @@ modules:
       - id: ISO-19902
         status: partial
     gaps:
-      - Spectral fatigue from irregular wave loading (sea-state scatter approach)
       - Biaxial stress interaction correction
     test_coverage: high
     related_wrk: []
@@ -182,6 +182,8 @@ modules:
       - Safety class and fabrication type selection
       - API 5L grade library
       - M-T lookup table generation
+      - Pluggable CodeStrategy pattern with auto-registration (wall_thickness_codes/)
+      - ASME B31.4 burst/collapse/propagation checks via AsmeB314Strategy
     standards:
       - id: DNV-ST-F101
         status: implemented
@@ -220,9 +222,30 @@ modules:
       - id: API-RP-1111
         status: partial
     gaps:
-      - On-bottom stability (hydrodynamic stability) not included
       - Free-span VIV not included (see subsea/viv_analysis)
     test_coverage: medium
+    related_wrk: []
+
+  - id: subsea/on_bottom_stability
+    path: src/digitalmodel/subsea/on_bottom_stability/
+    description: >
+      Pipeline on-bottom stability design per DNV-RP-F109 (2021). Computes
+      hydrodynamic forces (drag, inertia, lift), submerged weight, and lateral
+      stability checks (absolute and generalized methods).
+    maturity: development
+    capabilities:
+      - Hydrodynamic force per unit length (drag + inertia) per DNV-RP-F109 Eq 3.1
+      - Lift force per unit length per DNV-RP-F109 Eq 3.2
+      - Submerged weight per unit length for coated pipelines
+      - Absolute lateral stability check per DNV-RP-F109 S4.3.1
+      - Generalized lateral stability with soil resistance per DNV-RP-F109 S4.3.2
+    standards:
+      - id: DNV-RP-F109
+        status: implemented
+    gaps:
+      - Hydrodynamic coefficient lookup tables (Table 3-3 / 3-4) not embedded
+      - Wave-on-current interaction model not included
+    test_coverage: high
     related_wrk: []
 
   - id: subsea/catenary_riser
