@@ -1,0 +1,26 @@
+# manifest.yaml -- Machine-readable traceability for CI and website
+module: hydrodynamics/capytaine
+description: "Potential flow BEM hydrodynamic analysis using Capytaine (open-source)"
+primary_standard:
+  id: DNV-RP-C205
+  edition: 2021
+  title: "Environmental Conditions and Environmental Loads"
+functions:
+  - name: run_bem_analysis
+    clause: "S7.1"
+    equation: "Boundary integral equation (DNV-RP-C205 §7.1.2)"
+    description: "Solve diffraction + radiation BEM problems for a floating body"
+    inputs: [body_config, wave_conditions, solver_config]
+    outputs: [BEMResult]
+  - name: compute_rao
+    clause: "S7.2.5"
+    equation: "RAO = F_exc / (-omega^2*(M+A) + j*omega*B + K)"
+    description: "Response Amplitude Operators from impedance method"
+    inputs: [BEMResult]
+    outputs: [RAOResult]
+  - name: compute_rao_manual
+    clause: "S7.2.5"
+    equation: "Eq 7.2.1"
+    description: "RAO from user-supplied mass and stiffness matrices"
+    inputs: [BEMResult, mass_matrix, stiffness_matrix, damping_extra]
+    outputs: [RAOResult]

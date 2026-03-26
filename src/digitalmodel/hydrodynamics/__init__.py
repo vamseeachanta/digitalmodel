@@ -18,6 +18,13 @@ from .wave_spectra import WaveSpectra
 from .ocimf_loading import OCIMFLoading
 from .interpolator import CoefficientsInterpolator
 
+# Capytaine BEM solver (optional — requires capytaine-env)
+try:
+    from .capytaine import CapytaineSolver, run_bem_analysis, compute_rao
+    _HAS_CAPYTAINE = True
+except ImportError:
+    _HAS_CAPYTAINE = False
+
 __all__ = [
     "HydrodynamicMatrix",
     "VesselProperties",
@@ -29,3 +36,6 @@ __all__ = [
     "OCIMFLoading",
     "CoefficientsInterpolator",
 ]
+
+if _HAS_CAPYTAINE:
+    __all__ += ["CapytaineSolver", "run_bem_analysis", "compute_rao"]

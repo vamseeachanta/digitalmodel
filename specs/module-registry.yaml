@@ -488,6 +488,30 @@ modules:
     test_coverage: medium
     related_wrk: []
 
+  - id: hydrodynamics/capytaine
+    path: src/digitalmodel/hydrodynamics/capytaine/
+    description: >
+      Open-source potential flow BEM solver (Capytaine) for hydrodynamic
+      analysis. Computes added mass, radiation damping, excitation forces,
+      and RAOs for floating bodies from mesh geometry.
+    maturity: beta
+    capabilities:
+      - Mesh import (STL, GDF, MSH, meshio formats)
+      - Diffraction + radiation BEM solve
+      - Added mass, radiation damping, excitation force extraction
+      - RAO computation (impedance method and manual matrices)
+      - xarray dataset export, NetCDF, matplotlib plots
+      - Predefined test shapes (sphere, cylinder, box)
+    standards:
+      - id: DNV-RP-C205
+        status: implemented
+    gaps:
+      - Ship hull benchmarking (OC4 semi-sub, WAMIT comparison)
+      - Multi-body analysis not yet exposed
+      - QTF (second-order) not yet supported
+    test_coverage: high
+    related_wrk: []
+
   - id: hydrodynamics/wave_spectra
     path: src/digitalmodel/hydrodynamics/wave_spectra.py
     description: >
