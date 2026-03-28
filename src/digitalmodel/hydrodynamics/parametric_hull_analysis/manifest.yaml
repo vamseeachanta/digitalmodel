@@ -1,0 +1,46 @@
+# manifest.yaml -- Machine-readable traceability for CI and website
+module: hydrodynamics/parametric_hull_analysis
+description: >-
+  Parametric hull form sweep with BEM analysis, forward speed corrections,
+  passing ship forces, and shallow water effects
+primary_standard:
+  id: DNV-RP-C205
+  edition: 2021
+  title: "Environmental Conditions and Environmental Loads"
+functions:
+  - name: run_parametric_sweep
+    clause: "S7.1, S7.2"
+    equation: "BEM boundary integral (S7.1.2) + RAO impedance (S7.2.5)"
+    description: "Parametric hull sweep through Capytaine BEM at each variation"
+    inputs: [SweepConfig, HullCatalog]
+    outputs: [list_SweepResultEntry, RAODatabase]
+  - name: encounter_frequency
+    clause: "S7.4.1"
+    equation: "omega_e = omega - k*U*cos(beta)"
+    description: "Encounter frequency transformation for forward speed"
+    inputs: [omega, forward_speed, heading, water_depth]
+    outputs: [omega_encounter]
+  - name: correct_rao_for_speed
+    clause: "S7.4"
+    equation: "RAO remapped from wave frequency to encounter frequency"
+    description: "Forward speed RAO correction via encounter frequency mapping"
+    inputs: [RAOResult, forward_speed, water_depth]
+    outputs: [RAOResult]
+  - name: pianc_bank_suction_force
+    clause: "PIANC-121-S5.2"
+    equation: "F_bank = rho*V^2*(Am/h)*f(y,slope)"
+    description: "Bank suction force per PIANC Report 121"
+    inputs: [speed, water_depth, midship_area, bank_clearance, slope]
+    outputs: [BankEffectResult]
+  - name: run_passing_ship_sweep
+    clause: "Wang-1975, PIANC-121-S4"
+    equation: "Slender-body passing ship forces with finite depth correction"
+    description: "Parametric passing ship force sweep across hull variants"
+    inputs: [hull_variants, passing_vessel, PassingShipSweepConfig]
+    outputs: [list_PassingShipSweepEntry]
+  - name: dnv_shallow_water_factor
+    clause: "Table-7-1"
+    equation: "Empirical shallow water added mass amplification"
+    description: "Validation factor for comparing against Capytaine finite-depth BEM"
+    inputs: [h_over_T, dof]
+    outputs: [correction_factor]
