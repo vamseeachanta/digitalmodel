@@ -127,7 +127,9 @@ def _load_mesh_file(cpt, path: Path, fmt: MeshFormat):
         fmt = _detect_format(path)
 
     logger.info("Loading mesh from %s (format: %s)", path, fmt.value)
-    return cpt.load_mesh(str(path), file_format=_capytaine_format_string(fmt))
+    # Let Capytaine auto-detect from extension — its internal format strings
+    # are version-dependent and passing explicit format can cause errors.
+    return cpt.load_mesh(str(path))
 
 
 def _load_via_meshio(cpt, path: Path):
