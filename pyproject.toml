@@ -90,6 +90,7 @@ dependencies = [
     "pandas>=2.0.0,<3.0.0",
     "passlib[bcrypt]==1.7.4",
     "pillow==10.1.0", # Image processing
+    "pint>=0.24.4",
     "plotly==5.17.0",
     "poetry",
     "pre-commit==3.6.0",
