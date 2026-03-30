@@ -115,8 +115,68 @@ No built-in AISC database lookup (e.g., "W14x90" by name). Users must supply dim
 3. Parametric studies (varying wall thickness, member sizing)
 4. Custom section analysis (built-up sections, openings)
 
+## AISC Shapes Database Lookup
+
+**Issue:** vamseeachanta/workspace-hub#1497
+**Date:** 2026-03-29
+
+Since sectionproperties has no built-in AISC shape lookup (users must supply dimensions), we added a lookup layer backed by a YAML catalog.
+
+### Catalog
+
+`data/aisc_shapes.yaml` — 10 W-shapes from AISC Shapes Database v15.0, including:
+- Dimensions: d, bf, tf, tw, k_des, k_det
+- Reference properties: A, Ix, Iy, Sx, Zx, J, Cw
+- Shapes: W6x15, W8x31, W10x49, W12x65, W14x22, W14x48, W14x90, W21x44, W24x176, W36x150
+
+### Lookup Module
+
+`scripts/integrations/aisc_section_lookup.py` provides:
+
+```python
+from aisc_section_lookup import get_aisc_geometry, list_shapes, validate_shape
+
+# Get a sectionproperties Geometry object by AISC designation
+geom = get_aisc_geometry("W14x90", unit="imperial")  # or "metric"
+
+# List available shapes
+list_shapes()              # all shapes
+list_shapes(series="W14")  # W14 series only
+
+# Validate against AISC reference values
+validate_shape("W14x90", verbose=True)
+```
+
+Key design decisions:
+- Fillet radius computed from k_des (design k): `r = k_des - tf`
+- sectionproperties API note: `get_z()` returns elastic (AISC S), `get_s()` returns plastic (AISC Z) — opposite to AISC naming convention
+
+### Validation Results
+
+All 10 shapes validated against AISC manual reference values. Every property (A, Ix, Iy, Sx, Zx, J, Cw) within 1.4%:
+
+| Shape | A | Ix | Iy | Sx | Zx | J | Cw |
+|-------|---|----|----|----|----|---|------|
+| W14x90 | 0.13% | 0.29% | 0.11% | 0.49% | 0.43% | 0.32% | 0.65% |
+| W14x48 | 0.35% | 0.27% | 0.04% | 0.19% | 0.12% | 0.80% | 1.03% |
+| W14x22 | 0.07% | 0.63% | 0.01% | 0.46% | 0.49% | 0.17% | 1.39% |
+| W12x65 | 0.14% | 0.43% | 0.19% | 0.21% | 0.16% | 0.25% | 1.24% |
+| W10x49 | 0.24% | 0.62% | 0.02% | 0.26% | 0.17% | 0.57% | 0.39% |
+| W8x31 | 0.04% | 0.07% | 0.11% | 0.07% | 0.05% | 0.69% | 0.66% |
+| W6x15 | 0.07% | 0.03% | 0.01% | 0.01% | 0.10% | 0.92% | 0.86% |
+| W24x176 | 0.04% | 0.24% | 0.27% | 0.07% | 0.21% | 0.03% | 0.66% |
+| W36x150 | 0.02% | 0.48% | 0.57% | 0.41% | 0.41% | 0.74% | 0.20% |
+| W21x44 | 0.03% | 0.46% | 0.06% | 0.28% | 0.26% | 0.49% | 0.45% |
+
+The improvement from the PoC (which showed 7-13% errors on Sx, Zx, J) is due to:
+1. Using k_des (design fillet) instead of approximate k_det for fillet radius
+2. Correcting the Sx/Zx mapping from sectionproperties API
+
 ## Files
 
 - PoC script: `scripts/integrations/sectionproperties_poc.py`
 - Mesh plot: `scripts/integrations/output/sectionproperties_poc_meshes.png`
 - Results JSON: `scripts/integrations/output/sectionproperties_poc_results.json`
+- AISC catalog: `data/aisc_shapes.yaml`
+- Lookup module: `scripts/integrations/aisc_section_lookup.py`
+- Validation script: `scripts/integrations/aisc_validation.py`
