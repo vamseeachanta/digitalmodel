@@ -13,7 +13,7 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunResult, Ru
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
 
 try:
-    from digitalmodel.hydrodynamics.diffraction.orcawave_converter import (
+    from digitalmodel.hydrodynamics.diffraction.solver import (
         OrcaWaveConverter,
     )
 

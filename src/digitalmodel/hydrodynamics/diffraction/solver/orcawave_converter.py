@@ -16,12 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
-    print("Warning: OrcFxAPI not available. OrcaWave converter will not function.")
+import OrcFxAPI
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults, RAOSet, AddedMassSet, DampingSet,
@@ -29,7 +24,7 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     FrequencyData, HeadingData, DOF
 )
 
-from digitalmodel.hydrodynamics.diffraction.orcawave_data_extraction import (
+from .orcawave_data_extraction import (
     OrcaWaveDataExtractor,
     extract_all_rao_data,
     extract_all_added_mass,
@@ -48,9 +43,6 @@ class OrcaWaveConverter:
             model_file: Path to OrcaFlex model file (.sim or .dat) or diffraction database
             vessel_name: Name of vessel object in model (auto-detect if None)
         """
-        if not ORCAFLEX_AVAILABLE:
-            raise ImportError("OrcFxAPI is required for OrcaWave converter. Please install OrcaFlex.")
-
         self.model_file = Path(model_file)
         self.vessel_name = vessel_name
         self.model = None

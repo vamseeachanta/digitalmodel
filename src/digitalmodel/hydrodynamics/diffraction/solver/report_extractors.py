@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import OrcFxAPI
 
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     complex_phase_degrees,
@@ -55,8 +56,6 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
     Returns:
         DiffractionReportData populated from the results.
     """
-    import OrcFxAPI
-
     d = OrcFxAPI.Diffraction()
     d.LoadResults(str(Path(owr_path).resolve()))
 

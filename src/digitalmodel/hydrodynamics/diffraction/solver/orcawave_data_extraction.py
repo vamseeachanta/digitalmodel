@@ -17,13 +17,9 @@ Status: Data extraction implementation
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 
-from digitalmodel.hydrodynamics.diffraction.diffraction_units import complex_phase_degrees
+import OrcFxAPI
 
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import complex_phase_degrees
 
 
 class OrcaWaveDataExtractor:
@@ -36,9 +32,6 @@ class OrcaWaveDataExtractor:
         Args:
             vessel: OrcFxAPI vessel object
         """
-        if not ORCAFLEX_AVAILABLE:
-            raise ImportError("OrcFxAPI required for data extraction")
-
         self.vessel = vessel
         self.vessel_type = vessel.VesselType
 

@@ -42,8 +42,8 @@ from digitalmodel.hydrodynamics.diffraction.report_computations import (
     generate_executive_warnings,
 )
 
-# --- Re-exports from report_extractors ---
-from digitalmodel.hydrodynamics.diffraction.report_extractors import (
+# --- Re-exports from report_extractors (solver/ subpackage) ---
+from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
     _round_2d,
     build_report_data_from_solver_results,
     extract_report_data_from_owr,

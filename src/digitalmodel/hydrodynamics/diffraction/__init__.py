@@ -46,11 +46,11 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_converter import (
     convert_aqwa_results
 )
 
-# OrcaWave converter (requires OrcFxAPI)
+# OrcaWave converter (requires OrcFxAPI — lives in solver/ subpackage)
 try:
-    from digitalmodel.hydrodynamics.diffraction.orcawave_converter import (
+    from digitalmodel.hydrodynamics.diffraction.solver import (
         OrcaWaveConverter,
-        convert_orcawave_results
+        convert_orcawave_results,
     )
     ORCAWAVE_AVAILABLE = True
 except ImportError:
@@ -182,11 +182,11 @@ try:
         MockDataGenerator,
         create_test_vessel
     )
-    from digitalmodel.hydrodynamics.diffraction.orcawave_data_extraction import (
+    from digitalmodel.hydrodynamics.diffraction.solver import (
         OrcaWaveDataExtractor,
         extract_all_rao_data,
         extract_all_added_mass,
-        extract_all_damping
+        extract_all_damping,
     )
     TEST_UTILITIES_AVAILABLE = True
 except ImportError:

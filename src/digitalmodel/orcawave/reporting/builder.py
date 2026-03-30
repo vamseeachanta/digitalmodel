@@ -60,7 +60,7 @@ class OrcaWaveReportBuilder:
     def _load_diffraction(self):
         """Load OrcFxAPI.Diffraction from the .owr file."""
         try:
-            import OrcFxAPI  # type: ignore
+            from digitalmodel.hydrodynamics.diffraction.solver import OrcFxAPI
         except ImportError as exc:
             raise ImportError(
                 "OrcFxAPI is required to generate OrcaWave reports."
