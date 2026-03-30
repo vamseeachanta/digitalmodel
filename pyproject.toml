@@ -267,6 +267,7 @@ markers = [
     "load_test: marks tests as load tests",
     "stress_test: marks tests as stress tests",
     "chaos_test: marks tests as chaos/fault injection tests",
+    "solver: marks tests requiring OrcFxAPI on licensed machine (deselect with '-m \"not solver\"')",
 ]
 filterwarnings = [
     "error",

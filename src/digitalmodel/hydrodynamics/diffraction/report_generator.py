@@ -43,11 +43,18 @@ from digitalmodel.hydrodynamics.diffraction.report_computations import (
 )
 
 # --- Re-exports from report_extractors (solver/ subpackage) ---
-from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
-    _round_2d,
-    build_report_data_from_solver_results,
-    extract_report_data_from_owr,
-)
+# These functions live in solver/ because extract_report_data_from_owr
+# requires OrcFxAPI. Wrapped in try/except for license-free environments.
+try:
+    from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
+        _round_2d,
+        build_report_data_from_solver_results,
+        extract_report_data_from_owr,
+    )
+except ImportError:
+    _round_2d = None  # type: ignore[assignment]
+    build_report_data_from_solver_results = None  # type: ignore[assignment]
+    extract_report_data_from_owr = None  # type: ignore[assignment]
 
 # --- Re-exports from report_builders ---
 from digitalmodel.hydrodynamics.diffraction.report_builders import (

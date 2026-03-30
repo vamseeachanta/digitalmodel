@@ -22,6 +22,7 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 )
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver"
 
 N_FREQ = 10
 N_HEAD = 5
@@ -117,6 +118,48 @@ def _make_matrix_set(matrix_type: str) -> AddedMassSet | DampingSet:
 def fixtures_dir() -> Path:
     """Return path to test fixtures directory."""
     return FIXTURES_DIR
+
+
+@pytest.fixture
+def solver_fixtures_dir() -> Path:
+    """Return path to solver test fixtures directory."""
+    return SOLVER_FIXTURES_DIR
+
+
+@pytest.fixture
+def l00_owr_path() -> Path:
+    """Path to L00 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L00_test01.owr"
+    if not path.exists():
+        pytest.skip("L00 .owr fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l00_xlsx_path() -> Path:
+    """Path to L00 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L00_test01.xlsx"
+    if not path.exists():
+        pytest.skip("L00 .xlsx fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l01_owr_path() -> Path:
+    """Path to L01 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.owr"
+    if not path.exists():
+        pytest.skip("L01 .owr fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l01_xlsx_path() -> Path:
+    """Path to L01 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.xlsx"
+    if not path.exists():
+        pytest.skip("L01 .xlsx fixture not available (requires solver run on licensed-win-1)")
+    return path
 
 
 @pytest.fixture
