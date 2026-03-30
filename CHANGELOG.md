@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-03-26
+
+### Phase 1 GSD Sprint -- New Calculation Modules
+
+Three new calculation modules shipped with full test coverage and traceability manifests.
+
+### Added
+
+#### On-Bottom Stability (DNV-RP-F109)
+- 5 calculation functions for pipeline stability on seabed
+- Covers absolute stability, generalized lateral stability, vertical stability
+- 20 document-verified tests against DNV-RP-F109 worked examples
+- YAML manifest with clause-level traceability
+- **Source:** `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py`
+
+#### ASME B31.4 Wall Thickness
+- CodeStrategy pattern: burst, collapse, propagation buckling checks for liquid pipelines
+- Registered in CODE_REGISTRY alongside existing DNV-ST-F101 strategy
+- YAML manifest tracing each check to ASME B31.4 clause numbers
+- **Source:** `src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py`
+
+#### Spectral Scatter Fatigue (DNV-RP-C203)
+- scatter_fatigue_damage function for sea-state scatter diagram fatigue analysis
+- SeaStateEntry and ScatterFatigueResult dataclasses
+- Injectable wave spectrum function (JONSWAP default, decoupled from hydrodynamics)
+- YAML manifest tracing to DNV-RP-C203 Appendix C/D
+- **Source:** `src/digitalmodel/structural/fatigue/scatter_fatigue.py`
+
+#### Module Manifest Schema
+- Pydantic-based ModuleManifest schema for per-module manifest.yaml validation
+- CI validation script (validate_manifests.py) for repo-wide manifest discovery
+- **Source:** `src/digitalmodel/specs/manifest_schema.py`
+
+#### Integration
+- module-registry.yaml updated with 3 new module entries
+- All 3 manifests validated against Pydantic schema
+- Cross-module test pass with 90.5% coverage (all modules above 80%)
+
+---
+
 ## [2.0.0] - 2025-10-03
 
 ### Phase 1 Complete - Foundation Release
@@ -170,33 +210,22 @@ See git history for detailed commit logs: https://github.com/vamseeachanta/digit
 
 ---
 
-## Upcoming Releases
+## Future
 
-### [2.1.0] - Planned for Phase 2
+### Planned Enhancements
 
-#### Fatigue Module Enhancements
-- Cumulative damage calculation (Palmgren-Miner)
-- Rainflow cycle counting integration
-- Variable amplitude loading analysis
-- Interactive plotting with Plotly
-- Custom curve addition wizard
-
-#### Marine Analysis Enhancements
+#### Marine Analysis
 - WAMIT output file support
 - Force/moment RAO extraction
 - Automatic phase unwrapping
 - Multi-body RAO handling
-- Motion response prediction
 
-#### Mooring Module Expansion
+#### Mooring Module
 - Spread mooring systems
-- Turret mooring
-- Complete dynamic analysis
 - Line fatigue assessment
 - Optimization capabilities
 
 #### Cross-Module Integration
-- Fatigue-RAO integration for spectral analysis
 - Mooring-Fatigue coupling
 - Unified reporting system
 
@@ -217,8 +246,8 @@ This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
 
 - **Repository**: https://github.com/vamseeachanta/digitalmodel
 - **Issues**: https://github.com/vamseeachanta/digitalmodel/issues
-- **Documentation**: D:/workspace-hub/digitalmodel/docs/
-- **Examples**: D:/workspace-hub/digitalmodel/examples/
+- **Documentation**: [docs/](docs/)
+- **Examples**: [examples/](examples/)
 
 ---
 
@@ -236,4 +265,4 @@ This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
 ---
 
 **Changelog Maintained By:** Digital Model Development Team
-**Last Updated:** October 3, 2025
+**Last Updated:** March 26, 2026
