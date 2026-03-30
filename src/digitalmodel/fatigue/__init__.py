@@ -9,6 +9,7 @@ from .sn_curves import get_sn_curve, DNV_CURVES
 from .damage import miner_damage, design_life_check, thickness_correction
 from .crack_growth import paris_law_life, stress_intensity_factor, inspection_interval
 from .woehler_fitting import fit_woehler_curve, design_curve
+from .rainflow import rainflow_count, stress_histogram, fatigue_life
 
 __all__ = [
     "get_sn_curve",
@@ -21,4 +22,7 @@ __all__ = [
     "inspection_interval",
     "fit_woehler_curve",
     "design_curve",
+    "rainflow_count",
+    "stress_histogram",
+    "fatigue_life",
 ]
