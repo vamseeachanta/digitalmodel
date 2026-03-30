@@ -5,12 +5,14 @@ Provides a zero-config, chained assessment:
   Step 2 — Fitness-For-Service (FFS) corrosion assessment per API 579-1
             using the standalone rsf_calculations helpers.
 
-Units are internally SI (MPa, mm) converted to inches/psi at the FFS boundary.
+Units are internally SI (MPa, mm). Conversions to imperial at the FFS
+boundary use Pint (see digitalmodel.units) instead of hardcoded factors.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from digitalmodel.units import Q_
 from .rsf_calculations import check_ffs_level1
 
 SKILL_NAME = "pipeline_integrity"
@@ -29,10 +31,6 @@ SMYS_TABLE: dict[str, float] = {
 
 # Hoop stress design factor (ASME B31.4 / B31.8 onshore buried pipelines)
 HOOP_DESIGN_FACTOR = 0.72
-
-# Unit conversion constants
-_MPA_TO_PSI = 145.0378
-_MM_TO_IN = 1.0 / 25.4
 
 
 # ---------------------------------------------------------------------------
@@ -171,13 +169,13 @@ def _ffs_assessment(
         / (2.0 * smys_mpa * HOOP_DESIGN_FACTOR)
     )
 
-    # Convert to imperial for rsf_calculations helper
-    t_measured_in = t_measured_mm * _MM_TO_IN
-    t_required_in = t_required_mm * _MM_TO_IN
-    t_nominal_in = t_nominal_mm * _MM_TO_IN
-    od_in = inp.outer_diameter_mm * _MM_TO_IN
-    design_pressure_psi = inp.design_pressure_mpa * _MPA_TO_PSI
-    smys_psi = smys_mpa * _MPA_TO_PSI
+    # Convert to imperial for rsf_calculations helper using Pint
+    t_measured_in = Q_(t_measured_mm, "mm").to("inch").magnitude
+    t_required_in = Q_(t_required_mm, "mm").to("inch").magnitude
+    t_nominal_in = Q_(t_nominal_mm, "mm").to("inch").magnitude
+    od_in = Q_(inp.outer_diameter_mm, "mm").to("inch").magnitude
+    design_pressure_psi = Q_(inp.design_pressure_mpa, "MPa").to("psi").magnitude
+    smys_psi = Q_(smys_mpa, "MPa").to("psi").magnitude
 
     # Guard against corrosion eating through wall
     if t_measured_mm <= 0.0:
@@ -194,7 +192,7 @@ def _ffs_assessment(
 
     # Reduced MAWP in MPa
     mawp_psi = result["mawp_psi"]
-    mawp_mpa = mawp_psi / _MPA_TO_PSI
+    mawp_mpa = Q_(mawp_psi, "psi").to("MPa").magnitude
 
     # Determine FFS verdict
     if result["acceptable"]:
