@@ -1,4 +1,4 @@
-generated: '2026-02-24'
+generated: '2026-03-26'
 repo: digitalmodel
 description: Structured registry of all digitalmodel sub-modules for agent discovery
 modules:
@@ -41,6 +41,23 @@ modules:
       - Biaxial stress interaction correction
     test_coverage: high
     related_wrk: []
+
+  - id: structural/fatigue/scatter_fatigue
+    path: src/digitalmodel/structural/fatigue/scatter_fatigue.py
+    description: >
+      Sea-state scatter diagram fatigue damage via spectral methods.
+      Orchestrates frequency-domain spectral damage across multiple sea states
+      from scatter diagrams per DNV-RP-C203 Appendix C/D.
+    maturity: stable
+    capabilities:
+      - Scatter diagram fatigue damage accumulation
+      - Injectable wave spectrum function (JONSWAP default)
+      - SeaStateEntry and ScatterFatigueResult dataclasses
+    standards:
+      - id: DNV-RP-C203
+        status: implemented
+    gaps: []
+    test_coverage: high
 
   - id: structural/fatigue_apps
     path: src/digitalmodel/structural/fatigue_apps/
@@ -232,7 +249,7 @@ modules:
       Pipeline on-bottom stability design per DNV-RP-F109 (2021). Computes
       hydrodynamic forces (drag, inertia, lift), submerged weight, and lateral
       stability checks (absolute and generalized methods).
-    maturity: development
+    maturity: stable
     capabilities:
       - Hydrodynamic force per unit length (drag + inertia) per DNV-RP-F109 Eq 3.1
       - Lift force per unit length per DNV-RP-F109 Eq 3.2
@@ -356,6 +373,30 @@ modules:
       - Straked suppression effectiveness model not included
     test_coverage: medium
     related_wrk: []
+
+  # ── CATHODIC PROTECTION ───────────────────────────────────────────────────
+
+  - id: cathodic_protection
+    path: src/digitalmodel/cathodic_protection/
+    description: >
+      Multi-standard cathodic protection design for offshore structures,
+      pipelines, vessels, and generator fuel systems.
+    maturity: stable
+    capabilities:
+      - DNV-RP-B401 offshore structure CP design (anode sizing, coating breakdown, zone-based)
+      - API RP 1632 underground pipeline CP (Dwight resistance, current demand, anode life)
+      - ISO 15589-2 offshore pipeline CP (bracelet anodes, attenuation length)
+      - Fuel system CP (impressed current, ground bed, rectifier design)
+    standards:
+      - id: DNV-RP-B401
+        status: implemented
+      - id: API-RP-1632
+        status: implemented
+      - id: ISO-15589-2
+        status: implemented
+    gaps:
+      - ABS GN Ships/Offshore full implementation (currently configured only)
+    test_coverage: high
 
   # ── HYDRODYNAMICS ──────────────────────────────────────────────────────────
 
