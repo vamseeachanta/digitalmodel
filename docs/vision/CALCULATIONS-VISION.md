@@ -5,6 +5,29 @@
 > *Every calculation traces to its standard. Every standard traces to its implementation.
 > From clause to code to validated report.*
 
+## Vision Direction
+
+digitalmodel is a **Python calculation library**: importable functions with CLI convenience wrappers, each traceable to an international engineering standard. It is library-first, not a platform or SaaS product.
+
+### What digitalmodel IS
+- A Python package of engineering calculations (`pip install digitalmodel`)
+- Each function maps to a specific standard clause (dual traceability: docstrings + YAML manifests)
+- 27 CLI entry points for common workflows (registered in pyproject.toml)
+- The calculation engine behind aceengineer.com interactive calculators
+
+### What digitalmodel is NOT
+- Not a web platform or SaaS product (no web server, no user management, no database)
+- Not a web API service (FastAPI is in dependencies but unused for core calculations)
+- Not a monolithic application — it is a library consumed by other tools
+
+### How it feeds downstream
+1. **Client project analysis** — direct Python usage producing calculation reports
+2. **aceengineer.com calculators** — JavaScript reimplementations of digitalmodel modules for web interactivity
+3. **Document intelligence pipeline** — workspace-hub extraction/promotion workflow feeds reference data and test fixtures into modules
+
+### Development priorities
+See [ROADMAP.md](../../ROADMAP.md) for the tiered module prioritization driven by client project demand.
+
 ## Current State
 
 ### digitalmodel
@@ -239,5 +262,5 @@ Report structure:
 
 ---
 
-*Canonical reference: WRK-1179 Phase 3 | Sprint days 1-15*
-*Related: `docs/vision/VISION.md` (ecosystem north star), `specs/architecture/agent-vision.md` (capability tiers), `specs/capability-map/audit/` (per-repo audits)*
+*Updated: 2026-03-26 — Vision direction added, roadmap link added*
+*See also: [ROADMAP.md](../../ROADMAP.md) for tiered development priorities*
