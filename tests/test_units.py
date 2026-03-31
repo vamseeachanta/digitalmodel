@@ -54,3 +54,18 @@ class TestCustomUnits:
     def test_bbl_to_gallon(self):
         volume = Q_(1.0, "bbl").to("gallon")
         assert volume.magnitude == pytest.approx(42.0)
+
+
+class TestSingletonRegistry:
+    """Verify multiple imports return the same registry instance."""
+
+    def test_same_registry_instance(self):
+        from digitalmodel.units import ureg as ureg1
+        from digitalmodel.units import ureg as ureg2
+
+        assert ureg1 is ureg2
+
+    def test_quantity_from_same_registry(self):
+        from digitalmodel.units import Q_, ureg
+
+        assert Q_ is ureg.Quantity
