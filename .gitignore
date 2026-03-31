@@ -350,3 +350,4 @@ verdict.txt
 coverage.wrk*.xml
 *.wrk*.xml
 outputs/
+specs/
