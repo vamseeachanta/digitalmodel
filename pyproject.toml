@@ -7,7 +7,7 @@ name = "digitalmodel"
 version = "0.1.1"
 description = "Standardized project configuration for digitalmodel"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Development Team", email = "dev@example.com"}
@@ -90,7 +90,7 @@ dependencies = [
     "pandas>=2.0.0,<3.0.0",
     "passlib[bcrypt]==1.7.4",
     "pillow==10.1.0", # Image processing
-    "pint>=0.24.4",
+    "pint>=0.25.3",
     "plotly==5.17.0",
     "poetry",
     "pre-commit==3.6.0",
