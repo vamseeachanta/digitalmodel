@@ -138,7 +138,7 @@ These stub modules contain no engineering value and clutter the namespace:
 
 6. **455 standards gaps across 30 disciplines.** Many represent entire disciplines not yet started. Only gaps in Tier 1 and Tier 2 modules are actionable.
 
-7. **No VISION.md at repo root.** CALCULATIONS-VISION.md exists in `docs/vision/` but the ecosystem-level VISION.md it references does not exist.
+7. ~~**No VISION.md at repo root.**~~ Closed — Phase 6 delivered `docs/vision/CALCULATIONS-VISION.md` as the canonical library vision document (2026-03-29).
 
 8. **Stub modules with no engineering value.** `specialized/digitalmarketing`, `specialized/finance`, `specialized/project_management` -- see Candidates for Removal above.
 
