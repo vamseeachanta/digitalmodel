@@ -1,5 +1,7 @@
 import math
 
+from digitalmodel.units import Q_
+
 
 class CTHydraulics:
     """Steady-state coiled tubing hydraulics calculations."""
@@ -75,7 +77,7 @@ class CTHydraulics:
                 well.get("measured_depth_m", ann_length_m),
             )
         )
-        tvd_ft = tvd_m * 3.28084
+        tvd_ft = Q_(tvd_m, 'm').to('ft').magnitude
         hydrostatic_psi = 0.052 * density_ppg * tvd_ft if tvd_ft else 0.0
 
         wellhead_pressure_psi = float(well.get("wellhead_pressure_psi", 0.0))
@@ -132,7 +134,7 @@ class CTHydraulics:
         volume_gal = ct_cfg.get("volume_gal")
         length_m = ct_cfg.get("length_m")
         if volume_gal and length_m:
-            length_in = float(length_m) / 0.0254
+            length_in = Q_(float(length_m), 'm').to('inch').magnitude
             area_in2 = float(volume_gal) * 231.0 / length_in
             return math.sqrt(4.0 * area_in2 / math.pi)
         raise ValueError("ct.id_in, ct.wall_thickness_in, or ct.volume_gal required")
@@ -148,7 +150,7 @@ class CTHydraulics:
         viscosity_cp: float,
         re_transition: float,
     ) -> dict:
-        diameter_m = diameter_in * 0.0254
+        diameter_m = Q_(diameter_in, 'inch').to('m').magnitude
         area_m2 = math.pi / 4.0 * diameter_m**2
         area_in2 = math.pi / 4.0 * diameter_in**2
         velocity_m_s = self._gpm_to_m3s(rate_gpm) / area_m2 if area_m2 else 0.0
@@ -157,12 +159,12 @@ class CTHydraulics:
         reynolds = (
             density * velocity_m_s * diameter_m / viscosity if viscosity else 0.0
         )
-        rel_rough = (roughness_in * 0.0254) / diameter_m if diameter_m else 0.0
+        rel_rough = Q_(roughness_in, 'inch').to('m').magnitude / diameter_m if diameter_m else 0.0
         friction_factor = self._friction_factor(reynolds, rel_rough, re_transition)
         pressure_loss_psi = self._darcy_weisbach(
             friction_factor, length_m, diameter_m, density, velocity_m_s
         )
-        length_in = length_m / 0.0254
+        length_in = Q_(length_m, 'm').to('inch').magnitude
         volume_gal = area_in2 * length_in / 231.0 if length_in else 0.0
         travel_time_min = volume_gal / rate_gpm if rate_gpm else 0.0
 
@@ -194,8 +196,8 @@ class CTHydraulics:
         else:
             hydraulic_diameter_in = float(hole_id_in - inner_od_in)
         area_in2 = math.pi / 4.0 * (hole_id_in**2 - inner_od_in**2)
-        area_m2 = area_in2 * (0.0254**2)
-        hydraulic_diameter_m = hydraulic_diameter_in * 0.0254
+        area_m2 = Q_(area_in2, 'inch**2').to('m**2').magnitude
+        hydraulic_diameter_m = Q_(hydraulic_diameter_in, 'inch').to('m').magnitude
         velocity_m_s = self._gpm_to_m3s(rate_gpm) / area_m2 if area_m2 else 0.0
         density = self._ppg_to_kgm3(density_ppg)
         viscosity = viscosity_cp / 1000.0
@@ -205,7 +207,7 @@ class CTHydraulics:
             else 0.0
         )
         rel_rough = (
-            (roughness_in * 0.0254) / hydraulic_diameter_m
+            Q_(roughness_in, 'inch').to('m').magnitude / hydraulic_diameter_m
             if hydraulic_diameter_m
             else 0.0
         )
@@ -213,7 +215,7 @@ class CTHydraulics:
         pressure_loss_psi = self._darcy_weisbach(
             friction_factor, length_m, hydraulic_diameter_m, density, velocity_m_s
         )
-        length_in = length_m / 0.0254
+        length_in = Q_(length_m, 'm').to('inch').magnitude
         volume_gal = area_in2 * length_in / 231.0 if length_in else 0.0
         bottoms_up_time_min = volume_gal / rate_gpm if rate_gpm else 0.0
 
@@ -246,7 +248,7 @@ class CTHydraulics:
         if diameter_m <= 0.0:
             return 0.0
         delta_p_pa = friction_factor * (length_m / diameter_m) * 0.5 * density * velocity_m_s**2
-        return delta_p_pa / 6894.757
+        return Q_(delta_p_pa, 'Pa').to('psi').magnitude
 
     @staticmethod
     def _ppg_to_kgm3(ppg: float) -> float:

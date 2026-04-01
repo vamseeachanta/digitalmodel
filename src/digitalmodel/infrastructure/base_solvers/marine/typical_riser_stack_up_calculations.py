@@ -1,3 +1,6 @@
+from digitalmodel.units import Q_
+
+
 class TypicalRiserStackUpCalculations:
     def __init__(self, riser_model):
         self.riser_model = riser_model
@@ -66,10 +69,9 @@ class TypicalRiserStackUpCalculations:
                 not in ["Upper FJ", "Lower FJ", "Tensioners", "Support Spring"]
             ):
                 current_stack_item_length = (
-                    self.riser_model.stack_up_table.iloc[line_item_index][
+                    Q_(self.riser_model.stack_up_table.iloc[line_item_index][
                         "Component Length"
-                    ]
-                    * 0.3048
+                    ], 'ft').to('m').magnitude
                     * self.riser_model.stack_up_table.iloc[line_item_index][
                         "No. Of. Joints"
                     ]
@@ -109,10 +111,9 @@ class TypicalRiserStackUpCalculations:
         self.stack_up_properties_df.loc[
             reference_elevation_index, "component_top_elevation_above_mudline"
         ] = (
-            self.riser_model.stack_up_table.iloc[reference_elevation_index][
+            Q_(self.riser_model.stack_up_table.iloc[reference_elevation_index][
                 "Component Top Elevation above Mudline"
-            ]
-            * 0.3048
+            ], 'ft').to('m').magnitude
         )
         # March down the riser from reference
         for stack_item_index in range(

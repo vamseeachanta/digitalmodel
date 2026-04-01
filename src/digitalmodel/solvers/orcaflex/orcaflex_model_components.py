@@ -3,6 +3,7 @@ import math
 import yaml
 from collections import OrderedDict
 
+from digitalmodel.units import Q_
 from assetutilities.common.data import SaveData
 
 
@@ -46,14 +47,13 @@ class OrcaflexModelComponents:
                         "Seabed"
                     ]["Stiffness"][self.fea_type]
                     / (
-                        (
+                        Q_(
                             self.riser_model.cfg["MainPipe"]["InsulationSection"]["OD"]
                             + 2
                             * self.riser_model.cfg["geometry"]["Strakes"][
                                 "BaseThickness"
-                            ]
-                        )
-                        * 0.0254
+                            ], 'inch'
+                        ).to('m').magnitude
                     )
                 }
             )
@@ -693,15 +693,12 @@ class OrcaflexModelComponents:
                     component = self.riser_model.stack_up_table.iloc[line_item_index][
                         "Component"
                     ]
-                    stiffness = (
+                    stiffness = Q_(
                         self.riser_model.project_flexible_joints[
                             self.riser_model.project_flexible_joints["Component"]
                             == component
-                        ]["Rotational Stiffness"].values[0]
-                        * 0.3048
-                        * 0.4536
-                        * 9.81
-                    )
+                        ]["Rotational Stiffness"].values[0], 'ft * lbf'
+                    ).to('N * m').magnitude
                     self.fj_types.append(
                         {
                             "Name": component,
@@ -840,17 +837,15 @@ class OrcaflexModelComponents:
     def tensioner_vessel_locations(self, type="tensioner"):
         self.tensioner_vessel_hang_off_locations = []
 
-        moonpool_length = (
-            self.riser_model.project_tensioners["Row length"].iloc[0] * 0.3048
-        )
-        moonpool_breadth = (
-            self.riser_model.project_tensioners["Separation between rows"].iloc[0]
-            * 0.3048
-        )
-        vertical_length_of_tensioner = (
-            self.riser_model.project_tensioners["vertical_length_of_tensioner"].iloc[0]
-            * 0.3048
-        )
+        moonpool_length = Q_(
+            self.riser_model.project_tensioners["Row length"].iloc[0], 'ft'
+        ).to('m').magnitude
+        moonpool_breadth = Q_(
+            self.riser_model.project_tensioners["Separation between rows"].iloc[0], 'ft'
+        ).to('m').magnitude
+        vertical_length_of_tensioner = Q_(
+            self.riser_model.project_tensioners["vertical_length_of_tensioner"].iloc[0], 'ft'
+        ).to('m').magnitude
         self.tensioner_bottom_elevation_above_MSL = float(
             self.stack_up_properties_df.iloc[
                 self.riser_model.stack_up_table[
@@ -924,7 +919,7 @@ class OrcaflexModelComponents:
 
         if type == "tensioner":
             tensioner_stroke_range = (
-                self.riser_model.project_tensioners["stroke_range"].iloc[0] * 0.3048
+                Q_(self.riser_model.project_tensioners["stroke_range"].iloc[0], 'ft').to('m').magnitude
             )
             tensioner_initial_stroke_from_collapsed_length = (
                 tensioner_stroke_range * self.riser_model.initial_down_stroke
@@ -1136,10 +1131,9 @@ class OrcaflexModelComponents:
                             self.riser_model.stack_up_table.iloc[line_item_index][
                                 "Component"
                             ],
-                            self.riser_model.stack_up_table.iloc[line_item_index][
+                            Q_(self.riser_model.stack_up_table.iloc[line_item_index][
                                 "Component Length"
-                            ]
-                            * 0.3048
+                            ], 'ft').to('m').magnitude
                             * self.riser_model.stack_up_table.iloc[line_item_index][
                                 "No. Of. Joints"
                             ],
@@ -1419,7 +1413,7 @@ class OrcaflexModelComponents:
                             * math.sin(
                                 math.radians(absolute_orientation_angle_of_riser)
                             ),
-                            data["MainPipe"]["InsulationSection"]["OD"] * 0.0254 / 2,
+                            Q_(data["MainPipe"]["InsulationSection"]["OD"], 'inch').to('m').magnitude / 2,
                             data["LazyWaveCatenaryDefinition"]["lay_azimuth_to_vessel"],
                             data["FEASettings"]["EndOrientation"]["SLWR"]["B"][
                                 "Declination"
@@ -1475,7 +1469,7 @@ class OrcaflexModelComponents:
                             * math.sin(
                                 math.radians(absolute_orientation_angle_of_riser)
                             ),
-                            data["MainPipe"]["InsulationSection"]["OD"] * 0.0254 / 2,
+                            Q_(data["MainPipe"]["InsulationSection"]["OD"], 'inch').to('m').magnitude / 2,
                             data["simpleCatenaryDefinition"]["lay_azimuth_to_vessel"],
                             data["FEASettings"]["EndOrientation"]["SCR"]["B"][
                                 "Declination"

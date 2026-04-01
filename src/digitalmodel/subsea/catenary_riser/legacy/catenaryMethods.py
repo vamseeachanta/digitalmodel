@@ -3,6 +3,7 @@ import pandas as pd
 import warnings
 
 import matplotlib.pyplot as plt
+from digitalmodel.units import Q_
 from digitalmodel.subsea.catenary_riser.legacy.pipeProperties import pipeProperties
 
 
@@ -388,9 +389,9 @@ def buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy):
                     cfg["Material"]["SeaWater"]["Rho"]
                     - cfg["Material"]["Buoyancy"]["Rho"]
                 )
-                + (cfg["InsulationSection"]["OD"] * 0.0254) ** 2
+                + Q_(cfg["InsulationSection"]["OD"], 'inch').to('m').magnitude ** 2
             )
-            / 0.0254
+            / Q_(1, 'inch').to('m').magnitude
         )
         cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"] = (
             BuoyancyOD - cfg["InsulationSection"]["OD"]

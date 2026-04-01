@@ -1,6 +1,7 @@
 import logging
 import math
 
+from digitalmodel.units import Q_
 from common.update_deep import update_deep_dictionary
 
 
@@ -992,10 +993,10 @@ class VonMises_Pipe:
 
         self.M = self.loads["BendingMoment"] * 8.850746 * 1000
         if self.loads["AxialForce"] is None:
-            self.T_eff = self.loads["EffectiveTension"] * 0.224809 * 1000
+            self.T_eff = Q_(self.loads["EffectiveTension"], 'kN').to('lbf').magnitude
             self.T = self.T_eff + self.P_i * self.D_i - self.P_o * self.D_o
         elif self.loads["EffectiveTension"] is None:
-            self.T = self.loads["AxialForce"] * 0.224809 * 1000
+            self.T = Q_(self.loads["AxialForce"], 'kN').to('lbf').magnitude
             self.T_eff = (
                 self.loads["AxialForce"] - self.P_i * self.D_i + self.P_o * self.D_o
             )

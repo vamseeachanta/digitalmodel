@@ -32,6 +32,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from digitalmodel.units import Q_
 from .calculator import PipeCrossSection
 from .models import PipeCrossSectionConfig, inch_to_mm
 from .visualization import PipeCrossSectionVisualizer
@@ -199,7 +200,7 @@ def main(args=None):
             steel_od_inch=args.steel_od_inch,
             steel_wt_inch=args.steel_wt_inch,
             lpp_thickness_mm=args.lpp,
-            concrete_thickness_inch=args.concrete_inch or (args.concrete / 25.4 if args.concrete else 0),
+            concrete_thickness_inch=args.concrete_inch or (Q_(args.concrete, 'mm').to('inch').magnitude if args.concrete else 0),
             steel_density=args.steel_density,
             lpp_density=args.lpp_density,
             concrete_density=args.concrete_density,

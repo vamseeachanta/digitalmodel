@@ -12,6 +12,8 @@ import math
 from typing import Dict, Any, Union, Optional
 import logging
 import numpy as np
+
+from digitalmodel.units import Q_
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -190,7 +192,7 @@ class APISTD2RDCalculations:
         area = (math.pi / 4) * (outer_diameter**2 - inner_diameter**2)
 
         # Yield tension
-        ty_kn = (yield_strength * area) / 1000 * 4.448222  # Convert to kN
+        ty_kn = Q_((yield_strength * area) / 1000, 'kip').to('kN').magnitude  # Convert to kN
 
         # Yield moment (converted to kN.m)
         my_knm = (math.pi / 4 * (yield_strength * (outer_diameter - wall_thickness)**2 * wall_thickness)

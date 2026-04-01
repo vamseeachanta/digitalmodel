@@ -1,6 +1,7 @@
 import logging
 import math
 
+from digitalmodel.units import Q_
 from assetutilities.common.data import ReadData
 
 from digitalmodel.custom.PipeSizing import PipeSizing
@@ -78,12 +79,11 @@ class VerticalRiser:
         ]
 
         self.fea_type = "Fatigue"
-        self.water_depth = (
+        self.water_depth = Q_(
             self.stack_up_table[self.stack_up_table["Component"] == "MSL"][
                 "Component Top Elevation above Mudline"
-            ].values[0]
-            * 0.3048
-        )
+            ].values[0], 'ft'
+        ).to('m').magnitude
         self.loading_index = 0
 
         if self.fea_type == "Fatigue":
@@ -158,10 +158,10 @@ class VerticalRiser:
             "~",
             self.riser_joints.iloc[row_index]["Axial Added mass, Ca"],
         ]
-        pipe_id = (
+        pipe_id = Q_(
             self.riser_joints.iloc[row_index]["Pipe OD"]
-            - 2 * self.riser_joints.iloc[row_index]["Pipe WT"]
-        ) * 0.0254
+            - 2 * self.riser_joints.iloc[row_index]["Pipe WT"], 'inch'
+        ).to('m').magnitude
 
         if self.riser_joints.iloc[row_index]["Weight Method"] == "measured":
             logging.info("Calculating based on measured properties")
@@ -169,13 +169,13 @@ class VerticalRiser:
                 self.riser_joints.iloc[row_index]["Dry wt."]
                 * 0.4536
                 * 1000
-                / (self.riser_joints.iloc[row_index]["Length"] * 0.3048)
+                / Q_(self.riser_joints.iloc[row_index]["Length"], 'ft').to('m').magnitude
             )
             wet_weight_per_unit_length = (
                 self.riser_joints.iloc[row_index]["Wet wt."]
                 * 0.4536
                 * 1000
-                / (self.riser_joints.iloc[row_index]["Length"] * 0.3048)
+                / Q_(self.riser_joints.iloc[row_index]["Length"], 'ft').to('m').magnitude
             )
             buoyancy_diameter = math.sqrt(
                 (dry_weight_per_unit_length - wet_weight_per_unit_length)
@@ -190,7 +190,7 @@ class VerticalRiser:
             )
         elif self.riser_joints.iloc[row_index]["Weight Method"] == "calculated":
             logging.info("Calculating properties based on wall thickness")
-            buoyancy_diameter = self.riser_joints.iloc[row_index]["Pipe OD"] * 0.0254
+            buoyancy_diameter = Q_(self.riser_joints.iloc[row_index]["Pipe OD"], 'inch').to('m').magnitude
             dry_weight_per_unit_length = (
                 property_dictionary["section_properties"]["pipe"]["MassPerUnitLength"]
                 * 0.4536
@@ -222,7 +222,7 @@ class VerticalRiser:
         if math.isnan(self.riser_joints.iloc[row_index]["Drag Diameter"]):
             drag_diameter = buoyancy_diameter
         else:
-            drag_diameter = self.riser_joints.iloc[row_index]["Drag Diameter"] * 0.0254
+            drag_diameter = Q_(self.riser_joints.iloc[row_index]["Drag Diameter"], 'inch').to('m').magnitude
 
         effective_ID_with_axiliary_lines = math.sqrt(
             4
@@ -240,7 +240,7 @@ class VerticalRiser:
                 "Category": "General",
                 "Cd": cd_array,
                 "Ca": ca_array,
-                "StressOD": self.riser_joints.iloc[row_index]["Pipe OD"] * 0.0254,
+                "StressOD": Q_(self.riser_joints.iloc[row_index]["Pipe OD"], 'inch').to('m').magnitude,
                 "StressID": pipe_id,
                 "drag_diameter": drag_diameter,
                 "buoyancy_diameter": buoyancy_diameter,
@@ -261,15 +261,17 @@ class VerticalRiser:
     def update_property_dictionary_to_si_units(self, quantities_imperial):
         # TODO implement KGs lamda concept for unit conversion
         quantities_si = quantities_imperial
-        quantities_si["A"] = quantities_imperial["A"] * 0.0254**2
-        quantities_si["Ai"] = quantities_imperial["Ai"] * 0.0254**2
-        quantities_si["Ao"] = quantities_imperial["Ao"] * 0.0254**2
-        quantities_si["I"] = quantities_imperial["I"] * 0.0254**4
-        quantities_si["Io"] = quantities_imperial["Io"] * 0.0254**4
-        quantities_si["Ii"] = quantities_imperial["Ii"] * 0.0254**4
-        quantities_si["J"] = quantities_imperial["J"] * 0.0254**4
-        quantities_si["Jo"] = quantities_imperial["Jo"] * 0.0254**4
-        quantities_si["Ji"] = quantities_imperial["Ji"] * 0.0254**4
+        _in2_to_m2 = Q_(1, 'inch**2').to('m**2').magnitude
+        _in4_to_m4 = Q_(1, 'inch**4').to('m**4').magnitude
+        quantities_si["A"] = quantities_imperial["A"] * _in2_to_m2
+        quantities_si["Ai"] = quantities_imperial["Ai"] * _in2_to_m2
+        quantities_si["Ao"] = quantities_imperial["Ao"] * _in2_to_m2
+        quantities_si["I"] = quantities_imperial["I"] * _in4_to_m4
+        quantities_si["Io"] = quantities_imperial["Io"] * _in4_to_m4
+        quantities_si["Ii"] = quantities_imperial["Ii"] * _in4_to_m4
+        quantities_si["J"] = quantities_imperial["J"] * _in4_to_m4
+        quantities_si["Jo"] = quantities_imperial["Jo"] * _in4_to_m4
+        quantities_si["Ji"] = quantities_imperial["Ji"] * _in4_to_m4
         quantities_si["EI"] = quantities_imperial["EI"] * 6.894745 * (0.0254**4)
         quantities_si["EA"] = quantities_imperial["EA"] * 6.894745 * (0.0254**2)
         quantities_si["GJ"] = quantities_imperial["GJ"] * 6.894745 * (0.0254**4)

@@ -11,6 +11,7 @@ from assetutilities.engine import engine as au_engine
 from scipy import interpolate
 
 # Reader imports
+from digitalmodel.units import Q_
 from digitalmodel.subsea.pipeline.buckling_common import CommonBucklingCaculations
 
 viz_templates = VisualizationTemplates()
@@ -256,8 +257,8 @@ class LateralBuckling:
         else:
             length_end = length_end_0
         anchor_length = {
-            "start": round(length_start * 0.0254, 1),
-            "end": round(length_end * 0.0254, 1),
+            "start": round(Q_(length_start, 'inch').to('m').magnitude, 1),
+            "end": round(Q_(length_end, 'inch').to('m').magnitude, 1),
         }
 
         return anchor_length

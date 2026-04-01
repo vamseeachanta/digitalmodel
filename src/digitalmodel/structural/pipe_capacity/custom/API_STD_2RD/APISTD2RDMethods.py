@@ -4,6 +4,8 @@ import math
 import numpy as np
 import pandas as pd
 
+from digitalmodel.units import Q_
+
 
 def APISTD2RDBurst(data):
     # No corrosion allowance considered for test pressure
@@ -108,7 +110,7 @@ def APISTD2RDMethod1(data):
     # Moment Used in method 1
     # SigmaA = (data["AllowableStressFac"])*(data["S"])
     # Tension Check
-    Ty = (data["S"] * data["A"]) / 1000 * 4.448222  # kN
+    Ty = Q_((data["S"] * data["A"]) / 1000, 'kip').to('kN').magnitude  # kN
     # Ta = SigmaA*data["A"]/1000
     # Te = (Ta-data["internalPressure"]*data["Ai"]+data["externalPressure"]*data["Ao"])/1000 # Unit lbs
     My = (
@@ -205,7 +207,7 @@ def nominalWTAPISTD2RDMethod1(cfg, inputData):
 def APISTD2RDMethod1Utilization(cfg):
     # check for internal over or external over pr if i.p to--
     #
-    Ty = (cfg["Method1SLS"]["S"] * cfg["Method1SLS"]["A"]) / 1000 * 4.448222  # Unit kN
+    Ty = Q_((cfg["Method1SLS"]["S"] * cfg["Method1SLS"]["A"]) / 1000, 'kip').to('kN').magnitude  # Unit kN
     My = (
         math.pi
         / 4

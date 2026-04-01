@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool
 
+from digitalmodel.units import Q_
 from .data import AttributeDict
 from .data import ReadData
 from .math_solvers import Scipy_Interpolation
@@ -207,15 +208,15 @@ class BS7910_2013():
         # Calculated based on BS7910, Part 6.4 and Annex D
         P_m = self.cfg.loading['primary_membrane_stress'][
             'value'] * self.cfg.loading['primary_membrane_stress'][
-                'membrane_factor'] * 0.00689476
+                'membrane_factor'] * Q_(1, 'psi').to('MPa').magnitude
         self.P_m = P_m
         P_b = self.cfg.loading['primary_membrane_stress'][
             'value'] * self.cfg.loading['primary_membrane_stress'][
-                'bending_factor'] * 0.00689476
+                'bending_factor'] * Q_(1, 'psi').to('MPa').magnitude
         self.P_b = P_b
 
         Q_m = self.cfg.loading['secondary_membrane_stress']['stress_to_yield'][self.flaw.orientation] * \
-              self.material_grade_properties['SMYS'] * 0.00689476
+              self.material_grade_properties['SMYS'] * Q_(1, 'psi').to('MPa').magnitude
         Q_b = Q_m * self.cfg.loading['secondary_membrane_stress'][
             'bending_factor']
 
@@ -776,13 +777,13 @@ class BS7910_2013():
         self.material = self.cfg['Outer_Pipe']['Material']['Material']
         self.material_properties = self.cfg['Material'][self.material].copy()
         self.material_properties['E'] = self.cfg['Material'][
-            self.material]['E'] * 0.00689476
+            self.material]['E'] * Q_(1, 'psi').to('MPa').magnitude
         self.material_grade_properties = self.cfg['Material'][
             self.material]['Grades'][self.material_grade].copy()
         self.material_grade_properties['SMYS'] = self.cfg['Material'][
-            self.material]['Grades'][self.material_grade]['SMYS'] * 0.00689476
+            self.material]['Grades'][self.material_grade]['SMYS'] * Q_(1, 'psi').to('MPa').magnitude
         self.material_grade_properties['SMUS'] = self.cfg['Material'][
-            self.material]['Grades'][self.material_grade]['SMUS'] * 0.00689476
+            self.material]['Grades'][self.material_grade]['SMUS'] * Q_(1, 'psi').to('MPa').magnitude
         self.pipe_properties = None
         self.delta_P_m = 0
         self.delta_P_b = 0

@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from enum import Enum
 
+from digitalmodel.units import Q_
+
 
 class CoatingType(Enum):
     """Standard coating types for subsea pipelines."""
@@ -43,12 +45,12 @@ class InternalContents(Enum):
 
 def inch_to_mm(inches: float) -> float:
     """Convert inches to millimeters."""
-    return inches * 25.4
+    return Q_(inches, 'inch').to('mm').magnitude
 
 
 def mm_to_inch(mm: float) -> float:
     """Convert millimeters to inches."""
-    return mm / 25.4
+    return Q_(mm, 'mm').to('inch').magnitude
 
 
 @dataclass

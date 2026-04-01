@@ -8,6 +8,7 @@ Provides common vessel data extraction and cleaning functionality.
 import pandas as pd
 from typing import Optional, Dict, Any
 from pathlib import Path
+from digitalmodel.units import Q_
 from .base_scraper import BaseScraper
 
 
@@ -108,7 +109,7 @@ class VesselScraper(BaseScraper):
 
                 # Check for feet and convert to meters
                 if 'ft' in str(dim_str).lower() or "'" in str(dim_str):
-                    value = value * 0.3048
+                    value = Q_(value, 'ft').to('m').magnitude
 
                 return round(value, 2)
         except:

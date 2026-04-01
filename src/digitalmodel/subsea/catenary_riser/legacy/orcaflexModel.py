@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 import yaml
 
+from digitalmodel.units import Q_
 from assetutilities.common.saveData import saveDataYaml
 
 
@@ -33,12 +34,11 @@ def orcaflexModel(data, FEAType, LoadingIndex=0):
         "Type": "LineTypeOuterDiameter",
         "Name": "FJExtension",
         "ProfileLength": data["commonDefinition"]["TaperJoint"]["L"],
-        "ThickEndOD": (
+        "ThickEndOD": Q_(
             data["MainPipe"]["SteelSection"]["ID"]
-            + 2 * data["commonDefinition"]["TaperJoint"]["ThickendThickness"]
-        )
-        * 0.0254,
-        "ThinEndOD": (data["MainPipe"]["SteelSection"]["OD"]) * 0.0254,
+            + 2 * data["commonDefinition"]["TaperJoint"]["ThickendThickness"], 'inch'
+        ).to('m').magnitude,
+        "ThinEndOD": Q_(data["MainPipe"]["SteelSection"]["OD"], 'inch').to('m').magnitude,
     }
     customData.append(customData1)
     customData.append(customData2)
@@ -48,13 +48,10 @@ def orcaflexModel(data, FEAType, LoadingIndex=0):
         "Density": data["Material"]["SeaWater"]["Rho"] / 1000,
         "WaterDepth": data["geometry"]["waterDepth"],
         "SeabedNormalStiffness": data["FEASettings"]["Seabed"]["Stiffness"][FEAType]
-        / (
-            (
-                data["MainPipe"]["InsulationSection"]["OD"]
-                + 2 * data["geometry"]["Strakes"]["BaseThickness"]
-            )
-            * 0.0254
-        ),
+        / Q_(
+            data["MainPipe"]["InsulationSection"]["OD"]
+            + 2 * data["geometry"]["Strakes"]["BaseThickness"], 'inch'
+        ).to('m').magnitude,
     }
     model1["Environment"] = environment(data, customData, FEAType, LoadingIndex)
 
@@ -134,35 +131,34 @@ def orcaflexModel(data, FEAType, LoadingIndex=0):
     customData = {
         "Name": "MainPipe",
         "Category": "General",
-        "OD": (
+        "OD": Q_(
             data["MainPipe"]["InsulationSection"]["OD"]
-            + 2 * data["geometry"]["Strakes"]["BaseThickness"]
-        )
-        * 0.0254,
-        "ID": data["MainPipe"]["SteelSection"]["ID"] * 0.0254,
+            + 2 * data["geometry"]["Strakes"]["BaseThickness"], 'inch'
+        ).to('m').magnitude,
+        "ID": Q_(data["MainPipe"]["SteelSection"]["ID"], 'inch').to('m').magnitude,
         "MassPerUnitLength": data["MainPipe"]["equivalentPipe"]["WithoutBuoyancy"][
             "massPerUnitLength"
         ]
         / 1000,
         "EI": data["Material"]["Steel"]["E"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * data["MainPipe"]["SteelSection"]["I"]
-        * 0.0254**4,
+        * Q_(1, 'inch**4').to('m**4').magnitude,
         "EA": data["Material"]["Steel"]["E"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * data["MainPipe"]["SteelSection"]["A"]
-        * 0.0254**2,
+        * Q_(1, 'inch**2').to('m**2').magnitude,
         "PoissonRatio": data["Material"]["Steel"]["PoissionsRatio"],
         "GJ": data["Material"]["Steel"]["G"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * 2
         * data["MainPipe"]["SteelSection"]["I"]
-        * 0.0254**4,
+        * Q_(1, 'inch**4').to('m**4').magnitude,
         "Cd": data["FEASettings"]["Hydrodynamic"][FEAType]["MainPipe"]["Cd"],
         "Ca": data["FEASettings"]["Hydrodynamic"][FEAType]["MainPipe"]["Ca"],
-        "StressOD": data["MainPipe"]["SteelSection"]["OD"] * 0.0254,
-        "StressID": data["MainPipe"]["SteelSection"]["ID"] * 0.0254
-        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType] * 0.0254,
+        "StressOD": Q_(data["MainPipe"]["SteelSection"]["OD"], 'inch').to('m').magnitude,
+        "StressID": Q_(data["MainPipe"]["SteelSection"]["ID"]
+        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType], 'inch').to('m').magnitude,
         "SeabedNormalFrictionCoefficient": data["FEASettings"]["Seabed"][
             "FrictionCoefficient"
         ]["Normal"],
@@ -196,31 +192,31 @@ def orcaflexModel(data, FEAType, LoadingIndex=0):
     customData = {
         "Name": "BuoyPipe",
         "Category": "General",
-        "OD": data["BuoyPipe"]["BuoyancySection"]["OD"] * 0.0254,
-        "ID": data["BuoyPipe"]["SteelSection"]["ID"] * 0.0254,
+        "OD": Q_(data["BuoyPipe"]["BuoyancySection"]["OD"], 'inch').to('m').magnitude,
+        "ID": Q_(data["BuoyPipe"]["SteelSection"]["ID"], 'inch').to('m').magnitude,
         "MassPerUnitLength": data["BuoyPipe"]["equivalentPipe"]["WithBuoyancy"][
             "massPerUnitLength"
         ]
         / 1000,
         "EI": data["Material"]["Steel"]["E"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * data["BuoyPipe"]["SteelSection"]["I"]
-        * 0.0254**4,
+        * Q_(1, 'inch**4').to('m**4').magnitude,
         "EA": data["Material"]["Steel"]["E"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * data["BuoyPipe"]["SteelSection"]["A"]
-        * 0.0254**2,
+        * Q_(1, 'inch**2').to('m**2').magnitude,
         "PoissonRatio": data["Material"]["Steel"]["PoissionsRatio"],
         "GJ": data["Material"]["Steel"]["G"]
-        * 6.894745
+        * Q_(1, 'psi').to('kPa').magnitude
         * 2
         * data["BuoyPipe"]["SteelSection"]["I"]
-        * 0.0254**4,
+        * Q_(1, 'inch**4').to('m**4').magnitude,
         "Cd": data["FEASettings"]["Hydrodynamic"][FEAType]["BuoyPipe"]["Cd"],
         "Ca": data["FEASettings"]["Hydrodynamic"][FEAType]["BuoyPipe"]["Ca"],
-        "StressOD": data["BuoyPipe"]["SteelSection"]["OD"] * 0.0254,
-        "StressID": data["BuoyPipe"]["SteelSection"]["ID"] * 0.0254
-        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType] * 0.0254,
+        "StressOD": Q_(data["BuoyPipe"]["SteelSection"]["OD"], 'inch').to('m').magnitude,
+        "StressID": Q_(data["BuoyPipe"]["SteelSection"]["ID"]
+        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType], 'inch').to('m').magnitude,
         "SeabedNormalFrictionCoefficient": data["FEASettings"]["Seabed"][
             "FrictionCoefficient"
         ]["Normal"],
@@ -269,8 +265,8 @@ def orcaflexModel(data, FEAType, LoadingIndex=0):
         "Name": "FJExtension1",
         "Category": "Homogeneous Pipe",
         "OD": "FJExtension",
-        "ID": data["MainPipe"]["SteelSection"]["ID"] * 0.0254
-        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType] * 0.0254,
+        "ID": Q_(data["MainPipe"]["SteelSection"]["ID"]
+        + 2 * data["FEASettings"]["CorrosionAllowance"][FEAType], 'inch').to('m').magnitude,
         "MaterialDensity": data["Material"]["Steel"]["Rho"] / 1000,
         "E": data["Material"]["Steel"]["E"] * 6.894745,
         "PoissonRatio": data["Material"]["Steel"]["PoissionsRatio"],
@@ -679,7 +675,7 @@ def lines(data, FEAType, LoadingIndex):
                         data["LazyWaveCatenaryDefinition"]["Hangoff"]["from_centerline"]
                         + distance_from_hangoff_to_TDP
                         * math.sin(math.radians(absolute_orientation_angle_of_riser)),
-                        data["MainPipe"]["InsulationSection"]["OD"] * 0.0254 / 2,
+                        Q_(data["MainPipe"]["InsulationSection"]["OD"], 'inch').to('m').magnitude / 2,
                         data["LazyWaveCatenaryDefinition"]["lay_azimuth_to_vessel"],
                         data["FEASettings"]["EndOrientation"]["SLWR"]["B"][
                             "Declination"
@@ -722,7 +718,7 @@ def lines(data, FEAType, LoadingIndex):
                         data["commonDefinition"]["Hangoff"]["from_centerline"]
                         + distance_from_hangoff_to_TDP
                         * math.sin(math.radians(absolute_orientation_angle_of_riser)),
-                        data["MainPipe"]["InsulationSection"]["OD"] * 0.0254 / 2,
+                        Q_(data["MainPipe"]["InsulationSection"]["OD"], 'inch').to('m').magnitude / 2,
                         data["commonDefinition"]["lay_azimuth_to_vessel"],
                         data["FEASettings"]["EndOrientation"]["SCR"]["B"][
                             "Declination"

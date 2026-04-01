@@ -2,6 +2,8 @@
 import sympy as sp
 from sympy import init_printing
 
+from digitalmodel.units import Q_
+
 # from sympy import init_session
 
 
@@ -52,9 +54,9 @@ class Pressureloss:
         r = sp.Symbol("r")
         r = roughness
 
-        w_in_meters = w * 0.3048
+        w_in_meters = Q_(w, 'ft').to('m').magnitude
         w_in_meters = round(float(w_in_meters), 1)
-        i_in_meters = i * 0.0254
+        i_in_meters = Q_(i, 'inch').to('m').magnitude
         i_in_meters = round(float(i_in_meters), 3)
         r_in_meters = r * 0.001
 

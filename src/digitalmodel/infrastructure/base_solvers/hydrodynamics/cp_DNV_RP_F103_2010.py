@@ -1,6 +1,8 @@
 # Standard library imports
 import math
 
+from digitalmodel.units import Q_
+
 
 class DNV_RP_F103:
     def __init__(self):
@@ -119,13 +121,10 @@ class DNV_RP_F103:
         density = anode["physical_properties"]["density"]
 
         # convert to SI units
-        length = anode["physical_properties"]["length"]
-        length = length * 0.0254
-        thickness = anode["physical_properties"]["thickness"]
-        thickness = thickness * 0.0254
-        half_shell_gap = anode["physical_properties"]["half_shell_gap"]
-        half_shell_gap = half_shell_gap * 0.0254
-        outer_diameter = outer_diameter * 0.0254
+        length = Q_(anode["physical_properties"]["length"], 'inch').to('m').magnitude
+        thickness = Q_(anode["physical_properties"]["thickness"], 'inch').to('m').magnitude
+        half_shell_gap = Q_(anode["physical_properties"]["half_shell_gap"], 'inch').to('m').magnitude
+        outer_diameter = Q_(outer_diameter, 'inch').to('m').magnitude
 
         mass = (
             density
@@ -156,8 +155,7 @@ class DNV_RP_F103:
         field_joint_length = math.ceil(field_joint_length)
 
         # convert to SI units
-        OD = structure["dimensions"]["Nominal_OD"]
-        OD = OD * 0.0254
+        OD = Q_(structure["dimensions"]["Nominal_OD"], 'inch').to('m').magnitude
         length = structure["dimensions"]["length"]["total"]
         area_pipeline = math.pi * OD * (length - field_joint_length)
 
@@ -232,11 +230,11 @@ class DNV_RP_F103:
         anode_cfg = cfg["inputs"]["anode"]
         environment_cfg = cfg["inputs"]["environment"]
 
-        length_in_meters = anode_cfg["physical_properties"]["length"] * 0.0254
-        inner_diameter_in_meters = anode_mass["inner_diameter"] * 0.0254
-        half_shell_gap_in_meters = (
-            anode_cfg["physical_properties"]["half_shell_gap"] * 0.0254
-        )
+        length_in_meters = Q_(anode_cfg["physical_properties"]["length"], 'inch').to('m').magnitude
+        inner_diameter_in_meters = Q_(anode_mass["inner_diameter"], 'inch').to('m').magnitude
+        half_shell_gap_in_meters = Q_(
+            anode_cfg["physical_properties"]["half_shell_gap"], 'inch'
+        ).to('m').magnitude
 
         surface_area = length_in_meters * (
             math.pi * inner_diameter_in_meters - 2 * half_shell_gap_in_meters
@@ -281,8 +279,8 @@ class DNV_RP_F103:
         anode_cfg = cfg["inputs"]["anode"]
 
         # input values
-        d = structure_cfg["dimensions"]["Nominal_WT"] * 0.0254
-        D = round(structure_cfg["dimensions"]["Nominal_OD"] * 0.0254, 4)
+        d = Q_(structure_cfg["dimensions"]["Nominal_WT"], 'inch').to('m').magnitude
+        D = round(Q_(structure_cfg["dimensions"]["Nominal_OD"], 'inch').to('m').magnitude, 4)
         Res = structure_cfg["electrical"]["resistivity"]
         icm = structure_cfg["electrical"]["anode_mean_current_density"]
         k = design_cfg["factor"]
