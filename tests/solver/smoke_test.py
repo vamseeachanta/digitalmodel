@@ -5,7 +5,7 @@ ABOUTME: Binary pass/fail smoke tests per D-10. Runs on licensed-win-1 either
 standalone (python tests/solver/smoke_test.py) or via pytest.
 
 L00: Load test01.owd -> Calculate() -> extract frequency count -> SaveData(.owr) -> Excel export
-L01: Load existing .owr from L01_aqwa_benchmark/ -> extract basic data -> re-save as fixture
+L01: Drive .yml -> .owr -> .xlsx via OrcFxAPI, then verify result
 
 Exit codes:
     0 - All tests pass
@@ -34,6 +34,16 @@ L00_OWD = (
     / "test01.owd"
 )
 
+L01_YML = (
+    REPO_ROOT
+    / "docs"
+    / "domains"
+    / "orcawave"
+    / "L01_aqwa_benchmark"
+    / "orcawave_001_ship_raos_rev2.yml"
+)
+
+# Kept for backward compatibility (reference result from GUI run)
 L01_OWR_SOURCE = (
     REPO_ROOT / "docs" / "domains" / "orcawave" / "L01_aqwa_benchmark" / "orcawave_001_ship_raos_rev2.owr"
 )
@@ -47,9 +57,9 @@ def _write_frequency_workbook(diff, xlsx_path: Path) -> bool:
         workbook = openpyxl.Workbook()
         worksheet = workbook.active
         worksheet.title = "Frequencies"
-        worksheet.append(["Index", "Frequency (rad/s)"])
-        for index in range(diff.frequencyCount):
-            worksheet.append([index + 1, diff.frequency(index)])
+        worksheet.append(["Index", "Frequency (Hz)"])
+        for i, freq in enumerate(diff.frequencies):
+            worksheet.append([i + 1, freq])
         workbook.save(xlsx_path)
         return xlsx_path.exists() and xlsx_path.stat().st_size > 0
     except Exception:
@@ -148,7 +158,7 @@ def run_l00_smoke_test() -> bool:
     print(f"[L00] Calculation complete (state={diff.state})")
 
     # Extract basic info to verify data is accessible
-    freq_count = diff.frequencyCount
+    freq_count = len(diff.frequencies)
     print(f"[L00] Frequency count: {freq_count}")
     if freq_count <= 0:
         print("[L00] FAIL: no frequencies found after calculation")
@@ -170,36 +180,36 @@ def run_l00_smoke_test() -> bool:
 
 
 def run_l01_smoke_test() -> bool:
-    """L01: Load existing .owr, extract basic data, re-save as fixture.
+    """L01: Drive .yml -> .owr -> .xlsx via OrcFxAPI, then verify result.
 
     Returns True on pass, False on fail.
     """
-    import OrcFxAPI
+    import sys as _sys
 
-    print(f"[L01] Loading: {L01_OWR_SOURCE.name}")
-    if not L01_OWR_SOURCE.exists():
-        print(f"[L01] FAIL: source .owr not found: {L01_OWR_SOURCE}")
+    # Import run_orcawave_from_yml from the L01 benchmark dir
+    _l01_dir = str(L01_YML.parent)
+    if _l01_dir not in _sys.path:
+        _sys.path.insert(0, _l01_dir)
+    from run_orcawave_api import run_orcawave_from_yml
+
+    print(f"[L01] Input YML: {L01_YML.name}")
+    if not L01_YML.exists():
+        print(f"[L01] FAIL: input YML not found: {L01_YML}")
         return False
 
-    diff = OrcFxAPI.Diffraction(str(L01_OWR_SOURCE))
-    print(f"[L01] Loaded (state={diff.state})")
-
-    # Extract basic info to verify data is accessible
-    freq_count = diff.frequencyCount
-    print(f"[L01] Frequency count: {freq_count}")
-    if freq_count <= 0:
-        print("[L01] FAIL: no frequencies found in .owr")
-        return False
-
-    # Re-save as fixture
     FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     owr_path = FIXTURES_DIR / "L01_001_ship_raos.owr"
-    diff.SaveData(str(owr_path))
-    print(f"[L01] Saved: {owr_path.name} ({owr_path.stat().st_size} bytes)")
-
-    # Export Excel
     xlsx_path = FIXTURES_DIR / "L01_001_ship_raos.xlsx"
-    if not _export_excel_artifact(diff, xlsx_path, "L01"):
+
+    if not run_orcawave_from_yml(L01_YML, owr_path, xlsx_path):
+        print("[L01] FAIL: run_orcawave_from_yml returned False")
+        return False
+
+    # Verify the .owr was written (run_orcawave_from_yml validates freq_count > 0 internally)
+    owr_size = owr_path.stat().st_size
+    print(f"[L01] OWR size: {owr_size:,} bytes")
+    if owr_size == 0:
+        print("[L01] FAIL: generated .owr is empty")
         return False
 
     print("[L01] PASS")
