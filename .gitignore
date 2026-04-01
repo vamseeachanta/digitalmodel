@@ -326,6 +326,7 @@ benchmarks/results/
 
 # OrcaWave binary results (regenerable from .yml)
 **/*.owr
+!tests/fixtures/solver/*.owr
 
 # Wind binary time series
 **/*.bts

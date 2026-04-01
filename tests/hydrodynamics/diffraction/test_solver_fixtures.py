@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 
+REPO_ROOT = Path(__file__).parent.parent.parent.parent
+
+
 def test_solver_fixtures_dir_exists(solver_fixtures_dir: Path) -> None:
     """The solver fixtures directory exists."""
     assert solver_fixtures_dir.exists(), \
@@ -26,6 +29,29 @@ def test_l00_fixture_skips_when_missing(l00_owr_path: Path) -> None:
 def test_l01_fixture_skips_when_missing(l01_owr_path: Path) -> None:
     """L01 fixture skips gracefully when .owr file not yet committed."""
     assert l01_owr_path.suffix == ".owr"
+
+
+def test_l00_xlsx_fixture_skips_when_missing(l00_xlsx_path: Path) -> None:
+    """L00 Excel fixture skips gracefully when .xlsx file not yet committed."""
+    assert l00_xlsx_path.suffix == ".xlsx"
+
+
+def test_l01_xlsx_fixture_skips_when_missing(l01_xlsx_path: Path) -> None:
+    """L01 Excel fixture skips gracefully when .xlsx file not yet committed."""
+    assert l01_xlsx_path.suffix == ".xlsx"
+
+
+def test_solver_fixture_owr_paths_are_not_gitignored() -> None:
+    """Solver fixture .owr files must be committable as permanent references."""
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "!tests/fixtures/solver/*.owr" in gitignore
+
+
+def test_solver_fixture_binary_types_marked_in_gitattributes() -> None:
+    """Binary solver fixture types remain marked binary for git handling."""
+    gitattributes = (REPO_ROOT / ".gitattributes").read_text(encoding="utf-8")
+    assert "*.owr binary" in gitattributes
+    assert "*.xlsx binary" in gitattributes
 
 
 @pytest.mark.solver
