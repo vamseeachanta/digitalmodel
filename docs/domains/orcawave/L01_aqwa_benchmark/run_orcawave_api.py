@@ -95,13 +95,13 @@ def run_orcawave_from_yml(
         return False
 
     owr_path.parent.mkdir(parents=True, exist_ok=True)
-    diff.SaveData(str(owr_path))
+    diff.SaveResults(str(owr_path))
     print(f"[OW] Saved: {owr_path.name} ({owr_path.stat().st_size:,} bytes)")
 
     if xlsx_path is not None:
         xlsx_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            diff.ExportResults(str(xlsx_path))
+            diff.SaveResultsSpreadsheet(str(xlsx_path))
             print(f"[OW] Exported: {xlsx_path.name} ({xlsx_path.stat().st_size:,} bytes)")
         except Exception as e:
             print(f"[OW] WARNING: Excel export failed (non-fatal): {e}")

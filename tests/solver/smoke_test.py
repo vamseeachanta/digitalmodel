@@ -69,7 +69,7 @@ def _write_frequency_workbook(diff, xlsx_path: Path) -> bool:
 def _export_excel_artifact(diff, xlsx_path: Path, label: str) -> bool:
     """Export Excel results with a fallback workbook for smoke-test artifacts."""
     try:
-        diff.ExportResults(str(xlsx_path))
+        diff.SaveResultsSpreadsheet(str(xlsx_path))
         if xlsx_path.exists() and xlsx_path.stat().st_size > 0:
             print(f"[{label}] Exported: {xlsx_path.name} ({xlsx_path.stat().st_size} bytes)")
             return True
@@ -164,10 +164,10 @@ def run_l00_smoke_test() -> bool:
         print("[L00] FAIL: no frequencies found after calculation")
         return False
 
-    # Save .owr artifact
+    # Save .owr artifact (SaveResults writes the full results file, not just config)
     FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     owr_path = FIXTURES_DIR / "L00_test01.owr"
-    diff.SaveData(str(owr_path))
+    diff.SaveResults(str(owr_path))
     print(f"[L00] Saved: {owr_path.name} ({owr_path.stat().st_size} bytes)")
 
     # Export Excel
