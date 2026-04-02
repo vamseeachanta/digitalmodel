@@ -1,3 +1,5 @@
+"""DataFrame to image rendering for asset integrity reports."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

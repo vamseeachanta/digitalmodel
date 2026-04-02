@@ -1,3 +1,5 @@
+"""Application lifecycle management for asset integrity analyses."""
+
 import os
 import yaml
 import datetime

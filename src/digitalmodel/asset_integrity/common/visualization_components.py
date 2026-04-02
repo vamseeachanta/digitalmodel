@@ -1,3 +1,5 @@
+"""Visualization component helpers for asset integrity plots."""
+
 import logging
 
 

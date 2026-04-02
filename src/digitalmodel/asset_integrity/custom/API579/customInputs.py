@@ -1,3 +1,5 @@
+"""Custom input handling for API 579 assessments."""
+
 import pandas as pd
 from ...common.yml_utilities import WorkingWithYAML
 

@@ -1,3 +1,5 @@
+"""General-purpose utilities for asset integrity calculations."""
+
 import importlib.util
 import os
 import logging

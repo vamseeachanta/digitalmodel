@@ -1,3 +1,5 @@
+"""YAML utility functions for configuration loading and merging."""
+
 import os
 import yaml
 import pkgutil

@@ -1,3 +1,5 @@
+"""Mathematical solver utilities for asset integrity analyses."""
+
 class Polynomial():
 
     def solve_by_coefficients(self, coefficients):

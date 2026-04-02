@@ -1,3 +1,5 @@
+"""Custom material property definitions for asset integrity."""
+
 import logging
 
 from digitalmodel.units import Q_

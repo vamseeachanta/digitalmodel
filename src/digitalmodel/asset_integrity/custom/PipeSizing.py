@@ -1,3 +1,5 @@
+"""Custom pipe sizing methods for asset integrity assessments."""
+
 import logging
 import math
 

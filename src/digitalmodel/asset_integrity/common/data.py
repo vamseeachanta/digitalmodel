@@ -1,3 +1,5 @@
+"""Data reading, transformation, and persistence utilities."""
+
 import datetime
 
 

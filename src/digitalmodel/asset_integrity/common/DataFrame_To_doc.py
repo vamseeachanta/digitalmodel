@@ -1,3 +1,5 @@
+"""DataFrame to Word document export for asset integrity reports."""
+
 import lxml
 import pandas as pd
 from docx import Document

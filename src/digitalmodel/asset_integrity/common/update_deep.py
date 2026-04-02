@@ -1,3 +1,5 @@
+"""Deep dictionary update utilities for nested configurations."""
+
 from collections.abc import Mapping
 
 

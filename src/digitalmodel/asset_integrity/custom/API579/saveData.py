@@ -1,3 +1,5 @@
+"""Result data export for API 579 assessments."""
+
 import json
 from collections import OrderedDict
 

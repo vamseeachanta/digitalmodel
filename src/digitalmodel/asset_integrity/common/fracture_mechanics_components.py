@@ -1,3 +1,5 @@
+"""Component helpers for fracture mechanics calculations."""
+
 import logging
 
 from .data import AttributeDict, ReadData

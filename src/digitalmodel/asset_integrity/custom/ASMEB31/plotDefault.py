@@ -1,3 +1,5 @@
+"""Default plotting routines for ASME B31 asset integrity results."""
+
 import matplotlib.pyplot as plt
 
 

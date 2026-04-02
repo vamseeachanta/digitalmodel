@@ -1,3 +1,5 @@
+"""Asset integrity analysis engine — orchestrates FFS assessments."""
+
 import os
 import sys
 

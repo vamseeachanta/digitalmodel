@@ -1,3 +1,5 @@
+"""Parallel processing utilities for batch asset integrity runs."""
+
 class ParallelProcessComponents():
 
     def __init__(self, cfg):

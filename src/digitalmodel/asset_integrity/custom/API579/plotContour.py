@@ -1,3 +1,5 @@
+"""Contour plot generation for API 579 assessment results."""
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 

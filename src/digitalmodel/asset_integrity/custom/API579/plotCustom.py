@@ -1,3 +1,5 @@
+"""Custom plotting routines for API 579 assessment results."""
+
 import matplotlib.pyplot as plt
 
 

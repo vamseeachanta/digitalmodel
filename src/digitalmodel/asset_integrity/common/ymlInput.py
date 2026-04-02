@@ -1,3 +1,5 @@
+"""YAML input file handling for asset integrity configurations."""
+
 from collections.abc import Mapping
 
 import yaml

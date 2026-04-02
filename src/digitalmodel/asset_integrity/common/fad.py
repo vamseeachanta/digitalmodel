@@ -1,3 +1,5 @@
+"""Failure Assessment Diagram (FAD) construction and evaluation."""
+
 class FAD():
     def __init__(self, cfg):
         self.cfg = cfg

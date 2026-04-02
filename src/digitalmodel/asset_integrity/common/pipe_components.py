@@ -1,3 +1,5 @@
+"""Pipe geometry and property components for asset integrity."""
+
 from ..custom.MaterialProperties import MaterialProperties
 from ..custom.PipeCapacity import PipeCapacity
 from ..custom.PipeSizing import PipeSizing

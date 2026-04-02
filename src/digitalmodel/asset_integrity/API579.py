@@ -1,3 +1,5 @@
+"""API 579 fitness-for-service assessment entry point."""
+
 from .common.API579_components import API579_components
 
 

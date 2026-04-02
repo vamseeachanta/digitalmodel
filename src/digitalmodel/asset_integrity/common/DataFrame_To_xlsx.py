@@ -1,3 +1,5 @@
+"""DataFrame to Excel export for asset integrity reports."""
+
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles.borders import BORDER_THIN, Border, Side

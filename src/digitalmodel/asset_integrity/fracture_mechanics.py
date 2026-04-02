@@ -1,3 +1,5 @@
+"""Fracture mechanics assessment entry point for asset integrity."""
+
 def fracture_mechanics(cfg):
     from datetime import datetime
     t_start = datetime.now()

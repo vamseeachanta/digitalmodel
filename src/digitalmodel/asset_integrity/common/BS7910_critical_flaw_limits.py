@@ -1,3 +1,5 @@
+"""BS 7910 critical flaw size limit calculations."""
+
 import logging
 import math
 import numpy as np

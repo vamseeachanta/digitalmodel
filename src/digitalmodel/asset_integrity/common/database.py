@@ -1,3 +1,5 @@
+"""Database access utilities for asset integrity data storage."""
+
 def get_db_connection(db_properties):
     dbe = Database(db_properties)
     try:

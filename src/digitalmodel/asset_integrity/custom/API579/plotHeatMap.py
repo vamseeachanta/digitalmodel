@@ -1,3 +1,5 @@
+"""Heat map visualization for API 579 assessment results."""
+
 import pandas as pd
 from bokeh.io import export_png, output_file, show
 from bokeh.models import (BasicTicker, ColorBar, ColumnDataSource,

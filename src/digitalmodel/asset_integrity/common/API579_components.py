@@ -1,3 +1,5 @@
+"""Component helpers for API 579 fitness-for-service calculations."""
+
 import numpy as np
 import pandas as pd
 from pathlib import Path

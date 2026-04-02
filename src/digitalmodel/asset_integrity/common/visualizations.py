@@ -1,3 +1,5 @@
+"""Visualization routines for asset integrity results."""
+
 class Visualization():
 
     def __init__(self, plt_settings=None):
