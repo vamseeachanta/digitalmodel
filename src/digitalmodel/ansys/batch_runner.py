@@ -27,6 +27,63 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+import json
+import csv
+import io
+from enum import Enum
+
+
+class RunStatus(Enum):
+    """Status of a batch run."""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+@dataclass
+class LoadCase:
+    """Single load case for batch FEA analysis."""
+    name: str
+    loads: dict[str, float] = field(default_factory=dict)
+    boundary_conditions: dict[str, float] = field(default_factory=dict)
+    description: str = ""
+
+
+@dataclass
+class BatchLoadConfig:
+    """Batch configuration using load cases instead of parameter sweeps."""
+    project_name: str = "FEA_Batch"
+    base_model: str = ""  # APDL template with {load_name} placeholders
+    load_cases: list[LoadCase] = field(default_factory=list)
+    output_dir: str = "batch_output"
+    ansys_executable: str = "mapdl"
+    ansys_args: str = "-b -np 4"
+    platform: str = "linux"
+
+
+@dataclass
+class BatchResultEntry:
+    """Result for a single batch run."""
+    load_case_name: str
+    status: RunStatus = RunStatus.PENDING
+    max_stress_mpa: Optional[float] = None
+    max_displacement_mm: Optional[float] = None
+    output_dir: str = ""
+    error_message: str = ""
+    converged: bool = False
+
+
+@dataclass
+class BatchResults:
+    """Aggregated results from all batch runs."""
+    project_name: str = ""
+    entries: list[BatchResultEntry] = field(default_factory=list)
+    total_runs: int = 0
+    completed_runs: int = 0
+    failed_runs: int = 0
+
+
 
 # ---------------------------------------------------------------------------
 # Configuration dataclasses
@@ -207,6 +264,240 @@ class BatchRunner:
             lines.append(",".join(row))
 
         return "\n".join(lines) + "\n"
+
+
+    @staticmethod
+    def parse_load_cases_yaml(yaml_text: str) -> list[LoadCase]:
+        """Parse load case definitions from YAML text.
+
+        Expected format::
+
+            load_cases:
+              - name: "Operating"
+                loads:
+                  pressure_mpa: 10.0
+                  temperature_c: 200.0
+                boundary_conditions:
+                  fixed_end: 0.0
+
+        Parameters
+        ----------
+        yaml_text : str
+            YAML content defining load cases.
+
+        Returns
+        -------
+        list[LoadCase]
+            Parsed load cases.
+        """
+        # Simple YAML-like parser (no PyYAML dependency needed)
+        # For robustness, we support a dict-based input too
+        load_cases: list[LoadCase] = []
+        current_case: dict[str, Any] = {}
+        current_section: str = ""
+        indent_base = 0
+
+        for line in yaml_text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+
+            # Detect load_cases list items
+            if stripped.startswith("- name:"):
+                if current_case.get("name"):
+                    load_cases.append(LoadCase(
+                        name=current_case["name"],
+                        loads=current_case.get("loads", {}),
+                        boundary_conditions=current_case.get("boundary_conditions", {}),
+                        description=current_case.get("description", ""),
+                    ))
+                current_case = {"name": stripped.split(":", 1)[1].strip().strip('"').strip("'")}
+                current_section = ""
+            elif stripped.startswith("description:"):
+                current_case["description"] = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+            elif stripped == "loads:":
+                current_section = "loads"
+                current_case.setdefault("loads", {})
+            elif stripped == "boundary_conditions:":
+                current_section = "boundary_conditions"
+                current_case.setdefault("boundary_conditions", {})
+            elif ":" in stripped and current_section:
+                key, val = stripped.split(":", 1)
+                key = key.strip()
+                val = val.strip()
+                try:
+                    current_case.setdefault(current_section, {})[key] = float(val)
+                except ValueError:
+                    current_case.setdefault(current_section, {})[key] = val
+
+        # Don't forget the last case
+        if current_case.get("name"):
+            load_cases.append(LoadCase(
+                name=current_case["name"],
+                loads=current_case.get("loads", {}),
+                boundary_conditions=current_case.get("boundary_conditions", {}),
+                description=current_case.get("description", ""),
+            ))
+
+        return load_cases
+
+    def generate_batch_scripts_from_load_cases(
+        self, config: BatchLoadConfig
+    ) -> list[tuple[str, str]]:
+        """Generate APDL scripts for each load case.
+
+        Parameters
+        ----------
+        config : BatchLoadConfig
+            Batch load case configuration.
+
+        Returns
+        -------
+        list[tuple[str, str]]
+            List of (script_path, apdl_content) tuples.
+        """
+        scripts: list[tuple[str, str]] = []
+
+        for idx, lc in enumerate(config.load_cases):
+            run_dir = f"{config.output_dir}/{lc.name.replace(' ', '_')}"
+            script_path = f"{run_dir}/{config.project_name}.inp"
+
+            # Start with header
+            header = (
+                f"! Load Case: {lc.name}\n"
+                f"! Description: {lc.description}\n"
+                f"! Project: {config.project_name}\n"
+                f"! Run {idx + 1} of {len(config.load_cases)}\n"
+                f"!\n"
+            )
+
+            # Substitute load values into template
+            apdl_content = config.base_model
+            for key, val in lc.loads.items():
+                apdl_content = apdl_content.replace(f"{{{key}}}", str(val))
+            for key, val in lc.boundary_conditions.items():
+                apdl_content = apdl_content.replace(f"{{{key}}}", str(val))
+
+            scripts.append((script_path, header + apdl_content))
+
+        return scripts
+
+    def collect_results_from_outputs(
+        self, config: BatchLoadConfig, output_texts: dict[str, str]
+    ) -> BatchResults:
+        """Collect results from mock output text for each load case.
+
+        Parameters
+        ----------
+        config : BatchLoadConfig
+            Batch configuration.
+        output_texts : dict[str, str]
+            Mapping of load_case_name -> output text content.
+
+        Returns
+        -------
+        BatchResults
+            Aggregated results.
+        """
+        import re
+
+        results = BatchResults(
+            project_name=config.project_name,
+            total_runs=len(config.load_cases),
+        )
+
+        max_seqv_re = re.compile(
+            r"MAXIMUM\s+(?:VALUE|SEQV)\s*=?\s*([-\d.E+]+)", re.IGNORECASE
+        )
+        max_usum_re = re.compile(
+            r"MAXIMUM\s+(?:USUM|DISPLACEMENT)\s*=?\s*([-\d.E+]+)", re.IGNORECASE
+        )
+        converged_re = re.compile(r"SOLUTION\s+(?:IS\s+)?CONVERGED", re.IGNORECASE)
+
+        for lc in config.load_cases:
+            entry = BatchResultEntry(
+                load_case_name=lc.name,
+                output_dir=f"{config.output_dir}/{lc.name.replace(' ', '_')}",
+            )
+
+            text = output_texts.get(lc.name, "")
+            if not text:
+                entry.status = RunStatus.FAILED
+                entry.error_message = "No output found"
+                results.failed_runs += 1
+            else:
+                m = max_seqv_re.search(text)
+                if m:
+                    entry.max_stress_mpa = float(m.group(1))
+                m = max_usum_re.search(text)
+                if m:
+                    entry.max_displacement_mm = float(m.group(1))
+                if converged_re.search(text):
+                    entry.converged = True
+                    entry.status = RunStatus.COMPLETED
+                    results.completed_runs += 1
+                else:
+                    entry.status = RunStatus.FAILED
+                    entry.error_message = "Solution did not converge"
+                    results.failed_runs += 1
+
+            results.entries.append(entry)
+
+        return results
+
+    def generate_summary_report(
+        self, results: BatchResults, format: str = "csv"
+    ) -> str:
+        """Generate a summary report from batch results.
+
+        Parameters
+        ----------
+        results : BatchResults
+            Aggregated batch results.
+        format : str
+            Output format: 'csv' or 'json'.
+
+        Returns
+        -------
+        str
+            Report content as string.
+        """
+        if format == "json":
+            data = {
+                "project": results.project_name,
+                "total_runs": results.total_runs,
+                "completed": results.completed_runs,
+                "failed": results.failed_runs,
+                "cases": [],
+            }
+            for entry in results.entries:
+                data["cases"].append({
+                    "name": entry.load_case_name,
+                    "status": entry.status.value,
+                    "max_stress_mpa": entry.max_stress_mpa,
+                    "max_displacement_mm": entry.max_displacement_mm,
+                    "converged": entry.converged,
+                    "error": entry.error_message,
+                })
+            return json.dumps(data, indent=2)
+        else:
+            # CSV format
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow([
+                "load_case", "status", "max_stress_mpa",
+                "max_displacement_mm", "converged", "error",
+            ])
+            for entry in results.entries:
+                writer.writerow([
+                    entry.load_case_name,
+                    entry.status.value,
+                    entry.max_stress_mpa if entry.max_stress_mpa is not None else "",
+                    entry.max_displacement_mm if entry.max_displacement_mm is not None else "",
+                    entry.converged,
+                    entry.error_message,
+                ])
+            return output.getvalue()
 
     # ------------------------------------------------------------------
     # Private helpers
