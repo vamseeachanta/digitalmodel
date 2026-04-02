@@ -137,6 +137,7 @@ class PerformanceProfiler:
 
         # Memory profiling
         def run_spectrum():
+            """Execute a single wave spectrum generation for memory profiling."""
             freq, S = ws.jonswap(hs=hs, tp=tp, gamma=gamma, n_points=n_points)
             stats = ws.spectrum_statistics(freq, S)
             return S
@@ -206,6 +207,7 @@ class PerformanceProfiler:
 
         # Memory profiling
         def run_lookup():
+            """Execute a single OCIMF coefficient lookup for memory profiling."""
             coeffs = db.get_coefficients(90.0, 200000.0)
             return coeffs
 
@@ -278,6 +280,7 @@ class PerformanceProfiler:
 
         # Memory profiling
         def run_solver():
+            """Execute a single catenary solve for memory profiling."""
             results = solver.solve(params)
             return results
 
@@ -367,6 +370,7 @@ class PerformanceProfiler:
 
         # Memory profiling
         def run_interpolation():
+            """Execute a single coefficient interpolation for memory profiling."""
             added_mass = db.get_added_mass_matrix(1.0)
             damping = db.get_damping_matrix(1.0)
             return added_mass, damping

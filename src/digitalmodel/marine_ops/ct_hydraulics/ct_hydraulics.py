@@ -7,15 +7,42 @@ class CTHydraulics:
     """Steady-state coiled tubing hydraulics calculations."""
 
     def __init__(self) -> None:
+        """Initialize the CTHydraulics calculator."""
         pass
 
     def router(self, cfg: dict) -> dict:
+        """Route configuration through the CT hydraulics calculator.
+
+        Args:
+            cfg: Top-level configuration dictionary containing a
+                ``ct_hydraulics`` key with well, CT, annulus, fluid,
+                flow, BHA, and options sub-dictionaries.
+
+        Returns:
+            The configuration dictionary with computed ``results``
+            added under ``cfg["ct_hydraulics"]["results"]``.
+        """
         ct_cfg = cfg.get("ct_hydraulics", {})
         ct_cfg["results"] = self.calculate(ct_cfg)
         cfg["ct_hydraulics"] = ct_cfg
         return cfg
 
     def calculate(self, ct_cfg: dict) -> dict:
+        """Perform steady-state coiled tubing hydraulics calculations.
+
+        Computes pressure losses through the coiled tubing string and
+        annulus, pump pressure, downhole pressure, and equivalent
+        circulating density (ECD).
+
+        Args:
+            ct_cfg: CT hydraulics configuration dictionary with keys
+                ``well``, ``ct``, ``annulus``, ``fluid``, ``flow``,
+                ``bha``, and ``options``.
+
+        Returns:
+            Dictionary with ``summary``, ``coiled_tubing``, and
+            ``annulus`` sections containing computed hydraulic results.
+        """
         well = ct_cfg.get("well", {})
         ct = ct_cfg.get("ct", {})
         annulus = ct_cfg.get("annulus", {})

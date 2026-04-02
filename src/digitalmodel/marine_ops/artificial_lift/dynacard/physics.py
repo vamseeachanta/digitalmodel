@@ -23,6 +23,12 @@ class DynacardPhysicsSolver:
     """
 
     def __init__(self, context: DynacardAnalysisContext):
+        """Initialize the Gibbs analytical solver.
+
+        Args:
+            context: Complete well analysis context including surface card,
+                rod string, pump, and operating parameters.
+        """
         self.ctx = context
         self.results = AnalysisResults()
 
@@ -103,6 +109,14 @@ class DynacardPhysicsSolver:
         return self.results
 
     def detect_buckling(self):
+        """Detect rod buckling from the computed downhole card.
+
+        Checks whether the minimum downhole load falls below the
+        buckling detection threshold.
+
+        Returns:
+            True if buckling is detected, False otherwise.
+        """
         if not self.results.downhole_card: return False
         loads = np.array(self.results.downhole_card.load)
         if np.min(loads) < BUCKLING_DETECTION_LOAD_THRESHOLD_LBS:
@@ -110,5 +124,10 @@ class DynacardPhysicsSolver:
         return self.results.buckling_detected
 
     def calculate_fillage(self):
+        """Calculate pump fillage (simplified default).
+
+        Returns:
+            The pump fillage value as a float (default constant).
+        """
         self.results.pump_fillage = DEFAULT_PUMP_FILLAGE
         return self.results.pump_fillage

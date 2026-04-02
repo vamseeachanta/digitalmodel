@@ -23,6 +23,11 @@ class CornerDetector:
     """
 
     def __init__(self, card: CardData):
+        """Initialize corner detector with card data.
+
+        Args:
+            card: Dynamometer card containing position and load arrays.
+        """
         self.position = np.array(card.position)
         self.load = np.array(card.load)
         self.n_points = len(self.position)

@@ -25,7 +25,13 @@ class TorqueBalanceCalculator(BaseCalculator[TorqueBalanceAnalysis]):
     is minimized to find the optimal counterbalance moment.
     """
 
-    def __init__(self, context: DynacardAnalysisContext):
+    def __init__(self, context: DynacardAnalysisContext):  
+        """Initialize torque balance optimizer.
+
+        Args:
+            context: Complete well analysis context with surface unit
+                geometry and surface card data.
+        """
         super().__init__(context)
         # Computed geometry parameters
         self._psi: Optional[np.ndarray] = None

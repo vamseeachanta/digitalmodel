@@ -113,6 +113,18 @@ class CoordMapper:
         svg_y_min: float,
         svg_y_max: float,
     ) -> None:
+        """Initialize coordinate mapper between world and SVG spaces.
+
+        Args:
+            world_x_min: Minimum x value in world coordinates.
+            world_x_max: Maximum x value in world coordinates.
+            world_y_min: Minimum y value in world coordinates.
+            world_y_max: Maximum y value in world coordinates.
+            svg_x_min: Minimum x value in SVG pixel coordinates.
+            svg_x_max: Maximum x value in SVG pixel coordinates.
+            svg_y_min: Minimum y value in SVG pixel coordinates.
+            svg_y_max: Maximum y value in SVG pixel coordinates.
+        """
         self.wx_min = world_x_min
         self.wx_max = world_x_max
         self.wy_min = world_y_min

@@ -17,18 +17,26 @@ class DynacardException(Exception):
         details: Optional additional context about the error.
     """
 
-    def __init__(
+    def __init__(  
         self,
         message: str,
         code: Optional[str] = None,
         details: Optional[dict] = None
     ):
+        """Initialize a DynacardException.
+
+        Args:
+            message: Human-readable error description.
+            code: Optional error code for programmatic handling.
+            details: Optional additional context about the error.
+        """
         super().__init__(message)
         self.message = message
         self.code = code or "DYNACARD_ERROR"
         self.details = details or {}
 
     def __str__(self) -> str:
+        """Return formatted error string with code prefix."""
         return f"[{self.code}] {self.message}"
 
 

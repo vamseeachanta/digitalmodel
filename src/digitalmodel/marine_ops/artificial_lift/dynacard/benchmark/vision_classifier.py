@@ -193,6 +193,11 @@ class ClaudeVisionClassifier(VisionModelClassifier):
     backend = ClassifierBackend.CLAUDE_VISION
 
     def __init__(self, model: str = "claude-opus-4-6") -> None:
+        """Initialize the Claude Vision classifier.
+
+        Args:
+            model: Anthropic model identifier to use for classification.
+        """
         self._model = model
 
     def classify(
@@ -277,6 +282,11 @@ class GPT4VClassifier(VisionModelClassifier):
     backend = ClassifierBackend.GPT4V
 
     def __init__(self, model: str = "gpt-4o") -> None:
+        """Initialize the GPT-4V classifier.
+
+        Args:
+            model: OpenAI model identifier to use for classification.
+        """
         self._model = model
 
     def classify(

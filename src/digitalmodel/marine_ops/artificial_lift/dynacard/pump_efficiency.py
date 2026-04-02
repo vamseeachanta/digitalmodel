@@ -25,6 +25,12 @@ class PumpEfficiencyCalculator:
     """
 
     def __init__(self, context: DynacardAnalysisContext):
+        """Initialize the pump efficiency calculator.
+
+        Args:
+            context: Complete well analysis context with rod string,
+                pump, and well test data.
+        """
         self.ctx = context
 
     def calculate(

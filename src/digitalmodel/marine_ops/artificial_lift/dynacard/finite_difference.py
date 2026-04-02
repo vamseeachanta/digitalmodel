@@ -22,6 +22,12 @@ class FiniteDifferenceSolver:
     """
 
     def __init__(self, context: DynacardAnalysisContext):
+        """Initialize the finite difference solver.
+
+        Args:
+            context: Complete well analysis context including surface card,
+                rod string, pump, and solver configuration parameters.
+        """
         self.ctx = context
         self.results = AnalysisResults()
 

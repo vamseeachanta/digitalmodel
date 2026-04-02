@@ -23,6 +23,15 @@ class DynacardWorkflow:
         context: DynacardAnalysisContext = None,
         solver_method: Literal['gibbs', 'finite_difference'] = 'gibbs'
     ):
+        """Initialize the dynacard analyzer.
+
+        Args:
+            context: Complete well analysis context. Can be set later
+                before calling analysis methods.
+            solver_method: Physics solver to use — ``'gibbs'`` for
+                frequency-domain or ``'finite_difference'`` for
+                time-domain.
+        """
         self.ctx = context
         self.solver_method = solver_method
         self.solver = None

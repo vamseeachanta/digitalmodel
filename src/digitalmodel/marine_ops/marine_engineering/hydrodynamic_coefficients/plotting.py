@@ -459,6 +459,12 @@ class HydrodynamicPlotter:
         vmin, vmax = np.min(all_values), np.max(all_values)
 
         def update(frame):
+            """Update the animation frame with the matrix at the given index.
+
+            Args:
+                frame: Frame index corresponding to a frequency in
+                    ``self.db.frequencies``.
+            """
             ax.clear()
             freq = self.db.frequencies[frame]
 

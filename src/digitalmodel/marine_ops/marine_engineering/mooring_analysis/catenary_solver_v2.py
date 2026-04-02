@@ -64,6 +64,12 @@ class CatenarySolver:
     """Advanced catenary solver with proper 2D boundary value problem handling."""
 
     def __init__(self, tolerance: float = 1e-6, max_iterations: int = 200):
+        """Initialize the advanced catenary solver.
+
+        Args:
+            tolerance: Convergence tolerance for the iterative solver.
+            max_iterations: Maximum number of solver iterations.
+        """
         self.tolerance = tolerance
         self.max_iterations = max_iterations
         self.gravity = 9.8065  # m/s²

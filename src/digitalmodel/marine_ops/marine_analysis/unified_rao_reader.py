@@ -30,6 +30,12 @@ class RAOReaderError(Exception):
     """Base exception for RAO reader errors."""
 
     def __init__(self, message: str, suggestions: Optional[list] = None):
+        """Initialize an RAO reader error.
+
+        Args:
+            message: Human-readable error description.
+            suggestions: Optional list of suggested solutions for the user.
+        """
         self.message = message
         self.suggestions = suggestions or []
         super().__init__(self.message)

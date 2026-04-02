@@ -66,6 +66,12 @@ class CatenarySolver:
     """
 
     def __init__(self, tolerance: float = 1e-6, max_iterations: int = 200):
+        """Initialize the catenary solver.
+
+        Args:
+            tolerance: Convergence tolerance for the iterative solver.
+            max_iterations: Maximum number of Newton-Raphson iterations.
+        """
         self.tolerance = tolerance
         self.max_iterations = max_iterations
 
@@ -223,6 +229,15 @@ class CatenarySolver:
         """
 
         def length_error(H):
+            """Compute arc length error for a given horizontal tension.
+
+            Args:
+                H: Horizontal tension [N or consistent force unit].
+
+            Returns:
+                Difference between computed arc length (with elongation)
+                and the specified line length.
+            """
             if H <= 0:
                 return 1e10
 

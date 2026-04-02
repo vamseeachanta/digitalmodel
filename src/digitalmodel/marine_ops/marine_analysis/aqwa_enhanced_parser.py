@@ -554,6 +554,15 @@ class AQWAEnhancedParser:
     # ------------------------------------------------------------------
 
     def extract_damping_matrices(self, file_path: str) -> Dict[str, Any]:
+        """Extract frequency-dependent damping matrices from an AQWA .lis file.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``frequencies`` (ndarray), ``matrices``
+            (ndarray of shape (N, 6, 6)), and ``dofs`` (tuple of labels).
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -562,6 +571,15 @@ class AQWAEnhancedParser:
         return self._parse_frequency_matrix_section(lines)
 
     def extract_added_mass_matrices(self, file_path: str) -> Dict[str, Any]:
+        """Extract frequency-dependent added mass matrices from an AQWA .lis file.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``frequencies`` (ndarray), ``matrices``
+            (ndarray of shape (N, 6, 6)), and ``dofs`` (tuple of labels).
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -570,6 +588,15 @@ class AQWAEnhancedParser:
         return self._parse_frequency_matrix_section(lines)
 
     def extract_added_mass_at_infinite_frequency(self, file_path: str) -> Dict[str, Any]:
+        """Extract added mass matrix at infinite frequency from an AQWA .lis file.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``matrix`` (6x6 ndarray), ``dofs`` (tuple of
+            labels), and ``diagonal`` (dict mapping e.g. ``A11`` to float).
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -583,6 +610,16 @@ class AQWAEnhancedParser:
         return {"matrix": matrix, "dofs": DEFAULT_DOF_LABELS, "diagonal": diagonal}
 
     def extract_drag_table(self, file_path: str) -> List[Dict[str, Any]]:
+        """Extract the geometry drag table from an AQWA .lis file.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            List of dictionaries, each containing ``element_id``,
+            ``structure_id``, ``centroid``, ``area``, ``cd_normal``,
+            ``cd_axial``, ``cm``, and ``raw`` fields.
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -592,6 +629,15 @@ class AQWAEnhancedParser:
         return self._parse_drag_table_lines(lines)
 
     def extract_external_damping(self, file_path: str) -> Dict[str, Any]:
+        """Extract external (hydrodynamic interaction) damping data.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``B33``, ``B44``, ``B55`` ndarrays and ``raw``
+            lines from the parsed section.
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -600,6 +646,15 @@ class AQWAEnhancedParser:
         return self._parse_external_damping_lines(lines)
 
     def extract_percent_critical_damping(self, file_path: str) -> Dict[str, Any]:
+        """Extract approximate percentage critical damping data.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``frequencies``, ``B33``, ``B44``, ``B55``
+            ndarrays and ``raw`` lines.
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,
@@ -608,6 +663,15 @@ class AQWAEnhancedParser:
         return self._parse_percent_critical_section(lines)
 
     def extract_restoring_coefficients(self, file_path: str) -> Dict[str, Any]:
+        """Extract hydrostatic restoring coefficient matrix.
+
+        Args:
+            file_path: Path to the AQWA .lis output file.
+
+        Returns:
+            Dictionary with ``matrix`` (6x6 ndarray), ``dofs`` (tuple of
+            labels), and ``diagonal`` (dict mapping e.g. ``C11`` to float).
+        """
         content = self._read_file_content(file_path)
         lines = self._extract_section_lines(
             content,

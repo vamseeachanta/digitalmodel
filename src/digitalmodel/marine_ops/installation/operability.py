@@ -121,6 +121,14 @@ def compute_operability(
     for i, tp in enumerate(tp_range_s):
         # Criterion 1: Crane tip heave
         def heave_fn(hs: float, _tp=tp) -> float:
+            """Compute significant crane tip heave for a given Hs.
+
+            Args:
+                hs: Significant wave height [m].
+
+            Returns:
+                Significant crane tip heave amplitude [m].
+            """
             return crane_tip_significant_motion(
                 heave_rao, hs, _tp, vessel.rao_frequencies
             )
@@ -131,6 +139,14 @@ def compute_operability(
 
         # Criterion 2: Crane tip velocity
         def velocity_fn(hs: float, _tp=tp) -> float:
+            """Compute significant crane tip velocity for a given Hs.
+
+            Args:
+                hs: Significant wave height [m].
+
+            Returns:
+                Significant crane tip velocity [m/s].
+            """
             return crane_tip_significant_velocity(
                 heave_rao, hs, _tp, vessel.rao_frequencies
             )

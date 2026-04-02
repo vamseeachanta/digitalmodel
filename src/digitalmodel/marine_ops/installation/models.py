@@ -73,11 +73,13 @@ class Structure:
     A_projected_m2: float | None = None
 
     def __post_init__(self):
+        """Compute projected area if not explicitly provided."""
         if self.A_projected_m2 is None:
             self.A_projected_m2 = self.length_m * self.width_m
 
     @property
     def weight_air_N(self) -> float:
+        """Weight in air [N]."""
         return self.mass_air_kg * 9.80665
 
     def submerged_weight_N(self, rho_w: float = 1025.0) -> float:
@@ -110,6 +112,7 @@ class CraneTipConfig:
 
     @property
     def position_vector(self) -> np.ndarray:
+        """Return the 3D position vector as a NumPy array [x, y, z]."""
         return np.array([self.x_m, self.y_m, self.z_m])
 
 
@@ -168,6 +171,12 @@ class Vessel:
     displacement_te: float = 0.0
 
     def has_complete_raos(self) -> bool:
+        """Check whether all six DOF RAOs are present.
+
+        Returns:
+            True if surge, sway, heave, roll, pitch, and yaw keys
+            are all present in ``rao_data``.
+        """
         required = {"surge", "sway", "heave", "roll", "pitch", "yaw"}
         return required.issubset(self.rao_data.keys())
 

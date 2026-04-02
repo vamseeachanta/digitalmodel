@@ -33,6 +33,13 @@ class CardRenderer:
     """
 
     def __init__(self, width: int = 280, height: int = 200, margin: int = 45) -> None:
+        """Initialize the card renderer with SVG dimensions.
+
+        Args:
+            width: SVG canvas width in pixels.
+            height: SVG canvas height in pixels.
+            margin: Margin around the plotting area in pixels.
+        """
         self.width = width
         self.height = height
         self.margin = margin

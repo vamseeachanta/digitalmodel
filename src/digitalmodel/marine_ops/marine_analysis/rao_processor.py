@@ -64,6 +64,12 @@ class RAOImportError(Exception):
     """User-friendly RAO import error with suggested solutions."""
     
     def __init__(self, message: str, suggestions: List[str] = None):
+        """Initialize an RAO import error.
+
+        Args:
+            message: Human-readable error description.
+            suggestions: Optional list of suggested solutions for the user.
+        """
         self.message = message
         self.suggestions = suggestions or []
         super().__init__(self.message)

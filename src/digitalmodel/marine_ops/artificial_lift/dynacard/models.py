@@ -29,6 +29,7 @@ class CardData(BaseModel):
     timestamp: Optional[str] = None
 
     class Config:
+        """Pydantic configuration for CardData."""
         arbitrary_types_allowed = True
 
 
@@ -155,6 +156,7 @@ class DynacardAnalysisContext(BaseModel):
     calc_params: CalculationParameters = Field(default_factory=CalculationParameters)
 
     class Config:
+        """Pydantic configuration for DynacardAnalysisContext."""
         arbitrary_types_allowed = True
 
     @property
@@ -393,4 +395,5 @@ class AnalysisResults(BaseModel):
     solver_method: str = "gibbs"  # "gibbs" or "finite_difference"
 
     class Config:
+        """Pydantic configuration for AnalysisResults."""
         arbitrary_types_allowed = True

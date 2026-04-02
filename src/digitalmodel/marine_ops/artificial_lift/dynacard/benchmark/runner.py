@@ -89,6 +89,12 @@ class BenchmarkRunner:
         test_set: List[LabelledCard],
         vision_classifier: VisionModelClassifier,
     ) -> None:
+        """Initialize the benchmark runner.
+
+        Args:
+            test_set: List of LabelledCard objects to evaluate.
+            vision_classifier: VisionModelClassifier instance to benchmark.
+        """
         self.test_set = test_set
         self.vision_classifier = vision_classifier
 

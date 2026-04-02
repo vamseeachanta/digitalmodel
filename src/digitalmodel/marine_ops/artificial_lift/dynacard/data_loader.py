@@ -187,7 +187,16 @@ def get_expected_results(data: Dict[str, Any]) -> Dict[str, Any]:
     dh_analysis = data.get('downholeCardAnalysis', {})
 
     # Parse percentage strings
-    def parse_pct(s):
+    def parse_pct(s):  
+        """Parse a percentage string or number to float.
+
+        Args:
+            s: Value to parse — may be a string like ``'95%'``, a number,
+                or None.
+
+        Returns:
+            The numeric value as a float, or None if input is None.
+        """
         if s is None:
             return None
         if isinstance(s, (int, float)):

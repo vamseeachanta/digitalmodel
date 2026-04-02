@@ -38,6 +38,11 @@ class GalleryRenderer:
     """
 
     def __init__(self, seed: int = 42) -> None:
+        """Initialize the gallery renderer.
+
+        Args:
+            seed: Random seed for reproducible card generation.
+        """
         self.seed = seed
         self.renderer = CardRenderer()
 
