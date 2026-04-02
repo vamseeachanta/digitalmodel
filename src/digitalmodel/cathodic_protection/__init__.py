@@ -47,6 +47,113 @@ from digitalmodel.cathodic_protection.fuel_system_cp import (
     total_current_demand,
 )
 
+# --- New modules ---
+
+from digitalmodel.cathodic_protection.coating import (
+    CoatingCategory,
+    CoatingBreakdownResult,
+    CoatingLifeResult,
+    coating_breakdown_factors,
+    coating_life_estimate,
+    effective_bare_area_coated,
+)
+
+from digitalmodel.cathodic_protection.pipeline_cp import (
+    PipelineEnvironment,
+    PipelineCPInput,
+    PipelineCPResult,
+    AnodeSpacingResult,
+    pipeline_current_demand as pipeline_cp_current_demand,
+    anode_spacing as pipeline_anode_spacing,
+    holiday_detection_voltage,
+)
+
+from digitalmodel.cathodic_protection.marine_structure_cp import (
+    ExposureZone,
+    ClimateRegion,
+    StructuralZone,
+    MarineCPResult,
+    RetrofitAssessment,
+    marine_structure_current_demand,
+    anode_distribution,
+    retrofit_assessment,
+)
+
+from digitalmodel.cathodic_protection.iccp_design import (
+    AnodeBedType,
+    AnodeMaterial,
+    RectifierSizingInput,
+    RectifierSizingResult,
+    AnodeBedResult,
+    rectifier_sizing,
+    anode_bed_design,
+    cable_sizing,
+)
+
+from digitalmodel.cathodic_protection.cp_survey import (
+    CISSurveyPoint,
+    CISAnalysisResult,
+    DCVGIndication,
+    AttenuationResult,
+    analyze_cis_survey,
+    classify_dcvg_indication,
+    attenuation_analysis,
+)
+
+from digitalmodel.cathodic_protection.corrosion_rate import (
+    CO2CorrosionInput,
+    CO2CorrosionResult,
+    GalvanicCorrosionInput,
+    GalvanicCorrosionResult,
+    de_waard_milliams_co2,
+    norsok_m506_co2,
+    galvanic_corrosion,
+    pitting_rate_estimate,
+)
+
+from digitalmodel.cathodic_protection.anode_depletion import (
+    AnodeStatus,
+    DepletionResult,
+    DepletionProfile,
+    InspectionRecommendation,
+    calculate_remaining_life,
+    generate_depletion_profile,
+    recommend_inspection_interval,
+)
+
+from digitalmodel.cathodic_protection.cp_monitoring import (
+    ReferenceElectrodeType,
+    MonitoringEnvironment,
+    ReferenceElectrodeRecommendation,
+    MonitoringSystemSpec,
+    AlarmThresholds,
+    select_reference_electrode,
+    design_monitoring_system,
+    set_alarm_thresholds,
+)
+
+from digitalmodel.cathodic_protection.stray_current import (
+    InterferenceType,
+    MitigationType,
+    StrayCurrentInput,
+    StrayCurrentResult,
+    MitigationDesign,
+    assess_stray_current,
+    design_drainage_bond,
+)
+
+from digitalmodel.cathodic_protection.cp_reporting import (
+    ComplianceStatus,
+    RecommendationPriority,
+    ComplianceCheck,
+    Recommendation,
+    RemainingLifeSummary,
+    CPAssessmentReport,
+    compliance_check_potential,
+    generate_assessment_report,
+    remaining_life_summary,
+)
+
 __all__ = [
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
@@ -82,4 +189,89 @@ __all__ = [
     "effective_bare_area",
     "pipe_surface_area",
     "total_current_demand",
+    # coating
+    "CoatingCategory",
+    "CoatingBreakdownResult",
+    "CoatingLifeResult",
+    "coating_breakdown_factors",
+    "coating_life_estimate",
+    "effective_bare_area_coated",
+    # pipeline_cp
+    "PipelineEnvironment",
+    "PipelineCPInput",
+    "PipelineCPResult",
+    "AnodeSpacingResult",
+    "pipeline_cp_current_demand",
+    "pipeline_anode_spacing",
+    "holiday_detection_voltage",
+    # marine_structure_cp
+    "ExposureZone",
+    "ClimateRegion",
+    "StructuralZone",
+    "MarineCPResult",
+    "RetrofitAssessment",
+    "marine_structure_current_demand",
+    "anode_distribution",
+    "retrofit_assessment",
+    # iccp_design
+    "AnodeBedType",
+    "AnodeMaterial",
+    "RectifierSizingInput",
+    "RectifierSizingResult",
+    "AnodeBedResult",
+    "rectifier_sizing",
+    "anode_bed_design",
+    "cable_sizing",
+    # cp_survey
+    "CISSurveyPoint",
+    "CISAnalysisResult",
+    "DCVGIndication",
+    "AttenuationResult",
+    "analyze_cis_survey",
+    "classify_dcvg_indication",
+    "attenuation_analysis",
+    # corrosion_rate
+    "CO2CorrosionInput",
+    "CO2CorrosionResult",
+    "GalvanicCorrosionInput",
+    "GalvanicCorrosionResult",
+    "de_waard_milliams_co2",
+    "norsok_m506_co2",
+    "galvanic_corrosion",
+    "pitting_rate_estimate",
+    # anode_depletion
+    "AnodeStatus",
+    "DepletionResult",
+    "DepletionProfile",
+    "InspectionRecommendation",
+    "calculate_remaining_life",
+    "generate_depletion_profile",
+    "recommend_inspection_interval",
+    # cp_monitoring
+    "ReferenceElectrodeType",
+    "MonitoringEnvironment",
+    "ReferenceElectrodeRecommendation",
+    "MonitoringSystemSpec",
+    "AlarmThresholds",
+    "select_reference_electrode",
+    "design_monitoring_system",
+    "set_alarm_thresholds",
+    # stray_current
+    "InterferenceType",
+    "MitigationType",
+    "StrayCurrentInput",
+    "StrayCurrentResult",
+    "MitigationDesign",
+    "assess_stray_current",
+    "design_drainage_bond",
+    # cp_reporting
+    "ComplianceStatus",
+    "RecommendationPriority",
+    "ComplianceCheck",
+    "Recommendation",
+    "RemainingLifeSummary",
+    "CPAssessmentReport",
+    "compliance_check_potential",
+    "generate_assessment_report",
+    "remaining_life_summary",
 ]
