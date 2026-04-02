@@ -224,3 +224,255 @@ def holiday_detection_voltage(
 
     # Cap at practical limits
     return min(voltage, 25000.0)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Extended pipeline CP design — API RP 1169 / ISO 15589-1 additions
+# ═══════════════════════════════════════════════════════════════════════
+
+OVERPROTECTION_THRESHOLD_V: float = -1.200  # V vs CSE — hydrogen embrittlement risk
+
+
+class CriteriaResult(BaseModel):
+    """Result of protection potential criteria check."""
+
+    measured_potential_V: float = Field(
+        ..., description="Measured pipe-to-soil potential [V vs CSE]"
+    )
+    criterion_V: float = Field(
+        ..., description="Protection criterion potential [V vs CSE]"
+    )
+    is_protected: bool = Field(
+        ..., description="Whether measured potential meets criterion"
+    )
+    is_overprotected: bool = Field(
+        default=False,
+        description="Whether overprotection risk exists (< -1.2 V CSE)",
+    )
+    environment: str = Field(
+        ..., description="Environment type (aerobic/anaerobic)"
+    )
+
+
+class PipelineDesignResult(BaseModel):
+    """End-to-end pipeline CP design result."""
+
+    current_demand_A: float = Field(
+        ..., description="Total current demand [A]"
+    )
+    total_surface_area_m2: float = Field(
+        ..., description="Pipeline external surface area [m²]"
+    )
+    effective_bare_area_m2: float = Field(
+        ..., description="Effective bare area after coating breakdown [m²]"
+    )
+    number_of_anodes: int = Field(
+        ..., description="Number of anodes required"
+    )
+    anode_spacing_m: float = Field(
+        ..., description="Anode spacing along pipeline [m]"
+    )
+    soil_resistivity_correction_factor: float = Field(
+        ..., description="Soil resistivity correction factor applied"
+    )
+    protection_criteria: CriteriaResult = Field(
+        ..., description="Protection criteria assessment"
+    )
+
+
+def calculate_pipeline_current_demand(
+    input_params: PipelineCPInput,
+) -> float:
+    """Calculate pipeline current demand [A] with soil correction.
+
+    I = pi * D * L * f_c * i_c * k_soil / 1000
+
+    Parameters
+    ----------
+    input_params : PipelineCPInput
+        Pipeline parameters.
+
+    Returns
+    -------
+    float
+        Current demand [A].
+    """
+    bare_density, _ = CURRENT_DENSITY_TABLE[input_params.environment]
+    total_area = math.pi * input_params.outer_diameter_m * input_params.length_m
+    effective_bare = total_area * input_params.coating_breakdown_factor
+    k_soil = soil_resistivity_correction(input_params.soil_resistivity_ohm_m)
+    return effective_bare * bare_density * k_soil / 1000.0
+
+
+def calculate_anode_spacing(
+    pipeline_length_m: float,
+    total_current_demand_A: float,
+    anode_output_A: float,
+    max_spacing_m: float = 5000.0,
+) -> tuple[float, int]:
+    """Calculate anode spacing and count for a pipeline.
+
+    Parameters
+    ----------
+    pipeline_length_m : float
+        Total pipeline length [m].
+    total_current_demand_A : float
+        Total current demand [A].
+    anode_output_A : float
+        Current output per anode [A].
+    max_spacing_m : float
+        Maximum allowable spacing [m] (default 5000 m).
+
+    Returns
+    -------
+    tuple[float, int]
+        (anode_spacing_m, number_of_anodes)
+    """
+    if total_current_demand_A <= 0 or anode_output_A <= 0:
+        return (max_spacing_m, 1)
+
+    n_anodes = max(1, math.ceil(total_current_demand_A / anode_output_A))
+    spacing = pipeline_length_m / n_anodes
+
+    # Cap spacing
+    if spacing > max_spacing_m:
+        spacing = max_spacing_m
+        n_anodes = max(1, math.ceil(pipeline_length_m / spacing))
+
+    return (spacing, n_anodes)
+
+
+def soil_resistivity_correction(
+    resistivity_ohm_m: float,
+    reference_ohm_m: float = 50.0,
+) -> float:
+    """Soil resistivity correction factor per ISO 15589-1 guidance.
+
+    Low resistivity (< reference) → higher corrosion activity → higher demand.
+    High resistivity (> reference) → lower corrosion activity → lower demand.
+
+    Uses a logarithmic correction model:
+        k = (reference / resistivity) ^ 0.3
+
+    Parameters
+    ----------
+    resistivity_ohm_m : float
+        Measured soil resistivity [ohm-m].
+    reference_ohm_m : float
+        Reference resistivity for correction factor = 1.0 (default 50 ohm-m).
+
+    Returns
+    -------
+    float
+        Correction factor (>1 for low resistivity, <1 for high).
+    """
+    if resistivity_ohm_m <= 0:
+        return 1.0
+    return (reference_ohm_m / resistivity_ohm_m) ** 0.3
+
+
+def check_potential_criteria(
+    measured_potential_V_CSE: float,
+    environment: str = "aerobic",
+) -> CriteriaResult:
+    """Check if measured potential meets protection criteria per NACE SP0169 §6.2.
+
+    Criteria:
+        - Aerobic soil: -0.850 V vs Cu/CuSO4 (CSE)
+        - Anaerobic (SRB): -0.950 V vs CSE
+
+    Parameters
+    ----------
+    measured_potential_V_CSE : float
+        Measured pipe-to-soil potential [V vs CSE].
+    environment : str
+        "aerobic" or "anaerobic" (SRB environments).
+
+    Returns
+    -------
+    CriteriaResult
+        Protection status including overprotection check.
+    """
+    if environment.lower() == "anaerobic":
+        criterion = PROTECTION_POTENTIAL_CSE_ANAEROBIC
+    else:
+        criterion = PROTECTION_POTENTIAL_CSE
+
+    # Protection: measured must be more negative than (or equal to) criterion
+    is_protected = measured_potential_V_CSE <= criterion
+
+    # Overprotection: very negative potentials risk hydrogen embrittlement
+    is_overprotected = measured_potential_V_CSE < OVERPROTECTION_THRESHOLD_V
+
+    return CriteriaResult(
+        measured_potential_V=measured_potential_V_CSE,
+        criterion_V=criterion,
+        is_protected=is_protected,
+        is_overprotected=is_overprotected,
+        environment=environment.lower(),
+    )
+
+
+def design_pipeline_cp(
+    input_params: PipelineCPInput,
+    anode_output_A: float = 0.5,
+    assumed_potential_V_CSE: float = -0.900,
+) -> PipelineDesignResult:
+    """End-to-end pipeline CP design per API RP 1169 / ISO 15589-1.
+
+    Combines current demand, anode spacing, soil correction, and
+    protection criteria into a single design result.
+
+    Parameters
+    ----------
+    input_params : PipelineCPInput
+        Pipeline design parameters.
+    anode_output_A : float
+        Current output per anode [A] (default 0.5 A).
+    assumed_potential_V_CSE : float
+        Assumed/measured protection potential [V vs CSE].
+
+    Returns
+    -------
+    PipelineDesignResult
+        Complete pipeline CP design result.
+    """
+    # Current demand
+    i_demand = calculate_pipeline_current_demand(input_params)
+
+    # Surface area
+    total_area = math.pi * input_params.outer_diameter_m * input_params.length_m
+    effective_bare = total_area * input_params.coating_breakdown_factor
+
+    # Soil correction
+    k_soil = soil_resistivity_correction(input_params.soil_resistivity_ohm_m)
+
+    # Anode spacing
+    spacing, n_anodes = calculate_anode_spacing(
+        pipeline_length_m=input_params.length_m,
+        total_current_demand_A=i_demand,
+        anode_output_A=anode_output_A,
+    )
+
+    # Determine environment type for criteria check
+    env_str = "aerobic"  # default
+    if input_params.environment in (
+        PipelineEnvironment.BURIED_CLAY,
+        PipelineEnvironment.HDD_CROSSING,
+    ):
+        env_str = "anaerobic"
+
+    criteria = check_potential_criteria(
+        measured_potential_V_CSE=assumed_potential_V_CSE,
+        environment=env_str,
+    )
+
+    return PipelineDesignResult(
+        current_demand_A=round(i_demand, 4),
+        total_surface_area_m2=round(total_area, 2),
+        effective_bare_area_m2=round(effective_bare, 4),
+        number_of_anodes=n_anodes,
+        anode_spacing_m=round(spacing, 2),
+        soil_resistivity_correction_factor=round(k_soil, 4),
+        protection_criteria=criteria,
+    )
