@@ -30,6 +30,11 @@
 # Claude temp working directories
 tmpclaude-*-cwd
 
+# AI agent session working directories (Codex, Gemini)
+# Transient per-session dirs; aggregated output lives in workspace-hub/.claude/skills/session-logs/
+.codex/Cu*/
+.gemini/Cu*/
+
 # Temp test directories
 /temp_test_conversion/
 /temp_workflow_test/
