@@ -2,16 +2,37 @@ import logging
 
 
 class FEComponents():
+    """Front-end components for data retrieval, transformation, and reporting.
+
+    Manages the workflow of retrieving raw data from databases, transforming
+    DataFrames, preparing report data (HTML, PDF, JSON), and generating
+    interactive charts.
+
+    Attributes:
+        cfg: Configuration object with data source, transform, and report settings.
+        vars: AttributeDict for storing template variables.
+    """
     # https://plot.ly/python/v3/fft-filters/
     # http://scipy-lectures.org/intro/scipy/auto_examples/plot_fftpack.html
     # https://dsp.stackexchange.com/questions/724/low-pass-filter-and-fft-for-beginners-with-python
 
     def __init__(self, cfg):
+        """Initialize FEComponents with configuration.
+
+        Args:
+            cfg: Configuration object with 'default', 'db', 'transform',
+                'report', and 'parameters' attributes.
+        """
         from digitalmodel.infrastructure.utils.data import AttributeDict
         self.cfg = cfg
         self.vars = AttributeDict({})
 
     def get_raw_data(self):
+        """Retrieve raw data from the configured data source.
+
+        Currently supports 'db' as data source type. Exits if no
+        data source is specified.
+        """
         if self.cfg.default['data_source'] == 'db':
             from digitalmodel.infrastructure.utils.database import Database
             db_properties = self.cfg.db
@@ -27,9 +48,15 @@ class FEComponents():
             sys.exit()
 
     def transform_raw_data(self):
+        """Transform raw data by applying configured DataFrame transformations."""
         self.transform_dataframes()
 
     def transform_dataframes(self):
+        """Apply DataFrame transformations as specified in configuration.
+
+        Processes each transformation set, optionally transposing DataFrames,
+        and stores the results as instance attributes.
+        """
         from digitalmodel.infrastructure.utils.data import Transform
         trans = Transform()
         cfg_trans = self.cfg.transform['dataframe']['sets']
@@ -50,10 +77,16 @@ class FEComponents():
             setattr(self, set_label, df_trans)
 
     def prepare_report_data(self):
+        """Prepare data for report generation by adding DataFrames and parameters."""
         self.add_dataframes_to_vars()
         self.add_parameters_to_vars()
 
     def add_dataframes_to_vars(self):
+        """Convert DataFrames to HTML, dict, and JSON formats for template rendering.
+
+        Processes each DataFrame set, applying JSON string-to-dict conversions
+        and HTML transformations, then stores results in the vars attribute.
+        """
         from digitalmodel.infrastructure.utils.data import Transform
         trans = Transform()
         cfg_trans = self.cfg.transform['dataframe']['sets']
@@ -80,13 +113,24 @@ class FEComponents():
             self.vars.update({set_label + '_json': df_json})
 
     def add_parameters_to_vars(self):
+        """Add configuration parameters and custom parameters to template variables."""
         self.vars.parameters = self.cfg.parameters.copy()
         self.vars.custom_parameters = self.cfg.custom_parameters.copy()
 
     def prepare_web_api_data(self):
+        """Prepare data for web API consumption.
+
+        Note:
+            Currently a placeholder with no implementation.
+        """
         pass
 
     def prepare_chart_data(self):
+        """Prepare interactive chart data by extracting and filtering DataFrame data.
+
+        Converts DataFrames to JSON format and stores chart configurations
+        in the vars attribute for template rendering.
+        """
         import json
         cfg_temp = self.cfg.interactive_chart.copy()
         for chart_index in range(0, len(cfg_temp)):
@@ -100,6 +144,16 @@ class FEComponents():
             self.vars.update({cfg_chart['label']: json.dumps(cfg_chart)})
 
     def filter_df(self, df, cfg_chart):
+        """Filter a DataFrame based on chart configuration.
+
+        Args:
+            df: Input DataFrame to filter.
+            cfg_chart: Chart configuration dictionary with optional
+                'df.filter' settings.
+
+        Returns:
+            pd.DataFrame: Filtered DataFrame.
+        """
         if cfg_chart['df'].__contains__('filter'):
             from digitalmodel.infrastructure.utils.data import ReadData
             read_data = ReadData()
@@ -109,6 +163,11 @@ class FEComponents():
         return df
 
     def prepare_htmls(self):
+        """Generate HTML reports from Jinja2 templates.
+
+        Renders templates with prepared variables and optionally
+        converts the output to PDF format.
+        """
         from digitalmodel.infrastructure.utils.documentation_components import JinjaLib
         jl = JinjaLib()
         rpt_sets = self.cfg.report['sets']
@@ -143,16 +202,29 @@ class FEComponents():
                 self.prepare_pdf(output_text, file_name_without_extension)
 
     def prepare_pdf(self, html_string, file_name_without_extension):
+        """Convert an HTML string to a PDF file.
+
+        Args:
+            html_string: HTML content to convert.
+            file_name_without_extension: Base file path (without .pdf extension).
+        """
         from digitalmodel.infrastructure.utils.documentation_components import PDFReports
         pdf_rep = PDFReports(self.cfg.report['wkhtmltopdf_path'])
         pdf_rep.create_pdf_from_html_string(html_string, file_name_without_extension + '.pdf')
 
     def prepare_html(self, html_str, file_name_without_extension):
+        """Write an HTML string to an HTML file.
+
+        Args:
+            html_str: HTML content to write.
+            file_name_without_extension: Base file path (without .html extension).
+        """
         html_file = open(file_name_without_extension + '.html', "w")
         html_file.write(html_str)
         html_file.close()
 
     def save_report_data_as_json(self):
+        """Save report variables as a JSON file to the result folder."""
         import json
         file_name_without_extension = self.cfg['Analysis']['result_folder'] + self.cfg.custom_parameters[
             'field_nickname']
@@ -162,6 +234,7 @@ class FEComponents():
             json.dump(self.vars, fp)
 
     def save_report_data_as_pkl(self):
+        """Save report variables as a pickle file to the result folder."""
         import pickle
         file_name_without_extension = self.cfg['Analysis']['result_folder'] + self.cfg.custom_parameters[
             'field_nickname']

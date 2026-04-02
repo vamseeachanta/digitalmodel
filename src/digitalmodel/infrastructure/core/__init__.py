@@ -1,4 +1,9 @@
 # ABOUTME: Backward-compatibility shim for infrastructure/core/ (WRK-415 Phase 2A).
+"""Core infrastructure backward-compatibility shim.
+
+All persistence logic has moved to infrastructure/persistence/.
+This shim re-exports everything for existing callers.
+"""
 # All persistence logic has moved to infrastructure/persistence/.
 # This shim re-exports everything for existing callers.
 

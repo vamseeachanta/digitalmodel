@@ -1,4 +1,13 @@
 def get_db_connection(db_properties):
+    """Create a database connection using the provided properties.
+
+    Args:
+        db_properties: Dictionary with database connection parameters
+            (server_type, server, database, user, password, port, etc.).
+
+    Returns:
+        tuple: A pair of (Database instance, connection_status boolean).
+    """
     dbe = Database(db_properties)
     try:
         dbe.enable_connection_and_cursor()
@@ -12,6 +21,14 @@ def get_db_connection(db_properties):
 
 
 def get_db_properties_for_service(service):
+    """Load database properties for a named service from a YAML config file.
+
+    Args:
+        service: Name of the database service to look up.
+
+    Returns:
+        dict: Database connection properties for the specified service.
+    """
     import yaml
     with open('data/database.yml', 'r') as ymlfile:
         database_dict = yaml.safe_load(ymlfile)
@@ -21,17 +38,42 @@ def get_db_properties_for_service(service):
 
 
 def test_saving_service_data_to_db():
+    """Placeholder test for saving service data to database."""
     pass
 
 
 class Database():
+    """Database abstraction layer supporting multiple database backends.
+
+    Supports PostgreSQL, MySQL, MS SQL Server, SQLite, and Access databases.
+    Provides methods for connecting, querying, saving data, and performing
+    statistical analysis on database tables.
+
+    Attributes:
+        server_type: Type of database server.
+        server: Database server hostname.
+        database: Database name.
+        schema: Database schema.
+        conn: Database connection object.
+        cursor: Database cursor object.
+    """
 
     def __init__(self, db_properties):
+        """Initialize Database with connection properties.
+
+        Args:
+            db_properties: Dictionary with database connection parameters.
+        """
         from common.data import AttributeDict
         self.init_assign_db_properties(db_properties)
         self.analysis = AttributeDict()
 
     def init_assign_db_properties(self, db_properties):
+        """Assign database properties from configuration dictionary.
+
+        Args:
+            db_properties: Dictionary with database connection parameters.
+        """
         self.highAvailability = True
         self.server_type = db_properties.get('server_type', None)
         self.server = db_properties.get('server', None)
@@ -46,6 +88,14 @@ class Database():
         self.conn = None
 
     def db_retry_decorator(f):
+        """Decorator that retries a database operation on failure.
+
+        Args:
+            f: Function to wrap with retry logic.
+
+        Returns:
+            callable: Wrapped function with retry behavior.
+        """
         import logging
         from functools import wraps
 
@@ -60,6 +110,12 @@ class Database():
         return wrapper
 
     def get_input_data(self, cfg_input):
+        """Load input data sets from the database based on configuration.
+
+        Args:
+            cfg_input: Configuration dictionary with 'sets' list defining
+                data sets to load.
+        """
         try:
             self.enable_connection_and_cursor()
         except Exception as e:
@@ -73,6 +129,14 @@ class Database():
             print("Error getting input data in error {0}".format(e))
 
     def set_up_db_connection(self, db_properties):
+        """Establish a database connection and cursor.
+
+        Args:
+            db_properties: Dictionary with connection parameters.
+
+        Returns:
+            bool: True if connection successful, False otherwise.
+        """
         try:
             self.enable_connection_and_cursor()
             return True
@@ -82,6 +146,11 @@ class Database():
             return False
 
     def enable_connection_and_cursor(self):
+        """Enable database connection and cursor based on server type.
+
+        Creates SQLAlchemy engine and connection for the configured
+        database backend (mssql, postgresql, mysql, sqlite, accdb).
+        """
         from urllib.parse import quote_plus
 
         from sqlalchemy import create_engine
@@ -213,6 +282,12 @@ class Database():
                 print("Access file connection failed")
 
     def perform_analysis(self, cfg_analysis):
+        """Perform configured database analysis operations.
+
+        Args:
+            cfg_analysis: Configuration dictionary with analysis parameters
+                including 'sets' of operations to perform.
+        """
         db_analysis_result = {}
         if cfg_analysis['simple']:
             print("Performing db data analysis")
@@ -251,6 +326,15 @@ class Database():
         return db_analysis_result
 
     def get_df_from_stored_procedure(self, sp, args):
+        """Execute a stored procedure and return results as a DataFrame.
+
+        Args:
+            sp: Stored procedure name.
+            args: Arguments to pass to the stored procedure.
+
+        Returns:
+            pd.DataFrame: Query results as a DataFrame.
+        """
         import logging
 
         import pandas as pd
@@ -266,6 +350,14 @@ class Database():
         return df
 
     def get_df_from_query(self, query):
+        """Execute a SQL query and return results as a DataFrame.
+
+        Args:
+            query: SQL query string to execute.
+
+        Returns:
+            pd.DataFrame: Query results as a DataFrame.
+        """
         import logging
 
         import pandas as pd
@@ -358,6 +450,16 @@ class Database():
             print("Not a valid filename")
 
     def get_table_statistics(self, table_name, chosen_columns=None):
+        """Compute statistics for columns in a database table.
+
+        Args:
+            table_name: Name of the database table.
+            chosen_columns: Optional list of column names to analyze.
+                If None, analyzes all columns.
+
+        Returns:
+            pd.DataFrame: DataFrame containing column statistics.
+        """
         column_df = self.get_table_columns(table_name)
         for df_row in range(0, len(column_df)):
             # for df_row in range(0, 1):
@@ -492,6 +594,16 @@ class Database():
                 self.save_to_db(df, cfg=cfg_set)
 
     def save_to_db(self, df, table_name=None, if_exists='append', index=False, cfg={}):
+        """Save a DataFrame to a database table.
+
+        Args:
+            df: DataFrame to save.
+            table_name: Target table name. Defaults to None.
+            if_exists: Behavior when table exists ('append', 'replace', 'fail').
+                Defaults to 'append'.
+            index: Whether to write DataFrame index. Defaults to False.
+            cfg: Additional configuration dictionary. Defaults to {}.
+        """
         schema = getattr(self, 'schema', None)
         schema = cfg.get('schema', schema)
         table_name = cfg.get('table_name', table_name)
@@ -565,6 +677,12 @@ class Database():
                 print("Not a valid filename")
 
     def executeScriptsFromFile(self, filename, arg_array=[]):
+        """Execute SQL scripts from a file.
+
+        Args:
+            filename: Path to the SQL script file.
+            arg_array: Optional list of arguments for parameterized queries.
+        """
         import pandas as pd
         fd = open(filename, 'r')
         sqlFile = fd.read()
@@ -588,6 +706,12 @@ class Database():
             print("Command skipped: ", e)
 
     def executeQueryWithParameters(self, query, arg_array=[]):
+        """Execute a parameterized SQL query.
+
+        Args:
+            query: SQL query string with parameter placeholders.
+            arg_array: List of parameter values. Defaults to [].
+        """
         import pandas as pd
         sql = query
         if len(arg_array) == 1:
@@ -610,6 +734,12 @@ class Database():
             print("Command skipped: ", e)
 
     def executeNoDataQuery(self, query, arg_array=[]):
+        """Execute a SQL query that returns no data (INSERT, UPDATE, DELETE).
+
+        Args:
+            query: SQL query string to execute.
+            arg_array: List of parameter values. Defaults to [].
+        """
         from sqlalchemy.sql import text
         sql = query
         if len(arg_array) == 1:
@@ -766,6 +896,13 @@ class Database():
         return statistics_df
 
     def get_create_table_sql_code_from_df(self, df, table_name='table_name', file_name='results/filename.txt'):
+        """Generate SQL CREATE TABLE statement from a DataFrame schema.
+
+        Args:
+            df: DataFrame whose schema to convert.
+            table_name: Name for the SQL table. Defaults to 'table_name'.
+            file_name: Output file path for the SQL code. Defaults to 'results/filename.txt'.
+        """
         from common.data import SaveData
         save_data = SaveData()
         import pandas as pd

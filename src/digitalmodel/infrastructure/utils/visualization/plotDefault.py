@@ -2,6 +2,18 @@ import matplotlib.pyplot as plt
 
 
 def plotDefault(cfg, dataDF):
+    """Generate a default matplotlib plot with design pressure and wall thickness annotations.
+
+    Creates a line plot with title, axis labels, legend, grid, and reference
+    lines for design pressure and wall thickness fabrication limits.
+
+    Args:
+        cfg: Configuration dictionary containing:
+            - 'plotSettings': dict with 'pltSupTitle', 'pltTitle', 'pltXLabel',
+              'pltYLabel', 'label', 'yLim', and 'plotFileName'.
+            - 'design': dict with 'pressure' and 'wallThickness' values.
+        dataDF: DataFrame with columns 't' (x-axis) and 'Pd' (y-axis).
+    """
     # Define plot settings
     plt.suptitle(cfg["plotSettings"]["pltSupTitle"], fontsize=14, color="black")
     # it creates plot Sub-tittle, color and size

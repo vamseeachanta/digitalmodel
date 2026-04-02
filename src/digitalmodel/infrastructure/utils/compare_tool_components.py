@@ -1,10 +1,26 @@
 class CompareTools():
+    """Tools for comparing data from various file formats (YAML, CSV, XLSX, ASCII).
+
+    Provides methods to load, extract, and compare data from different file
+    types and generate visualizations of the comparison results.
+
+    Attributes:
+        cfg: Configuration dictionary with file and plot settings.
+        df_array: List of DataFrames loaded from input files.
+    """
 
     def __init__(self, cfg=None):
+        """Initialize CompareTools with optional configuration.
+
+        Args:
+            cfg: Configuration dictionary with 'files' and 'plot' keys.
+                Defaults to None.
+        """
         self.cfg = cfg
         self.df_array = []
 
     def dictionaries(self):
+        """Compare two dictionaries using DeepDiff and print the differences."""
         from pprint import pprint
 
         from deepdiff import DeepDiff
@@ -13,6 +29,7 @@ class CompareTools():
         print(DeepDiff(t1, t2))
 
     def csvs(self):
+        """Load CSV files specified in configuration into the df_array list."""
         import pandas as pd
         for file_index in range(0, len(self.cfg['files'])):
             df = pd.read_csv(self.cfg['files'][file_index]['io'])
@@ -23,6 +40,15 @@ class CompareTools():
         # visualization.from_df_array(self.df_array, self.cfg)
 
     def get_df_from_yaml(self, file_data):
+        """Extract data from a YAML file into a pandas DataFrame.
+
+        Args:
+            file_data: Dictionary with 'io' (file path) and 'extract_data'
+                (list of key paths to extract) keys.
+
+        Returns:
+            pd.DataFrame: DataFrame with extracted data columns.
+        """
         from digitalmodel.infrastructure.utils.data import DefineData, ReadData
         read_data = ReadData()
         define_data = DefineData()
@@ -39,17 +65,42 @@ class CompareTools():
         return extract_data_df
 
     def get_df_from_csv(self, file_data):
+        """Load a CSV file into a pandas DataFrame.
+
+        Args:
+            file_data: Dictionary with 'io' key containing the CSV file path.
+
+        Returns:
+            pd.DataFrame: DataFrame loaded from the CSV file.
+        """
         import pandas as pd
         df = pd.read_csv(file_data['io'])
 
         return df
 
     def get_df_from_xlsx(self, file_data):
+        """Load an Excel file into a pandas DataFrame.
+
+        Args:
+            file_data: Dictionary with 'io' (file path) and 'sheet_name' keys.
+
+        Returns:
+            pd.DataFrame: DataFrame loaded from the specified Excel sheet.
+        """
         import pandas as pd
         df = pd.read_excel(io=file_data['io'], sheet_name=file_data['sheet_name'])
         return df
 
     def get_df_from_ascii(self, file_data):
+        """Load an ASCII file into a pandas DataFrame using whitespace delimiters.
+
+        Args:
+            file_data: Dictionary with 'io' (file path), 'lines' (dict with
+                'start' and 'end'), and 'data_type' keys.
+
+        Returns:
+            pd.DataFrame: DataFrame loaded from the ASCII file.
+        """
         from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
 
@@ -65,6 +116,16 @@ class CompareTools():
         return df
 
     def extractData(self, fileList, cfg):
+        """Extract structured data from a list of YAML files into a DataFrame.
+
+        Args:
+            fileList: List of YAML file paths to extract data from.
+            cfg: Configuration dictionary with 'dataFrame' key containing
+                'columns' and 'data' definitions with nested level keys (L1-L5).
+
+        Returns:
+            pd.DataFrame: DataFrame with extracted data from all files.
+        """
         import pandas as pd
         import yaml
         dataDF = pd.DataFrame(columns=cfg['dataFrame']['columns'])
@@ -96,6 +157,17 @@ class CompareTools():
         return dataDF
 
     def extractPlotData(self, fileList, cfg):
+        """Extract plot-specific data from YAML files, separated by riser type.
+
+        Args:
+            fileList: List of YAML file paths to extract data from.
+            cfg: Configuration dictionary with 'plot' and 'ymlFiles' keys
+                defining column mappings and riser type classifications.
+
+        Returns:
+            tuple: A pair of DataFrames (dataDF_SLWR, dataDF_SCR) for
+                SLWR and SCR riser types respectively.
+        """
         import pandas as pd
         import yaml
         dataDF_SLWR = pd.DataFrame(columns=cfg['plot']['columns']['SLWR'])
@@ -134,6 +206,11 @@ class CompareTools():
         return dataDF_SLWR, dataDF_SCR
 
     def get_input_data(self):
+        """Load input data from all configured files based on their file types.
+
+        Reads data from YAML, CSV, XLSX, or ASCII files as specified in the
+        configuration and stores them as instance attributes.
+        """
         df_array = []
         for file_index in range(0, len(self.cfg['files'])):
             set_info = self.cfg['files'][file_index]
@@ -159,11 +236,17 @@ class CompareTools():
             df_array.append(file_data_df)
 
     def prepare_visualizations(self):
+        """Prepare and generate visualizations from the loaded data."""
         from digitalmodel.infrastructure.utils.visualization.visualization_components import VisualizationComponents
         vc = VisualizationComponents(self.cfg)
         vc.prepare_visualizations(self)
 
     def legacy_plot(self):
+        """Generate legacy-style plots using the Visualization class.
+
+        Creates plots for each configured plot specification, iterating
+        over all loaded file data sets.
+        """
         from digitalmodel.infrastructure.utils.visualization.visualizations import Visualization
         for plot_index in range(0, len(self.cfg['plot'])):
             plt_settings = self.cfg['plot'][plot_index]

@@ -5,10 +5,29 @@ import math
 
 
 class BasicStatistics:
+    """Utility class for computing basic statistical operations on datasets.
+
+    Provides methods for generating histograms and computing bin ranges
+    from numerical datasets.
+    """
+
     def __init__(self):
+        """Initialize BasicStatistics."""
         pass
 
     def get_histograms(self, dataset: array, cfg) -> pd.DataFrame:
+        """Compute histogram data for a given dataset.
+
+        Args:
+            dataset: Array-like numerical data to compute the histogram for.
+            cfg: Configuration dictionary with keys:
+                - 'bins' (int): Number of bins for the histogram.
+                - 'bin_range' (tuple, optional): Min and max range for bins.
+
+        Returns:
+            pd.DataFrame: DataFrame with columns 'frequency', 'start_value',
+                'end_value', and 'labels' describing each histogram bin.
+        """
         bins = cfg["bins"]
         bin_range = cfg.get("bin_range", None)
         if bin_range == None:
@@ -36,6 +55,23 @@ class BasicStatistics:
         return df
 
     def get_bins_from_dataset(self, dataset: array, cfg) -> array:
+        """Calculate bin range for a dataset based on configuration.
+
+        Determines appropriate bin boundaries by examining the dataset's
+        min and max values, then extends the range if needed to accommodate
+        the requested number of bins.
+
+        Args:
+            dataset: Array-like numerical data to determine bin range for.
+            cfg: Configuration dictionary with 'bins' key specifying
+                the desired number of bins.
+
+        Returns:
+            tuple: A (min_value, max_value) tuple defining the bin range.
+
+        Note:
+            Currently works for integers only. Float support is planned.
+        """
         # TODO works for integers only. Need to accommodate floats as well
         bins = cfg["bins"]
         min_value = min(dataset)

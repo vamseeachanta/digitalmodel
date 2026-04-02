@@ -5,10 +5,31 @@ from common.update_deep import update_deep_dictionary
 
 
 class MaterialProperties():
+    """Handles material property evaluation including temperature derating and mass calculations.
+
+    Evaluates material properties for inner and outer pipes, performs
+    temperature derating based on specification codes, and calculates
+    mass and weight properties.
+
+    Attributes:
+        cfg: Configuration dictionary containing pipe and material data.
+    """
+
     def __init__(self, cfg):
+        """Initialize MaterialProperties with configuration.
+
+        Args:
+            cfg: Configuration dictionary with 'Outer_Pipe', 'Inner_Pipe',
+                'Design', and 'Material' keys.
+        """
         self.cfg = cfg
 
     def evaluate_material_properties(self):
+        """Evaluate material properties for both inner and outer pipes.
+
+        Processes material properties, temperature derating, and mass/weight
+        calculations for each pipe that is defined in the configuration.
+        """
         if self.cfg['Outer_Pipe'] != None:
             self.get_material_properties(pipe_flag = 'Outer_Pipe')
             self.set_up_temperature_derating(pipe_flag = 'Outer_Pipe')
@@ -20,6 +41,11 @@ class MaterialProperties():
 
 
     def set_up_temperature_derating(self, pipe_flag):
+        """Set up temperature derating factors for all design load conditions.
+
+        Args:
+            pipe_flag: String identifier for the pipe ('Outer_Pipe' or 'Inner_Pipe').
+        """
         for load_condition_index in range(0, len(self.cfg['Design'])):
             for code_index in range(0, len(self.cfg['Design'][load_condition_index]['Code'])):
                 specification_code = self.cfg['Design'][load_condition_index]['Code'][code_index][pipe_flag]
@@ -31,6 +57,19 @@ class MaterialProperties():
                                                                                                          specification_code))
 
     def temperatureDerating(self, data):
+        """Calculate temperature derating factor based on specification code.
+
+        Applies code-specific temperature derating rules. For 'Other' codes,
+        applies a temperature-dependent strength reduction. For ASME, API,
+        and CFR codes, returns a derating factor of 1.
+
+        Args:
+            data: Dictionary with 'Code' key and optionally 'temperature',
+                'S' (yield strength), and 'U' (ultimate strength) keys.
+
+        Returns:
+            dict: Updated data dictionary with 'temperature_derating' factor.
+        """
         if data['Code'] == "Other":
             if data['temperature'] > 50 and data['temperature'] <= 100:
                 data['S'] = data['S'] - (25 - 0) / (100 - 50) * (data['temperature'] - 50) * Q_(1, 'MPa').to('psi').magnitude
@@ -70,6 +109,14 @@ class MaterialProperties():
 
 
     def get_material_properties(self, pipe_flag):
+        """Retrieve material properties for the specified pipe.
+
+        Args:
+            pipe_flag: String identifier for the pipe ('Outer_Pipe' or 'Inner_Pipe').
+
+        Note:
+            Currently a placeholder with implementation commented out.
+        """
         pass
         # material = self.cfg[pipe_flag]['Material']['Material']
         # material_grade = self.cfg[pipe_flag]['Material_Grade']
@@ -77,6 +124,14 @@ class MaterialProperties():
         # self.cfg[pipe_flag]['Material'].update(self.cfg['Material'][material])
 
     def evaluate_mass_and_weight_properties(self, pipe_flag):
+        """Calculate mass and weight properties for the specified pipe.
+
+        Computes pipe mass, coupling mass, internal fluid mass, dry mass,
+        buoyancy, and wet mass for each design load condition.
+
+        Args:
+            pipe_flag: String identifier for the pipe ('Outer_Pipe' or 'Inner_Pipe').
+        """
         material = self.cfg[pipe_flag]['Material']['Material']
         material_density = self.cfg['Material'][material]['Rho']
         for load_condition_index in range(0, len(self.cfg['Design'])):

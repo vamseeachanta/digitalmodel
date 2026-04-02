@@ -2,12 +2,30 @@ import logging
 
 
 class LogFileAnalysisComponents():
+    """Components for analyzing log files from ODA and similar systems.
+
+    Provides methods for collecting file lists, extracting log data,
+    gathering file metadata, computing statistics, and plotting results.
+
+    Attributes:
+        cfg: Configuration object containing file paths, labels, and settings.
+    """
 
     def __init__(self, cfg):
+        """Initialize LogFileAnalysisComponents with configuration.
+
+        Args:
+            cfg: Configuration object with 'files' and 'Analysis' attributes.
+        """
         self.cfg = cfg
         # self.get_model_state_information()
 
     def get_file_list(self):
+        """Populate the file_list attribute by scanning configured folders.
+
+        Reads file lists from each folder specified in the configuration,
+        filtering by the configured file type.
+        """
         from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         self.file_list = []
@@ -18,6 +36,11 @@ class LogFileAnalysisComponents():
             self.file_list.append(file_list_for_folder)
 
     def get_last_2_lines(self):
+        """Extract the last two lines from each log file and save to CSV.
+
+        Processes up to 10 files per folder, reads the last 2 lines from
+        each, and exports the results to a CSV file.
+        """
         import pandas as pd
 
         from digitalmodel.infrastructure.utils.data import ReadData
@@ -45,6 +68,12 @@ class LogFileAnalysisComponents():
             df_array.append(df)
 
     def get_detailed_file_information(self):
+        """Collect detailed metadata for each file in the file list.
+
+        Extracts file name, label, API number, creation date, start month,
+        and modification date for ODA log files. Results are stored in
+        the file_detailed_information attribute.
+        """
         import datetime
         import os
 
@@ -69,6 +98,12 @@ class LogFileAnalysisComponents():
             self.file_detailed_information = df
 
     def get_file_information_statistics(self):
+        """Compute high-level statistics from file metadata.
+
+        Groups files by API number and extracts start month for each
+        unique API. Results are saved to a CSV file and stored in the
+        high_level_statistics attribute.
+        """
         import pandas as pd
         if self.cfg.files['oda_logs']:
             columns = ['month']
@@ -84,5 +119,6 @@ class LogFileAnalysisComponents():
 
 
     def plot_statistics(self):
+        """Print high-level statistics and display a placeholder for plotting."""
         print(self.high_level_statistics)
         print("Perform filtering, transformation and high level plotting here")

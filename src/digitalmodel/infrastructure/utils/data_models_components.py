@@ -2,11 +2,29 @@ import logging
 
 
 class DataModelsComponents():
+    """Components for data model management including database and file operations.
+
+    Handles creating database tables, reading data from various sources
+    (CSV, XLSX, ZIP, URL, database), and saving processed data to target databases.
+
+    Attributes:
+        cfg: Configuration object with database, input data, and table settings.
+    """
 
     def __init__(self, cfg):
+        """Initialize DataModelsComponents with configuration.
+
+        Args:
+            cfg: Configuration object with 'db', 'db_tables', and 'input_data' attributes.
+        """
         self.cfg = cfg
 
     def drop_dependent_tables(self):
+        """Drop dependent database tables specified in configuration.
+
+        Connects to the database and drops tables listed in the
+        'drop_first' configuration before creating new ones.
+        """
         from digitalmodel.infrastructure.utils.database import Database
 
         db_properties = self.cfg.db
@@ -18,6 +36,11 @@ class DataModelsComponents():
             self.dbe.executeQueryWithParameters(drop_query)
 
     def create_db_tables(self):
+        """Create database tables from SQL script files.
+
+        Processes each table set in configuration, optionally dropping
+        existing tables before executing creation scripts.
+        """
         from digitalmodel.infrastructure.utils.database import Database
 
         db_properties = self.cfg.db
@@ -33,6 +56,12 @@ class DataModelsComponents():
             self.dbe.executeScriptsFromFile(set_info['io'])
 
     def get_data_and_save_to_target(self):
+        """Read data from configured source and save to target.
+
+        Supports multiple source types: 'accdb', 'xlsx', 'csv', 'zip',
+        'url', and 'db'. Routes processing to the appropriate method
+        based on the configured source type.
+        """
         result = {}
         if self.cfg.input_data['source'] == 'accdb':
             for set_index in range(0, len(self.cfg.input_data['sets'])):
@@ -60,6 +89,11 @@ class DataModelsComponents():
             sys.exit()
 
     def process_csv_files(self):
+        """Process CSV files from configuration and save to database.
+
+        Reads each CSV file with configured headers and column names,
+        then saves the resulting DataFrames to the target database.
+        """
         import os
 
         import pandas as pd
@@ -88,6 +122,12 @@ class DataModelsComponents():
                 logging.error("Could not process a file: {}".format(file_name), exc_info=True)
 
     def process_db_source(self, input_data=None):
+        """Process data from a database source and save to target.
+
+        Args:
+            input_data: Optional input data configuration. If None,
+                uses self.cfg.input_data.
+        """
         from digitalmodel.infrastructure.utils.database import Database
         if input_data is None:
             input_data = self.cfg.input_data
@@ -111,6 +151,12 @@ class DataModelsComponents():
                 logging.error("Could not process a file: {}".format(cfg_db), exc_info=True)
 
     def process_zip_files(self, input_data=None):
+        """Process CSV files from ZIP archives and save to database.
+
+        Args:
+            input_data: Optional input data configuration. If None,
+                uses self.cfg.input_data.
+        """
         import os
         import zipfile
 
@@ -157,6 +203,11 @@ class DataModelsComponents():
                     logging.info("Skipping file: {} in zip file: {}".format(file_name, cfg_zip['io']))
 
     def process_url_files(self):
+        """Download and process files from URLs.
+
+        Downloads files from configured URLs and processes them as
+        ZIP archives.
+        """
         import os
 
         import pandas as pd
@@ -179,6 +230,13 @@ class DataModelsComponents():
                 logging.error("Could not process a file: {}".format(cfg_url), exc_info=True)
 
     def save_data(self, cfg, data):
+        """Save data to the configured output target.
+
+        Args:
+            cfg: Configuration dictionary with optional 'output' key
+                specifying target type and behavior.
+            data: Dictionary mapping table names to DataFrames.
+        """
         if cfg.__contains__('output'):
             if cfg['output']['target'] == 'db':
                 db_properties = self.cfg.db
@@ -195,10 +253,23 @@ class DataModelsComponents():
                         logging.error("Could not save dataframe to DB: {}".format(cfg), exc_info=True)
 
     def run_example(self):
+        """Run an example workflow.
+
+        Note:
+            Currently a placeholder with no implementation.
+        """
         pass
         # TBA
 
     def read_from_xlsx(self, cfg_xlsx):
+        """Read data from an Excel file.
+
+        Args:
+            cfg_xlsx: Configuration dictionary with Excel file parameters.
+
+        Returns:
+            dict: Dictionary of DataFrames keyed by sheet/label names.
+        """
         from digitalmodel.infrastructure.utils.data import ReadData
         readdata = ReadData()
         result = readdata.from_xlsx(cfg_xlsx)

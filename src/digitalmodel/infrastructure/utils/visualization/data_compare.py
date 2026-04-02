@@ -1,10 +1,21 @@
 class Compare:
+    """Utility class for comparing two dictionaries and displaying differences."""
 
     def __init__(self):
+        """Initialize Compare."""
         pass
 
     def find_dff_in_2_Dicts(self, d1, d2, path=""):
-        '''Reference: https://stackoverflow.com/questions/27265939/comparing-python-dictionaries-and-nested-dictionaries/35065035'''
+        """Find and print differences between two dictionaries recursively.
+
+        Reference: https://stackoverflow.com/questions/27265939/comparing-python-dictionaries-and-nested-dictionaries/35065035
+
+        Args:
+            d1: First dictionary to compare.
+            d2: Second dictionary to compare against.
+            path: Internal path string for tracking nested key positions.
+                Defaults to empty string.
+        """
         for k in d1:
             if (k not in d2):
                 print(path, ":")
@@ -24,11 +35,14 @@ class Compare:
 
 
 class CompareTests:
+    """Test class for Compare dictionary comparison functionality."""
 
     def __init__(self):
+        """Initialize CompareTests."""
         pass
 
     def test_find_dff_in_2_Dicts(self):
+        """Run a test comparing two sample dictionaries and print differences."""
         d1 = {'a': {'b': {'cs': 10}, 'd': {'cs': 20}}}
         d2 = {'a': {'b': {'cs': 30}, 'd': {'cs': 20}}, 'newa': {'q': {'cs': 50}}}
         print("comparing d1 to d2:")

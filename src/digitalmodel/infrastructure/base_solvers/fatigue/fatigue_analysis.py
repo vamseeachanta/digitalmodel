@@ -10,10 +10,30 @@ tsa = TimeSeriesAnalysis()
 
 
 class FatigueAnalysis:
+    """Fatigue damage analysis using S-N curves and rainflow cycle counting.
+
+    Supports damage calculation from direct S-N data inputs and from
+    time-domain stress traces via rainflow counting.
+    """
+
     def __init__(self):
+        """Initialize FatigueAnalysis."""
         pass
 
     def router(self, cfg):
+        """Route fatigue analysis to the appropriate calculation method.
+
+        Args:
+            cfg: Configuration dictionary with 'inputs' containing
+                'calculation_type' and 'stress_input' keys.
+
+        Returns:
+            dict: Updated configuration with fatigue analysis results.
+
+        Raises:
+            NotImplementedError: If 'orcaflex' or 'abaqus' software is specified.
+            Exception: If stress_input is not 'sn' or 'timetrace'.
+        """
         if "software" in cfg["inputs"]:
             if cfg["inputs"]["software"] == "orcaflex":
                 raise NotImplementedError
@@ -30,6 +50,15 @@ class FatigueAnalysis:
         return cfg
 
     def damage_from_sn_data(self, cfg):
+        """Calculate cumulative fatigue damage from S-N data pairs.
+
+        Args:
+            cfg: Configuration dictionary with 'inputs.SN' list of
+                stress-cycle pairs and fatigue curve specification.
+
+        Returns:
+            dict: Updated configuration with 'fatigue_analysis.damage' result.
+        """
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
         for sn in cfg["inputs"]["SN"]:
@@ -43,6 +72,16 @@ class FatigueAnalysis:
         return cfg
 
     def damage_from_rainflow_cycles(self, rainflow_df, fatigue_curve):
+        """Calculate cumulative damage from rainflow-counted stress cycles.
+
+        Args:
+            rainflow_df: DataFrame with 'range' and 'count' columns from
+                rainflow cycle counting.
+            fatigue_curve: Dictionary with 'a1' and 'm1' S-N curve parameters.
+
+        Returns:
+            float: Cumulative fatigue damage (Miner's rule summation).
+        """
         damage = 0
         for index, row in rainflow_df.iterrows():
             s = row["range"]
@@ -54,6 +93,16 @@ class FatigueAnalysis:
         return damage
 
     def damage_from_timetrace(self, cfg):
+        """Calculate fatigue damage from stress time traces.
+
+        Performs rainflow counting on each timetrace and accumulates damage.
+
+        Args:
+            cfg: Configuration dictionary with 'inputs.timetraces' list.
+
+        Returns:
+            dict: Updated configuration with 'fatigue_analysis' results.
+        """
         fatigue_curve = self.get_fatigue_curve(cfg)
         damage = 0
         cfg_timetraces = cfg["inputs"]["timetraces"].copy()
@@ -90,10 +139,27 @@ class FatigueAnalysis:
         return cfg
 
     def get_cycles_to_failure(self, fatigue_curve, s):
+        """Calculate cycles to failure for a given stress range using S-N curve.
+
+        Args:
+            fatigue_curve: Dictionary with 'a1' and 'm1' S-N curve parameters.
+            s: Stress range value.
+
+        Returns:
+            float: Number of cycles to failure (N).
+        """
         N = fatigue_curve["a1"] * s ** fatigue_curve["m1"]
         return N
 
     def get_fatigue_curve(self, cfg):
+        """Retrieve the specified fatigue curve from the fatigue data.
+
+        Args:
+            cfg: Configuration with 'inputs.fatigue_curve' label.
+
+        Returns:
+            dict: Fatigue curve parameters as a dictionary.
+        """
         fatigue_curve_data = self.get_fatigue_curve_data(cfg)
         fatigue_curve_df = fatigue_curve_data[
             fatigue_curve_data["Curve Label"] == cfg["inputs"]["fatigue_curve"]
@@ -103,6 +169,14 @@ class FatigueAnalysis:
         return fatigue_curve
 
     def get_fatigue_curve_data(self, cfg):
+        """Load fatigue curve data from a CSV file.
+
+        Args:
+            cfg: Configuration with 'fatigue_data.io' file path.
+
+        Returns:
+            pd.DataFrame: DataFrame containing fatigue curve data.
+        """
 
         if cfg["fatigue_data"]["csv"]:
             fatigue_data_file = cfg["fatigue_data"]["io"]
@@ -116,6 +190,11 @@ class FatigueAnalysis:
         return fatigue_curve_data
 
     def get_default_sn_cfg(self):
+        """Get default configuration for S-N based fatigue analysis.
+
+        Returns:
+            dict: Default configuration dictionary for S-N damage calculation.
+        """
         default_cfg = {
             "basename": "fatigue_analysis",
             "inputs": {
@@ -133,6 +212,11 @@ class FatigueAnalysis:
         return default_cfg
 
     def get_default_timetrace_cfg(self):
+        """Get default configuration for timetrace-based fatigue analysis.
+
+        Returns:
+            dict: Default configuration dictionary for timetrace damage calculation.
+        """
         default_cfg = {
             "basename": "fatigue_analysis",
             "inputs": {
@@ -163,6 +247,15 @@ class FatigueAnalysis:
         return default_cfg
 
     def get_rainflow_from_timetrace(self, timetrace):
+        """Perform rainflow cycle counting on a stress timetrace.
+
+        Args:
+            timetrace: List of stress values forming the time trace.
+
+        Returns:
+            tuple: A pair of (rainflow_df, rainflow_dict) containing the
+                cycle counting results as DataFrame and dictionary.
+        """
         rainflow_df, rainflow_dict = tsa.count_cycles(timetrace)
 
         return rainflow_df, rainflow_dict
