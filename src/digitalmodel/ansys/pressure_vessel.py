@@ -377,6 +377,178 @@ class ASMEThicknessCalc:
         return p_test
 
 
+    def calculate_mawp(
+        self, wall_thickness_mm: float, inner_radius_mm: float,
+        allowable_stress_mpa: float, joint_efficiency: float = 1.0,
+        corrosion_allowance_mm: float = 3.0,
+    ) -> float:
+        """Calculate Maximum Allowable Working Pressure (MAWP) per UG-27.
+
+        Inverse of UG-27 thickness formula:
+            MAWP = S * E * t_corr / (R + 0.6 * t_corr)
+
+        Parameters
+        ----------
+        wall_thickness_mm : float
+            Actual wall thickness in mm.
+        inner_radius_mm : float
+            Inner radius in mm.
+        allowable_stress_mpa : float
+            Allowable stress at design temperature.
+        joint_efficiency : float
+            Weld joint efficiency.
+        corrosion_allowance_mm : float
+            Corrosion allowance in mm.
+
+        Returns
+        -------
+        float
+            MAWP in MPa.
+
+        Raises
+        ------
+        ValueError
+            If corroded thickness is zero or negative.
+        """
+        t_corr = wall_thickness_mm - corrosion_allowance_mm
+        if t_corr <= 0:
+            raise ValueError(
+                f"corroded thickness is {t_corr:.2f} mm "
+                f"(wall={wall_thickness_mm}, CA={corrosion_allowance_mm})"
+            )
+        S = allowable_stress_mpa
+        E = joint_efficiency
+        R = inner_radius_mm
+        return (S * E * t_corr) / (R + 0.6 * t_corr)
+
+    def check_nozzle_reinforcement(
+        self,
+        shell_inner_radius_mm: float,
+        shell_thickness_mm: float,
+        nozzle_outer_diameter_mm: float,
+        nozzle_thickness_mm: float,
+        design_pressure_mpa: float,
+        allowable_stress_mpa: float,
+        joint_efficiency: float = 1.0,
+        corrosion_allowance_mm: float = 3.0,
+        reinforcement_pad_thickness_mm: float = 0.0,
+    ) -> dict[str, float | bool]:
+        """Check nozzle reinforcement per ASME VIII Div 1 UG-37.
+
+        Uses the equal-area replacement method:
+        - Area removed (A_required) = d * t_r
+        - Area available = excess shell area + excess nozzle area + pad area
+
+        Parameters
+        ----------
+        shell_inner_radius_mm : float
+            Shell inner radius.
+        shell_thickness_mm : float
+            Actual shell thickness.
+        nozzle_outer_diameter_mm : float
+            Nozzle OD.
+        nozzle_thickness_mm : float
+            Nozzle wall thickness.
+        design_pressure_mpa : float
+            Internal design pressure.
+        allowable_stress_mpa : float
+            Allowable stress at design temperature.
+        joint_efficiency : float
+            Weld joint efficiency.
+        corrosion_allowance_mm : float
+            Corrosion allowance.
+        reinforcement_pad_thickness_mm : float
+            Additional reinforcement pad thickness (0 = none).
+
+        Returns
+        -------
+        dict with area_required_mm2, area_available_mm2, is_adequate, and details.
+        """
+        CA = corrosion_allowance_mm
+        # Corroded dimensions
+        t_shell = shell_thickness_mm - CA
+        t_nozzle = nozzle_thickness_mm - CA
+        d = nozzle_outer_diameter_mm - 2.0 * nozzle_thickness_mm  # nozzle ID
+
+        # Required shell thickness from UG-27
+        t_r = self.ug27_cylindrical_shell(
+            pressure_mpa=design_pressure_mpa,
+            inner_radius_mm=shell_inner_radius_mm,
+            allowable_stress_mpa=allowable_stress_mpa,
+            joint_efficiency=joint_efficiency,
+            corrosion_allowance_mm=0.0,  # already subtracted
+        )["t_required_mm"]
+
+        # Required nozzle thickness (treat nozzle as cylinder)
+        nozzle_inner_radius = d / 2.0
+        t_rn = self.ug27_cylindrical_shell(
+            pressure_mpa=design_pressure_mpa,
+            inner_radius_mm=nozzle_inner_radius,
+            allowable_stress_mpa=allowable_stress_mpa,
+            joint_efficiency=joint_efficiency,
+            corrosion_allowance_mm=0.0,
+        )["t_required_mm"]
+
+        # Area required (area removed by opening)
+        area_required = d * t_r
+
+        # Area available: excess in shell + excess in nozzle + pad
+        # Limit of reinforcement along shell: larger of d or (R*t_shell)^0.5
+        limit_shell = max(d, (shell_inner_radius_mm * t_shell) ** 0.5)
+        # But use d for the simplified calculation
+        area_shell_excess = (t_shell - t_r) * d  # excess shell metal
+        area_nozzle_excess = 2.0 * (t_nozzle - t_rn) * min(
+            2.5 * t_shell, 2.5 * t_nozzle + shell_thickness_mm
+        )
+        area_pad = reinforcement_pad_thickness_mm * d if reinforcement_pad_thickness_mm > 0 else 0.0
+
+        area_available = area_shell_excess + max(area_nozzle_excess, 0.0) + area_pad
+
+        return {
+            "area_required_mm2": float(area_required),
+            "area_available_mm2": float(area_available),
+            "is_adequate": area_available >= area_required,
+            "t_required_shell_mm": float(t_r),
+            "t_required_nozzle_mm": float(t_rn),
+            "excess_shell_mm2": float(area_shell_excess),
+            "excess_nozzle_mm2": float(max(area_nozzle_excess, 0.0)),
+            "pad_area_mm2": float(area_pad),
+        }
+
+    def calculate_hydrotest_pressure(
+        self,
+        design_pressure_mpa: float,
+        test_factor: float = 1.3,
+        allowable_design_mpa: float | None = None,
+        allowable_test_mpa: float | None = None,
+    ) -> float:
+        """Calculate hydrostatic test pressure per UG-99.
+
+        Default: P_test = test_factor * P_design
+        With stress ratio: P_test = test_factor * P_design * (S_test / S_design)
+
+        Parameters
+        ----------
+        design_pressure_mpa : float
+            Design pressure.
+        test_factor : float
+            Test pressure factor (default 1.3 per UG-99).
+        allowable_design_mpa : float, optional
+            Allowable stress at design temperature.
+        allowable_test_mpa : float, optional
+            Allowable stress at test temperature (usually higher).
+
+        Returns
+        -------
+        float
+            Test pressure in MPa.
+        """
+        p_test = test_factor * design_pressure_mpa
+        if allowable_design_mpa is not None and allowable_test_mpa is not None:
+            p_test *= (allowable_test_mpa / allowable_design_mpa)
+        return p_test
+
+
 # ---------------------------------------------------------------------------
 # APDL Generator for pressure vessel
 # ---------------------------------------------------------------------------
@@ -656,6 +828,52 @@ class PressureVesselGenerator:
         sections = [
             f"! ============================================",
             f"! Pressure Vessel FEA — {conditions.material_name}",
+            f"! Generated by digitalmodel.ansys",
+            f"! ============================================",
+            "",
+            self.generate_vessel_geometry(geom),
+        ]
+
+        if include_hydrotest:
+            sections.append(self.generate_hydrotest_load(conditions))
+        else:
+            sections.append(self.generate_internal_pressure(conditions, geom))
+
+        if include_thermal:
+            sections.append(self.generate_thermal_loading(conditions))
+
+        sections.append(self.generate_stress_classification_paths(geom))
+
+        return "\n".join(sections)
+
+    def generate_pv_apdl(
+        self, geom: "VesselGeometry", conditions: "DesignConditions",
+        include_thermal: bool = True, include_hydrotest: bool = False,
+    ) -> str:
+        """Generate a complete APDL macro for pressure vessel FEA.
+
+        Combines geometry, pressure loading, thermal loading, and
+        post-processing into a single APDL script.
+
+        Parameters
+        ----------
+        geom : VesselGeometry
+            Vessel geometric parameters.
+        conditions : DesignConditions
+            Design conditions including pressure, temperature, material.
+        include_thermal : bool
+            Whether to include thermal loading (default True).
+        include_hydrotest : bool
+            Whether to use hydrotest pressure instead of design pressure.
+
+        Returns
+        -------
+        str
+            Complete APDL macro text.
+        """
+        sections = [
+            f"! ============================================",
+            f"! Pressure Vessel FEA \u2014 {conditions.material_name}",
             f"! Generated by digitalmodel.ansys",
             f"! ============================================",
             "",

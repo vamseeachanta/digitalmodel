@@ -196,7 +196,7 @@ class TestNozzleReinforcement:
             design_pressure_mpa=10.0,
             allowable_stress_mpa=138.0,
         )
-        # Just verify it returns a dict — pass/fail depends on geometry
+        # Just verify it returns a dict - pass/fail depends on geometry
         assert isinstance(result["area_required_mm2"], float)
         assert isinstance(result["area_available_mm2"], float)
 
