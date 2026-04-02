@@ -16,7 +16,7 @@ import os
 import tempfile
 import pytest
 
-import matplotlib
+matplotlib = pytest.importorskip("matplotlib")
 matplotlib.use("Agg")
 
 

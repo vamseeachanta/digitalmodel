@@ -176,8 +176,9 @@ class TestScour:
         from digitalmodel.geotechnical.scour import pipeline_scour_depth
         result = pipeline_scour_depth(
             pipe_od_m=0.5,
-            current_velocity_m_s=0.8,
-            wave_velocity_m_s=0.5,
+            current_velocity_ms=0.8,
+            wave_orbital_velocity_ms=0.5,
+            sediment_d50_mm=0.2,
         )
         assert result.scour_depth_m > 0
         assert result.pipe_od_m == 0.5
@@ -185,6 +186,8 @@ class TestScour:
 
     def test_monopile_scour_positive(self):
         from digitalmodel.geotechnical.scour import monopile_scour_depth
-        result = monopile_scour_depth(pile_diameter_m=6.0, current_velocity_m_s=1.0)
+        result = monopile_scour_depth(
+            pile_diameter_m=6.0, current_velocity_ms=1.0, water_depth_m=20.0
+        )
         assert result.scour_depth_m > 0
         assert result.pile_diameter_m == 6.0
