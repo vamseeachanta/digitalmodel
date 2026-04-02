@@ -1,3 +1,5 @@
+"""Upheaval buckling analysis for subsea pipelines."""
+
 # Standard library imports
 import math
 import os

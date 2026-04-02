@@ -1,3 +1,5 @@
+"""Legacy calculation methods for catenary riser analysis."""
+
 import math
 import pandas as pd
 import warnings

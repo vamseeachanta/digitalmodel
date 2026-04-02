@@ -1,3 +1,5 @@
+"""Tubular member VIV analysis and response calculations."""
+
 # Standard library imports
 import math
 import os

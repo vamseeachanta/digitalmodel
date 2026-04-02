@@ -1,3 +1,5 @@
+"""Legacy riser stack-up figure generation and visualization."""
+
 def textdata(z,x,y,c):
         basicfont = pygame.font.SysFont('arial', 15)
         text = basicfont.render(z, True,c)

@@ -1,3 +1,5 @@
+"""File listing utilities for legacy catenary riser input/output."""
+
 import glob
 import os
 

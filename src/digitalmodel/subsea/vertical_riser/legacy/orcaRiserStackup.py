@@ -1,3 +1,5 @@
+"""OrcaFlex model generation for legacy vertical riser stack-up."""
+
 import math
 import os
 

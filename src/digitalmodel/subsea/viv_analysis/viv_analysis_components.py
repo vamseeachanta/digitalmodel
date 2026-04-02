@@ -1,5 +1,7 @@
 
 
+"""Component definitions for VIV analysis calculations."""
+
 class VIVAnalysisComponents:
     def __init__(self, cfg):
         self.cfg = cfg

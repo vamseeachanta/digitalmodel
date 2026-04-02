@@ -1,3 +1,5 @@
+"""Legacy vortex-induced vibration analysis methods."""
+
 # Data preparation
 def set_up_application():
     import logging

@@ -1,3 +1,5 @@
+"""Thermal buckling analysis for subsea pipelines."""
+
 # Standard library imports
 
 # Third party imports

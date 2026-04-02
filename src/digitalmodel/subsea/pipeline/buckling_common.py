@@ -1,3 +1,5 @@
+"""Common buckling calculation utilities for subsea pipelines."""
+
 # Standard library imports
 
 # Third party imports

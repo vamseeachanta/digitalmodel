@@ -1,3 +1,5 @@
+"""Subsea pipeline analysis entry point and orchestration."""
+
 # Reader imports
 
 # Reader imports

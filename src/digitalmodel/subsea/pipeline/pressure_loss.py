@@ -1,3 +1,5 @@
+"""Pressure loss calculations for subsea pipeline flow analysis."""
+
 # Third party imports
 import sympy as sp
 from sympy import init_printing

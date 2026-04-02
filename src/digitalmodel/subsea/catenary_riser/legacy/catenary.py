@@ -1,3 +1,5 @@
+"""Legacy catenary riser geometry and configuration calculations."""
+
 from typing import Dict, Any
 
 from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator

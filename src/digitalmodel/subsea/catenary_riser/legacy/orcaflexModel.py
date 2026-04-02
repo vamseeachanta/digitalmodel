@@ -1,3 +1,5 @@
+"""OrcaFlex model generation for legacy catenary riser analysis."""
+
 import pkgutil
 import math
 from collections import OrderedDict

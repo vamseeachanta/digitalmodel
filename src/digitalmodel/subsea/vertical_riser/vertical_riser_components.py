@@ -1,3 +1,5 @@
+"""Vertical riser component definitions and properties."""
+
 import logging
 import math
 

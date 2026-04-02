@@ -1,3 +1,5 @@
+"""Vortex-induced vibration (VIV) analysis entry point and orchestration."""
+
 # Standard library imports
 import logging
 

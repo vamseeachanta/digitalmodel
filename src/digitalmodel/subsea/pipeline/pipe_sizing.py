@@ -1,3 +1,5 @@
+"""Pipe sizing calculations for subsea pipeline design."""
+
 import math
 
 

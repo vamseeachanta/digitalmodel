@@ -1,3 +1,5 @@
+"""Lateral buckling analysis for subsea pipelines."""
+
 # Standard library imports
 import logging
 import os
