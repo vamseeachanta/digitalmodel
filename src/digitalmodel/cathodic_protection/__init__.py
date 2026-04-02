@@ -154,6 +154,36 @@ from digitalmodel.cathodic_protection.cp_reporting import (
     remaining_life_summary,
 )
 
+from digitalmodel.cathodic_protection.anode_sizing import (
+    AnodeType,
+    AnodeSizingInput,
+    AnodeSizingResult,
+    calculate_current_demand as sizing_current_demand,
+    calculate_anode_mass as sizing_anode_mass,
+    calculate_anode_resistance as sizing_anode_resistance,
+    design_cp_system,
+)
+
+from digitalmodel.cathodic_protection.marine_cp import (
+    ZoneType as MarineZoneType,
+    Zone as MarineZone,
+    MarineCPInput,
+    MarineCPResult as MarineCPDesignResult,
+    get_seawater_current_density,
+    calculate_zone_demand,
+    design_marine_cp,
+)
+
+from digitalmodel.cathodic_protection.pipeline_cp import (
+    CriteriaResult,
+    PipelineDesignResult,
+    calculate_pipeline_current_demand,
+    calculate_anode_spacing,
+    check_potential_criteria,
+    design_pipeline_cp,
+    soil_resistivity_correction,
+)
+
 __all__ = [
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
@@ -274,4 +304,28 @@ __all__ = [
     "compliance_check_potential",
     "generate_assessment_report",
     "remaining_life_summary",
+    # anode_sizing
+    "AnodeType",
+    "AnodeSizingInput",
+    "AnodeSizingResult",
+    "sizing_current_demand",
+    "sizing_anode_mass",
+    "sizing_anode_resistance",
+    "design_cp_system",
+    # marine_cp
+    "MarineZoneType",
+    "MarineZone",
+    "MarineCPInput",
+    "MarineCPDesignResult",
+    "get_seawater_current_density",
+    "calculate_zone_demand",
+    "design_marine_cp",
+    # pipeline_cp extensions
+    "CriteriaResult",
+    "PipelineDesignResult",
+    "calculate_pipeline_current_demand",
+    "calculate_anode_spacing",
+    "check_potential_criteria",
+    "design_pipeline_cp",
+    "soil_resistivity_correction",
 ]
