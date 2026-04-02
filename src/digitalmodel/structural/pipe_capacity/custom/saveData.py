@@ -1,3 +1,5 @@
+"""Result data export for custom pipe capacity calculations."""
+
 import json
 from collections import OrderedDict
 

@@ -1,3 +1,5 @@
+"""Command-line interface for structural analysis tools."""
+
 # ABOUTME: CLI entry point for pipeline wall thickness design checks
 # ABOUTME: Commands for single check, parametric sweep, phase analysis, grade listing
 

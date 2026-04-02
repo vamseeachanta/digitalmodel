@@ -1,3 +1,5 @@
+"""YAML input file handling for API STD 2RD burst pressure analysis."""
+
 import yaml
 
 

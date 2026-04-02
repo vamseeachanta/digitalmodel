@@ -1,3 +1,5 @@
+"""Parameter definitions for stiffener buckling analysis."""
+
 # Plate1 data is obtained from workbook: "";
 # 
 

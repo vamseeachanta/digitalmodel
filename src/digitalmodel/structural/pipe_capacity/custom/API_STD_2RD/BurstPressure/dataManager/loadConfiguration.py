@@ -1,3 +1,5 @@
+"""Configuration loading for API STD 2RD burst pressure analysis."""
+
 from dataManager.ConfigurationManager import ConfigurationManager
 
 

@@ -1,3 +1,5 @@
+"""ASME B31.4 wall thickness design code implementation."""
+
 # ABOUTME: ASME B31.4 liquid transportation pipeline design code strategy implementation
 # ABOUTME: Barlow burst, elastic-plastic collapse transition, propagation buckling checks
 

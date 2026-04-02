@@ -1,3 +1,5 @@
+"""API RP 2RD wall thickness design code implementation."""
+
 # ABOUTME: API RP 2RD riser design code strategy (WSD, legacy riser standard)
 # ABOUTME: Combined stress (Von Mises) <= C_f * C_a * SMYS with hoop check
 

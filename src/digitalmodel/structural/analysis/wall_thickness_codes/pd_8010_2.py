@@ -1,3 +1,5 @@
+"""PD 8010-2 wall thickness design code implementation."""
+
 # ABOUTME: PD 8010-2 UK offshore pipeline code strategy implementation
 # ABOUTME: Hoop stress burst, Timoshenko collapse, propagation buckling checks
 

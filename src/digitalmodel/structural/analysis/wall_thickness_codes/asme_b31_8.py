@@ -1,3 +1,5 @@
+"""ASME B31.8 wall thickness design code implementation."""
+
 # ABOUTME: ASME B31.8 gas transmission pipeline design code strategy implementation
 # ABOUTME: Barlow burst, elastic-plastic collapse transition, propagation checks
 

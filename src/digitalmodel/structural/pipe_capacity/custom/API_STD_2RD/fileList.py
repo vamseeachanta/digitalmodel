@@ -1,3 +1,5 @@
+"""File listing utilities for API STD 2RD analysis input/output."""
+
 import glob
 import os
 

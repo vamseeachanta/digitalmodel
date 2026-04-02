@@ -1,3 +1,5 @@
+"""Custom material property definitions for pipe calculations."""
+
 import logging
 
 from digitalmodel.units import Q_

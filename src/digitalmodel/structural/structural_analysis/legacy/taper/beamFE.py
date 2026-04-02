@@ -1,3 +1,5 @@
+"""Beam finite element formulation for taper design."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

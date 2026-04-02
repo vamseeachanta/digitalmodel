@@ -1,3 +1,5 @@
+"""Column buckling parameters for plate capacity plot generation."""
+
 # Plate1 data is obtained from workbook: "614-CAL-2215-01 (SEWOL ANSYS Buckling Template) DRAFT2.xlsm";
 # worksheet: "Standard Buckling Calculations" ; Column (G-H-I-J-K)
 

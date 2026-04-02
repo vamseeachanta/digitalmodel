@@ -1,3 +1,5 @@
+"""Custom temperature derating factor implementations."""
+
 from digitalmodel.units import Q_
 
 

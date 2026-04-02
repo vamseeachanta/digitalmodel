@@ -1,3 +1,5 @@
+"""Pipe capacity analysis entry point and orchestration."""
+
 # Reader imports
 from digitalmodel.structural.pipe_capacity.common.pipe_components import PipeComponents
 

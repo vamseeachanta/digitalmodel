@@ -1,3 +1,5 @@
+"""Custom pipe sizing calculation methods."""
+
 import math
 
 

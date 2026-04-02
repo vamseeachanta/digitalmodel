@@ -1,3 +1,5 @@
+"""Beam element structural model for taper design analysis."""
+
 import math
 
 import matplotlib.pyplot as plt

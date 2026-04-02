@@ -1,3 +1,5 @@
+"""Parameter definitions for plate capacity calculations."""
+
 # Plate1 data is obtained from workbook: "614-CAL-2215-01 (SEWOL ANSYS Buckling Template) DRAFT2.xlsm";
 # worksheet: "Standard Buckling Calculations" ; Column G
 import munch

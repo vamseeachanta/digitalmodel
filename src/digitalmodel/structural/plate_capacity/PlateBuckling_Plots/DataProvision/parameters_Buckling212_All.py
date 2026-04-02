@@ -1,3 +1,5 @@
+"""Parameters for DNV RP-C201 Section 2.12 plate buckling plots."""
+
 # Plate1 data is obtained from workbook: "614-CAL-2215-01 (SEWOL ANSYS Buckling Template) DRAFT2.xlsm";
 # 
 

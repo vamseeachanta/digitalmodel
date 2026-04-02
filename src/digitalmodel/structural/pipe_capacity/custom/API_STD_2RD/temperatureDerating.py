@@ -1,3 +1,5 @@
+"""Temperature derating factors for API STD 2RD pipe capacity calculations."""
+
 # def temperatureDerating(data):
 # if data['temperature'] > 50 and data['temperature'] <= 100:
 # data['S']= data['S'] - (25-0)/(100-50)*(data['temperature'] - 50)*145.038

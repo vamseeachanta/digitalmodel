@@ -1,3 +1,5 @@
+"""Common pipe capacity calculation methods and utilities."""
+
 import logging
 import math
 

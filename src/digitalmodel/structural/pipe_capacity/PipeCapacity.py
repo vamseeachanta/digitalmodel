@@ -1,3 +1,5 @@
+"""Top-level pipe capacity analysis module."""
+
 import logging
 import math
 

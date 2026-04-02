@@ -1,3 +1,5 @@
+"""Common temperature derating factor calculations for pipe capacity."""
+
 from digitalmodel.units import Q_
 
 

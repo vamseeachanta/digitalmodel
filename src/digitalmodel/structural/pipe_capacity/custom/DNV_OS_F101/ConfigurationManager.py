@@ -1,3 +1,5 @@
+"""Configuration management for DNV OS F101 pipe capacity analysis."""
+
 import configparser
 
 from custom.DNV_OS_F101.AttributeDict import AttributeDict

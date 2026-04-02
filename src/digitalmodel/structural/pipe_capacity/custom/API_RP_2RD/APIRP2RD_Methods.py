@@ -1,3 +1,5 @@
+"""API RP 2RD pipe capacity calculation methods."""
+
 class APIRP:
     def __init__(
         self,

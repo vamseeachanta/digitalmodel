@@ -1,3 +1,5 @@
+"""Default plotting routines for custom pipe capacity results."""
+
 import matplotlib.pyplot as plt
 
 

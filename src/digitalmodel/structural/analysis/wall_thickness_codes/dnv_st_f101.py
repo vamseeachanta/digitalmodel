@@ -1,3 +1,5 @@
+"""DNV-ST-F101 wall thickness design code implementation."""
+
 # ABOUTME: DNV-ST-F101 submarine pipeline design code strategy implementation
 # ABOUTME: Extracts burst, collapse, propagation, combined loading checks from monolithic analyzer
 

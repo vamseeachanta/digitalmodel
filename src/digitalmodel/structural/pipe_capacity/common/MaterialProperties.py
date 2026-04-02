@@ -1,3 +1,5 @@
+"""Common material properties for pipe capacity calculations."""
+
 import logging
 
 from digitalmodel.units import Q_

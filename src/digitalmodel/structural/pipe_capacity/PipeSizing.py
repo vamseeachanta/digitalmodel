@@ -1,3 +1,5 @@
+"""Top-level pipe sizing analysis module."""
+
 import logging
 import math
 

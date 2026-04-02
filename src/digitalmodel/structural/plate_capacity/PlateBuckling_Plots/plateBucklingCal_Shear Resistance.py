@@ -1,3 +1,5 @@
+"""Shear plate buckling resistance calculation and plotting."""
+
 from DataProvision.plateBucklingCal_G import *
 from DataProvision.plateBucklingCal_H import *
 from DataProvision.plateBucklingCal_i import *

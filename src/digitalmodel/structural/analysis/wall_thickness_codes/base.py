@@ -1,3 +1,5 @@
+"""Base class for wall thickness code calculations."""
+
 # ABOUTME: CodeStrategy Protocol and CODE_REGISTRY for design code strategy pattern
 # ABOUTME: New codes register via @register_code decorator, auto-discovered on import
 

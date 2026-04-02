@@ -1,3 +1,5 @@
+"""Tapered structural member design and optimization."""
+
 import yaml
 
 with open("taper.yml", 'r') as ymlfile:

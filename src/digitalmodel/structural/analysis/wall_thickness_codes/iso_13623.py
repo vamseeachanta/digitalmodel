@@ -1,3 +1,5 @@
+"""ISO 13623 wall thickness design code implementation."""
+
 # ABOUTME: ISO 13623 international pipeline transportation systems design code strategy
 # ABOUTME: Pressure containment, elastic-plastic collapse, propagation buckling checks
 

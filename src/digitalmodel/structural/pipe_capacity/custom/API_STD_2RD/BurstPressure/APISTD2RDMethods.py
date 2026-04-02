@@ -1,3 +1,5 @@
+"""API STD 2RD burst pressure calculation methods."""
+
 import logging
 import math
 

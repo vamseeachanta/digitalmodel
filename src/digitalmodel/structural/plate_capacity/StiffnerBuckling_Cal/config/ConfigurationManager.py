@@ -1,3 +1,5 @@
+"""Configuration management for stiffener buckling calculations."""
+
 import configparser
 import os
 from os.path import dirname, abspath

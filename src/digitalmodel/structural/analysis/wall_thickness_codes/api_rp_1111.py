@@ -1,3 +1,5 @@
+"""API RP 1111 wall thickness design code implementation."""
+
 # ABOUTME: API RP 1111 offshore hydrocarbon pipeline design code strategy implementation
 # ABOUTME: Edition-aware factors for 3rd Ed (1999) and 4th Ed (2015), burst/collapse/propagation
 

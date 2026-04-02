@@ -1,3 +1,5 @@
+"""API STD 2RD pipe capacity calculation methods."""
+
 import logging
 import math
 

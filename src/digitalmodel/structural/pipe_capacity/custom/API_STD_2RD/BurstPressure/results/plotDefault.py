@@ -1,3 +1,5 @@
+"""Default plotting routines for burst pressure results."""
+
 import matplotlib.pyplot as plt
 
 

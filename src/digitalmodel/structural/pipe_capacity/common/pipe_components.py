@@ -1,3 +1,5 @@
+"""Pipe component definitions and geometry calculations."""
+
 from digitalmodel.structural.pipe_capacity.custom.MaterialProperties import (
     MaterialProperties,
 )

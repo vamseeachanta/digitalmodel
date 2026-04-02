@@ -1,3 +1,5 @@
+"""API STD 2RD wall thickness design code implementation."""
+
 # ABOUTME: API STD 2RD riser design code strategy (LRFD, current riser standard)
 # ABOUTME: Design-factor-based approach with Method 1 (linear) and Method 2 (cosine) M-T interaction
 

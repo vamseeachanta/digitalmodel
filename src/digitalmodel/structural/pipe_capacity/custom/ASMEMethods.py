@@ -1,3 +1,5 @@
+"""ASME code-based pipe capacity calculation methods."""
+
 import math
 
 # TODO Define a generic class PipeSizing()
