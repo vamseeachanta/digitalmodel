@@ -59,6 +59,11 @@ from digitalmodel.ansys.batch_runner import (
     BatchConfig,
     ParameterSweep,
     BatchRun,
+    LoadCase,
+    BatchLoadConfig,
+    BatchResultEntry,
+    BatchResults,
+    RunStatus,
 )
 from digitalmodel.ansys.results_extractor import (
     ResultsExtractor,
@@ -66,6 +71,9 @@ from digitalmodel.ansys.results_extractor import (
     NodalResult,
     ElementResult,
     ConvergenceRecord,
+    StressSummary,
+    DisplacementSummary,
+    ComparisonRow,
 )
 from digitalmodel.ansys.pressure_vessel import (
     PressureVesselGenerator,
@@ -146,12 +154,20 @@ __all__ = [
     "BatchConfig",
     "ParameterSweep",
     "BatchRun",
+    "LoadCase",
+    "BatchLoadConfig",
+    "BatchResultEntry",
+    "BatchResults",
+    "RunStatus",
     # Results Extractor
     "ResultsExtractor",
     "ResultSummary",
     "NodalResult",
     "ElementResult",
     "ConvergenceRecord",
+    "StressSummary",
+    "DisplacementSummary",
+    "ComparisonRow",
     # Pressure Vessel
     "PressureVesselGenerator",
     "ASMEThicknessCalc",

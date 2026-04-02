@@ -1,15 +1,19 @@
 # ABOUTME: Tests for ResultsExtractor — ANSYS output file parsing
-# ABOUTME: Verifies regex-based extraction of stress, displacement, convergence data
+# ABOUTME: Verifies regex-based extraction of stress, displacement, convergence, export, comparison
 
-"""Tests for results_extractor — ResultsExtractor output parsing."""
+"""Tests for results_extractor — ResultsExtractor output parsing, export, and comparison."""
 
+import json
 import pytest
 import pandas as pd
 
 from digitalmodel.ansys.results_extractor import (
+    ComparisonRow,
+    ConvergenceRecord,
+    DisplacementSummary,
     ResultsExtractor,
     ResultSummary,
-    ConvergenceRecord,
+    StressSummary,
 )
 
 
@@ -18,7 +22,7 @@ def _ext() -> ResultsExtractor:
 
 
 # ---------------------------------------------------------------------------
-# Summary extraction
+# Summary extraction (existing)
 # ---------------------------------------------------------------------------
 
 SAMPLE_OUTPUT = """\
@@ -84,7 +88,7 @@ class TestExtractSummaryEmpty:
 
 
 # ---------------------------------------------------------------------------
-# PRNSOL parsing
+# PRNSOL parsing (existing)
 # ---------------------------------------------------------------------------
 
 PRNSOL_BLOCK = """\
@@ -116,7 +120,7 @@ class TestParsePrnsol:
 
 
 # ---------------------------------------------------------------------------
-# Element table parsing
+# Element table parsing (existing)
 # ---------------------------------------------------------------------------
 
 PRETAB_BLOCK = """\
@@ -145,7 +149,7 @@ class TestParseElementTable:
 
 
 # ---------------------------------------------------------------------------
-# Convergence history
+# Convergence history (existing)
 # ---------------------------------------------------------------------------
 
 class TestParseConvergenceHistory:
@@ -163,7 +167,7 @@ class TestParseConvergenceHistory:
 
 
 # ---------------------------------------------------------------------------
-# Max values extraction
+# Max values extraction (existing)
 # ---------------------------------------------------------------------------
 
 class TestExtractMaxValues:
@@ -180,3 +184,149 @@ class TestExtractMaxValues:
     def test_empty_df_returns_zeros(self):
         stats = _ext().extract_max_values(pd.DataFrame())
         assert stats["max"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Stress summary extraction (NEW)
+# ---------------------------------------------------------------------------
+
+class TestStressSummary:
+    def test_extracts_von_mises(self):
+        ss = _ext().extract_stress_summary(SAMPLE_OUTPUT)
+        assert ss.max_von_mises_mpa == pytest.approx(185.3)
+
+    def test_extracts_location_node(self):
+        ss = _ext().extract_stress_summary(SAMPLE_OUTPUT)
+        assert ss.location_node == 4521
+
+    def test_empty_text_returns_zero(self):
+        ss = _ext().extract_stress_summary("")
+        assert ss.max_von_mises_mpa == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Displacement summary extraction (NEW)
+# ---------------------------------------------------------------------------
+
+class TestDisplacementSummary:
+    def test_extracts_total_displacement(self):
+        ds = _ext().extract_displacements(SAMPLE_OUTPUT)
+        assert ds.max_total_mm == pytest.approx(0.452)
+
+    def test_extracts_displacement_node(self):
+        ds = _ext().extract_displacements(SAMPLE_OUTPUT)
+        assert ds.location_node == 3201
+
+    def test_empty_text_returns_zero(self):
+        ds = _ext().extract_displacements("")
+        assert ds.max_total_mm == 0.0
+
+
+# ---------------------------------------------------------------------------
+# JSON/CSV export (NEW)
+# ---------------------------------------------------------------------------
+
+class TestExportResults:
+    def test_json_export_is_valid(self):
+        summary = _ext().extract_summary(SAMPLE_OUTPUT)
+        result = _ext().export_results(summary, format="json")
+        data = json.loads(result)
+        assert data["max_von_mises_mpa"] == pytest.approx(185.3)
+
+    def test_json_export_contains_all_fields(self):
+        summary = _ext().extract_summary(SAMPLE_OUTPUT)
+        result = _ext().export_results(summary, format="json")
+        data = json.loads(result)
+        assert "total_nodes" in data
+        assert "converged" in data
+        assert "num_substeps" in data
+
+    def test_csv_export_has_header(self):
+        summary = _ext().extract_summary(SAMPLE_OUTPUT)
+        result = _ext().export_results(summary, format="csv")
+        assert "max_von_mises_mpa" in result
+        assert "total_nodes" in result
+
+    def test_csv_export_has_data_row(self):
+        summary = _ext().extract_summary(SAMPLE_OUTPUT)
+        result = _ext().export_results(summary, format="csv")
+        lines = [l for l in result.strip().split("\n") if l]
+        assert len(lines) == 2  # header + data
+
+
+# ---------------------------------------------------------------------------
+# Multi-load-case comparison (NEW)
+# ---------------------------------------------------------------------------
+
+CASE_A_OUTPUT = """\
+ NUMBER OF NODES   =    5000
+ NUMBER OF ELEMENTS=    3000
+ SOLUTION IS CONVERGED
+ MAXIMUM SEQV =  120.0  AT NODE=  100
+ MAXIMUM USUM =  0.300  AT NODE=  200
+"""
+
+CASE_B_OUTPUT = """\
+ NUMBER OF NODES   =    5000
+ NUMBER OF ELEMENTS=    3000
+ SOLUTION IS CONVERGED
+ MAXIMUM SEQV =  200.0  AT NODE=  300
+ MAXIMUM USUM =  0.500  AT NODE=  400
+"""
+
+CASE_C_UNCONVERGED = """\
+ NUMBER OF NODES   =    5000
+ *** WARNING ***
+"""
+
+
+class TestCompareLoadCases:
+    def test_returns_correct_count(self):
+        cases = [
+            ("Operating", CASE_A_OUTPUT),
+            ("Hydrotest", CASE_B_OUTPUT),
+        ]
+        rows = _ext().compare_load_cases(cases)
+        assert len(rows) == 2
+
+    def test_identifies_max_stress_case(self):
+        cases = [
+            ("Operating", CASE_A_OUTPUT),
+            ("Hydrotest", CASE_B_OUTPUT),
+        ]
+        rows = _ext().compare_load_cases(cases)
+        stresses = {r.load_case_name: r.max_stress_mpa for r in rows}
+        assert stresses["Hydrotest"] > stresses["Operating"]
+
+    def test_identifies_unconverged(self):
+        cases = [
+            ("Good", CASE_A_OUTPUT),
+            ("Bad", CASE_C_UNCONVERGED),
+        ]
+        rows = _ext().compare_load_cases(cases)
+        bad_row = [r for r in rows if r.load_case_name == "Bad"][0]
+        assert bad_row.converged is False
+
+    def test_comparison_includes_nodes_elements(self):
+        cases = [("A", CASE_A_OUTPUT)]
+        rows = _ext().compare_load_cases(cases)
+        assert rows[0].total_nodes == 5000
+        assert rows[0].total_elements == 3000
+
+    def test_export_comparison_json(self):
+        cases = [
+            ("A", CASE_A_OUTPUT),
+            ("B", CASE_B_OUTPUT),
+        ]
+        rows = _ext().compare_load_cases(cases)
+        result = _ext().export_comparison(rows, format="json")
+        data = json.loads(result)
+        assert len(data) == 2
+        assert data[0]["load_case"] == "A"
+
+    def test_export_comparison_csv(self):
+        cases = [("A", CASE_A_OUTPUT)]
+        rows = _ext().compare_load_cases(cases)
+        result = _ext().export_comparison(rows, format="csv")
+        assert "load_case" in result
+        assert "max_stress_mpa" in result
