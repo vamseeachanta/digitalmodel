@@ -38,6 +38,10 @@ from .hotspot_stress import (
     extrapolate_hotspot, through_thickness_linearisation,
     recommended_readout_distances, HotspotInput, HotspotResult,
 )
+from .sn_library_api import (
+    list_curves, get_curve, calculate_endurance, compare_curves,
+    CurveInfo, SNCurve, ComparisonData,
+)
 from .spectral_fatigue import (
     compute_spectral_moments, narrow_band_damage,
     wirsching_light_damage, dirlik_damage, benasciutti_tovo_damage,
@@ -143,4 +147,12 @@ __all__ = [
     "apply_environment_to_sn",
     "EnvironmentInput",
     "EnvironmentResult",
+    # sn_library_api
+    "list_curves",
+    "get_curve",
+    "calculate_endurance",
+    "compare_curves",
+    "CurveInfo",
+    "SNCurve",
+    "ComparisonData",
 ]
