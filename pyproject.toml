@@ -187,6 +187,11 @@ test = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "pytest-mock>=3.0",
+    "pint>=0.25.0",
+    "plotly>=5.0.0",
+    "deepdiff>=8.0.0",
+    "factory-boy>=3.3.0",
+    "loguru>=0.7.0",
 ]
 docs = [
     "sphinx>=6.0",
