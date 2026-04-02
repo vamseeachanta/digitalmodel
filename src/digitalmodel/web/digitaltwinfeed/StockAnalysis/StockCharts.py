@@ -1,13 +1,32 @@
+"""Stock chart generation using Plotly visualization.
+
+Provides chart creation methods for stock analysis data including
+insider trading, institutional holdings, price, volume, and technical indicators.
+"""
+
 import datetime
 import json
 
 
 class StockCharts:
+    """Chart generator for stock market data visualization.
+
+    Creates Plotly chart configurations for insider trading, institutional
+    holdings, price trends, volume, volatility, and technical indicators.
+    """
 
     def __init__(self):
         pass
 
     def get_plot_data(self, cfg):
+        """Generate all chart data for a stock ticker.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         insider = self.create_insider_chart(cfg)
         insider_relative_sale = self.create_insider_relative_sale_chart(cfg)
         insider_relative_buy = self.create_insider_relative_buy_chart(cfg)
@@ -49,6 +68,14 @@ class StockCharts:
         return plot_data
 
     def create_insider_chart(self, cfg):
+        """Create a combined insider buy/sell/price chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         plotly_data1 = json.loads(self.create_insider_buy_chart(cfg))
         plotly_data2 = json.loads(self.create_insider_sell_chart(cfg))
         plotly_data3 = json.loads(self.create_insider_share_price_chart(cfg))
@@ -60,6 +87,14 @@ class StockCharts:
         return plotly_data_json_str
 
     def create_insider_buy_chart(self, cfg):
+        """Create an insider buy transactions bubble chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -108,6 +143,14 @@ class StockCharts:
         return plotly_data
 
     def create_insider_relative_sale_chart(self, cfg):
+        """Create an insider relative sale chart with share price overlay.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
         plotly_group_data = None
@@ -189,6 +232,14 @@ class StockCharts:
         return plotly_group_data
 
     def create_insider_relative_buy_chart(self, cfg):
+        """Create an insider relative buy chart with share price overlay.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
         plotly_group_data = None
@@ -271,6 +322,14 @@ class StockCharts:
         return plotly_group_data
 
     def create_insider_sell_chart(self, cfg):
+        """Create an insider sell transactions bubble chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -319,6 +378,14 @@ class StockCharts:
         return plotly_data
 
     def create_insider_share_price_chart(self, cfg):
+        """Create a share price line chart for insider trading period.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -365,6 +432,14 @@ class StockCharts:
         return plotly_data
 
     def create_insider_by_relation_chart(self, cfg):
+        """Create insider share holding ratio by relationship bar chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -409,6 +484,14 @@ class StockCharts:
         return plotly_data
 
     def create_insider_by_timeline_chart(self, cfg):
+        """Create insider share holding ratio by timeline bar chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -456,6 +539,14 @@ class StockCharts:
         return plotly_data
 
     def create_institution_chart(self, cfg):
+        """Create a combined institution volume and price chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         plotly_data1 = json.loads(self.create_institution_volume_chart(cfg))
         plotly_data2 = json.loads(self.create_insider_share_price_chart(cfg))
 
@@ -466,6 +557,14 @@ class StockCharts:
         return plotly_data_json_str
 
     def create_institution_volume_chart(self, cfg):
+        """Create an institutional holders volume bubble chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -514,6 +613,14 @@ class StockCharts:
         return plotly_data
 
     def create_price_chart(self, cfg):
+        """Create a stock price chart with moving averages.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -546,6 +653,14 @@ class StockCharts:
         return plotly_data
 
     def create_volume_all_chart(self, cfg):
+        """Create a chart with all volume-based technical indicators.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -572,6 +687,14 @@ class StockCharts:
         return plotly_data
 
     def create_ob_volume_chart(self, cfg):
+        """Create an On Balance Volume indicator chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -604,6 +727,14 @@ class StockCharts:
         return plotly_data
 
     def create_cfm_chart(self, cfg):
+        """Create a Chaikin Money Flow indicator chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -628,6 +759,14 @@ class StockCharts:
         return plotly_data
 
     def create_eom_chart(self, cfg):
+        """Create an Ease of Movement indicator chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -660,6 +799,14 @@ class StockCharts:
         return plotly_data
 
     def create_wt_price_chart(self, cfg):
+        """Create a Volume Weighted Average Price chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -684,6 +831,14 @@ class StockCharts:
         return plotly_data
 
     def create_volatility_chart(self, cfg):
+        """Create a chart with all volatility indicators.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -716,6 +871,14 @@ class StockCharts:
         return plotly_data
 
     def create_volatility_width_chart(self, cfg):
+        """Create a volatility width comparison chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -749,6 +912,14 @@ class StockCharts:
         return plotly_data
 
     def create_volatility_high_low_band_chart(self, cfg):
+        """Create a volatility high-low band indicator chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -781,6 +952,14 @@ class StockCharts:
         return plotly_data
 
     def create_ulcer_chart(self, cfg):
+        """Create an Ulcer Index indicator chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -806,6 +985,14 @@ class StockCharts:
         return plotly_data
 
     def create_strength_all_chart(self, cfg):
+        """Create a chart with all momentum/strength indicators.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 
@@ -837,6 +1024,14 @@ class StockCharts:
         return plotly_data
 
     def create_call_analysis_chart(self, cfg):
+        """Create a call option analysis bar chart.
+
+        Args:
+            cfg: Configuration dictionary containing chart data.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         from common.visualization import Visualization
         viz = Visualization()
 

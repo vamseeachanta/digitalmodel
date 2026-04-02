@@ -1,3 +1,9 @@
+"""GoM Fields data components for database interaction and data processing.
+
+Provides data retrieval and transformation methods for Gulf of Mexico
+field data from PostgreSQL databases.
+"""
+
 import datetime
 import json
 import logging
@@ -44,12 +50,24 @@ data_from_db = [{
 
 
 class GoMFieldsComponents():
+    """Data component for Gulf of Mexico field data retrieval and processing.
+
+    Handles database connections, SQL query execution, and data
+    transformation for GoM field analysis.
+
+    Args:
+        cfg: Configuration dictionary for the component.
+    """
 
     def __init__(self, cfg):
         self.cfg = cfg
         self.get_database_connection()
 
     def get_data_dict(self):
+        """Retrieve and package stock-related data into a dictionary.
+        
+                Returns:
+                    dict: Dictionary containing data frames and metadata."""
         df_data_array = getattr(self.fdata, 'stock_data_array', [None])
         df_data = df_data_array[0]
         company_info = getattr(self.fdata, 'company_info', None)
@@ -66,10 +84,15 @@ class GoMFieldsComponents():
         return data_dict
 
     def get_database_connection(self):
+        """Establish a database connection for GoM Fields service."""
         db_properties = get_db_properties_for_service(service='GoMFields')
         self.dbe, self.dbe_connection_status = get_db_connection(db_properties=db_properties)
 
     def get_gom_field_list_from_db(self):
+        """Retrieve list of GoM field nicknames from the database.
+        
+                Returns:
+                    list: List of GoM field nickname strings."""
         gom_field_list_from_db = []
         filename = os.path.join(script_working_dir, 'data', self.dbe.server_type, 'sql', 'bsee.get_gom_fields.sql')
         try:
@@ -81,6 +104,13 @@ class GoMFieldsComponents():
         return gom_field_list_from_db
 
     def get_plot_cfg(self, data_dict):
+        """Build plot configuration from data dictionary.
+        
+                Args:
+                    data_dict: Dictionary containing ticker and timing data.
+        
+                Returns:
+                    dict: Plot configuration dictionary."""
 
         ticker = data_dict.get('ticker', None)
         updated_time = data_dict.get('updated_time', None)
@@ -92,6 +122,13 @@ class GoMFieldsComponents():
         return cfg
 
     def get_gom_field_plot_cfg(self, data_dict):
+        """Build GoM field plot configuration from data dictionary.
+        
+                Args:
+                    data_dict: Dictionary containing ticker and daily data.
+        
+                Returns:
+                    dict: Plot configuration dictionary with daily data."""
 
         ticker = data_dict.get('ticker', None)
         daily_data = data_dict.get('daily_data', None)
@@ -103,12 +140,26 @@ class GoMFieldsComponents():
         return plot_cfg
 
     def get_data_for_UI(self, gom_block):
+        """Retrieve and prepare GoM field data for UI rendering.
+        
+                Args:
+                    gom_block: GoM block identifier string.
+        
+                Returns:
+                    tuple: (data_df, data_dict) containing DataFrames and dict representations."""
         data_df, data_dict = self.get_data_from_db(gom_block)
         # Perform data transformations as required
 
         return data_df, data_dict
 
     def get_data_from_db(self, gom_block):
+        """Execute SQL queries to retrieve all data for a GoM block.
+        
+                Args:
+                    gom_block: GoM block identifier string.
+        
+                Returns:
+                    tuple: (data_df, data_dict) containing raw DataFrames and dict representations."""
         data_df = {}
         data_dict = {}
         for cfg_data in data_from_db:

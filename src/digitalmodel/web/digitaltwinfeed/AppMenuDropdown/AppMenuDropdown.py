@@ -1,7 +1,11 @@
 # TODO Parametrize dropdown choice as part of URL
-import os
+"""App Menu Dropdown blueprint with form-based tab navigation.
 
-from flask import (Blueprint, abort, jsonify, make_response, render_template,
+Provides a Flask blueprint demonstrating dropdown-based menu selection
+with dynamic content rendering based on user selections.
+"""
+
+lask import (Blueprint, abort, jsonify, make_response, render_template,
                    request, url_for)
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import (Api, Resource, fields, marshal, marshal_with,
@@ -43,6 +47,7 @@ form_sumbit_variable = 'dropDownSelection'
 
 
 def set_up_app():
+    """Initialize the application context with default configuration values."""
     context['AppName'] = AppName
     context['AppNameAlias'] = 'Tab Design using dropdown'
     context['title'] = 'Tab Design using dropdown'
@@ -56,6 +61,11 @@ set_up_app()
 
 
 class dropDownSelectionForm(FlaskForm):
+    """Form with a dropdown selection field that auto-submits on change.
+
+    Attributes:
+        dropDownSelection: SelectField for choosing from available options.
+    """
     dropDownSelection = SelectField('Select a choice:',
                                     choices=context['choices'],
                                     render_kw={
@@ -67,6 +77,11 @@ class dropDownSelectionForm(FlaskForm):
 
 @AppBlueprint.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the dropdown menu index page.
+
+    Returns:
+        Rendered HTML template with dropdown form and context data.
+    """
     set_up_app()
     form = dropDownSelectionForm()
     context['form'] = form
@@ -80,6 +95,14 @@ def index():
 
 @AppBlueprint.route('/<selectedMenuID>', methods=['GET', 'POST'])
 def app_menuitem(selectedMenuID):
+    """Render a specific menu item page.
+
+    Args:
+        selectedMenuID: The menu item identifier to render.
+
+    Returns:
+        Rendered HTML template for the selected menu item.
+    """
     url_path = context['AppName'] + '/' + selectedMenuID + '.html'
 
     if request.method == 'GET':
@@ -93,6 +116,7 @@ def app_menuitem(selectedMenuID):
 
 
 def performFormSubmissionActions():
+    """Process form submission by updating context data and menu items."""
     form_submitted_value = request.form.get(form_sumbit_variable)
     if form_submitted_value is not None:
         if form_submitted_value != context['form_submitted_value']:
@@ -102,4 +126,5 @@ def performFormSubmissionActions():
 
 
 def assignContextData():
+    """Assign result data to the application context after form submission."""
     context['data'] = {'result': "dropdown_choice is chosen now"}

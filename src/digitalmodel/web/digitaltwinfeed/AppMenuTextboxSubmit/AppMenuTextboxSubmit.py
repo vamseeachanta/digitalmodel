@@ -1,3 +1,9 @@
+"""App Menu Textbox Submit blueprint with form-based tab navigation.
+
+Provides a Flask blueprint demonstrating textbox input with submit button
+for dynamic content rendering based on user text input.
+"""
+
 import os
 
 from flask import (Blueprint, abort, jsonify, make_response, render_template,
@@ -42,6 +48,7 @@ form_sumbit_variable = 'textboxInput'
 
 
 def set_up_app():
+    """Initialize the application context with default configuration values."""
     context['AppName'] = AppName
     context['AppNameAlias'] = 'Tab Design using textbox'
     context['title'] = 'Tab Design using textbox'
@@ -55,12 +62,23 @@ set_up_app()
 
 
 class textBoxSubmitForm(FlaskForm):
+    """Form with a text input field and submit button.
+
+    Attributes:
+        textboxInput: Required string field for user text input.
+        submit: Submit button to trigger form submission.
+    """
     textboxInput = StringField('Input: ', [validators.DataRequired()])
     submit = SubmitField('Submit')
 
 
 @AppBlueprint.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the textbox submit index page.
+
+    Returns:
+        Rendered HTML template with textbox form and context data.
+    """
     set_up_app()
     form = textBoxSubmitForm(request.form)
     context['form'] = form
@@ -74,6 +92,14 @@ def index():
 
 @AppBlueprint.route('/<selectedMenuID>', methods=['GET', 'POST'])
 def app_menuitem(selectedMenuID):
+    """Render a specific menu item page.
+
+    Args:
+        selectedMenuID: The menu item identifier to render.
+
+    Returns:
+        Rendered HTML template for the selected menu item.
+    """
     url_path = context['AppName'] + '/' + selectedMenuID + '.html'
 
     if request.method == 'GET':
@@ -87,6 +113,7 @@ def app_menuitem(selectedMenuID):
 
 
 def performFormSubmissionActions():
+    """Process form submission by updating context data and menu items."""
     form_submitted_value = request.form.get(form_sumbit_variable)
     if form_submitted_value is not None:
         if form_submitted_value != context['form_submitted_value']:
@@ -96,4 +123,5 @@ def performFormSubmissionActions():
 
 
 def assignContextData():
+    """Assign result data to the application context after form submission."""
     context['data'] = {'result': "form submit value is provided"}

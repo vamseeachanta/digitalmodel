@@ -1,3 +1,9 @@
+"""Stock Analysis blueprint for stock market data visualization.
+
+Provides Flask routes for stock ticker lookup, analysis display,
+and interactive chart rendering using financial market data.
+"""
+
 import os
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, make_response, redirect, render_template, request,
@@ -27,6 +33,14 @@ ticker_list_from_db = fc.get_stock_ticker_list_from_db()
 
 
 def set_up_app(choices=ticker_list_from_db):
+    """Initialize the application context with default stock analysis configuration.
+
+    Args:
+        choices: List of available stock ticker symbols. Defaults to database list.
+
+    Returns:
+        dict: The initialized context dictionary.
+    """
     context['AppName'] = AppName
     context['AppNameAlias'] = 'Stock Analysis'
     context['title'] = 'Stock Analysis'
@@ -42,12 +56,23 @@ set_up_app()
 
 
 class textBoxSubmitForm(FlaskForm):
+    """Form with a text input for stock ticker symbol entry.
+
+    Attributes:
+        textboxInput: Required string field for ticker symbol input.
+        submit: Submit button to trigger stock analysis.
+    """
     textboxInput = StringField('Ticker: ', [validators.DataRequired()])
     submit = SubmitField('Submit')
 
 
 @AppBlueprint.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the stock analysis index page or process ticker submission.
+
+    Returns:
+        Rendered index template on GET, redirect to ticker analysis on POST.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('index', request.method))
 
     if request.method in ['GET']:
@@ -64,6 +89,14 @@ def index():
 
 @AppBlueprint.route('/<ticker>', methods=['GET'])
 def app_ticker(ticker):
+    """Redirect a bare ticker URL to the summary menu item.
+
+    Args:
+        ticker: Stock ticker symbol string.
+
+    Returns:
+        Redirect response to the ticker's summary page.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('app_ticker', request.method))
 
     url_path = url_for(AppName + '.' + 'app_menuitem', ticker=ticker, selectedMenuID='summary', _external=True)
@@ -72,6 +105,15 @@ def app_ticker(ticker):
 
 @AppBlueprint.route('/<ticker>/<selectedMenuID>', methods=['GET', 'POST'])
 def app_menuitem(ticker, selectedMenuID):
+    """Render a specific stock analysis menu item page.
+
+    Args:
+        ticker: Stock ticker symbol string.
+        selectedMenuID: The menu item identifier to render.
+
+    Returns:
+        Rendered HTML template for the selected analysis view.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('app_menuitem', request.method))
 
     if request.method in ['POST']:
@@ -92,6 +134,11 @@ def app_menuitem(ticker, selectedMenuID):
 
 
 def get_form_submitted_value():
+    """Extract and store the submitted ticker value from the form.
+
+    Returns:
+        str: The submitted ticker symbol, or None if not present.
+    """
     form_submitted_value = request.form.get(form_submit_variable)
     current_app.logger.debug("Form Submitted ticker :{}".format(form_submitted_value))
 
@@ -103,6 +150,12 @@ def get_form_submitted_value():
 
 
 def assign_stock_data_and_update_menu_items(ticker=None, test_flag=False):
+    """Load stock data from database and update context with analysis results.
+
+    Args:
+        ticker: Stock ticker symbol to analyze. Defaults to None.
+        test_flag: If True, suppresses logging for test environments.
+    """
     if ticker in ticker_list_from_db:
         context['data'] = {}
         context['title'] = ticker
@@ -150,6 +203,14 @@ def assign_stock_data_and_update_menu_items(ticker=None, test_flag=False):
 
 
 def get_menu_items(ticker):
+    """Generate navigation menu items with URLs for the given ticker.
+
+    Args:
+        ticker: Stock ticker symbol for URL generation.
+
+    Returns:
+        list: List of menu item dictionaries with id, href, and alias.
+    """
     current_app.logger.debug("Update menu urls for ticker :{}".format(ticker))
     menu_items = [
         {

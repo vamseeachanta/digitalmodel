@@ -1,3 +1,9 @@
+"""GoM Fields chart generation using Plotly visualization.
+
+Provides chart creation methods for Gulf of Mexico field data
+including well locations, production rates, and well path profiles.
+"""
+
 import datetime
 import json
 from common.visualization import Visualization
@@ -5,11 +11,24 @@ import pandas as pd
 
 
 class GoMFieldsCharts:
+    """Chart generator for Gulf of Mexico field data visualization.
+
+    Creates Plotly chart configurations for well locations, production data,
+    and well path profiles from BSEE database records.
+    """
 
     def __init__(self):
         pass
 
     def get_plot_data(self, cfg):
+        """Generate all chart data for a GoM field.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            dict: Dictionary of Plotly chart data keyed by chart name.
+        """
         well_location = self.create_well_location_chart(cfg)
         block_cummulative_production_by_month = self.create_block_cummulative_production_by_month_chart(cfg)
         block_production_rate_by_month = self.create_block_production_rate_by_month_chart(cfg)
@@ -30,6 +49,14 @@ class GoMFieldsCharts:
         return plot_data
 
     def create_well_location_chart(self, cfg):
+        """Create a bubble chart of well locations.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
 
         df = cfg.get('well_location_and_production', pd.DataFrame())
@@ -72,6 +99,14 @@ class GoMFieldsCharts:
         return plotly_data
 
     def create_block_cummulative_production_by_month_chart(self, cfg):
+        """Create a cumulative production by month line chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
 
         df_summary = cfg.get('field_summary', pd.DataFrame())
@@ -107,6 +142,14 @@ class GoMFieldsCharts:
         return plotly_data
 
     def create_block_production_rate_by_month_chart(self, cfg):
+        """Create a monthly production rate line chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
 
         df_summary = cfg.get('field_summary', pd.DataFrame())
@@ -142,6 +185,14 @@ class GoMFieldsCharts:
         return plotly_data
 
     def create_production_by_well_chart(self, cfg):
+        """Create a cumulative production by well bar chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
 
         df = cfg.get('production_by_well', pd.DataFrame())
@@ -169,6 +220,14 @@ class GoMFieldsCharts:
         return plotly_data
 
     def create_production_rate_by_well_chart(self, cfg):
+        """Create production rate by well multi-line chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
         plotly_group_data = None
 
@@ -210,6 +269,14 @@ class GoMFieldsCharts:
         return plotly_group_data
 
     def create_well_path_ES_chart(self, cfg):
+        """Create a 2D well path easting-northing chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
         plotly_group_data = {}
 
@@ -255,6 +322,14 @@ class GoMFieldsCharts:
         return plotly_group_data
 
     def create_well_path_chart(self, cfg):
+        """Create a 3D well path profile chart.
+
+        Args:
+            cfg: Dictionary containing field data DataFrames.
+
+        Returns:
+            Plotly chart data as JSON string or dictionary.
+        """
         viz = Visualization()
         plotly_group_data = {}
 

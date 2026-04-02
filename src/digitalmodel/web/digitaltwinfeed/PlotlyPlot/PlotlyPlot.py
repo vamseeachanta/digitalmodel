@@ -1,3 +1,9 @@
+"""Plotly Plot blueprint demonstrating interactive chart rendering.
+
+Provides Flask routes that generate and serve Plotly.js charts
+embedded in HTML templates.
+"""
+
 import json
 import os
 
@@ -20,6 +26,14 @@ api = Api(AppBlueprint)
 
 # @auth.get_password
 def get_password(username):
+    """Retrieve the password for HTTP basic authentication.
+
+    Args:
+        username: The username to authenticate.
+
+    Returns:
+        The password string if username is valid, None otherwise.
+    """
     if username == 'dtf_beta':
         return 'dtf_gamma'
     return None
@@ -27,10 +41,20 @@ def get_password(username):
 
 # @auth.error_handler
 def unauthorized():
+    """Handle unauthorized access attempts.
+
+    Returns:
+        JSON error response with HTTP 403 status code.
+    """
     return make_response(jsonify({'error': 'Unauthorized access'}), 403)
 
 
 def create_plot():
+    """Create a sample Plotly bar chart with random data.
+
+    Returns:
+        str: JSON string containing Plotly chart data.
+    """
 
     N = 40
     x = np.linspace(0, 1, N)
@@ -50,6 +74,11 @@ def create_plot():
 
 @AppBlueprint.route('/', methods=['GET'])
 def index():
+    """Render the PlotlyPlot index page with a sample bar chart.
+
+    Returns:
+        Rendered HTML template with embedded Plotly chart.
+    """
 
     bar = create_plot()
     url_path = AppName + '/index.html'

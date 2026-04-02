@@ -1,3 +1,9 @@
+"""OffshoreRiser blueprint with data and OrcaFlex endpoints.
+
+Provides RESTful API endpoints for OffshoreRiser data retrieval
+and OrcaFlex model rendering within the digitaltwinfeed application.
+"""
+
 import os
 
 from flask import (Blueprint, Response, abort, jsonify, make_response,
@@ -15,6 +21,14 @@ api = Api(AppBlueprint)
 
 @auth.get_password
 def get_password(username):
+    """Retrieve the password for HTTP basic authentication.
+
+    Args:
+        username: The username to authenticate.
+
+    Returns:
+        The password string if username is valid, None otherwise.
+    """
     if username == 'dtf_beta':
         return 'dtf_gamma'
     return None
@@ -22,13 +36,24 @@ def get_password(username):
 
 @auth.error_handler
 def unauthorized():
+    """Handle unauthorized access attempts.
+
+    Returns:
+        JSON error response with HTTP 403 status code.
+    """
     return make_response(jsonify({'error': 'Unauthorized access'}), 403)
 
 
 class AppIndex(Resource):
+    """Root API resource that returns YAML configuration data for OffshoreRiser."""
     # decorators = [auth.login_required]
 
     def get(self):
+        """Retrieve YAML configuration data for the OffshoreRiser service.
+
+        Returns:
+            dict: Configuration data loaded from YAML with OrcaFlex URL added.
+        """
         import os
 
         from common.data import ReadDataFromSystemFiles
@@ -44,9 +69,15 @@ class AppIndex(Resource):
 
 
 class OrcaFlex(Resource):
+    """OrcaFlex model resource for rendering OffshoreRiser analysis models."""
     decorators = [auth.login_required]
 
     def get(self):
+        """Retrieve and render the OrcaFlex model configuration.
+
+        Returns:
+            Response: HTML-rendered OrcaFlex model template.
+        """
         import os
 
         import yaml

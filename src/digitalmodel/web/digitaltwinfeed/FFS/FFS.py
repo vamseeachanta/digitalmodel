@@ -1,3 +1,9 @@
+"""Fitness For Service (FFS) RESTful API blueprint.
+
+Provides authenticated API endpoints for fitness-for-service analysis data
+within the digitaltwinfeed application.
+"""
+
 import os
 
 from flask import (Blueprint, Response, abort, jsonify, make_response,
@@ -15,6 +21,14 @@ api = Api(AppBlueprint)
 
 @auth.get_password
 def get_password(username):
+    """Retrieve the password for HTTP basic authentication.
+
+    Args:
+        username: The username to authenticate.
+
+    Returns:
+        The password string if username is valid, None otherwise.
+    """
     if username == 'dtf_beta':
         return 'dtf_gamma'
     return None
@@ -22,6 +36,11 @@ def get_password(username):
 
 @auth.error_handler
 def unauthorized():
+    """Handle unauthorized access attempts.
+
+    Returns:
+        JSON error response with HTTP 403 status code.
+    """
     return make_response(jsonify({'error': 'Unauthorized access'}), 403)
 
 

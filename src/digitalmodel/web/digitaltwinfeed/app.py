@@ -12,6 +12,13 @@ app.secret_key = b'm\xb7\x12\x97\xb4\x98\x88~\xf4o'
 
 
 def register_blueprint(mod_name, is_service=True):
+    """Register a Flask blueprint by dynamically importing its module.
+
+    Args:
+        mod_name: Name of the module to import and register as a blueprint.
+        is_service: If True, registers under '/services/<mod_name>' URL prefix.
+            If False, registers at the root URL. Defaults to True.
+    """
     import sys
 
     from flask import Blueprint
@@ -43,6 +50,11 @@ for blueprint_item in blueprint_list:
 
 # Blog resides in main app. Could not transfer to services folder as unable to set configuration properties
 class MyForm(FlaskForm):
+    """Simple form with a name field for blog-related pages.
+
+    Attributes:
+        name: A required string field for user input.
+    """
     name = StringField('name', validators=[DataRequired()])
 
 
@@ -57,6 +69,14 @@ blogs = FlatPages(app)
 
 @app.route('/blog/<path:path>.html')
 def page(path):
+    """Render a single blog article page from flat files.
+
+    Args:
+        path: The URL path segment identifying the blog article.
+
+    Returns:
+        Rendered HTML template for the requested blog article.
+    """
     context = {}
     context['brand'] = 'DigitalTwinFeed Logo'
     context['title'] = 'DTF | Blog'
@@ -68,6 +88,11 @@ def page(path):
 
 @app.route('/blog', methods=['GET', 'POST'])
 def blog():
+    """Render the blog listing page with all available articles.
+
+    Returns:
+        Rendered HTML template displaying the blog index with all posts.
+    """
     context = {}
     context['brand'] = 'DigitalTwinFeed Logo'
     context['title'] = 'DTF | Blog'

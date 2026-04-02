@@ -1,7 +1,11 @@
 # TODO Parametrize dropdown choice as part of URL
-import os
+"""BSEE Data blueprint for Bureau of Safety and Environmental Enforcement data.
 
-from flask import (Blueprint, abort, jsonify, make_response, render_template,
+Provides a Flask blueprint with dropdown-based field selection for
+browsing and downloading BSEE offshore field data.
+"""
+
+lask import (Blueprint, abort, jsonify, make_response, render_template,
                    request, url_for)
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import (Api, Resource, fields, marshal, marshal_with,
@@ -48,6 +52,7 @@ form_sumbit_variable = 'dropDownSelection'
 
 
 def assignFieldList():
+    """Load and assign the list of available BSEE fields from data files."""
     from common.data import ReadDataFromSystemFiles
     read_data = ReadDataFromSystemFiles()
     folder_with_file_type = os.path.join(os.getcwd(), 'services', 'bseedata', 'static', 'bseedata', 'data', '*.json')
@@ -62,6 +67,7 @@ assignFieldList()
 
 
 def set_up_app():
+    """Initialize the application context with default BSEE data configuration."""
     context['AppName'] = AppName
     context['AppNameAlias'] = 'BSEE Data'
     context['title'] = 'BSEE Data'
@@ -76,6 +82,12 @@ set_up_app()
 
 
 class dropDownSelectionForm(FlaskForm):
+    """Form with a dropdown for selecting BSEE fields and a download button.
+
+    Attributes:
+        dropDownSelection: SelectField for choosing from available BSEE fields.
+        downloadFieldData: Submit button to download field data as CSV.
+    """
     dropDownSelection = SelectField(context['dropDownSelectionLabel'],
                                     choices=context['choices'],
                                     render_kw={
@@ -88,6 +100,11 @@ class dropDownSelectionForm(FlaskForm):
 
 @AppBlueprint.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the BSEE data index page with field selection dropdown.
+
+    Returns:
+        Rendered HTML template with dropdown form and context data.
+    """
     set_up_app()
     form = dropDownSelectionForm()
     context['form'] = form
@@ -101,6 +118,14 @@ def index():
 
 @AppBlueprint.route('/<selectedMenuID>', methods=['GET', 'POST'])
 def app_menuitem(selectedMenuID):
+    """Render a specific BSEE data menu item page.
+
+    Args:
+        selectedMenuID: The menu item identifier to render.
+
+    Returns:
+        Rendered HTML template for the selected menu item.
+    """
     url_path = context['AppName'] + '/' + selectedMenuID + '.html'
 
     if request.method == 'GET':
@@ -114,6 +139,7 @@ def app_menuitem(selectedMenuID):
 
 
 def performFormSubmissionActions():
+    """Process form submission by updating context data and menu items."""
     form_submitted_value = request.form.get(form_sumbit_variable)
     if form_submitted_value is not None:
         if form_submitted_value != context['form_submitted_value']:
@@ -123,6 +149,7 @@ def performFormSubmissionActions():
 
 
 def assignContextData():
+    """Load selected field data from JSON files into the application context."""
     from common.data import ReadDataFromSystemFiles
     read_data = ReadDataFromSystemFiles()
     context['FieldName'] = context['form_submitted_value']

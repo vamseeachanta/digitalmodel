@@ -1,3 +1,9 @@
+"""Gulf of Mexico Fields blueprint for BSEE field data analysis.
+
+Provides Flask routes for GoM block lookup, production data display,
+and interactive chart rendering using BSEE database records.
+"""
+
 import json
 import os
 import traceback
@@ -29,6 +35,14 @@ app_choice_list_from_db = gom_fc.get_gom_field_list_from_db()
 
 
 def set_up_app(choices=app_choice_list_from_db):
+    """Initialize the application context with default GoM fields configuration.
+
+    Args:
+        choices: List of available GoM block identifiers. Defaults to database list.
+
+    Returns:
+        dict: The initialized context dictionary.
+    """
     context['AppName'] = AppName
     context['AppNameAlias'] = 'GoM Blocks'
     context['title'] = 'GoM Blocks'
@@ -44,12 +58,23 @@ set_up_app()
 
 
 class textBoxSubmitForm(FlaskForm):
+    """Form with a text input for GoM block identifier entry.
+
+    Attributes:
+        textboxInput: Required string field for GoM block input.
+        submit: Submit button to trigger data lookup.
+    """
     textboxInput = StringField('GoM Block: ', [validators.DataRequired()])
     submit = SubmitField('Submit')
 
 
 @AppBlueprint.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the GoM Fields index page or process block submission.
+
+    Returns:
+        Rendered index template on GET, redirect to block analysis on POST.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('index', request.method))
 
     if request.method in ['GET']:
@@ -69,6 +94,14 @@ def index():
 
 @AppBlueprint.route('/<user_selected_choice>', methods=['GET'])
 def app_user_selected_choice(user_selected_choice):
+    """Redirect a bare GoM block URL to the summary menu item.
+
+    Args:
+        user_selected_choice: GoM block identifier string.
+
+    Returns:
+        Redirect response to the block's summary page.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('app_ticker', request.method))
 
     url_path = url_for(AppName + '.' + 'app_menuitem',
@@ -80,6 +113,15 @@ def app_user_selected_choice(user_selected_choice):
 
 @AppBlueprint.route('/<user_selected_choice>/<selectedMenuID>', methods=['GET', 'POST'])
 def app_menuitem(user_selected_choice, selectedMenuID):
+    """Render a specific GoM field analysis menu item page.
+
+    Args:
+        user_selected_choice: GoM block identifier string.
+        selectedMenuID: The menu item identifier to render.
+
+    Returns:
+        Rendered HTML template for the selected analysis view.
+    """
     current_app.logger.debug("function name: {}; http request :{}".format('app_menuitem', request.method))
 
     if request.method in ['POST']:
@@ -100,6 +142,11 @@ def app_menuitem(user_selected_choice, selectedMenuID):
 
 
 def get_form_submitted_value():
+    """Extract and store the submitted GoM block value from the form.
+
+    Returns:
+        str: The submitted GoM block identifier, or None if not present.
+    """
     form_submitted_value = request.form.get(form_submit_variable)
     current_app.logger.debug("Form Submitted :{}".format(form_submitted_value))
 
@@ -111,6 +158,12 @@ def get_form_submitted_value():
 
 
 def assign_data_and_update_menu_items(user_selected_choice=None, test_flag=False):
+    """Load GoM field data from database and update context with analysis results.
+
+    Args:
+        user_selected_choice: GoM block identifier to analyze. Defaults to None.
+        test_flag: If True, suppresses logging for test environments.
+    """
     if user_selected_choice in app_choice_list_from_db:
         context['data'] = {}
         context['title'] = user_selected_choice
@@ -156,6 +209,14 @@ def assign_data_and_update_menu_items(user_selected_choice=None, test_flag=False
 
 
 def get_menu_items(user_selected_choice):
+    """Generate navigation menu items with URLs for the given GoM block.
+
+    Args:
+        user_selected_choice: GoM block identifier for URL generation.
+
+    Returns:
+        list: List of menu item dictionaries with id, href, and alias.
+    """
     current_app.logger.debug("Update menu urls for :{}".format(user_selected_choice))
     menu_items = [
         {
