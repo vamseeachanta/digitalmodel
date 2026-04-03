@@ -43,7 +43,7 @@ from digitalmodel.cathodic_protection import dnv_rp_b401
 | power | Generator controls, microgrid EMS, protection relays | IEEE 1547, NFPA 110, IEEE C37.112 | 210+ |
 | gis | CRS transforms, spatial queries, multi-format I/O | -- | -- |
 
-For the complete module catalog with maturity levels, capabilities, and gaps: see [specs/module-registry.yaml](specs/module-registry.yaml).
+For OrcaWave/OrcaFlex current-state navigation, see [../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md](../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md) (#1752). The earlier `specs/module-registry.yaml` reference is currently stale and should not be treated as canonical until restored.
 
 ## Development Roadmap
 
@@ -57,7 +57,7 @@ Current Tier 1 priorities:
 
 - [ROADMAP.md](ROADMAP.md) -- Development priorities and tech debt
 - [docs/vision/CALCULATIONS-VISION.md](docs/vision/CALCULATIONS-VISION.md) -- Ecosystem vision, current state, gap register
-- [specs/module-registry.yaml](specs/module-registry.yaml) -- Machine-readable module catalog (1,634 lines)
+- [../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md](../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md) -- Canonical operator map for OrcaWave/OrcaFlex code, tests, issues, and machine boundaries
 - [specs/data-needs.yaml](specs/data-needs.yaml) -- Data dependency lifecycle tracker
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 

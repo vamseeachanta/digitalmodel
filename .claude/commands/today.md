@@ -11,13 +11,17 @@ Determine the mode based on current time or user argument:
 
 ## Step 1: Generate Report
 
-First, run the daily report script to gather fresh data:
+First, gather fresh daily context. If a repo-local daily productivity script exists, run it; otherwise gather the state manually from git status, active work, and recent logs.
 
 ```bash
-./scripts/productivity/daily_today.sh 2>/dev/null || echo "Script not found, gathering data manually"
+if [ -x ./scripts/productivity/daily_today.sh ]; then
+  ./scripts/productivity/daily_today.sh 2>/dev/null
+else
+  echo "No daily_today.sh script found — gather daily context manually"
+fi
 ```
 
-Then read today's log file at `logs/daily/{TODAY}.md`.
+Then read today's log file at `logs/daily/{TODAY}.md` if present.
 
 ## Step 2: Interactive Review by Mode
 
@@ -156,13 +160,17 @@ After the table, show:
 
 ### Quick Reflect Script
 
-You can also run the reflect report data gatherer directly:
+If a repo-local reflect helper exists, you can run it directly; otherwise read `reflect-state.yaml` manually and build the table from that state.
 
 ```bash
-./scripts/productivity/daily-reflect-report.sh 2>/dev/null
+if [ -x ./scripts/productivity/daily-reflect-report.sh ]; then
+  ./scripts/productivity/daily-reflect-report.sh 2>/dev/null
+else
+  echo "No daily-reflect-report.sh script found — read reflect-state.yaml manually"
+fi
 ```
 
-This script reads reflect-state.yaml and outputs the table in markdown format for quick review.
+The reflect workflow should read `reflect-state.yaml` and output the table in markdown format for quick review.
 
 ## Arguments
 
