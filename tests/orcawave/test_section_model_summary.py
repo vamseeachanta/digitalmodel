@@ -118,23 +118,21 @@ class TestBuildModelSummaryEdgeCases:
 
     def test_missing_water_depth_attribute(self, config):
         """When WaterDepth attribute is missing, no crash."""
-        diff = MagicMock()
+        diff = MagicMock(spec=[])
         diff.frequencies = [0.1]
         diff.headings = [0.0]
         diff.addedMass = np.zeros((1, 6, 6))
-        # Make WaterDepth raise AttributeError
-        type(diff).WaterDepth = PropertyMock(side_effect=AttributeError)
+        # spec=[] means only explicitly-set attributes exist
         diff.WaterDensity = 1025.0
         result = build_model_summary(diff, config)
         assert "Water depth" not in result  # Should be omitted gracefully
 
     def test_missing_water_density_attribute(self, config):
-        diff = MagicMock()
+        diff = MagicMock(spec=[])
         diff.frequencies = [0.1]
         diff.headings = [0.0]
         diff.addedMass = np.zeros((1, 6, 6))
         diff.WaterDepth = 50.0
-        type(diff).WaterDensity = PropertyMock(side_effect=AttributeError)
         result = build_model_summary(diff, config)
         assert "Water density" not in result
 
