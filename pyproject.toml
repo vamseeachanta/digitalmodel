@@ -172,6 +172,7 @@ dependencies = [
     "meshio>=5.3.0,<6.0.0",  # Multi-format mesh I/O (VTK, STL, Gmsh, Abaqus, etc.)
     "pygmt>=0.13.0",  # Python interface to GMT for bathymetric/offshore mapping (requires GMT system lib)
     "sectionproperties>=3.4.0",  # Cross-section geometric/warping properties via FEM (AISC, Eurocode, AS)
+    "pyvista>=0.47.1",
 ]
 
 [project.optional-dependencies]
