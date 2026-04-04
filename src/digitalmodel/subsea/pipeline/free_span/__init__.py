@@ -107,7 +107,7 @@ class FreespanVIVFatigue:
         fat_IL = SpanFatigueDamage(inp, freq.fn_IL_hz, il_sigma)
         fat_CF = SpanFatigueDamage(inp, freq.fn_CF_hz, cf_sigma)
         # Use combined damage object for result; store summed values below
-        fat = fat_CF  # kept for life calculation via summed damage
+        # fat = fat_CF  # kept for life calculation via summed damage
 
         # 5 — Allowable span
         allow = SpanAllowableLength(
@@ -142,4 +142,78 @@ class FreespanVIVFatigue:
             allowable_span_m=L_allow,
             span_length_m=inp.span_length_m,
             span_utilization=utilization,
+        )
+
+    # ------------------------------------------------------------------
+    # Multi-current probability-weighted assessment
+    # ------------------------------------------------------------------
+
+    def assess_multi_current(
+        self,
+        current_bins: list[tuple[float, float]],
+    ) -> SpanVIVResult:
+        """Probability-weighted VIV fatigue over multiple current speed bins.
+
+        Computes damage at each current speed and sums weighted by
+        occurrence probability, matching the MATLAB approach:
+
+            D_total = Σ D(Uc_i) × prob_i
+
+        Parameters
+        ----------
+        current_bins
+            List of (current_speed_ms, probability) tuples.
+            Probabilities should sum to 1.0.
+
+        Returns
+        -------
+        SpanVIVResult
+            Result with probability-weighted damage.  Frequencies, onset
+            screening, amplitudes, and stresses correspond to the current
+            speed that produces the maximum (unweighted) damage.
+        """
+        from dataclasses import replace
+
+        if not current_bins:
+            raise ValueError("current_bins must not be empty")
+
+        weighted_damage = 0.0
+        max_damage = -1.0
+        worst_result = None
+
+        for speed, prob in current_bins:
+            inp_i = replace(self._inp, current_velocity_ms=speed)
+            facade_i = FreespanVIVFatigue(
+                inp_i, self._W_sub, self._alpha, self._KC,
+            )
+            result_i = facade_i.assess()
+            weighted_damage += result_i.damage_per_year * prob
+
+            if result_i.damage_per_year > max_damage:
+                max_damage = result_i.damage_per_year
+                worst_result = result_i
+
+        # Build combined result using worst-case details but weighted damage
+        assert worst_result is not None
+        life = 1.0 / weighted_damage if weighted_damage > 0 else math.inf
+
+        return SpanVIVResult(
+            fn_IL_hz=worst_result.fn_IL_hz,
+            fn_CF_hz=worst_result.fn_CF_hz,
+            Ks=worst_result.Ks,
+            Ur_IL=worst_result.Ur_IL,
+            Ur_CF=worst_result.Ur_CF,
+            Ur_onset_IL=worst_result.Ur_onset_IL,
+            Ur_onset_CF=worst_result.Ur_onset_CF,
+            il_viv_onset=worst_result.il_viv_onset,
+            cf_viv_onset=worst_result.cf_viv_onset,
+            il_A_over_D=worst_result.il_A_over_D,
+            cf_A_over_D=worst_result.cf_A_over_D,
+            il_stress_mpa=worst_result.il_stress_mpa,
+            cf_stress_mpa=worst_result.cf_stress_mpa,
+            damage_per_year=weighted_damage,
+            fatigue_life_years=life,
+            allowable_span_m=worst_result.allowable_span_m,
+            span_length_m=worst_result.span_length_m,
+            span_utilization=worst_result.span_utilization,
         )
