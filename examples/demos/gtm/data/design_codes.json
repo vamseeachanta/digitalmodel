@@ -1,0 +1,186 @@
+{
+  "_description": "Design code metadata for GTM demo 2 (wall thickness sizing). Contains safety factors, formula references, and key parameters for multi-code comparison of subsea pipeline wall thickness design.",
+  "_version": "1.0",
+  "codes": [
+    {
+      "id": "DNV-ST-F101",
+      "name": "DNV-ST-F101",
+      "full_title": "Submarine Pipeline Systems",
+      "edition_year": 2021,
+      "issuing_body": "DNV (Det Norske Veritas)",
+      "approach": "Load and Resistance Factor Design (LRFD)",
+      "key_clauses": {
+        "pressure_containment": "Sec 5.4.2",
+        "system_collapse": "Sec 5.4.3",
+        "propagation_buckling": "Sec 5.4.4",
+        "combined_loading": "Sec 5.4.5",
+        "material_requirements": "Sec 5.3",
+        "safety_class_definition": "Sec 2.3"
+      },
+      "safety_classes": {
+        "Low": {
+          "description": "Where failure implies low risk of human injury and minor environmental and economic consequences (e.g., water injection lines in remote locations)",
+          "gamma_SC": 1.046,
+          "usage_factor_equiv": 0.83
+        },
+        "Medium": {
+          "description": "For conditions where failure implies risk of significant environmental or economic consequences (e.g., typical oil/gas production pipeline)",
+          "gamma_SC": 1.138,
+          "usage_factor_equiv": 0.77
+        },
+        "High": {
+          "description": "For conditions where failure implies significant risk of human injury or very large environmental/economic consequences (e.g., pipeline near platform, riser)",
+          "gamma_SC": 1.308,
+          "usage_factor_equiv": 0.67
+        }
+      },
+      "resistance_factors": {
+        "gamma_m": 1.15,
+        "_note": "Material resistance factor per Sec 5.4.2.1",
+        "alpha_U": 0.96,
+        "_note_alpha_U": "Material strength de-rating factor for normal use. alpha_U = 1.0 for supplementary requirement U."
+      },
+      "load_effect_factors": {
+        "gamma_F": {
+          "functional": 1.1,
+          "environmental": 1.3,
+          "accidental": 1.0
+        },
+        "gamma_E": 1.3,
+        "gamma_A": 1.0,
+        "_note": "Load effect factors per Table 5-3"
+      },
+      "pressure_containment_formula": {
+        "equation": "p_b = (2 * t / (D - t)) * (f_cb / sqrt(3)) * (2 / sqrt(3))",
+        "where": {
+          "p_b": "Burst pressure (characteristic resistance)",
+          "t": "Wall thickness (minus corrosion and fabrication tolerances)",
+          "D": "Nominal outside diameter",
+          "f_cb": "min(f_y, f_u/1.15) where f_y = SMYS * alpha_U, f_u = SMTS * alpha_U"
+        },
+        "check": "p_li - p_e <= p_b / (gamma_m * gamma_SC)",
+        "_note": "p_li = local incidental pressure, p_e = external pressure"
+      },
+      "collapse_formula": {
+        "equation": "(p_c - p_el)(p_c^2 - p_p^2) = p_c * p_el * p_p * f_0 * (D/t)",
+        "where": {
+          "p_el": "Elastic collapse pressure = 2*E*(t/D)^3 / (1-nu^2)",
+          "p_p": "Plastic collapse pressure = f_y * alpha_fab * 2*t/D",
+          "f_0": "Ovality = (D_max - D_min) / D_nom, typically 0.005-0.015"
+        },
+        "_note": "Sec 5.4.3. Requires iterative solution for p_c."
+      },
+      "fabrication_tolerance_mm": 1.0,
+      "ovality_default": 0.005,
+      "temperature_derating": {
+        "up_to_50C": 0,
+        "at_100C_mpa": 30,
+        "at_150C_mpa": 50,
+        "at_200C_mpa": 70,
+        "_note": "Approximate yield strength derating for carbon steel per DNV-ST-F101 Table 5-1"
+      }
+    },
+    {
+      "id": "API-RP-1111",
+      "name": "API RP 1111",
+      "full_title": "Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+      "edition_year": 2015,
+      "issuing_body": "American Petroleum Institute",
+      "approach": "Working Stress Design (WSD) with design factors",
+      "key_clauses": {
+        "internal_pressure": "Sec 4.3.2",
+        "collapse": "Sec 4.3.3",
+        "combined_pressure_bending": "Sec 4.3.4",
+        "propagation_buckling": "Sec 4.3.5",
+        "material": "Sec 3.2"
+      },
+      "design_factors": {
+        "fd_hoop_stress": 0.72,
+        "fd_collapse": 0.80,
+        "fd_propagation": 0.80,
+        "fd_combined": 0.90,
+        "_note": "fd = design factor applied to SMYS for allowable stress. 0.72 is standard for offshore pipelines per API RP 1111."
+      },
+      "internal_pressure_formula": {
+        "equation": "t_min = P_d * D / (2 * S * fd * T)",
+        "where": {
+          "P_d": "Design pressure (internal minus external)",
+          "D": "Nominal outside diameter",
+          "S": "SMYS of pipe material",
+          "fd": "Design factor (0.72 for standard offshore)",
+          "T": "Temperature de-rating factor"
+        },
+        "check": "Barlow formula basis: hoop stress = P*D/(2*t) <= fd * S * T",
+        "_note": "Classic Barlow-based WSD approach"
+      },
+      "collapse_formula": {
+        "equation": "P_c = P_y * P_e / sqrt(P_y^2 + P_e^2)",
+        "where": {
+          "P_y": "Yield pressure = 2 * S * t / D",
+          "P_e": "Elastic buckling pressure = 2 * E * (t/D)^3 / (1-nu^2)"
+        },
+        "_note": "Simplified collapse per API RP 1111 Sec 4.3.3. External pressure <= fd * P_c."
+      },
+      "temperature_derating": {
+        "factor_at_ambient": 1.0,
+        "factor_at_121C": 0.967,
+        "factor_at_149C": 0.933,
+        "factor_at_177C": 0.900,
+        "factor_at_204C": 0.867,
+        "factor_at_232C": 0.833,
+        "_note": "Per ASME B31.4 / B31.8 temperature de-rating for carbon steel"
+      },
+      "fabrication_tolerance_mm": 1.0,
+      "ovality_default": 0.005
+    },
+    {
+      "id": "PD-8010-2",
+      "name": "PD 8010-2",
+      "full_title": "Code of Practice for Pipelines - Part 2: Subsea pipelines",
+      "edition_year": 2015,
+      "issuing_body": "BSI (British Standards Institution)",
+      "approach": "Working Stress Design (WSD) with design factors",
+      "key_clauses": {
+        "hoop_stress": "Cl. 6.4.2.1",
+        "collapse": "Cl. 6.4.2.2",
+        "propagation_buckling": "Cl. 6.4.2.3",
+        "equivalent_stress": "Cl. 6.4.3",
+        "on_bottom_stability": "Cl. 6.6"
+      },
+      "design_factors": {
+        "fd_hoop_operational": 0.72,
+        "fd_hoop_hydrotest": 0.96,
+        "fd_collapse": 0.80,
+        "fd_equivalent_stress": 0.90,
+        "_note": "Design factor 0.72 for hoop stress in operational condition. Based on BS tradition aligned with ASME B31.8."
+      },
+      "hoop_stress_formula": {
+        "equation": "sigma_h = (P_i - P_e) * D / (2 * t)",
+        "check": "sigma_h <= fd * SMYS",
+        "where": {
+          "sigma_h": "Hoop stress (thin-wall Barlow formula)",
+          "P_i": "Internal design pressure",
+          "P_e": "External pressure (hydrostatic)",
+          "D": "Nominal outside diameter",
+          "t": "Minimum wall thickness (nominal minus tolerances and corrosion allowance)"
+        },
+        "_note": "Same Barlow basis as API, but PD 8010-2 has additional equivalent stress check"
+      },
+      "equivalent_stress_check": {
+        "equation": "sigma_e = sqrt(sigma_h^2 + sigma_a^2 - sigma_h*sigma_a + 3*tau^2)",
+        "check": "sigma_e <= 0.9 * SMYS",
+        "_note": "Von Mises equivalent stress including hoop, axial, and shear. Per Cl. 6.4.3."
+      },
+      "fabrication_tolerance_mm": 1.0,
+      "ovality_default": 0.005,
+      "temperature_derating": {
+        "_note": "Uses ASME B31.8 temperature de-rating factors (same as API RP 1111 values)"
+      }
+    }
+  ],
+  "comparison_notes": {
+    "general": "DNV-ST-F101 uses LRFD (partial safety factors on loads and resistance separately), while API RP 1111 and PD 8010-2 use WSD (single design factor). DNV approach is more nuanced but more complex.",
+    "conservatism_ranking": "DNV High Safety Class > PD 8010-2 > DNV Medium SC ≈ API RP 1111 > DNV Low SC (generally, but depends on specific load case and D/t ratio)",
+    "typical_differences": "Wall thickness from DNV Medium SC is typically 0-5% thicker than API/PD 8010-2 for pressure containment. Collapse checks can drive larger differences for deepwater (high D/t) designs."
+  }
+}

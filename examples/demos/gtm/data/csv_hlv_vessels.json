@@ -1,0 +1,182 @@
+{
+  "_description": "Construction Support Vessel (CSV) and Heavy Lift Vessel (HLV) database for GTM demos 3 and 5. Vessel parameters are representative of real vessel classes but are not exact specifications of any named vessel.",
+  "_version": "1.0",
+  "_references": [
+    "DNV-RP-H103 (2011) - Modelling and Analysis of Marine Operations",
+    "DNV-ST-N001 (2021) - Marine Operations and Marine Warranty",
+    "DNV-OS-H101 (2011) - Marine Operations, General"
+  ],
+  "units": {
+    "length": "m",
+    "mass": "te (metric tonnes)",
+    "force": "kN",
+    "angle": "degrees",
+    "period": "seconds",
+    "rao_heave": "m/m (heave amplitude / wave amplitude)",
+    "rao_roll": "deg/m (roll amplitude / wave amplitude)"
+  },
+  "vessels": [
+    {
+      "id": "CSV-001",
+      "name": "Large CSV",
+      "representative_class": "Heerema Aegir / Seven Borealis class",
+      "type": "CSV",
+      "general": {
+        "loa_m": 210.0,
+        "beam_m": 46.0,
+        "depth_m": 20.0,
+        "draft_operational_m": 12.0,
+        "displacement_te": 60000,
+        "deadweight_te": 20000,
+        "dp_class": "DP3",
+        "max_water_depth_m": 3000,
+        "accommodation_pob": 300
+      },
+      "crane_main": {
+        "type": "Fully revolving",
+        "swl_max_te": 5000,
+        "swl_max_radius_m": 20.0,
+        "crane_tip_position_rel_cog": {
+          "x_m": 40.0,
+          "y_m": 20.0,
+          "z_m": 50.0,
+          "_note": "x=forward, y=port, z=above CoG"
+        },
+        "crane_capacity_curve": [
+          {"radius_m": 20.0, "swl_te": 5000},
+          {"radius_m": 25.0, "swl_te": 4500},
+          {"radius_m": 30.0, "swl_te": 4000},
+          {"radius_m": 35.0, "swl_te": 3500},
+          {"radius_m": 40.0, "swl_te": 2800},
+          {"radius_m": 50.0, "swl_te": 2000}
+        ],
+        "hoist_speed_m_per_min": 10.0,
+        "slew_speed_deg_per_min": 30.0,
+        "max_hook_height_m": 60.0,
+        "main_wire_mbl_te": 6500,
+        "main_wire_diameter_mm": 128
+      },
+      "motion_characteristics": {
+        "_note": "Simplified RAO peaks for demonstration. Full RAOs would be frequency-dependent transfer functions.",
+        "heave_rao": {
+          "peak_amplitude_m_per_m": 0.8,
+          "peak_period_s": 10.0,
+          "_description": "Peak heave response per unit wave amplitude"
+        },
+        "roll_rao": {
+          "peak_amplitude_deg_per_m": 3.0,
+          "peak_period_s": 12.0,
+          "_description": "Peak roll response per unit wave amplitude"
+        },
+        "pitch_rao": {
+          "peak_amplitude_deg_per_m": 1.5,
+          "peak_period_s": 9.0
+        },
+        "natural_periods": {
+          "heave_s": 10.0,
+          "roll_s": 14.0,
+          "pitch_s": 10.0
+        }
+      },
+      "operational_limits": {
+        "heavy_lift": {
+          "max_hs_m": 2.5,
+          "max_tp_range_s": [6, 14],
+          "max_wind_speed_ms": 15.0,
+          "max_current_ms": 1.5,
+          "_note": "Limits depend on specific lift weight, rigging, and weather window requirements per DNV-ST-N001"
+        },
+        "light_lift": {
+          "max_hs_m": 3.5,
+          "max_wind_speed_ms": 20.0
+        },
+        "dp_operations": {
+          "max_hs_m": 4.5,
+          "max_wind_speed_ms": 25.0,
+          "max_current_ms": 2.0
+        }
+      }
+    },
+    {
+      "id": "CSV-002",
+      "name": "Medium CSV",
+      "representative_class": "Normand Maximus / Seven Arctic class",
+      "type": "CSV",
+      "general": {
+        "loa_m": 157.0,
+        "beam_m": 27.0,
+        "depth_m": 12.0,
+        "draft_operational_m": 8.0,
+        "displacement_te": 22000,
+        "deadweight_te": 7000,
+        "dp_class": "DP2",
+        "max_water_depth_m": 3000,
+        "accommodation_pob": 140
+      },
+      "crane_main": {
+        "type": "Fully revolving",
+        "swl_max_te": 2500,
+        "swl_max_radius_m": 15.0,
+        "crane_tip_position_rel_cog": {
+          "x_m": 30.0,
+          "y_m": 15.0,
+          "z_m": 35.0,
+          "_note": "x=forward, y=port, z=above CoG"
+        },
+        "crane_capacity_curve": [
+          {"radius_m": 15.0, "swl_te": 2500},
+          {"radius_m": 20.0, "swl_te": 2200},
+          {"radius_m": 25.0, "swl_te": 1800},
+          {"radius_m": 30.0, "swl_te": 1400},
+          {"radius_m": 35.0, "swl_te": 1000},
+          {"radius_m": 40.0, "swl_te": 800}
+        ],
+        "hoist_speed_m_per_min": 8.0,
+        "slew_speed_deg_per_min": 25.0,
+        "max_hook_height_m": 45.0,
+        "main_wire_mbl_te": 3500,
+        "main_wire_diameter_mm": 96
+      },
+      "motion_characteristics": {
+        "_note": "Simplified RAO peaks. Smaller vessel = higher motions.",
+        "heave_rao": {
+          "peak_amplitude_m_per_m": 1.2,
+          "peak_period_s": 8.0,
+          "_description": "Peak heave response per unit wave amplitude"
+        },
+        "roll_rao": {
+          "peak_amplitude_deg_per_m": 5.0,
+          "peak_period_s": 10.0,
+          "_description": "Peak roll response per unit wave amplitude"
+        },
+        "pitch_rao": {
+          "peak_amplitude_deg_per_m": 2.5,
+          "peak_period_s": 7.0
+        },
+        "natural_periods": {
+          "heave_s": 8.0,
+          "roll_s": 10.0,
+          "pitch_s": 8.0
+        }
+      },
+      "operational_limits": {
+        "heavy_lift": {
+          "max_hs_m": 2.0,
+          "max_tp_range_s": [5, 12],
+          "max_wind_speed_ms": 12.0,
+          "max_current_ms": 1.0,
+          "_note": "More restrictive than Large CSV due to higher motions and lower crane capacity"
+        },
+        "light_lift": {
+          "max_hs_m": 3.0,
+          "max_wind_speed_ms": 18.0
+        },
+        "dp_operations": {
+          "max_hs_m": 4.0,
+          "max_wind_speed_ms": 22.0,
+          "max_current_ms": 1.5
+        }
+      }
+    }
+  ]
+}

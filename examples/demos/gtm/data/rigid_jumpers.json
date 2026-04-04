@@ -1,0 +1,146 @@
+{
+  "_description": "Rigid jumper catalog for GTM demos 1 (freespan/VIV) and 5 (installation analysis). All jumpers are 8in (219.1mm OD) API 5L X65 with 18.26mm wall thickness and 3mm FBE anti-corrosion coating. Mass values calculated from first principles.",
+  "_version": "1.0",
+  "_references": [
+    "API 5L (46th Ed, 2018) - Line Pipe",
+    "DNV-RP-F105 (2006) - Free Spanning Pipelines",
+    "DNV-RP-H103 (2011) - Modelling and Analysis of Marine Operations"
+  ],
+  "common_properties": {
+    "nominal_size": "8in",
+    "od_mm": 219.1,
+    "od_m": 0.2191,
+    "wt_mm": 18.26,
+    "wt_m": 0.0183,
+    "id_mm": 182.58,
+    "id_m": 0.1826,
+    "grade": "X65",
+    "smys_mpa": 448,
+    "smts_mpa": 531,
+    "smys_pa": 448000000,
+    "smts_pa": 531000000,
+    "youngs_modulus_pa": 207000000000,
+    "poissons_ratio": 0.3,
+    "steel_density_kg_m3": 7850,
+    "anti_corrosion_coating": {
+      "type": "FBE (Fusion Bonded Epoxy)",
+      "thickness_mm": 3.0,
+      "thickness_m": 0.003,
+      "density_kg_m3": 950
+    },
+    "outer_diameter_incl_coating_mm": 225.1,
+    "outer_diameter_incl_coating_m": 0.2251,
+    "a_steel_m2": 0.01152128,
+    "i_steel_m4": 5.857e-05,
+    "section_modulus_m3": 5.346e-04,
+    "mass_per_meter": {
+      "steel_kg_per_m": 90.44,
+      "coating_kg_per_m": 1.99,
+      "total_air_kg_per_m": 92.43,
+      "submerged_kg_per_m": 51.64,
+      "_note": "Submerged mass = total mass - displaced seawater mass"
+    },
+    "weight_per_meter": {
+      "air_n_per_m": 906.49,
+      "submerged_n_per_m": 506.41,
+      "_note": "Weight = mass * 9.80665 m/s2"
+    }
+  },
+  "jumpers": [
+    {
+      "id": "JMP-20",
+      "name": "Jumper-20m",
+      "description": "Short rigid jumper for well-to-manifold connection",
+      "length_m": 20.0,
+      "total_mass_air_kg": 1848.6,
+      "total_mass_air_te": 1.85,
+      "total_mass_submerged_kg": 1032.8,
+      "total_weight_air_kn": 18.13,
+      "total_weight_submerged_kn": 10.13,
+      "configuration": {
+        "type": "M-shape",
+        "number_of_bends": 4,
+        "bend_radius_m": 3.0,
+        "horizontal_span_m": 15.0,
+        "vertical_clearance_m": 3.0,
+        "_note": "Typical M-shape for short thermal expansion accommodation"
+      }
+    },
+    {
+      "id": "JMP-40",
+      "name": "Jumper-40m",
+      "description": "Medium rigid jumper for manifold-to-PLET connection",
+      "length_m": 40.0,
+      "total_mass_air_kg": 3697.2,
+      "total_mass_air_te": 3.70,
+      "total_mass_submerged_kg": 2065.6,
+      "total_weight_air_kn": 36.26,
+      "total_weight_submerged_kn": 20.26,
+      "configuration": {
+        "type": "M-shape",
+        "number_of_bends": 4,
+        "bend_radius_m": 5.0,
+        "horizontal_span_m": 30.0,
+        "vertical_clearance_m": 5.0,
+        "_note": "Standard M-shape configuration"
+      }
+    },
+    {
+      "id": "JMP-60",
+      "name": "Jumper-60m",
+      "description": "Long rigid jumper for manifold-to-manifold tie-in",
+      "length_m": 60.0,
+      "total_mass_air_kg": 5545.8,
+      "total_mass_air_te": 5.55,
+      "total_mass_submerged_kg": 3098.4,
+      "total_weight_air_kn": 54.39,
+      "total_weight_submerged_kn": 30.38,
+      "configuration": {
+        "type": "M-shape",
+        "number_of_bends": 6,
+        "bend_radius_m": 5.0,
+        "horizontal_span_m": 45.0,
+        "vertical_clearance_m": 6.0,
+        "_note": "Extended M-shape with additional expansion loops"
+      }
+    },
+    {
+      "id": "JMP-80",
+      "name": "Jumper-80m",
+      "description": "Extra-long rigid jumper for distant subsea tie-back",
+      "length_m": 80.0,
+      "total_mass_air_kg": 7394.5,
+      "total_mass_air_te": 7.39,
+      "total_mass_submerged_kg": 4131.2,
+      "total_weight_air_kn": 72.52,
+      "total_weight_submerged_kn": 40.51,
+      "configuration": {
+        "type": "W-shape",
+        "number_of_bends": 8,
+        "bend_radius_m": 5.0,
+        "horizontal_span_m": 60.0,
+        "vertical_clearance_m": 7.0,
+        "_note": "W-shape for large thermal expansion. Requires careful VIV assessment."
+      }
+    },
+    {
+      "id": "JMP-100",
+      "name": "Jumper-100m",
+      "description": "Maximum length rigid jumper for extended tie-back",
+      "length_m": 100.0,
+      "total_mass_air_kg": 9243.1,
+      "total_mass_air_te": 9.24,
+      "total_mass_submerged_kg": 5164.0,
+      "total_weight_air_kn": 90.65,
+      "total_weight_submerged_kn": 50.64,
+      "configuration": {
+        "type": "W-shape",
+        "number_of_bends": 10,
+        "bend_radius_m": 5.0,
+        "horizontal_span_m": 75.0,
+        "vertical_clearance_m": 8.0,
+        "_note": "Approaching practical limit for rigid jumpers. Flexible jumper may be preferred at this length."
+      }
+    }
+  ]
+}
