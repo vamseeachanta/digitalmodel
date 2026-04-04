@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Wall Thickness — Multi-Code Comparison — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>Pipeline Wall Thickness — Multi-Code Comparison</h1>
+    <div class="subtitle">72 parametric cases across 6 pipe sizes, 3 design codes, and 4 operating pressures</div>
+    <div class="case-badge">72 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-04-04 11:31 UTC · demo_02</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This analysis compares minimum wall thickness requirements across three widely-used
+    subsea pipeline design codes. Each code uses a different philosophy:</p>
+    
+    <h3>DNV-ST-F101 (2021)</h3>
+    <p>Uses <strong>Load and Resistance Factor Design (LRFD)</strong> with partial safety factors
+    on both loads and resistance. The most granular approach with separate factors for safety class
+    (Low/Medium/High), material resistance (γ<sub>m</sub>=1.15), and condition
+    (γ<sub>SC</sub> varies by safety class). Performs four limit state checks: pressure containment,
+    collapse, propagation buckling, and combined loading.</p>
+    
+    <h3>API RP 1111 (2015)</h3>
+    <p>Uses <strong>Working Stress Design (WSD)</strong> with single design factors applied to
+    material strength. The burst check uses a Barlow-based approach with f<sub>d</sub>=0.72.
+    Collapse uses an elastic-plastic transition formula. Generally the least conservative
+    of the three codes for typical offshore conditions.</p>
+    
+    <h3>PD 8010-2 (2015)</h3>
+    <p>Also uses <strong>Working Stress Design (WSD)</strong> based on British Standards tradition.
+    Similar design factor approach (f<sub>d</sub>=0.72 for hoop stress) with an additional
+    Von Mises equivalent stress check (σ<sub>e</sub> ≤ 0.9 × SMYS). Includes collapse and
+    propagation checks similar to API.</p>
+    
+    <h3>Common Parameters</h3>
+    <ul>
+        <li>Grade: API 5L X65 (SMYS = 448 MPa, SMTS = 531 MPa)</li>
+        <li>Water depth: 500 m (external pressure ≈ 5.02 MPa)</li>
+        <li>Internal pressures: 10, 15, 20, 25 MPa</li>
+        <li>Corrosion allowance: 1 mm</li>
+        <li>Safety Class: Medium (DNV), standard factors (API, PD 8010-2)</li>
+    </ul>
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>DNV-ST-F101 (2021) — Submarine Pipeline Systems</li><li>API RP 1111 (2015) — Offshore Hydrocarbon Pipelines (Limit State Design)</li><li>PD 8010-2 (2015) — Code of Practice for Pipelines – Part 2: Subsea Pipelines</li><li>API 5L (2018) — Line Pipe (material grades)</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Summary: Minimum Wall Thickness by Pipe Size and Code</h2>
+            <p>At 20 MPa internal pressure, 500m water depth, X65 grade, Safety Class Medium</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Pipe Size</th>
+      <th>OD (mm)</th>
+      <th>Code</th>
+      <th>Min WT (mm)</th>
+      <th>Governing Check</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6"</td>
+      <td>168.3</td>
+      <td>DNV-ST-F101</td>
+      <td>8.51</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>168.3</td>
+      <td>API RP 1111</td>
+      <td>7.62</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>168.3</td>
+      <td>PD 8010-2</td>
+      <td>8.57</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>219.1</td>
+      <td>DNV-ST-F101</td>
+      <td>10.79</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>219.1</td>
+      <td>API RP 1111</td>
+      <td>9.90</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>219.1</td>
+      <td>PD 8010-2</td>
+      <td>10.90</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>273.1</td>
+      <td>DNV-ST-F101</td>
+      <td>13.19</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>273.1</td>
+      <td>API RP 1111</td>
+      <td>12.30</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>273.1</td>
+      <td>PD 8010-2</td>
+      <td>13.30</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>323.9</td>
+      <td>DNV-ST-F101</td>
+      <td>15.47</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>323.9</td>
+      <td>API RP 1111</td>
+      <td>14.58</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>323.9</td>
+      <td>PD 8010-2</td>
+      <td>15.58</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>406.4</td>
+      <td>DNV-ST-F101</td>
+      <td>19.14</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>406.4</td>
+      <td>API RP 1111</td>
+      <td>18.31</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>406.4</td>
+      <td>PD 8010-2</td>
+      <td>19.31</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>508.0</td>
+      <td>DNV-ST-F101</td>
+      <td>23.65</td>
+      <td>Propagation Buckling</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>508.0</td>
+      <td>API RP 1111</td>
+      <td>22.87</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>508.0</td>
+      <td>PD 8010-2</td>
+      <td>23.87</td>
+      <td>Propagation</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, wall thickness verification
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>All analyses use API 5L X65 grade (SMYS = 448 MPa, SMTS = 531 MPa)</li><li>Water depth fixed at 500 m for all cases (P_ext ≈ 5.02 MPa)</li><li>Corrosion allowance = 1.0 mm internal, 0.0 mm external (intact coating assumed)</li><li>Fabrication tolerance = 12.5% (DNV default for seamless pipe)</li><li>Ovality = 0.5% (Dmax-Dmin)/Dnom — conservative for good-quality pipe</li><li>Seamless pipe fabrication (α_fab = 1.0 for DNV, no UOE derating)</li><li>Temperature derating not applied (operating temperature < 50°C assumed)</li><li>Safety Class Medium used for DNV (typical for production pipelines)</li><li>Lifecycle phases use simplified bending moments and tensions</li><li>No dynamic loading or fatigue effects considered</li><li>Wall thicknesses from standard pipe schedules per ASME B36.10M</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Lifecycle Utilisation by Design Code</div>
+                <div class='chart-subtitle'>Max utilisation across limit states for each lifecycle phase. Use dropdown to select pipe size.</div>
+                <div>                            <div id="chart-lifecycle_utilisation" class="plotly-graph-div" style="height:550px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-lifecycle_utilisation")) {                    Plotly.newPlot(                        "chart-lifecycle_utilisation",                        [{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.9145208556552575,0.9144904154797401,0.3542940780610111,0.45784641878961585,0.2389405048092193],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.21698548892206931,0.21698548892206931,0.33809684092123177,0.25346299547857587,0.21698548892206931],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.2582220012444125,0.2582220012444125,0.391795110749635,0.29371928502460815,0.2582220012444125],"type":"bar"},{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.49344255734151315,0.49324908146368546,0.441065555677723,0.3992700660567265,0.3992700660567265],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.35861820731780086,0.35861820731780086,0.42458781245185134,0.35861820731780086,0.35861820731780086],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.4227183866207598,0.4227183866207598,0.4811160021482066,0.4227183866207598,0.4227183866207598],"type":"bar"},{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":true,"visible":true,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.6925722050913097,0.6925722050913097,0.6925722050913097,0.6925722050913097,0.6925722050913097],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":true,"visible":true,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.6085029800124838,0.6085029800124838,0.6085029800124838,0.6085029800124838,0.6085029800124838],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":true,"visible":true,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.7172680937999704,0.7172680937999704,0.7172680937999704,0.7172680937999704,0.7172680937999704],"type":"bar"},{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.7161864480339707,0.7161864480339707,0.7161864480339707,0.7161864480339707,0.7161864480339707],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.6431766376465753,0.6431766376465753,0.6431766376465753,0.6431766376465753,0.6431766376465753],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[0.7407303027857234,0.7407303027857234,0.7407303027857234,0.7407303027857234,0.7407303027857234],"type":"bar"},{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[1.4300252521469965,1.4300252521469965,1.4300252521469965,1.4300252521469965,1.4300252521469965],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[1.2405225125890549,1.2405225125890549,1.2405225125890549,1.2405225125890549,1.2405225125890549],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[1.4386826794287668,1.4386826794287668,1.4386826794287668,1.4386826794287668,1.4386826794287668],"type":"bar"},{"hovertemplate":"\u003cb\u003eDNV-ST-F101\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"DNV-ST-F101","marker":{"color":"#2c5282"},"name":"DNV-ST-F101","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[3.2682862621245024,3.2682862621245024,3.2682862621245024,3.2682862621245024,3.2682862621245024],"type":"bar"},{"hovertemplate":"\u003cb\u003eAPI RP 1111\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"API RP 1111","marker":{"color":"#ed8936"},"name":"API RP 1111","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[2.6987554885416425,2.6987554885416425,2.6987554885416425,2.6987554885416425,2.6987554885416425],"type":"bar"},{"hovertemplate":"\u003cb\u003ePD 8010-2\u003c\u002fb\u003e\u003cbr\u003ePhase: %{x}\u003cbr\u003eUtilisation: %{y:.3f}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"PD 8010-2","marker":{"color":"#38a169"},"name":"PD 8010-2","showlegend":false,"visible":false,"x":["Installation (empty)","Installation (water-filled)","Hydrotest","Operation","Shutdown"],"y":[3.1811367708647196,3.1811367708647196,3.1811367708647196,3.1811367708647196,3.1811367708647196],"type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"red","dash":"dash","width":2},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":1.0,"y1":1.0,"yref":"y"}],"annotations":[{"showarrow":false,"text":"Pipe Size:","x":0.82,"xanchor":"right","xref":"paper","y":1.15,"yanchor":"bottom","yref":"paper","font":{"size":13}}],"title":{"font":{"size":18},"text":"Lifecycle Utilisation by Design Code"},"xaxis":{"title":{"text":"Lifecycle Phase"}},"yaxis":{"title":{"text":"Max Utilisation Ratio"}},"barmode":"group","height":550,"updatemenus":[{"active":2,"buttons":[{"args":[{"visible":[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"showlegend":[true,true,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]}],"label":"6\" (168.3mm)","method":"update"},{"args":[{"visible":[false,false,false,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false],"showlegend":[false,false,false,true,true,true,false,false,false,false,false,false,false,false,false,false,false,false]}],"label":"8\" (219.1mm)","method":"update"},{"args":[{"visible":[false,false,false,false,false,false,true,true,true,false,false,false,false,false,false,false,false,false],"showlegend":[false,false,false,false,false,false,true,true,true,false,false,false,false,false,false,false,false,false]}],"label":"10\" (273.1mm)","method":"update"},{"args":[{"visible":[false,false,false,false,false,false,false,false,false,true,true,true,false,false,false,false,false,false],"showlegend":[false,false,false,false,false,false,false,false,false,true,true,true,false,false,false,false,false,false]}],"label":"12\" (323.9mm)","method":"update"},{"args":[{"visible":[false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,false,false,false],"showlegend":[false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,false,false,false]}],"label":"16\" (406.4mm)","method":"update"},{"args":[{"visible":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true],"showlegend":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true]}],"label":"20\" (508.0mm)","method":"update"}],"direction":"down","showactive":true,"type":"dropdown","x":0.98,"xanchor":"right","y":1.15,"yanchor":"top"}],"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_02_lifecycle_utilisation", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Minimum Required Wall Thickness vs Pipe Size</div>
+                <div class='chart-subtitle'>At 20 MPa internal pressure, 500m water depth, X65 grade. Shaded band shows code penalty.</div>
+                <div>                            <div id="chart-min_wt_vs_pipe_size" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-min_wt_vs_pipe_size")) {                    Plotly.newPlot(                        "chart-min_wt_vs_pipe_size",                        [{"line":{"color":"#2c5282","width":3},"marker":{"size":8},"mode":"lines+markers","name":"DNV-ST-F101","x":[168.3,219.1,273.1,323.9,406.4,508.0],"y":[8.5107421875,10.792968750000002,13.186523437500002,15.468750000000002,19.142578125,23.6513671875],"type":"scatter"},{"line":{"color":"#ed8936","width":3},"marker":{"size":8},"mode":"lines+markers","name":"API RP 1111","x":[168.3,219.1,273.1,323.9,406.4,508.0],"y":[7.620117187500001,9.90234375,12.2958984375,14.578125,18.3076171875,22.872070312500004],"type":"scatter"},{"line":{"color":"#38a169","width":3},"marker":{"size":8},"mode":"lines+markers","name":"PD 8010-2","x":[168.3,219.1,273.1,323.9,406.4,508.0],"y":[8.56640625,10.904296875,13.297851562500002,15.580078125,19.3095703125,23.874023437500004],"type":"scatter"},{"fill":"toself","fillcolor":"rgba(237,137,54,0.15)","hoverinfo":"skip","line":{"color":"rgba(0,0,0,0)"},"name":"Code Penalty Band","showlegend":true,"x":[168.3,219.1,273.1,323.9,406.4,508.0,508.0,406.4,323.9,273.1,219.1,168.3],"y":[8.56640625,10.904296875,13.297851562500002,15.580078125,19.3095703125,23.874023437500004,22.872070312500004,18.3076171875,14.578125,12.2958984375,9.90234375,7.620117187500001],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Minimum Required Wall Thickness vs Pipe Size"},"legend":{"x":0.02,"y":0.98},"xaxis":{"title":{"text":"Pipe OD (mm)"}},"yaxis":{"title":{"text":"Minimum Wall Thickness (mm)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_02_min_wt_vs_pipe_size", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: Utilisation Heatmap — Pipe Size × Internal Pressure</div>
+                <div class='chart-subtitle'>Each cell uses the minimum standard WT from the pipe catalog. Green = safe, Red = overstressed.</div>
+                <div>                            <div id="chart-utilisation_heatmap" class="plotly-graph-div" style="height:450px; width:1100px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-utilisation_heatmap")) {                    Plotly.newPlot(                        "chart-utilisation_heatmap",                        [{"colorscale":[[0.0,"#38a169"],[0.35,"#38a169"],[0.5,"#d69e2e"],[0.7,"#d69e2e"],[0.85,"#e53e3e"],[1.0,"#e53e3e"]],"hoverinfo":"text","showscale":false,"text":[["Pipe: 6\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.239\u003cbr\u003eGov: propagation_buckling","Pipe: 8\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.399\u003cbr\u003eGov: propagation_buckling","Pipe: 10\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.693\u003cbr\u003eGov: propagation_buckling","Pipe: 12\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.716\u003cbr\u003eGov: propagation_buckling","Pipe: 16\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.430\u003cbr\u003eGov: propagation_buckling","Pipe: 20\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.268\u003cbr\u003eGov: propagation_buckling"],["Pipe: 6\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.239\u003cbr\u003eGov: propagation_buckling","Pipe: 8\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.399\u003cbr\u003eGov: propagation_buckling","Pipe: 10\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.693\u003cbr\u003eGov: propagation_buckling","Pipe: 12\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.716\u003cbr\u003eGov: propagation_buckling","Pipe: 16\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.430\u003cbr\u003eGov: propagation_buckling","Pipe: 20\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.268\u003cbr\u003eGov: propagation_buckling"],["Pipe: 6\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.266\u003cbr\u003eGov: pressure_containment","Pipe: 8\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.399\u003cbr\u003eGov: propagation_buckling","Pipe: 10\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.693\u003cbr\u003eGov: propagation_buckling","Pipe: 12\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.716\u003cbr\u003eGov: propagation_buckling","Pipe: 16\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.430\u003cbr\u003eGov: propagation_buckling","Pipe: 20\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.268\u003cbr\u003eGov: propagation_buckling"],["Pipe: 6\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.354\u003cbr\u003eGov: pressure_containment","Pipe: 8\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.441\u003cbr\u003eGov: pressure_containment","Pipe: 10\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.693\u003cbr\u003eGov: propagation_buckling","Pipe: 12\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.716\u003cbr\u003eGov: propagation_buckling","Pipe: 16\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.430\u003cbr\u003eGov: propagation_buckling","Pipe: 20\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.268\u003cbr\u003eGov: propagation_buckling"]],"x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":["10 MPa","15 MPa","20 MPa","25 MPa"],"z":[[0.2389405048092193,0.3992700660567265,0.6925722050913097,0.7161864480339707,1.4300252521469965,3.2682862621245024],[0.2389405048092193,0.3992700660567265,0.6925722050913097,0.7161864480339707,1.4300252521469965,3.2682862621245024],[0.26560567102898647,0.3992700660567265,0.6925722050913097,0.7161864480339707,1.4300252521469965,3.2682862621245024],[0.3542940780610111,0.441065555677723,0.6925722050913097,0.7161864480339707,1.4300252521469965,3.2682862621245024]],"zmax":2.0,"zmin":0,"type":"heatmap","xaxis":"x","yaxis":"y"},{"colorscale":[[0.0,"#38a169"],[0.35,"#38a169"],[0.5,"#d69e2e"],[0.7,"#d69e2e"],[0.85,"#e53e3e"],[1.0,"#e53e3e"]],"hoverinfo":"text","showscale":false,"text":[["Pipe: 6\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.217\u003cbr\u003eGov: propagation","Pipe: 8\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.359\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.609\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.643\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.241\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 2.699\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.217\u003cbr\u003eGov: propagation","Pipe: 8\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.359\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.609\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.643\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.241\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 2.699\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.253\u003cbr\u003eGov: burst","Pipe: 8\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.359\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.609\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.643\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.241\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 2.699\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.338\u003cbr\u003eGov: burst","Pipe: 8\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.425\u003cbr\u003eGov: burst","Pipe: 10\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.609\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.643\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.241\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 2.699\u003cbr\u003eGov: propagation"]],"x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":["10 MPa","15 MPa","20 MPa","25 MPa"],"z":[[0.21698548892206931,0.35861820731780086,0.6085029800124838,0.6431766376465753,1.2405225125890549,2.6987554885416425],[0.21698548892206931,0.35861820731780086,0.6085029800124838,0.6431766376465753,1.2405225125890549,2.6987554885416425],[0.25346299547857587,0.35861820731780086,0.6085029800124838,0.6431766376465753,1.2405225125890549,2.6987554885416425],[0.33809684092123177,0.42458781245185134,0.6085029800124838,0.6431766376465753,1.2405225125890549,2.6987554885416425]],"zmax":2.0,"zmin":0,"type":"heatmap","xaxis":"x2","yaxis":"y2"},{"colorbar":{"title":{"text":"Utilisation"}},"colorscale":[[0.0,"#38a169"],[0.35,"#38a169"],[0.5,"#d69e2e"],[0.7,"#d69e2e"],[0.85,"#e53e3e"],[1.0,"#e53e3e"]],"hoverinfo":"text","showscale":true,"text":[["Pipe: 6\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.258\u003cbr\u003eGov: propagation","Pipe: 8\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.423\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.717\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.741\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.439\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 10 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.181\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.258\u003cbr\u003eGov: propagation","Pipe: 8\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.423\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.717\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.741\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.439\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 15 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.181\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.294\u003cbr\u003eGov: hoop_stress","Pipe: 8\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.423\u003cbr\u003eGov: propagation","Pipe: 10\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.717\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.741\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.439\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 20 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.181\u003cbr\u003eGov: propagation"],["Pipe: 6\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 14.3 mm\u003cbr\u003eUtil: 0.392\u003cbr\u003eGov: hoop_stress","Pipe: 8\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.481\u003cbr\u003eGov: hoop_stress","Pipe: 10\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 0.717\u003cbr\u003eGov: propagation","Pipe: 12\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 17.5 mm\u003cbr\u003eUtil: 0.741\u003cbr\u003eGov: propagation","Pipe: 16\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 16.7 mm\u003cbr\u003eUtil: 1.439\u003cbr\u003eGov: propagation","Pipe: 20\"\u003cbr\u003eP_int: 25 MPa\u003cbr\u003eWT: 15.1 mm\u003cbr\u003eUtil: 3.181\u003cbr\u003eGov: propagation"]],"x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":["10 MPa","15 MPa","20 MPa","25 MPa"],"z":[[0.2582220012444125,0.4227183866207598,0.7172680937999704,0.7407303027857234,1.4386826794287668,3.1811367708647196],[0.2582220012444125,0.4227183866207598,0.7172680937999704,0.7407303027857234,1.4386826794287668,3.1811367708647196],[0.29371928502460815,0.4227183866207598,0.7172680937999704,0.7407303027857234,1.4386826794287668,3.1811367708647196],[0.391795110749635,0.4811160021482066,0.7172680937999704,0.7407303027857234,1.4386826794287668,3.1811367708647196]],"zmax":2.0,"zmin":0,"type":"heatmap","xaxis":"x3","yaxis":"y3"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.27999999999999997],"title":{"text":"Pipe Size"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Internal Pressure"}},"xaxis2":{"anchor":"y2","domain":[0.36,0.6399999999999999],"title":{"text":"Pipe Size"}},"yaxis2":{"anchor":"x2","domain":[0.0,1.0]},"xaxis3":{"anchor":"y3","domain":[0.72,1.0],"title":{"text":"Pipe Size"}},"yaxis3":{"anchor":"x3","domain":[0.0,1.0]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"DNV-ST-F101","x":0.13999999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"API RP 1111","x":0.49999999999999994,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"PD 8010-2","x":0.86,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"font":{"size":18},"text":"Utilisation Heatmap: Pipe Size × Internal Pressure"},"height":450,"width":1100,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_02_utilisation_heatmap", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 4: Steel Weight Penalty — Code Conservatism Cost</div>
+                <div class='chart-subtitle'>Difference in required WT between most and least conservative code, at 20 MPa.</div>
+                <div>                            <div id="chart-weight_penalty" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-weight_penalty")) {                    Plotly.newPlot(                        "chart-weight_penalty",                        [{"hovertemplate":"\u003cb\u003e%{x}\u003c\u002fb\u003e\u003cbr\u003eExtra: %{y:.1f} kg\u002fm\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2c5282"},"name":"Extra Steel (kg\u002fm)","x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":[3.549858500208941,4.899763339979386,6.115797593969691,7.258262668423309,9.112501350510534,11.397431499418179],"type":"bar","xaxis":"x","yaxis":"y"},{"hovertemplate":"\u003cb\u003e%{x}\u003c\u002fb\u003e\u003cbr\u003eWT increase: %{y:.1f}%%\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":8},"mode":"lines+markers","name":"WT Increase (%)","x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":[12.418300653594763,10.11834319526627,8.148677626876367,6.872990353697747,5.472875660105616,4.380684001537081],"type":"scatter","xaxis":"x","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.94]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Extra Steel Weight (kg\u002fm)"}},"yaxis2":{"anchor":"x","overlaying":"y","side":"right","title":{"text":"Wall Thickness Increase (%)"}},"annotations":[{"align":"center","bgcolor":"rgba(237,137,54,0.1)","bordercolor":"#ed8936","borderpad":8,"borderwidth":1,"font":{"color":"#2d3748","size":13},"showarrow":false,"text":"On a 50km pipeline, choosing PD 8010-2 over API RP 1111\u003cbr\u003ecosts an extra \u003cb\u003e363 tonnes\u003c\u002fb\u003e of steel","x":0.5,"xref":"paper","y":-0.22,"yref":"paper"}],"title":{"font":{"size":18},"text":"Weight Penalty: Most vs Least Conservative Code"},"margin":{"b":60,"l":60,"r":30,"t":40},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_02_weight_penalty", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 5: Governing Limit State Distribution</div>
+                <div class='chart-subtitle'>Which limit state governs across all parametric cases, broken down by code.</div>
+                <div>                            <div id="chart-governing_limit_state" class="plotly-graph-div" style="height:550px; width:700px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-governing_limit_state")) {                    Plotly.newPlot(                        "chart-governing_limit_state",                        [{"branchvalues":"total","hovertemplate":"\u003cb\u003e%{label}\u003c\u002fb\u003e\u003cbr\u003eCount: %{value}\u003cbr\u003e%{percentRoot:.1%} of total\u003cextra\u003e\u003c\u002fextra\u003e","insidetextorientation":"radial","labels":["All Cases","Pressure Containment","API RP 1111","DNV-ST-F101","PD 8010-2","Propagation Buckling","API RP 1111","DNV-ST-F101","PD 8010-2"],"marker":{"colors":["#f7fafc","#2c5282","#2c5282","#2c5282","#2c5282","#38a169","#38a169","#38a169","#38a169"]},"parents":["","All Cases","Pressure Containment","Pressure Containment","Pressure Containment","All Cases","Propagation Buckling","Propagation Buckling","Propagation Buckling"],"textinfo":"label+percent parent","values":[72,9,3,3,3,63,21,21,21],"type":"sunburst"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Governing Limit State Distribution"},"height":550,"width":700,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_02_governing_limit_state", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> DNV-ST-F101 (2021) — Submarine Pipeline Systems · API RP 1111 (2015) — Offshore Hydrocarbon Pipelines (Limit State Design) · PD 8010-2 (2015) — Code of Practice for Pipelines – Part 2: Subsea Pipelines · API 5L (2018) — Line Pipe (material grades)</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>

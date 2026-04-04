@@ -1,0 +1,61 @@
+{
+  "_description": "DNV-RP-F105 freespan/VIV screening results. One row per parametric case (pipe x span x current x gap ratio). Populated by demo_01_dnv_freespan.py.",
+  "_schema": {
+    "case_id": "Unique case identifier, e.g. FSP-001",
+    "pipe": "Pipe geometry and material from pipelines.json or rigid_jumpers.json",
+    "span": "Span geometry and soil conditions",
+    "environment": "Near-bottom current velocity",
+    "results.natural_freq_inline_hz": "First inline natural frequency [Hz], DNV-RP-F105 Eq 3.6",
+    "results.natural_freq_crossflow_hz": "First crossflow natural frequency [Hz]",
+    "results.reduced_velocity_inline": "V_R,IL = U / (f_n,IL * D), screening parameter",
+    "results.reduced_velocity_crossflow": "V_R,CF = U / (f_n,CF * D)",
+    "results.viv_onset_inline": "PASS if V_R,IL < onset threshold per F105 Table 3-2",
+    "results.viv_onset_crossflow": "PASS if V_R,CF < onset threshold",
+    "results.static_deflection_m": "Static deflection at midspan under self-weight",
+    "results.max_allowable_span_m": "Max span before VIV onset at this current speed",
+    "results.overall_status": "PASS = no VIV concern, FAIL = VIV onset predicted",
+    "results.governing_check": "Which check governs: inline_viv, crossflow_viv, or static_deflection"
+  },
+  "cases": [
+    {
+      "case_id": "FSP-001",
+      "pipe": {"type": "pipeline", "nominal_size": "8in", "od_m": 0.2191, "wt_m": 0.0183, "grade": "X65", "smys_mpa": 448, "submerged_weight_nm": null},
+      "span": {"length_m": 20.0, "gap_ratio": 0.5, "soil_type": "stiff_clay", "soil_stiffness_kpa": 10.0},
+      "environment": {"current_velocity_ms": 0.5},
+      "results": {
+        "natural_freq_inline_hz": null,
+        "natural_freq_crossflow_hz": null,
+        "reduced_velocity_inline": null,
+        "reduced_velocity_crossflow": null,
+        "viv_onset_inline": null,
+        "viv_onset_crossflow": null,
+        "static_deflection_m": null,
+        "max_allowable_span_m": null,
+        "overall_status": null,
+        "governing_check": null
+      },
+      "code_ref": "DNV-RP-F105 (2006), Sec 3.3, 4.3",
+      "timestamp": null
+    },
+    {
+      "case_id": "FSP-002",
+      "pipe": {"type": "jumper", "nominal_size": "8in", "od_m": 0.2191, "wt_m": 0.0183, "grade": "X65", "smys_mpa": 448, "submerged_weight_nm": null},
+      "span": {"length_m": 25.0, "gap_ratio": 1.0, "soil_type": "soft_clay", "soil_stiffness_kpa": 1.0},
+      "environment": {"current_velocity_ms": 0.7},
+      "results": {
+        "natural_freq_inline_hz": null,
+        "natural_freq_crossflow_hz": null,
+        "reduced_velocity_inline": null,
+        "reduced_velocity_crossflow": null,
+        "viv_onset_inline": null,
+        "viv_onset_crossflow": null,
+        "static_deflection_m": null,
+        "max_allowable_span_m": null,
+        "overall_status": null,
+        "governing_check": null
+      },
+      "code_ref": "DNV-RP-F105 (2006), Sec 3.3, 4.3",
+      "timestamp": null
+    }
+  ]
+}

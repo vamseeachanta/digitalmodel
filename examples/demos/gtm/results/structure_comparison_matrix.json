@@ -1,0 +1,96 @@
+{
+  "_description": "Cross-structure comparison matrix. For a given vessel/code, compare performance across structures. Answers: 'Which mudmat is too heavy?' 'Which pipe size needs the thickest wall?' 'At what span length does VIV become a problem?'",
+  "_usage": [
+    "Compare 50te vs 100te vs 200te mudmat on same vessel at same depth",
+    "Compare 8in vs 12in vs 16in pipeline wall thickness across 3 codes",
+    "Compare 20m vs 60m vs 100m jumper installation feasibility",
+    "Find the breakpoint where a structure goes from GO to NO_GO"
+  ],
+  "comparisons": [
+    {
+      "category": "mudmats",
+      "demo_source": "demo_03",
+      "structures": ["Mudmat-S-50te", "Mudmat-M-100te", "Mudmat-L-200te"],
+      "comparison_axes": ["water_depth_m", "vessel"],
+      "by_vessel": {
+        "Large CSV": {
+          "pass_count_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
+          "max_depth_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
+          "crane_util_at_1500m": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null}
+        },
+        "Medium CSV": {
+          "pass_count_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
+          "max_depth_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
+          "crane_util_at_1500m": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null}
+        }
+      }
+    },
+    {
+      "category": "rigid_jumpers",
+      "demo_source": "demo_05",
+      "structures": ["Jumper-20m", "Jumper-40m", "Jumper-60m", "Jumper-80m", "Jumper-100m"],
+      "comparison_axes": ["water_depth_m", "vessel"],
+      "by_vessel": {
+        "Large CSV": {
+          "pass_count_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
+          "max_depth_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
+          "crane_util_at_2000m": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null}
+        },
+        "Medium CSV": {
+          "pass_count_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
+          "max_depth_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
+          "crane_util_at_2000m": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null}
+        }
+      }
+    },
+    {
+      "category": "pipelines_freespan",
+      "demo_source": "demo_01",
+      "structures": ["8in", "12in", "16in"],
+      "comparison_axes": ["span_length_m", "current_velocity_ms"],
+      "max_allowable_span_by_current": {
+        "8in":  {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null},
+        "12in": {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null},
+        "16in": {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null}
+      },
+      "viv_onset_span_by_pipe": {
+        "inline":     {"8in": null, "12in": null, "16in": null},
+        "crossflow":  {"8in": null, "12in": null, "16in": null}
+      }
+    },
+    {
+      "category": "pipelines_wall_thickness",
+      "demo_source": "demo_02",
+      "structures": ["6in", "8in", "10in", "12in", "16in", "20in"],
+      "comparison_axes": ["design_code", "internal_pressure_mpa"],
+      "min_wt_by_code": {
+        "DNV-ST-F101": {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null},
+        "API-RP-1111":  {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null},
+        "PD-8010-2":    {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null}
+      },
+      "most_conservative_code_by_pipe": {
+        "6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null
+      },
+      "weight_penalty_pct": {
+        "_description": "% extra steel weight if using most conservative code vs least conservative",
+        "6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null
+      }
+    },
+    {
+      "category": "shallow_water_pipelay",
+      "demo_source": "demo_04",
+      "structures": ["8in", "12in", "16in", "20in", "24in"],
+      "comparison_axes": ["water_depth_m", "vessel"],
+      "by_vessel": {
+        "Large PLV": {
+          "max_pipe_size_by_depth": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+          "min_tension_by_pipe": {"8in": null, "12in": null, "16in": null, "20in": null, "24in": null}
+        },
+        "Shallow Water Barge": {
+          "max_pipe_size_by_depth": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+          "min_tension_by_pipe": {"8in": null, "12in": null, "16in": null, "20in": null, "24in": null}
+        }
+      }
+    }
+  ]
+}

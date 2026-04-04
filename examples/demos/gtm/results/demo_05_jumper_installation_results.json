@@ -1,0 +1,62 @@
+{
+  "_description": "Deepwater rigid jumper installation analysis results. One row per (vessel x jumper x water_depth) combo. Populated by demo_05_deepwater_rigid_jumper.py.",
+  "_schema": {
+    "case_id": "Unique, e.g. JMP-001",
+    "vessel": "CSV vessel from csv_hlv_vessels.json",
+    "structure": "Rigid jumper from rigid_jumpers.json",
+    "environment.water_depth_m": "Water depth [m], 500-3000m",
+    "environment.hs_m": "Significant wave height [m]",
+    "environment.tp_s": "Peak spectral period [s]",
+    "results.phase_results": "Per-phase: lift_off, splash_zone, lowering, landing",
+    "results.pipe_stress": "Bending/combined stress check on the jumper pipe body during lift",
+    "results.overall_status": "GO / NO_GO / MARGINAL",
+    "results.governing_phase": "Which phase limits the operation",
+    "results.max_hs_limit_m": "Max allowable Hs [m]",
+    "results.crane_utilisation_pct": "Peak crane utilisation [%]",
+    "results.lowering_time_min": "Estimated lowering time to seabed [min]"
+  },
+  "cases": [
+    {
+      "case_id": "JMP-001",
+      "vessel": {"name": "Large CSV", "crane_capacity_te": 5000, "dp_class": "DP3"},
+      "structure": {"name": "Jumper-40m", "length_m": 40, "od_m": 0.2191, "wt_m": 0.0183, "mass_air_kg": 1562, "grade": "X65"},
+      "environment": {"water_depth_m": 1500, "hs_m": 1.5, "tp_s": 7.0},
+      "results": {
+        "phase_results": {
+          "lift_off": {"hook_load_te": null, "crane_utilisation": null, "status": null},
+          "splash_zone": {
+            "slamming_force_kn": null,
+            "daf": null,
+            "max_hook_load_te": null,
+            "crane_utilisation": null,
+            "status": null
+          },
+          "lowering": {
+            "cable_tension_te": null,
+            "cable_weight_in_water_te": null,
+            "lowering_speed_ms": null,
+            "lowering_time_min": null,
+            "snap_risk": null,
+            "status": null
+          },
+          "landing": {"landing_load_te": null, "status": null}
+        },
+        "pipe_stress": {
+          "bending_stress_mpa": null,
+          "axial_stress_mpa": null,
+          "combined_stress_mpa": null,
+          "allowable_stress_mpa": null,
+          "utilisation": null,
+          "status": null
+        },
+        "overall_status": null,
+        "governing_phase": null,
+        "max_hs_limit_m": null,
+        "crane_utilisation_pct": null,
+        "lowering_time_min": null
+      },
+      "code_ref": "DNV-RP-H103 (2011) Sec 4, DNV-ST-N001 (2021)",
+      "timestamp": null
+    }
+  ]
+}

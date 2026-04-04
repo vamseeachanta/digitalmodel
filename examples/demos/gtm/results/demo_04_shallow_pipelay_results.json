@@ -1,0 +1,51 @@
+{
+  "_description": "Shallow water pipeline S-lay installation results. One row per (vessel x pipe_size x water_depth) combo. Populated by demo_04_shallow_water_pipelay.py.",
+  "_schema": {
+    "case_id": "Unique, e.g. SPL-001",
+    "vessel": "Pipelay vessel from pipelay_vessels.json",
+    "pipe": "Pipeline from pipelines.json",
+    "environment.water_depth_m": "Water depth [m], range 7-30m",
+    "environment.current_ms": "Ambient current [m/s]",
+    "results.top_tension_te": "Required top tension [te]",
+    "results.tensioner_utilisation": "top_tension / tensioner_capacity",
+    "results.sagbend": "Sagbend stress/strain check (near seabed)",
+    "results.overbend": "Overbend stress/strain check (stinger departure)",
+    "results.stinger_tip_departure_angle_deg": "Pipe departure angle at stinger tip [deg]",
+    "results.required_stinger_angle_deg": "Stinger angle needed for acceptable overbend [deg]",
+    "results.min_bend_radius_m": "Minimum bend radius in sagbend [m]",
+    "results.overall_status": "PASS / FAIL",
+    "results.governing_check": "sagbend / overbend / tension / stinger_angle"
+  },
+  "cases": [
+    {
+      "case_id": "SPL-001",
+      "vessel": {"name": "Large PLV", "tensioner_capacity_te": 600, "stinger_length_m": 140},
+      "pipe": {"nominal_size": "12in", "od_m": 0.3239, "wt_m": 0.0214, "grade": "X65", "submerged_weight_nm": null},
+      "environment": {"water_depth_m": 15, "current_ms": 0.5},
+      "results": {
+        "top_tension_te": null,
+        "tensioner_utilisation": null,
+        "sagbend": {
+          "strain_pct": null,
+          "stress_mpa": null,
+          "utilisation": null,
+          "min_bend_radius_m": null,
+          "status": null
+        },
+        "overbend": {
+          "strain_pct": null,
+          "stress_mpa": null,
+          "utilisation": null,
+          "stinger_radius_m": null,
+          "status": null
+        },
+        "stinger_tip_departure_angle_deg": null,
+        "required_stinger_angle_deg": null,
+        "overall_status": null,
+        "governing_check": null
+      },
+      "code_ref": "DNV-ST-F101 (2021) Sec 5 (Installation), API RP 1111 (2015)",
+      "timestamp": null
+    }
+  ]
+}

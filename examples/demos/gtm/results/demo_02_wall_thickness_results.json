@@ -1,0 +1,1642 @@
+{
+  "metadata": {
+    "demo": "GTM Demo 2: Wall Thickness Multi-Code Comparison",
+    "total_cases": 72,
+    "pipe_sizes": [
+      "6\"",
+      "8\"",
+      "10\"",
+      "12\"",
+      "16\"",
+      "20\""
+    ],
+    "codes": [
+      "DNV-ST-F101",
+      "API RP 1111",
+      "PD 8010-2"
+    ],
+    "internal_pressures_mpa": [
+      10,
+      15,
+      20,
+      25
+    ],
+    "water_depth_m": 500.0,
+    "grade": "X65",
+    "smys_mpa": 448.0,
+    "smts_mpa": 531.0,
+    "corrosion_allowance_mm": 1.0
+  },
+  "summary": [
+    {
+      "Pipe Size": "6\"",
+      "OD (mm)": 168.3,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 8.51,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "6\"",
+      "OD (mm)": 168.3,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 7.62,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "6\"",
+      "OD (mm)": 168.3,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 8.57,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "8\"",
+      "OD (mm)": 219.1,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 10.79,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "8\"",
+      "OD (mm)": 219.1,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 9.9,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "8\"",
+      "OD (mm)": 219.1,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 10.9,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "10\"",
+      "OD (mm)": 273.1,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 13.19,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "10\"",
+      "OD (mm)": 273.1,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 12.3,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "10\"",
+      "OD (mm)": 273.1,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 13.3,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "12\"",
+      "OD (mm)": 323.9,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 15.47,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "12\"",
+      "OD (mm)": 323.9,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 14.58,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "12\"",
+      "OD (mm)": 323.9,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 15.58,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "16\"",
+      "OD (mm)": 406.4,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 19.14,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "16\"",
+      "OD (mm)": 406.4,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 18.31,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "16\"",
+      "OD (mm)": 406.4,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 19.31,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "20\"",
+      "OD (mm)": 508.0,
+      "Code": "DNV-ST-F101",
+      "Min WT (mm)": 23.65,
+      "Governing Check": "Propagation Buckling",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "20\"",
+      "OD (mm)": 508.0,
+      "Code": "API RP 1111",
+      "Min WT (mm)": 22.87,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    },
+    {
+      "Pipe Size": "20\"",
+      "OD (mm)": 508.0,
+      "Code": "PD 8010-2",
+      "Min WT (mm)": 23.87,
+      "Governing Check": "Propagation",
+      "Status": "PASS"
+    }
+  ],
+  "results": [
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.2389,
+      "checks": {
+        "pressure_containment": 0.0882,
+        "collapse": 0.0098,
+        "propagation_buckling": 0.2389,
+        "combined_loading": 0.0074
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.2389,
+      "checks": {
+        "pressure_containment": 0.1769,
+        "collapse": 0.0098,
+        "propagation_buckling": 0.2389,
+        "combined_loading": 0.0148
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "pressure_containment",
+      "max_utilisation": 0.2656,
+      "checks": {
+        "pressure_containment": 0.2656,
+        "collapse": 0.0098,
+        "propagation_buckling": 0.2389,
+        "combined_loading": 0.0222
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "pressure_containment",
+      "max_utilisation": 0.3543,
+      "checks": {
+        "pressure_containment": 0.3543,
+        "collapse": 0.0098,
+        "propagation_buckling": 0.2389,
+        "combined_loading": 0.0297
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.217,
+      "checks": {
+        "burst": 0.0842,
+        "collapse": 0.0855,
+        "propagation": 0.217
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.217,
+      "checks": {
+        "burst": 0.1688,
+        "collapse": 0.0855,
+        "propagation": 0.217
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "burst",
+      "max_utilisation": 0.2535,
+      "checks": {
+        "burst": 0.2535,
+        "collapse": 0.0855,
+        "propagation": 0.217
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "burst",
+      "max_utilisation": 0.3381,
+      "checks": {
+        "burst": 0.3381,
+        "collapse": 0.0855,
+        "propagation": 0.217
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.2582,
+      "checks": {
+        "hoop_stress": 0.0976,
+        "collapse": 0.0093,
+        "propagation": 0.2582
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.2582,
+      "checks": {
+        "hoop_stress": 0.1956,
+        "collapse": 0.0093,
+        "propagation": 0.2582
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "hoop_stress",
+      "max_utilisation": 0.2937,
+      "checks": {
+        "hoop_stress": 0.2937,
+        "collapse": 0.0093,
+        "propagation": 0.2582
+      }
+    },
+    {
+      "pipe_size": "6\"",
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "wt_mm": 14.3,
+      "wt_m": 0.0143,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "hoop_stress",
+      "max_utilisation": 0.3918,
+      "checks": {
+        "hoop_stress": 0.3918,
+        "collapse": 0.0093,
+        "propagation": 0.2582
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.3993,
+      "checks": {
+        "pressure_containment": 0.1098,
+        "collapse": 0.0181,
+        "propagation_buckling": 0.3993,
+        "combined_loading": 0.0137
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.3993,
+      "checks": {
+        "pressure_containment": 0.2202,
+        "collapse": 0.0181,
+        "propagation_buckling": 0.3993,
+        "combined_loading": 0.0274
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.3993,
+      "checks": {
+        "pressure_containment": 0.3307,
+        "collapse": 0.0181,
+        "propagation_buckling": 0.3993,
+        "combined_loading": 0.0412
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "pressure_containment",
+      "max_utilisation": 0.4411,
+      "checks": {
+        "pressure_containment": 0.4411,
+        "collapse": 0.0181,
+        "propagation_buckling": 0.3993,
+        "combined_loading": 0.0549
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.3586,
+      "checks": {
+        "burst": 0.1057,
+        "collapse": 0.1101,
+        "propagation": 0.3586
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.3586,
+      "checks": {
+        "burst": 0.212,
+        "collapse": 0.1101,
+        "propagation": 0.3586
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.3586,
+      "checks": {
+        "burst": 0.3183,
+        "collapse": 0.1101,
+        "propagation": 0.3586
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "burst",
+      "max_utilisation": 0.4246,
+      "checks": {
+        "burst": 0.4246,
+        "collapse": 0.1101,
+        "propagation": 0.3586
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.4227,
+      "checks": {
+        "hoop_stress": 0.1198,
+        "collapse": 0.0173,
+        "propagation": 0.4227
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.4227,
+      "checks": {
+        "hoop_stress": 0.2402,
+        "collapse": 0.0173,
+        "propagation": 0.4227
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.4227,
+      "checks": {
+        "hoop_stress": 0.3607,
+        "collapse": 0.0173,
+        "propagation": 0.4227
+      }
+    },
+    {
+      "pipe_size": "8\"",
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "hoop_stress",
+      "max_utilisation": 0.4811,
+      "checks": {
+        "hoop_stress": 0.4811,
+        "collapse": 0.0173,
+        "propagation": 0.4227
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.6926,
+      "checks": {
+        "pressure_containment": 0.1385,
+        "collapse": 0.035,
+        "propagation_buckling": 0.6926,
+        "combined_loading": 0.0265
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.6926,
+      "checks": {
+        "pressure_containment": 0.2778,
+        "collapse": 0.035,
+        "propagation_buckling": 0.6926,
+        "combined_loading": 0.0531
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.6926,
+      "checks": {
+        "pressure_containment": 0.417,
+        "collapse": 0.035,
+        "propagation_buckling": 0.6926,
+        "combined_loading": 0.0797
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.6926,
+      "checks": {
+        "pressure_containment": 0.5563,
+        "collapse": 0.035,
+        "propagation_buckling": 0.6926,
+        "combined_loading": 0.1063
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6085,
+      "checks": {
+        "burst": 0.134,
+        "collapse": 0.1508,
+        "propagation": 0.6085
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6085,
+      "checks": {
+        "burst": 0.2686,
+        "collapse": 0.1508,
+        "propagation": 0.6085
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6085,
+      "checks": {
+        "burst": 0.4033,
+        "collapse": 0.1508,
+        "propagation": 0.6085
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6085,
+      "checks": {
+        "burst": 0.538,
+        "collapse": 0.1508,
+        "propagation": 0.6085
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7173,
+      "checks": {
+        "hoop_stress": 0.1493,
+        "collapse": 0.0334,
+        "propagation": 0.7173
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7173,
+      "checks": {
+        "hoop_stress": 0.2995,
+        "collapse": 0.0334,
+        "propagation": 0.7173
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7173,
+      "checks": {
+        "hoop_stress": 0.4496,
+        "collapse": 0.0334,
+        "propagation": 0.7173
+      }
+    },
+    {
+      "pipe_size": "10\"",
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7173,
+      "checks": {
+        "hoop_stress": 0.5997,
+        "collapse": 0.0334,
+        "propagation": 0.7173
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.7162,
+      "checks": {
+        "pressure_containment": 0.1405,
+        "collapse": 0.0365,
+        "propagation_buckling": 0.7162,
+        "combined_loading": 0.0276
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.7162,
+      "checks": {
+        "pressure_containment": 0.2817,
+        "collapse": 0.0365,
+        "propagation_buckling": 0.7162,
+        "combined_loading": 0.0553
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.7162,
+      "checks": {
+        "pressure_containment": 0.4229,
+        "collapse": 0.0365,
+        "propagation_buckling": 0.7162,
+        "combined_loading": 0.083
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 0.7162,
+      "checks": {
+        "pressure_containment": 0.5641,
+        "collapse": 0.0365,
+        "propagation_buckling": 0.7162,
+        "combined_loading": 0.1107
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6432,
+      "checks": {
+        "burst": 0.1373,
+        "collapse": 0.1565,
+        "propagation": 0.6432
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6432,
+      "checks": {
+        "burst": 0.2753,
+        "collapse": 0.1565,
+        "propagation": 0.6432
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6432,
+      "checks": {
+        "burst": 0.4133,
+        "collapse": 0.1565,
+        "propagation": 0.6432
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.6432,
+      "checks": {
+        "burst": 0.5513,
+        "collapse": 0.1565,
+        "propagation": 0.6432
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7407,
+      "checks": {
+        "hoop_stress": 0.1514,
+        "collapse": 0.0348,
+        "propagation": 0.7407
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7407,
+      "checks": {
+        "hoop_stress": 0.3035,
+        "collapse": 0.0348,
+        "propagation": 0.7407
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7407,
+      "checks": {
+        "hoop_stress": 0.4556,
+        "collapse": 0.0348,
+        "propagation": 0.7407
+      }
+    },
+    {
+      "pipe_size": "12\"",
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "wt_mm": 17.5,
+      "wt_m": 0.0175,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": true,
+      "governing_check": "propagation",
+      "max_utilisation": 0.7407,
+      "checks": {
+        "hoop_stress": 0.6078,
+        "collapse": 0.0348,
+        "propagation": 0.7407
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 1.43,
+      "checks": {
+        "pressure_containment": 0.1873,
+        "collapse": 0.0633,
+        "propagation_buckling": 1.43,
+        "combined_loading": 0.0479
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 1.43,
+      "checks": {
+        "pressure_containment": 0.3756,
+        "collapse": 0.0633,
+        "propagation_buckling": 1.43,
+        "combined_loading": 0.0961
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 1.43,
+      "checks": {
+        "pressure_containment": 0.564,
+        "collapse": 0.0633,
+        "propagation_buckling": 1.43,
+        "combined_loading": 0.1442
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 1.43,
+      "checks": {
+        "pressure_containment": 0.7523,
+        "collapse": 0.0633,
+        "propagation_buckling": 1.43,
+        "combined_loading": 0.1923
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.2405,
+      "checks": {
+        "burst": 0.183,
+        "collapse": 0.2621,
+        "propagation": 1.2405
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.2405,
+      "checks": {
+        "burst": 0.3669,
+        "collapse": 0.2621,
+        "propagation": 1.2405
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.2405,
+      "checks": {
+        "burst": 0.5508,
+        "collapse": 0.2621,
+        "propagation": 1.2405
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.2405,
+      "checks": {
+        "burst": 0.7347,
+        "collapse": 0.2621,
+        "propagation": 1.2405
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.4387,
+      "checks": {
+        "hoop_stress": 0.1996,
+        "collapse": 0.0605,
+        "propagation": 1.4387
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.4387,
+      "checks": {
+        "hoop_stress": 0.4002,
+        "collapse": 0.0605,
+        "propagation": 1.4387
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.4387,
+      "checks": {
+        "hoop_stress": 0.6008,
+        "collapse": 0.0605,
+        "propagation": 1.4387
+      }
+    },
+    {
+      "pipe_size": "16\"",
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "wt_mm": 16.7,
+      "wt_m": 0.0167,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 1.4387,
+      "checks": {
+        "hoop_stress": 0.8015,
+        "collapse": 0.0605,
+        "propagation": 1.4387
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 3.2683,
+      "checks": {
+        "pressure_containment": 0.2633,
+        "collapse": 0.0882,
+        "propagation_buckling": 3.2683,
+        "combined_loading": 0.0667
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 3.2683,
+      "checks": {
+        "pressure_containment": 0.528,
+        "collapse": 0.0882,
+        "propagation_buckling": 3.2683,
+        "combined_loading": 0.1337
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 3.2683,
+      "checks": {
+        "pressure_containment": 0.7927,
+        "collapse": 0.0882,
+        "propagation_buckling": 3.2683,
+        "combined_loading": 0.2007
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "DNV-ST-F101",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation_buckling",
+      "max_utilisation": 3.2683,
+      "checks": {
+        "pressure_containment": 1.0573,
+        "collapse": 0.0882,
+        "propagation_buckling": 3.2683,
+        "combined_loading": 0.2677
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 2.6988,
+      "checks": {
+        "burst": 0.2559,
+        "collapse": 0.5763,
+        "propagation": 2.6988
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 2.6988,
+      "checks": {
+        "burst": 0.5132,
+        "collapse": 0.5763,
+        "propagation": 2.6988
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 2.6988,
+      "checks": {
+        "burst": 0.7705,
+        "collapse": 0.5763,
+        "propagation": 2.6988
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "API RP 1111",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 2.6988,
+      "checks": {
+        "burst": 1.0278,
+        "collapse": 0.5763,
+        "propagation": 2.6988
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 10,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 3.1811,
+      "checks": {
+        "hoop_stress": 0.2778,
+        "collapse": 0.0842,
+        "propagation": 3.1811
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 15,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 3.1811,
+      "checks": {
+        "hoop_stress": 0.557,
+        "collapse": 0.0842,
+        "propagation": 3.1811
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 20,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 3.1811,
+      "checks": {
+        "hoop_stress": 0.8363,
+        "collapse": 0.0842,
+        "propagation": 3.1811
+      }
+    },
+    {
+      "pipe_size": "20\"",
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "wt_mm": 15.1,
+      "wt_m": 0.0151,
+      "grade": "X65",
+      "code": "PD 8010-2",
+      "internal_pressure_mpa": 25,
+      "external_pressure_mpa": 5.026,
+      "water_depth_m": 500.0,
+      "is_safe": false,
+      "governing_check": "propagation",
+      "max_utilisation": 3.1811,
+      "checks": {
+        "hoop_stress": 1.1155,
+        "collapse": 0.0842,
+        "propagation": 3.1811
+      }
+    }
+  ]
+}

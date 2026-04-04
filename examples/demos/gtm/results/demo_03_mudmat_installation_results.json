@@ -1,0 +1,43 @@
+{
+  "_description": "Deepwater mudmat installation analysis results. One row per (vessel x structure x water_depth x sea_state) combo. Populated by demo_03_deepwater_mudmat_installation.py.",
+  "_schema": {
+    "case_id": "Unique, e.g. MUD-001",
+    "vessel": "Vessel name and crane capacity from csv_hlv_vessels.json",
+    "structure": "Mudmat name, mass, dims from mudmat_structures.json",
+    "environment.water_depth_m": "Water depth [m]",
+    "environment.hs_m": "Significant wave height [m] for operability screening",
+    "environment.tp_s": "Peak spectral period [s]",
+    "results.phase_results": "Per-phase breakdown: lift_off, in_air, splash_zone, lowering, landing",
+    "results.phase_results.*.hook_load_te": "Hook load during this phase [te]",
+    "results.phase_results.*.crane_utilisation": "Hook load / crane capacity at operating radius",
+    "results.phase_results.splash_zone.slamming_force_kn": "DNV-RP-H103 Sec 4.3.4 slamming force [kN]",
+    "results.phase_results.splash_zone.daf": "Dynamic Amplification Factor",
+    "results.overall_status": "GO / NO_GO / MARGINAL",
+    "results.governing_phase": "Which installation phase is limiting",
+    "results.max_hs_limit_m": "Max allowable Hs for this vessel/structure/depth combo [m]",
+    "results.crane_utilisation_pct": "Peak crane utilisation across all phases [%]"
+  },
+  "cases": [
+    {
+      "case_id": "MUD-001",
+      "vessel": {"name": "Large CSV", "crane_capacity_te": 5000, "dp_class": "DP3"},
+      "structure": {"name": "Mudmat-S-50te", "mass_air_kg": 50000, "length_m": 6.0, "width_m": 6.0, "height_m": 1.5},
+      "environment": {"water_depth_m": 500, "hs_m": 2.0, "tp_s": 8.0},
+      "results": {
+        "phase_results": {
+          "lift_off": {"hook_load_te": null, "crane_utilisation": null, "status": null},
+          "in_air": {"tilt_deg": null, "status": null},
+          "splash_zone": {"slamming_force_kn": null, "daf": null, "max_hook_load_te": null, "crane_utilisation": null, "status": null},
+          "lowering": {"cable_tension_te": null, "snap_risk": null, "status": null},
+          "landing": {"landing_load_te": null, "bearing_pressure_kpa": null, "status": null}
+        },
+        "overall_status": null,
+        "governing_phase": null,
+        "max_hs_limit_m": null,
+        "crane_utilisation_pct": null
+      },
+      "code_ref": "DNV-RP-H103 (2011) Sec 4, DNV-ST-N001 (2021)",
+      "timestamp": null
+    }
+  ]
+}

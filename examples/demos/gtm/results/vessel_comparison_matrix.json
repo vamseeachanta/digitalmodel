@@ -1,0 +1,217 @@
+{
+  "_description": "Cross-demo vessel capability matrix. Aggregates go/no-go results across demos 3, 4, 5 to answer: 'What can each vessel do?' Populated after all demos run.",
+  "_usage": [
+    "Which vessel handles the 200te mudmat at 3000m?",
+    "What's the max jumper length at 2000m for each vessel?",
+    "Which vessel has higher operability across all job types?",
+    "At what depth does Vessel B become limited for mudmats?",
+    "Can either vessel do the 100m jumper in 2500m water depth?"
+  ],
+  "vessels": [
+    {
+      "name": "Large CSV",
+      "type": "CSV",
+      "crane_capacity_te": 5000,
+      "dp_class": "DP3",
+      "capabilities": {
+        "mudmat_installation": {
+          "_source": "demo_03_mudmat_installation_results.json",
+          "max_structure_mass_te_by_depth": {
+            "500m": null,
+            "1000m": null,
+            "1500m": null,
+            "2000m": null,
+            "2500m": null,
+            "3000m": null
+          },
+          "go_nogo_matrix": {
+            "Mudmat-S-50te":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Mudmat-M-100te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Mudmat-L-200te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        },
+        "jumper_installation": {
+          "_source": "demo_05_jumper_installation_results.json",
+          "max_jumper_length_m_by_depth": {
+            "500m": null,
+            "1000m": null,
+            "1500m": null,
+            "2000m": null,
+            "2500m": null,
+            "3000m": null
+          },
+          "go_nogo_matrix": {
+            "Jumper-20m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-40m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-60m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-80m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-100m": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        }
+      },
+      "overall_score": {
+        "total_cases": null,
+        "total_pass": null,
+        "pass_rate_pct": null,
+        "strongest_capability": null,
+        "weakest_capability": null
+      }
+    },
+    {
+      "name": "Medium CSV",
+      "type": "CSV",
+      "crane_capacity_te": 2500,
+      "dp_class": "DP2",
+      "capabilities": {
+        "mudmat_installation": {
+          "_source": "demo_03_mudmat_installation_results.json",
+          "max_structure_mass_te_by_depth": {
+            "500m": null,
+            "1000m": null,
+            "1500m": null,
+            "2000m": null,
+            "2500m": null,
+            "3000m": null
+          },
+          "go_nogo_matrix": {
+            "Mudmat-S-50te":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Mudmat-M-100te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Mudmat-L-200te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        },
+        "jumper_installation": {
+          "_source": "demo_05_jumper_installation_results.json",
+          "max_jumper_length_m_by_depth": {
+            "500m": null,
+            "1000m": null,
+            "1500m": null,
+            "2000m": null,
+            "2500m": null,
+            "3000m": null
+          },
+          "go_nogo_matrix": {
+            "Jumper-20m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-40m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-60m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-80m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
+            "Jumper-100m": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        }
+      },
+      "overall_score": {
+        "total_cases": null,
+        "total_pass": null,
+        "pass_rate_pct": null,
+        "strongest_capability": null,
+        "weakest_capability": null
+      }
+    },
+    {
+      "name": "Large PLV",
+      "type": "PLV",
+      "tensioner_capacity_te": 600,
+      "capabilities": {
+        "shallow_water_pipelay": {
+          "_source": "demo_04_shallow_pipelay_results.json",
+          "max_pipe_size_by_depth": {
+            "7m": null,
+            "10m": null,
+            "15m": null,
+            "20m": null,
+            "25m": null,
+            "30m": null
+          },
+          "go_nogo_matrix": {
+            "8in":  {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "12in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "16in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "20in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "24in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        }
+      },
+      "overall_score": {
+        "total_cases": null,
+        "total_pass": null,
+        "pass_rate_pct": null,
+        "strongest_capability": null,
+        "weakest_capability": null
+      }
+    },
+    {
+      "name": "Shallow Water Barge",
+      "type": "Lay Barge",
+      "tensioner_capacity_te": 250,
+      "capabilities": {
+        "shallow_water_pipelay": {
+          "_source": "demo_04_shallow_pipelay_results.json",
+          "max_pipe_size_by_depth": {
+            "7m": null,
+            "10m": null,
+            "15m": null,
+            "20m": null,
+            "25m": null,
+            "30m": null
+          },
+          "go_nogo_matrix": {
+            "8in":  {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "12in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "16in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "20in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
+            "24in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null}
+          },
+          "cases_pass": null,
+          "cases_total": null,
+          "pass_rate_pct": null,
+          "limiting_factor": null
+        }
+      },
+      "overall_score": {
+        "total_cases": null,
+        "total_pass": null,
+        "pass_rate_pct": null,
+        "strongest_capability": null,
+        "weakest_capability": null
+      }
+    }
+  ],
+  "head_to_head": {
+    "_description": "Direct vessel-vs-vessel comparison for overlapping capabilities",
+    "csv_comparison": {
+      "Large CSV vs Medium CSV": {
+        "mudmat_advantage": null,
+        "jumper_advantage": null,
+        "depth_crossover_m": null,
+        "summary": null
+      }
+    },
+    "plv_comparison": {
+      "Large PLV vs Shallow Water Barge": {
+        "pipe_size_advantage": null,
+        "shallow_depth_advantage": null,
+        "cost_tradeoff": null,
+        "summary": null
+      }
+    }
+  }
+}
