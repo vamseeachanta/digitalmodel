@@ -18,6 +18,55 @@ STANDARD = "API RP 2GEO"
 DEFAULT_NC = 9.0
 DEFAULT_NQ = 40.0
 
+# Valid input ranges per API RP 2GEO (from dark-intelligence YAML archive)
+_RANGE_PILE_DIAMETER_M = (0.3, 3.0)
+_RANGE_PILE_LENGTH_M = (10.0, 100.0)
+_RANGE_SU_KPA = (10.0, 200.0)
+_RANGE_SIGMA_V_KPA = (10.0, 500.0)
+
+
+def validate_pile_inputs(
+    pile_diameter_m: float | None = None,
+    pile_length_m: float | None = None,
+    su_kpa: float | None = None,
+    sigma_v_kpa: float | None = None,
+) -> None:
+    """Validate pile inputs against API RP 2GEO typical ranges.
+
+    Args:
+        pile_diameter_m: Outer pile diameter (m). Valid range [0.3, 3.0].
+        pile_length_m: Embedded pile length (m). Valid range [10, 100].
+        su_kpa: Undrained shear strength (kPa). Valid range [10, 200].
+        sigma_v_kpa: Effective overburden pressure (kPa). Valid range [10, 500].
+
+    Raises:
+        ValueError: If any provided value is outside its valid range.
+    """
+    if pile_diameter_m is not None:
+        lo, hi = _RANGE_PILE_DIAMETER_M
+        if not (lo <= pile_diameter_m <= hi):
+            raise ValueError(
+                f"pile_diameter_m={pile_diameter_m} out of API RP 2GEO range [{lo}, {hi}] m"
+            )
+    if pile_length_m is not None:
+        lo, hi = _RANGE_PILE_LENGTH_M
+        if not (lo <= pile_length_m <= hi):
+            raise ValueError(
+                f"pile_length_m={pile_length_m} out of API RP 2GEO range [{lo}, {hi}] m"
+            )
+    if su_kpa is not None:
+        lo, hi = _RANGE_SU_KPA
+        if not (lo <= su_kpa <= hi):
+            raise ValueError(
+                f"su_kpa={su_kpa} out of API RP 2GEO range [{lo}, {hi}] kPa"
+            )
+    if sigma_v_kpa is not None:
+        lo, hi = _RANGE_SIGMA_V_KPA
+        if not (lo <= sigma_v_kpa <= hi):
+            raise ValueError(
+                f"sigma_v_kpa={sigma_v_kpa} out of API RP 2GEO range [{lo}, {hi}] kPa"
+            )
+
 
 @dataclass
 class SkinFrictionClayResult:
@@ -58,6 +107,7 @@ class AxialCapacityResult:
 def skin_friction_clay(
     undrained_shear_strength_kpa: float,
     effective_overburden_kpa: float,
+    validate: bool = False,
 ) -> SkinFrictionClayResult:
     """Alpha method for unit skin friction in clay per API RP 2GEO Sec 7.3.
 
@@ -68,10 +118,19 @@ def skin_friction_clay(
     Args:
         undrained_shear_strength_kpa: Undrained shear strength Su (kPa).
         effective_overburden_kpa: Effective vertical overburden stress (kPa).
+        validate: If True, raise ValueError if inputs are outside API RP 2GEO ranges.
 
     Returns:
         SkinFrictionClayResult with unit friction and alpha factor.
+
+    Raises:
+        ValueError: If validate=True and inputs are out of valid range.
     """
+    if validate:
+        validate_pile_inputs(
+            su_kpa=undrained_shear_strength_kpa,
+            sigma_v_kpa=effective_overburden_kpa,
+        )
     psi = undrained_shear_strength_kpa / effective_overburden_kpa
     if psi <= 1.0:
         alpha = 0.5 * psi ** (-0.5)
@@ -157,6 +216,7 @@ def axial_capacity(
     pile_diameter_m: float,
     pile_length_m: float,
     layers: list[dict[str, Any]],
+    validate: bool = False,
 ) -> AxialCapacityResult:
     """Total axial compressive pile capacity per API RP 2GEO Sec 7.2.
 
@@ -172,12 +232,14 @@ def axial_capacity(
         pile_diameter_m: Outer diameter of pile (m).
         pile_length_m: Embedded length of pile (m).
         layers: List of soil layer dicts.
+        validate: If True, raise ValueError if pile dimensions are outside API RP 2GEO ranges.
 
     Returns:
         AxialCapacityResult with total, skin friction, and end bearing.
 
     Raises:
-        ValueError: If layers is empty or pile dimensions are invalid.
+        ValueError: If layers is empty, pile dimensions are invalid, or validate=True and
+                    inputs are outside API RP 2GEO ranges.
     """
     if not layers:
         raise ValueError("layers must not be empty")
@@ -185,6 +247,12 @@ def axial_capacity(
         raise ValueError("pile_diameter_m must be positive")
     if pile_length_m <= 0:
         raise ValueError("pile_length_m must be positive")
+
+    if validate:
+        validate_pile_inputs(
+            pile_diameter_m=pile_diameter_m,
+            pile_length_m=pile_length_m,
+        )
 
     perimeter = math.pi * pile_diameter_m
     tip_area = math.pi * (pile_diameter_m / 2.0) ** 2
