@@ -275,13 +275,13 @@ class GPT4VClassifier(VisionModelClassifier):
     Usage::
 
         import os
-        clf = GPT4VClassifier(model="gpt-4o")
+        clf = GPT4VClassifier(model="gpt-4.1")
         result = clf.classify(card, true_label="FLUID_POUND")
     """
 
     backend = ClassifierBackend.GPT4V
 
-    def __init__(self, model: str = "gpt-4o") -> None:
+    def __init__(self, model: str = "gpt-4.1") -> None:
         """Initialize the GPT-4V classifier.
 
         Args:
