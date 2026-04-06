@@ -503,12 +503,12 @@ class TestOrcaFlexSections:
     def test_contains_buoyancy_sections(self) -> None:
         """There must be buoyancy sections in the breakdown."""
         buoy_sections = [s for s in self.sections if "wBuoy" in s["line_type"]]
-        self.assertGreater(len(buoy_sections), 0)
+        assert len(buoy_sections) > 0
 
     def test_contains_strake_sections(self) -> None:
         """There must be strake sections in the breakdown."""
         strake_sections = [s for s in self.sections if "wStrake" in s["line_type"]]
-        self.assertGreater(len(strake_sections), 0)
+        assert len(strake_sections) > 0
 
     def test_total_length_covers_pipe(self) -> None:
         """Sum of all OrcaFlex sections should approximate total pipe + 2 connectors."""
@@ -517,7 +517,7 @@ class TestOrcaFlexSections:
         # Total pipe + 2×1.3 m connectors
         expected_approx = geom["total_length_m"] + 2 * 1.3
         # Allow 1% tolerance
-        self.assertAlmostEqual(total_ofx, expected_approx, delta=expected_approx * 0.01)
+        assert total_ofx == pytest.approx(expected_approx, rel=expected_approx * 0.01)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -536,14 +536,14 @@ class TestSlingLengths:
         result = compute_rigging_sling_lengths()
         cum = result["cumulative_m"]
         for i in range(1, len(cum)):
-            self.assertGreater(cum[i], cum[i - 1])
+            assert cum[i] > cum[i - 1]
 
     def test_offsets_symmetric_ish(self) -> None:
         """Offsets from centre should have negative start and positive end."""
         result = compute_rigging_sling_lengths()
         offsets = result["offsets_from_centre_m"]
-        self.assertLess(offsets[0], 0)
-        self.assertGreater(offsets[-1], 0)
+        assert offsets[0] < 0
+        assert offsets[-1] > 0
 
 
 # ──────────────────────────────────────────────────────────────────────
