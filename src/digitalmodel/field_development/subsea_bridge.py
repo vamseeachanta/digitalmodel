@@ -212,6 +212,23 @@ class SubseaFieldCatalog:
         return cls(fields)
 
     # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
+
+    @property
+    def fields(self) -> list[GoMField]:
+        """Public read-only access to the field list."""
+        return list(self._fields)
+
+    def list_operators(self) -> list[str]:
+        """All unique operators, sorted alphabetically."""
+        return sorted({f.operator for f in self._fields})
+
+    def export_for_concept_selection(self) -> list[dict]:
+        """Export all fields as plain dicts for use by concept_selection."""
+        return [f.to_dict() for f in self._fields]
+
+    # ------------------------------------------------------------------
     # Query methods
     # ------------------------------------------------------------------
 

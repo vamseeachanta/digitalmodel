@@ -72,27 +72,29 @@ class TestSubseaFieldCatalog:
     def test_query_by_operator(self, catalog):
         shell = catalog.query(operator="Shell")
         assert len(shell) == 6  # Perdido, Appomattox, Mars, Stones, Ursa, Whale
+        assert all(f.operator == "Shell" for f in shell)
 
         bp = catalog.query(operator="BP")
         assert len(bp) == 3  # Atlantis, Thunder Horse, Mad Dog
+        assert all(f.operator == "BP" for f in bp)
 
     def test_query_by_host_type(self, catalog):
         spars = catalog.query(host_type="Spar")
         assert len(spars) == 2  # Perdido, Whale
 
         tlps = catalog.query(host_type="TLP")
-        assert len(tlps) == 2  # Mars, Ursa
+        assert len(tlps) == 2  # Mars, Ursa (etlp has 'ETLP' not 'TLP' as substring)
 
     def test_query_by_water_depth(self, catalog):
-        deep = catalog.query(min_water_depth=2000)
+        deep = catalog.query(water_depth_min_m=2000)
         assert all(f.water_depth_m >= 2000 for f in deep)
 
-        shallow = catalog.query(max_water_depth=1500)
+        shallow = catalog.query(water_depth_max_m=1500)
         assert all(f.water_depth_m <= 1500 for f in shallow)
 
     def test_query_combined(self, catalog):
         """Query by both operator and water depth."""
-        results = catalog.query(operator="Shell", min_water_depth=2000)
+        results = catalog.query(operator="Shell", water_depth_min_m=2000)
         assert all(f.operator == "Shell" for f in results)
         assert all(f.water_depth_m >= 2000 for f in results)
 
