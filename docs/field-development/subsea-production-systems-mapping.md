@@ -49,6 +49,25 @@ LMI video post on river towing operational risk — barge collision with towing 
 
 ---
 
+## Issue Tracker
+
+| Issue | Component | API / Standard | Priority |
+|-------|-----------|----------------|----------|
+| [#484](https://github.com/vamseeachanta/digitalmodel/issues/484) | Subsea Trees | API 17D | Medium |
+| [#485](https://github.com/vamseeachanta/digitalmodel/issues/485) | Manifold Aggregation | API 17P | Medium |
+| [#486](https://github.com/vamseeachanta/digitalmodel/issues/486) | Connectors & Jumpers | API 17R | Medium |
+| [#487](https://github.com/vamseeachanta/digitalmodel/issues/487) | Towing / Marine Ops | DNV-ST-N001 | Low |
+| [#488](https://github.com/vamseeachanta/digitalmodel/issues/488) | Umbilicals & Control | API 17E, 17F | Low |
+| [#489](https://github.com/vamseeachanta/digitalmodel/issues/489) | HIPPS | API 17O | Low |
+| [#490](https://github.com/vamseeachanta/digitalmodel/issues/490) | Capping Stack | API 17W | Low |
+| [#491](https://github.com/vamseeachanta/digitalmodel/issues/491) | ROV Intervention | API 17H | Low |
+| [#493](https://github.com/vamseeachanta/digitalmodel/issues/493) | River/Shallow-Water Currents | -- | Low |
+| [#494](https://github.com/vamseeachanta/digitalmodel/issues/494) | Flexible Pipes Enhancement | API 17B, 17J | Low |
+
+All issues grouped under Milestone #1 — [Subsea Production Systems — API 17 Expansion](https://github.com/vamseeachanta/digitalmodel/milestone/1).
+
+---
+
 ## Code Coverage Map
 
 ### STRONG Coverage
@@ -75,17 +94,18 @@ LMI video post on river towing operational risk — barge collision with towing 
 | Geotechnical/Anchors | geotechnical/ | DNV-RP-C212 basic |
 | Pipe Capacity | structural/pipe_capacity/ | API 2RD, DNV-OS-F101 |
 
-### NO COVERAGE (Gaps)
-| Area | API/Std | Justification |
-|------|---------|--------------|
-| Subsea Trees | API 17D | No tree modeling, pressure/flow control |
-| Subsea Manifolds | API 17P | No manifold gathering/balancing |
-| HIPPS | API 17O | No pressure protection system modeling |
-| Capping Stack | API 17W | No blowout containment modeling |
-| ROV Tooling | API 17H | No ROV intervention modeling |
-| Control Systems | API 17F | No subsea electrical/hydraulic control |
-| Towing Analysis | DNV-ST-N001 | No towline catenary/bollard pull solver |
-| River Current Profiles | -- | No shallow-water/river current models |
+### NO COVERAGE (Gaps) — Now tracked as issues
+| Area | API/Std | Issue | Justification |
+|------|---------|-------|--------------|
+| Subsea Trees | API 17D | #484 | No tree modeling, pressure/flow control |
+| Subsea Manifolds | API 17P | #485 | No manifold gathering/balancing |
+| HIPPS | API 17O | #489 | No pressure protection system modeling |
+| Capping Stack | API 17W | #490 | No blowout containment modeling |
+| ROV Tooling | API 17H | #491 | No ROV intervention modeling |
+| Control Systems | API 17F | #488 | No subsea electrical/hydraulic control |
+| Towing Analysis | DNV-ST-N001 | #487 | No towline catenary/bollard pull solver |
+| River Current Profiles | -- | #493 | No shallow-water/river current models |
+| Flexible Pipes (enhanced) | API 17B/J | #494 | No unbonded pipe cross-section/fatigue |
 
 ---
 
@@ -105,9 +125,6 @@ Reservoir
    |
    v
 [Flexible Pipes/Flowlines] -- transport (covered)
-   |
-   v
-[Flexible Riser] -- to FPSO turret (covered)
    |
    v
 [FPSO / Platform] -- surface facility
