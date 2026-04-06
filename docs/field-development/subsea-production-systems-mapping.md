@@ -1,0 +1,143 @@
+# Subsea Production Systems & Installation Ops — Code Coverage Mapping
+
+**Date:** 2026-04-06
+**Sources:** LinkedIn posts from Lloyd's Maritime Institute (LMI)
+**Purpose:** Map extracted field development content to digitalmodel modules and identify gaps for future development.
+
+---
+
+## Source 1: Subsea Production Systems
+
+LMI post cataloging all subsea production system components with their API 17 standard references. Provides a complete taxonomy from reservoir extraction to FPSO tie-back.
+
+### Component Inventory
+
+| Component | API 17 Ref | Function |
+|-----------|------------|----------|
+| Subsea Trees | 17D | Flow control, pressure regulation, well monitoring |
+| Manifolds | 17P | Gather production from multiple wells, balance flow |
+| Workover Riser | 17G | Well access for maintenance/intervention |
+| Control Systems | 17F | Remote valve/sensor/equipment operation |
+| Umbilicals | 17E | Power, communication, chemical delivery |
+| HIPPS | 17O | High-integrity pressure protection (auto shutdown) |
+| Flexible Pipes | 17 Series | Dynamic fluid transport |
+| Capping Stack | 17W | Emergency well sealing (blowout) |
+| ROVs & Tooling | 17H | Deepwater inspection/repair |
+| Connectors & Jumpers | 17R | Link equipment for fluid transfer |
+| Structures | 17P | Support/protect installations |
+| General Design | 17A | Overall system requirements |
+
+### Operational Workflow
+Extraction -> Collection -> Control -> Transport -> Monitoring -> Protection
+
+---
+
+## Source 2: Towed Barges & Strong Currents
+
+LMI video post on river towing operational risk — barge collision with towing tug due to current-induced loss of control.
+
+### Hazards
+- Loss of control in strong river currents
+- Contact damage (barge-to-tug collision)
+- Cascading operational hazards from small miscalculations
+
+### Mitigations
+- Monitor current strength and direction
+- Maintain clear communication
+- Adjust speed and tow configuration
+- Anticipate vessel movement
+
+---
+
+## Code Coverage Map
+
+### STRONG Coverage
+| Area | digitalmodel Module | Standard |
+|------|--------------------|----------|
+| Hydrodynamics (diffraction/RAO) | hydrodynamics/diffraction/, hydrodynamics/ | DNV-RP-H103 |
+| Cathodic Protection | cathodic_protection/ | DNV-RP-B401, F103, API RP 1632, ISO 15589 |
+| Asset Integrity / FFS | asset_integrity/ | API 579, BS 7910, ASME B31 |
+| Pipeline Design | subsea/pipeline/ | DNV-OS-F101 |
+| Riser Analysis | subsea/catenary_riser/, subsea/vertical_riser/ | -- |
+| Fatigue | fatigue/, structural/fatigue/ | DNV-RP-C203 |
+| Free Span & VIV | subsea/pipeline/free_span/, subsea/viv_analysis/ | DNV-RP-F105 |
+| On-Bottom Stability | subsea/on_bottom_stability/ | DNV-RP-F109 |
+| Passing Ship / Vessel Interaction | hydrodynamics/passing_ship/ | -- |
+| Field Development Schematics | field_development/schematics/ | -- |
+
+### PARTIAL Coverage
+| Area | Exists | Gap Missing |
+|------|--------|------------|
+| Workover Riser | drilling_riser/, vertical_riser/ | API 17G-specific modeling, stackup |
+| Flexible Pipes | catenary_riser/ | API 17B/17J-specific |
+| Connectors & Jumpers | OrcaFlex skill only | No native Python solver |
+| Mooring Design | subsea/mooring_analysis/ | DNV-OS-E301 partial |
+| Geotechnical/Anchors | geotechnical/ | DNV-RP-C212 basic |
+| Pipe Capacity | structural/pipe_capacity/ | API 2RD, DNV-OS-F101 |
+
+### NO COVERAGE (Gaps)
+| Area | API/Std | Justification |
+|------|---------|--------------|
+| Subsea Trees | API 17D | No tree modeling, pressure/flow control |
+| Subsea Manifolds | API 17P | No manifold gathering/balancing |
+| HIPPS | API 17O | No pressure protection system modeling |
+| Capping Stack | API 17W | No blowout containment modeling |
+| ROV Tooling | API 17H | No ROV intervention modeling |
+| Control Systems | API 17F | No subsea electrical/hydraulic control |
+| Towing Analysis | DNV-ST-N001 | No towline catenary/bollard pull solver |
+| River Current Profiles | -- | No shallow-water/river current models |
+
+---
+
+## Field Development Schematic Architecture
+
+```
+Reservoir
+   |
+   v
+[Subsea Tree 17D] -- extraction
+   |
+   v
+[Manifold 17P] -- collection from multiple trees
+   |
+   v
+[Jumpers/Connectors 17R] -- fluid transfer
+   |
+   v
+[Flexible Pipes/Flowlines] -- transport (covered)
+   |
+   v
+[Flexible Riser] -- to FPSO turret (covered)
+   |
+   v
+[FPSO / Platform] -- surface facility
+
+Parallel systems:
+- Umbilicals 17E -- power/comms/chemicals (from FPSO to trees/manifolds)
+- Control System 17F -- remote operation (subsea to surface)
+- HIPPS 17O -- overpressure protection
+- Capping Stack 17W -- emergency well sealing
+- ROV 17H -- inspection/maintenance
+```
+
+---
+
+## API 17 Standards Quick Reference
+
+```
+17A  - System design and classification
+17B  - Flexible pipe systems
+17C  - Flexible pipe interconnector systems
+17D  - Subsea wellhead and tree equipment
+17E  - Subsea and surface umbilicals
+17F  - Subsea production control systems
+17G  - Workover riser systems
+17H  - Subsea production systems — ROV interface
+17J  - Flexible pipe systems (unbonded)
+17K  - Flexible pipe systems — testing
+17O  - High integrity pressure protection systems (HIPPS)
+17P  - Subsea manifolds and related structures
+17R  - Connectors and jumpers
+17W  - Capping stack systems
+17Z  - Subsea production and distribution systems
+```
