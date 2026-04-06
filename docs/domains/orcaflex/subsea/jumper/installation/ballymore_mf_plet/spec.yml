@@ -1,0 +1,135 @@
+# OrcaFlex Jumper Installation Analysis - Input Specification
+# Ballymore Manifold-to-PLET Jumper
+#
+# This spec.yml feeds the jumper_lift.py calculation module which generates
+# OrcaFlex line-section YAML segments for the model generator.
+#
+# Pipeline: spec.yml → jumper_lift.py → orcaflex model.yml → analysis → postprocess → outputs
+#
+# Usage:
+#   from digitalmodel.marine_ops.installation.jumper_lift import run_jumper_analysis
+#   from digitalmodel.infrastructure.spec_loader import load_spec
+#   cfg = load_spec("spec.yml")
+#   results = run_jumper_analysis(cfg.jumper)
+
+metadata:
+  name: "ballymore_mf_plet_jumper"
+  description: "Ballymore Manifold-to-PLET Jumper Installation Analysis"
+  structure: jumper
+  operation: installation/lift
+  cranes: [SZ, DZ]
+
+environment:
+  water:
+    depth: 1400                        # Approximate water depth (m) – Ballymore GOM
+    density: 1.025                     # Seawater density (te/m3)
+  seabed:
+    soil_type: soft_clay               # Conservative assumption for jumper landing
+    stiffness:
+      normal: 1000                     # Normal stiffness (kN/m/m2)
+  metocean:
+    # StormGeo metocean data from Ballymore project (2023-07-12/13)
+    wind:
+      design_speed: 25.0               # 1-yr max wind (m/s)
+      gust_factors: [0.8, 0.75, 0.71, 0.69, 0.68, 0.67, 0.66, 0.65, 0.63, 0.62]
+    wave:
+      significant: 4.0                 # Hs (m) - 1-yr max
+      period: 7.5                      # Tp (s)
+      direction: 180                   # From south (deg)
+
+pipe:
+  name: "jumper"
+  outer_diameter: 0.27305              # Steel OD (m) – 10.75 in
+  wall_thickness: 0.045466             # Wall thickness (m) – 1.79 in
+  bend_radius: 1.27                    # Bend radius (m) – 50 in
+  insulated_od: 0.42545                # OD with insulation (m) – 16.75 in
+  insulation:
+    thickness: 0.0762                  # Insulation thickness (m) – 3.0 in
+    density: 978.7                     # Insulation density (kg/m3) – 61.1 lb/ft3
+  steel_density: 7850                  # Steel density (kg/m3)
+
+buoyancy_modules:
+  length_m: 1.016
+  dry_weight_lbs: 1287.0
+  wet_weight_lbs: -613.0              # Negative = buoyant
+  od_drag_m: 1.5403
+  placement:
+    segment_C: 2                        # 2 buoyancy modules
+    segment_D: 20                       # 10+10 with 1.168m bare pipe centre
+    segment_E: 2                        # 2 buoyancy modules
+
+strake_modules:
+  length_m: 2.159                       # Strake module length
+  base_dry_lbs: 36.12                   # Base dry weight
+  wt_lbs_per_joint: 3.0                 # 3 joints × 0.63 lbs/joint = 1.89
+  od_drag_m: 0.653
+  num_strakes: 2                        # Total strake modules
+
+rigging:
+  masterlink:
+    wll_te: 98.0
+  fiber_rope:
+    type: "Dyneema SK75"
+    diameter_mm: 78
+    length_m: 0.6096                   # 2 ft
+    mbl_te: 600.0
+  upper_wire:
+    diameter_in: 2.25
+    mbl_te: 224.0
+  lower_wire:
+    diameter_in: 1.5
+    mbl_te: 103.0
+  turnbuckle:
+    wll_te: 27.0
+  sling_stiffness:
+    mbl_te: 1200.0
+    elongation: 0.045                   # 4.5%
+  spreader_bar:
+    length_ft: 110.0
+    od_in: 20.0
+    wall_in: 1.281
+
+crane_configuration:
+  SZ:                                   # Saipem 7000 (SZ) crane
+    radius_m: 18.0
+    swl_te: 77.5                        # 70+30/4 – 18m radius interpolated
+    ddf: 1.3                            # Dynamic Design Factor
+  DZ:                                   # DZ crane (Saipem Saipem 7000 DZ config)
+    radius_m: 12.0
+    swl_te: 100.0                       # At 12m radius
+    ddf: 1.3
+
+jumper:
+  # JumperConfig parameters for jumper_lift.py
+  config_name: "ballymore_mf_plet"
+  seg_a_inch: 336.0
+  seg_b_inch: 160.0
+  seg_c_inch: 525.0                     # 160+365
+  seg_d_inch: 1046.3                    # 552.1+494.2
+  seg_e_inch: 370.0                     # 210+160
+  seg_f_inch: 160.0
+  seg_g_inch: 352.0
+  connector_weight_kg: 1678.5           # 3357/2
+  connector_length_m: 1.3
+  clamp_weight_kg: 260.0
+  clamp_wll_te: 15.0
+  num_buoy_modules_in_c: 2
+  num_buoy_modules_in_d: 20
+  num_buoy_modules_in_e: 2
+  num_strakes: 2
+  clamp_ocs_offset_m: 1.3
+
+weight_check:
+  uninsulated:
+    KIT1: 7438.0
+    KIT2: 6333.0
+    KIT3: 4684.0
+    KIT4: 8189.0
+  insulated:
+    KIT1: 8682.0
+    KIT2: 8309.0
+    KIT3: 6134.0
+    KIT4: 8730.0
+  clamps:
+    count: 5
+    weight_kg: 260.0
