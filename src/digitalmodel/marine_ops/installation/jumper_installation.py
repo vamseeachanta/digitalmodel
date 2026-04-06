@@ -3,10 +3,11 @@
 End-to-end workflow:
   1. spec.yml (declarative input) 
   2. jumper_lift.py (calculate jumper properties from Excel conversion)
-  3. orcaflex model.yml (generate line-section config for model generator)
-  4. OrcaFlex analysis (run solver)
-  5. Post-processing (extract results, generate reports)
-  6. Output delivery (PDF/HTML reports, data tables, Go/No-Go decisions)
+  3. go_no_go.py (DNV-compliant Go/No-Go decision)
+  4. orcaflex model.yml (generate line-section config for model generator)
+  5. OrcaFlex analysis (run solver)
+  6. Post-processing (extract results, generate reports)
+  7. Output delivery (PDF/HTML reports, data tables, Go/No-Go decisions)
 
 Supports multiple jumper configurations from a single spec:
   • SZ (static) – Saipem crane, no active heave compensation
@@ -38,39 +39,61 @@ from digitalmodel.marine_ops.installation.jumper_lift import (
     generate_orcaflex_line_sections_yaml,
 )
 
+from digitalmodel.marine_ops.installation.go_no_go import (
+    GoNoGoDecision,
+    evaluate_go_no_go,
+    print_decision,
+)
+
 
 @dataclass
 class PipelineConfig:
-    """Configuration for the full jumper analysis pipeline."""
+    """Configuration for the full jumper analysis pipeline.
+    
+    Attributes:
+        spec_path: Path to spec.yml input file.
+        output_dir: Directory for all output files.
+        run_orcaflex: Whether to run OrcaFlex solver (requires installation).
+        generate_report: Whether to generate HTML/PDF reports.
+        run_go_no_go: Whether to evaluate Go/No-Go decision criteria.
+        go_no_go_criteria: Custom criteria overrides (optional).
+    """
     spec_path: str
     output_dir: str = "./output"
     run_orcaflex: bool = False
     generate_report: bool = True
+    run_go_no_go: bool = True
     go_no_go_criteria: Optional[Dict[str, float]] = None
 
 
 @dataclass
 class PipelineOutput:
-    """Results from the complete pipeline."""
+    """Results from the complete pipeline.
+    
+    Attributes:
+        config_name: Name of jumper configuration used.
+        timestamp: Time pipeline was executed.
+        jumper_analysis: Results from jumper_lift.run_jumper_analysis().
+        go_no_go: Go/No-Go decision (or None if not evaluated).
+        line_sections_yaml: OrcaFlex line section YAML generation.
+        report_path: Path to generated report file.
+        output_files: List of all output files generated.
+    """
     config_name: str
     timestamp: str = field(default_factory=lambda: datetime.datetime.now().isoformat())
 
-    # Stage 1: spec.yml
-    spec_data: Dict[str, Any] = field(default_factory=dict)
+    # Stage 2: jumper analysis results
+    jumper_analysis: Optional[Dict[str, Any]] = None
 
-    # Stage 2: calculations
-    pipe_properties: Dict[str, float] = field(default_factory=dict)
-    pipe_geometry: Dict[str, float] = field(default_factory=dict)
-    orcaflex_sections: List[Dict] = field(default_factory=list)
-    weight_tally: Dict[str, Any] = field(default_factory=dict)
-    crane_utilisation: Dict[str, float] = field(default_factory=dict)
+    # Stage 3: Go/No-Go decision
+    go_no_go: Optional[GoNoGoDecision] = None
 
-    # Stage 3: YAML generation
+    # Stage 4: OrcaFlex line section YAML
     line_sections_yaml: str = ""
 
-    # Stage 6: outputs
+    # Stage 6: Report and outputs
     report_path: str = ""
-    go_no_go: str = "pending"
+    output_files: List[str] = field(default_factory=list)
 
 
 def load_spec(spec_path: str) -> Dict:
@@ -83,6 +106,10 @@ def load_spec(spec_path: str) -> Dict:
     
     Returns:
         Parsed yaml spec data.
+    
+    Raises:
+        FileNotFoundError: If spec file doesn't exist.
+        ImportError: If PyYAML not installed.
     """
     path = Path(spec_path)
     if not path.exists():
@@ -92,7 +119,7 @@ def load_spec(spec_path: str) -> Dict:
         with open(path) as f:
             return yaml.safe_load(f)
     else:
-        raise ImportError("PyYAML required to load spec.yml: pip install pyyaml")
+        raise ImportError("PyYAML required: pip install pyyaml")
 
 
 def parse_jumper_config(spec: Dict) -> JumperConfig:
@@ -102,18 +129,17 @@ def parse_jumper_config(spec: Dict) -> JumperConfig:
         spec: Parsed spec.yml data.
     
     Returns:
-        JumperConfig with values from spec (falling back to known configs).
+        JumperConfig with values from spec, falling back to KNOWN_JUMPER_CONFIGS.
     """
     jumper_data = spec.get("jumper", {})
     config_name = jumper_data.get("config_name", "ballymore_mf_plet")
     
-    # Start from known config
     base = KNOWN_JUMPER_CONFIGS.get(config_name, JumperConfig())
+    overrides = {
+        k: v for k, v in jumper_data.items() 
+        if k != "config_name" and hasattr(base, k)
+    }
     
-    # Override with spec values
-    overrides = {k: v for k, v in jumper_data.items() if k != "config_name" and hasattr(base, k)}
-    
-    # Replace fields
     from dataclasses import replace
     return replace(base, **overrides)
 
@@ -122,7 +148,6 @@ def stage_1_load_spec(spec_path: str) -> Dict:
     """Stage 1: Load and validate spec.yml."""
     spec = load_spec(spec_path)
     
-    # Basic validation
     required = {"metadata", "pipe", "environment"}
     missing = required - set(spec.keys())
     if missing:
@@ -134,91 +159,188 @@ def stage_1_load_spec(spec_path: str) -> Dict:
 def stage_2_calculate(spec: Dict) -> Dict:
     """Stage 2: Run jumper_lift.py calculations.
     
-    Takes parsed spec, creates JumperConfig, runs all calculation
-    functions (24 functions from windows conversion), returns results.
+    Args:
+        spec: Parsed spec.yml data.
     
-    This is where the Excel-to-code conversion is exercised.
+    Returns:
+        Results dict from run_jumper_analysis().
     """
     config = parse_jumper_config(spec)
     return run_jumper_analysis(config)
 
 
-def stage_3_generate_yaml(results: Dict) -> str:
-    """Stage 3: Generate OrcaFlex line-section YAML from calculation results."""
-    return results.get("orcaflex_sections_yaml", "")
-
-
-def stage_4_report(results: Dict, spec: Dict, yaml_sections: str) -> str:
-    """Generate a summary report dict (to be rendered as HTML/PDF externally)."""
-    pipe = results.get("pipe_properties", {})
-    geom = results.get("pipe_geometry", {})
-    wc = results.get("weight_check", {})
-    crane = results.get("crane", {})
+def stage_3_go_no_go(jumper_name: str, results: Dict, custom_criteria: Optional[Dict] = None) -> GoNoGoDecision:
+    """Stage 3: Evaluate Go/No-Go decision criteria.
     
-    report = {
-        "jumper_name": spec.get("metadata", {}).get("name", "unknown"),
-        "total_length_m": geom.get("total_length_m", 0) if isinstance(geom, dict) else 0,
-        "pipe_od_mm": pipe.get("od_m", 0) * 1000 if isinstance(pipe, dict) else 0,
-        "steel_linear_mass": pipe.get("steel_linear_wt_kg_m", 0) if isinstance(pipe, dict) else 0,
-        "buoyancy_dry_weight_kg": results.get("buoyancy", {}).get("dry_weight_kg", 0) if isinstance(results.get("buoyancy", {}), dict) else 0,
-        "strake_dry_weight_kg": results.get("strake", {}).get("dry_weight_kg", 0) if isinstance(results.get("strake", {}), dict) else 0,
-        "grand_total_kg": wc.get("grand_total_kg", 0) if isinstance(wc, dict) else 0,
-        "crane_configs": list(crane.get("cranes", {}).keys()) if isinstance(crane.get("cranes", {}), dict) else [],
-        "orcaflex_section_count": len(results.get("orcaflex_sections", [])),
-    }
-    return json.dumps(report, indent=2)
-
-
-def run_pipeline(spec_path: str, output_dir: str = "./output") -> PipelineOutput:
-    """Execute the full jumper analysis pipeline.
-    
-    Stages:
-      1. Load spec.yml
-      2. Calculate jumper properties (jumper_lift.py – 24 functions)
-      3. Generate OrcaFlex line-section YAML
-      4. Produce summary output
+    Implements 12 DNV-compliant criteria including:
+    - Crane SWL utilisation (SZ + DZ)
+    - Dynamic capacity utilisation
+    - Sling WLL safety margin
+    - Sling stiffness adequacy
+    - DAF min/max range
+    - Minimum bend radius
+    - Vessel deck payload
+    - Total lift weight
+    - Spreader bar adequacy
     
     Args:
-        spec_path: Path to jumper spec.yml (either ballymore_mf_plet or ballymore_plet_plem)
-        output_dir: Directory for output files
+        jumper_name: Name of jumper for report.
+        results: Output from stage_2_calculate().
+        custom_criteria: Optional custom criterion overrides.
     
     Returns:
-        PipelineOutput with all results.
+        GoNoGoDecision with all criteria evaluated.
+    """
+    criteria_kwargs = custom_criteria or {}
+    return evaluate_go_no_go(jumper_name, results, **criteria_kwargs)
+
+
+def stage_4_generate_yaml(results: Dict) -> str:
+    """Stage 4: Generate OrcaFlex line-section YAML.
+    
+    Args:
+        results: Output from stage_2_calculate().
+    
+    Returns:
+        YAML string defining line sections.
+    """
+    if isinstance(results, dict):
+        return results.get("orcaflex_yaml", "")
+    return ""
+
+
+def stage_5_write_outputs(output_dir: str, output: PipelineOutput) -> List[str]:
+    """Stage 5: Write all output files.
+    
+    Creates:
+    - line_sections.yml
+    - go_no_go_decision.txt
+    - report.json (summary data)
+    
+    Args:
+        output_dir: Target directory.
+        output: Pipeline output with all results.
+    
+    Returns:
+        List of output file paths created.
     """
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    output = PipelineOutput(config_name=Path(spec_path).parent.name)
+    output_files = []
     
-    # Stage 1: Load spec
-    output.spec_data = stage_1_load_spec(spec_path)
-    
-    # Stage 2: Calculate
-    results = stage_2_calculate(output.spec_data)
-    
-    # Extract key values (handle dataclass and dict results)
-    if hasattr(results, "pipe_properties"):
-        p = results.pipe_properties
-        output.pipe_properties = {
-            "od_m": p.OD_m if hasattr(p, "OD_m") else getattr(p, "od_m", 0),
-            "id_m": p.ID_m if hasattr(p, "ID_m") else getattr(p, "id_m", 0),
-            "steel_linear_mass_kg_m": p.steel_linear_mass_kg_m if hasattr(p, "steel_linear_mass_kg_m") else p.steel_linear_wt_kg_m,
-        }
-    
-    # Stage 3: Generate YAML
-    if hasattr(results, "orcaflex_sections_yaml"):
-        output.line_sections_yaml = results.orcaflex_sections_yaml
-        output.orcaflex_sections = results.orcaflex_sections if hasattr(results, "orcaflex_sections") else []
-    
-    # Write sections YAML to file
+    # Write line sections YAML
     if output.line_sections_yaml:
         yaml_path = Path(output_dir) / "line_sections.yml"
         with open(yaml_path, "w") as f:
             f.write(output.line_sections_yaml)
+        output_files.append(str(yaml_path))
     
-    # Stage 4: Report
-    report = stage_4_report(results, output.spec_data, output.line_sections_yaml)
-    report_path = Path(output_dir) / "report.json"
-    with open(report_path, "w") as f:
-        f.write(report)
-    output.report_path = str(report_path)
+    # Write Go/No-Go decision
+    if output.go_no_go:
+        gng_path = Path(output_dir) / "go_no_go_decision.txt"
+        with open(gng_path, "w") as f:
+            f.write(print_decision(output.go_no_go))
+        output_files.append(str(gng_path))
+        
+        # Also write machine-readable JSON
+        gng_json_path = Path(output_dir) / "go_no_go_decision.json"
+        decision_data = {
+            "jumper_name": output.go_no_go.jumper_name,
+            "overall_state": output.go_no_go.overall_state.value,
+            "criteria_count": len(output.go_no_go.criteria),
+            "pass_count": sum(1 for c in output.go_no_go.criteria if c.state.name == "PASS"),
+            "warning_count": sum(1 for c in output.go_no_go.criteria if c.state.name == "WARNING"),
+            "fail_count": sum(1 for c in output.go_no_go.criteria if c.state.name == "FAIL"),
+            "criteria": [
+                {
+                    "name": c.name,
+                    "state": c.state.value,
+                    "value": c.value,
+                    "limit": c.limit,
+                    "unit": c.unit,
+                    "margin": c.margin,
+                    "reference": c.reference,
+                }
+                for c in output.go_no_go.criteria
+            ],
+            "summary": output.go_no_go.summary,
+        }
+        with open(gng_json_path, "w") as f:
+            json.dump(decision_data, f, indent=2)
+        output_files.append(str(gng_json_path))
+    
+    # Write analysis summary
+    if output.jumper_analysis:
+        summary_path = Path(output_dir) / "analysis_summary.json"
+        summary_data = {
+            "config_name": output.config_name,
+            "timestamp": output.timestamp,
+            "pipe_properties": str(output.jumper_analysis.get("pipe_properties", {})),
+            "total_weight_kg": output.jumper_analysis.get("weight_check_insulated", {}).get("grand_total_kg", 
+                                   output.jumper_analysis.get("weight_check", {}).get("grand_total_kg", 0)),
+            "total_length_m": output.jumper_analysis.get("pipe_geometry", {}).get("total_length_m", 0),
+            "orcaflex_section_count": len(output.jumper_analysis.get("orcaflex_sections", [])),
+        }
+        with open(summary_path, "w") as f:
+            json.dump(summary_data, f, indent=2)
+        output_files.append(str(summary_path))
+    
+    return output_files
+
+
+def run_pipeline(spec_path: str, output_dir: str = "./output", 
+                 run_orcaflex: bool = False,
+                 generate_report: bool = True,
+                 run_go_no_go: bool = True) -> PipelineOutput:
+    """Execute the full jumper installation analysis pipeline.
+    
+    Pipeline stages:
+      1. Load spec.yml
+      2. Calculate jumper properties (jumper_lift.py - 24 functions)
+      3. Evaluate Go/No-Go decision (12 DNV-compliant criteria)
+      4. Generate OrcaFlex line-section YAML
+      5. Write output files
+      6. (Optional) Run OrcaFlex analysis
+      7. (Optional) Generate HTML/PDF reports
+    
+    Args:
+        spec_path: Path to jumper spec.yml (ballymore_mf_plet or ballymore_plet_plem).
+        output_dir: Directory for all output files.
+        run_orcaflex: Whether to run OrcaFlex solver.
+        generate_report: Whether to generate reports.
+        run_go_no_go: Whether to evaluate Go/No-Go decision.
+    
+    Returns:
+        PipelineOutput with all results and output file paths.
+    """
+    config_name = Path(spec_path).parent.name
+    output = PipelineOutput(config_name=config_name)
+    
+    # Stage 1: Load and validate spec
+    print(f"[Pipeline] Stage 1/5: Loading spec from {spec_path}")
+    spec = stage_1_load_spec(spec_path)
+    
+    # Stage 2: Calculate jumper properties
+    print(f"[Pipeline] Stage 2/5: Running jumper analysis ({config_name})")
+    results = stage_2_calculate(spec)
+    output.jumper_analysis = results
+    
+    # Stage 3: Go/No-Go Decision
+    if run_go_no_go:
+        print(f"[Pipeline] Stage 3/5: Evaluating Go/No-Go decision")
+        output.go_no_go = stage_3_go_no_go(config_name, results)
+        print(print_decision(output.go_no_go))
+    else:
+        print(f"[Pipeline] Stage 3/5: Skipped (run_go_no_go=False)")
+    
+    # Stage 4: Generate OrcaFlex YAML
+    print(f"[Pipeline] Stage 4/5: Generating OrcaFlex line sections")
+    output.line_sections_yaml = stage_4_generate_yaml(results)
+    
+    # Stage 5: Write outputs
+    print(f"[Pipeline] Stage 5/5: Writing outputs to {output_dir}")
+    output.output_files = stage_5_write_outputs(output_dir, output)
+    
+    print(f"\n[Pipeline] Complete - {len(output.output_files)} files written to {output_dir}")
+    print(f"[Pipeline] Output files: {output.output_files}")
     
     return output
