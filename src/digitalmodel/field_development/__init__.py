@@ -32,6 +32,16 @@ from .economics import (
     build_economics_schedule,
     carbon_sensitivity,
 )
+from .benchmarks import (
+    SubseaProject,
+    ConceptPrediction,
+    concept_probability_matrix,
+    predict_concept_type,
+    validate_against_cases,
+    concept_benchmark_bands,
+    load_projects,
+    DEPTH_BANDS,
+)
 from .workflow import (
     FieldDevelopmentSpec,
     FieldDevelopmentResult,
@@ -50,6 +60,15 @@ __all__ = [
     "ConceptSelectionResult",
     "concept_selection",
     "concept_selection_with_benchmarks",
+    # Benchmarks & probability matrix (#1861, #2053)
+    "SubseaProject",
+    "ConceptPrediction",
+    "concept_probability_matrix",
+    "predict_concept_type",
+    "validate_against_cases",
+    "concept_benchmark_bands",
+    "load_projects",
+    "DEPTH_BANDS",
     # CAPEX estimation (#1843)
     "CAPEXEstimate",
     "estimate_capex",

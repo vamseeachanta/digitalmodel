@@ -427,6 +427,108 @@ def predict_concept_type(
 
 
 # ---------------------------------------------------------------------------
+# Case study validation (#2053)
+# ---------------------------------------------------------------------------
+
+def validate_against_cases(
+    projects: list[SubseaProject],
+    case_studies: list[dict],
+) -> dict:
+    """Validate concept predictions against known case studies.
+
+    Runs :func:`predict_concept_type` for each case study and compares
+    the predicted concept to the expected answer.  Returns accuracy
+    metrics and per-case details.
+
+    Parameters
+    ----------
+    projects : list[SubseaProject]
+        Benchmark dataset from which to derive probabilities.
+    case_studies : list[dict]
+        Each dict must contain:
+        - ``name`` (str): Case study label.
+        - ``water_depth`` (float): Water depth in metres.
+        - ``reservoir_size_mmbbl`` (float): Reserves in MMbbl.
+        - ``distance_to_infra_km`` (float or None): Distance to infra.
+        - ``expected_concept`` (str or list[str]): Correct concept type(s).
+          Pass a list to accept multiple valid answers (e.g.
+          ``["Spar", "Semi"]``).
+
+    Returns
+    -------
+    dict
+        Keys:
+        - ``accuracy`` (float): Fraction of correct predictions (0.0–1.0).
+        - ``total`` (int): Number of case studies evaluated.
+        - ``correct`` (int): Number of correct predictions.
+        - ``incorrect`` (int): Number of incorrect predictions.
+        - ``details`` (list[dict]): Per-case breakdown with fields:
+          ``name``, ``expected``, ``predicted``, ``match`` (bool),
+          ``top_3`` (list of (concept, probability) tuples).
+
+    Examples
+    --------
+    >>> result = validate_against_cases(projects, case_studies)
+    >>> result["accuracy"]
+    0.75
+    """
+    if not case_studies:
+        return {
+            "accuracy": 0.0,
+            "total": 0,
+            "correct": 0,
+            "incorrect": 0,
+            "details": [],
+        }
+
+    details: list[dict] = []
+    correct = 0
+
+    for case in case_studies:
+        prediction = predict_concept_type(
+            projects=projects,
+            water_depth=case["water_depth"],
+            reservoir_size_mmbbl=case["reservoir_size_mmbbl"],
+            distance_to_infra_km=case.get("distance_to_infra_km"),
+        )
+
+        expected = case["expected_concept"]
+        if isinstance(expected, str):
+            match = prediction.predicted_concept == expected
+        else:
+            # Accept any of the listed concepts as correct
+            match = prediction.predicted_concept in expected
+
+        if match:
+            correct += 1
+
+        # Top 3 concepts by probability
+        sorted_probs = sorted(
+            prediction.probabilities.items(),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        top_3 = [(c, round(p, 4)) for c, p in sorted_probs[:3]]
+
+        details.append({
+            "name": case["name"],
+            "expected": expected,
+            "predicted": prediction.predicted_concept,
+            "match": match,
+            "top_3": top_3,
+        })
+
+    total = len(case_studies)
+    return {
+        "accuracy": correct / total,
+        "total": total,
+        "correct": correct,
+        "incorrect": total - correct,
+        "details": details,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
