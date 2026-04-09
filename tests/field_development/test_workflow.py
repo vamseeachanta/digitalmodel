@@ -144,6 +144,58 @@ class TestFieldDevelopmentSpec:
                 fluid_type="hydrogen",
             )
 
+    def test_zero_production_raises(self) -> None:
+        with pytest.raises(ValueError, match="production_capacity_bopd"):
+            FieldDevelopmentSpec(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                reservoir_size_mmbbl=100.0,
+                production_capacity_bopd=0.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=20,
+            )
+
+    def test_zero_oil_price_raises(self) -> None:
+        with pytest.raises(ValueError, match="oil_price_usd_per_bbl"):
+            FieldDevelopmentSpec(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                reservoir_size_mmbbl=100.0,
+                production_capacity_bopd=50_000.0,
+                oil_price_usd_per_bbl=0.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=20,
+            )
+
+    def test_invalid_discount_rate_raises(self) -> None:
+        with pytest.raises(ValueError, match="discount_rate"):
+            FieldDevelopmentSpec(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                reservoir_size_mmbbl=100.0,
+                production_capacity_bopd=50_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=1.5,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=20,
+            )
+
+    def test_zero_field_life_raises(self) -> None:
+        with pytest.raises(ValueError, match="field_life_years"):
+            FieldDevelopmentSpec(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                reservoir_size_mmbbl=100.0,
+                production_capacity_bopd=50_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=0,
+            )
+
 
 # ---------------------------------------------------------------------------
 # evaluate_field_development — end-to-end pipeline
@@ -281,6 +333,74 @@ class TestCompareConceptsMode:
     ) -> None:
         comparison = compare_concepts(gom_deepwater_spec, top_n=1)
         assert len(comparison.results) == 1
+
+    def test_zero_viable_concepts_raises(self) -> None:
+        """Water depth below all hard limits should raise ValueError."""
+        spec = FieldDevelopmentSpec(
+            field_name="Too Shallow",
+            water_depth_m=50.0,  # below all host depth limits (min 100 m)
+            reservoir_size_mmbbl=100.0,
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+        )
+        with pytest.raises(ValueError, match="No viable host concepts"):
+            compare_concepts(spec)
+
+    def test_top_n_zero_raises(self) -> None:
+        """top_n=0 should raise ValueError."""
+        spec = FieldDevelopmentSpec(
+            field_name="Bad N",
+            water_depth_m=1000.0,
+            reservoir_size_mmbbl=200.0,
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+        )
+        with pytest.raises(ValueError, match="top_n"):
+            compare_concepts(spec, top_n=0)
+
+    def test_distinct_host_types_evaluated(
+        self, gom_deepwater_spec: FieldDevelopmentSpec
+    ) -> None:
+        """Each result in compare_concepts should evaluate a distinct host type."""
+        comparison = compare_concepts(gom_deepwater_spec, top_n=3)
+        hosts = [r.evaluated_host for r in comparison.results]
+        assert len(set(hosts)) == len(hosts)
+
+    def test_evaluated_host_set_on_result(
+        self, gom_deepwater_spec: FieldDevelopmentSpec
+    ) -> None:
+        """evaluated_host should be populated on each result."""
+        comparison = compare_concepts(gom_deepwater_spec, top_n=2)
+        for r in comparison.results:
+            assert r.evaluated_host != ""
+            assert r.evaluated_host in r.economics.basis
+
+
+# ---------------------------------------------------------------------------
+# evaluate_field_development — evaluated_host
+# ---------------------------------------------------------------------------
+
+
+class TestEvaluatedHostField:
+    """Test evaluated_host is set correctly on FieldDevelopmentResult."""
+
+    def test_evaluate_field_development_sets_evaluated_host(
+        self, gom_deepwater_spec: FieldDevelopmentSpec
+    ) -> None:
+        result = evaluate_field_development(gom_deepwater_spec)
+        assert result.evaluated_host == result.concept.selected_host.value
+
+    def test_evaluated_host_matches_economics_basis(
+        self, gom_deepwater_spec: FieldDevelopmentSpec
+    ) -> None:
+        result = evaluate_field_development(gom_deepwater_spec)
+        assert result.evaluated_host in result.economics.basis
 
 
 # ---------------------------------------------------------------------------

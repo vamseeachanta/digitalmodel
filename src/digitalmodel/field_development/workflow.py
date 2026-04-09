@@ -93,6 +93,22 @@ class FieldDevelopmentSpec:
             raise ValueError(
                 f"reservoir_size_mmbbl must be positive, got {self.reservoir_size_mmbbl!r}"
             )
+        if self.production_capacity_bopd <= 0:
+            raise ValueError(
+                f"production_capacity_bopd must be positive, got {self.production_capacity_bopd!r}"
+            )
+        if self.oil_price_usd_per_bbl <= 0:
+            raise ValueError(
+                f"oil_price_usd_per_bbl must be positive, got {self.oil_price_usd_per_bbl!r}"
+            )
+        if self.discount_rate < 0 or self.discount_rate > 1:
+            raise ValueError(
+                f"discount_rate must be in [0, 1], got {self.discount_rate!r}"
+            )
+        if self.field_life_years < 1:
+            raise ValueError(
+                f"field_life_years must be >= 1, got {self.field_life_years!r}"
+            )
         if self.fluid_type not in ("oil", "gas", "condensate"):
             raise ValueError(
                 f"fluid_type must be 'oil', 'gas', or 'condensate', got {self.fluid_type!r}"
@@ -108,12 +124,14 @@ class FieldDevelopmentSpec:
 class FieldDevelopmentResult:
     """Complete field development screening result.
 
-    Bundles concept selection ranking with the economics evaluation
-    for the top-ranked host concept.
+    Bundles concept selection ranking with the economics evaluation.
+    In compare-concepts mode, ``evaluated_host`` identifies which host
+    economics were actually run for (may differ from ``concept.selected_host``).
     """
 
     concept: ConceptSelectionResult
     economics: EconomicsResult
+    evaluated_host: str = ""
 
 
 @dataclass
@@ -188,7 +206,11 @@ def evaluate_field_development(
     econ_input = _spec_to_economics_input(spec, concept.selected_host.value)
     econ_result = evaluate_economics(econ_input)
 
-    return FieldDevelopmentResult(concept=concept, economics=econ_result)
+    return FieldDevelopmentResult(
+        concept=concept,
+        economics=econ_result,
+        evaluated_host=concept.selected_host.value,
+    )
 
 
 def compare_concepts(
@@ -213,6 +235,9 @@ def compare_concepts(
         Side-by-side results, with a ``.best`` property for the
         highest-NPV option.
     """
+    if top_n < 1:
+        raise ValueError(f"top_n must be >= 1, got {top_n!r}")
+
     concept = concept_selection(
         water_depth=spec.water_depth_m,
         reservoir_size_mmbbl=spec.reservoir_size_mmbbl,
@@ -222,13 +247,22 @@ def compare_concepts(
 
     # Only evaluate viable concepts (score > 0)
     viable = [opt for opt in concept.ranked_options if opt.score > 0][:top_n]
+    if not viable:
+        raise ValueError(
+            f"No viable host concepts (score > 0) for water_depth_m={spec.water_depth_m}. "
+            "All options are outside depth suitability limits."
+        )
 
     results = []
     for option in viable:
         econ_input = _spec_to_economics_input(spec, option.host_type.value)
         econ_result = evaluate_economics(econ_input)
         results.append(
-            FieldDevelopmentResult(concept=concept, economics=econ_result)
+            FieldDevelopmentResult(
+                concept=concept,
+                economics=econ_result,
+                evaluated_host=option.host_type.value,
+            )
         )
 
     return ConceptComparison(results=results)
