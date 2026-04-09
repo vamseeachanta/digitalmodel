@@ -131,7 +131,10 @@ class TestRegisterFleetVessels:
             get_ship,
         )
 
-        added, skipped = register_fleet_vessels([SLEIPNIR_RECORD, THIALF_RECORD])
+        # Use overwrite=True to handle test-ordering sensitivity (pytest-randomly)
+        added, skipped = register_fleet_vessels(
+            [SLEIPNIR_RECORD, THIALF_RECORD], overwrite=True
+        )
 
         assert added >= 1
         # At least one should be retrievable
@@ -395,4 +398,178 @@ class TestFloatingPlatformStabilityIntegration:
         assert hydro is not None
         vol = submerged_volume(ship["displacement_lt"])
         assert 200_000 < vol < 500_000
+
+
+# ── Hull Properties Module Tests ─────────────────────────────────────
+
+class TestHullHydrostatics:
+    """Tests for hull_properties.hull_hydrostatics."""
+
+    def test_registered_vessel_returns_properties(self):
+        from digitalmodel.naval_architecture.ship_data import register_fleet_vessels
+        from digitalmodel.naval_architecture.hull_properties import hull_hydrostatics
+
+        register_fleet_vessels([THIALF_RECORD], overwrite=True)
+        props = hull_hydrostatics("THIALF")
+
+        assert props is not None
+        assert props["hull_id"] == "THIALF"
+        assert 0.05 < props["cb"] < 0.95
+        assert props["gm_ft"] > 0
+        assert props["waterplane_area_ft2"] > 0
+        assert props["displacement_lt"] > 0
+        assert props["submerged_volume_ft3"] > 0
+
+    def test_unknown_vessel_returns_none(self):
+        from digitalmodel.naval_architecture.hull_properties import hull_hydrostatics
+        assert hull_hydrostatics("NONEXISTENT-VESSEL-XYZ") is None
+
+    def test_ddg51_hull_hydrostatics(self):
+        from digitalmodel.naval_architecture.hull_properties import hull_hydrostatics
+        props = hull_hydrostatics("DDG-51")
+        assert props is not None
+        assert props["gm_ft"] > 0
+        assert props["gm_ft"] < 30
+
+
+class TestCapacityPlan:
+    """Tests for hull_properties.capacity_plan."""
+
+    def test_basic_capacity_plan(self):
+        from digitalmodel.naval_architecture.hull_properties import capacity_plan
+        plan = capacity_plan(loa_ft=600.0, beam_ft=80.0, draft_ft=25.0)
+        assert plan["moulded_volume_ft3"] > 0
+        assert plan["waterplane_area_ft2"] > 0
+        assert plan["midship_area_ft2"] > 0
+        assert plan["cargo_volume_ft3"] > 0
+        assert plan["steel_weight_lt"] > 0
+
+    def test_cargo_less_than_moulded(self):
+        from digitalmodel.naval_architecture.hull_properties import capacity_plan
+        plan = capacity_plan(loa_ft=600.0, beam_ft=80.0, draft_ft=25.0)
+        assert plan["cargo_volume_ft3"] < plan["moulded_volume_ft3"]
+
+    def test_invalid_dimensions_raise(self):
+        from digitalmodel.naval_architecture.hull_properties import capacity_plan
+        with pytest.raises(ValueError):
+            capacity_plan(loa_ft=0, beam_ft=80.0, draft_ft=25.0)
+        with pytest.raises(ValueError):
+            capacity_plan(loa_ft=600.0, beam_ft=80.0, draft_ft=25.0, cb=0)
+
+
+class TestStabilityCurveEstimate:
+    """Tests for hull_properties.stability_curve_estimate."""
+
+    def test_returns_multiple_points(self):
+        from digitalmodel.naval_architecture.hull_properties import stability_curve_estimate
+        curve = stability_curve_estimate(gm_ft=5.0, beam_ft=80.0)
+        assert len(curve) > 5
+        assert curve[0]["angle_deg"] == 0.0
+        assert curve[0]["gz_ft"] == 0.0
+
+    def test_gz_positive_at_moderate_angles(self):
+        from digitalmodel.naval_architecture.hull_properties import stability_curve_estimate
+        curve = stability_curve_estimate(gm_ft=5.0, beam_ft=80.0)
+        # GZ should be positive at 30 degrees
+        gz_30 = [p for p in curve if p["angle_deg"] == 30.0]
+        assert len(gz_30) == 1
+        assert gz_30[0]["gz_ft"] > 0
+
+    def test_negative_gm_raises(self):
+        from digitalmodel.naval_architecture.hull_properties import stability_curve_estimate
+        with pytest.raises(ValueError):
+            stability_curve_estimate(gm_ft=-1.0, beam_ft=80.0)
+
+
+class TestHullWeightGroups:
+    """Tests for hull_properties.hull_weight_groups."""
+
+    def test_weight_groups_sum_to_displacement(self):
+        from digitalmodel.naval_architecture.hull_properties import hull_weight_groups
+        groups = hull_weight_groups(70000.0, vessel_type="crane_vessel")
+        total = sum(groups.values())
+        assert total == pytest.approx(70000.0, rel=1e-3)
+
+    def test_fpso_weight_groups(self):
+        from digitalmodel.naval_architecture.hull_properties import hull_weight_groups
+        groups = hull_weight_groups(100000.0, vessel_type="fpso")
+        assert groups["hull_lt"] > 0
+        assert groups["payload_lt"] > groups["hull_lt"]  # FPSO payload-heavy
+
+
+# ── Vessel Type → Platform Type Mapping Tests ────────────────────────
+
+class TestVesselTypeToHostType:
+    """Tests for concept_selection.vessel_type_to_host_type."""
+
+    def test_semi_submersible_maps_to_semi(self):
+        from digitalmodel.field_development.concept_selection import (
+            vessel_type_to_host_type, HostType,
+        )
+        result = vessel_type_to_host_type(vessel_subtype="semi_submersible")
+        assert result is HostType.SEMI
+
+    def test_fpso_maps(self):
+        from digitalmodel.field_development.concept_selection import (
+            vessel_type_to_host_type, HostType,
+        )
+        assert vessel_type_to_host_type(vessel_type="fpso") is HostType.FPSO
+
+    def test_crane_vessel_maps_to_semi(self):
+        from digitalmodel.field_development.concept_selection import (
+            vessel_type_to_host_type, HostType,
+        )
+        assert vessel_type_to_host_type(vessel_type="crane_vessel") is HostType.SEMI
+
+    def test_subtype_takes_precedence(self):
+        from digitalmodel.field_development.concept_selection import (
+            vessel_type_to_host_type, HostType,
+        )
+        # subtype=semi_submersible overrides type=crane_vessel
+        result = vessel_type_to_host_type(
+            vessel_type="crane_vessel", vessel_subtype="semi_submersible",
+        )
+        assert result is HostType.SEMI
+
+    def test_unknown_type_returns_none(self):
+        from digitalmodel.field_development.concept_selection import vessel_type_to_host_type
+        assert vessel_type_to_host_type(vessel_type="submarine") is None
+
+    def test_none_inputs_returns_none(self):
+        from digitalmodel.field_development.concept_selection import vessel_type_to_host_type
+        assert vessel_type_to_host_type() is None
+
+
+# ── Gyradius for Fleet Vessel Tests ──────────────────────────────────
+
+class TestGyradiusForFleetVessel:
+    """Tests for gyradius.gyradius_for_fleet_vessel."""
+
+    def test_thialf_gyradius(self):
+        from digitalmodel.naval_architecture.ship_data import register_fleet_vessels
+        from digitalmodel.naval_architecture.gyradius import gyradius_for_fleet_vessel
+
+        register_fleet_vessels([THIALF_RECORD], overwrite=True)
+        result = gyradius_for_fleet_vessel("THIALF")
+
+        assert result.roll > 0
+        assert result.pitch > 0
+        assert result.yaw > 0
+        assert result.displacement_t > 0
+        # Thialf ~71k tonnes → displacement_t should be close
+        assert 60_000 < result.displacement_t < 80_000
+
+    def test_sleipnir_no_displacement_uses_estimate(self):
+        from digitalmodel.naval_architecture.ship_data import register_fleet_vessels
+        from digitalmodel.naval_architecture.gyradius import gyradius_for_fleet_vessel
+
+        register_fleet_vessels([SLEIPNIR_RECORD], overwrite=True)
+        result = gyradius_for_fleet_vessel("SLEIPNIR")
+        assert result.roll > 0
+        assert result.displacement_t > 0
+
+    def test_unknown_vessel_raises(self):
+        from digitalmodel.naval_architecture.gyradius import gyradius_for_fleet_vessel
+        with pytest.raises(KeyError):
+            gyradius_for_fleet_vessel("NONEXISTENT-VESSEL-999")
 

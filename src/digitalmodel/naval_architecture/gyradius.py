@@ -211,3 +211,79 @@ def estimate_inertia_from_gyradius(
         "iyy": mass_kg * ky ** 2,
         "izz": mass_kg * kz ** 2,
     }
+
+
+# Vessel-type → platform-type mapping for gyradius estimation
+_VESSEL_TO_PLATFORM: dict[str, str] = {
+    "fpso": "fpso",
+    "semi_submersible": "semisubmersible",
+    "semisubmersible": "semisubmersible",
+    "crane_vessel": "semisubmersible",
+    "spar": "spar",
+    "tlp": "tlp",
+    "tension_leg_platform": "tlp",
+    "drillship": "fpso",
+    "pipelay_vessel": "barge",
+    "anchor_handler": "fpso",
+    "platform_supply_vessel": "fpso",
+    "jack_up": "barge",
+}
+
+
+def gyradius_for_fleet_vessel(hull_id: str) -> GyradiusResult:
+    """Compute 6-DOF gyradius for a registered fleet vessel.
+
+    Looks up the vessel in the ship registry, maps its vessel_type to a
+    platform type, and delegates to ``gyradius_for_platform_type``.
+
+    Args:
+        hull_id: Vessel name as registered (e.g. "THIALF", "SLEIPNIR").
+
+    Returns:
+        GyradiusResult with kx, ky, kz in meters.
+
+    Raises:
+        KeyError: vessel not found in registry.
+        ValueError: vessel lacks displacement or mappable type.
+    """
+    from digitalmodel.naval_architecture.ship_data import get_ship
+
+    ship = get_ship(hull_id)
+    if ship is None:
+        raise KeyError(f"Vessel '{hull_id}' not found in ship registry")
+
+    # Determine displacement in tonnes
+    disp_lt = ship.get("displacement_lt")
+    if disp_lt is None or float(disp_lt) <= 0:
+        # Fall back to block-coefficient estimate
+        loa = ship.get("loa_ft")
+        beam = ship.get("beam_ft")
+        draft = ship.get("draft_ft")
+        if loa and beam and draft:
+            vol_ft3 = 0.65 * float(loa) * float(beam) * float(draft)
+            disp_lt = (64.0 * vol_ft3) / 2240.0
+        else:
+            raise ValueError(
+                f"Vessel '{hull_id}' lacks displacement and sufficient "
+                "dimensions for estimation"
+            )
+
+    # Convert LT to tonnes
+    disp_tonnes = float(disp_lt) * 1.01605
+
+    # Map vessel type to platform type
+    vtype = ship.get("vessel_type", "")
+    vsubtype = ship.get("vessel_subtype", "")
+    platform_type = None
+    for candidate in (vsubtype, vtype):
+        if candidate:
+            key = str(candidate).lower().strip()
+            if key in _VESSEL_TO_PLATFORM:
+                platform_type = _VESSEL_TO_PLATFORM[key]
+                break
+
+    if platform_type is None:
+        # Default to barge for unknown types
+        platform_type = "barge"
+
+    return gyradius_for_platform_type(platform_type, disp_tonnes)

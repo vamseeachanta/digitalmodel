@@ -411,6 +411,60 @@ def concept_selection(
     )
 
 
+# ---------------------------------------------------------------------------
+# Vessel-type → Platform-type mapping (Issue #1973)
+# ---------------------------------------------------------------------------
+
+# Maps worldenergydata vessel_type / vessel_subtype strings to HostType.
+# Used for linking registered fleet vessels to concept-selection platform types.
+_VESSEL_TO_HOST: dict[str, HostType] = {
+    # Direct mappings
+    "fpso": HostType.FPSO,
+    "semi_submersible": HostType.SEMI,
+    "semisubmersible": HostType.SEMI,
+    "spar": HostType.SPAR,
+    "tlp": HostType.TLP,
+    "tension_leg_platform": HostType.TLP,
+    # Drilling rigs map to their closest host analogue
+    "drillship": HostType.FPSO,  # ship-shaped hull
+    "jack_up": HostType.SUBSEA_TIEBACK,  # shallow-water
+    # Construction/installation vessels — typically semi-submersible hull forms
+    "crane_vessel": HostType.SEMI,
+    "pipelay_vessel": HostType.FPSO,  # ship-shaped
+    "dive_support_vessel": HostType.FPSO,
+    "platform_supply_vessel": HostType.FPSO,
+    "anchor_handler": HostType.FPSO,
+}
+
+
+def vessel_type_to_host_type(
+    vessel_type: Optional[str] = None,
+    vessel_subtype: Optional[str] = None,
+) -> Optional[HostType]:
+    """Map a worldenergydata vessel type to a concept-selection HostType.
+
+    Checks *vessel_subtype* first (more specific), then *vessel_type*.
+    Returns ``None`` if no mapping exists.
+
+    Parameters
+    ----------
+    vessel_type : str or None
+        The vessel_type field from a normalised fleet record.
+    vessel_subtype : str or None
+        The vessel_subtype field from a normalised fleet record.
+
+    Returns
+    -------
+    HostType or None
+    """
+    for candidate in (vessel_subtype, vessel_type):
+        if candidate is not None:
+            key = str(candidate).lower().strip()
+            if key in _VESSEL_TO_HOST:
+                return _VESSEL_TO_HOST[key]
+    return None
+
+
 def concept_selection_with_benchmarks(
     water_depth: float,
     reservoir_size_mmbbl: float,
