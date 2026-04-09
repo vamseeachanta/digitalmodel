@@ -227,3 +227,82 @@ def register_fleet_vessels(
         normalized, overwrite=overwrite
     )
     return added, pre_skipped + merge_skipped
+
+
+
+def normalize_drilling_rig_record(record):
+    """Convert a worldenergydata drilling-rig record to the ship registry shape."""
+    name = record.get("RIG_NAME")
+    if not isinstance(name, str) or not name.strip():
+        return None
+    name = name.strip()
+    entry = {
+        "hull_id": name,
+        "name": name,
+        "vessel_category": "drilling",
+        "loa_ft": _convert_metric(record.get("LOA_M"), _M_TO_FT),
+        "beam_ft": _convert_metric(record.get("BEAM_M"), _M_TO_FT),
+        "draft_ft": _convert_metric(record.get("DRAFT_M"), _M_TO_FT),
+        "displacement_lt": _convert_metric(
+            record.get("DISPLACEMENT_TONNES"), _TONNES_TO_LT
+        ),
+    }
+    for src, dst in (
+        ("RIG_TYPE", "vessel_type"),
+        ("RIG_STATUS", "rig_status"),
+        ("YEAR_BUILT", "year_built"),
+        ("DP_CLASS", "dp_class"),
+        ("OWNER", "owner"),
+        ("WATER_DEPTH_RATING_FT", "water_depth_rating_ft"),
+    ):
+        val = record.get(src)
+        if val is not None:
+            entry[dst] = val
+    entry = {k: v for k, v in entry.items() if v is not None}
+    return entry
+
+
+_GAMMA_SW_LB_FT3 = 64.0
+_LT_TO_LB = 2240.0
+_DEFAULT_CB = 0.65
+_DEFAULT_CW = 0.72
+
+
+def estimate_vessel_hydrostatics(dims):
+    """Estimate hydrostatic properties from principal dimensions."""
+    loa = dims.get("loa_ft")
+    beam = dims.get("beam_ft")
+    draft = dims.get("draft_ft")
+    if not (_is_positive(loa) and _is_positive(beam) and _is_positive(draft)):
+        return None
+    loa, beam, draft = float(loa), float(beam), float(draft)
+    disp_lt = dims.get("displacement_lt")
+    if _is_positive(disp_lt):
+        disp_lt = float(disp_lt)
+        vol_ft3 = disp_lt * _LT_TO_LB / _GAMMA_SW_LB_FT3
+        cb = vol_ft3 / (loa * beam * draft)
+        cb = max(0.05, min(cb, 0.95))
+    else:
+        cb = _DEFAULT_CB
+        vol_ft3 = cb * loa * beam * draft
+    cw = _DEFAULT_CW
+    awp = cw * loa * beam
+    kb = 0.53 * draft
+    iwp = cw * loa * beam ** 3 / 12.0
+    bm = iwp / vol_ft3 if vol_ft3 > 0 else 0.0
+    kg_val = dims.get("kg_ft")
+    if _is_positive(kg_val):
+        kg = float(kg_val)
+    else:
+        kg = 0.6 * draft
+    gm = kb + bm - kg
+    return {
+        "cb": cb, "kb_ft": kb, "bm_ft": bm,
+        "kg_ft": kg, "gm_ft": gm, "waterplane_area_ft2": awp,
+    }
+
+
+def _is_positive(value):
+    if value is None or isinstance(value, bool):
+        return False
+    return isinstance(value, (int, float)) and float(value) > 0

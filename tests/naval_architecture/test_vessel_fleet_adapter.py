@@ -244,3 +244,155 @@ class TestStabilityIntegration:
         register_fleet_vessels([SLEIPNIR_RECORD])
         ships = list_ships()
         assert "SLEIPNIR" in ships
+
+
+
+DEEPWATER_HORIZON_RIG = dict(
+    RIG_NAME="DEEPWATER HORIZON", RIG_TYPE="drillship",
+    RIG_STATUS="decommissioned", OWNER="Transocean",
+    LOA_M=121.0, BEAM_M=24.0, DISPLACEMENT_TONNES=52587.0,
+    WATER_DEPTH_RATING_FT=10000, YEAR_BUILT=2001, DP_CLASS=3,
+)
+
+SEMISUB_RIG = dict(
+    RIG_NAME="THUNDER HORSE PDQ", RIG_TYPE="semi_submersible",
+    OWNER="BP", LOA_M=100.0, BEAM_M=100.0,
+    DISPLACEMENT_TONNES=60000.0, WATER_DEPTH_RATING_FT=6000, YEAR_BUILT=2005,
+)
+
+PARTIAL_RIG_RECORD = dict(RIG_NAME="SOME RIG", RIG_TYPE="jack_up", WATER_DEPTH_RATING_FT=164)
+EMPTY_RIG_RECORD = dict(RIG_TYPE="unknown")
+
+
+class TestNormalizeDrillingRigRecord:
+    def test_full_drillship_record(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+        result = normalize_drilling_rig_record(DEEPWATER_HORIZON_RIG)
+        assert result is not None
+        assert result["hull_id"] == "DEEPWATER HORIZON"
+        assert result["loa_ft"] == pytest.approx(121.0 * _M_TO_FT, rel=1e-3)
+        assert result["displacement_lt"] == pytest.approx(52587.0 * _TONNES_TO_LT, rel=1e-3)
+
+    def test_rig_type_preserved(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+        result = normalize_drilling_rig_record(DEEPWATER_HORIZON_RIG)
+        assert result["vessel_type"] == "drillship"
+        assert result["vessel_category"] == "drilling"
+
+    def test_water_depth_preserved(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+        result = normalize_drilling_rig_record(DEEPWATER_HORIZON_RIG)
+        assert result["water_depth_rating_ft"] == 10000
+
+    def test_missing_rig_name_returns_none(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+        assert normalize_drilling_rig_record(EMPTY_RIG_RECORD) is None
+
+    def test_partial_rig(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+        result = normalize_drilling_rig_record(PARTIAL_RIG_RECORD)
+        assert result is not None
+        assert result["hull_id"] == "SOME RIG"
+        assert result.get("loa_ft") is None
+
+    def test_register_rigs_without_draft(self):
+        from digitalmodel.naval_architecture.ship_data import (
+            normalize_drilling_rig_record, register_fleet_vessels,
+        )
+        normalized = normalize_drilling_rig_record(SEMISUB_RIG)
+        assert normalized is not None
+        added, skipped = register_fleet_vessels([normalized])
+        assert skipped >= 1
+
+
+class TestEstimateVesselHydrostatics:
+    def test_thialf_with_displacement(self):
+        from digitalmodel.naval_architecture.ship_data import (
+            register_fleet_vessels, get_ship, estimate_vessel_hydrostatics,
+        )
+        register_fleet_vessels([THIALF_RECORD])
+        ship = get_ship("THIALF")
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert 0.05 < hydro["cb"] < 0.95
+        assert hydro["kb_ft"] > 0
+        assert hydro["bm_ft"] > 0
+        assert hydro["kg_ft"] > 0
+        expected_gm = hydro["kb_ft"] + hydro["bm_ft"] - hydro["kg_ft"]
+        assert hydro["gm_ft"] == pytest.approx(expected_gm, rel=1e-6)
+        assert hydro["waterplane_area_ft2"] > 0
+
+    def test_ddg51_from_registry(self):
+        from digitalmodel.naval_architecture.ship_data import get_ship, estimate_vessel_hydrostatics
+        ship = get_ship("DDG-51")
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert hydro["gm_ft"] > 0
+        assert hydro["gm_ft"] < 30
+
+    def test_missing_displacement_fallback(self):
+        from digitalmodel.naval_architecture.ship_data import estimate_vessel_hydrostatics
+        dims = dict(loa_ft=500.0, beam_ft=60.0, draft_ft=20.0)
+        hydro = estimate_vessel_hydrostatics(dims)
+        assert 0.3 < hydro["cb"] < 0.9
+        assert hydro["gm_ft"] > 0
+
+    def test_missing_critical_dims_returns_none(self):
+        from digitalmodel.naval_architecture.ship_data import estimate_vessel_hydrostatics
+        assert estimate_vessel_hydrostatics(dict(loa_ft=100.0)) is None
+        assert estimate_vessel_hydrostatics(dict()) is None
+
+
+class TestCurvesOfFormHook:
+    def test_ddg51_curves_still_work(self):
+        from digitalmodel.naval_architecture.curves_of_form import displacement_at_draft
+        disp = displacement_at_draft("DDG-51", 20.0)
+        assert disp == pytest.approx(7200, abs=200)
+
+    def test_registered_vessel_estimated_displacement(self):
+        from digitalmodel.naval_architecture.ship_data import register_fleet_vessels
+        from digitalmodel.naval_architecture.curves_of_form import displacement_at_draft
+        register_fleet_vessels([THIALF_RECORD])
+        draft_ft = 31.2 * _M_TO_FT
+        disp = displacement_at_draft("THIALF", draft_ft)
+        assert disp > 0
+        assert 20_000 < disp < 200_000
+
+    def test_unknown_vessel_raises(self):
+        from digitalmodel.naval_architecture.curves_of_form import displacement_at_draft
+        with pytest.raises(NotImplementedError):
+            displacement_at_draft("UNKNOWN-VESSEL-999", 20.0)
+
+
+class TestFloatingPlatformStabilityIntegration:
+    def test_thialf_stability_check_runs(self):
+        from digitalmodel.naval_architecture.ship_data import (
+            register_fleet_vessels, get_ship, estimate_vessel_hydrostatics,
+        )
+        from digitalmodel.naval_architecture.floating_platform_stability import (
+            compute_gz_curve, compute_wind_heel, check_intact_stability,
+        )
+        register_fleet_vessels([THIALF_RECORD])
+        ship = get_ship("THIALF")
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert hydro is not None
+        gm_m = hydro["gm_ft"] * 0.3048
+        gz_curve = compute_gz_curve(gm_m)
+        assert len(gz_curve) > 0
+        wind = compute_wind_heel(
+            wind_pressure_kpa=0.5, projected_area_m2=5000.0,
+            heeling_arm_m=15.0, displacement_t=71368.0, gm_m=gm_m,
+        )
+        result = check_intact_stability("semisubmersible", gm_m, gz_curve, wind)
+        assert isinstance(result.gm_m, float)
+        assert result.gm_m > 0
+        assert hasattr(result, "intact")
+        assert isinstance(result.intact, bool)
+
+    def test_ddg51_submerged_volume_via_estimate(self):
+        from digitalmodel.naval_architecture.ship_data import get_ship, estimate_vessel_hydrostatics
+        from digitalmodel.naval_architecture.hydrostatics import submerged_volume
+        ship = get_ship("DDG-51")
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert hydro is not None
+        vol = submerged_volume(ship["displacement_lt"])
+        assert 200_000 < vol < 500_000
+
