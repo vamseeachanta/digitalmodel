@@ -27,6 +27,8 @@ from .economics import (
     CostEstimates,
     EvaluationMetrics,
     evaluate_economics,
+    build_economics_schedule,
+    carbon_sensitivity,
 )
 
 __all__ = [
@@ -51,4 +53,6 @@ __all__ = [
     "CostEstimates",
     "EvaluationMetrics",
     "evaluate_economics",
+    "build_economics_schedule",
+    "carbon_sensitivity",
 ]
