@@ -43,7 +43,6 @@ def minimal_input() -> EconomicsInput:
         water_depth_m=1200.0,
         host_type="TLP",
         production_capacity_bopd=80_000.0,
-        reservoir_size_mmbbl=250.0,
         oil_price_usd_per_bbl=70.0,
         discount_rate=0.10,
         fiscal_regime=FiscalRegime.US,
@@ -59,11 +58,11 @@ def full_input() -> EconomicsInput:
         water_depth_m=2100.0,
         host_type="Spar",
         production_capacity_bopd=100_000.0,
-        reservoir_size_mmbbl=400.0,
         oil_price_usd_per_bbl=75.0,
         discount_rate=0.10,
         fiscal_regime=FiscalRegime.US,
         field_life_years=30,
+        reservoir_size_mmbbl=400.0,
         opex_usd_per_bbl=25.0,
         capex_usd_mm=8_500.0,
         abex_usd_mm=500.0,
@@ -87,6 +86,7 @@ class TestEconomicsInput:
         assert minimal_input.fiscal_regime is FiscalRegime.US
 
     def test_defaults_applied(self, minimal_input: EconomicsInput) -> None:
+        assert minimal_input.reservoir_size_mmbbl is None
         assert minimal_input.opex_usd_per_bbl is None
         assert minimal_input.capex_usd_mm is None
         assert minimal_input.abex_usd_mm is None
@@ -107,7 +107,6 @@ class TestEconomicsInput:
                 water_depth_m=-100.0,
                 host_type="TLP",
                 production_capacity_bopd=80_000.0,
-                reservoir_size_mmbbl=200.0,
                 oil_price_usd_per_bbl=70.0,
                 discount_rate=0.10,
                 fiscal_regime=FiscalRegime.US,
@@ -121,7 +120,6 @@ class TestEconomicsInput:
                 water_depth_m=1000.0,
                 host_type="TLP",
                 production_capacity_bopd=0.0,
-                reservoir_size_mmbbl=200.0,
                 oil_price_usd_per_bbl=70.0,
                 discount_rate=0.10,
                 fiscal_regime=FiscalRegime.US,
@@ -135,9 +133,47 @@ class TestEconomicsInput:
                 water_depth_m=1000.0,
                 host_type="TLP",
                 production_capacity_bopd=80_000.0,
-                reservoir_size_mmbbl=200.0,
                 oil_price_usd_per_bbl=70.0,
                 discount_rate=-0.5,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+            )
+
+    def test_zero_oil_price_raises(self) -> None:
+        with pytest.raises(ValueError, match="oil_price_usd_per_bbl"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=0.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+            )
+
+    def test_zero_field_life_raises(self) -> None:
+        with pytest.raises(ValueError, match="field_life_years"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=0,
+            )
+
+    def test_invalid_host_type_raises(self) -> None:
+        with pytest.raises(ValueError, match="host_type"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="Catamaran",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
                 fiscal_regime=FiscalRegime.US,
                 field_life_years=25,
             )

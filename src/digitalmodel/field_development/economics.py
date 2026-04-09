@@ -84,13 +84,15 @@ class EconomicsInput:
     # Required
     field_name: str
     water_depth_m: float
-    host_type: str  # matches HostType.value strings
+    host_type: str  # validated against HostType.value in __post_init__
     production_capacity_bopd: float
-    reservoir_size_mmbbl: float
     oil_price_usd_per_bbl: float
     discount_rate: float
     fiscal_regime: FiscalRegime
     field_life_years: int
+
+    # Optional — used for reserves-based analysis in future fiscal regime work
+    reservoir_size_mmbbl: Optional[float] = None
 
     # Optional overrides — bypass backend estimation when provided
     opex_usd_per_bbl: Optional[float] = None
@@ -100,6 +102,13 @@ class EconomicsInput:
     region: Optional[str] = None
 
     def __post_init__(self) -> None:
+        # Validate host_type against HostType enum values
+        from digitalmodel.field_development.concept_selection import HostType
+        valid_hosts = {h.value for h in HostType}
+        if self.host_type not in valid_hosts:
+            raise ValueError(
+                f"host_type must be one of {sorted(valid_hosts)}, got {self.host_type!r}"
+            )
         if self.water_depth_m <= 0:
             raise ValueError(
                 f"water_depth_m must be positive, got {self.water_depth_m!r}"
@@ -108,9 +117,17 @@ class EconomicsInput:
             raise ValueError(
                 f"production_capacity_bopd must be positive, got {self.production_capacity_bopd!r}"
             )
+        if self.oil_price_usd_per_bbl <= 0:
+            raise ValueError(
+                f"oil_price_usd_per_bbl must be positive, got {self.oil_price_usd_per_bbl!r}"
+            )
         if self.discount_rate < 0 or self.discount_rate > 1:
             raise ValueError(
                 f"discount_rate must be in [0, 1], got {self.discount_rate!r}"
+            )
+        if self.field_life_years < 1:
+            raise ValueError(
+                f"field_life_years must be >= 1, got {self.field_life_years!r}"
             )
 
 
@@ -254,7 +271,7 @@ def _numpy_financial_metrics(cashflows: np.ndarray, discount_rate: float) -> dic
     discounted = cashflows / discount_factors
     npv = float(np.sum(discounted))
 
-    # Simple IRR via numpy (no numpy-financial dependency required)
+    # IRR via numpy-financial if available; None otherwise
     irr = None
     try:
         import numpy_financial as npf
