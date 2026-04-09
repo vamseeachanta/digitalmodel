@@ -308,3 +308,109 @@ class TestSubseaArchitectureStats:
         stats = subsea_architecture_stats([])
         assert stats["tieback_distance"]["count"] == 0
         assert stats["trees_per_project"]["count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Robustness: junk/unparseable scraped values
+# ---------------------------------------------------------------------------
+
+class TestJunkValues:
+    """Codex review finding: _opt_float/_opt_int must tolerate scraped junk."""
+
+    def test_na_strings_become_none(self):
+        records = [
+            {
+                "name": "Junk",
+                "water_depth_m": "N/A",
+                "num_trees": "unknown",
+                "tieback_distance_km": "",
+                "num_manifolds": "TBD",
+            }
+        ]
+        projects = load_projects(records)
+        p = projects[0]
+        assert p.water_depth_m is None
+        assert p.num_trees is None
+        assert p.tieback_distance_km is None
+        assert p.num_manifolds is None
+
+    def test_string_numbers_parsed(self):
+        records = [{"name": "StringNum", "water_depth_m": "1200.5", "num_trees": "8.0"}]
+        projects = load_projects(records)
+        p = projects[0]
+        assert p.water_depth_m == 1200.5
+        assert p.num_trees == 8
+
+    def test_junk_excluded_from_bands(self):
+        records = [
+            {"name": "JunkDepth", "water_depth_m": "N/A", "concept_type": "TLP"},
+            {"name": "GoodOne", "water_depth_m": 900, "concept_type": "Semi"},
+        ]
+        projects = load_projects(records)
+        bands = concept_benchmark_bands(projects)
+        total = sum(c for bd in bands.values() for c in bd.values())
+        assert total == 1  # only GoodOne classifiable
+
+
+# ---------------------------------------------------------------------------
+# Integration: normalize → load_projects pipeline
+# ---------------------------------------------------------------------------
+
+class TestNormalizeIntegration:
+    """Codex review finding: prove raw SubseaIQ keys survive the pipeline."""
+
+    def test_raw_subseaiq_keys_through_pipeline(self):
+        import sys
+        from pathlib import Path
+
+        # digitalmodel/ sits alongside worldenergydata/ under workspace-hub/
+        wed_root = Path(__file__).resolve().parents[3] / "worldenergydata"
+        if not wed_root.exists():
+            pytest.skip("worldenergydata repo not available")
+        sys.path.insert(0, str(wed_root))
+        try:
+            from subseaiq.analytics.normalize import normalize_projects
+        except ImportError:
+            pytest.skip("subseaiq.analytics.normalize not importable")
+
+        raw = [
+            {
+                "Project Name": "Perdido",
+                "Operator": "Shell",
+                "Water Depth (m)": 2438,
+                "Host Type": "Spar",
+                "Trees": 16,
+                "Manifolds": 4,
+                "Tieback Distance (km)": 12.5,
+                "Fluid Type": "oil",
+                "Region": "GoM",
+            },
+            {
+                "Project Name": "Stones",
+                "Operator": "Shell",
+                "Water Depth (m)": 2900,
+                "Host Type": "ETLP",
+                "Trees": "N/A",
+                "Manifolds": None,
+            },
+        ]
+        normalized = normalize_projects(raw)
+        projects = load_projects(normalized)
+
+        assert len(projects) == 2
+        perdido = projects[0]
+        assert perdido.name == "Perdido"
+        assert perdido.water_depth_m == 2438.0
+        assert perdido.concept_type == "Spar"
+        assert perdido.num_trees == 16
+        assert perdido.tieback_distance_km == 12.5
+
+        stones = projects[1]
+        assert stones.name == "Stones"
+        assert stones.num_trees is None  # "N/A" → None
+        assert stones.num_manifolds is None
+
+        bands = concept_benchmark_bands(projects)
+        ultra = bands["1500m+"]
+        assert "Spar" in ultra
+        assert "ETLP" in ultra

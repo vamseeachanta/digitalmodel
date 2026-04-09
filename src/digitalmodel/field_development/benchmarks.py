@@ -221,10 +221,20 @@ def _describe(values: list) -> dict[str, float]:
 
 
 def _opt_float(val) -> Optional[float]:
-    """Convert to float if not None."""
-    return float(val) if val is not None else None
+    """Convert to float if not None.  Returns None for unparseable values."""
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
 
 
 def _opt_int(val) -> Optional[int]:
-    """Convert to int if not None."""
-    return int(val) if val is not None else None
+    """Convert to int if not None.  Returns None for unparseable values."""
+    if val is None:
+        return None
+    try:
+        return int(float(val))
+    except (TypeError, ValueError):
+        return None
