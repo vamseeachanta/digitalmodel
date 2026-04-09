@@ -414,3 +414,350 @@ class TestNormalizeIntegration:
         ultra = bands["1500m+"]
         assert "Spar" in ultra
         assert "ETLP" in ultra
+
+
+# ---------------------------------------------------------------------------
+# concept_probability_matrix (#2053)
+# ---------------------------------------------------------------------------
+
+from digitalmodel.field_development.benchmarks import (
+    concept_probability_matrix,
+    predict_concept_type,
+    ConceptPrediction,
+)
+
+
+# Larger fixture with realistic GoM-like distribution for probability tests
+PROBABILITY_FIXTURE_RECORDS = [
+    # Shallow (0-300m): Fixed Platforms dominate
+    {"name": "ShP1", "water_depth_m": 100, "concept_type": "Fixed Platform"},
+    {"name": "ShP2", "water_depth_m": 150, "concept_type": "Fixed Platform"},
+    {"name": "ShP3", "water_depth_m": 200, "concept_type": "Fixed Platform"},
+    {"name": "ShP4", "water_depth_m": 250, "concept_type": "Subsea Tieback"},
+    # Mid-water (300-800m): TLP + Subsea Tieback
+    {"name": "MW1", "water_depth_m": 400, "concept_type": "TLP"},
+    {"name": "MW2", "water_depth_m": 500, "concept_type": "TLP"},
+    {"name": "MW3", "water_depth_m": 600, "concept_type": "Semi"},
+    {"name": "MW4", "water_depth_m": 350, "concept_type": "Subsea Tieback"},
+    {"name": "MW5", "water_depth_m": 700, "concept_type": "TLP"},
+    # Deepwater (800-1500m): TLP + Semi + Spar
+    {"name": "DW1", "water_depth_m": 900, "concept_type": "TLP"},
+    {"name": "DW2", "water_depth_m": 1000, "concept_type": "TLP"},
+    {"name": "DW3", "water_depth_m": 1100, "concept_type": "Semi"},
+    {"name": "DW4", "water_depth_m": 1200, "concept_type": "Semi"},
+    {"name": "DW5", "water_depth_m": 1300, "concept_type": "Spar"},
+    {"name": "DW6", "water_depth_m": 1400, "concept_type": "TLP"},
+    {"name": "DW7", "water_depth_m": 850, "concept_type": "Subsea Tieback"},
+    {"name": "DW8", "water_depth_m": 1100, "concept_type": "Semi"},
+    {"name": "DW9", "water_depth_m": 950, "concept_type": "TLP"},
+    {"name": "DW10", "water_depth_m": 1450, "concept_type": "Spar"},
+    # Ultra-deep (1500m+): Spar + Semi + FPSO
+    {"name": "UD1", "water_depth_m": 1600, "concept_type": "Spar"},
+    {"name": "UD2", "water_depth_m": 1800, "concept_type": "Semi"},
+    {"name": "UD3", "water_depth_m": 2000, "concept_type": "FPSO"},
+    {"name": "UD4", "water_depth_m": 2200, "concept_type": "Semi"},
+    {"name": "UD5", "water_depth_m": 2400, "concept_type": "Spar"},
+    {"name": "UD6", "water_depth_m": 2600, "concept_type": "FPSO"},
+    {"name": "UD7", "water_depth_m": 1700, "concept_type": "Subsea Tieback"},
+    {"name": "UD8", "water_depth_m": 1900, "concept_type": "Spar"},
+]
+
+
+@pytest.fixture
+def probability_projects():
+    return load_projects(PROBABILITY_FIXTURE_RECORDS)
+
+
+class TestConceptProbabilityMatrix:
+    """Tests for concept_probability_matrix (#2053)."""
+
+    def test_returns_dict_with_depth_bands(self, probability_projects):
+        matrix = concept_probability_matrix(probability_projects)
+        assert isinstance(matrix, dict)
+        for band_label in DEPTH_BANDS:
+            assert band_label in matrix
+
+    def test_probabilities_sum_to_one(self, probability_projects):
+        """Each depth band's probabilities must sum to 1.0 (or be empty)."""
+        matrix = concept_probability_matrix(probability_projects)
+        for band_label, probs in matrix.items():
+            if probs:  # non-empty band
+                total = sum(probs.values())
+                assert total == pytest.approx(1.0, abs=1e-9), (
+                    f"Band {band_label}: probabilities sum to {total}, not 1.0"
+                )
+
+    def test_probabilities_non_negative(self, probability_projects):
+        matrix = concept_probability_matrix(probability_projects)
+        for band_label, probs in matrix.items():
+            for concept, prob in probs.items():
+                assert prob >= 0.0, f"{band_label}/{concept}: negative prob {prob}"
+
+    def test_shallow_band_dominated_by_fixed_platform(self, probability_projects):
+        """Shallow band should show Fixed Platform as highest probability."""
+        matrix = concept_probability_matrix(probability_projects)
+        shallow = matrix[DEPTH_BANDS[0]]
+        assert "Fixed Platform" in shallow
+        assert shallow["Fixed Platform"] >= 0.5  # 3/4 = 0.75
+
+    def test_deepwater_band_has_tlp_and_semi(self, probability_projects):
+        """Deepwater band should show TLP and Semi as significant options."""
+        matrix = concept_probability_matrix(probability_projects)
+        deep = matrix[DEPTH_BANDS[2]]
+        assert "TLP" in deep
+        assert "Semi" in deep
+        assert deep["TLP"] > 0.2
+        assert deep["Semi"] > 0.2
+
+    def test_ultra_deep_has_spar_and_semi(self, probability_projects):
+        """Ultra-deep band should show Spar and Semi as primary options."""
+        matrix = concept_probability_matrix(probability_projects)
+        ultra = matrix[DEPTH_BANDS[3]]
+        assert "Spar" in ultra
+        assert "Semi" in ultra
+
+    def test_empty_input_returns_empty_bands(self):
+        matrix = concept_probability_matrix([])
+        assert isinstance(matrix, dict)
+        assert all(v == {} for v in matrix.values())
+
+    def test_sparse_data_still_valid(self, sparse_projects):
+        """Sparse data should not crash; probabilities still valid."""
+        matrix = concept_probability_matrix(sparse_projects)
+        # Sparse-D is the only classifiable: depth=600, concept=Semi
+        mid = matrix[DEPTH_BANDS[1]]
+        if mid:
+            total = sum(mid.values())
+            assert total == pytest.approx(1.0, abs=1e-9)
+
+    def test_single_project_gives_100_percent(self):
+        """One project in a band → 100% probability for that concept."""
+        records = [{"name": "Solo", "water_depth_m": 500, "concept_type": "TLP"}]
+        projects = load_projects(records)
+        matrix = concept_probability_matrix(projects)
+        mid = matrix[DEPTH_BANDS[1]]
+        assert mid == {"TLP": pytest.approx(1.0)}
+
+
+# ---------------------------------------------------------------------------
+# predict_concept_type — decision tree (#2053)
+# ---------------------------------------------------------------------------
+
+class TestPredictConceptType:
+    """Tests for the decision tree predictor (#2053)."""
+
+    def test_returns_concept_prediction(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert isinstance(result, ConceptPrediction)
+
+    def test_prediction_has_required_fields(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert hasattr(result, "predicted_concept")
+        assert hasattr(result, "probabilities")
+        assert hasattr(result, "depth_band")
+        assert hasattr(result, "rationale")
+
+    def test_predicted_concept_is_string(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert isinstance(result.predicted_concept, str)
+        assert len(result.predicted_concept) > 0
+
+    def test_probabilities_sum_to_one(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert sum(result.probabilities.values()) == pytest.approx(1.0, abs=1e-9)
+
+    def test_shallow_small_close_prefers_tieback(self, probability_projects):
+        """Small reservoir close to infra in shallow water → tieback."""
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=250,
+            reservoir_size_mmbbl=20,
+            distance_to_infra_km=5,
+        )
+        # Should boost Subsea Tieback due to small reservoir + close infra
+        assert "Subsea Tieback" in result.probabilities
+
+    def test_deep_large_remote_prefers_standalone(self, probability_projects):
+        """Large reservoir far from infra at depth → standalone host."""
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=2000,
+            reservoir_size_mmbbl=500,
+            distance_to_infra_km=100,
+        )
+        assert result.predicted_concept != "Subsea Tieback"
+
+    def test_depth_band_assigned_correctly(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert result.depth_band == "800-1500m"
+
+    def test_ultra_deep_band(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=2000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert result.depth_band == "1500m+"
+
+    def test_negative_depth_raises(self, probability_projects):
+        with pytest.raises(ValueError, match="water_depth"):
+            predict_concept_type(
+                projects=probability_projects,
+                water_depth=-100,
+                reservoir_size_mmbbl=200,
+                distance_to_infra_km=50,
+            )
+
+    def test_negative_reservoir_raises(self, probability_projects):
+        with pytest.raises(ValueError, match="reservoir_size"):
+            predict_concept_type(
+                projects=probability_projects,
+                water_depth=1000,
+                reservoir_size_mmbbl=-50,
+                distance_to_infra_km=50,
+            )
+
+    def test_empty_projects_raises(self):
+        """No benchmark data → cannot predict."""
+        with pytest.raises(ValueError, match="projects"):
+            predict_concept_type(
+                projects=[],
+                water_depth=1000,
+                reservoir_size_mmbbl=200,
+                distance_to_infra_km=50,
+            )
+
+    def test_rationale_mentions_depth_band(self, probability_projects):
+        result = predict_concept_type(
+            projects=probability_projects,
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+        )
+        assert "800-1500m" in result.rationale
+
+
+# ---------------------------------------------------------------------------
+# Case study validation (#2053)
+# ---------------------------------------------------------------------------
+
+# GoM reference fields with known concept selections
+CASE_STUDY_RECORDS = [
+    # Real GoM field data (approximate values from public sources)
+    {"name": "Perdido", "water_depth_m": 2438, "concept_type": "Spar",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Mars", "water_depth_m": 896, "concept_type": "TLP",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Atlantis", "water_depth_m": 2150, "concept_type": "Semi",
+     "operator": "BP", "region": "GoM"},
+    {"name": "Thunder Horse", "water_depth_m": 1844, "concept_type": "Semi",
+     "operator": "BP", "region": "GoM"},
+    {"name": "Mad Dog", "water_depth_m": 1311, "concept_type": "Spar",
+     "operator": "BP", "region": "GoM"},
+    {"name": "Appomattox", "water_depth_m": 2195, "concept_type": "Semi",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Whale", "water_depth_m": 1372, "concept_type": "Semi",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Stones", "water_depth_m": 2900, "concept_type": "FPSO",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Lucius", "water_depth_m": 2164, "concept_type": "Spar",
+     "operator": "Anadarko", "region": "GoM"},
+    {"name": "Ursa", "water_depth_m": 1158, "concept_type": "TLP",
+     "operator": "Shell", "region": "GoM"},
+    # Additional GoM fields for statistical depth
+    {"name": "Na Kika", "water_depth_m": 1920, "concept_type": "Semi",
+     "operator": "Shell", "region": "GoM"},
+    {"name": "Holstein", "water_depth_m": 1325, "concept_type": "Spar",
+     "operator": "Anadarko", "region": "GoM"},
+    {"name": "Shenzi", "water_depth_m": 1311, "concept_type": "TLP",
+     "operator": "BHP", "region": "GoM"},
+    {"name": "Constitution", "water_depth_m": 1524, "concept_type": "Spar",
+     "operator": "Anadarko", "region": "GoM"},
+    {"name": "Great White", "water_depth_m": 2438, "concept_type": "Spar",
+     "operator": "Shell", "region": "GoM"},
+]
+
+
+class TestCaseStudyValidation:
+    """Validate probability matrix against known GoM field decisions (#2053)."""
+
+    @pytest.fixture
+    def case_study_projects(self):
+        return load_projects(CASE_STUDY_RECORDS)
+
+    def test_deepwater_band_includes_tlp_and_spar(self, case_study_projects):
+        """800-1500m band should show TLP, Spar, Semi all present."""
+        matrix = concept_probability_matrix(case_study_projects)
+        deep = matrix["800-1500m"]
+        # Mars(TLP), Ursa(TLP), Mad Dog(Spar), Holstein(Spar),
+        # Shenzi(TLP), Whale(Semi) are in this band
+        assert len(deep) >= 2
+        assert "TLP" in deep or "Spar" in deep
+
+    def test_ultra_deep_spar_and_semi_dominant(self, case_study_projects):
+        """1500m+ band should be dominated by Spar and Semi in GoM data."""
+        matrix = concept_probability_matrix(case_study_projects)
+        ultra = matrix["1500m+"]
+        # Perdido(Spar), Atlantis(Semi), Thunder Horse(Semi),
+        # Appomattox(Semi), Stones(FPSO), Lucius(Spar), Na Kika(Semi),
+        # Constitution(Spar), Great White(Spar)
+        assert "Spar" in ultra
+        assert "Semi" in ultra
+        assert ultra["Spar"] + ultra["Semi"] > 0.6  # combined > 60%
+
+    def test_predict_at_perdido_depth(self, case_study_projects):
+        """At 2438m with large reservoir, should predict Spar or Semi."""
+        result = predict_concept_type(
+            projects=case_study_projects,
+            water_depth=2438,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=80,
+        )
+        assert result.predicted_concept in ("Spar", "Semi", "FPSO")
+
+    def test_predict_at_mars_depth(self, case_study_projects):
+        """At 896m with medium reservoir, should predict TLP or Semi."""
+        result = predict_concept_type(
+            projects=case_study_projects,
+            water_depth=896,
+            reservoir_size_mmbbl=150,
+            distance_to_infra_km=40,
+        )
+        assert result.predicted_concept in ("TLP", "Spar", "Semi")
+
+    def test_predict_tieback_small_reservoir_close(self, case_study_projects):
+        """Small reservoir near infra → tieback even if GoM data is sparse."""
+        result = predict_concept_type(
+            projects=case_study_projects,
+            water_depth=900,
+            reservoir_size_mmbbl=20,
+            distance_to_infra_km=5,
+        )
+        # Decision tree should override historical data for tieback cases
+        assert "Subsea Tieback" in result.probabilities

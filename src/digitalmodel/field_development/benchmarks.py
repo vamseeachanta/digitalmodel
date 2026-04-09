@@ -1,5 +1,5 @@
-# ABOUTME: SubseaIQ benchmark bridge — concept-selection bands and subsea architecture stats.
-# ABOUTME: Issue #1861 — loads normalized project records and derives benchmark aggregations.
+# ABOUTME: SubseaIQ benchmark bridge — concept-selection bands, probability matrix, and decision tree.
+# ABOUTME: Issue #1861/#2053 — loads normalized project records and derives benchmark aggregations.
 """
 digitalmodel.field_development.benchmarks
 =========================================
@@ -7,6 +7,8 @@ digitalmodel.field_development.benchmarks
 Loads normalized SubseaIQ project records and derives:
 - concept-selection benchmark bands (concept type counts by water depth)
 - subsea architecture statistics (tieback distance, equipment counts)
+- concept probability matrix (concept type probabilities by depth band)
+- decision tree predictor (predicted concept given field parameters)
 
 This is the *bridge layer* between raw SubseaIQ scraped data and the
 field_development analysis modules (concept_selection, capex_estimator).
@@ -15,10 +17,14 @@ Usage
 -----
 >>> from digitalmodel.field_development.benchmarks import (
 ...     load_projects, concept_benchmark_bands, subsea_architecture_stats,
+...     concept_probability_matrix, predict_concept_type,
 ... )
 >>> projects = load_projects(raw_records)
 >>> bands = concept_benchmark_bands(projects)
 >>> stats = subsea_architecture_stats(projects)
+>>> matrix = concept_probability_matrix(projects)
+>>> prediction = predict_concept_type(projects, water_depth=1000,
+...     reservoir_size_mmbbl=200, distance_to_infra_km=50)
 """
 
 from __future__ import annotations
@@ -67,6 +73,28 @@ class SubseaProject:
     num_manifolds: Optional[int] = None
     fluid_type: Optional[str] = None
     region: Optional[str] = None
+
+
+@dataclass
+class ConceptPrediction:
+    """Result of the empirical concept-type decision tree.
+
+    Attributes
+    ----------
+    predicted_concept : str
+        The concept type with the highest adjusted probability.
+    probabilities : dict[str, float]
+        All concept types and their adjusted probabilities (sum to 1.0).
+    depth_band : str
+        The water-depth band used for the prediction.
+    rationale : str
+        Human-readable explanation of the prediction drivers.
+    """
+
+    predicted_concept: str
+    probabilities: dict[str, float]
+    depth_band: str
+    rationale: str
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +222,208 @@ def subsea_architecture_stats(
         "manifolds_per_project": _describe(manifold_vals),
         "trees_per_manifold": _describe(trees_per_mani),
     }
+
+
+# ---------------------------------------------------------------------------
+# Concept probability matrix (#2053)
+# ---------------------------------------------------------------------------
+
+def concept_probability_matrix(
+    projects: list[SubseaProject],
+) -> dict[str, dict[str, float]]:
+    """Compute concept-type probability distributions per water-depth band.
+
+    Converts the raw counts from :func:`concept_benchmark_bands` into
+    normalised probabilities (0.0–1.0) that sum to 1.0 within each band.
+
+    Parameters
+    ----------
+    projects : list[SubseaProject]
+
+    Returns
+    -------
+    dict[str, dict[str, float]]
+        Outer key is the depth band label (e.g. ``"800-1500m"``).
+        Inner dict maps concept type to probability (0.0–1.0).
+        Empty bands return an empty inner dict.
+
+    Examples
+    --------
+    >>> matrix = concept_probability_matrix(projects)
+    >>> matrix["800-1500m"]
+    {'TLP': 0.45, 'Semi': 0.30, 'Spar': 0.15, 'Subsea Tieback': 0.10}
+    """
+    bands = concept_benchmark_bands(projects)
+    result: dict[str, dict[str, float]] = {}
+
+    for band_label, counts in bands.items():
+        total = sum(counts.values())
+        if total == 0:
+            result[band_label] = {}
+        else:
+            result[band_label] = {
+                concept: count / total
+                for concept, count in counts.items()
+            }
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Decision tree predictor (#2053)
+# ---------------------------------------------------------------------------
+
+# Tieback decision thresholds (consistent with concept_selection.py)
+_TIEBACK_RESERVOIR_THRESHOLD = 50.0   # MMbbl — below this, tieback preferred
+_TIEBACK_DISTANCE_THRESHOLD = 15.0    # km — below this, tieback viable
+_STANDALONE_RESERVOIR_MIN = 200.0     # MMbbl — above this, standalone preferred
+
+
+def predict_concept_type(
+    projects: list[SubseaProject],
+    water_depth: float,
+    reservoir_size_mmbbl: float,
+    distance_to_infra_km: Optional[float],
+) -> ConceptPrediction:
+    """Predict concept type using an empirical decision tree over benchmark data.
+
+    Combines the statistical probability matrix from SubseaIQ benchmarks
+    with heuristic adjustments for reservoir size and distance to
+    infrastructure.  The decision tree:
+
+    1. Classify the field into a water-depth band.
+    2. Look up base probabilities from the benchmark probability matrix.
+    3. Apply reservoir-size adjustments (boost tieback for small fields,
+       penalise tieback for large fields).
+    4. Apply distance-to-infrastructure adjustments (boost tieback when
+       close, penalise when far).
+    5. Re-normalise and return the highest-probability concept.
+
+    Parameters
+    ----------
+    projects : list[SubseaProject]
+        Benchmark dataset from which to derive probabilities.
+    water_depth : float
+        Target field water depth in metres (must be > 0).
+    reservoir_size_mmbbl : float
+        Estimated recoverable reserves in MMbbl (must be > 0).
+    distance_to_infra_km : float or None
+        Distance to nearest existing infrastructure in km.
+        Pass None if no infrastructure is nearby.
+
+    Returns
+    -------
+    ConceptPrediction
+        Predicted concept type, full probability distribution,
+        depth band, and rationale string.
+
+    Raises
+    ------
+    ValueError
+        If ``water_depth <= 0``, ``reservoir_size_mmbbl <= 0``,
+        or ``projects`` is empty.
+    """
+    # --- Validation ---
+    if not projects:
+        raise ValueError(
+            "projects list must not be empty — need benchmark data "
+            "to derive probabilities."
+        )
+    if water_depth <= 0:
+        raise ValueError(
+            f"water_depth must be positive, got {water_depth!r}."
+        )
+    if reservoir_size_mmbbl <= 0:
+        raise ValueError(
+            f"reservoir_size_mmbbl must be positive, got {reservoir_size_mmbbl!r}."
+        )
+
+    # --- Step 1: Classify depth band ---
+    depth_band = _classify_depth(water_depth)
+    if depth_band is None:
+        # Depth below 0 already rejected; this handles edge cases
+        depth_band = DEPTH_BANDS[-1]  # treat as ultra-deep
+
+    # --- Step 2: Base probabilities from benchmark matrix ---
+    matrix = concept_probability_matrix(projects)
+    base_probs = dict(matrix.get(depth_band, {}))
+
+    # If the band is empty, seed with uniform priors over common types
+    if not base_probs:
+        _common = ["TLP", "Spar", "Semi", "FPSO", "Subsea Tieback"]
+        base_probs = {c: 1.0 / len(_common) for c in _common}
+
+    # Ensure Subsea Tieback is in the distribution (may not appear in data)
+    if "Subsea Tieback" not in base_probs:
+        base_probs["Subsea Tieback"] = 0.0
+
+    # --- Step 3: Reservoir size adjustments ---
+    adjusted = dict(base_probs)
+    if reservoir_size_mmbbl <= _TIEBACK_RESERVOIR_THRESHOLD:
+        # Small reservoir → boost tieback
+        adjusted["Subsea Tieback"] = adjusted.get("Subsea Tieback", 0.0) + 0.30
+    elif reservoir_size_mmbbl >= _STANDALONE_RESERVOIR_MIN:
+        # Large reservoir → penalise tieback, boost standalone hosts
+        adjusted["Subsea Tieback"] = max(
+            0.01, adjusted.get("Subsea Tieback", 0.0) * 0.2
+        )
+        # Redistribute the freed probability to standalone hosts
+        standalone_types = [k for k in adjusted if k != "Subsea Tieback"]
+        if standalone_types:
+            boost = 0.05
+            for st in standalone_types:
+                adjusted[st] = adjusted.get(st, 0.0) + boost
+
+    # --- Step 4: Distance to infrastructure adjustments ---
+    if distance_to_infra_km is not None:
+        if distance_to_infra_km <= _TIEBACK_DISTANCE_THRESHOLD:
+            # Close to infra → boost tieback
+            adjusted["Subsea Tieback"] = adjusted.get("Subsea Tieback", 0.0) + 0.15
+        elif distance_to_infra_km > 60.0:
+            # Far from infra → penalise tieback
+            adjusted["Subsea Tieback"] = max(
+                0.01, adjusted.get("Subsea Tieback", 0.0) * 0.3
+            )
+    else:
+        # No infrastructure → tieback not viable
+        adjusted["Subsea Tieback"] = max(
+            0.01, adjusted.get("Subsea Tieback", 0.0) * 0.1
+        )
+
+    # --- Step 5: Re-normalise ---
+    total = sum(adjusted.values())
+    if total > 0:
+        normalised = {k: v / total for k, v in adjusted.items()}
+    else:
+        # Fallback: uniform
+        normalised = {k: 1.0 / len(adjusted) for k in adjusted}
+
+    # Remove zero-probability entries for cleanliness, then re-normalise
+    normalised = {k: v for k, v in normalised.items() if v > 1e-12}
+    norm_total = sum(normalised.values())
+    if norm_total > 0:
+        normalised = {k: v / norm_total for k, v in normalised.items()}
+
+    # --- Select prediction ---
+    predicted = max(normalised, key=normalised.get)  # type: ignore[arg-type]
+
+    # --- Build rationale ---
+    dist_str = f"{distance_to_infra_km:.0f} km" if distance_to_infra_km is not None else "unknown"
+    top_3 = sorted(normalised.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_3_str = ", ".join(f"{c} {p:.0%}" for c, p in top_3)
+    rationale = (
+        f"Depth band {depth_band}: empirical prediction is {predicted}. "
+        f"Top options: {top_3_str}. "
+        f"Inputs: depth={water_depth:.0f}m, reservoir={reservoir_size_mmbbl:.0f} MMbbl, "
+        f"distance={dist_str}."
+    )
+
+    return ConceptPrediction(
+        predicted_concept=predicted,
+        probabilities=normalised,
+        depth_band=depth_band,
+        rationale=rationale,
+    )
 
 
 # ---------------------------------------------------------------------------

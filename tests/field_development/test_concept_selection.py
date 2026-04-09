@@ -1,5 +1,5 @@
 # ABOUTME: Tests for concept_selection module — host facility type ranking logic.
-# ABOUTME: Issue #1843 — Concept Selection Framework for field_development.
+# ABOUTME: Issue #1843/#2053 — Concept Selection Framework with empirical weighting.
 """
 Tests for digitalmodel.field_development.concept_selection
 
@@ -415,3 +415,164 @@ class TestConceptSelectionValidation:
         )
         assert isinstance(result.summary, str)
         assert len(result.summary) > 10
+
+
+# ---------------------------------------------------------------------------
+# concept_selection — Empirical weights integration (#2053)
+# ---------------------------------------------------------------------------
+
+from digitalmodel.field_development.concept_selection import (
+    concept_selection_with_benchmarks,
+)
+from digitalmodel.field_development.benchmarks import (
+    SubseaProject,
+    load_projects,
+)
+
+
+class TestConceptSelectionEmpiricalWeights:
+    """Tests for empirical_weights parameter (#2053)."""
+
+    def test_no_empirical_weights_backward_compatible(self):
+        """Without empirical_weights, behaviour is unchanged."""
+        result = concept_selection(
+            water_depth=900,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+        )
+        assert result.selected_host is not None
+        assert "Empirical" not in result.summary
+
+    def test_empirical_weights_accepted(self):
+        """Passing empirical_weights should not raise."""
+        weights = {"TLP": 0.45, "Semi": 0.30, "Spar": 0.15, "FPSO": 0.05, "Subsea_Tieback": 0.05}
+        result = concept_selection(
+            water_depth=900,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            empirical_weights=weights,
+        )
+        assert result.selected_host is not None
+        assert "Empirical" in result.summary
+
+    def test_empirical_weights_influence_score(self):
+        """Scores should differ when empirical weights are applied.
+
+        Empirical weights blend at 10%, so the relative ranking between
+        two concepts should shift when one gets a heavy empirical boost
+        and the other gets penalised.
+        """
+        result_no_emp = concept_selection(
+            water_depth=1500,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+        )
+        # Give Spar 100% empirical weight, zero to others
+        weights_spar = {"TLP": 0.0, "Semi": 0.0, "Spar": 1.0, "FPSO": 0.0, "Subsea_Tieback": 0.0}
+        # Give Semi 100% empirical weight, zero to Spar
+        weights_semi = {"TLP": 0.0, "Semi": 1.0, "Spar": 0.0, "FPSO": 0.0, "Subsea_Tieback": 0.0}
+        result_spar = concept_selection(
+            water_depth=1500,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            empirical_weights=weights_spar,
+        )
+        result_semi = concept_selection(
+            water_depth=1500,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            empirical_weights=weights_semi,
+        )
+        # Spar score should be higher when Spar gets 100% empirical vs Semi getting 100%
+        spar_in_spar = next(o for o in result_spar.ranked_options if o.host_type == HostType.SPAR)
+        spar_in_semi = next(o for o in result_semi.ranked_options if o.host_type == HostType.SPAR)
+        assert spar_in_spar.score > spar_in_semi.score
+
+    def test_empty_empirical_weights_no_crash(self):
+        """Empty weights dict should be treated as no empirical data."""
+        result = concept_selection(
+            water_depth=900,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            empirical_weights={},
+        )
+        assert result.selected_host is not None
+
+    def test_scores_still_ordered_descending(self):
+        """With empirical weights, scores must still be descending."""
+        weights = {"TLP": 0.20, "Semi": 0.30, "Spar": 0.30, "FPSO": 0.10, "Subsea_Tieback": 0.10}
+        result = concept_selection(
+            water_depth=1200,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            empirical_weights=weights,
+        )
+        scores = [opt.score for opt in result.ranked_options]
+        assert scores == sorted(scores, reverse=True)
+
+
+class TestConceptSelectionWithBenchmarks:
+    """Tests for concept_selection_with_benchmarks convenience function (#2053)."""
+
+    BENCHMARK_RECORDS = [
+        {"name": "F1", "water_depth_m": 900, "concept_type": "TLP"},
+        {"name": "F2", "water_depth_m": 1000, "concept_type": "TLP"},
+        {"name": "F3", "water_depth_m": 1100, "concept_type": "Semi"},
+        {"name": "F4", "water_depth_m": 1200, "concept_type": "Semi"},
+        {"name": "F5", "water_depth_m": 1800, "concept_type": "Spar"},
+        {"name": "F6", "water_depth_m": 2000, "concept_type": "FPSO"},
+        {"name": "F7", "water_depth_m": 2200, "concept_type": "Spar"},
+        {"name": "F8", "water_depth_m": 350, "concept_type": "Subsea Tieback"},
+    ]
+
+    @pytest.fixture
+    def bench_projects(self):
+        return load_projects(self.BENCHMARK_RECORDS)
+
+    def test_returns_concept_selection_result(self, bench_projects):
+        result = concept_selection_with_benchmarks(
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            benchmark_projects=bench_projects,
+        )
+        assert isinstance(result, ConceptSelectionResult)
+
+    def test_has_all_host_types(self, bench_projects):
+        result = concept_selection_with_benchmarks(
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            benchmark_projects=bench_projects,
+        )
+        host_types = {o.host_type for o in result.ranked_options}
+        assert len(host_types) == len(HostType)
+
+    def test_empirical_note_in_summary(self, bench_projects):
+        result = concept_selection_with_benchmarks(
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            benchmark_projects=bench_projects,
+        )
+        assert "Empirical" in result.summary
+
+    def test_selected_host_matches_top(self, bench_projects):
+        result = concept_selection_with_benchmarks(
+            water_depth=1000,
+            reservoir_size_mmbbl=200,
+            distance_to_infra_km=50,
+            fluid_type="oil",
+            benchmark_projects=bench_projects,
+        )
+        assert result.selected_host == result.ranked_options[0].host_type

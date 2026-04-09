@@ -18,6 +18,7 @@ from .concept_selection import (
     ConceptOption,
     ConceptSelectionResult,
     concept_selection,
+    concept_selection_with_benchmarks,
 )
 from .capex_estimator import CAPEXEstimate, estimate_capex
 from .opex_estimator import OPEXEstimate, estimate_opex
@@ -43,11 +44,12 @@ __all__ = [
     # Schematics (WRK-192)
     "generate_field_schematic",
     "SOLVEIG_PHASE2_CONFIG",
-    # Concept selection (#1843)
+    # Concept selection (#1843, #2053)
     "HostType",
     "ConceptOption",
     "ConceptSelectionResult",
     "concept_selection",
+    "concept_selection_with_benchmarks",
     # CAPEX estimation (#1843)
     "CAPEXEstimate",
     "estimate_capex",
