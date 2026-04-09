@@ -9,6 +9,7 @@ Modules:
 - capex_estimator:     GoM-benchmark CAPEX estimation — #1843
 - opex_estimator:      Annual OPEX estimation — #1843
 - economics:           Economics facade over worldenergydata backends — #1858
+- workflow:            End-to-end FDP screening orchestrator — #1858/#1848
 """
 
 from .schematic_generator import generate_field_schematic, SOLVEIG_PHASE2_CONFIG
@@ -29,6 +30,13 @@ from .economics import (
     evaluate_economics,
     build_economics_schedule,
     carbon_sensitivity,
+)
+from .workflow import (
+    FieldDevelopmentSpec,
+    FieldDevelopmentResult,
+    ConceptComparison,
+    evaluate_field_development,
+    compare_concepts,
 )
 
 __all__ = [
@@ -55,4 +63,10 @@ __all__ = [
     "evaluate_economics",
     "build_economics_schedule",
     "carbon_sensitivity",
+    # Workflow orchestrator (#1858/#1848)
+    "FieldDevelopmentSpec",
+    "FieldDevelopmentResult",
+    "ConceptComparison",
+    "evaluate_field_development",
+    "compare_concepts",
 ]
