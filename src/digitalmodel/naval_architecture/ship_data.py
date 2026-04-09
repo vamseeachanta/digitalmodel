@@ -13,7 +13,7 @@ References:
 - NavSource Naval History (public domain vessel data)
 """
 
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 # ── Ship Registry ─────────────────────────────────────────────────
 
@@ -125,3 +125,102 @@ def get_cross_curves(hull_id: str) -> Optional[dict]:
 def get_curves_of_form(hull_id: str) -> Optional[dict]:
     """Get curves of form (hydrostatic curves) for a ship class."""
     return _CURVES_OF_FORM.get(hull_id)
+
+
+# ── Vessel Fleet Adapter ────────────────────────────────────────────
+# Converts worldenergydata vessel_fleet records (metric, UPPER_SNAKE)
+# into the principal-dimensions shape used by this registry (imperial).
+
+_M_TO_FT: float = 1.0 / 0.3048
+_TONNES_TO_LT: float = 1.0 / 1.01605  # metric tonnes → long tons
+
+
+def _convert_metric(value: Any, factor: float) -> Optional[float]:
+    """Multiply *value* by *factor* if it is a positive number."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)) and float(value) > 0:
+        return float(value) * factor
+    return None
+
+
+def normalize_fleet_record(record: Mapping[str, Any]) -> Optional[dict[str, Any]]:
+    """Convert a worldenergydata vessel-fleet record to the ship registry shape.
+
+    Accepts a dict with UPPER_SNAKE keys from the curated CSV or loader
+    and returns a dict compatible with ``ship_dimensions.merge_template_into_registry``.
+
+    Returns ``None`` if the record has no usable vessel name.
+    """
+    name = record.get("VESSEL_NAME")
+    if not isinstance(name, str) or not name.strip():
+        return None
+
+    name = name.strip()
+
+    entry: dict[str, Any] = {
+        "hull_id": name,
+        "name": name,
+        "loa_ft": _convert_metric(record.get("LOA_M"), _M_TO_FT),
+        "beam_ft": _convert_metric(record.get("BEAM_M"), _M_TO_FT),
+        "draft_ft": _convert_metric(record.get("DRAFT_M"), _M_TO_FT),
+        "displacement_lt": _convert_metric(
+            record.get("DISPLACEMENT_TONNES"), _TONNES_TO_LT
+        ),
+    }
+
+    # Preserve useful metadata for downstream consumers
+    for src, dst in (
+        ("VESSEL_CATEGORY", "vessel_category"),
+        ("VESSEL_TYPE", "vessel_type"),
+        ("VESSEL_SUBTYPE", "vessel_subtype"),
+        ("YEAR_BUILT", "year_built"),
+        ("DP_CLASS", "dp_class"),
+        ("OWNER", "owner"),
+    ):
+        val = record.get(src)
+        if val is not None:
+            entry[dst] = val
+
+    # Strip None-valued dimension fields so validate_vessel_entry
+    # reports them as missing rather than as invalid numerics.
+    entry = {k: v for k, v in entry.items() if v is not None}
+    # hull_id and name must always be present
+    entry.setdefault("hull_id", name)
+    entry.setdefault("name", name)
+
+    return entry
+
+
+def register_fleet_vessels(
+    records: list[Mapping[str, Any]],
+    *,
+    overwrite: bool = False,
+) -> tuple[int, int]:
+    """Normalize and register worldenergydata vessel-fleet records.
+
+    Each record is converted via ``normalize_fleet_record`` and then
+    validated and merged through ``ship_dimensions.merge_template_into_registry``.
+
+    Returns ``(added_count, skipped_count)``.
+    """
+    from digitalmodel.naval_architecture.ship_dimensions import (
+        merge_template_into_registry,
+    )
+
+    normalized: list[dict[str, Any]] = []
+    pre_skipped = 0
+
+    for rec in records:
+        entry = normalize_fleet_record(rec)
+        if entry is None:
+            pre_skipped += 1
+            continue
+        normalized.append(entry)
+
+    added, merge_skipped = merge_template_into_registry(
+        normalized, overwrite=overwrite
+    )
+    return added, pre_skipped + merge_skipped

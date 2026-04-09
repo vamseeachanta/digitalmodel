@@ -6,6 +6,8 @@ from digitalmodel.naval_architecture.ship_data import (
     get_curves_of_form,
     get_ship,
     list_ships,
+    normalize_fleet_record,
+    register_fleet_vessels,
 )
 from digitalmodel.naval_architecture.ship_dimensions import (
     default_dimension_template_path,
@@ -22,5 +24,7 @@ __all__ = [
     "list_ships",
     "load_dimension_template",
     "merge_template_into_registry",
+    "normalize_fleet_record",
+    "register_fleet_vessels",
     "validate_vessel_entry",
 ]
