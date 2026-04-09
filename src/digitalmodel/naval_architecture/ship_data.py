@@ -13,6 +13,7 @@ References:
 - NavSource Naval History (public domain vessel data)
 """
 
+import math
 from typing import Any, Mapping, Optional
 
 # ── Ship Registry ─────────────────────────────────────────────────
@@ -141,7 +142,7 @@ def _convert_metric(value: Any, factor: float) -> Optional[float]:
         return None
     if isinstance(value, bool):
         return None
-    if isinstance(value, (int, float)) and float(value) > 0:
+    if isinstance(value, (int, float)) and math.isfinite(value) and float(value) > 0:
         return float(value) * factor
     return None
 
@@ -151,6 +152,10 @@ def normalize_fleet_record(record: Mapping[str, Any]) -> Optional[dict[str, Any]
 
     Accepts a dict with UPPER_SNAKE keys from the curated CSV or loader
     and returns a dict compatible with ``ship_dimensions.merge_template_into_registry``.
+
+    The hull_id is set to VESSEL_NAME. If this collides with a hardcoded
+    registry entry (e.g. "DDG-51"), ``register_fleet_vessels`` skips it
+    by default (overwrite=False).
 
     Returns ``None`` if the record has no usable vessel name.
     """
@@ -186,10 +191,8 @@ def normalize_fleet_record(record: Mapping[str, Any]) -> Optional[dict[str, Any]
 
     # Strip None-valued dimension fields so validate_vessel_entry
     # reports them as missing rather than as invalid numerics.
+    # hull_id and name are always non-None strings at this point.
     entry = {k: v for k, v in entry.items() if v is not None}
-    # hull_id and name must always be present
-    entry.setdefault("hull_id", name)
-    entry.setdefault("name", name)
 
     return entry
 
