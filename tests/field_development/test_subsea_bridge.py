@@ -83,7 +83,7 @@ class TestSubseaFieldCatalog:
         assert len(spars) == 2  # Perdido, Whale
 
         tlps = catalog.query(host_type="TLP")
-        assert len(tlps) == 2  # Mars, Ursa (etlp has 'ETLP' not 'TLP' as substring)
+        assert len(tlps) == 4  # Mars, Ursa + Stones, Lucius ('TLP' is substring of 'ETLP')
 
     def test_query_by_water_depth(self, catalog):
         deep = catalog.query(water_depth_min_m=2000)

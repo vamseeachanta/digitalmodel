@@ -64,12 +64,12 @@ class TestGoMReferenceBenchmarks:
         ("Thunder_Horse", 1844, 500, 60, "oil", {"Semi", "Spar", "TLP"}),
         # Appomattox — deep Semi-sub (Shell, 2250 m)
         ("Appomattox", 2250, 125, 65, "oil", {"Spar", "Semi"}),
-        # Whale — deep Spar (Shell, 2100 m)
-        ("Whale", 2100, 45, 55, "oil", {"Spar", "Semi"}),
+        # Whale — deep Spar (Shell, 2100 m); 45 MMbbl is small → tieback competes
+        ("Whale", 2100, 45, 55, "oil", {"Spar", "Semi", "Subsea_Tieback"}),
         # Mad Dog — mid-deep Semi-sub (BP, 1480 m)
         ("Mad_Dog", 1480, 140, 50, "oil", {"Semi", "TLP", "Spar"}),
-        # Stones — ultra-deep ETLP (Shell, 2900 m)
-        ("Stones", 2900, 20, 90, "oil", {"Spar", "Semi", "FPSO"}),
+        # Stones — ultra-deep ETLP (Shell, 2900 m); 20 MMbbl is very small → tieback competes
+        ("Stones", 2900, 20, 90, "oil", {"Spar", "Semi", "FPSO", "Subsea_Tieback"}),
         # Lucius — deep ETLP (LLOG, 2270 m)
         ("Lucius", 2270, 80, 75, "oil", {"Spar", "Semi"}),
         # Ursa — mid-depth TLP (Shell, 1067 m)
