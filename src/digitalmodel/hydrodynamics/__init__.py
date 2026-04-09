@@ -17,6 +17,13 @@ from .coefficient_database import CoefficientDatabase
 from .wave_spectra import WaveSpectra
 from .ocimf_loading import OCIMFLoading
 from .interpolator import CoefficientsInterpolator
+from .seakeeping import (
+    compute_response_spectrum,
+    spectral_moments,
+    significant_amplitude,
+    motion_exceedance,
+    operability_analysis,
+)
 
 # Capytaine BEM solver (optional — requires capytaine-env)
 try:
@@ -35,6 +42,11 @@ __all__ = [
     "WaveSpectra",
     "OCIMFLoading",
     "CoefficientsInterpolator",
+    "compute_response_spectrum",
+    "spectral_moments",
+    "significant_amplitude",
+    "motion_exceedance",
+    "operability_analysis",
 ]
 
 if _HAS_CAPYTAINE:
