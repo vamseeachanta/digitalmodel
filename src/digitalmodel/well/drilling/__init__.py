@@ -9,12 +9,20 @@ from digitalmodel.well.drilling.dysfunction_detector import (
     DysfunctionEvent,
     DysfunctionType,
 )
+from digitalmodel.well.drilling.well_bore_design import (
+    CasingString,
+    CostBreakdown,
+    WellDesign,
+)
 
 __all__ = [
     "BourgoineYoungROP",
+    "CasingString",
+    "CostBreakdown",
     "RopPrediction",
     "WarrenROP",
     "WellboreHydraulics",
+    "WellDesign",
     "DysfunctionDetector",
     "DysfunctionEvent",
     "DysfunctionType",
