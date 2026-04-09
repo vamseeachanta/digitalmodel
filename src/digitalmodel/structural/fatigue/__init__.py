@@ -156,6 +156,13 @@ from .analysis import (
     quick_frequency_domain_analysis
 )
 
+from .fatigue_reliability import (
+    failure_probability,
+    reliability_index,
+    sensitivity_analysis,
+    monte_carlo_fatigue,
+)
+
 # Version information
 __version__ = "2.0.0"
 __author__ = "Digital Model Team"
@@ -189,7 +196,11 @@ __all__ = [
 
     # Analysis Engine
     'FatigueAnalysisEngine', 'FatigueAnalysisConfig', 'FatigueValidationResults',
-    'quick_time_domain_analysis', 'quick_frequency_domain_analysis'
+    'quick_time_domain_analysis', 'quick_frequency_domain_analysis',
+
+    # Reliability Analysis
+    'failure_probability', 'reliability_index',
+    'sensitivity_analysis', 'monte_carlo_fatigue',
 ]
 
 # Add frequency domain components if available
