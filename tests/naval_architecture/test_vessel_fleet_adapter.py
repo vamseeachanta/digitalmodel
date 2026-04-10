@@ -2,6 +2,8 @@
 # ABOUTME: Validates record normalization, partial data, and stability integration
 """Tests for vessel fleet adapter — worldenergydata → naval architecture pipeline."""
 
+from pathlib import Path
+
 import pytest
 
 
@@ -42,6 +44,22 @@ THIALF_RECORD = {
     "DP_CLASS": 3,
     "YEAR_BUILT": 1985,
     "MAIN_CRANE_CAPACITY_T": 14200.0,
+}
+
+BALDER_RECORD = {
+    "VESSEL_NAME": "BALDER",
+    "VESSEL_CATEGORY": "construction",
+    "VESSEL_TYPE": "crane_vessel",
+    "VESSEL_SUBTYPE": "semi_submersible",
+    "OWNER": "Heerema Marine Contractors",
+    "LOA_M": 152.0,
+    "BEAM_M": 76.8,
+    "DRAFT_M": 25.0,
+    "DISPLACEMENT_TONNES": None,
+    "GROSS_TONNAGE": None,
+    "DP_CLASS": 2,
+    "YEAR_BUILT": 1978,
+    "MAIN_CRANE_CAPACITY_T": 6300.0,
 }
 
 PARTIAL_RECORD = {
@@ -572,4 +590,189 @@ class TestGyradiusForFleetVessel:
         from digitalmodel.naval_architecture.gyradius import gyradius_for_fleet_vessel
         with pytest.raises(KeyError):
             gyradius_for_fleet_vessel("NONEXISTENT-VESSEL-999")
+
+
+# ── CSV Bulk Registration Tests ────────────────────────────────────────
+
+_CSV_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "worldenergydata"
+    / "data"
+    / "modules"
+    / "vessel_fleet"
+    / "curated"
+    / "construction_vessels.csv"
+)
+
+
+@pytest.mark.skipif(
+    not _CSV_PATH.exists(),
+    reason="worldenergydata CSV not available (standalone digitalmodel checkout)",
+)
+class TestCSVBulkRegistration:
+    """Bulk-register all construction vessels from the curated CSV.
+
+    The CSV contains 17 real-world construction vessels (crane vessels,
+    pipelay vessels, wind installation vessels) from operators including
+    Heerema, Allseas, Saipem, Subsea 7, McDermott, and TechnipFMC.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _load_csv_records(self):
+        """Load CSV rows into dicts once per test class."""
+        import csv
+
+        assert _CSV_PATH.exists(), f"CSV not found: {_CSV_PATH}"
+        with open(_CSV_PATH, newline="") as fh:
+            reader = csv.DictReader(fh)
+            raw = list(reader)
+        # Convert numeric strings — DictReader returns all values as str
+        for row in raw:
+            for key in ("LOA_M", "BEAM_M", "DRAFT_M", "DISPLACEMENT_TONNES",
+                        "GROSS_TONNAGE", "MAIN_CRANE_CAPACITY_T"):
+                val = row.get(key, "")
+                row[key] = float(val) if val else None
+            for key in ("DP_CLASS", "YEAR_BUILT"):
+                val = row.get(key, "")
+                row[key] = int(val) if val else None
+        self.records = raw
+
+    def test_register_17_vessels(self):
+        """All 17 CSV rows should be processed; most should register."""
+        from digitalmodel.naval_architecture.ship_data import register_fleet_vessels
+
+        added, skipped = register_fleet_vessels(self.records, overwrite=True)
+        assert added + skipped == 17
+        # Most have LOA, beam, draft — expect majority registered
+        assert added >= 10
+
+    def test_all_have_required_keys(self):
+        """Every successfully normalized record must have hull_id and dimension keys."""
+        from digitalmodel.naval_architecture.ship_data import (
+            normalize_fleet_record,
+        )
+
+        for rec in self.records:
+            result = normalize_fleet_record(rec)
+            if result is None:
+                continue
+            assert "hull_id" in result, f"Missing hull_id for {rec['VESSEL_NAME']}"
+            assert "loa_ft" in result, f"Missing loa_ft for {rec['VESSEL_NAME']}"
+            assert "beam_ft" in result, f"Missing beam_ft for {rec['VESSEL_NAME']}"
+            assert "draft_ft" in result, f"Missing draft_ft for {rec['VESSEL_NAME']}"
+
+
+# ── Three-Vessel Stability Pipeline Tests ──────────────────────────────
+
+# Parameter tuples: (record, has_measured_displacement)
+_THREE_VESSELS = [
+    pytest.param(SLEIPNIR_RECORD, False, id="Sleipnir"),
+    pytest.param(THIALF_RECORD, True, id="Thialf"),
+    pytest.param(BALDER_RECORD, False, id="Balder"),
+]
+
+
+class TestThreeVesselStabilityPipeline:
+    """End-to-end stability pipeline for Sleipnir, Thialf, and Balder.
+
+    These are Heerema Marine Contractors' three semi-submersible crane
+    vessels.  Thialf has published displacement (71,368 t) so its block
+    coefficient is computed from measured data.  Sleipnir and Balder lack
+    published displacement, so hydrostatic estimates use assumed Cb
+    (draft_estimated=True path).
+
+    Parameters noted as "assumed" in the tests:
+      - Block coefficient (Cb): assumed default when displacement unknown
+      - KG (vertical centre of gravity): estimated as 0.6 × draft
+      - Waterplane coefficient (Cw): assumed default
+
+    Parameters from measured/published data:
+      - LOA, beam, draft: from vessel specifications
+      - Displacement (Thialf only): from published technical data
+    """
+
+    @pytest.mark.parametrize("record, has_measured_disp", _THREE_VESSELS)
+    def test_register_and_compute_gz_curve(self, record, has_measured_disp):
+        """Register vessel, estimate hydrostatics, and compute GZ curve."""
+        from digitalmodel.naval_architecture.ship_data import (
+            register_fleet_vessels,
+            get_ship,
+            estimate_vessel_hydrostatics,
+        )
+        from digitalmodel.naval_architecture.floating_platform_stability import (
+            compute_gz_curve,
+        )
+
+        register_fleet_vessels([record], overwrite=True)
+        ship = get_ship(record["VESSEL_NAME"])
+        assert ship is not None
+
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert hydro is not None, f"Hydrostatics failed for {record['VESSEL_NAME']}"
+
+        gm_m = hydro["gm_ft"] * 0.3048
+        gz_curve = compute_gz_curve(gm_m)
+
+        # GZ curve should have points from 0° to 90° in 5° increments
+        assert len(gz_curve) >= 10
+        # GZ at 0° heel is always 0
+        assert gz_curve[0] == (0, 0.0)
+        # GZ at moderate heel (30°) should be positive for a stable vessel
+        gz_at_30 = [gz for angle, gz in gz_curve if angle == 30]
+        assert len(gz_at_30) == 1
+        assert gz_at_30[0] > 0
+
+    @pytest.mark.parametrize("record, has_measured_disp", _THREE_VESSELS)
+    def test_positive_metacentric_height(self, record, has_measured_disp):
+        """GM must be positive for all three vessels (basic intact stability)."""
+        from digitalmodel.naval_architecture.ship_data import (
+            register_fleet_vessels,
+            get_ship,
+            estimate_vessel_hydrostatics,
+        )
+
+        register_fleet_vessels([record], overwrite=True)
+        ship = get_ship(record["VESSEL_NAME"])
+        hydro = estimate_vessel_hydrostatics(ship)
+        assert hydro is not None
+
+        # GM = KB + BM - KG — must be positive for a stable floating body
+        assert hydro["gm_ft"] > 0, (
+            f"{record['VESSEL_NAME']}: GM={hydro['gm_ft']:.2f} ft is not positive"
+        )
+        # Wide-beam semi-submersibles can have very large GM due to BM ∝ B³.
+        # Thialf (B=88m, low Cb) estimates ~385 ft; Sleipnir (B=102m) ~108 ft.
+        # Upper bound of 500 ft keeps the sanity check without rejecting valid
+        # rectangular-waterplane approximations for these extreme beam vessels.
+        assert hydro["gm_ft"] < 500
+
+    @pytest.mark.parametrize("record, has_measured_disp", _THREE_VESSELS)
+    def test_displacement_estimation_flag(self, record, has_measured_disp):
+        """Sleipnir and Balder lack published displacement — verify estimation path.
+
+        When DISPLACEMENT_TONNES is None in the CSV, normalize_fleet_record
+        strips the displacement_lt key.  estimate_vessel_hydrostatics then
+        falls back to an assumed block coefficient, meaning all downstream
+        stability values are estimates rather than measured.
+        """
+        from digitalmodel.naval_architecture.ship_data import (
+            register_fleet_vessels,
+            get_ship,
+        )
+
+        register_fleet_vessels([record], overwrite=True)
+        ship = get_ship(record["VESSEL_NAME"])
+        assert ship is not None
+
+        if has_measured_disp:
+            # Thialf: displacement_lt should be present and derived from 71,368 t
+            assert "displacement_lt" in ship
+            assert ship["displacement_lt"] == pytest.approx(
+                71368.0 * _TONNES_TO_LT, rel=1e-3
+            )
+        else:
+            # Sleipnir and Balder: no published displacement → key absent
+            assert "displacement_lt" not in ship, (
+                f"{record['VESSEL_NAME']} should not have measured displacement_lt"
+            )
 

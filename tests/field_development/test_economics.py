@@ -25,6 +25,7 @@ if _wed_src.exists() and str(_wed_src) not in sys.path:
     sys.path.insert(0, str(_wed_src))
 
 from digitalmodel.field_development.economics import (
+    DeclineType,
     EconomicsInput,
     EconomicsResult,
     FiscalRegime,
@@ -33,6 +34,7 @@ from digitalmodel.field_development.economics import (
     evaluate_economics,
     build_economics_schedule,
     carbon_sensitivity,
+    _production_factors,
     _resolve_capex_adapter,
     _resolve_abex_adapter,
     _resolve_financial_adapter,
@@ -588,3 +590,371 @@ class TestCarbonSensitivity:
         """base_npv should equal NPV at carbon_price=0."""
         result = carbon_sensitivity(minimal_input)
         assert abs(result.base_npv - result.npv_values[0]) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# DeclineType enum (#2054)
+# ---------------------------------------------------------------------------
+
+
+class TestDeclineType:
+    """Test DeclineType enum members and usage."""
+
+    def test_four_members(self) -> None:
+        assert len(DeclineType) == 4
+        expected = {"exponential", "hyperbolic", "harmonic", "linear"}
+        actual = {d.value for d in DeclineType}
+        assert actual == expected
+
+    def test_string_enum(self) -> None:
+        assert isinstance(DeclineType.LINEAR, str)
+        assert DeclineType.LINEAR == "linear"
+
+    def test_invalid_value_raises(self) -> None:
+        with pytest.raises(ValueError):
+            DeclineType("parabolic")
+
+
+# ---------------------------------------------------------------------------
+# EconomicsInput decline defaults and validation (#2054)
+# ---------------------------------------------------------------------------
+
+
+class TestDeclineInputDefaults:
+    """Test that new decline fields default correctly and validate."""
+
+    def test_defaults_are_linear(self, minimal_input: EconomicsInput) -> None:
+        """Default decline_type is LINEAR for backward compatibility."""
+        assert minimal_input.decline_type is DeclineType.LINEAR
+        assert minimal_input.decline_rate == 0.0
+        assert minimal_input.b_factor == 0.5
+
+    def test_exponential_requires_positive_rate(self) -> None:
+        with pytest.raises(ValueError, match="decline_rate"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+                decline_type=DeclineType.EXPONENTIAL,
+                decline_rate=0.0,
+            )
+
+    def test_harmonic_requires_positive_rate(self) -> None:
+        with pytest.raises(ValueError, match="decline_rate"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+                decline_type=DeclineType.HARMONIC,
+                decline_rate=-0.1,
+            )
+
+    def test_hyperbolic_b_factor_out_of_range(self) -> None:
+        with pytest.raises(ValueError, match="b_factor"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+                decline_type=DeclineType.HYPERBOLIC,
+                decline_rate=0.15,
+                b_factor=1.0,  # must be < 1
+            )
+
+    def test_hyperbolic_b_factor_zero_rejected(self) -> None:
+        with pytest.raises(ValueError, match="b_factor"):
+            EconomicsInput(
+                field_name="Bad",
+                water_depth_m=1000.0,
+                host_type="TLP",
+                production_capacity_bopd=80_000.0,
+                oil_price_usd_per_bbl=70.0,
+                discount_rate=0.10,
+                fiscal_regime=FiscalRegime.US,
+                field_life_years=25,
+                decline_type=DeclineType.HYPERBOLIC,
+                decline_rate=0.15,
+                b_factor=0.0,  # must be > 0
+            )
+
+    def test_linear_allows_zero_rate(self, minimal_input: EconomicsInput) -> None:
+        """LINEAR decline does not require a positive decline_rate."""
+        assert minimal_input.decline_rate == 0.0  # no error raised
+
+
+# ---------------------------------------------------------------------------
+# _production_factors shape tests (#2054)
+# ---------------------------------------------------------------------------
+
+
+class TestProductionFactors:
+    """Test decline factor shapes from _production_factors."""
+
+    def _make_input(self, decline_type, decline_rate=0.15, b_factor=0.5):
+        return EconomicsInput(
+            field_name="Factor Test",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            decline_type=decline_type,
+            decline_rate=decline_rate,
+            b_factor=b_factor,
+        )
+
+    def test_linear_shape(self) -> None:
+        """LINEAR: factors decline from 1.0 toward 0.2 in post-plateau."""
+        inp = self._make_input(DeclineType.LINEAR)
+        factors = _production_factors(inp, 20)
+        assert factors[0] == 0.0  # year 0 = development
+        plateau_end = max(1, int(20 * 0.6))  # 12
+        assert factors[plateau_end] == 1.0
+        assert factors[-1] == pytest.approx(0.2, abs=0.01)
+
+    def test_exponential_monotonically_decreasing(self) -> None:
+        """EXPONENTIAL: post-plateau factors strictly decrease."""
+        inp = self._make_input(DeclineType.EXPONENTIAL)
+        factors = _production_factors(inp, 20)
+        plateau_end = max(1, int(20 * 0.6))
+        post_plateau = factors[plateau_end + 1:]
+        for i in range(1, len(post_plateau)):
+            assert post_plateau[i] < post_plateau[i - 1]
+
+    def test_exponential_first_factor(self) -> None:
+        """EXPONENTIAL: first post-plateau factor = exp(-D*1)."""
+        inp = self._make_input(DeclineType.EXPONENTIAL, decline_rate=0.10)
+        factors = _production_factors(inp, 20)
+        plateau_end = max(1, int(20 * 0.6))
+        expected = math.exp(-0.10 * 1)
+        assert factors[plateau_end + 1] == pytest.approx(expected, rel=1e-6)
+
+    def test_hyperbolic_monotonically_decreasing(self) -> None:
+        """HYPERBOLIC: post-plateau factors strictly decrease."""
+        inp = self._make_input(DeclineType.HYPERBOLIC, b_factor=0.5)
+        factors = _production_factors(inp, 20)
+        plateau_end = max(1, int(20 * 0.6))
+        post_plateau = factors[plateau_end + 1:]
+        for i in range(1, len(post_plateau)):
+            assert post_plateau[i] < post_plateau[i - 1]
+
+    def test_harmonic_formula(self) -> None:
+        """HARMONIC: factor = 1/(1+D*t)."""
+        inp = self._make_input(DeclineType.HARMONIC, decline_rate=0.20)
+        factors = _production_factors(inp, 20)
+        plateau_end = max(1, int(20 * 0.6))
+        for t in range(1, 20 - plateau_end + 1):
+            yr = plateau_end + t
+            expected = 1.0 / (1.0 + 0.20 * t)
+            assert factors[yr] == pytest.approx(expected, rel=1e-6)
+
+    def test_all_plateau_factors_are_one(self) -> None:
+        """All decline types have factors=1.0 during plateau period."""
+        for dt in DeclineType:
+            rate = 0.0 if dt == DeclineType.LINEAR else 0.15
+            inp = self._make_input(dt, decline_rate=rate)
+            factors = _production_factors(inp, 20)
+            plateau_end = max(1, int(20 * 0.6))
+            for yr in range(1, plateau_end + 1):
+                assert factors[yr] == 1.0, f"Failed for {dt.value} at year {yr}"
+
+    def test_year_zero_always_zero(self) -> None:
+        """Year 0 (development) always has factor 0.0."""
+        for dt in DeclineType:
+            rate = 0.0 if dt == DeclineType.LINEAR else 0.15
+            inp = self._make_input(dt, decline_rate=rate)
+            factors = _production_factors(inp, 20)
+            assert factors[0] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Backward compatibility (#2054)
+# ---------------------------------------------------------------------------
+
+
+class TestDeclineBackwardCompatibility:
+    """Verify that adding decline fields does not break existing behaviour."""
+
+    def test_minimal_input_still_works(self, minimal_input: EconomicsInput) -> None:
+        """EconomicsInput without decline args evaluates as before."""
+        result = evaluate_economics(minimal_input)
+        assert isinstance(result, EconomicsResult)
+        assert math.isfinite(result.metrics.npv_usd_mm)
+
+    def test_schedule_unchanged_for_linear_default(
+        self, minimal_input: EconomicsInput
+    ) -> None:
+        """build_economics_schedule with defaults matches legacy linear decline."""
+        schedule = build_economics_schedule(minimal_input)
+        n = minimal_input.field_life_years
+        assert len(schedule.years) == n + 1
+        # Revenue in year 1 should equal plateau revenue
+        assert schedule.revenue[1] > 0
+
+    def test_existing_fixtures_unchanged(self, full_input: EconomicsInput) -> None:
+        """full_input fixture still evaluates correctly with new fields at defaults."""
+        result = evaluate_economics(full_input)
+        assert result.costs.capex_usd_mm == 8_500.0
+        assert math.isfinite(result.metrics.npv_usd_mm)
+
+
+# ---------------------------------------------------------------------------
+# build_economics_schedule decline integration (#2054) — RED test
+# ---------------------------------------------------------------------------
+
+
+class TestScheduleDeclineIntegration:
+    """Verify build_economics_schedule uses decline params, not hardcoded linear."""
+
+    def test_exponential_schedule_differs_from_linear(self) -> None:
+        """Exponential decline must produce different revenue than linear default.
+
+        This is the KEY test: build_economics_schedule currently ignores
+        inp.decline_type and hardcodes linear decline.  With exponential
+        decline (D=0.15), late-life revenue should differ from the legacy
+        linear profile.
+        """
+        base = dict(
+            field_name="Schedule Decline",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            capex_usd_mm=3_000.0,
+            opex_usd_per_bbl=20.0,
+            abex_usd_mm=200.0,
+        )
+        linear_inp = EconomicsInput(**base)  # default LINEAR
+        exp_inp = EconomicsInput(
+            **base,
+            decline_type=DeclineType.EXPONENTIAL,
+            decline_rate=0.15,
+        )
+
+        linear_sched = build_economics_schedule(linear_inp)
+        exp_sched = build_economics_schedule(exp_inp)
+
+        # Last producing year (before ABEX) should have different revenue
+        last_yr = 19  # year before final year
+        assert linear_sched.revenue[last_yr] != pytest.approx(
+            exp_sched.revenue[last_yr], rel=0.01
+        ), (
+            "Exponential schedule revenue should differ from linear — "
+            "build_economics_schedule must use decline_type from input"
+        )
+
+    def test_schedule_factors_match_production_factors(self) -> None:
+        """Revenue ratios in schedule should match _production_factors output."""
+        inp = EconomicsInput(
+            field_name="Factor Match",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            capex_usd_mm=3_000.0,
+            opex_usd_per_bbl=20.0,
+            abex_usd_mm=200.0,
+            decline_type=DeclineType.EXPONENTIAL,
+            decline_rate=0.15,
+        )
+        factors = _production_factors(inp, 20)
+        schedule = build_economics_schedule(inp)
+
+        # Revenue at plateau (year 1) should be 100%; year 15 should match factor
+        plateau_revenue = schedule.revenue[1]
+        for yr in [5, 10, 15, 19]:
+            if plateau_revenue > 0:
+                ratio = schedule.revenue[yr] / plateau_revenue
+                assert ratio == pytest.approx(factors[yr], rel=0.01), (
+                    f"Year {yr}: schedule ratio {ratio:.4f} != factor {factors[yr]:.4f}"
+                )
+
+
+# ---------------------------------------------------------------------------
+# EUR-based decline parameterization (#2054)
+# ---------------------------------------------------------------------------
+
+
+class TestEURDeclineParameterization:
+    """Test that reservoir_size_mmbbl auto-derives decline rate from EUR."""
+
+    def test_eur_auto_derives_decline_rate(self) -> None:
+        """When reservoir_size given without decline_rate, rate is auto-derived."""
+        inp = EconomicsInput(
+            field_name="EUR Test",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=30_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            reservoir_size_mmbbl=1000.0,  # triggers EUR derivation
+        )
+        assert inp.decline_type is DeclineType.EXPONENTIAL
+        assert inp.decline_rate > 0
+
+    def test_eur_constrains_cumulative_production(self) -> None:
+        """Derived decline rate constrains total production to approx EUR."""
+        reservoir = 1000.0  # MMbbl OOIP
+        recovery_factor = 0.15
+        eur = reservoir * recovery_factor  # 150 MMbbl
+
+        inp = EconomicsInput(
+            field_name="EUR Cum Test",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=30_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            reservoir_size_mmbbl=reservoir,
+        )
+
+        factors = _production_factors(inp, 20)
+        annual_prod = 30_000.0 * 365.0 / 1e6  # MMbbl/yr
+        cumulative = sum(f * annual_prod for f in factors)
+
+        assert cumulative == pytest.approx(eur, rel=0.05), (
+            f"Cumulative {cumulative:.1f} MMbbl should ≈ EUR {eur:.1f} MMbbl"
+        )
+
+    def test_explicit_decline_rate_not_overridden(self) -> None:
+        """When both reservoir_size and decline_rate given, use explicit rate."""
+        inp = EconomicsInput(
+            field_name="Explicit Rate",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=30_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            reservoir_size_mmbbl=1000.0,
+            decline_type=DeclineType.EXPONENTIAL,
+            decline_rate=0.20,
+        )
+        assert inp.decline_rate == 0.20  # not overridden by EUR derivation

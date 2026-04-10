@@ -73,6 +73,9 @@ class SubseaProject:
     num_manifolds: Optional[int] = None
     fluid_type: Optional[str] = None
     region: Optional[str] = None
+    flowline_diameter_in: Optional[float] = None
+    flowline_material: Optional[str] = None
+    layout_type: Optional[str] = None
 
 
 @dataclass
@@ -137,6 +140,9 @@ def load_projects(records: list[dict]) -> list[SubseaProject]:
                 num_manifolds=_opt_int(rec.get("num_manifolds")),
                 fluid_type=rec.get("fluid_type"),
                 region=rec.get("region"),
+                flowline_diameter_in=_opt_float(rec.get("flowline_diameter_in")),
+                flowline_material=rec.get("flowline_material"),
+                layout_type=rec.get("layout_type"),
             )
         )
     return projects

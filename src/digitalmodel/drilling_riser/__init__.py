@@ -16,6 +16,11 @@ from digitalmodel.drilling_riser.stackup import (
     top_tension_required,
     wall_thickness_required,
 )
+from digitalmodel.drilling_riser.adapter import (
+    compute_riser_string_weight_kn,
+    normalize_riser_component_record,
+    register_riser_components,
+)
 from digitalmodel.drilling_riser.tool_passage import (
     annular_clearance_mm,
     minimum_riser_id_required,
@@ -36,4 +41,7 @@ __all__ = [
     "structural_damping_ratio",
     "rayleigh_damping_coefficients",
     "modal_damping_equivalent",
+    "normalize_riser_component_record",
+    "register_riser_components",
+    "compute_riser_string_weight_kn",
 ]

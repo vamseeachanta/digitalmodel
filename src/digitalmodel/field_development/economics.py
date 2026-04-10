@@ -49,6 +49,22 @@ import numpy as np
 # ---------------------------------------------------------------------------
 
 
+class DeclineType(str, Enum):
+    """Production decline curve type after plateau period.
+
+    Controls how production tapers from plateau rate to end-of-life:
+    - EXPONENTIAL: q(t) = q_i * exp(-D*t)
+    - HYPERBOLIC:  q(t) = q_i / (1 + b*D*t)^(1/b)
+    - HARMONIC:    q(t) = q_i / (1 + D*t)       (hyperbolic with b=1)
+    - LINEAR:      straight-line decline to 20% of plateau (legacy default)
+    """
+
+    EXPONENTIAL = "exponential"
+    HYPERBOLIC = "hyperbolic"
+    HARMONIC = "harmonic"
+    LINEAR = "linear"
+
+
 class FiscalRegime(str, Enum):
     """Supported fiscal regimes.
 
@@ -65,6 +81,52 @@ class FiscalRegime(str, Enum):
     UK = "UK"
     Brazil = "Brazil"
     Nigeria = "Nigeria"
+
+
+# ---------------------------------------------------------------------------
+# EUR-based decline rate derivation
+# ---------------------------------------------------------------------------
+
+
+def _derive_decline_rate_from_eur(
+    reservoir_size_mmbbl: float,
+    production_capacity_bopd: float,
+    field_life_years: int,
+    recovery_factor: float = 0.15,
+) -> float:
+    """Derive exponential decline rate D so cumulative production ≈ EUR.
+
+    EUR = reservoir_size_mmbbl * recovery_factor.  Plateau is 60% of field
+    life at full rate; D is chosen so the post-plateau exponential tail
+    constrains total cumulative to EUR.  Uses bisection (50 iterations).
+    """
+    annual_prod = production_capacity_bopd * 365.0 / 1e6  # MMbbl/yr
+    eur = reservoir_size_mmbbl * recovery_factor
+    plateau_years = max(1, int(field_life_years * 0.6))
+    decline_years = field_life_years - plateau_years
+    plateau_cum = annual_prod * plateau_years
+
+    if decline_years <= 0 or plateau_cum >= eur:
+        return 2.0  # fast decline — EUR already met or exceeded in plateau
+
+    target_decline_cum = eur - plateau_cum
+    max_decline_cum = annual_prod * decline_years
+
+    if target_decline_cum >= max_decline_cum:
+        return 0.01  # very slow decline — need nearly full production
+
+    # Bisection: find D where annual_prod * Σ exp(-D*t) = target_decline_cum
+    target_sum = target_decline_cum / annual_prod
+    t = np.arange(1, decline_years + 1, dtype=float)
+    d_low, d_high = 0.001, 5.0
+    for _ in range(50):
+        d_mid = (d_low + d_high) / 2.0
+        cum = float(np.sum(np.exp(-d_mid * t)))
+        if cum > target_sum:
+            d_low = d_mid
+        else:
+            d_high = d_mid
+    return (d_low + d_high) / 2.0
 
 
 # ---------------------------------------------------------------------------
@@ -101,6 +163,11 @@ class EconomicsInput:
     carbon_cost_usd_per_tonne: Optional[float] = None
     region: Optional[str] = None
 
+    # Decline curve parameters (default preserves legacy linear behaviour)
+    decline_type: DeclineType = DeclineType.LINEAR
+    decline_rate: float = 0.0
+    b_factor: float = 0.5
+
     def __post_init__(self) -> None:
         # Validate host_type against HostType enum values
         from digitalmodel.field_development.concept_selection import HostType
@@ -129,6 +196,33 @@ class EconomicsInput:
             raise ValueError(
                 f"field_life_years must be >= 1, got {self.field_life_years!r}"
             )
+        # EUR-based decline rate derivation (before validation)
+        if (
+            self.reservoir_size_mmbbl is not None
+            and self.decline_rate == 0.0
+            and self.decline_type == DeclineType.LINEAR
+        ):
+            self.decline_type = DeclineType.EXPONENTIAL
+            self.decline_rate = _derive_decline_rate_from_eur(
+                self.reservoir_size_mmbbl,
+                self.production_capacity_bopd,
+                self.field_life_years,
+            )
+
+        # Decline curve validation
+        if not isinstance(self.decline_type, DeclineType):
+            self.decline_type = DeclineType(self.decline_type)
+        if self.decline_type != DeclineType.LINEAR and self.decline_rate <= 0:
+            raise ValueError(
+                f"decline_rate must be > 0 for {self.decline_type.value} decline, "
+                f"got {self.decline_rate!r}"
+            )
+        if self.decline_type == DeclineType.HYPERBOLIC:
+            if not (0 < self.b_factor < 1):
+                raise ValueError(
+                    f"b_factor must be in (0, 1) for hyperbolic decline, "
+                    f"got {self.b_factor!r}"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -388,6 +482,55 @@ def _estimate_opex_mm_per_yr(inp: EconomicsInput) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Production decline helpers
+# ---------------------------------------------------------------------------
+
+
+def _production_factors(inp: EconomicsInput, n: int) -> list[float]:
+    """Return per-year production multipliers for years 0..n.
+
+    Year 0 is always 0.0 (development).  Years 1..plateau are 1.0.
+    Post-plateau behaviour depends on ``inp.decline_type``:
+
+    - LINEAR (default, legacy): straight-line from 1.0 to 0.2
+    - EXPONENTIAL: exp(-D * t)  where t = years past plateau
+    - HYPERBOLIC:  (1 + b*D*t)^(-1/b)
+    - HARMONIC:    1 / (1 + D*t)
+    """
+    plateau_years = max(1, int(n * 0.6))
+    decline_years = n - plateau_years
+    dt = inp.decline_type
+    factors: list[float] = [0.0]  # year 0
+
+    for yr in range(1, n + 1):
+        if yr <= plateau_years:
+            factors.append(1.0)
+        else:
+            t = yr - plateau_years
+
+            if dt == DeclineType.LINEAR:
+                if decline_years > 0:
+                    frac_decline = t / decline_years
+                    factors.append(1.0 - 0.8 * frac_decline)
+                else:
+                    factors.append(0.2)
+
+            elif dt == DeclineType.EXPONENTIAL:
+                factors.append(np.exp(-inp.decline_rate * t))
+
+            elif dt == DeclineType.HYPERBOLIC:
+                factors.append(
+                    (1.0 + inp.b_factor * inp.decline_rate * t)
+                    ** (-1.0 / inp.b_factor)
+                )
+
+            elif dt == DeclineType.HARMONIC:
+                factors.append(1.0 / (1.0 + inp.decline_rate * t))
+
+    return factors
+
+
+# ---------------------------------------------------------------------------
 # Cashflow construction
 # ---------------------------------------------------------------------------
 
@@ -417,22 +560,13 @@ def _build_annual_cashflows(
             cashflows[i] -= capex_mm * frac
 
     # Revenue and OPEX from year 1 onwards
-    plateau_years = max(1, int(n * 0.6))
+    factors = _production_factors(inp, n)
     annual_revenue_mm = (
         inp.production_capacity_bopd * 365.0 * inp.oil_price_usd_per_bbl / 1_000_000.0
     )
 
     for yr in range(1, n + 1):
-        if yr <= plateau_years:
-            prod_factor = 1.0
-        else:
-            # Linear decline from 100% to 20% over remaining years
-            decline_years = n - plateau_years
-            if decline_years > 0:
-                frac_decline = (yr - plateau_years) / decline_years
-                prod_factor = 1.0 - 0.8 * frac_decline
-            else:
-                prod_factor = 0.2
+        prod_factor = factors[yr]
         revenue = annual_revenue_mm * prod_factor
         opex = opex_mm_yr * prod_factor
 
@@ -614,7 +748,7 @@ def build_economics_schedule(
     capex_arr[n] += abex_usd_mm * 1_000_000.0
 
     # Revenue, OPEX, carbon from year 1
-    plateau_years = max(1, int(n * 0.6))
+    factors = _production_factors(inp, n)
     annual_revenue = (
         inp.production_capacity_bopd * 365.0 * inp.oil_price_usd_per_bbl
     )
@@ -622,15 +756,7 @@ def build_economics_schedule(
     emission_intensity = 0.04  # tCO2/bbl Scope 1+2
 
     for yr in range(1, n + 1):
-        if yr <= plateau_years:
-            prod_factor = 1.0
-        else:
-            decline_years = n - plateau_years
-            if decline_years > 0:
-                frac_decline = (yr - plateau_years) / decline_years
-                prod_factor = 1.0 - 0.8 * frac_decline
-            else:
-                prod_factor = 0.2
+        prod_factor = factors[yr]
 
         revenue_arr[yr] = annual_revenue * prod_factor
         opex_arr[yr] = annual_opex * prod_factor

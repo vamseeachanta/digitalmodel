@@ -41,6 +41,9 @@ FIXTURE_RECORDS = [
         "num_manifolds": 2,
         "fluid_type": "oil",
         "region": "GoM",
+        "flowline_diameter_in": 8.0,
+        "flowline_material": "Carbon Steel",
+        "layout_type": "direct_tieback",
     },
     {
         "name": "Charlie",
@@ -65,6 +68,9 @@ FIXTURE_RECORDS = [
         "num_manifolds": 4,
         "fluid_type": "oil",
         "region": "West Africa",
+        "flowline_diameter_in": 10.75,
+        "flowline_material": "Duplex",
+        "layout_type": "daisy_chain",
     },
     {
         "name": "Echo",
@@ -89,6 +95,9 @@ FIXTURE_RECORDS = [
         "num_manifolds": 5,
         "fluid_type": "oil",
         "region": "Brazil",
+        "flowline_diameter_in": 12.0,
+        "flowline_material": "Flexible",
+        "layout_type": "star",
     },
     {
         "name": "Golf",
@@ -101,6 +110,9 @@ FIXTURE_RECORDS = [
         "num_manifolds": 1,
         "fluid_type": "gas",
         "region": "North Sea",
+        "flowline_diameter_in": 6.0,
+        "flowline_material": "Carbon Steel",
+        "layout_type": "direct_tieback",
     },
     {
         "name": "Hotel",
@@ -177,6 +189,32 @@ class TestLoadProjects:
     def test_name_required(self):
         with pytest.raises((KeyError, ValueError)):
             load_projects([{"operator": "Shell"}])
+
+
+# ---------------------------------------------------------------------------
+# SubseaProject new fields (#2058)
+# ---------------------------------------------------------------------------
+
+class TestSubseaProjectNewFields:
+    """Tests for flowline_diameter_in, flowline_material, layout_type (#2058)."""
+
+    def test_flowline_diameter_loaded(self, projects):
+        bravo = [p for p in projects if p.name == "Bravo"][0]
+        assert bravo.flowline_diameter_in == 8.0
+
+    def test_flowline_material_loaded(self, projects):
+        delta = [p for p in projects if p.name == "Delta"][0]
+        assert delta.flowline_material == "Duplex"
+
+    def test_layout_type_loaded(self, projects):
+        foxtrot = [p for p in projects if p.name == "Foxtrot"][0]
+        assert foxtrot.layout_type == "star"
+
+    def test_new_fields_default_to_none(self, sparse_projects):
+        sparse_a = [p for p in sparse_projects if p.name == "Sparse-A"][0]
+        assert sparse_a.flowline_diameter_in is None
+        assert sparse_a.flowline_material is None
+        assert sparse_a.layout_type is None
 
 
 # ---------------------------------------------------------------------------
@@ -414,6 +452,47 @@ class TestNormalizeIntegration:
         ultra = bands["1500m+"]
         assert "Spar" in ultra
         assert "ETLP" in ultra
+
+
+# ---------------------------------------------------------------------------
+# Normalize: new flowline/layout fields (#2058)
+# ---------------------------------------------------------------------------
+
+class TestNormalizeNewFields:
+    """Prove that normalize handles flowline_diameter_in, flowline_material,
+    layout_type through the full pipeline (#2058)."""
+
+    def _get_normalize(self):
+        import sys
+        from pathlib import Path
+
+        wed_root = Path(__file__).resolve().parents[3] / "worldenergydata"
+        if not wed_root.exists():
+            pytest.skip("worldenergydata repo not available")
+        sys.path.insert(0, str(wed_root))
+        try:
+            from subseaiq.analytics.normalize import normalize_project
+        except ImportError:
+            pytest.skip("subseaiq.analytics.normalize not importable")
+        return normalize_project
+
+    def test_flowline_diameter_float_coercion(self):
+        normalize_project = self._get_normalize()
+        raw = {"Project Name": "TestFL", "Flowline Diameter (in)": "10.75"}
+        result = normalize_project(raw)
+        assert result["flowline_diameter_in"] == 10.75
+
+    def test_flowline_material_passthrough(self):
+        normalize_project = self._get_normalize()
+        raw = {"Project Name": "TestMat", "Flowline Material": "Duplex"}
+        result = normalize_project(raw)
+        assert result["flowline_material"] == "Duplex"
+
+    def test_layout_type_passthrough(self):
+        normalize_project = self._get_normalize()
+        raw = {"Project Name": "TestLay", "Layout Type": "daisy_chain"}
+        result = normalize_project(raw)
+        assert result["layout_type"] == "daisy_chain"
 
 
 # ---------------------------------------------------------------------------
