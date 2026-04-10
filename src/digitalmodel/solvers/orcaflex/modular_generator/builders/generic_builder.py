@@ -13,6 +13,7 @@ precede objects that reference them (Lines, Shapes, etc.).
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from ..schema.generic import (
@@ -24,6 +25,8 @@ from ..schema.generic import (
 )
 from .base import BaseBuilder
 from .registry import BuilderRegistry
+
+logger = logging.getLogger(__name__)
 
 # Map spec field name -> context registration key for known entity types.
 # Only fields that have a corresponding attribute on BuilderContext are listed.
@@ -308,8 +311,22 @@ class GenericModelBuilder(BaseBuilder):
         for py_field, ofx_key in TYPED_FIELD_MAP.items():
             value = getattr(obj, py_field, None)
             if value is not None:
+                if ofx_key in merged:
+                    logger.warning(
+                        "Property '%s' set in both typed field and properties "
+                        "bag for %s; typed field takes precedence",
+                        ofx_key,
+                        obj.name,
+                    )
                 merged[ofx_key] = value
             elif py_field in explicitly_set:
+                if ofx_key in merged:
+                    logger.warning(
+                        "Property '%s' set in both typed field (None) and "
+                        "properties bag for %s; typed field takes precedence",
+                        ofx_key,
+                        obj.name,
+                    )
                 merged[ofx_key] = value
 
         # Strip dormant mode-dependent properties that cause
