@@ -1417,7 +1417,6 @@ dependencies = [
     { name = "isort" },
     { name = "loguru" },
     { name = "lxml" },
-    { name = "markitdown" },
     { name = "marshmallow" },
     { name = "matplotlib" },
     { name = "memory-profiler" },
@@ -1512,6 +1511,9 @@ docs = [
     { name = "mkdocstrings", extra = ["python"] },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
+]
+markitdown = [
+    { name = "markitdown" },
 ]
 nde = [
     { name = "the-well" },
@@ -1613,7 +1615,7 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.0,<1.0.0" },
     { name = "loguru", marker = "extra == 'test'", specifier = ">=0.7.0" },
     { name = "lxml", specifier = "==4.9.3" },
-    { name = "markitdown", specifier = ">=0.0.1,<0.1.0" },
+    { name = "markitdown", marker = "extra == 'markitdown'", specifier = ">=0.0.1,<0.1.0" },
     { name = "marshmallow", specifier = "==3.20.1" },
     { name = "matplotlib", specifier = ">=3.7.0,<4.0.0" },
     { name = "memory-profiler", specifier = "==0.61.0" },
@@ -1708,7 +1710,7 @@ requires-dist = [
     { name = "xlsxwriter", specifier = ">=3.1.0,<4.0.0" },
     { name = "xmltodict", specifier = ">=0.13.0,<1.0.0" },
 ]
-provides-extras = ["dev", "test", "docs", "well", "nde", "solvers", "viz", "web", "async"]
+provides-extras = ["dev", "test", "docs", "well", "nde", "solvers", "viz", "web", "async", "markitdown"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "loguru", specifier = ">=0.7.3" }]
