@@ -17,52 +17,108 @@
         "mudmat_installation": {
           "_source": "demo_03_mudmat_installation_results.json",
           "max_structure_mass_te_by_depth": {
-            "500m": null,
-            "1000m": null,
-            "1500m": null,
-            "2000m": null,
-            "2500m": null,
-            "3000m": null
+            "500m": 200,
+            "1000m": 200,
+            "1500m": 200,
+            "2000m": 200,
+            "2500m": 200,
+            "3000m": 200
           },
           "go_nogo_matrix": {
-            "Mudmat-S-50te":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Mudmat-M-100te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Mudmat-L-200te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+            "Mudmat-S-50te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Mudmat-M-100te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Mudmat-L-200te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 18,
+          "cases_total": 18,
+          "pass_rate_pct": 100.0,
+          "limiting_factor": "Landing bearing pressure"
         },
         "jumper_installation": {
           "_source": "demo_05_jumper_installation_results.json",
           "max_jumper_length_m_by_depth": {
-            "500m": null,
-            "1000m": null,
-            "1500m": null,
-            "2000m": null,
-            "2500m": null,
-            "3000m": null
+            "500m": 20,
+            "1000m": 20,
+            "1500m": 20,
+            "2000m": 20,
+            "2500m": 20,
+            "3000m": 20
           },
           "go_nogo_matrix": {
-            "Jumper-20m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-40m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-60m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-80m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-100m": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+            "Jumper-20m": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Jumper-40m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-60m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-80m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-100m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 6,
+          "cases_total": 30,
+          "pass_rate_pct": 20.0,
+          "limiting_factor": "Tie-in alignment tolerance"
         }
       },
       "overall_score": {
-        "total_cases": null,
-        "total_pass": null,
-        "pass_rate_pct": null,
-        "strongest_capability": null,
-        "weakest_capability": null
+        "total_cases": 48,
+        "total_pass": 24,
+        "pass_rate_pct": 50.0,
+        "strongest_capability": "mudmat_installation",
+        "weakest_capability": "jumper_installation"
       }
     },
     {
@@ -74,52 +130,108 @@
         "mudmat_installation": {
           "_source": "demo_03_mudmat_installation_results.json",
           "max_structure_mass_te_by_depth": {
-            "500m": null,
-            "1000m": null,
-            "1500m": null,
-            "2000m": null,
-            "2500m": null,
-            "3000m": null
+            "500m": 200,
+            "1000m": 200,
+            "1500m": 200,
+            "2000m": 200,
+            "2500m": 200,
+            "3000m": 200
           },
           "go_nogo_matrix": {
-            "Mudmat-S-50te":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Mudmat-M-100te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Mudmat-L-200te": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+            "Mudmat-S-50te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Mudmat-M-100te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Mudmat-L-200te": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 18,
+          "cases_total": 18,
+          "pass_rate_pct": 100.0,
+          "limiting_factor": "Splash zone hydrodynamic loads"
         },
         "jumper_installation": {
           "_source": "demo_05_jumper_installation_results.json",
           "max_jumper_length_m_by_depth": {
-            "500m": null,
-            "1000m": null,
-            "1500m": null,
-            "2000m": null,
-            "2500m": null,
-            "3000m": null
+            "500m": 20,
+            "1000m": 20,
+            "1500m": 20,
+            "2000m": 20,
+            "2500m": 20,
+            "3000m": 20
           },
           "go_nogo_matrix": {
-            "Jumper-20m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-40m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-60m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-80m":  {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null},
-            "Jumper-100m": {"500m": null, "1000m": null, "1500m": null, "2000m": null, "2500m": null, "3000m": null}
+            "Jumper-20m": {
+              "500m": "GO",
+              "1000m": "GO",
+              "1500m": "GO",
+              "2000m": "GO",
+              "2500m": "GO",
+              "3000m": "GO"
+            },
+            "Jumper-40m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-60m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-80m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            },
+            "Jumper-100m": {
+              "500m": "NO_GO",
+              "1000m": "NO_GO",
+              "1500m": "NO_GO",
+              "2000m": "NO_GO",
+              "2500m": "NO_GO",
+              "3000m": "NO_GO"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 6,
+          "cases_total": 30,
+          "pass_rate_pct": 20.0,
+          "limiting_factor": "Tie-in alignment tolerance"
         }
       },
       "overall_score": {
-        "total_cases": null,
-        "total_pass": null,
-        "pass_rate_pct": null,
-        "strongest_capability": null,
-        "weakest_capability": null
+        "total_cases": 48,
+        "total_pass": 24,
+        "pass_rate_pct": 50.0,
+        "strongest_capability": "mudmat_installation",
+        "weakest_capability": "jumper_installation"
       }
     },
     {
@@ -131,31 +243,66 @@
           "_source": "demo_04_shallow_pipelay_results.json",
           "max_pipe_size_by_depth": {
             "7m": null,
-            "10m": null,
-            "15m": null,
-            "20m": null,
-            "25m": null,
-            "30m": null
+            "10m": "24in",
+            "15m": "24in",
+            "20m": "24in",
+            "25m": "24in",
+            "30m": "24in"
           },
           "go_nogo_matrix": {
-            "8in":  {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "12in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "16in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "20in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "24in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null}
+            "8in": {
+              "7m": "NO_GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "12in": {
+              "7m": "NO_GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "16in": {
+              "7m": "NO_GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "20in": {
+              "7m": "NO_GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "24in": {
+              "7m": "NO_GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "MARGINAL"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 25,
+          "cases_total": 30,
+          "pass_rate_pct": 83.3,
+          "limiting_factor": "tension"
         }
       },
       "overall_score": {
-        "total_cases": null,
-        "total_pass": null,
-        "pass_rate_pct": null,
-        "strongest_capability": null,
-        "weakest_capability": null
+        "total_cases": 30,
+        "total_pass": 25,
+        "pass_rate_pct": 83.3,
+        "strongest_capability": "shallow_water_pipelay",
+        "weakest_capability": "shallow_water_pipelay"
       }
     },
     {
@@ -166,32 +313,67 @@
         "shallow_water_pipelay": {
           "_source": "demo_04_shallow_pipelay_results.json",
           "max_pipe_size_by_depth": {
-            "7m": null,
-            "10m": null,
-            "15m": null,
-            "20m": null,
-            "25m": null,
-            "30m": null
+            "7m": "24in",
+            "10m": "24in",
+            "15m": "24in",
+            "20m": "24in",
+            "25m": "24in",
+            "30m": "24in"
           },
           "go_nogo_matrix": {
-            "8in":  {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "12in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "16in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "20in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-            "24in": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null}
+            "8in": {
+              "7m": "GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "12in": {
+              "7m": "GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "16in": {
+              "7m": "GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "20in": {
+              "7m": "GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "GO"
+            },
+            "24in": {
+              "7m": "GO",
+              "10m": "GO",
+              "15m": "GO",
+              "20m": "GO",
+              "25m": "GO",
+              "30m": "MARGINAL"
+            }
           },
-          "cases_pass": null,
-          "cases_total": null,
-          "pass_rate_pct": null,
-          "limiting_factor": null
+          "cases_pass": 30,
+          "cases_total": 30,
+          "pass_rate_pct": 100.0,
+          "limiting_factor": "overbend"
         }
       },
       "overall_score": {
-        "total_cases": null,
-        "total_pass": null,
-        "pass_rate_pct": null,
-        "strongest_capability": null,
-        "weakest_capability": null
+        "total_cases": 30,
+        "total_pass": 30,
+        "pass_rate_pct": 100.0,
+        "strongest_capability": "shallow_water_pipelay",
+        "weakest_capability": "shallow_water_pipelay"
       }
     }
   ],
@@ -199,18 +381,18 @@
     "_description": "Direct vessel-vs-vessel comparison for overlapping capabilities",
     "csv_comparison": {
       "Large CSV vs Medium CSV": {
-        "mudmat_advantage": null,
-        "jumper_advantage": null,
+        "mudmat_advantage": "Large CSV has lower utilisation (20.6% vs 71.5% for 200te mudmat) but both achieve GO at all depths",
+        "jumper_advantage": "Identical \u2014 both vessels produce same go/no-go results (jumper governed by tie-in, not crane)",
         "depth_crossover_m": null,
-        "summary": null
+        "summary": "Both vessels achieve GO for all mudmat and jumper-20m cases. Large CSV provides greater safety margin (lower utilisation) for heavy structures. No depth crossover \u2014 performance is equivalent across all depths."
       }
     },
     "plv_comparison": {
       "Large PLV vs Shallow Water Barge": {
-        "pipe_size_advantage": null,
-        "shallow_depth_advantage": null,
-        "cost_tradeoff": null,
-        "summary": null
+        "pipe_size_advantage": "Shallow Water Barge handles all pipe sizes at 7m depth; Large PLV fails at 7m for all sizes",
+        "shallow_depth_advantage": "Shallow Water Barge (100.0% pass rate) outperforms Large PLV (83.3% pass rate) in shallow water",
+        "cost_tradeoff": "Large PLV has higher tensioner capacity (600te vs 250te) but cannot operate at 7m depth; Shallow Water Barge is more versatile in ultra-shallow water",
+        "summary": "Shallow Water Barge dominates in shallow water with 100% GO at all depths including 7m. Large PLV fails at 7m for all pipe sizes (vessel draft limitation) but handles deeper water with higher tension capacity."
       }
     }
   }

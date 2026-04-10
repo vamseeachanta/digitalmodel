@@ -10,85 +10,270 @@
     {
       "category": "mudmats",
       "demo_source": "demo_03",
-      "structures": ["Mudmat-S-50te", "Mudmat-M-100te", "Mudmat-L-200te"],
-      "comparison_axes": ["water_depth_m", "vessel"],
+      "structures": [
+        "Mudmat-S-50te",
+        "Mudmat-M-100te",
+        "Mudmat-L-200te"
+      ],
+      "comparison_axes": [
+        "water_depth_m",
+        "vessel"
+      ],
       "by_vessel": {
         "Large CSV": {
-          "pass_count_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
-          "max_depth_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
-          "crane_util_at_1500m": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null}
+          "pass_count_by_structure": {
+            "Mudmat-S-50te": 6,
+            "Mudmat-M-100te": 6,
+            "Mudmat-L-200te": 6
+          },
+          "max_depth_by_structure": {
+            "Mudmat-S-50te": 3000,
+            "Mudmat-M-100te": 3000,
+            "Mudmat-L-200te": 3000
+          },
+          "crane_util_at_1500m": {
+            "Mudmat-S-50te": 24.7,
+            "Mudmat-M-100te": 21.5,
+            "Mudmat-L-200te": 20.6
+          }
         },
         "Medium CSV": {
-          "pass_count_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
-          "max_depth_by_structure": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null},
-          "crane_util_at_1500m": {"Mudmat-S-50te": null, "Mudmat-M-100te": null, "Mudmat-L-200te": null}
+          "pass_count_by_structure": {
+            "Mudmat-S-50te": 6,
+            "Mudmat-M-100te": 6,
+            "Mudmat-L-200te": 6
+          },
+          "max_depth_by_structure": {
+            "Mudmat-S-50te": 3000,
+            "Mudmat-M-100te": 3000,
+            "Mudmat-L-200te": 3000
+          },
+          "crane_util_at_1500m": {
+            "Mudmat-S-50te": 24.7,
+            "Mudmat-M-100te": 34.8,
+            "Mudmat-L-200te": 71.5
+          }
         }
       }
     },
     {
       "category": "rigid_jumpers",
       "demo_source": "demo_05",
-      "structures": ["Jumper-20m", "Jumper-40m", "Jumper-60m", "Jumper-80m", "Jumper-100m"],
-      "comparison_axes": ["water_depth_m", "vessel"],
+      "structures": [
+        "Jumper-20m",
+        "Jumper-40m",
+        "Jumper-60m",
+        "Jumper-80m",
+        "Jumper-100m"
+      ],
+      "comparison_axes": [
+        "water_depth_m",
+        "vessel"
+      ],
       "by_vessel": {
         "Large CSV": {
-          "pass_count_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
-          "max_depth_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
-          "crane_util_at_2000m": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null}
+          "pass_count_by_structure": {
+            "Jumper-20m": 6,
+            "Jumper-40m": 0,
+            "Jumper-60m": 0,
+            "Jumper-80m": 0,
+            "Jumper-100m": 0
+          },
+          "max_depth_by_structure": {
+            "Jumper-20m": 3000,
+            "Jumper-40m": null,
+            "Jumper-60m": null,
+            "Jumper-80m": null,
+            "Jumper-100m": null
+          },
+          "crane_util_at_2000m": {
+            "Jumper-20m": 0.3154,
+            "Jumper-40m": 2.9637,
+            "Jumper-60m": 15.004,
+            "Jumper-80m": 47.4199,
+            "Jumper-100m": 115.7712
+          }
         },
         "Medium CSV": {
-          "pass_count_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
-          "max_depth_by_structure": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null},
-          "crane_util_at_2000m": {"Jumper-20m": null, "Jumper-40m": null, "Jumper-60m": null, "Jumper-80m": null, "Jumper-100m": null}
+          "pass_count_by_structure": {
+            "Jumper-20m": 6,
+            "Jumper-40m": 0,
+            "Jumper-60m": 0,
+            "Jumper-80m": 0,
+            "Jumper-100m": 0
+          },
+          "max_depth_by_structure": {
+            "Jumper-20m": 3000,
+            "Jumper-40m": null,
+            "Jumper-60m": null,
+            "Jumper-80m": null,
+            "Jumper-100m": null
+          },
+          "crane_util_at_2000m": {
+            "Jumper-20m": 0.3154,
+            "Jumper-40m": 2.9637,
+            "Jumper-60m": 15.004,
+            "Jumper-80m": 47.4199,
+            "Jumper-100m": 115.7712
+          }
         }
       }
     },
     {
       "category": "pipelines_freespan",
       "demo_source": "demo_01",
-      "structures": ["8in", "12in", "16in"],
-      "comparison_axes": ["span_length_m", "current_velocity_ms"],
+      "structures": [
+        "8in",
+        "12in",
+        "16in"
+      ],
+      "comparison_axes": [
+        "span_length_m",
+        "current_velocity_ms"
+      ],
       "max_allowable_span_by_current": {
-        "8in":  {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null},
-        "12in": {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null},
-        "16in": {"0.3ms": null, "0.5ms": null, "0.7ms": null, "1.0ms": null, "1.5ms": null}
+        "8in": {
+          "0.3ms": 16.7,
+          "0.5ms": 13.6,
+          "0.7ms": 11.8,
+          "1.0ms": 10.6,
+          "1.5ms": 10.6
+        },
+        "12in": {
+          "0.3ms": 23.8,
+          "0.5ms": 19.5,
+          "0.7ms": 16.9,
+          "1.0ms": 15.1,
+          "1.5ms": 15.1
+        },
+        "16in": {
+          "0.3ms": 28.8,
+          "0.5ms": 23.5,
+          "0.7ms": 20.4,
+          "1.0ms": 18.2,
+          "1.5ms": 18.2
+        }
       },
       "viv_onset_span_by_pipe": {
-        "inline":     {"8in": null, "12in": null, "16in": null},
-        "crossflow":  {"8in": null, "12in": null, "16in": null}
+        "inline": {
+          "8in": 10,
+          "12in": 10,
+          "16in": 10
+        },
+        "crossflow": {
+          "8in": 10,
+          "12in": 20,
+          "16in": 20
+        }
       }
     },
     {
       "category": "pipelines_wall_thickness",
       "demo_source": "demo_02",
-      "structures": ["6in", "8in", "10in", "12in", "16in", "20in"],
-      "comparison_axes": ["design_code", "internal_pressure_mpa"],
+      "structures": [
+        "6in",
+        "8in",
+        "10in",
+        "12in",
+        "16in",
+        "20in"
+      ],
+      "comparison_axes": [
+        "design_code",
+        "internal_pressure_mpa"
+      ],
       "min_wt_by_code": {
-        "DNV-ST-F101": {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null},
-        "API-RP-1111":  {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null},
-        "PD-8010-2":    {"6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null}
+        "DNV-ST-F101": {
+          "6in": null,
+          "8in": null,
+          "10in": null,
+          "12in": null,
+          "16in": null,
+          "20in": null
+        },
+        "API-RP-1111": {
+          "6in": null,
+          "8in": null,
+          "10in": null,
+          "12in": null,
+          "16in": null,
+          "20in": null
+        },
+        "PD-8010-2": {
+          "6in": null,
+          "8in": null,
+          "10in": null,
+          "12in": null,
+          "16in": null,
+          "20in": null
+        }
       },
       "most_conservative_code_by_pipe": {
-        "6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null
+        "6in": null,
+        "8in": null,
+        "10in": null,
+        "12in": null,
+        "16in": null,
+        "20in": null
       },
       "weight_penalty_pct": {
         "_description": "% extra steel weight if using most conservative code vs least conservative",
-        "6in": null, "8in": null, "10in": null, "12in": null, "16in": null, "20in": null
+        "6in": null,
+        "8in": null,
+        "10in": null,
+        "12in": null,
+        "16in": null,
+        "20in": null
       }
     },
     {
       "category": "shallow_water_pipelay",
       "demo_source": "demo_04",
-      "structures": ["8in", "12in", "16in", "20in", "24in"],
-      "comparison_axes": ["water_depth_m", "vessel"],
+      "structures": [
+        "8in",
+        "12in",
+        "16in",
+        "20in",
+        "24in"
+      ],
+      "comparison_axes": [
+        "water_depth_m",
+        "vessel"
+      ],
       "by_vessel": {
         "Large PLV": {
-          "max_pipe_size_by_depth": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-          "min_tension_by_pipe": {"8in": null, "12in": null, "16in": null, "20in": null, "24in": null}
+          "max_pipe_size_by_depth": {
+            "7m": null,
+            "10m": "24in",
+            "15m": "24in",
+            "20m": "24in",
+            "25m": "24in",
+            "30m": "24in"
+          },
+          "min_tension_by_pipe": {
+            "8in": 3.9,
+            "12in": 85.6,
+            "16in": 110.4,
+            "20in": 131.9,
+            "24in": 175.6
+          }
         },
         "Shallow Water Barge": {
-          "max_pipe_size_by_depth": {"7m": null, "10m": null, "15m": null, "20m": null, "25m": null, "30m": null},
-          "min_tension_by_pipe": {"8in": null, "12in": null, "16in": null, "20in": null, "24in": null}
+          "max_pipe_size_by_depth": {
+            "7m": "24in",
+            "10m": "24in",
+            "15m": "24in",
+            "20m": "24in",
+            "25m": "24in",
+            "30m": "24in"
+          },
+          "min_tension_by_pipe": {
+            "8in": 1.2,
+            "12in": 26.7,
+            "16in": 34.4,
+            "20in": 41.1,
+            "24in": 54.8
+          }
         }
       }
     }
