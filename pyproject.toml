@@ -14,12 +14,8 @@ authors = [
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
@@ -132,7 +128,6 @@ dependencies = [
     "xlrd>=2.0.0,<3.0.0",
     "xlsxwriter>=3.1.0,<4.0.0",
     "xmltodict>=0.13.0,<1.0.0",
-    "markitdown>=0.0.1,<0.1.0",
     "fastmcp>=2.12.4,<3.0.0",
     "munch>=4.0.0,<5.0.0",
     "tqdm>=4.67.1,<5.0.0",
@@ -184,6 +179,7 @@ solvers = ["OrcFxAPI", "gmsh>=4.12.0,<5.0.0"]
 viz = ["dash>=3.1.0,<4.0.0", "kaleido>=0.2.0,<1.0.0", "seaborn>=0.13.0,<1.0.0"]
 web = ["fastapi>=0.100.0,<1.0.0", "uvicorn>=0.25.0,<1.0.0", "sqlalchemy>=2.0.0,<3.0.0"]
 async = ["aiofiles>=23.0.0,<25.0.0", "asyncpg>=0.29.0,<1.0.0"]
+markitdown = ["markitdown>=0.0.1,<0.1.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/username/digitalmodel"
@@ -218,7 +214,7 @@ exclude = ["tests*", "docs*"]
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310', 'py311']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -226,7 +222,7 @@ profile = "black"
 line_length = 88
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
