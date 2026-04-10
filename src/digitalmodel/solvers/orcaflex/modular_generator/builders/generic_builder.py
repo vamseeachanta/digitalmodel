@@ -140,6 +140,9 @@ _SKIP_GENERAL_KEYS: set[str] = {
     # Temperature units — display-only, encoding of degree symbol (°)
     # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
     "TemperatureUnits",
+    # Variable time-step max — only settable when ImplicitUseVariableTimeStep
+    # is True; dormant otherwise, causing "Change not allowed" errors.
+    "ImplicitVariableMaxTimeStep",
 }
 
 # Object-level properties to strip from ALL object types during

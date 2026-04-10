@@ -16,6 +16,7 @@ from .environment import (
     Seabed,
     SeabedStiffness,
     Water,
+    WaveTrain,
     Waves,
     Wind,
 )
@@ -113,6 +114,7 @@ __all__ = [
     "Water",
     "SeabedStiffness",
     "Seabed",
+    "WaveTrain",
     "Waves",
     "CurrentProfile",
     "Current",

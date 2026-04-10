@@ -36,7 +36,7 @@ class ShapesBuilder(BaseBuilder):
 
     def should_generate(self) -> bool:
         """Only generate for pipeline models with ramp configuration."""
-        return self.spec.is_pipeline() and self.spec.equipment.ramp is not None
+        return self.spec.is_pipeline() and self.spec.equipment.ramps is not None
 
     def build(self) -> dict[str, Any]:
         """Build the Shapes section from equipment ramp configuration.

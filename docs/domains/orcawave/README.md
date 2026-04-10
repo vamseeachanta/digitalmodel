@@ -2,9 +2,11 @@
 
 **ABOUTME**: Comprehensive documentation and automation tools for Orcina OrcaWave panel method diffraction analysis with direct integration to OrcaFlex.
 
+See also: [OrcaFlex & OrcaWave Manuals and References](../orcaflex/MANUALS_AND_REFERENCES.md) for official documentation links, YAML format reference, and API resources.
+
 ---
 
-## 📚 Quick Navigation
+## Quick Navigation
 
 ### ⚡ Quick Start & CLI Tools
 - **[QUICK START GUIDE](diffraction/QUICK_START.md)** - Fast setup and CLI usage

@@ -23,6 +23,6 @@ class Metadata(BaseModel):
     description: str = Field(..., description="Human-readable model description")
     structure: str = Field(..., description="Structure type (pipeline, riser, mooring, etc.)")
     operation: str = Field(..., description="Operation type (installation/floating, in-place, etc.)")
-    project: str = Field(..., description="Project code for traceability")
+    project: str = Field(default="", description="Project code for traceability")
     version: str = Field(default="1.0", description="Schema version")
     author: str | None = Field(default=None, description="Author name or team")

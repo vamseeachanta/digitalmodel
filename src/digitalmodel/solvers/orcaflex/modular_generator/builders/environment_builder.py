@@ -244,65 +244,74 @@ class EnvironmentBuilder(BaseBuilder):
     ) -> list[dict[str, Any]]:
         """Build wave train configuration from wave settings.
 
-        Uses the correct OrcaFlex property names based on wave type:
+        Iterates over ``waves.trains`` to support multiple simultaneous
+        wave trains.  Uses the correct OrcaFlex property names based on
+        wave type:
+
         - Deterministic (Dean stream, Airy, etc.): WaveHeight + WavePeriod
         - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
         - Other (User defined, No waves, etc.): no height/period emitted
 
-        When raw_properties contain WaveTrains, the raw wave train data is
-        used as the base layer to preserve all original properties (Name,
-        spectral discretisation params, etc.), with spec-derived values
-        overlaid on top.
+        When raw_properties contain WaveTrains, raw train entries are used
+        as the base layer (matched by index) to preserve all original
+        properties (Name, spectral discretisation params, etc.), with
+        spec-derived values overlaid on top.
 
         Args:
             waves: Wave specification from the input spec.
             raw: Raw environment properties dict (optional).
 
         Returns:
-            List containing wave train definitions.
+            List of wave train definitions.
         """
         raw = raw or {}
-
-        # Map wave type to OrcaFlex enum value
-        wave_type = WAVE_TYPE_MAP.get(waves.type, waves.type)
-
-        # If raw WaveTrains exist, use first train as base layer
         raw_trains = raw.get("WaveTrains", [])
-        if raw_trains and isinstance(raw_trains, list) and raw_trains:
-            wave_train = dict(raw_trains[0])
-        else:
-            wave_train = {
-                "Name": "Wave 1",
-                "WaveOrigin": [0, 0],
-                "WaveTimeOrigin": 0,
-            }
+        if not isinstance(raw_trains, list):
+            raw_trains = []
 
-        # Always overlay spec-derived values
-        wave_train["WaveType"] = wave_type
-        wave_train["WaveDirection"] = waves.direction
+        result: list[dict[str, Any]] = []
+        for i, train in enumerate(waves.trains):
+            # Map wave type to OrcaFlex enum value
+            wave_type = WAVE_TYPE_MAP.get(train.type, train.type)
 
-        # Emit height/period with correct property names for the wave type
-        if wave_type in _DETERMINISTIC_WAVE_TYPES:
-            wave_train["WaveHeight"] = waves.height
-            wave_train["WavePeriod"] = waves.period
-        elif wave_type in _SPECTRAL_WAVE_TYPES:
-            wave_train["WaveHs"] = waves.height
-            wave_train["WaveTz"] = waves.period
-            if wave_type in ("JONSWAP", "jonswap"):
-                # WaveGamma is dormant when WaveJONSWAPParameters is "Automatic"
-                jonswap_params = wave_train.get("WaveJONSWAPParameters", "")
-                if jonswap_params != "Automatic":
-                    wave_train["WaveGamma"] = waves.gamma
-        # For other wave types (User defined, User specified components,
-        # No waves, etc.), omit height/period — OrcaFlex uses type-specific
-        # parameters that pass through via generic properties.
+            # Use raw train as base layer if available for this index
+            if raw_trains and i < len(raw_trains):
+                wave_train = dict(raw_trains[i])
+            else:
+                wave_train = {
+                    "Name": train.name,
+                    "WaveOrigin": [0, 0],
+                    "WaveTimeOrigin": 0,
+                }
 
-        # Add wave-type specific parameters
-        if waves.type == "dean_stream" or wave_type == "Dean stream":
-            wave_train["WaveStreamFunctionOrder"] = 5
-            wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
+            # Always overlay spec-derived values
+            wave_train["WaveType"] = wave_type
+            wave_train["WaveDirection"] = train.direction
 
-        return [wave_train]
+            # Emit height/period with correct property names for the wave type
+            if wave_type in _DETERMINISTIC_WAVE_TYPES:
+                wave_train["WaveHeight"] = train.height
+                wave_train["WavePeriod"] = train.period
+            elif wave_type in _SPECTRAL_WAVE_TYPES:
+                wave_train["WaveHs"] = train.height
+                wave_train["WaveTz"] = train.period
+                if wave_type in ("JONSWAP", "jonswap"):
+                    # WaveGamma is dormant when WaveJONSWAPParameters is "Automatic"
+                    jonswap_params = wave_train.get("WaveJONSWAPParameters", "")
+                    if jonswap_params != "Automatic":
+                        wave_train["WaveGamma"] = train.gamma
+            # For other wave types (User defined, User specified components,
+            # No waves, etc.), omit height/period — OrcaFlex uses type-specific
+            # parameters that pass through via generic properties.
+
+            # Add wave-type specific parameters
+            if train.type == "dean_stream" or wave_type == "Dean stream":
+                wave_train["WaveStreamFunctionOrder"] = 5
+                wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
+
+            result.append(wave_train)
+
+        return result
 
     def _build_current_profile(
         self, profile: list[list[float]]

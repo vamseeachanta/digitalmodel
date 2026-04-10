@@ -1,5 +1,6 @@
 """OrcaFlex Modular Model Generator from Project Spec."""
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict
@@ -28,9 +29,12 @@ from .builders import (  # noqa: F401
     GroupsBuilder,
 )
 
+from .post_validator import PostGenerationValidator, ValidationWarning
 from .routers.mooring_router import MooringRouter
 from .routers.vessel_router import VesselRouter
 from .schema.generic import GenericModel
+
+logger = logging.getLogger(__name__)
 
 
 class _NoAliasDumper(yaml.Dumper):
@@ -171,6 +175,34 @@ class ModularModelGenerator:
         # Generate master.yml (only include files that were actually generated)
         self._write_master(output_dir / 'master.yml', generated_files)
 
+        # Post-generation cross-builder validation
+        self._run_post_validation(includes_dir)
+
+    def _run_post_validation(self, includes_dir: Path) -> list[ValidationWarning]:
+        """Run post-generation validation and log any findings.
+
+        Validates cross-builder consistency of the generated YAML files.
+        Warnings are logged but do not block generation.
+
+        Args:
+            includes_dir: Directory containing generated include files.
+
+        Returns:
+            List of validation warnings found.
+        """
+        validator = PostGenerationValidator()
+        findings = validator.validate_directory(includes_dir)
+        for finding in findings:
+            if finding.level == "error":
+                logger.warning(
+                    "Post-validation %s: %s", finding.category, finding.message
+                )
+            else:
+                logger.info(
+                    "Post-validation %s: %s", finding.category, finding.message
+                )
+        return findings
+
     def _write_parameters(self, path: Path) -> None:
         env = self.spec.environment
         params: dict[str, Any] = {
@@ -298,6 +330,13 @@ class ModularModelGenerator:
         self._write_parameters(inputs_dir / 'parameters.yml')
         master_path = output_dir / 'master.yml'
         self._write_master(master_path, generated_files)
+
+        # Post-generation cross-builder validation
+        findings = self._run_post_validation(includes_dir)
+        for finding in findings:
+            warnings.append(
+                f"[{finding.level}] {finding.category}: {finding.message}"
+            )
 
         return GenerationResult(
             master_file=master_path,

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
+
+logger = logging.getLogger(__name__)
 from .environment import Environment
 from .generic import GenericModel
 from .pipeline import Pipeline
@@ -112,6 +116,19 @@ class ProjectInputSpec(BaseModel):
                 f"Cannot define multiple model types ({', '.join(defined)}) "
                 "in same spec. Create separate spec files for each model type."
             )
+
+        # Cross-validate current profile depth vs water depth
+        if self.environment.current and self.environment.current.profile:
+            max_profile_depth = max(
+                (p[0] for p in self.environment.current.profile), default=0
+            )
+            if max_profile_depth > self.environment.water.depth * 1.01:  # 1% tolerance
+                logger.warning(
+                    "Current profile extends to %.1fm but water depth is only %.1fm. "
+                    "OrcaFlex may extrapolate or clamp the profile.",
+                    max_profile_depth,
+                    self.environment.water.depth,
+                )
 
         # Pipeline-specific validation
         if self.pipeline is not None:

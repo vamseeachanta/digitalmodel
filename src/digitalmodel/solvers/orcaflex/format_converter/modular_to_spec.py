@@ -24,7 +24,8 @@ EXTRACTION_MAP: list[tuple[tuple[str, str], str]] = [
     (("Environment", "SeabedSlope"), "environment.seabed.slope"),
     (("Environment", "SeabedNormalStiffness"), "environment.seabed.stiffness.normal"),
     (("Environment", "SeabedShearStiffness"), "environment.seabed.stiffness.shear"),
-    # Waves (from WaveTrains[0])
+    # Waves — primary train extracted via _populate_wave_trains() below.
+    # Legacy single-train extraction kept for confidence scoring only.
     (("_WaveTrain0", "WaveHeight"), "environment.waves.height"),
     (("_WaveTrain0", "WavePeriod"), "environment.waves.period"),
     (("_WaveTrain0", "WaveDirection"), "environment.waves.direction"),
@@ -109,6 +110,9 @@ class ModularToSpecConverter:
                 self._set_nested(spec, spec_path, value)
                 extracted_count += 1
 
+        # Populate wave trains list when multiple trains are present
+        self._populate_wave_trains(flat, spec)
+
         # Add metadata placeholder
         spec.setdefault("metadata", {})
         spec["metadata"].setdefault("name", "extracted_model")
@@ -166,6 +170,74 @@ class ModularToSpecConverter:
 
     def supported_formats(self) -> tuple[str, str]:
         return ("modular", "spec")
+
+    # Reverse mapping from OrcaFlex wave type strings to spec type keys
+    _WAVE_TYPE_REVERSE: dict[str, str] = {
+        "Dean stream": "dean_stream",
+        "Airy": "airy",
+        "Stokes' 5th": "stokes_5th",
+        "Cnoidal": "cnoidal",
+        "JONSWAP": "jonswap",
+        "Pierson-Moskowitz": "pierson_moskowitz",
+        "User defined spectrum": "user_defined",
+    }
+
+    def _populate_wave_trains(
+        self, flat: dict[str, Any], spec: dict[str, Any]
+    ) -> None:
+        """Extract wave trains from OrcaFlex WaveTrains list into spec format.
+
+        When multiple wave trains are present, populates
+        ``spec["environment"]["waves"]["trains"]`` with all trains.
+        For a single train the flat-field extraction from EXTRACTION_MAP
+        is sufficient (backward compat), but we still populate trains
+        for consistency.
+        """
+        env_data = flat.get("Environment", {})
+        if not isinstance(env_data, dict):
+            return
+        raw_trains = env_data.get("WaveTrains", [])
+        if not isinstance(raw_trains, list) or not raw_trains:
+            return
+
+        trains: list[dict[str, Any]] = []
+        for i, wt in enumerate(raw_trains):
+            if not isinstance(wt, dict):
+                continue
+            train: dict[str, Any] = {}
+            if "Name" in wt:
+                train["name"] = wt["Name"]
+            raw_type = wt.get("WaveType", "Airy")
+            train["type"] = self._WAVE_TYPE_REVERSE.get(raw_type, raw_type)
+            if "WaveDirection" in wt:
+                train["direction"] = wt["WaveDirection"]
+            # Height/period depend on wave type
+            if "WaveHeight" in wt:
+                train["height"] = wt["WaveHeight"]
+            elif "WaveHs" in wt:
+                train["height"] = wt["WaveHs"]
+            if "WavePeriod" in wt:
+                train["period"] = wt["WavePeriod"]
+            elif "WaveTz" in wt:
+                train["period"] = wt["WaveTz"]
+            if "WaveGamma" in wt:
+                train["gamma"] = wt["WaveGamma"]
+            trains.append(train)
+
+        if len(trains) > 1:
+            # Multi-train: use trains list format
+            spec.setdefault("environment", {}).setdefault("waves", {})["trains"] = trains
+            # Remove flat fields that were extracted by EXTRACTION_MAP
+            waves = spec.get("environment", {}).get("waves", {})
+            for key in ("type", "height", "period", "direction"):
+                waves.pop(key, None)
+        elif len(trains) == 1:
+            # Single train: flat fields from EXTRACTION_MAP already cover it.
+            # Merge any fields the EXTRACTION_MAP missed (e.g. name, gamma).
+            waves = spec.setdefault("environment", {}).setdefault("waves", {})
+            for key in ("name", "gamma"):
+                if key in trains[0] and key not in waves:
+                    waves[key] = trains[0][key]
 
     @staticmethod
     def _set_nested(d: dict, path: str, value: Any) -> None:
