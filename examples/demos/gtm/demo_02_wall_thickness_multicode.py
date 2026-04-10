@@ -14,16 +14,21 @@ Runs parametric wall thickness design checks across:
 Produces:
   - 5 interactive Plotly charts
   - Branded HTML report via GTMReportBuilder
-  - JSON results file
+  - JSON results file with --from-cache support
 
 Usage:
     cd digitalmodel
     PYTHONPATH=examples/demos/gtm:src uv run python \\
         examples/demos/gtm/demo_02_wall_thickness_multicode.py
+
+    # Re-generate charts from cached results:
+    PYTHONPATH=examples/demos/gtm:src uv run python \\
+        examples/demos/gtm/demo_02_wall_thickness_multicode.py --from-cache
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import math
@@ -46,31 +51,60 @@ except ImportError as exc:
     print("        Install with: uv pip install numpy pandas plotly")
     sys.exit(1)
 
-try:
-    from digitalmodel.structural.analysis.wall_thickness import (
-        DesignCode,
-        DesignFactors,
-        DesignLoads,
-        FabricationType,
-        PipeGeometry,
-        PipeMaterial,
-        SafetyClass,
-        WallThicknessAnalyzer,
-    )
-    from digitalmodel.structural.analysis.wall_thickness_parametric import (
-        API_5L_GRADES,
-    )
-    from digitalmodel.structural.analysis.wall_thickness_phases import (
-        PhaseAnalysisRunner,
-        PipeDefinition,
-        PipelinePhase,
-        create_standard_phases,
-        compute_hydrostatic_pressure,
-    )
-except ImportError as exc:
-    print(f"[ERROR] Cannot import digitalmodel modules: {exc}")
-    print("        Ensure PYTHONPATH includes 'src' directory.")
-    sys.exit(1)
+# Engineering modules — deferred when running from cache
+_ENGINEERING_MODULES_LOADED = False
+
+def _load_engineering_modules():
+    """Import digitalmodel engineering modules on demand."""
+    global _ENGINEERING_MODULES_LOADED
+    if _ENGINEERING_MODULES_LOADED:
+        return
+    # These are injected into module globals so existing functions can use them
+    global DesignCode, DesignFactors, DesignLoads, FabricationType
+    global PipeGeometry, PipeMaterial, SafetyClass, WallThicknessAnalyzer
+    global API_5L_GRADES
+    global PhaseAnalysisRunner, PipeDefinition, PipelinePhase
+    global create_standard_phases, compute_hydrostatic_pressure
+    try:
+        from digitalmodel.structural.analysis.wall_thickness import (
+            DesignCode as _DesignCode,
+            DesignFactors as _DesignFactors,
+            DesignLoads as _DesignLoads,
+            FabricationType as _FabricationType,
+            PipeGeometry as _PipeGeometry,
+            PipeMaterial as _PipeMaterial,
+            SafetyClass as _SafetyClass,
+            WallThicknessAnalyzer as _WallThicknessAnalyzer,
+        )
+        from digitalmodel.structural.analysis.wall_thickness_parametric import (
+            API_5L_GRADES as _API_5L_GRADES,
+        )
+        from digitalmodel.structural.analysis.wall_thickness_phases import (
+            PhaseAnalysisRunner as _PhaseAnalysisRunner,
+            PipeDefinition as _PipeDefinition,
+            PipelinePhase as _PipelinePhase,
+            create_standard_phases as _create_standard_phases,
+            compute_hydrostatic_pressure as _compute_hydrostatic_pressure,
+        )
+        DesignCode = _DesignCode
+        DesignFactors = _DesignFactors
+        DesignLoads = _DesignLoads
+        FabricationType = _FabricationType
+        PipeGeometry = _PipeGeometry
+        PipeMaterial = _PipeMaterial
+        SafetyClass = _SafetyClass
+        WallThicknessAnalyzer = _WallThicknessAnalyzer
+        API_5L_GRADES = _API_5L_GRADES
+        PhaseAnalysisRunner = _PhaseAnalysisRunner
+        PipeDefinition = _PipeDefinition
+        PipelinePhase = _PipelinePhase
+        create_standard_phases = _create_standard_phases
+        compute_hydrostatic_pressure = _compute_hydrostatic_pressure
+        _ENGINEERING_MODULES_LOADED = True
+    except ImportError as exc:
+        print(f"[ERROR] Cannot import digitalmodel modules: {exc}")
+        print("        Ensure PYTHONPATH includes 'src' directory.")
+        sys.exit(1)
 
 try:
     from report_template import GTMReportBuilder, COLORS, CHART_PALETTE
@@ -113,12 +147,22 @@ PIPE_SIZES = [
     {"name": '20"', "od_mm": 508.0, "od_m": 0.5080},
 ]
 
-CODES = [DesignCode.DNV_ST_F101, DesignCode.API_RP_1111, DesignCode.PD_8010_2]
-CODE_NAMES = {
-    DesignCode.DNV_ST_F101: "DNV-ST-F101",
-    DesignCode.API_RP_1111: "API RP 1111",
-    DesignCode.PD_8010_2: "PD 8010-2",
-}
+# CODES and CODE_NAMES are initialised after engineering modules are loaded
+# (see _init_code_constants).  In --from-cache mode they are plain strings.
+CODES: list = []
+CODE_NAMES: dict = {}
+CODE_NAME_STRINGS = ["DNV-ST-F101", "API RP 1111", "PD 8010-2"]
+
+
+def _init_code_constants():
+    """Populate CODES / CODE_NAMES from loaded DesignCode enum."""
+    global CODES, CODE_NAMES
+    CODES = [DesignCode.DNV_ST_F101, DesignCode.API_RP_1111, DesignCode.PD_8010_2]
+    CODE_NAMES = {
+        DesignCode.DNV_ST_F101: "DNV-ST-F101",
+        DesignCode.API_RP_1111: "API RP 1111",
+        DesignCode.PD_8010_2: "PD 8010-2",
+    }
 
 INTERNAL_PRESSURES_MPA = [10, 15, 20, 25]
 WATER_DEPTH = 500.0  # m
@@ -241,62 +285,83 @@ def find_min_wall_thickness(
 # Chart 1: Lifecycle Utilisation (Hero Chart)
 # ---------------------------------------------------------------------------
 
-def build_chart_1_lifecycle(pipe_catalog: list) -> go.Figure:
-    """Build lifecycle utilisation grouped bar chart with pipe size dropdown."""
+def build_chart_1_lifecycle(
+    pipe_catalog: Optional[list] = None,
+    cached_lifecycle: Optional[Dict] = None,
+) -> Tuple[go.Figure, Dict]:
+    """Build lifecycle utilisation grouped bar chart with pipe size dropdown.
+
+    Returns (figure, lifecycle_data) so intermediate results can be cached.
+    When *cached_lifecycle* is provided, skip engineering calculations.
+    """
     print("\n[Chart 1] Building Lifecycle Utilisation chart...")
 
-    pe = external_pressure_pa()
-    design_pressure = 20e6  # Fixed for lifecycle phases
+    if cached_lifecycle is not None:
+        # Reconstruct all_pipe_data from cache
+        all_pipe_data = {}
+        for pipe_name, code_map in cached_lifecycle.items():
+            all_pipe_data[pipe_name] = {
+                "phase_data": code_map,
+                "phases": PHASE_DISPLAY_NAMES,
+            }
+    else:
+        pe = external_pressure_pa()
+        design_pressure = 20e6  # Fixed for lifecycle phases
 
-    # Pre-compute data for all pipe sizes
-    all_pipe_data = {}
-    for ps in PIPE_SIZES:
-        od_m = ps["od_m"]
-        pipe_name = ps["name"]
+        # Pre-compute data for all pipe sizes
+        all_pipe_data = {}
+        for ps in PIPE_SIZES:
+            od_m = ps["od_m"]
+            pipe_name = ps["name"]
 
-        # Get a reasonable WT for this pipe (mid-range from catalog)
-        wt_m = select_analysis_wt(ps, pipe_catalog)
+            # Get a reasonable WT for this pipe (mid-range from catalog)
+            wt_m = select_analysis_wt(ps, pipe_catalog)
 
-        pipe_def = PipeDefinition(
-            outer_diameter=od_m,
-            wall_thickness=wt_m,
-            grade=GRADE,
-            smys=SMYS,
-            smts=SMTS,
-            corrosion_allowance=CORROSION_ALLOWANCE,
-        )
+            pipe_def = PipeDefinition(
+                outer_diameter=od_m,
+                wall_thickness=wt_m,
+                grade=GRADE,
+                smys=SMYS,
+                smts=SMTS,
+                corrosion_allowance=CORROSION_ALLOWANCE,
+            )
 
-        phases = create_standard_phases(
-            water_depth=WATER_DEPTH,
-            design_pressure=design_pressure,
-        )
+            phases = create_standard_phases(
+                water_depth=WATER_DEPTH,
+                design_pressure=design_pressure,
+            )
 
-        # Run phase analysis for each code
-        phase_data = {}  # {code_name: {phase_name: max_util}}
-        for code in CODES:
-            code_name = CODE_NAMES[code]
-            try:
-                runner = PhaseAnalysisRunner(
-                    pipe=pipe_def,
-                    phases=phases,
-                    codes=[code],
-                    safety_class=SafetyClass.MEDIUM,
-                )
-                comparison = runner.run()
-                summary = comparison.summary_dataframe()
+            # Run phase analysis for each code
+            phase_data = {}  # {code_name: {phase_name: max_util}}
+            for code in CODES:
+                code_name = CODE_NAMES[code]
+                try:
+                    runner = PhaseAnalysisRunner(
+                        pipe=pipe_def,
+                        phases=phases,
+                        codes=[code],
+                        safety_class=SafetyClass.MEDIUM,
+                    )
+                    comparison = runner.run()
+                    summary = comparison.summary_dataframe()
 
-                phase_utils = {}
-                for _, row in summary.iterrows():
-                    phase_utils[row["phase"]] = row["max_utilisation"]
-                phase_data[code_name] = phase_utils
-            except Exception as exc:
-                logger.warning("Phase analysis failed for %s %s: %s", pipe_name, code_name, exc)
-                phase_data[code_name] = {}
+                    phase_utils = {}
+                    for _, row in summary.iterrows():
+                        phase_utils[row["phase"]] = row["max_utilisation"]
+                    phase_data[code_name] = phase_utils
+                except Exception as exc:
+                    logger.warning("Phase analysis failed for %s %s: %s", pipe_name, code_name, exc)
+                    phase_data[code_name] = {}
 
-        all_pipe_data[pipe_name] = {
-            "phase_data": phase_data,
-            "phases": [p.name for p in phases],
-        }
+            all_pipe_data[pipe_name] = {
+                "phase_data": phase_data,
+                "phases": [p.name for p in phases],
+            }
+
+    # Build serialisable lifecycle data for caching
+    lifecycle_data = {}
+    for pipe_name, pdata in all_pipe_data.items():
+        lifecycle_data[pipe_name] = pdata["phase_data"]
 
     # Build figure with dropdown
     fig = go.Figure()
@@ -304,7 +369,7 @@ def build_chart_1_lifecycle(pipe_catalog: list) -> go.Figure:
     # Get phase names from first pipe
     first_pipe = list(all_pipe_data.values())[0]
     phase_names = first_pipe["phases"]
-    code_names_list = [CODE_NAMES[c] for c in CODES]
+    code_names_list = CODE_NAME_STRINGS
     code_colors = {
         code_names_list[0]: CHART_PALETTE[0],
         code_names_list[1]: CHART_PALETTE[1],
@@ -404,36 +469,60 @@ def build_chart_1_lifecycle(pipe_catalog: list) -> go.Figure:
     )
 
     print("  ✓ Chart 1 complete")
-    return fig
+    return fig, lifecycle_data
 
 
 # ---------------------------------------------------------------------------
 # Chart 2: Min Wall Thickness vs Pipe Size
 # ---------------------------------------------------------------------------
 
-def build_chart_2_min_wt() -> go.Figure:
-    """Build min WT vs pipe size line chart."""
+def build_chart_2_min_wt(
+    cached_min_wt: Optional[Dict] = None,
+) -> Tuple[go.Figure, Dict]:
+    """Build min WT vs pipe size line chart.
+
+    Returns (figure, min_wt_data) so intermediate results can be cached.
+    When *cached_min_wt* is provided, skip engineering calculations.
+    """
     print("\n[Chart 2] Building Min Wall Thickness vs Pipe Size...")
 
-    pe = external_pressure_pa()
-    pi = 20e6  # Fixed 20 MPa
-
     od_values = [ps["od_mm"] for ps in PIPE_SIZES]
-    code_results = {}
 
-    for code_idx, code in enumerate(CODES):
-        code_name = CODE_NAMES[code]
-        wt_values = []
-        for ps in PIPE_SIZES:
-            min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
-            wt_values.append(min_wt * 1000)  # Convert to mm
-            print(f"  {ps['name']} | {code_name}: min WT = {min_wt*1000:.2f} mm")
-        code_results[code_name] = wt_values
+    if cached_min_wt is not None:
+        # Reconstruct code_results from cache  {pipe_name: {code: wt_mm}}
+        code_results = {}
+        for code_name in CODE_NAME_STRINGS:
+            wt_values = []
+            for ps in PIPE_SIZES:
+                wt_mm = cached_min_wt.get(ps["name"], {}).get(code_name, 0.0)
+                wt_values.append(wt_mm)
+            code_results[code_name] = wt_values
+    else:
+        pe = external_pressure_pa()
+        pi = 20e6  # Fixed 20 MPa
+
+        code_results = {}
+        for code_idx, code in enumerate(CODES):
+            code_name = CODE_NAMES[code]
+            wt_values = []
+            for ps in PIPE_SIZES:
+                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
+                wt_values.append(min_wt * 1000)  # Convert to mm
+                print(f"  {ps['name']} | {code_name}: min WT = {min_wt*1000:.2f} mm")
+            code_results[code_name] = wt_values
+
+    # Build serialisable min_wt data for caching  {pipe_name: {code: wt_mm}}
+    min_wt_data: Dict[str, Dict[str, float]] = {}
+    for i, ps in enumerate(PIPE_SIZES):
+        pipe_wts = {}
+        for code_name, wt_list in code_results.items():
+            pipe_wts[code_name] = round(wt_list[i], 2)
+        min_wt_data[ps["name"]] = pipe_wts
 
     fig = go.Figure()
 
     # Add lines for each code
-    code_names_list = [CODE_NAMES[c] for c in CODES]
+    code_names_list = list(code_results.keys())
     for idx, code_name in enumerate(code_names_list):
         fig.add_trace(go.Scatter(
             x=od_values,
@@ -472,18 +561,24 @@ def build_chart_2_min_wt() -> go.Figure:
     )
 
     print("  ✓ Chart 2 complete")
-    return fig
+    return fig, min_wt_data
 
 
 # ---------------------------------------------------------------------------
 # Chart 3: Utilisation Heatmap
 # ---------------------------------------------------------------------------
 
-def build_chart_3_heatmap(pipe_catalog: list) -> go.Figure:
-    """Build 3 side-by-side utilisation heatmaps (one per code)."""
+def build_chart_3_heatmap(
+    pipe_catalog: Optional[list] = None,
+    cached_results: Optional[List[Dict]] = None,
+) -> go.Figure:
+    """Build 3 side-by-side utilisation heatmaps (one per code).
+
+    When *cached_results* (the parametric sweep list) is provided, extract
+    utilisation values from the sweep instead of re-running analyses.
+    """
     print("\n[Chart 3] Building Utilisation Heatmaps...")
 
-    pe = external_pressure_pa()
     pipe_labels = [ps["name"] for ps in PIPE_SIZES]
 
     # Custom colorscale: green -> amber -> red
@@ -496,14 +591,21 @@ def build_chart_3_heatmap(pipe_catalog: list) -> go.Figure:
         [1.0, "#e53e3e"],
     ]
 
-    code_names_list = [CODE_NAMES[c] for c in CODES]
+    code_names_list = CODE_NAME_STRINGS
     fig = make_subplots(
         rows=1, cols=3,
         subplot_titles=code_names_list,
         horizontal_spacing=0.08,
     )
 
-    for col_idx, code in enumerate(CODES, start=1):
+    # Build a lookup from cached results if available
+    _cache_lookup: Dict[tuple, Dict] = {}
+    if cached_results is not None:
+        for r in cached_results:
+            key = (r.get("pipe_size"), r.get("code"), r.get("internal_pressure_mpa"))
+            _cache_lookup[key] = r
+
+    for col_idx, code_name in enumerate(code_names_list, start=1):
         z_matrix = []
         hover_text = []
 
@@ -511,24 +613,35 @@ def build_chart_3_heatmap(pipe_catalog: list) -> go.Figure:
             row_z = []
             row_hover = []
             for ps in PIPE_SIZES:
-                # Use a mid-range WT for more meaningful utilisation spread
-                wt_m = select_analysis_wt(ps, pipe_catalog)
-
-                result = run_single_analysis(
-                    ps["od_m"], wt_m, pi_mpa * 1e6, pe, code,
-                )
-                if result:
-                    util = result["max_utilisation"]
-                    gov = result["governing_check"] or "N/A"
+                if cached_results is not None:
+                    r = _cache_lookup.get((ps["name"], code_name, pi_mpa))
+                    if r and r.get("max_utilisation") not in (None, "N/A"):
+                        util = float(r["max_utilisation"])
+                        gov = r.get("governing_check") or "N/A"
+                        wt_mm = r.get("wt_mm", 0)
+                    else:
+                        util = float("nan")
+                        gov = "N/A"
+                        wt_mm = 0
                 else:
-                    util = float("nan")
-                    gov = "N/A"
+                    wt_m = select_analysis_wt(ps, pipe_catalog)
+                    wt_mm = wt_m * 1000
+                    pe = external_pressure_pa()
+                    result = run_single_analysis(
+                        ps["od_m"], wt_m, pi_mpa * 1e6, pe, CODES[col_idx - 1],
+                    )
+                    if result:
+                        util = result["max_utilisation"]
+                        gov = result["governing_check"] or "N/A"
+                    else:
+                        util = float("nan")
+                        gov = "N/A"
 
                 row_z.append(util)
                 row_hover.append(
                     f"Pipe: {ps['name']}<br>"
                     f"P_int: {pi_mpa} MPa<br>"
-                    f"WT: {wt_m*1000:.1f} mm<br>"
+                    f"WT: {wt_mm:.1f} mm<br>"
                     f"Util: {util:.3f}<br>"
                     f"Gov: {gov}"
                 )
@@ -572,12 +685,17 @@ def build_chart_3_heatmap(pipe_catalog: list) -> go.Figure:
 # Chart 4: Weight Penalty Bar Chart
 # ---------------------------------------------------------------------------
 
-def build_chart_4_weight_penalty() -> Tuple[go.Figure, Dict]:
-    """Build dual-axis weight penalty bar chart."""
-    print("\n[Chart 4] Building Weight Penalty chart...")
+def build_chart_4_weight_penalty(
+    cached_weight_penalty: Optional[Dict] = None,
+    cached_min_wt: Optional[Dict] = None,
+) -> Tuple[go.Figure, Dict]:
+    """Build dual-axis weight penalty bar chart.
 
-    pe = external_pressure_pa()
-    pi = 20e6
+    When *cached_weight_penalty* is provided, use pre-computed values.
+    When *cached_min_wt* is provided (but not weight_penalty), derive from
+    min WT data without running engineering calculations.
+    """
+    print("\n[Chart 4] Building Weight Penalty chart...")
 
     pipe_labels = [ps["name"] for ps in PIPE_SIZES]
     extra_kg_m = []
@@ -585,36 +703,73 @@ def build_chart_4_weight_penalty() -> Tuple[go.Figure, Dict]:
     most_conservative_codes = []
     least_conservative_codes = []
 
-    for ps in PIPE_SIZES:
-        wt_by_code = {}
-        for code in CODES:
-            min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
-            wt_by_code[CODE_NAMES[code]] = min_wt
+    if cached_weight_penalty is not None:
+        # Use pre-computed weight penalty data
+        for ps in PIPE_SIZES:
+            pname = ps["name"]
+            wp = cached_weight_penalty.get(pname, {})
+            extra_kg_m.append(wp.get("delta_kg_m", 0.0))
+            extra_pct.append(wp.get("delta_pct", 0.0))
+            most_conservative_codes.append(wp.get("most_conservative", "N/A"))
+            least_conservative_codes.append(wp.get("least_conservative", "N/A"))
+    elif cached_min_wt is not None:
+        # Derive from cached min WT values
+        for ps in PIPE_SIZES:
+            pname = ps["name"]
+            wt_by_code = cached_min_wt.get(pname, {})
+            # Convert mm -> m
+            wt_m_by_code = {k: v / 1000.0 for k, v in wt_by_code.items()}
+            wt_values = list(wt_m_by_code.values())
+            max_wt = max(wt_values) if wt_values else 0
+            min_wt_val = min(wt_values) if wt_values else 0
+            delta_wt = max_wt - min_wt_val
 
-        wt_values = list(wt_by_code.values())
-        max_wt = max(wt_values)
-        min_wt = min(wt_values)
-        delta_wt = max_wt - min_wt
+            most_code = max(wt_m_by_code, key=wt_m_by_code.get) if wt_m_by_code else "N/A"
+            least_code = min(wt_m_by_code, key=wt_m_by_code.get) if wt_m_by_code else "N/A"
+            most_conservative_codes.append(most_code)
+            least_conservative_codes.append(least_code)
 
-        # Find which codes are most/least conservative
-        most_code = max(wt_by_code, key=wt_by_code.get)
-        least_code = min(wt_by_code, key=wt_by_code.get)
-        most_conservative_codes.append(most_code)
-        least_conservative_codes.append(least_code)
+            od = ps["od_m"]
+            a_thick = math.pi / 4 * (od**2 - (od - 2 * max_wt)**2)
+            a_thin = math.pi / 4 * (od**2 - (od - 2 * min_wt_val)**2)
+            delta_mass = (a_thick - a_thin) * STEEL_DENSITY
+            pct = (delta_wt / min_wt_val * 100) if min_wt_val > 0 else 0
+            extra_kg_m.append(delta_mass)
+            extra_pct.append(pct)
+    else:
+        pe = external_pressure_pa()
+        pi = 20e6
 
-        # Extra steel weight per metre: rho_steel * pi * (OD - t) * t_delta (approx)
-        # More precisely: delta in cross-sectional area
-        od = ps["od_m"]
-        a_thick = math.pi / 4 * (od**2 - (od - 2 * max_wt)**2)
-        a_thin = math.pi / 4 * (od**2 - (od - 2 * min_wt)**2)
-        delta_mass = (a_thick - a_thin) * STEEL_DENSITY  # kg/m
+        for ps in PIPE_SIZES:
+            wt_by_code = {}
+            for code in CODES:
+                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
+                wt_by_code[CODE_NAMES[code]] = min_wt
 
-        pct = (delta_wt / min_wt * 100) if min_wt > 0 else 0
+            wt_values = list(wt_by_code.values())
+            max_wt = max(wt_values)
+            min_wt = min(wt_values)
+            delta_wt = max_wt - min_wt
 
-        extra_kg_m.append(delta_mass)
-        extra_pct.append(pct)
+            # Find which codes are most/least conservative
+            most_code = max(wt_by_code, key=wt_by_code.get)
+            least_code = min(wt_by_code, key=wt_by_code.get)
+            most_conservative_codes.append(most_code)
+            least_conservative_codes.append(least_code)
 
-        print(f"  {ps['name']}: ΔWT={delta_wt*1000:.2f}mm, Δmass={delta_mass:.1f} kg/m, {pct:.1f}%")
+            # Extra steel weight per metre: rho_steel * pi * (OD - t) * t_delta (approx)
+            # More precisely: delta in cross-sectional area
+            od = ps["od_m"]
+            a_thick = math.pi / 4 * (od**2 - (od - 2 * max_wt)**2)
+            a_thin = math.pi / 4 * (od**2 - (od - 2 * min_wt)**2)
+            delta_mass = (a_thick - a_thin) * STEEL_DENSITY  # kg/m
+
+            pct = (delta_wt / min_wt * 100) if min_wt > 0 else 0
+
+            extra_kg_m.append(delta_mass)
+            extra_pct.append(pct)
+
+            print(f"  {ps['name']}: ΔWT={delta_wt*1000:.2f}mm, Δmass={delta_mass:.1f} kg/m, {pct:.1f}%")
 
     # Find typical annotation data (use 12" pipe)
     idx_12 = 3  # 12" is index 3
@@ -684,8 +839,18 @@ def build_chart_4_weight_penalty() -> Tuple[go.Figure, Dict]:
         "least_conservative": least,
     }
 
+    # Build serialisable weight penalty data for caching
+    weight_penalty_data: Dict[str, Dict] = {}
+    for i, ps in enumerate(PIPE_SIZES):
+        weight_penalty_data[ps["name"]] = {
+            "delta_kg_m": round(extra_kg_m[i], 2),
+            "delta_pct": round(extra_pct[i], 1),
+            "most_conservative": most_conservative_codes[i],
+            "least_conservative": least_conservative_codes[i],
+        }
+
     print("  ✓ Chart 4 complete")
-    return fig, penalty_info
+    return fig, penalty_info, weight_penalty_data
 
 
 # ---------------------------------------------------------------------------
@@ -871,8 +1036,15 @@ def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
 # Summary table
 # ---------------------------------------------------------------------------
 
-def build_summary_table() -> pd.DataFrame:
-    """Build summary: pipe size × code -> min WT, governing check."""
+def build_summary_table(cached_summary: Optional[List[Dict]] = None) -> pd.DataFrame:
+    """Build summary: pipe size x code -> min WT, governing check.
+
+    When *cached_summary* is provided (list of row dicts from JSON), rebuild
+    the DataFrame directly without running engineering calculations.
+    """
+    if cached_summary is not None:
+        return pd.DataFrame(cached_summary)
+
     pe = external_pressure_pa()
     pi = 20e6
 
@@ -1036,11 +1208,28 @@ def build_report(
 
 def main():
     """Run the full demo pipeline."""
+    parser = argparse.ArgumentParser(
+        description="GTM Demo 2: Pipeline Wall Thickness — Multi-Code Comparison",
+    )
+    parser.add_argument(
+        "--from-cache",
+        action="store_true",
+        help="Load results from cached JSON instead of re-running the sweep",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force re-run even if cached results exist",
+    )
+    args = parser.parse_args()
+
     start_time = time.time()
 
     print("=" * 60)
     print("  GTM Demo 2: Pipeline Wall Thickness — Multi-Code Comparison")
     print("=" * 60)
+
+    results_path = RESULTS_DIR / "demo_02_wall_thickness_results.json"
 
     # 1. Load data files
     print("\n[1/7] Loading input data...")
@@ -1053,22 +1242,55 @@ def main():
         code_data = json.load(f)
     print(f"  ✓ Loaded {len(code_data['codes'])} design codes from design_codes.json")
 
-    # 2. Run parametric sweep
-    print("\n[2/7] Running parametric sweep...")
-    all_results, results_df = run_parametric_sweep(pipe_catalog)
-    total_cases = len(all_results)
+    # ── Step 2: Run sweep or load cache ────────────────────────────────────
+    if args.from_cache and results_path.exists() and not args.force:
+        print("\n[2/7] Loading cached results...")
+        with open(results_path, "r") as f:
+            cached = json.load(f)
+
+        all_results = cached.get("results", [])
+        results_df = pd.DataFrame(all_results)
+        total_cases = len(all_results)
+        cached_lifecycle = cached.get("lifecycle_phases")
+        cached_min_wt = cached.get("min_wall_thickness")
+        cached_weight_penalty = cached.get("weight_penalty")
+        cached_summary = cached.get("summary")
+        print(f"  Loaded {total_cases} cached results from {results_path.name}")
+    else:
+        # Load engineering modules and run full calculations
+        _load_engineering_modules()
+        _init_code_constants()
+
+        print("\n[2/7] Running parametric sweep...")
+        all_results, results_df = run_parametric_sweep(pipe_catalog)
+        total_cases = len(all_results)
+        cached_lifecycle = None
+        cached_min_wt = None
+        cached_weight_penalty = None
+        cached_summary = None
 
     # 3. Build charts
     print("\n[3/7] Building charts...")
-    fig1 = build_chart_1_lifecycle(pipe_catalog)
-    fig2 = build_chart_2_min_wt()
-    fig3 = build_chart_3_heatmap(pipe_catalog)
-    fig4, penalty_info = build_chart_4_weight_penalty()
+    fig1, lifecycle_data = build_chart_1_lifecycle(
+        pipe_catalog=pipe_catalog,
+        cached_lifecycle=cached_lifecycle,
+    )
+    fig2, min_wt_data = build_chart_2_min_wt(
+        cached_min_wt=cached_min_wt,
+    )
+    fig3 = build_chart_3_heatmap(
+        pipe_catalog=pipe_catalog,
+        cached_results=all_results if (args.from_cache and not args.force) else None,
+    )
+    fig4, penalty_info, weight_penalty_data = build_chart_4_weight_penalty(
+        cached_weight_penalty=cached_weight_penalty,
+        cached_min_wt=cached_min_wt,
+    )
     fig5 = build_chart_5_sunburst(all_results)
 
     # 4. Build summary table
     print("\n[4/7] Building summary table...")
-    summary_df = build_summary_table()
+    summary_df = build_summary_table(cached_summary=cached_summary)
     print(summary_df.to_string(index=False))
 
     # 5. Build HTML report
@@ -1076,30 +1298,35 @@ def main():
     build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, penalty_info, total_cases)
 
     # 6. Save JSON results
-    print("\n[6/7] Saving JSON results...")
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    results_path = RESULTS_DIR / "demo_02_wall_thickness_results.json"
+    if not args.from_cache or args.force:
+        print("\n[6/7] Saving JSON results...")
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    json_output = {
-        "metadata": {
-            "demo": "GTM Demo 2: Wall Thickness Multi-Code Comparison",
-            "total_cases": total_cases,
-            "pipe_sizes": [ps["name"] for ps in PIPE_SIZES],
-            "codes": [CODE_NAMES[c] for c in CODES],
-            "internal_pressures_mpa": INTERNAL_PRESSURES_MPA,
-            "water_depth_m": WATER_DEPTH,
-            "grade": GRADE,
-            "smys_mpa": SMYS / 1e6,
-            "smts_mpa": SMTS / 1e6,
-            "corrosion_allowance_mm": CORROSION_ALLOWANCE * 1000,
-        },
-        "summary": summary_df.to_dict(orient="records"),
-        "results": all_results,
-    }
+        json_output = {
+            "metadata": {
+                "demo": "GTM Demo 2: Wall Thickness Multi-Code Comparison",
+                "total_cases": total_cases,
+                "pipe_sizes": [ps["name"] for ps in PIPE_SIZES],
+                "codes": CODE_NAME_STRINGS,
+                "internal_pressures_mpa": INTERNAL_PRESSURES_MPA,
+                "water_depth_m": WATER_DEPTH,
+                "grade": GRADE,
+                "smys_mpa": SMYS / 1e6,
+                "smts_mpa": SMTS / 1e6,
+                "corrosion_allowance_mm": CORROSION_ALLOWANCE * 1000,
+            },
+            "summary": summary_df.to_dict(orient="records"),
+            "results": all_results,
+            "lifecycle_phases": lifecycle_data,
+            "min_wall_thickness": min_wt_data,
+            "weight_penalty": weight_penalty_data,
+        }
 
-    with open(results_path, "w") as f:
-        json.dump(json_output, f, indent=2, default=str)
-    print(f"  ✓ Results saved to: {results_path}")
+        with open(results_path, "w") as f:
+            json.dump(json_output, f, indent=2, default=str)
+        print(f"  ✓ Results saved to: {results_path}")
+    else:
+        print("\n[6/7] Skipping JSON save (loaded from cache)")
 
     # 7. Done
     elapsed = time.time() - start_time
