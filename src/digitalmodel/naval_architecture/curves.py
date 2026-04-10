@@ -1,7 +1,12 @@
 # content-hash: 97b48aedebade8a4a6dee222e670756ba91b3c834962b7eb66620ee8022a7047
 """Curve interpolation scaffolds — naval-architecture.
 
-These functions will be populated when curve digitization data becomes available.
+NOTE: This file contains 29K+ lines of placeholder entries referencing
+standard curves (DNV-RP-C205, Warship-Naval-Submarines). Each entry
+links to a source PDF figure and CSV data path. No executable code.
+
+Future: Convert to a structured data format (YAML/JSON catalog) and
+load curves programmatically. See GitHub issue for tracking.
 """
 
 from pathlib import Path
