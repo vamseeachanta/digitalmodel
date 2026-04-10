@@ -76,6 +76,10 @@ class SubseaProject:
     flowline_diameter_in: Optional[float] = None
     flowline_material: Optional[str] = None
     layout_type: Optional[str] = None
+    year_concept: Optional[int] = None
+    year_feed: Optional[int] = None
+    year_fid: Optional[int] = None
+    year_first_oil: Optional[int] = None
 
 
 @dataclass
@@ -143,6 +147,10 @@ def load_projects(records: list[dict]) -> list[SubseaProject]:
                 flowline_diameter_in=_opt_float(rec.get("flowline_diameter_in")),
                 flowline_material=rec.get("flowline_material"),
                 layout_type=rec.get("layout_type"),
+                year_concept=_opt_int(rec.get("year_concept")),
+                year_feed=_opt_int(rec.get("year_feed")),
+                year_fid=_opt_int(rec.get("year_fid")),
+                year_first_oil=_opt_int(rec.get("year_first_oil")),
             )
         )
     return projects

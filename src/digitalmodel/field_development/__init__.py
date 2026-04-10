@@ -42,6 +42,11 @@ from .benchmarks import (
     load_projects,
     DEPTH_BANDS,
 )
+from .timeline import (
+    timeline_duration_stats,
+    duration_stats_by_concept_type,
+    schedule_distributions,
+)
 from .workflow import (
     FieldDevelopmentSpec,
     FieldDevelopmentResult,
@@ -69,6 +74,10 @@ __all__ = [
     "concept_benchmark_bands",
     "load_projects",
     "DEPTH_BANDS",
+    # Timeline benchmarks (#2060)
+    "timeline_duration_stats",
+    "duration_stats_by_concept_type",
+    "schedule_distributions",
     # CAPEX estimation (#1843)
     "CAPEXEstimate",
     "estimate_capex",

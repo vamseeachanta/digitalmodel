@@ -23,17 +23,13 @@ classifiers = [
 ]
 
 dependencies = [
-    "aiofiles==23.2.1",
     "click>=8.0.0,<9.0.0", # CLI framework for command-line tools
-    "gmsh>=4.11.0", # GMSH Python bindings for mesh generation
     "aiosqlite==0.19.0", # SQLite async driver fordevelopment",
     "alembic==1.12.1",
     "argon2-cffi==23.1.0", # Alternative passwordhashing,
-    "assetutilities",
-    "assetutilities>=0.0.7",
+    "assetutilities>=0.0.7,<1.0.0",
     "asyncio-extras==1.3.2", # Additional asyncutilities,
     "asyncio-mqtt==0.16.1", # MQTT support ifneeded,
-    "asyncpg==0.29.0", # PostgreSQL asyncdriver,
     "async-timeout==4.0.3", # Timeouthandling,
     "bandit==1.7.5", # Securitylinting,
     "beautifulsoup4>=4.13.0,<5.0.0",
@@ -41,23 +37,18 @@ dependencies = [
     "bleach==6.1.0", # HTMLsanitization,
     "boto3==1.34.0", # AWS S3 if cloud storageneeded,
     "brotli==1.1.0", # Additionalcompression,
-    "build>=1.0.0",
-    "bumpver",
-    "bumpver>=2023.1129",
+    "build>=1.0.0,<2.0.0",
+    "bumpver>=2023.1129,<2024.0",
     "celery==5.3.4",
     "chardet==5.2.0", # Character encodingdetection,
     "coverage==7.3.2", # Codecoverage,
-    "cryptography>=41.0.0",
+    "cryptography>=41.0.0,<44.0.0",
     "cx-Oracle==6.3.1",
-    "dash",
-    "dash>=3.1.0,<4.0.0",
-    "deepdiff",
-    "deepdiff>=8.0.0,<9.0.0",
+    "deepdiff>=6.7.0,<8.0.0",
     "defusedxml==0.7.1", # Secure XMLprocessing,
     "docx",
     "factory-boy==3.3.0", # Test datafactories,
     "faker==20.1.0", # Fake datageneration,
-    "fastapi==0.119.0",
     "fastapi-limiter==0.1.6", # Additional ratelimiting,
     "fastapi-pagination==0.14.3", # Paginationutilities,
     "fastapi-users==14.0.1", # User management (ifneeded),
@@ -68,13 +59,9 @@ dependencies = [
     "hiredis==2.2.3",
     "httpx>=0.28.1,<0.29.0", # For testing HTTPclients,
     "hypercorn==0.15.0", # Alternative ASGIserver,
-    "imgkit",
     "imgkit>=1.2.0,<2.0.0",
-    "ipython>=8.0.0", # Enhanced Pythonshell,
+    "ipython>=8.0.0,<9.0.0", # Enhanced Pythonshell,
     "isort>=5.13.0,<6.0.0", # Importsorting,
-    "kaleido",
-    "kaleido>=0.2.0",
-    "loguru",
     "loguru>=0.7.0,<1.0.0",
     "lxml==4.9.3", # XMLprocessing,
     "marshmallow==3.20.1", # Additionalserialization,
@@ -84,13 +71,10 @@ dependencies = [
     "newrelic==9.2.0", # Performance monitoring(optional),
     "numpy>=1.24.0,<2.0.0", # Usually needed withpandas,
     "openpyxl>=3.1.0,<4.0.0", # Excelexport,
-    "OrcFxAPI",
-    "OrcFxAPI", # Note: Check if version constraints areavailable,
-    "pandas",
     "pandas>=2.0.0,<3.0.0",
     "passlib[bcrypt]==1.7.4",
     "pillow==10.1.0", # Image processing
-    "pint>=0.25.3",
+    "pint>=0.25.3,<1.0.0",
     "plotly==5.17.0",
     "poetry",
     "pre-commit==3.6.0",
@@ -102,14 +86,11 @@ dependencies = [
     "pyjwt==2.10.1",
     "pykalman==0.9.5", # Kalman filters for time series
     "pymssql==2.3.8",
-    "PyPDF2",
     "pypdf2>=3.0.0,<4.0.0",
     "pyproj==3.6.1", # Coordinate transformations
-    "pytest",
     "pytest>=7.4.3,<9.0.0",
     "pytest-asyncio==0.21.1",
     "pytest-cov>=4.1.0,<5.0.0",
-    "pytest-mock==3.12.0",
     "pytest-mock>=3.12.0,<4.0.0",
     "pytest-xdist>=3.5.0,<4.0.0", # For parallel test execution
     "pytest-benchmark>=4.0.0,<5.0.0", # Performance benchmarking
@@ -123,58 +104,45 @@ dependencies = [
     "pytest-metadata>=3.1.0,<4.0.0", # Test metadata
     "pytest-instafail>=0.5.0,<1.0.0", # Fast failure reporting
     "python-dateutil==2.8.2",
-    "python-docx>=0.8.0",
+    "python-docx>=0.8.0,<2.0.0",
     "python-dotenv>=1.1.0,<2.0.0",
     "python-jose[cryptography]==3.3.0", # Additional JWT support
     "python-multipart>=0.0.9,<0.1.0",
-    "pyyaml",
     "pyyaml>=6.0.0,<7.0.0",
-    "pyyaml==6.0.1",
     "rainflow>=3.2.0,<4.0.0",
     "requests>=2.31.0,<3.0.0",
     "ruamel.yaml>=0.18.0,<1.0.0",
     "ruff>=0.3.0,<1.0.0", # Fast Python linter
     "scikit-learn==1.3.2",
     "scipy>=1.10.0,<2.0.0",
-    "seaborn==0.13.2",
-    "scrapy",
     "scrapy>=2.11.0,<3.0.0",
     "sentry-sdk[fastapi]==1.38.0", # Error tracking
     "slowapi==0.1.9", # Additional rate limiting utilities
     "sphinx>=7.0.0,<8.0.0",
     "sphinx-rtd-theme>=2.0.0,<3.0.0",
-    "sqlalchemy>=2.0.23,<3.0.0",
     "statsmodels==0.14.0", # Advanced statistical models
     "structlog==23.2.0",
     "sympy>=1.12.0,<2.0.0", # Symbolic mathematics
-    "tabula",
-    "tabulate",
     "tabulate>=0.9.0,<1.0.0",
-    "twine>=4.0.0",
+    "twine>=4.0.0,<6.0.0",
     "uncertainties==3.1.7", # Error propagation
-    "uvicorn[standard]==0.24.0",
     "validators==0.22.0",
-    "webcolors",
     "webcolors>=1.13,<2.0",
     "websockets>=15.0.1,<16.0.0", # WebSocket support
-    "xlrd",
     "xlrd>=2.0.0,<3.0.0",
-    "xlsxwriter",
     "xlsxwriter>=3.1.0,<4.0.0",
-    "xlsxwriter==3.1.9", # Excel with formatting
-    "xmltodict",
     "xmltodict>=0.13.0,<1.0.0",
-    "markitdown",
+    "markitdown>=0.0.1,<0.1.0",
     "fastmcp>=2.12.4,<3.0.0",
-    "munch>=4.0.0",
-    "tqdm>=4.67.1",
-    "fluids>=1.3.0",
+    "munch>=4.0.0,<5.0.0",
+    "tqdm>=4.67.1,<5.0.0",
+    "fluids>=1.3.0,<2.0.0",
     "meshio>=5.3.0,<6.0.0",  # Multi-format mesh I/O (VTK, STL, Gmsh, Abaqus, etc.)
-    "pygmt>=0.13.0",  # Python interface to GMT for bathymetric/offshore mapping (requires GMT system lib)
-    "sectionproperties>=3.4.0",  # Cross-section geometric/warping properties via FEM (AISC, Eurocode, AS)
-    "pyvista>=0.47.1",
-    "ht>=1.2.0",
-    "geopandas>=1.1.3",
+    "pygmt>=0.13.0,<1.0.0",  # Python interface to GMT for bathymetric/offshore mapping (requires GMT system lib)
+    "sectionproperties>=3.4.0,<4.0.0",  # Cross-section geometric/warping properties via FEM (AISC, Eurocode, AS)
+    "pyvista>=0.47.1,<1.0.0",
+    "ht>=1.2.0,<2.0.0",
+    "geopandas>=1.1.3,<2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -192,7 +160,7 @@ test = [
     "pytest-mock>=3.0",
     "pint>=0.25.0",
     "plotly>=5.0.0",
-    "deepdiff>=8.0.0",
+    "deepdiff>=6.7.0,<8.0.0",
     "factory-boy>=3.3.0",
     "loguru>=0.7.0",
 ]
@@ -211,6 +179,11 @@ nde = [
     # CC BY 4.0, Polymathic AI — install: pip install digitalmodel[nde]
     "the_well>=1.2.0",
 ]
+
+solvers = ["OrcFxAPI", "gmsh>=4.12.0,<5.0.0"]
+viz = ["dash>=3.1.0,<4.0.0", "kaleido>=0.2.0,<1.0.0", "seaborn>=0.13.0,<1.0.0"]
+web = ["fastapi>=0.100.0,<1.0.0", "uvicorn>=0.25.0,<1.0.0", "sqlalchemy>=2.0.0,<3.0.0"]
+async = ["aiofiles>=23.0.0,<25.0.0", "asyncpg>=0.29.0,<1.0.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/username/digitalmodel"
