@@ -1,100 +1,101 @@
-"""Drilling-riser component adapter — worldenergydata CSV → normalised dicts.
-
-Mirrors the adapter pattern in ``naval_architecture.ship_data`` but operates
-on drilling-riser component records that are already in imperial units.
-"""
+"""Drilling-riser component adapter — worldenergydata CSV → normalized SI dicts."""
 
 from __future__ import annotations
 
 import csv
 import math
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
+_KIPS_TO_KN = 4.44822
+_IN_TO_MM = 25.4
+_FT_TO_M = 0.3048
+_PSI_TO_MPA = 0.00689476
+_FT_KIP_PER_DEG_TO_KN_M_PER_DEG = _FT_TO_M * _KIPS_TO_KN
+
+_REGISTRY: dict[str, dict[str, Any]] = {}
 
 
-# ── Constants ───────────────────────────────────────────────────────
-_FT_PER_M: float = 1.0 / 0.3048
-_KN_PER_KIP: float = 4.44822  # 1 kip-force = 4.44822 kN
-
-
-# ── Helpers ─────────────────────────────────────────────────────────
-
-def _safe_float(value: Any) -> Optional[float]:
-    """Return *value* as a float if it is a finite number, else ``None``."""
+def _safe_float(value: Any) -> float | None:
+    """Return *value* as a finite float, else ``None``."""
     if value is None or isinstance(value, bool):
         return None
     try:
-        f = float(value)
+        numeric = float(value)
     except (TypeError, ValueError):
         return None
-    if not math.isfinite(f):
+    if not math.isfinite(numeric):
         return None
-    return f
+    return numeric
 
 
-def _safe_positive_float(value: Any) -> Optional[float]:
+def _safe_positive_float(value: Any) -> float | None:
     """Return *value* as a positive float, else ``None``."""
-    f = _safe_float(value)
-    if f is not None and f > 0:
-        return f
+    numeric = _safe_float(value)
+    if numeric is not None and numeric > 0:
+        return numeric
     return None
 
 
-def _safe_nonneg_float(value: Any) -> Optional[float]:
-    """Return *value* as a non-negative float (>= 0), else ``None``."""
-    f = _safe_float(value)
-    if f is not None and f >= 0:
-        return f
+def _safe_nonneg_float(value: Any) -> float | None:
+    """Return *value* as a non-negative float, else ``None``."""
+    numeric = _safe_float(value)
+    if numeric is not None and numeric >= 0:
+        return numeric
     return None
 
 
-def _safe_int(value: Any) -> Optional[int]:
-    """Return *value* as an int if it represents a whole number, else ``None``."""
-    f = _safe_float(value)
-    if f is not None and f == int(f):
-        return int(f)
+def _safe_int(value: Any) -> int | None:
+    """Return *value* as an int if it represents a whole finite number."""
+    numeric = _safe_float(value)
+    if numeric is not None and numeric == int(numeric):
+        return int(numeric)
     return None
 
 
-# ── Normaliser ──────────────────────────────────────────────────────
+def _convert(value: Any, factor: float, *, positive: bool = False) -> float | None:
+    """Convert a numeric value by *factor* if it passes validation."""
+    numeric = _safe_positive_float(value) if positive else _safe_float(value)
+    if numeric is None:
+        return None
+    return numeric * factor
 
-# Numeric fields that must be positive (dimensions / weights / ratings).
-_POSITIVE_FLOAT_FIELDS: list[tuple[str, str]] = [
-    ("OD_IN", "od_in"),
-    ("ID_IN", "id_in"),
-    ("WALL_THICKNESS_IN", "wall_thickness_in"),
-    ("LENGTH_FT", "length_ft"),
-    ("WEIGHT_AIR_KIPS", "weight_air_kips"),
-    ("PRESSURE_RATING_PSI", "pressure_rating_psi"),
-    ("BUOYANCY_OD_IN", "buoyancy_od_in"),
-    ("BORE_SIZE_IN", "bore_size_in"),
-    ("HEIGHT_FT", "height_ft"),
-    ("STIFFNESS_FT_KIP_PER_DEG", "stiffness_ft_kip_per_deg"),
-    ("STROKE_FT", "stroke_ft"),
-    ("OUTER_BARREL_LENGTH_FT", "outer_barrel_length_ft"),
-    ("INNER_BARREL_LENGTH_FT", "inner_barrel_length_ft"),
-]
 
-# Numeric fields that may be negative (buoyant weight).
-_FLOAT_FIELDS: list[tuple[str, str]] = [
-    ("WEIGHT_WATER_KIPS", "weight_water_kips"),
-]
+_SI_FLOAT_FIELDS: tuple[tuple[str, str, float, bool], ...] = (
+    ("OD_IN", "od_mm", _IN_TO_MM, True),
+    ("ID_IN", "id_mm", _IN_TO_MM, True),
+    ("WALL_THICKNESS_IN", "wall_thickness_mm", _IN_TO_MM, True),
+    ("LENGTH_FT", "length_m", _FT_TO_M, True),
+    ("WEIGHT_AIR_KIPS", "weight_air_kn", _KIPS_TO_KN, True),
+    ("WEIGHT_WATER_KIPS", "submerged_weight_kn", _KIPS_TO_KN, False),
+    ("BUOYANCY_OD_IN", "buoyancy_od_mm", _IN_TO_MM, True),
+    ("PRESSURE_RATING_PSI", "pressure_mpa", _PSI_TO_MPA, True),
+    ("BORE_SIZE_IN", "bore_size_mm", _IN_TO_MM, True),
+    ("HEIGHT_FT", "height_m", _FT_TO_M, True),
+    (
+        "STIFFNESS_FT_KIP_PER_DEG",
+        "stiffness_kn_m_per_deg",
+        _FT_KIP_PER_DEG_TO_KN_M_PER_DEG,
+        True,
+    ),
+    ("STROKE_FT", "stroke_m", _FT_TO_M, True),
+    ("OUTER_BARREL_LENGTH_FT", "outer_barrel_length_m", _FT_TO_M, True),
+    ("INNER_BARREL_LENGTH_FT", "inner_barrel_length_m", _FT_TO_M, True),
+)
 
-# Percentage fields (0–100 range, positive).
-_PCT_FIELDS: list[tuple[str, str]] = [
+_NONNEG_FLOAT_FIELDS: tuple[tuple[str, str], ...] = (
     ("BUOYANCY_COVERAGE_PCT", "buoyancy_coverage_pct"),
     ("MAX_ANGLE_DEG", "max_angle_deg"),
-]
+)
 
-# Integer count fields.
-_INT_FIELDS: list[tuple[str, str]] = [
+_INT_FIELDS: tuple[tuple[str, str], ...] = (
     ("ANNULAR_COUNT", "annular_count"),
     ("SHEAR_RAM_COUNT", "shear_ram_count"),
     ("PIPE_RAM_COUNT", "pipe_ram_count"),
-]
+)
 
-# String metadata fields.
-_STR_FIELDS: list[tuple[str, str]] = [
+_STR_FIELDS: tuple[tuple[str, str], ...] = (
     ("COMPONENT_TYPE", "component_type"),
     ("MANUFACTURER", "manufacturer"),
     ("MODEL", "model"),
@@ -106,100 +107,85 @@ _STR_FIELDS: list[tuple[str, str]] = [
     ("CONNECTOR_TYPE", "connector_type"),
     ("DATA_SOURCE", "data_source"),
     ("NOTES", "notes"),
-]
+)
 
 
-def normalize_riser_component_record(row: dict[str, Any]) -> Optional[dict[str, Any]]:
-    """Convert a raw CSV row into the normalised riser-component shape.
+def normalize_riser_component_record(record: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Convert one CSV row to a calculation-ready SI dict.
 
-    Returns ``None`` if the row has no usable ``COMPONENT_ID``.
+    Returns ``None`` if ``COMPONENT_ID`` is missing or blank.
     """
-    cid = row.get("COMPONENT_ID")
-    if not isinstance(cid, str) or not cid.strip():
+    component_id = record.get("COMPONENT_ID")
+    if not isinstance(component_id, str) or not component_id.strip():
         return None
 
-    entry: dict[str, Any] = {"component_id": cid.strip()}
-
-    for src, dst in _POSITIVE_FLOAT_FIELDS:
-        val = _safe_positive_float(row.get(src))
-        if val is not None:
-            entry[dst] = val
-
-    for src, dst in _FLOAT_FIELDS:
-        val = _safe_float(row.get(src))
-        if val is not None:
-            entry[dst] = val
-
-    for src, dst in _PCT_FIELDS:
-        val = _safe_nonneg_float(row.get(src))
-        if val is not None:
-            entry[dst] = val
-
-    for src, dst in _INT_FIELDS:
-        val = _safe_int(row.get(src))
-        if val is not None:
-            entry[dst] = val
+    entry: dict[str, Any] = {"component_id": component_id.strip()}
 
     for src, dst in _STR_FIELDS:
-        val = row.get(src)
-        if isinstance(val, str) and val.strip():
-            entry[dst] = val.strip()
+        value = record.get(src)
+        if isinstance(value, str) and value.strip():
+            entry[dst] = value.strip()
+
+    for src, dst, factor, positive in _SI_FLOAT_FIELDS:
+        converted = _convert(record.get(src), factor, positive=positive)
+        if converted is not None:
+            entry[dst] = converted
+
+    for src, dst in _NONNEG_FLOAT_FIELDS:
+        value = _safe_nonneg_float(record.get(src))
+        if value is not None:
+            entry[dst] = value
+
+    for src, dst in _INT_FIELDS:
+        value = _safe_int(record.get(src))
+        if value is not None:
+            entry[dst] = value
 
     return entry
 
 
-# ── Registration ────────────────────────────────────────────────────
+def _iter_records(
+    records: Iterable[Mapping[str, Any]] | Path,
+) -> Iterable[Mapping[str, Any]]:
+    """Yield riser records from an iterable or a CSV path."""
+    if isinstance(records, Path):
+        with records.open(newline="", encoding="utf-8") as handle:
+            yield from csv.DictReader(handle)
+        return
+    yield from records
 
-def register_riser_components(csv_path: Path) -> list[dict[str, Any]]:
-    """Read a drilling-riser component CSV and return normalised records.
 
-    Skips rows that fail normalisation (missing ``COMPONENT_ID``).
+def register_riser_components(
+    records: Iterable[Mapping[str, Any]] | Path,
+    *,
+    registry: dict[str, dict[str, Any]] | None = None,
+) -> tuple[int, int]:
+    """Batch-normalize records and merge them into a registry.
+
+    Returns ``(added_count, skipped_count)``.
     """
-    components: list[dict[str, Any]] = []
-    with open(csv_path, newline="", encoding="utf-8") as fh:
-        reader = csv.DictReader(fh)
-        for row in reader:
-            rec = normalize_riser_component_record(row)
-            if rec is not None:
-                components.append(rec)
-    return components
+    target_registry = _REGISTRY if registry is None else registry
+    added = 0
+    skipped = 0
+
+    for record in _iter_records(records):
+        entry = normalize_riser_component_record(record)
+        if entry is None:
+            skipped += 1
+            continue
+        target_registry[entry["component_id"]] = entry
+        added += 1
+
+    return added, skipped
 
 
-# ── Computation ─────────────────────────────────────────────────────
-
-def compute_riser_string_weight_kn(
-    components: list[dict[str, Any]],
-    lengths_m: list[float],
-) -> float:
-    """Compute total riser-string weight in kN from component linear densities.
-
-    For each *(component, length_m)* pair the weight contribution is::
-
-        (weight_air_kips / length_ft) × (length_m × FT_PER_M) × KN_PER_KIP
-
-    Components missing ``weight_air_kips`` or ``length_ft`` raise
-    :class:`KeyError` so callers can decide how to handle incomplete data.
-
-    Returns ``0.0`` for an empty component list.
-    """
-    if not components:
-        return 0.0
-
-    if len(components) != len(lengths_m):
-        raise ValueError(
-            f"components ({len(components)}) and lengths_m ({len(lengths_m)}) "
-            f"must have the same length"
-        )
-
-    total_kn = 0.0
-    for comp, length_m in zip(components, lengths_m):
-        weight_air = comp["weight_air_kips"]
-        length_ft = comp["length_ft"]
-        if length_ft == 0:
+def compute_riser_string_weight_kn(components: Iterable[Mapping[str, Any]]) -> float:
+    """Sum submerged weight across all components in kN."""
+    total = 0.0
+    for component in components:
+        if "submerged_weight_kn" not in component:
             raise ValueError(
-                f"Component {comp.get('component_id', '?')} has length_ft=0"
+                f"Component {component.get('component_id', '?')} lacks submerged_weight_kn"
             )
-        linear_density = weight_air / length_ft  # kips / ft
-        total_kn += linear_density * (length_m * _FT_PER_M) * _KN_PER_KIP
-
-    return total_kn
+        total += float(component["submerged_weight_kn"])
+    return total

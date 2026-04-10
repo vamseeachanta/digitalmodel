@@ -26,7 +26,15 @@ def csv_path() -> Path:
 
 
 @pytest.fixture()
-def raw_csv_rows(csv_path: Path) -> list[dict[str, str]]:
-    """Load every row from the CSV as raw string-valued dicts."""
-    with open(csv_path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+def all_csv_records(csv_path: Path) -> list[dict[str, str]]:
+    """Load all drilling-riser component records as raw CSV dicts."""
+    with csv_path.open(newline="", encoding="utf-8") as handle:
+        records = list(csv.DictReader(handle))
+    assert len(records) == 36, f"Expected 36 records, got {len(records)}"
+    return records
+
+
+@pytest.fixture()
+def raw_csv_rows(all_csv_records: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Backward-compatible alias for raw string-valued CSV rows."""
+    return all_csv_records
