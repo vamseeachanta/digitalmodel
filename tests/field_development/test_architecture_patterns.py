@@ -209,14 +209,16 @@ class TestTiebackStatsSegmented:
     def test_skips_missing_tieback(self, projects):
         result = tieback_stats_segmented(projects)
         by_depth = result["by_depth_band"]
-        # All stats should only count projects with tieback_distance_km set
+        # by_depth_band requires both tieback_distance_km AND a classifiable
+        # water_depth_m — projects with tieback but missing depth are excluded.
         total_counted = sum(
             v.get("count", 0) for v in by_depth.values()
         )
-        projects_with_tieback = sum(
-            1 for p in projects if p.tieback_distance_km is not None
+        projects_in_depth_band = sum(
+            1 for p in projects
+            if p.tieback_distance_km is not None and p.water_depth_m is not None
         )
-        assert total_counted == projects_with_tieback
+        assert total_counted == projects_in_depth_band
 
     def test_empty_input(self):
         result = tieback_stats_segmented([])
