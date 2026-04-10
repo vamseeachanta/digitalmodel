@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import sys
+from typing import Any, Optional
 
 # Third party imports
 from assetutilities.common.update_deep import update_deep_dictionary
@@ -17,17 +20,17 @@ mes_files = MesFiles()
 
 
 class Aqwa:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @staticmethod
-    def _resolve_attr(name, fallback):
+    def _resolve_attr(name: str, fallback: Any) -> Any:
         module = sys.modules.get("digitalmodel.aqwa")
         if module is not None and hasattr(module, name):
             return getattr(module, name)
         return fallback
 
-    def router(self, cfg):
+    def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
 
         cfg = self.get_cfg_with_master_data(cfg)
 
@@ -94,7 +97,7 @@ class Aqwa:
 
         return cfg
 
-    def get_cfg_with_master_data(self, cfg):
+    def get_cfg_with_master_data(self, cfg: dict[str, Any]) -> dict[str, Any]:
         updater = self._resolve_attr("update_deep_dictionary", update_deep_dictionary)
         if "summary_settings_master" in cfg:
             summary_settings_master = cfg["summary_settings_master"].copy()
