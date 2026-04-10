@@ -138,13 +138,10 @@ _TONNES_TO_LT: float = 1.0 / 1.01605  # metric tonnes → long tons
 
 def _convert_metric(value: Any, factor: float) -> Optional[float]:
     """Multiply *value* by *factor* if it is a positive number."""
-    if value is None:
+    numeric_value = _coerce_positive_value(value)
+    if numeric_value is None:
         return None
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)) and math.isfinite(value) and float(value) > 0:
-        return float(value) * factor
-    return None
+    return numeric_value * factor
 
 
 def normalize_fleet_record(record: Mapping[str, Any]) -> Optional[dict[str, Any]]:
@@ -232,17 +229,33 @@ def register_fleet_vessels(
 
 def normalize_drilling_rig_record(record):
     """Convert a worldenergydata drilling-rig record to the ship registry shape."""
+    from digitalmodel.naval_architecture.hull_form import (
+        estimate_rig_hull_dimensions,
+        rig_type_to_hull_form,
+    )
+
     name = record.get("RIG_NAME")
     if not isinstance(name, str) or not name.strip():
         return None
     name = name.strip()
+    rig_type = record.get("RIG_TYPE")
+    water_depth_ft = _coerce_positive_value(
+        record.get("WATER_DEPTH_RATING_FT", record.get("MAX_WATER_DEPTH_FT"))
+    )
+    estimate = estimate_rig_hull_dimensions(rig_type, water_depth_ft=water_depth_ft)
+    draft_m = _coerce_positive_value(record.get("DRAFT_M"))
+    draft_confidence = "measured"
+    if draft_m is None and estimate is not None and estimate.draft_m is not None:
+        draft_m = estimate.draft_m
+        draft_confidence = estimate.confidence
+
     entry = {
         "hull_id": name,
         "name": name,
         "vessel_category": "drilling",
         "loa_ft": _convert_metric(record.get("LOA_M"), _M_TO_FT),
         "beam_ft": _convert_metric(record.get("BEAM_M"), _M_TO_FT),
-        "draft_ft": _convert_metric(record.get("DRAFT_M"), _M_TO_FT),
+        "draft_ft": _convert_metric(draft_m, _M_TO_FT),
         "displacement_lt": _convert_metric(
             record.get("DISPLACEMENT_TONNES"), _TONNES_TO_LT
         ),
@@ -253,13 +266,45 @@ def normalize_drilling_rig_record(record):
         ("YEAR_BUILT", "year_built"),
         ("DP_CLASS", "dp_class"),
         ("OWNER", "owner"),
+        ("OPERATOR", "operator"),
         ("WATER_DEPTH_RATING_FT", "water_depth_rating_ft"),
+        ("MAX_WATER_DEPTH_FT", "max_water_depth_ft"),
     ):
         val = record.get(src)
         if val is not None:
             entry[dst] = val
+    hull_form_type = rig_type_to_hull_form(rig_type)
+    if hull_form_type is not None:
+        entry["hull_form_type"] = hull_form_type
+    if draft_m is not None:
+        entry["dimension_confidence"] = draft_confidence
     entry = {k: v for k, v in entry.items() if v is not None}
     return entry
+
+
+def register_drilling_rigs(
+    records: list[Mapping[str, Any]],
+    *,
+    overwrite: bool = False,
+) -> tuple[int, int]:
+    """Normalize and register drilling-rig records into the ship registry."""
+    from digitalmodel.naval_architecture.ship_dimensions import (
+        merge_template_into_registry,
+    )
+
+    normalized: list[dict[str, Any]] = []
+    pre_skipped = 0
+    for rec in records:
+        entry = normalize_drilling_rig_record(rec)
+        if entry is None:
+            pre_skipped += 1
+            continue
+        normalized.append(entry)
+
+    added, merge_skipped = merge_template_into_registry(
+        normalized, overwrite=overwrite
+    )
+    return added, pre_skipped + merge_skipped
 
 
 _GAMMA_SW_LB_FT3 = 64.0
@@ -306,3 +351,20 @@ def _is_positive(value):
     if value is None or isinstance(value, bool):
         return False
     return isinstance(value, (int, float)) and float(value) > 0
+
+
+def _coerce_positive_value(value: Any) -> Optional[float]:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)) and math.isfinite(value) and float(value) > 0:
+        return float(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            parsed = float(stripped)
+        except ValueError:
+            return None
+        return parsed if math.isfinite(parsed) and parsed > 0 else None
+    return None

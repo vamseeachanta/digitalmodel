@@ -129,3 +129,83 @@ class TestLCBEstimate:
         lcb = lcb_from_cb(0.80)
         # Full hull: LCB forward of midship
         assert lcb > 0
+
+
+class TestRigHullValidation:
+    def test_rig_type_to_hull_form(self):
+        from digitalmodel.naval_architecture.hull_form import rig_type_to_hull_form
+
+        assert rig_type_to_hull_form("drillship") == "drillship"
+        assert rig_type_to_hull_form("semi_submersible") == "semi_sub"
+        assert rig_type_to_hull_form("jack_up") is None
+
+    def test_estimate_rig_hull_dimensions_by_depth(self):
+        from digitalmodel.naval_architecture.hull_form import estimate_rig_hull_dimensions
+
+        drillship = estimate_rig_hull_dimensions("drillship", water_depth_ft=10000.0)
+        semi_sub = estimate_rig_hull_dimensions("semi_submersible", water_depth_ft=5000.0)
+
+        assert drillship is not None
+        assert drillship.draft_m == pytest.approx(12.0)
+        assert drillship.confidence == "estimated"
+        assert semi_sub is not None
+        assert semi_sub.draft_m == pytest.approx(21.0)
+
+    def test_classify_rig_hull_geometry(self):
+        from digitalmodel.naval_architecture.hull_form import classify_rig_hull_geometry
+
+        assert classify_rig_hull_geometry(238.0, 42.0) == "ship_shape"
+        assert classify_rig_hull_geometry(100.0, 80.0) == "semi_sub"
+
+    def test_validate_drillship_hull_form(self):
+        from digitalmodel.naval_architecture.hull_form import validate_drilling_rig_hull_form
+
+        result = validate_drilling_rig_hull_form(
+            {
+                "RIG_NAME": "VALARIS DS-17",
+                "RIG_TYPE": "drillship",
+                "LOA_M": 238.0,
+                "BEAM_M": 42.0,
+                "WATER_DEPTH_RATING_FT": 12000.0,
+            }
+        )
+
+        assert result is not None
+        assert result.is_valid is True
+        assert result.geometry_family == "ship_shape"
+        assert result.matched_family == "ship_shape"
+        assert result.dimension_confidence == "estimated"
+
+    def test_validate_semi_sub_hull_form(self):
+        from digitalmodel.naval_architecture.hull_form import validate_drilling_rig_hull_form
+
+        result = validate_drilling_rig_hull_form(
+            {
+                "RIG_NAME": "DEEPWATER ATLAS",
+                "RIG_TYPE": "semi_submersible",
+                "LOA_M": 100.0,
+                "BEAM_M": 78.0,
+                "WATER_DEPTH_RATING_FT": 12000.0,
+            }
+        )
+
+        assert result is not None
+        assert result.is_valid is True
+        assert result.matched_hull_id == "SEMI-100"
+
+    def test_validate_outlier_geometry_marks_invalid(self):
+        from digitalmodel.naval_architecture.hull_form import validate_drilling_rig_hull_form
+
+        result = validate_drilling_rig_hull_form(
+            {
+                "RIG_NAME": "ABAN ABRAHAM",
+                "RIG_TYPE": "drillship",
+                "LOA_M": 148.74,
+                "BEAM_M": 136.55,
+                "WATER_DEPTH_RATING_FT": 10000.0,
+            }
+        )
+
+        assert result is not None
+        assert result.is_valid is False
+        assert "expected ship_shape" in result.reason

@@ -305,6 +305,16 @@ class TestNormalizeDrillingRigRecord:
         result = normalize_drilling_rig_record(DEEPWATER_HORIZON_RIG)
         assert result["water_depth_rating_ft"] == 10000
 
+    def test_missing_draft_is_estimated_for_supported_rigs(self):
+        from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
+
+        result = normalize_drilling_rig_record(DEEPWATER_HORIZON_RIG)
+
+        assert result is not None
+        assert result["draft_ft"] == pytest.approx(12.0 * _M_TO_FT, rel=1e-3)
+        assert result["hull_form_type"] == "drillship"
+        assert result["dimension_confidence"] == "estimated"
+
     def test_missing_rig_name_returns_none(self):
         from digitalmodel.naval_architecture.ship_data import normalize_drilling_rig_record
         assert normalize_drilling_rig_record(EMPTY_RIG_RECORD) is None
@@ -324,6 +334,27 @@ class TestNormalizeDrillingRigRecord:
         assert normalized is not None
         added, skipped = register_fleet_vessels([normalized])
         assert skipped >= 1
+
+
+class TestRegisterDrillingRigs:
+    def test_register_supported_rigs_with_estimated_draft(self):
+        from digitalmodel.naval_architecture.ship_data import (
+            get_ship,
+            register_drilling_rigs,
+        )
+
+        added, skipped = register_drilling_rigs(
+            [DEEPWATER_HORIZON_RIG, SEMISUB_RIG], overwrite=True
+        )
+
+        assert added == 2
+        assert skipped == 0
+        assert get_ship("DEEPWATER HORIZON")["draft_ft"] == pytest.approx(
+            12.0 * _M_TO_FT, rel=1e-3
+        )
+        assert get_ship("THUNDER HORSE PDQ")["draft_ft"] == pytest.approx(
+            21.0 * _M_TO_FT, rel=1e-3
+        )
 
 
 class TestEstimateVesselHydrostatics:
@@ -604,6 +635,16 @@ _CSV_PATH = (
     / "construction_vessels.csv"
 )
 
+_DRILLING_RIGS_CSV_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "worldenergydata"
+    / "data"
+    / "modules"
+    / "vessel_fleet"
+    / "curated"
+    / "drilling_rigs.csv"
+)
+
 
 @pytest.mark.skipif(
     not _CSV_PATH.exists(),
@@ -775,4 +816,53 @@ class TestThreeVesselStabilityPipeline:
             assert "displacement_lt" not in ship, (
                 f"{record['VESSEL_NAME']} should not have measured displacement_lt"
             )
+
+
+@pytest.mark.skipif(
+    not _DRILLING_RIGS_CSV_PATH.exists(),
+    reason="worldenergydata drilling-rigs CSV not available",
+)
+class TestDrillingRigHullValidationCSV:
+    @pytest.fixture(scope="class")
+    def drilling_rig_records(self):
+        import csv
+
+        with open(_DRILLING_RIGS_CSV_PATH, newline="") as fh:
+            return list(csv.DictReader(fh))
+
+    def test_validate_only_supported_rigs_with_geometry(self, drilling_rig_records):
+        from digitalmodel.naval_architecture.hull_form import (
+            summarize_drilling_rig_hull_validation,
+            validate_drilling_rig_fleet,
+        )
+
+        results = validate_drilling_rig_fleet(drilling_rig_records)
+        summary = summarize_drilling_rig_hull_validation(results)
+
+        assert summary["processed"] == 138
+        assert summary["by_type"] == {"semi_submersible": 87, "drillship": 51}
+        assert summary["valid"] == 134
+        assert summary["invalid"] == 4
+        assert set(summary["invalid_rigs"]) == {
+            "ABAN ABRAHAM",
+            "NOBLE DANNY ADKINS",
+            "NOBLE JIM DAY",
+            "NOBLE PHOENIX",
+        }
+
+    def test_register_supported_geometry_subset(self, drilling_rig_records):
+        from digitalmodel.naval_architecture.ship_data import register_drilling_rigs
+
+        supported = [
+            record
+            for record in drilling_rig_records
+            if record.get("RIG_TYPE") in {"drillship", "semi_submersible"}
+            and record.get("LOA_M")
+            and record.get("BEAM_M")
+        ]
+
+        added, skipped = register_drilling_rigs(supported, overwrite=True)
+
+        assert added == 138
+        assert skipped == 0
 
