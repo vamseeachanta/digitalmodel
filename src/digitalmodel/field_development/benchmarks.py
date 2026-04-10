@@ -61,6 +61,9 @@ class SubseaProject:
     """A normalized SubseaIQ project record.
 
     All fields except ``name`` are optional to handle incomplete scraped data.
+    Timeline fields (``year_concept``, ``year_feed``, ``year_fid``,
+    ``year_first_oil``) support schedule benchmark analysis in
+    :mod:`digitalmodel.field_development.timeline`.
     """
 
     name: str

@@ -9,6 +9,8 @@ Modules:
 - capex_estimator:     GoM-benchmark CAPEX estimation — #1843
 - opex_estimator:      Annual OPEX estimation — #1843
 - economics:           Economics facade over worldenergydata backends — #1858
+- benchmarks:          SubseaIQ concept-selection and architecture benchmarks — #1861/#2053
+- timeline:            Milestone-based schedule benchmark analytics — #2060
 - workflow:            End-to-end FDP screening orchestrator — #1858/#1848
 """
 

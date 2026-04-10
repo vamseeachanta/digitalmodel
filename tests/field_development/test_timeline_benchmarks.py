@@ -338,3 +338,16 @@ class TestBoundaryEdgeCases:
         # With 2 data points P10 <= P50 <= P90 must hold
         d = semi["concept_to_feed"]
         assert d["p10"] <= d["p50"] <= d["p90"]
+
+
+def test_package_surface_exports_timeline_helpers():
+    """field_development package re-exports the timeline benchmark helpers."""
+    from digitalmodel.field_development import (
+        timeline_duration_stats as exported_timeline_duration_stats,
+        duration_stats_by_concept_type as exported_duration_stats_by_concept_type,
+        schedule_distributions as exported_schedule_distributions,
+    )
+
+    assert exported_timeline_duration_stats is timeline_duration_stats
+    assert exported_duration_stats_by_concept_type is duration_stats_by_concept_type
+    assert exported_schedule_distributions is schedule_distributions

@@ -31,6 +31,12 @@ from statistics import mean, quantiles
 
 from .benchmarks import SubseaProject
 
+__all__ = [
+    "timeline_duration_stats",
+    "duration_stats_by_concept_type",
+    "schedule_distributions",
+]
+
 
 # Phase pairs: (label, from_attr, to_attr)
 _PHASE_PAIRS: tuple[tuple[str, str, str], ...] = (
