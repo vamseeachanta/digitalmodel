@@ -164,8 +164,10 @@ class EconomicsInput:
     region: Optional[str] = None
 
     # Decline curve parameters (default preserves legacy linear behaviour)
+    # decline_rate=None means "not explicitly provided by caller"; auto-derive
+    # fires only in that case, preventing silent mutation of explicit choices.
     decline_type: DeclineType = DeclineType.LINEAR
-    decline_rate: float = 0.0
+    decline_rate: Optional[float] = None
     b_factor: float = 0.5
 
     def __post_init__(self) -> None:
@@ -196,10 +198,13 @@ class EconomicsInput:
             raise ValueError(
                 f"field_life_years must be >= 1, got {self.field_life_years!r}"
             )
-        # EUR-based decline rate derivation (before validation)
+        # EUR-based decline rate derivation — only fires when caller did NOT
+        # explicitly provide decline_rate (None sentinel).  An explicit
+        # decline_rate=0.0 is preserved as-is and will fail later validation
+        # for non-LINEAR types, giving the caller a clear error.
         if (
             self.reservoir_size_mmbbl is not None
-            and self.decline_rate == 0.0
+            and self.decline_rate is None
             and self.decline_type == DeclineType.LINEAR
         ):
             self.decline_type = DeclineType.EXPONENTIAL
@@ -209,18 +214,26 @@ class EconomicsInput:
                 self.field_life_years,
             )
 
+        # For LINEAR with no rate provided: default to 0.0 (not used in calc)
+        if self.decline_type == DeclineType.LINEAR and self.decline_rate is None:
+            self.decline_rate = 0.0
+
         # Decline curve validation
         if not isinstance(self.decline_type, DeclineType):
             self.decline_type = DeclineType(self.decline_type)
-        if self.decline_type != DeclineType.LINEAR and self.decline_rate <= 0:
+        if self.decline_type != DeclineType.LINEAR and (
+            self.decline_rate is None or self.decline_rate <= 0
+        ):
             raise ValueError(
                 f"decline_rate must be > 0 for {self.decline_type.value} decline, "
                 f"got {self.decline_rate!r}"
             )
         if self.decline_type == DeclineType.HYPERBOLIC:
-            if not (0 < self.b_factor < 1):
+            # b=1 is the harmonic limit and is physically valid (reduces to
+            # 1/(1+Dt)), so the upper bound is inclusive.
+            if not (0 < self.b_factor <= 1):
                 raise ValueError(
-                    f"b_factor must be in (0, 1) for hyperbolic decline, "
+                    f"b_factor must be in (0, 1] for hyperbolic decline, "
                     f"got {self.b_factor!r}"
                 )
 

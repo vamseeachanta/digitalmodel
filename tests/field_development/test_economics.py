@@ -660,6 +660,8 @@ class TestDeclineInputDefaults:
             )
 
     def test_hyperbolic_b_factor_out_of_range(self) -> None:
+        # b_factor must be in (0, 1]; b=1.0 is valid (harmonic limit),
+        # but b>1 (e.g. 1.5) is outside the Arps hyperbolic definition.
         with pytest.raises(ValueError, match="b_factor"):
             EconomicsInput(
                 field_name="Bad",
@@ -672,8 +674,25 @@ class TestDeclineInputDefaults:
                 field_life_years=25,
                 decline_type=DeclineType.HYPERBOLIC,
                 decline_rate=0.15,
-                b_factor=1.0,  # must be < 1
+                b_factor=1.5,  # b > 1 is outside the valid range
             )
+
+    def test_hyperbolic_b_factor_one_accepted(self) -> None:
+        """b_factor=1.0 is the harmonic limit and must be accepted."""
+        inp = EconomicsInput(
+            field_name="HarmonicLimit",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=80_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=25,
+            decline_type=DeclineType.HYPERBOLIC,
+            decline_rate=0.15,
+            b_factor=1.0,
+        )
+        assert inp.b_factor == 1.0  # no ValueError raised
 
     def test_hyperbolic_b_factor_zero_rejected(self) -> None:
         with pytest.raises(ValueError, match="b_factor"):
