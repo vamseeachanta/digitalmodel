@@ -38,6 +38,8 @@ from digitalmodel.field_development.economics import (
     _resolve_capex_adapter,
     _resolve_abex_adapter,
     _resolve_financial_adapter,
+    _apply_fiscal_regime,
+    _resolve_fiscal_calculator,
 )
 
 
@@ -977,3 +979,168 @@ class TestEURDeclineParameterization:
             decline_rate=0.20,
         )
         assert inp.decline_rate == 0.20  # not overridden by EUR derivation
+
+
+# ---------------------------------------------------------------------------
+# Fiscal regime tax adjustment (#2050)
+# ---------------------------------------------------------------------------
+
+
+class TestFiscalRegimeTaxAdjustment:
+    """Test fiscal regime tax adjustment applied to economics cashflows."""
+
+    @pytest.fixture
+    def tax_test_input(self) -> EconomicsInput:
+        """Input with explicit cost overrides to isolate fiscal effects."""
+        return EconomicsInput(
+            field_name="Fiscal Test Field",
+            water_depth_m=1200.0,
+            host_type="TLP",
+            production_capacity_bopd=80_000.0,
+            oil_price_usd_per_bbl=75.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            capex_usd_mm=5_000.0,
+            opex_usd_per_bbl=20.0,
+            abex_usd_mm=350.0,
+        )
+
+    def test_passthrough_when_fiscal_module_unavailable(
+        self, tax_test_input: EconomicsInput
+    ) -> None:
+        """When worldenergydata fiscal module cannot be imported, cashflows
+        pass through unchanged (backward-compatible pre-tax behavior)."""
+        import numpy as np
+        from digitalmodel.field_development.economics import _build_annual_cashflows
+
+        cashflows = _build_annual_cashflows(
+            tax_test_input, 5_000.0, 200.0, 350.0,
+        )
+        original = cashflows.copy()
+
+        # Force ImportError by patching away the fiscal modules
+        with patch.dict("sys.modules", {
+            "worldenergydata.eia_us.analysis.us_fiscal": None,
+            "worldenergydata.eia_us.analysis": None,
+            "worldenergydata.eia_us": None,
+        }):
+            adjusted = _apply_fiscal_regime(
+                cashflows, tax_test_input, 5_000.0, 200.0, 350.0,
+            )
+        np.testing.assert_array_equal(adjusted, original)
+
+    def test_fiscal_adjustment_reduces_npv_for_uk(self) -> None:
+        """UK fiscal regime (75% headline) should produce post-tax NPV < pre-tax NPV."""
+        inp = EconomicsInput(
+            field_name="UK Fiscal Test",
+            water_depth_m=150.0,
+            host_type="Subsea_Tieback",
+            production_capacity_bopd=40_000.0,
+            oil_price_usd_per_bbl=80.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.UK,
+            field_life_years=15,
+            capex_usd_mm=3_000.0,
+            opex_usd_per_bbl=18.0,
+            abex_usd_mm=200.0,
+        )
+        result = evaluate_economics(inp)
+        # Post-tax NPV should be strictly less than pre-tax NPV
+        assert result.metrics.pre_tax_npv_usd_mm is not None
+        assert result.metrics.npv_usd_mm < result.metrics.pre_tax_npv_usd_mm
+
+    def test_fiscal_adjustment_reduces_npv_for_us(
+        self, tax_test_input: EconomicsInput
+    ) -> None:
+        """US federal royalty should reduce NPV vs pre-tax baseline."""
+        result = evaluate_economics(tax_test_input)
+        assert result.metrics.pre_tax_npv_usd_mm is not None
+        assert result.metrics.npv_usd_mm < result.metrics.pre_tax_npv_usd_mm
+
+    def test_pre_tax_metrics_populated(
+        self, tax_test_input: EconomicsInput
+    ) -> None:
+        """Pre-tax NPV and IRR fields are populated when fiscal is applied."""
+        result = evaluate_economics(tax_test_input)
+        assert result.metrics.pre_tax_npv_usd_mm is not None
+        assert math.isfinite(result.metrics.pre_tax_npv_usd_mm)
+        # pre_tax_irr may be None if numpy_financial unavailable, but if set
+        # it must be finite
+        if result.metrics.pre_tax_irr is not None:
+            assert math.isfinite(result.metrics.pre_tax_irr)
+
+    def test_result_remains_finite_and_structured(
+        self, tax_test_input: EconomicsInput
+    ) -> None:
+        """All result fields remain finite and correctly typed after fiscal adj."""
+        result = evaluate_economics(tax_test_input)
+        assert isinstance(result, EconomicsResult)
+        assert isinstance(result.metrics, EvaluationMetrics)
+        assert math.isfinite(result.metrics.npv_usd_mm)
+        assert result.metrics.irr is None or math.isfinite(result.metrics.irr)
+        assert result.metrics.mirr is None or math.isfinite(result.metrics.mirr)
+        assert (
+            result.metrics.payback_years is None
+            or result.metrics.payback_years > 0
+        )
+
+    def test_backward_compat_existing_fixtures(
+        self, minimal_input: EconomicsInput, full_input: EconomicsInput
+    ) -> None:
+        """Existing fixtures still produce valid EconomicsResult objects."""
+        for inp in [minimal_input, full_input]:
+            result = evaluate_economics(inp)
+            assert isinstance(result, EconomicsResult)
+            assert math.isfinite(result.metrics.npv_usd_mm)
+            assert result.costs.capex_usd_mm > 0
+
+    @pytest.mark.parametrize("regime", [
+        FiscalRegime.US,
+        FiscalRegime.UK,
+        FiscalRegime.Brazil,
+        FiscalRegime.Nigeria,
+    ])
+    def test_each_regime_applies_tax(self, regime: FiscalRegime) -> None:
+        """Each regime with available fiscal module produces adjusted cashflows."""
+        import numpy as np
+        from digitalmodel.field_development.economics import _build_annual_cashflows
+
+        inp = EconomicsInput(
+            field_name=f"Fiscal {regime.value}",
+            water_depth_m=1200.0,
+            host_type="TLP",
+            production_capacity_bopd=60_000.0,
+            oil_price_usd_per_bbl=75.0,
+            discount_rate=0.10,
+            fiscal_regime=regime,
+            field_life_years=15,
+            capex_usd_mm=4_000.0,
+            opex_usd_per_bbl=20.0,
+            abex_usd_mm=280.0,
+        )
+        opex_mm_yr = 20.0 * 60_000.0 * 365.0 / 1e6
+        cashflows = _build_annual_cashflows(inp, 4_000.0, opex_mm_yr, 280.0)
+        original = cashflows.copy()
+        adjusted = _apply_fiscal_regime(cashflows, inp, 4_000.0, opex_mm_yr, 280.0)
+        # Tax adjustment should reduce at least one producing year's cashflow
+        assert np.any(adjusted < original), (
+            f"Fiscal regime {regime.value} should reduce at least one year's cashflow"
+        )
+
+    def test_resolve_fiscal_calculator_returns_callable(self) -> None:
+        """_resolve_fiscal_calculator returns a callable for supported regimes."""
+        inp = EconomicsInput(
+            field_name="Resolve Test",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=50_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.UK,
+            field_life_years=15,
+        )
+        calc = _resolve_fiscal_calculator(inp)
+        # UK module should be available
+        assert calc is not None
+        assert callable(calc)

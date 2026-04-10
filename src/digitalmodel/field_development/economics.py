@@ -263,6 +263,8 @@ class EvaluationMetrics:
     mirr: Optional[float]
     payback_years: Optional[float]
     discount_rate: float
+    pre_tax_npv_usd_mm: Optional[float] = None
+    pre_tax_irr: Optional[float] = None
 
 
 @dataclass
@@ -603,6 +605,148 @@ def _build_annual_cashflows(
 
 
 # ---------------------------------------------------------------------------
+# Fiscal regime tax adjustment (#2050)
+# ---------------------------------------------------------------------------
+
+
+def _resolve_fiscal_calculator(
+    inp: EconomicsInput,
+) -> Optional[Callable[[float, float, float, float], float]]:
+    """Resolve a fiscal calculator for the given regime.
+
+    Returns a callable ``(revenue_mm, opex_mm, capex_mm, prod_rate_bpd) ->
+    government_take_mm`` or ``None`` if the regime's worldenergydata module
+    is unavailable.
+    """
+    regime = inp.fiscal_regime
+
+    try:
+        if regime == FiscalRegime.US:
+            from worldenergydata.eia_us.analysis.us_fiscal import (
+                FederalOnshoreFiscal,
+            )
+
+            fiscal = FederalOnshoreFiscal()
+
+            def _us(rev: float, opex: float, capex: float, _pr: float) -> float:
+                return fiscal.calculate(rev, opex, capex).total_government_take
+
+            return _us
+
+        if regime == FiscalRegime.UK:
+            from worldenergydata.ukcs.analysis.field_economics import (
+                UKFiscalRegime,
+            )
+
+            fiscal = UKFiscalRegime()
+
+            def _uk(rev: float, opex: float, capex: float, _pr: float) -> float:
+                return fiscal.calculate(rev, opex, capex).total_government_take
+
+            return _uk
+
+        if regime == FiscalRegime.Brazil:
+            from worldenergydata.brazil_anp.analysis.field_economics import (
+                ConcessionRegime,
+            )
+
+            fiscal = ConcessionRegime()
+
+            def _br(rev: float, opex: float, capex: float, pr: float) -> float:
+                return fiscal.calculate(rev, opex, capex, pr).total_government_take
+
+            return _br
+
+        if regime == FiscalRegime.Nigeria:
+            from worldenergydata.west_africa.analysis.field_economics import (
+                NigeriaDeepwaterPSC,
+            )
+
+            fiscal = NigeriaDeepwaterPSC(water_depth_m=int(inp.water_depth_m))
+
+            def _ng(rev: float, opex: float, capex: float, pr: float) -> float:
+                return fiscal.calculate(
+                    rev, opex, capex, int(pr),
+                ).total_government_take
+
+            return _ng
+
+        if regime == FiscalRegime.Norway:
+            from worldenergydata.sodir.npv_norway import (
+                NorwayNPVCalculator,
+                NorwegianFinancialParameters,
+            )
+
+            calc_obj = NorwayNPVCalculator(NorwegianFinancialParameters())
+
+            def _no(rev: float, opex: float, capex: float, _pr: float) -> float:
+                taxable = rev - opex - capex
+                if taxable <= 0:
+                    return 0.0
+                taxes = calc_obj.calculate_taxes(taxable)
+                return sum(taxes.values())
+
+            return _no
+
+    except (ImportError, Exception):
+        return None
+
+    return None
+
+
+def _apply_fiscal_regime(
+    cashflows: np.ndarray,
+    inp: EconomicsInput,
+    capex_mm: float,
+    opex_mm_yr: float,
+    abex_mm: float,
+) -> np.ndarray:
+    """Apply per-year fiscal regime tax adjustment to annual cashflows.
+
+    Dispatches to worldenergydata fiscal modules by regime.  Returns
+    adjusted (post-tax) cashflows.  If the module is unavailable or
+    the regime is unsupported, returns the original cashflows unchanged.
+    """
+    calc = _resolve_fiscal_calculator(inp)
+    if calc is None:
+        return cashflows  # passthrough — no tax adjustment
+
+    n = inp.field_life_years
+    adjusted = cashflows.copy()
+    factors = _production_factors(inp, n)
+    annual_revenue_mm = (
+        inp.production_capacity_bopd * 365.0 * inp.oil_price_usd_per_bbl / 1e6
+    )
+
+    capex_schedule = [0.30, 0.50, 0.20]
+
+    for yr in range(n + 1):
+        prod_factor = factors[yr]
+        revenue_yr = annual_revenue_mm * prod_factor
+        opex_yr = opex_mm_yr * prod_factor
+
+        capex_yr = 0.0
+        if yr < len(capex_schedule):
+            capex_yr = capex_mm * capex_schedule[yr]
+        if yr == n:
+            capex_yr += abex_mm
+
+        if revenue_yr <= 0:
+            continue  # no revenue, no tax
+
+        prod_rate_yr = inp.production_capacity_bopd * prod_factor
+
+        try:
+            gov_take = calc(revenue_yr, opex_yr, capex_yr, prod_rate_yr)
+            if gov_take > 0:
+                adjusted[yr] -= gov_take
+        except Exception:
+            continue  # skip year on calculation error
+
+    return adjusted
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -656,9 +800,25 @@ def evaluate_economics(inp: EconomicsInput) -> EconomicsResult:
     # --- Cashflow construction ---
     cashflows = _build_annual_cashflows(inp, capex_mm, opex_mm_yr, abex_mm)
 
+    # --- Fiscal regime tax adjustment (#2050) ---
+    post_tax_cashflows = _apply_fiscal_regime(
+        cashflows, inp, capex_mm, opex_mm_yr, abex_mm,
+    )
+    fiscal_applied = post_tax_cashflows is not cashflows
+
     # --- Financial metrics ---
     financial_adapter = _resolve_financial_adapter()
-    metrics_dict = financial_adapter(cashflows, inp.discount_rate)
+
+    # Pre-tax metrics (only computed when fiscal adjustment is applied)
+    pre_tax_npv: Optional[float] = None
+    pre_tax_irr: Optional[float] = None
+    if fiscal_applied:
+        pre_tax_dict = financial_adapter(cashflows, inp.discount_rate)
+        pre_tax_npv = pre_tax_dict.get("npv", 0.0) or 0.0
+        pre_tax_irr = pre_tax_dict.get("irr_annual")
+
+    # Post-tax metrics (or pre-tax if fiscal was not applied)
+    metrics_dict = financial_adapter(post_tax_cashflows, inp.discount_rate)
 
     metrics = EvaluationMetrics(
         npv_usd_mm=metrics_dict.get("npv", 0.0) or 0.0,
@@ -666,6 +826,8 @@ def evaluate_economics(inp: EconomicsInput) -> EconomicsResult:
         mirr=metrics_dict.get("mirr_annual"),
         payback_years=metrics_dict.get("payback_years"),
         discount_rate=inp.discount_rate,
+        pre_tax_npv_usd_mm=pre_tax_npv,
+        pre_tax_irr=pre_tax_irr,
     )
 
     # --- Result ---
