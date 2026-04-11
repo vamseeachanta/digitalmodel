@@ -1507,6 +1507,7 @@ dev = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
 ]
 docs = [
@@ -1533,6 +1534,7 @@ test = [
     { name = "pint" },
     { name = "plotly" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
 ]
@@ -1660,6 +1662,8 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
     { name = "pytest-asyncio", specifier = "==0.21.1" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==0.21.1" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = "==0.21.1" },
     { name = "pytest-benchmark", specifier = ">=4.0.0,<5.0.0" },
     { name = "pytest-cov", specifier = ">=4.1.0,<5.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
