@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shallow Water Pipeline Installation Analysis — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>Shallow Water Pipeline Installation Analysis</h1>
+    <div class="subtitle">60 parametric S-lay cases: 2 vessels x 5 pipe sizes x 6 water depths</div>
+    <div class="case-badge">60 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-04-10 16:25 UTC · demo_04</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This analysis screens shallow water S-lay pipeline installations across a parametric
+    matrix of vessels, pipe sizes, and water depths. Each case solves the catenary mechanics
+    to find the minimum horizontal tension and evaluates five installation checks per
+    DNV-ST-F101 and API RP 1111 methodology.</p>
+
+    <h3>S-lay Catenary Theory</h3>
+    <p>During S-lay, the pipe forms a catenary curve from the vessel stinger tip down to the
+    seabed touchdown point (TDP). The catenary is characterised by parameter
+    <em>a = H / w<sub>sub</sub></em>, where H is horizontal tension and w<sub>sub</sub> is
+    submerged weight per unit length.</p>
+    <ul>
+        <li>Arc length: s = a &times; sinh(x/a)</li>
+        <li>Height above TDP: y = a &times; (cosh(x/a) - 1)</li>
+        <li>Pipe angle: &theta; = arctan(sinh(x/a))</li>
+    </ul>
+
+    <h3>Check 1: Stinger Departure Angle</h3>
+    <p>The required departure angle at the stinger tip must fall within the vessel's
+    adjustable range. Large PLV: 2&deg;-8&deg;, Barge: 3&deg;-12&deg;.</p>
+
+    <h3>Check 2: Top Tension</h3>
+    <p>Tension at stinger departure: T<sub>top</sub> = H &times; cosh(x<sub>dep</sub>/a).
+    Must not exceed vessel tensioner capacity (600 te or 250 te).</p>
+
+    <h3>Check 3: Sagbend Stress (Critical for Shallow Water)</h3>
+    <p>At the TDP, curvature &kappa; = w<sub>sub</sub> / H gives the tightest bend radius.
+    Combined bending + axial stress: &sigma; = E &times; OD / (2R) + H / A<sub>steel</sub>.
+    Must satisfy &sigma; &le; 0.72 &times; SMYS per DNV-ST-F101 installation allowable.</p>
+
+    <h3>Check 4: Overbend Stress</h3>
+    <p>Pipe bending over the stinger: R<sub>ob</sub> = L<sub>stinger</sub> / sin(&theta;<sub>dep</sub>).
+    Overbend stress must also satisfy the 0.72 &times; SMYS limit.</p>
+
+    <h3>Check 5: Vessel Capability</h3>
+    <p>Pipe diameter must be within vessel's handling range and water depth within
+    operational envelope.</p>
+
+    <h3>Go/No-Go Criteria</h3>
+    <ul>
+        <li><strong>GO:</strong> All checks pass AND max utilisation &lt; 0.85</li>
+        <li><strong>MARGINAL:</strong> All checks pass AND max utilisation in [0.85, 1.00]</li>
+        <li><strong>NO-GO:</strong> Any check fails (utilisation &gt; 1.00)</li>
+    </ul>
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>DNV-ST-F101 (2021) - Submarine Pipeline Systems</li><li>API RP 1111 (2015) - Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines</li><li>DNV-OS-F101 (2013) - Submarine Pipeline Systems</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Installation Screening Summary</h2>
+            <p>All 60 parametric cases — 2 vessels x 5 pipe sizes x 6 water depths</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Vessel</th>
+      <th>Pipe</th>
+      <th>WT (mm)</th>
+      <th>Depth (m)</th>
+      <th>T_top (te)</th>
+      <th>Depart. Angle</th>
+      <th>Sagbend Util</th>
+      <th>Max Util.</th>
+      <th>Gov. Check</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>7</td>
+      <td>2.7</td>
+      <td>8.0 deg</td>
+      <td>10%</td>
+      <td class="status-fail">FAIL</td>
+      <td>vessel_capability</td>
+      <td>NO-GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>10</td>
+      <td>3.9</td>
+      <td>8.0 deg</td>
+      <td>7%</td>
+      <td>7.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>15</td>
+      <td>5.8</td>
+      <td>8.0 deg</td>
+      <td>5%</td>
+      <td>7.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>20</td>
+      <td>7.7</td>
+      <td>8.0 deg</td>
+      <td>3%</td>
+      <td>7.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>25</td>
+      <td>9.6</td>
+      <td>8.0 deg</td>
+      <td>3%</td>
+      <td>7.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>30</td>
+      <td>11.5</td>
+      <td>8.0 deg</td>
+      <td>2%</td>
+      <td>7.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>59.9</td>
+      <td>8.0 deg</td>
+      <td>15%</td>
+      <td class="status-fail">FAIL</td>
+      <td>vessel_capability</td>
+      <td>NO-GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>85.6</td>
+      <td>8.0 deg</td>
+      <td>10%</td>
+      <td>14.3%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>128.4</td>
+      <td>8.0 deg</td>
+      <td>7%</td>
+      <td>21.4%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>171.2</td>
+      <td>8.0 deg</td>
+      <td>5%</td>
+      <td>28.5%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>214.0</td>
+      <td>8.0 deg</td>
+      <td>4%</td>
+      <td>35.7%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>256.7</td>
+      <td>8.0 deg</td>
+      <td>3%</td>
+      <td>42.8%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>77.3</td>
+      <td>8.0 deg</td>
+      <td>18%</td>
+      <td class="status-fail">FAIL</td>
+      <td>vessel_capability</td>
+      <td>NO-GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>110.4</td>
+      <td>8.0 deg</td>
+      <td>13%</td>
+      <td>18.4%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>165.6</td>
+      <td>8.0 deg</td>
+      <td>9%</td>
+      <td>27.6%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>220.8</td>
+      <td>8.0 deg</td>
+      <td>6%</td>
+      <td>36.8%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>276.0</td>
+      <td>8.0 deg</td>
+      <td>5%</td>
+      <td>46.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>331.2</td>
+      <td>8.0 deg</td>
+      <td>4%</td>
+      <td>55.2%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>92.3</td>
+      <td>8.0 deg</td>
+      <td>23%</td>
+      <td class="status-fail">FAIL</td>
+      <td>vessel_capability</td>
+      <td>NO-GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>131.9</td>
+      <td>8.0 deg</td>
+      <td>16%</td>
+      <td>22.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>197.8</td>
+      <td>8.0 deg</td>
+      <td>11%</td>
+      <td>33.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>263.7</td>
+      <td>8.0 deg</td>
+      <td>8%</td>
+      <td>44.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>329.7</td>
+      <td>8.0 deg</td>
+      <td>6%</td>
+      <td>54.9%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>395.6</td>
+      <td>8.0 deg</td>
+      <td>5%</td>
+      <td>65.9%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>122.9</td>
+      <td>8.0 deg</td>
+      <td>27%</td>
+      <td class="status-fail">FAIL</td>
+      <td>vessel_capability</td>
+      <td>NO-GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>175.6</td>
+      <td>8.0 deg</td>
+      <td>19%</td>
+      <td>29.3%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>263.4</td>
+      <td>8.0 deg</td>
+      <td>13%</td>
+      <td>43.9%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>351.3</td>
+      <td>8.0 deg</td>
+      <td>10%</td>
+      <td>58.5%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>439.1</td>
+      <td>8.0 deg</td>
+      <td>8%</td>
+      <td>73.2%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Large PLV</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>526.9</td>
+      <td>8.0 deg</td>
+      <td>6%</td>
+      <td>87.8%</td>
+      <td>tension</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>7</td>
+      <td>1.2</td>
+      <td>12.0 deg</td>
+      <td>22%</td>
+      <td>22.4%</td>
+      <td>sagbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>10</td>
+      <td>1.7</td>
+      <td>12.0 deg</td>
+      <td>16%</td>
+      <td>18.3%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>15</td>
+      <td>2.6</td>
+      <td>12.0 deg</td>
+      <td>10%</td>
+      <td>18.3%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>20</td>
+      <td>3.4</td>
+      <td>12.0 deg</td>
+      <td>8%</td>
+      <td>18.3%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>25</td>
+      <td>4.3</td>
+      <td>12.0 deg</td>
+      <td>6%</td>
+      <td>18.3%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>8"</td>
+      <td>8.18</td>
+      <td>30</td>
+      <td>5.1</td>
+      <td>12.0 deg</td>
+      <td>5%</td>
+      <td>18.3%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>26.7</td>
+      <td>12.0 deg</td>
+      <td>33%</td>
+      <td>33.2%</td>
+      <td>sagbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>38.1</td>
+      <td>12.0 deg</td>
+      <td>23%</td>
+      <td>27.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>57.2</td>
+      <td>12.0 deg</td>
+      <td>15%</td>
+      <td>27.0%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>76.2</td>
+      <td>12.0 deg</td>
+      <td>12%</td>
+      <td>30.5%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>95.3</td>
+      <td>12.0 deg</td>
+      <td>9%</td>
+      <td>38.1%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>12"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>114.3</td>
+      <td>12.0 deg</td>
+      <td>8%</td>
+      <td>45.7%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>34.4</td>
+      <td>12.0 deg</td>
+      <td>42%</td>
+      <td>41.6%</td>
+      <td>sagbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>49.2</td>
+      <td>12.0 deg</td>
+      <td>29%</td>
+      <td>33.9%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>73.8</td>
+      <td>12.0 deg</td>
+      <td>19%</td>
+      <td>33.9%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>98.3</td>
+      <td>12.0 deg</td>
+      <td>15%</td>
+      <td>39.3%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>122.9</td>
+      <td>12.0 deg</td>
+      <td>12%</td>
+      <td>49.2%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>16"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>147.5</td>
+      <td>12.0 deg</td>
+      <td>10%</td>
+      <td>59.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>41.1</td>
+      <td>12.0 deg</td>
+      <td>52%</td>
+      <td>52.0%</td>
+      <td>sagbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>58.7</td>
+      <td>12.0 deg</td>
+      <td>36%</td>
+      <td>42.4%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>88.1</td>
+      <td>12.0 deg</td>
+      <td>24%</td>
+      <td>42.4%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>117.5</td>
+      <td>12.0 deg</td>
+      <td>18%</td>
+      <td>47.0%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>146.8</td>
+      <td>12.0 deg</td>
+      <td>15%</td>
+      <td>58.7%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>20"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>176.2</td>
+      <td>12.0 deg</td>
+      <td>12%</td>
+      <td>70.5%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>7</td>
+      <td>54.8</td>
+      <td>12.0 deg</td>
+      <td>62%</td>
+      <td>62.4%</td>
+      <td>sagbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>10</td>
+      <td>78.2</td>
+      <td>12.0 deg</td>
+      <td>44%</td>
+      <td>50.8%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>15</td>
+      <td>117.3</td>
+      <td>12.0 deg</td>
+      <td>29%</td>
+      <td>50.8%</td>
+      <td>overbend</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>20</td>
+      <td>156.4</td>
+      <td>12.0 deg</td>
+      <td>22%</td>
+      <td>62.6%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>25</td>
+      <td>195.5</td>
+      <td>12.0 deg</td>
+      <td>17%</td>
+      <td>78.2%</td>
+      <td>tension</td>
+      <td class="status-pass">GO</td>
+    </tr>
+    <tr>
+      <td>Shallow Water Barge</td>
+      <td>24"</td>
+      <td>9.53</td>
+      <td>30</td>
+      <td>234.7</td>
+      <td>12.0 deg</td>
+      <td>15%</td>
+      <td>93.9%</td>
+      <td>tension</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, the pipeline installation screening
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>All pipes are X65 grade (SMYS = 448 MPa, E = 207 GPa)</li><li>Catenary solution assumes no current loading on the suspended span</li><li>Sagbend and overbend stresses use simplified elastic beam theory</li><li>Combined stress is conservative additive (bending + axial) per DNV-ST-F101 Sec 5</li><li>Stinger radius approximated as R_ob = L_stinger / sin(theta_dep)</li><li>No dynamic amplification applied — quasi-static installation assumed</li><li>Pipe submerged weight includes anti-corrosion coating and CWC where applicable</li><li>Seabed assumed flat at each water depth — no slope corrections</li><li>Seawater density = 1025 kg/m3 throughout water column</li><li>Installation stress limit factor = 0.72 per DNV-ST-F101 (2021)</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Go/No-Go Installation Matrix</div>
+                <div class='chart-subtitle'>Side-by-side vessel comparison across all pipe sizes and water depths.</div>
+                <div>                            <div id="chart-go_nogo" class="plotly-graph-div" style="height:450px; width:1050px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-go_nogo")) {                    Plotly.newPlot(                        "chart-go_nogo",                        [{"colorscale":[[0.0,"#38a169"],[0.33,"#38a169"],[0.34,"#d69e2e"],[0.66,"#d69e2e"],[0.67,"#e53e3e"],[1.0,"#e53e3e"]],"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e at %{x}\u003cbr\u003e%{text}\u003cextra\u003e\u003c\u002fextra\u003e","showscale":false,"text":[["NO-GO\u003cbr\u003evessel_capability\u003cbr\u003e999%","GO\u003cbr\u003eoverbend\u003cbr\u003e7%","GO\u003cbr\u003eoverbend\u003cbr\u003e7%","GO\u003cbr\u003eoverbend\u003cbr\u003e7%","GO\u003cbr\u003eoverbend\u003cbr\u003e7%","GO\u003cbr\u003eoverbend\u003cbr\u003e7%"],["NO-GO\u003cbr\u003evessel_capability\u003cbr\u003e999%","GO\u003cbr\u003etension\u003cbr\u003e14%","GO\u003cbr\u003etension\u003cbr\u003e21%","GO\u003cbr\u003etension\u003cbr\u003e29%","GO\u003cbr\u003etension\u003cbr\u003e36%","GO\u003cbr\u003etension\u003cbr\u003e43%"],["NO-GO\u003cbr\u003evessel_capability\u003cbr\u003e999%","GO\u003cbr\u003etension\u003cbr\u003e18%","GO\u003cbr\u003etension\u003cbr\u003e28%","GO\u003cbr\u003etension\u003cbr\u003e37%","GO\u003cbr\u003etension\u003cbr\u003e46%","GO\u003cbr\u003etension\u003cbr\u003e55%"],["NO-GO\u003cbr\u003evessel_capability\u003cbr\u003e999%","GO\u003cbr\u003etension\u003cbr\u003e22%","GO\u003cbr\u003etension\u003cbr\u003e33%","GO\u003cbr\u003etension\u003cbr\u003e44%","GO\u003cbr\u003etension\u003cbr\u003e55%","GO\u003cbr\u003etension\u003cbr\u003e66%"],["NO-GO\u003cbr\u003evessel_capability\u003cbr\u003e999%","GO\u003cbr\u003etension\u003cbr\u003e29%","GO\u003cbr\u003etension\u003cbr\u003e44%","GO\u003cbr\u003etension\u003cbr\u003e59%","GO\u003cbr\u003etension\u003cbr\u003e73%","MARGINAL\u003cbr\u003etension\u003cbr\u003e88%"]],"textfont":{"size":9},"texttemplate":"%{text}","x":["7m","10m","15m","20m","25m","30m"],"y":["8\"","12\"","16\"","20\"","24\""],"z":[[2,0,0,0,0,0],[2,0,0,0,0,0],[2,0,0,0,0,0],[2,0,0,0,0,0],[2,0,0,0,0,1]],"zmax":2,"zmin":0,"type":"heatmap","xaxis":"x","yaxis":"y"},{"colorscale":[[0.0,"#38a169"],[0.33,"#38a169"],[0.34,"#d69e2e"],[0.66,"#d69e2e"],[0.67,"#e53e3e"],[1.0,"#e53e3e"]],"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e at %{x}\u003cbr\u003e%{text}\u003cextra\u003e\u003c\u002fextra\u003e","showscale":false,"text":[["GO\u003cbr\u003esagbend\u003cbr\u003e22%","GO\u003cbr\u003eoverbend\u003cbr\u003e18%","GO\u003cbr\u003eoverbend\u003cbr\u003e18%","GO\u003cbr\u003eoverbend\u003cbr\u003e18%","GO\u003cbr\u003eoverbend\u003cbr\u003e18%","GO\u003cbr\u003eoverbend\u003cbr\u003e18%"],["GO\u003cbr\u003esagbend\u003cbr\u003e33%","GO\u003cbr\u003eoverbend\u003cbr\u003e27%","GO\u003cbr\u003eoverbend\u003cbr\u003e27%","GO\u003cbr\u003etension\u003cbr\u003e30%","GO\u003cbr\u003etension\u003cbr\u003e38%","GO\u003cbr\u003etension\u003cbr\u003e46%"],["GO\u003cbr\u003esagbend\u003cbr\u003e42%","GO\u003cbr\u003eoverbend\u003cbr\u003e34%","GO\u003cbr\u003eoverbend\u003cbr\u003e34%","GO\u003cbr\u003etension\u003cbr\u003e39%","GO\u003cbr\u003etension\u003cbr\u003e49%","GO\u003cbr\u003etension\u003cbr\u003e59%"],["GO\u003cbr\u003esagbend\u003cbr\u003e52%","GO\u003cbr\u003eoverbend\u003cbr\u003e42%","GO\u003cbr\u003eoverbend\u003cbr\u003e42%","GO\u003cbr\u003etension\u003cbr\u003e47%","GO\u003cbr\u003etension\u003cbr\u003e59%","GO\u003cbr\u003etension\u003cbr\u003e70%"],["GO\u003cbr\u003esagbend\u003cbr\u003e62%","GO\u003cbr\u003eoverbend\u003cbr\u003e51%","GO\u003cbr\u003eoverbend\u003cbr\u003e51%","GO\u003cbr\u003etension\u003cbr\u003e63%","GO\u003cbr\u003etension\u003cbr\u003e78%","MARGINAL\u003cbr\u003etension\u003cbr\u003e94%"]],"textfont":{"size":9},"texttemplate":"%{text}","x":["7m","10m","15m","20m","25m","30m"],"y":["8\"","12\"","16\"","20\"","24\""],"z":[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,1]],"zmax":2,"zmin":0,"type":"heatmap","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.46],"title":{"text":"Water Depth"}},"yaxis":{"anchor":"x","domain":[0.0,1.0]},"xaxis2":{"anchor":"y2","domain":[0.54,1.0],"title":{"text":"Water Depth"}},"yaxis2":{"anchor":"x2","domain":[0.0,1.0]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Large PLV","x":0.23,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Shallow Water Barge","x":0.77,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"font":{"size":18},"text":"S-lay Installation Go\u002fNo-Go Matrix"},"height":450,"width":1050,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_04_go_nogo", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Sagbend Stress Utilisation Heatmap</div>
+                <div class='chart-subtitle'>Sagbend utilisation as percentage of 0.72 x SMYS (X65 = 448 MPa). Green = low, red = critical.</div>
+                <div>                            <div id="chart-sagbend_heatmap" class="plotly-graph-div" style="height:450px; width:1050px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-sagbend_heatmap")) {                    Plotly.newPlot(                        "chart-sagbend_heatmap",                        [{"colorscale":[[0.0,"#38a169"],[0.5,"#d69e2e"],[0.72,"#ed8936"],[1.0,"#e53e3e"]],"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e at %{x}\u003cbr\u003eSagbend utilisation: %{z:.0f}%\u003cextra\u003e\u003c\u002fextra\u003e","showscale":false,"text":[["10%","7%","5%","3%","3%","2%"],["15%","10%","7%","5%","4%","3%"],["18%","13%","9%","6%","5%","4%"],["23%","16%","11%","8%","6%","5%"],["27%","19%","13%","10%","8%","6%"]],"textfont":{"size":10},"texttemplate":"%{text}","x":["7m","10m","15m","20m","25m","30m"],"y":["8\"","12\"","16\"","20\"","24\""],"z":[[9.87,6.909999999999999,4.61,3.45,2.76,2.3],[14.59,10.209999999999999,6.81,5.11,4.09,3.4000000000000004],[18.310000000000002,12.82,8.540000000000001,6.41,5.13,4.2700000000000005],[22.88,16.02,10.68,8.01,6.41,5.34],[27.46,19.220000000000002,12.82,9.610000000000001,7.6899999999999995,6.41]],"zmax":100,"zmin":0,"type":"heatmap","xaxis":"x","yaxis":"y"},{"colorbar":{"len":0.8,"title":{"text":"Util %"}},"colorscale":[[0.0,"#38a169"],[0.5,"#d69e2e"],[0.72,"#ed8936"],[1.0,"#e53e3e"]],"hovertemplate":"\u003cb\u003e%{y}\u003c\u002fb\u003e at %{x}\u003cbr\u003eSagbend utilisation: %{z:.0f}%\u003cextra\u003e\u003c\u002fextra\u003e","showscale":true,"text":[["22%","16%","10%","8%","6%","5%"],["33%","23%","15%","12%","9%","8%"],["42%","29%","19%","15%","12%","10%"],["52%","36%","24%","18%","15%","12%"],["62%","44%","29%","22%","17%","15%"]],"textfont":{"size":10},"texttemplate":"%{text}","x":["7m","10m","15m","20m","25m","30m"],"y":["8\"","12\"","16\"","20\"","24\""],"z":[[22.42,15.7,10.47,7.85,6.279999999999999,5.2299999999999995],[33.17,23.22,15.479999999999999,11.61,9.29,7.739999999999999],[41.620000000000005,29.13,19.42,14.57,11.65,9.71],[52.019999999999996,36.42,24.279999999999998,18.21,14.57,12.139999999999999],[62.43,43.7,29.13,21.85,17.48,14.57]],"zmax":100,"zmin":0,"type":"heatmap","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.44],"title":{"text":"Water Depth"}},"yaxis":{"anchor":"x","domain":[0.0,1.0]},"xaxis2":{"anchor":"y2","domain":[0.56,1.0],"title":{"text":"Water Depth"}},"yaxis2":{"anchor":"x2","domain":[0.0,1.0]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Large PLV","x":0.22,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Shallow Water Barge","x":0.78,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"font":{"size":18},"text":"Sagbend Stress Utilisation (% of 0.72 x SMYS)"},"height":450,"width":1050,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_04_sagbend_heatmap", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: Required Top Tension vs Water Depth</div>
+                <div class='chart-subtitle'>Solid = Large PLV, dashed = Barge. Horizontal lines show tensioner capacity limits.</div>
+                <div>                            <div id="chart-tension_vs_depth" class="plotly-graph-div" style="height:550px; width:1000px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-tension_vs_depth")) {                    Plotly.newPlot(                        "chart-tension_vs_depth",                        [{"hovertemplate":"\u003cb\u003eLarge PLV — 8\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"Large PLV \u002f 8\"","x":[7,10,15,20,25,30],"y":[2.7,3.9,5.8,7.7,9.6,11.5],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 12\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"Large PLV \u002f 12\"","x":[7,10,15,20,25,30],"y":[59.9,85.6,128.4,171.2,214.0,256.7],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 16\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"Large PLV \u002f 16\"","x":[7,10,15,20,25,30],"y":[77.3,110.4,165.6,220.8,276.0,331.2],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 20\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#e53e3e","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"Large PLV \u002f 20\"","x":[7,10,15,20,25,30],"y":[92.3,131.9,197.8,263.7,329.7,395.6],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 24\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#805ad5","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"Large PLV \u002f 24\"","x":[7,10,15,20,25,30],"y":[122.9,175.6,263.4,351.3,439.1,526.9],"type":"scatter"},{"hovertemplate":"\u003cb\u003eBarge — 8\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","dash":"dash","width":2},"marker":{"size":5,"symbol":"diamond"},"mode":"lines+markers","name":"Barge \u002f 8\"","x":[7,10,15,20,25,30],"y":[1.2,1.7,2.6,3.4,4.3,5.1],"type":"scatter"},{"hovertemplate":"\u003cb\u003eBarge — 12\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","dash":"dash","width":2},"marker":{"size":5,"symbol":"diamond"},"mode":"lines+markers","name":"Barge \u002f 12\"","x":[7,10,15,20,25,30],"y":[26.7,38.1,57.2,76.2,95.3,114.3],"type":"scatter"},{"hovertemplate":"\u003cb\u003eBarge — 16\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","dash":"dash","width":2},"marker":{"size":5,"symbol":"diamond"},"mode":"lines+markers","name":"Barge \u002f 16\"","x":[7,10,15,20,25,30],"y":[34.4,49.2,73.8,98.3,122.9,147.5],"type":"scatter"},{"hovertemplate":"\u003cb\u003eBarge — 20\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#e53e3e","dash":"dash","width":2},"marker":{"size":5,"symbol":"diamond"},"mode":"lines+markers","name":"Barge \u002f 20\"","x":[7,10,15,20,25,30],"y":[41.1,58.7,88.1,117.5,146.8,176.2],"type":"scatter"},{"hovertemplate":"\u003cb\u003eBarge — 24\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eT_top: %{y:.1f} te\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#805ad5","dash":"dash","width":2},"marker":{"size":5,"symbol":"diamond"},"mode":"lines+markers","name":"Barge \u002f 24\"","x":[7,10,15,20,25,30],"y":[54.8,78.2,117.3,156.4,195.5,234.7],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#2c5282","dash":"dot","width":2},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":600,"y1":600,"yref":"y"},{"line":{"color":"#e53e3e","dash":"dot","width":2},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":250,"y1":250,"yref":"y"}],"annotations":[{"showarrow":false,"text":"Large PLV capacity (600 te)","x":1,"xanchor":"right","xref":"x domain","y":600,"yanchor":"bottom","yref":"y"},{"showarrow":false,"text":"Barge capacity (250 te)","x":1,"xanchor":"right","xref":"x domain","y":250,"yanchor":"top","yref":"y"}],"title":{"font":{"size":18},"text":"Required Top Tension vs Water Depth"},"legend":{"font":{"size":9}},"xaxis":{"title":{"text":"Water Depth (m)"}},"yaxis":{"title":{"text":"Required Top Tension (te)"}},"height":550,"width":1000,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_04_tension_vs_depth", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 4: Stinger Departure Angle vs Water Depth</div>
+                <div class='chart-subtitle'>Required departure angle with vessel stinger range bands. Shows where stinger geometry governs.</div>
+                <div>                            <div id="chart-departure_angle" class="plotly-graph-div" style="height:550px; width:1000px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-departure_angle")) {                    Plotly.newPlot(                        "chart-departure_angle",                        [{"fill":"toself","fillcolor":"rgba(44, 82, 130, 0.12)","hoverinfo":"skip","line":{"color":"rgba(0,0,0,0)"},"name":"Large PLV range (2-8 deg)","showlegend":true,"x":[6,31,31,6],"y":[2.0,2.0,8.0,8.0],"type":"scatter"},{"fill":"toself","fillcolor":"rgba(237, 137, 54, 0.12)","hoverinfo":"skip","line":{"color":"rgba(0,0,0,0)"},"name":"Barge range (3-12 deg)","showlegend":true,"x":[6,31,31,6],"y":[3.0,3.0,12.0,12.0],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 8\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eDeparture angle: %{y:.1f} deg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"PLV \u002f 8\"","x":[7,10,15,20,25,30],"y":[8.0,8.0,8.0,8.0,8.0,8.0],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 12\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eDeparture angle: %{y:.1f} deg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"PLV \u002f 12\"","x":[7,10,15,20,25,30],"y":[8.0,8.0,8.0,8.0,8.0,8.0],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 16\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eDeparture angle: %{y:.1f} deg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"PLV \u002f 16\"","x":[7,10,15,20,25,30],"y":[8.0,8.0,8.0,8.0,8.0,8.0],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 20\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eDeparture angle: %{y:.1f} deg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#e53e3e","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"PLV \u002f 20\"","x":[7,10,15,20,25,30],"y":[8.0,8.0,8.0,8.0,8.0,8.0],"type":"scatter"},{"hovertemplate":"\u003cb\u003eLarge PLV — 24\"\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}m\u003cbr\u003eDeparture angle: %{y:.1f} deg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#805ad5","dash":"solid","width":2},"marker":{"size":6},"mode":"lines+markers","name":"PLV \u002f 24\"","x":[7,10,15,20,25,30],"y":[8.0,8.0,8.0,8.0,8.0,8.0],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Required Stinger Departure Angle vs Water Depth"},"legend":{"font":{"size":9}},"yaxis":{"title":{"text":"Departure Angle (degrees)"},"range":[0,15]},"xaxis":{"title":{"text":"Water Depth (m)"}},"height":550,"width":1000,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_04_departure_angle", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 5: Vessel Head-to-Head — Max Pipe Size at Each Depth</div>
+                <div class='chart-subtitle'>Maximum installable pipe diameter for each vessel at each water depth.</div>
+                <div>                            <div id="chart-vessel_comparison" class="plotly-graph-div" style="height:500px; width:900px;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-vessel_comparison")) {                    Plotly.newPlot(                        "chart-vessel_comparison",                        [{"hovertemplate":"\u003cb\u003eLarge PLV\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}\u003cbr\u003eMax pipe: %{y:.0f}\"\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2c5282"},"name":"Large PLV","text":["None","24\"","24\"","24\"","24\"","24\""],"textposition":"auto","x":["7m","10m","15m","20m","25m","30m"],"y":[0,24.0,24.0,24.0,24.0,24.0],"type":"bar"},{"hovertemplate":"\u003cb\u003eShallow Water Barge\u003c\u002fb\u003e\u003cbr\u003eDepth: %{x}\u003cbr\u003eMax pipe: %{y:.0f}\"\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#ed8936"},"name":"Shallow Water Barge","text":["24\"","24\"","24\"","24\"","24\"","24\""],"textposition":"auto","x":["7m","10m","15m","20m","25m","30m"],"y":[24.0,24.0,24.0,24.0,24.0,24.0],"type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Vessel Comparison — Max Installable Pipe Size at Each Depth"},"yaxis":{"title":{"text":"Max Pipe Size (inches)"},"range":[0,28],"dtick":4},"xaxis":{"title":{"text":"Water Depth"}},"barmode":"group","height":500,"width":900,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_04_vessel_comparison", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> DNV-ST-F101 (2021) - Submarine Pipeline Systems · API RP 1111 (2015) - Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines · DNV-OS-F101 (2013) - Submarine Pipeline Systems</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>
