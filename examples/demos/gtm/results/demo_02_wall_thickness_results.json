@@ -1638,5 +1638,215 @@
         "propagation": 3.1811
       }
     }
-  ]
+  ],
+  "lifecycle_phases": {
+    "6\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 0.9145208556552575,
+        "Installation (water-filled)": 0.9144904154797401,
+        "Hydrotest": 0.3542940780610111,
+        "Operation": 0.45784641878961585,
+        "Shutdown": 0.2389405048092193
+      },
+      "API RP 1111": {
+        "Installation (empty)": 0.21698548892206931,
+        "Installation (water-filled)": 0.21698548892206931,
+        "Hydrotest": 0.33809684092123177,
+        "Operation": 0.25346299547857587,
+        "Shutdown": 0.21698548892206931
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 0.2582220012444125,
+        "Installation (water-filled)": 0.2582220012444125,
+        "Hydrotest": 0.391795110749635,
+        "Operation": 0.29371928502460815,
+        "Shutdown": 0.2582220012444125
+      }
+    },
+    "8\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 0.49344255734151315,
+        "Installation (water-filled)": 0.49324908146368546,
+        "Hydrotest": 0.441065555677723,
+        "Operation": 0.3992700660567265,
+        "Shutdown": 0.3992700660567265
+      },
+      "API RP 1111": {
+        "Installation (empty)": 0.35861820731780086,
+        "Installation (water-filled)": 0.35861820731780086,
+        "Hydrotest": 0.42458781245185134,
+        "Operation": 0.35861820731780086,
+        "Shutdown": 0.35861820731780086
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 0.4227183866207598,
+        "Installation (water-filled)": 0.4227183866207598,
+        "Hydrotest": 0.4811160021482066,
+        "Operation": 0.4227183866207598,
+        "Shutdown": 0.4227183866207598
+      }
+    },
+    "10\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 0.6925722050913097,
+        "Installation (water-filled)": 0.6925722050913097,
+        "Hydrotest": 0.6925722050913097,
+        "Operation": 0.6925722050913097,
+        "Shutdown": 0.6925722050913097
+      },
+      "API RP 1111": {
+        "Installation (empty)": 0.6085029800124838,
+        "Installation (water-filled)": 0.6085029800124838,
+        "Hydrotest": 0.6085029800124838,
+        "Operation": 0.6085029800124838,
+        "Shutdown": 0.6085029800124838
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 0.7172680937999704,
+        "Installation (water-filled)": 0.7172680937999704,
+        "Hydrotest": 0.7172680937999704,
+        "Operation": 0.7172680937999704,
+        "Shutdown": 0.7172680937999704
+      }
+    },
+    "12\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 0.7161864480339707,
+        "Installation (water-filled)": 0.7161864480339707,
+        "Hydrotest": 0.7161864480339707,
+        "Operation": 0.7161864480339707,
+        "Shutdown": 0.7161864480339707
+      },
+      "API RP 1111": {
+        "Installation (empty)": 0.6431766376465753,
+        "Installation (water-filled)": 0.6431766376465753,
+        "Hydrotest": 0.6431766376465753,
+        "Operation": 0.6431766376465753,
+        "Shutdown": 0.6431766376465753
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 0.7407303027857234,
+        "Installation (water-filled)": 0.7407303027857234,
+        "Hydrotest": 0.7407303027857234,
+        "Operation": 0.7407303027857234,
+        "Shutdown": 0.7407303027857234
+      }
+    },
+    "16\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 1.4300252521469965,
+        "Installation (water-filled)": 1.4300252521469965,
+        "Hydrotest": 1.4300252521469965,
+        "Operation": 1.4300252521469965,
+        "Shutdown": 1.4300252521469965
+      },
+      "API RP 1111": {
+        "Installation (empty)": 1.2405225125890549,
+        "Installation (water-filled)": 1.2405225125890549,
+        "Hydrotest": 1.2405225125890549,
+        "Operation": 1.2405225125890549,
+        "Shutdown": 1.2405225125890549
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 1.4386826794287668,
+        "Installation (water-filled)": 1.4386826794287668,
+        "Hydrotest": 1.4386826794287668,
+        "Operation": 1.4386826794287668,
+        "Shutdown": 1.4386826794287668
+      }
+    },
+    "20\"": {
+      "DNV-ST-F101": {
+        "Installation (empty)": 3.2682862621245024,
+        "Installation (water-filled)": 3.2682862621245024,
+        "Hydrotest": 3.2682862621245024,
+        "Operation": 3.2682862621245024,
+        "Shutdown": 3.2682862621245024
+      },
+      "API RP 1111": {
+        "Installation (empty)": 2.6987554885416425,
+        "Installation (water-filled)": 2.6987554885416425,
+        "Hydrotest": 2.6987554885416425,
+        "Operation": 2.6987554885416425,
+        "Shutdown": 2.6987554885416425
+      },
+      "PD 8010-2": {
+        "Installation (empty)": 3.1811367708647196,
+        "Installation (water-filled)": 3.1811367708647196,
+        "Hydrotest": 3.1811367708647196,
+        "Operation": 3.1811367708647196,
+        "Shutdown": 3.1811367708647196
+      }
+    }
+  },
+  "min_wall_thickness": {
+    "6\"": {
+      "DNV-ST-F101": 8.51,
+      "API RP 1111": 7.62,
+      "PD 8010-2": 8.57
+    },
+    "8\"": {
+      "DNV-ST-F101": 10.79,
+      "API RP 1111": 9.9,
+      "PD 8010-2": 10.9
+    },
+    "10\"": {
+      "DNV-ST-F101": 13.19,
+      "API RP 1111": 12.3,
+      "PD 8010-2": 13.3
+    },
+    "12\"": {
+      "DNV-ST-F101": 15.47,
+      "API RP 1111": 14.58,
+      "PD 8010-2": 15.58
+    },
+    "16\"": {
+      "DNV-ST-F101": 19.14,
+      "API RP 1111": 18.31,
+      "PD 8010-2": 19.31
+    },
+    "20\"": {
+      "DNV-ST-F101": 23.65,
+      "API RP 1111": 22.87,
+      "PD 8010-2": 23.87
+    }
+  },
+  "weight_penalty": {
+    "6\"": {
+      "delta_kg_m": 3.55,
+      "delta_pct": 12.4,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    },
+    "8\"": {
+      "delta_kg_m": 4.9,
+      "delta_pct": 10.1,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    },
+    "10\"": {
+      "delta_kg_m": 6.12,
+      "delta_pct": 8.1,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    },
+    "12\"": {
+      "delta_kg_m": 7.26,
+      "delta_pct": 6.9,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    },
+    "16\"": {
+      "delta_kg_m": 9.11,
+      "delta_pct": 5.5,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    },
+    "20\"": {
+      "delta_kg_m": 11.4,
+      "delta_pct": 4.4,
+      "most_conservative": "PD 8010-2",
+      "least_conservative": "API RP 1111"
+    }
+  }
 }
