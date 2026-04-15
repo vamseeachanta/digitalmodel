@@ -152,6 +152,16 @@ PIPE_SIZES = [
 CODES: list = []
 CODE_NAMES: dict = {}
 CODE_NAME_STRINGS = ["DNV-ST-F101", "API RP 1111", "PD 8010-2"]
+CACHE_INTERMEDIATE_KEYS = (
+    "lifecycle_phases",
+    "min_wall_thickness",
+    "weight_penalty",
+)
+
+
+def _cache_has_intermediate_data(cached: Dict[str, Any]) -> bool:
+    """Return True when cache contains the intermediate chart data needed for fast regen."""
+    return all(cached.get(key) is not None for key in CACHE_INTERMEDIATE_KEYS)
 
 
 def _init_code_constants():
@@ -1243,7 +1253,8 @@ def main():
     print(f"  ✓ Loaded {len(code_data['codes'])} design codes from design_codes.json")
 
     # ── Step 2: Run sweep or load cache ────────────────────────────────────
-    if args.from_cache and results_path.exists() and not args.force:
+    use_cache = args.from_cache and results_path.exists() and not args.force
+    if use_cache:
         print("\n[2/7] Loading cached results...")
         with open(results_path, "r") as f:
             cached = json.load(f)
@@ -1256,7 +1267,15 @@ def main():
         cached_weight_penalty = cached.get("weight_penalty")
         cached_summary = cached.get("summary")
         print(f"  Loaded {total_cases} cached results from {results_path.name}")
-    else:
+
+        if not _cache_has_intermediate_data(cached):
+            print(
+                "  ! Cache missing intermediate chart data; falling back to full recalculation "
+                "to refresh legacy results"
+            )
+            use_cache = False
+
+    if not use_cache:
         # Load engineering modules and run full calculations
         _load_engineering_modules()
         _init_code_constants()
@@ -1268,6 +1287,11 @@ def main():
         cached_min_wt = None
         cached_weight_penalty = None
         cached_summary = None
+    elif not CODES:
+        # Fast regen uses string-coded cache data, but downstream chart builders still
+        # expect the code-name constants to be initialised.
+        _load_engineering_modules()
+        _init_code_constants()
 
     # 3. Build charts
     print("\n[3/7] Building charts...")
