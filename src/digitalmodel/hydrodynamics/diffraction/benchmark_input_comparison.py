@@ -33,6 +33,67 @@ LEGACY_LEVEL_TO_TAXONOMY = {
 }
 
 
+def summarize_semantic_equivalence(
+    sem_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Normalize semantic-equivalence payloads across legacy and taxonomy-aware producers.
+
+    When explicit diffs are present, derive taxonomy counts from those diff entries to keep
+    the rendered counts aligned with the evidence table. Only fall back to payload-level
+    taxonomy_counts when the payload has no diff list.
+    """
+    diffs = sem_data.get("diffs", [])
+
+    taxonomy_counter = Counter(
+        d.get("category")
+        or LEGACY_LEVEL_TO_TAXONOMY.get(d.get("level", ""), "")
+        for d in diffs
+    )
+    payload_taxonomy_counts = sem_data.get("taxonomy_counts") or {}
+    if not diffs:
+        for taxonomy in SEMANTIC_TAXONOMY:
+            if taxonomy in payload_taxonomy_counts:
+                taxonomy_counter[taxonomy] = payload_taxonomy_counts[taxonomy]
+
+    match_count = sem_data.get("match_count", 0)
+    cosmetic_count = sem_data.get("cosmetic_count", 0)
+    convention_count = sem_data.get("convention_count", 0)
+    significant_count = sem_data.get("significant_count", 0)
+    total = match_count + cosmetic_count + convention_count + significant_count
+
+    significant_diffs = [d for d in diffs if d.get("level") == "significant"]
+    convention_diffs = [d for d in diffs if d.get("level") == "convention"]
+    cosmetic_diffs = [d for d in diffs if d.get("level") == "cosmetic"]
+
+    categorized_diffs: Dict[str, List[Dict[str, Any]]] = {
+        taxonomy: [] for taxonomy in SEMANTIC_TAXONOMY
+    }
+    for diff in diffs:
+        taxonomy = diff.get("category") or LEGACY_LEVEL_TO_TAXONOMY.get(
+            diff.get("level", ""),
+            "",
+        )
+        if taxonomy in categorized_diffs:
+            categorized_diffs[taxonomy].append(diff)
+
+    return {
+        "diffs": diffs,
+        "match_count": match_count,
+        "cosmetic_count": cosmetic_count,
+        "convention_count": convention_count,
+        "significant_count": significant_count,
+        "total": total,
+        "taxonomy_counts": {
+            taxonomy: taxonomy_counter.get(taxonomy, 0)
+            for taxonomy in SEMANTIC_TAXONOMY
+        },
+        "significant_diffs": significant_diffs,
+        "convention_diffs": convention_diffs,
+        "cosmetic_diffs": cosmetic_diffs,
+        "categorized_diffs": categorized_diffs,
+    }
+
+
 def build_input_comparison_html(
     solver_names: List[str],
     solver_results: Dict[str, DiffractionResults],
@@ -235,16 +296,14 @@ def build_semantic_equivalence_html(
     if sem_data is None:
         return ""
 
-    match_count = sem_data.get("match_count", 0)
-    cosmetic_count = sem_data.get("cosmetic_count", 0)
-    convention_count = sem_data.get("convention_count", 0)
-    sig_count = sem_data.get("significant_count", 0)
-    diffs = sem_data.get("diffs", [])
-    taxonomy_counter = Counter(
-        d.get("category") or LEGACY_LEVEL_TO_TAXONOMY.get(d.get("level", ""), "")
-        for d in diffs
-    )
-    total = match_count + cosmetic_count + convention_count + sig_count
+    summary = summarize_semantic_equivalence(sem_data)
+    match_count = summary["match_count"]
+    cosmetic_count = summary["cosmetic_count"]
+    convention_count = summary["convention_count"]
+    sig_count = summary["significant_count"]
+    diffs = summary["diffs"]
+    taxonomy_counts = summary["taxonomy_counts"]
+    total = summary["total"]
 
     if sig_count == 0:
         badge_color = "#27ae60"
@@ -289,7 +348,7 @@ def build_semantic_equivalence_html(
         "<table class='stats-table' style='max-width:700px;margin-bottom:1em;'>",
         "<tr><th>Taxonomy class</th><th>Count</th></tr>",
         *[
-            f"<tr><td>{taxonomy}</td><td>{taxonomy_counter.get(taxonomy, 0)}</td></tr>"
+            f"<tr><td>{taxonomy}</td><td>{taxonomy_counts.get(taxonomy, 0)}</td></tr>"
             for taxonomy in SEMANTIC_TAXONOMY
         ],
         "</table>",
@@ -300,9 +359,9 @@ def build_semantic_equivalence_html(
     ]
 
     if diffs:
-        sig_diffs = [d for d in diffs if d["level"] == "significant"]
-        conv_diffs = [d for d in diffs if d["level"] == "convention"]
-        cos_diffs = [d for d in diffs if d["level"] == "cosmetic"]
+        sig_diffs = summary["significant_diffs"]
+        conv_diffs = summary["convention_diffs"]
+        cos_diffs = summary["cosmetic_diffs"]
 
         _KEY_COMMENTS: Dict[str, str] = {
             "DivideNonPlanarPanels": (

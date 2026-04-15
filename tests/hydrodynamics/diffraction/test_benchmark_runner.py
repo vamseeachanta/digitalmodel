@@ -184,3 +184,60 @@ class TestRunBenchmarkConvenience:
         # Assert
         assert result.success is True
         assert result.report is not None
+
+
+class TestBenchmarkExecutiveSemanticSummary:
+    def test_build_benchmark_executive_uses_taxonomy_labels(
+        self,
+        three_solver_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        config = BenchmarkConfig(output_dir=tmp_path)
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(three_solver_results)
+
+        html = runner._build_benchmark_executive_html(
+            result.report,
+            semantic={
+                "match_count": 10,
+                "cosmetic_count": 1,
+                "convention_count": 1,
+                "significant_count": 1,
+                "taxonomy_counts": {
+                    "physics_significant": 0,
+                    "solver_mode_significant": 1,
+                    "representation_normalization_only": 1,
+                    "output_only": 1,
+                    "gui_only": 0,
+                    "internal_default_only": 0,
+                    "known_non_configurable_in_spec": 0,
+                },
+                "diffs": [
+                    {
+                        "key": "SolveType",
+                        "level": "significant",
+                        "category": "solver_mode_significant",
+                        "owd": "Potential",
+                        "spec": "Full QTF",
+                    },
+                    {
+                        "key": "WavesReferredToBy",
+                        "level": "convention",
+                        "category": "representation_normalization_only",
+                        "owd": "frequency (rad/s)",
+                        "spec": "period (s)",
+                    },
+                    {
+                        "key": "OutputPanelPressures",
+                        "level": "cosmetic",
+                        "category": "output_only",
+                        "owd": "Yes",
+                        "spec": "No",
+                    },
+                ],
+            },
+        )
+
+        assert "solver_mode_significant" in html
+        assert "representation_normalization_only" in html
+        assert "output_only" in html

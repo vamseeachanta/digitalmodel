@@ -309,3 +309,66 @@ class TestBuildSemanticEquivalenceHtml:
         }
         html = build_semantic_equivalence_html(names, meta)
         assert "#e74c3c" in html  # red badge
+
+    def test_renders_taxonomy_counts_from_consistent_diff_categories(self):
+        names = ["SolverA"]
+        meta = _make_solver_metadata(names)
+        meta["SolverA"]["_semantic_equivalence"] = {
+            "match_count": 10,
+            "cosmetic_count": 3,
+            "convention_count": 1,
+            "significant_count": 1,
+            "taxonomy_counts": {
+                "physics_significant": 0,
+                "solver_mode_significant": 1,
+                "representation_normalization_only": 1,
+                "output_only": 1,
+                "gui_only": 0,
+                "internal_default_only": 0,
+                "known_non_configurable_in_spec": 2,
+            },
+            "diffs": [
+                {
+                    "key": "SolveType",
+                    "level": "significant",
+                    "category": "solver_mode_significant",
+                    "owd": "Potential",
+                    "spec": "Full QTF",
+                },
+                {
+                    "key": "WavesReferredToBy",
+                    "level": "convention",
+                    "category": "representation_normalization_only",
+                    "owd": "frequency (rad/s)",
+                    "spec": "period (s)",
+                },
+                {
+                    "key": "OutputPanelPressures",
+                    "level": "cosmetic",
+                    "category": "output_only",
+                    "owd": "Yes",
+                    "spec": "No",
+                },
+                {
+                    "key": "DivideNonPlanarPanels",
+                    "level": "cosmetic",
+                    "category": "known_non_configurable_in_spec",
+                    "owd": "Yes",
+                    "spec": "No",
+                },
+                {
+                    "key": "BodyInteriorSurfacePanelMethod",
+                    "level": "cosmetic",
+                    "category": "known_non_configurable_in_spec",
+                    "owd": "Radial",
+                    "spec": "Triangulation",
+                },
+            ],
+        }
+
+        html = build_semantic_equivalence_html(names, meta)
+
+        assert "solver_mode_significant</td><td>1" in html
+        assert "representation_normalization_only</td><td>1" in html
+        assert "output_only</td><td>1" in html
+        assert "known_non_configurable_in_spec</td><td>2" in html

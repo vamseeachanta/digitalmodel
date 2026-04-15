@@ -1371,7 +1371,6 @@ def _compare_orcawave_ymls(
     _CONVENTION_KEYS = {
         "WavesReferredToBy",   # "frequency (rad/s)" vs "period (s)"
         "PeriodOrFrequency",   # same frequencies, different units/ordering
-        "SolveType",           # e.g. "Full QTF" vs "Potential" — RAOs match
         "WaterDensity",        # unit system artifact (1 vs 1025) — scale-invariant RAOs
         # Free-surface discretisation parameters — different convergence settings
         # that produce the same first-order RAO results (e.g. finer OWD grid vs
@@ -1385,6 +1384,49 @@ def _compare_orcawave_ymls(
         "FreeSurfaceQuadratureZoneNumberOfRadialNodes",
         "FreeSurfaceQuadratureZoneNumberOfAzimuthalNodes",
         "FreeSurfaceQuadratureZoneInnerRadius",
+    }
+
+    _SOLVER_MODE_SIGNIFICANT_KEYS = {
+        "SolveType",
+    }
+
+    _OUTPUT_ONLY_KEYS = {
+        "OutputPanelPressures", "OutputPanelVelocities",
+        "FieldPointX", "FieldPointY", "FieldPointZ",
+        "FieldPointX, FieldPointY, FieldPointZ",
+    }
+
+    _GUI_ONLY_KEYS = {
+        "DataFileVersion", "DiffractionVersion", "DataFileName",
+        "InternalName", "TitleBarText", "FileName", "DataCreationDate",
+        "FreeSurfaceMeshPen", "InteriorSurfacePanelsPen",
+        "BodyMeshPen", "WaterlinePen", "DampingLidMeshPen",
+        "BodyName",
+        "BodyMeshFileName",
+        "DampingLidMeshFileName", "DampingLidMeshFormat", "DampingLidMeshLengthUnits",
+        "BodyControlSurfaceMeshFileName", "BodyControlSurfaceMeshFormat", "BodyControlSurfaceMeshLengthUnits",
+        "BodyOrcaFlexImportLength", "BodyOrcaFlexImportSymmetry",
+        "FreeSurfacePanelledZoneMeshFileName",
+        "FreeSurfacePanelledZoneMeshFormat",
+        "FreeSurfacePanelledZoneMeshLengthUnits",
+    }
+
+    _INTERNAL_DEFAULT_ONLY_KEYS = {
+        "ComputationStrategy",
+        "EnableMultibodyConstraints",
+        "BodyOriginType",
+        "BodyVolumeWarningLevel",
+        "WaterlineZTolerance",
+        "WaterlineGapTolerance",
+        "HasResonanceDampingLid",
+        "PreferredLoadRAOCalculationMethod",
+        "BodyIncreaseRollDampingToTarget",
+    }
+
+    _KNOWN_NON_CONFIGURABLE_KEYS = {
+        "BodyInteriorSurfacePanelMethod",
+        "DivideNonPlanarPanels",
+        "BodyControlSurfaceType",
     }
 
     def _load(path: Path) -> dict:
@@ -1458,21 +1500,40 @@ def _compare_orcawave_ymls(
     cosmetic_count = 0
     convention_count = 0
     sig_count = 0
+    taxonomy_counts = {
+        "physics_significant": 0,
+        "solver_mode_significant": 0,
+        "representation_normalization_only": 0,
+        "output_only": 0,
+        "gui_only": 0,
+        "internal_default_only": 0,
+        "known_non_configurable_in_spec": 0,
+    }
 
-    def _classify_key(key: str) -> str:
-        """Return classification for a key: cosmetic, convention, dormant, or significant."""
-        if key in _COSMETIC_KEYS:
-            return "cosmetic"
+    def _classify_key(key: str) -> tuple[str, str]:
+        """Return legacy level plus richer taxonomy category for a key."""
+        if key in _OUTPUT_ONLY_KEYS:
+            return "cosmetic", "output_only"
+        if key in _GUI_ONLY_KEYS:
+            return "cosmetic", "gui_only"
+        if key in _INTERNAL_DEFAULT_ONLY_KEYS:
+            return "cosmetic", "internal_default_only"
+        if key in _KNOWN_NON_CONFIGURABLE_KEYS:
+            return "cosmetic", "known_non_configurable_in_spec"
         if key in _CONVENTION_KEYS:
-            return "convention"
-        if key in _DORMANT_QTF_KEYS and not is_qtf:
-            return "cosmetic"  # dormant = cosmetic when not active
-        return "significant"
+            return "convention", "representation_normalization_only"
+        if key in _SOLVER_MODE_SIGNIFICANT_KEYS:
+            return "significant", "solver_mode_significant"
+        if key in _DORMANT_QTF_KEYS:
+            if not is_qtf:
+                return "cosmetic", "internal_default_only"
+            return "significant", "solver_mode_significant"
+        return "significant", "physics_significant"
 
     def _compare_key(key: str, owd_val, spec_val, display_key: str) -> None:
         nonlocal match_count, cosmetic_count, convention_count, sig_count
 
-        level = _classify_key(key)
+        level, category = _classify_key(key)
 
         if _values_equal(owd_val, spec_val):
             match_count += 1
@@ -1488,10 +1549,14 @@ def _compare_orcawave_ymls(
             convention_count += 1
         else:
             sig_count += 1
+        taxonomy_counts[category] += 1
 
         diffs.append({
-            "key": display_key, "level": level,
-            "owd": owd_str, "spec": spec_str,
+            "key": display_key,
+            "level": level,
+            "category": category,
+            "owd": owd_str,
+            "spec": spec_str,
         })
 
     # Compare top-level keys (excluding Bodies)
@@ -1521,6 +1586,7 @@ def _compare_orcawave_ymls(
         "cosmetic_count": cosmetic_count,
         "convention_count": convention_count,
         "significant_count": sig_count,
+        "taxonomy_counts": taxonomy_counts,
         "has_significant_diffs": sig_count > 0,
         "diffs": diffs,
     }

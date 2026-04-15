@@ -830,11 +830,17 @@ class BenchmarkRunner:
         # --- 4. Semantic equivalence summary --------------------------------
         semantic_html = ""
         if semantic:
-            sig = semantic.get("significant_count", 0)
-            cos = semantic.get("cosmetic_count", 0)
-            conv = semantic.get("convention_count", 0)
-            mat = semantic.get("match_count", 0)
-            total = mat + cos + conv + sig
+            from digitalmodel.hydrodynamics.diffraction.benchmark_input_comparison import (
+                summarize_semantic_equivalence,
+            )
+
+            semantic_summary = summarize_semantic_equivalence(semantic)
+            sig = semantic_summary["significant_count"]
+            cos = semantic_summary["cosmetic_count"]
+            conv = semantic_summary["convention_count"]
+            mat = semantic_summary["match_count"]
+            total = semantic_summary["total"]
+            taxonomy_counts = semantic_summary["taxonomy_counts"]
 
             if sig == 0:
                 badge = (
@@ -848,16 +854,10 @@ class BenchmarkRunner:
                 )
 
             # Build diff detail lists by level
-            all_diffs = semantic.get("diffs", [])
-            sig_diffs = [
-                d for d in all_diffs if d["level"] == "significant"
-            ]
-            cos_diffs = [
-                d for d in all_diffs if d["level"] == "cosmetic"
-            ]
-            conv_diffs = [
-                d for d in all_diffs if d["level"] == "convention"
-            ]
+            all_diffs = semantic_summary["diffs"]
+            sig_diffs = semantic_summary["significant_diffs"]
+            cos_diffs = semantic_summary["cosmetic_diffs"]
+            conv_diffs = semantic_summary["convention_diffs"]
 
             # Significant diffs — shown prominently
             diff_detail = ""
@@ -886,6 +886,14 @@ class BenchmarkRunner:
                     f"{d['owd']} vs {d['spec']}"
                 )
             if footnote_items:
+                non_significant_taxonomy_summary = ", ".join(
+                    f"{name}={count}"
+                    for name, count in taxonomy_counts.items()
+                    if count and name not in {
+                        "physics_significant",
+                        "solver_mode_significant",
+                    }
+                ) or "none"
                 fn_list = "".join(
                     f"<li>{item}</li>" for item in footnote_items
                 )
@@ -900,11 +908,17 @@ class BenchmarkRunner:
                     "font-style:italic;'>"
                     "Cosmetic: GUI pens, naming, output flags. "
                     "Convention: same physics, different "
-                    "representation (e.g. freq vs period). "
+                    f"representation (e.g. freq vs period). Taxonomy counts: {non_significant_taxonomy_summary}. "
                     "QTF-related settings are dormant when "
                     "QTF is disabled.</p>"
                     "</details>"
                 )
+
+            taxonomy_summary = ", ".join(
+                f"{name}={count}"
+                for name, count in taxonomy_counts.items()
+                if count
+            ) or "none"
 
             semantic_html = (
                 '<h3 style="margin-top:1em;">'
@@ -912,7 +926,10 @@ class BenchmarkRunner:
                 f'<p style="margin:0.3em 0;">'
                 f"{mat}/{total} match, {badge}, "
                 f"{conv} convention, {cos} cosmetic"
-                f"</p>{diff_detail}{footnote}"
+                f"</p>"
+                f"<p style='margin:0.2em 0 0.4em 0;font-size:0.9em;color:#555;'>"
+                f"Taxonomy: {taxonomy_summary}</p>"
+                f"{diff_detail}{footnote}"
             )
 
         return f"{verdict_html}{rao_table}{hydro_html}{semantic_html}"
