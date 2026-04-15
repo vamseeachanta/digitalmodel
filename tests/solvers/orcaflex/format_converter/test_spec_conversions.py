@@ -283,6 +283,142 @@ class TestModularToSpecConverter:
         assert not report.success
 
 
+class TestModularToSpecBoundaryReporting:
+    """Issue #520: explicit boundary reporting for reverse extraction.
+
+    All tests here are self-contained (no external fixture files).
+    They verify that ModularToSpecConverter categorizes unmapped
+    sections as expected vs actionable and makes the non-lossless
+    nature explicit in both the report and the output file.
+    """
+
+    @staticmethod
+    def _make_master(tmp_path: Path, extra_sections: dict | None = None) -> Path:
+        """Create a minimal modular structure with optional extra OrcaFlex sections."""
+        includes = tmp_path / "modular" / "includes"
+        includes.mkdir(parents=True)
+        data: dict = {
+            "Environment": {
+                "WaterDepth": 100,
+                "Density": 1.025,
+                "WaveTrains": [
+                    {
+                        "WaveHeight": 6,
+                        "WavePeriod": 7,
+                        "WaveDirection": 180,
+                        "WaveType": "Airy",
+                    }
+                ],
+            },
+            "General": {
+                "ImplicitConstantTimeStep": 0.1,
+                "StageDuration": [7, 35],
+            },
+        }
+        if extra_sections:
+            data.update(extra_sections)
+        with open(includes / "data.yml", "w") as f:
+            yaml.dump(data, f)
+        master = tmp_path / "modular" / "master.yml"
+        master.write_text("- includefile: includes/data.yml\n")
+        return master
+
+    def test_is_best_effort_true(self, tmp_path: Path):
+        """ModularToSpecConverter always marks report as best-effort."""
+        master = self._make_master(tmp_path)
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        assert report.is_best_effort is True
+
+    def test_summary_includes_best_effort_label(self, tmp_path: Path):
+        """summary() labels reverse extraction as best-effort."""
+        master = self._make_master(tmp_path, {"VesselTypes": [{"Name": "FPSO"}]})
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        assert "best-effort" in report.summary().lower()
+
+    def test_expected_gaps_classified(self, tmp_path: Path):
+        """VesselTypes, Vessels, Groups are expected (out-of-scope) gaps."""
+        master = self._make_master(
+            tmp_path,
+            {
+                "VesselTypes": [{"Name": "FPSO"}],
+                "Vessels": [{"Name": "V1"}],
+                "Groups": [{"Name": "G1"}],
+            },
+        )
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        assert "VesselTypes" in report.expected_gaps
+        assert "Vessels" in report.expected_gaps
+        assert "Groups" in report.expected_gaps
+        assert "VesselTypes" not in report.actionable_gaps
+
+    def test_actionable_gaps_classified(self, tmp_path: Path):
+        """Lines and LineTypes are actionable (partial extraction possible)."""
+        master = self._make_master(
+            tmp_path,
+            {
+                "Lines": [{"Name": "Riser1", "Length": [100, 200]}],
+                "LineTypes": [{"Name": "Steel", "OD": 0.3}],
+            },
+        )
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        assert "Lines" in report.actionable_gaps
+        assert "LineTypes" in report.actionable_gaps
+        assert "Lines" not in report.expected_gaps
+
+    def test_unknown_sections_classified_as_actionable(self, tmp_path: Path):
+        """Sections not in any known set default to actionable."""
+        master = self._make_master(tmp_path, {"UnknownSection": {"foo": "bar"}})
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        assert "UnknownSection" in report.actionable_gaps
+        assert "UnknownSection" not in report.expected_gaps
+
+    def test_all_unmapped_are_categorized(self, tmp_path: Path):
+        """Every unmapped section appears in expected_gaps or actionable_gaps."""
+        master = self._make_master(
+            tmp_path,
+            {
+                "VesselTypes": [{"Name": "FPSO"}],
+                "Lines": [{"Name": "R1"}],
+                "UnknownSection": {"foo": "bar"},
+            },
+        )
+        report = ModularToSpecConverter().convert(
+            source=master, target=tmp_path / "s.yml"
+        )
+        categorized = set(report.expected_gaps) | set(report.actionable_gaps)
+        assert set(report.unmapped_sections) == categorized
+
+    def test_file_header_not_lossless_warning(self, tmp_path: Path):
+        """Output file header explicitly warns that extraction is not lossless."""
+        master = self._make_master(tmp_path)
+        out = tmp_path / "spec.yml"
+        ModularToSpecConverter().convert(source=master, target=out)
+        text = out.read_text()
+        assert "not a lossless" in text.lower()
+
+
+class TestSingleToSpecBoundaryReporting:
+    """Issue #520: boundary reporting propagates through single2spec chain."""
+
+    def test_is_best_effort_true(self, sample_single_data: dict, tmp_path: Path):
+        """SingleToSpecConverter propagates is_best_effort=True from modular stage."""
+        src = tmp_path / "model.yml"
+        src.write_text(yaml.dump(sample_single_data))
+        out = tmp_path / "spec.yml"
+        report = SingleToSpecConverter().convert(source=src, target=out)
+        assert report.is_best_effort is True
+
+
 class TestSingleToSpecConverter:
     """Test single -> spec conversion."""
 

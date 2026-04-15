@@ -37,7 +37,14 @@ def _print_report(report: ConversionReport) -> None:
     if report.warnings:
         for w in report.warnings:
             print(f"  WARNING: {w}")
-    if report.unmapped_sections:
+    if report.expected_gaps:
+        sections = ", ".join(sorted(report.expected_gaps))
+        print(f"  Expected gaps (out of spec scope): {sections}")
+    if report.actionable_gaps:
+        sections = ", ".join(sorted(report.actionable_gaps))
+        print(f"  Actionable gaps (potential improvement): {sections}")
+    if report.unmapped_sections and not (report.expected_gaps or report.actionable_gaps):
+        # Backward-compatible fallback for non-categorized reports
         print(f"  Unmapped sections: {', '.join(report.unmapped_sections)}")
     if report.success:
         print(f"  Output: {report.target_path}")

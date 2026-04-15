@@ -1,11 +1,14 @@
 """Tests for the CLI module."""
 
 import shutil
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
-from digitalmodel.solvers.orcaflex.format_converter.cli import create_parser, main
+from digitalmodel.solvers.orcaflex.format_converter.cli import _print_report, create_parser, main
+from digitalmodel.solvers.orcaflex.format_converter.protocols import ConversionReport
 
 
 class TestCLIDetect:
@@ -118,3 +121,29 @@ class TestCLIParser:
         """No subcommand returns exit code 1."""
         result = main([])
         assert result == 1
+
+
+class TestCLIReporting:
+    """Test reverse-extraction reporting text for issue #520."""
+
+    def test_print_report_surfaces_expected_and_actionable_gaps(self, tmp_path: Path):
+        report = ConversionReport(
+            success=True,
+            source_format="modular",
+            target_format="spec",
+            source_path=tmp_path / "master.yml",
+            target_path=tmp_path / "spec.yml",
+            unmapped_sections=["VesselTypes", "UnknownSection"],
+            expected_gaps=["VesselTypes"],
+            actionable_gaps=["UnknownSection"],
+            confidence=0.88,
+            is_best_effort=True,
+        )
+
+        stream = StringIO()
+        with redirect_stdout(stream):
+            _print_report(report)
+
+        output = stream.getvalue()
+        assert "Expected gaps (out of spec scope): VesselTypes" in output
+        assert "Actionable gaps (potential improvement): UnknownSection" in output

@@ -54,6 +54,22 @@ print(f"Converted {results['statistics']['successful']} files")
 
 ## 📋 Command Line Interface
 
+### Reverse extraction boundary (important)
+
+`modular2spec` and `single2spec` are best-effort reverse-extraction helpers.
+They are useful for migration scaffolding, inventory, and partial recovery of
+Environment / General intent, but they are not a lossless round-trip path from
+OrcaFlex strict YAML back into canonical `spec.yml`.
+
+Current expected reverse-extraction limits include object-rich OrcaFlex sections
+such as `VesselTypes`, `Vessels`, and `Groups`. Those are out of scope for the
+simplified `spec.yml` abstraction and should not be treated as converter bugs.
+Sections reported as actionable gaps are different: they indicate places where
+additional reverse extraction may still be feasible.
+
+Treat extracted specs as review-required artifacts, not canonical proof that a
+strict YAML model can be reconstructed without semantic loss.
+
 ### Single File Conversion
 
 ```bash
@@ -273,6 +289,59 @@ Run examples:
 ```bash
 python docs/domains/orcaflex/examples/conversion_examples.py
 ```
+
+---
+
+## Three-Way Format Converter: Reverse Extraction Limits
+
+The `format_converter` module supports a three-way conversion between
+`spec.yml` (simplified), modular OrcaFlex YAML, and single OrcaFlex YAML.
+The **forward** path (`spec → modular/single`) is lossless by design.
+The **reverse** path (`modular/single → spec`) is **best-effort only**.
+
+### What "best-effort" means
+
+`modular2spec` and `single2spec` extract only the subset of OrcaFlex data
+that has a direct equivalent in `spec.yml` (Environment + General fields).
+The output file header states this explicitly:
+
+```
+# Auto-extracted from OrcaFlex modular format (best-effort)
+# NOT a lossless round-trip — only Environment/General fields are mapped
+```
+
+### Unmapped section categories
+
+When sections cannot be mapped, the report classifies them:
+
+| Category | Meaning | Examples |
+|---|---|---|
+| **Expected gaps** | Out of spec scope — no equivalent concept in `spec.yml` | `VesselTypes`, `Vessels`, `Groups`, `Buoys`, `Shapes` |
+| **Actionable gaps** | Partial extraction exists or is feasible; higher-value sections | `Lines`, `LineTypes` |
+
+CLI output distinguishes the two:
+
+```
+[OK] modular -> spec | best-effort | confidence=0.72 | unmapped=5
+  Expected gaps (out of spec scope): Groups, VesselTypes, Vessels
+  Actionable gaps (potential improvement): LineTypes, Lines
+```
+
+### Confidence score
+
+The confidence score (`0.0 – 1.0`) reflects how many of the 14
+Environment/General fields were successfully extracted. A score of `1.0`
+means all 14 fields were found, not that the full model is recoverable.
+
+### When to use reverse extraction
+
+- **Bootstrapping a spec from an existing model** — gives you a starting
+  point that you must review and complete manually.
+- **Checking environment/simulation parameters** — high confidence for
+  water depth, wave trains, time step.
+
+Do **not** treat the extracted `spec.yml` as a canonical model definition
+without reviewing the actionable gaps and filling in missing data.
 
 ---
 

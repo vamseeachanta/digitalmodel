@@ -45,6 +45,45 @@ EXTRACTION_MAP: list[tuple[tuple[str, str], str]] = [
 # Total number of extractable fields (for confidence calculation)
 _TOTAL_EXTRACTABLE = len(EXTRACTION_MAP)
 
+# OrcaFlex sections that are intentionally out of spec.yml scope.
+# These represent vessel/component-level detail that the simplified spec
+# format has no equivalent for.  Seeing these in unmapped_sections is
+# expected and does not indicate a bug or improvable gap.
+EXPECTED_UNMAPPED_SECTIONS: frozenset[str] = frozenset(
+    {
+        "VesselTypes",
+        "Vessels",
+        "Groups",
+        "6DBuoys",
+        "Buoys",
+        "BuoyTypes",
+        "Shapes",
+        "Constraints",
+        "Links",
+        "Winches",
+        "Supports",
+        "SupportTypes",
+        "MorisonElementTypes",
+        "3DBuoys",
+        "TurbineTypes",
+        "Turbines",
+        "DragChainTypes",
+        "DragChains",
+        "FlexJoints",
+        "SolidFrictionCoefficients",
+    }
+)
+
+# OrcaFlex sections where partial extraction already exists or further
+# extraction is feasible.  Users who need more complete spec coverage
+# should look here first.
+ACTIONABLE_UNMAPPED_SECTIONS: frozenset[str] = frozenset(
+    {
+        "Lines",      # name already extracted; geometry/connections could map to spec
+        "LineTypes",  # cross-section/material could map to spec pipeline section
+    }
+)
+
 
 class ModularToSpecConverter:
     """Convert modular OrcaFlex format to spec.yml (best-effort).
@@ -137,15 +176,26 @@ class ModularToSpecConverter:
                 if section_key not in {"_WaveTrain0"}:
                     unmapped_sections.append(section_key)
 
+        # Categorize unmapped sections as expected vs actionable (issue #520)
+        expected_gaps: list[str] = []
+        actionable_gaps: list[str] = []
+        for section in unmapped_sections:
+            if section in EXPECTED_UNMAPPED_SECTIONS:
+                expected_gaps.append(section)
+            else:
+                # ACTIONABLE_UNMAPPED_SECTIONS or unknown — treat as actionable
+                actionable_gaps.append(section)
+
         # Calculate confidence
         confidence = (
             extracted_count / _TOTAL_EXTRACTABLE if _TOTAL_EXTRACTABLE > 0 else 0.0
         )
 
-        # Write spec with confidence header
+        # Write spec with explicit best-effort / non-lossless header
         header = (
-            f"# Auto-extracted from OrcaFlex modular format\n"
-            f"# Confidence: {confidence:.2f} ({extracted_count}/{_TOTAL_EXTRACTABLE} fields)\n"
+            f"# Auto-extracted from OrcaFlex modular format (best-effort)\n"
+            f"# NOT a lossless round-trip — only Environment/General fields are mapped\n"
+            f"# Confidence: {confidence:.2f} ({extracted_count}/{_TOTAL_EXTRACTABLE} fields extracted)\n"
             f"# Review before use\n"
         )
         content = yaml.dump(
@@ -166,6 +216,9 @@ class ModularToSpecConverter:
             unmapped_sections=unmapped_sections,
             confidence=round(confidence, 2),
             warnings=warnings,
+            is_best_effort=True,
+            expected_gaps=expected_gaps,
+            actionable_gaps=actionable_gaps,
         )
 
     def supported_formats(self) -> tuple[str, str]:

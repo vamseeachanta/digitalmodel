@@ -24,11 +24,17 @@ class ConversionReport:
     unmapped_sections: list[str] = field(default_factory=list)
     confidence: float = 1.0
     warnings: list[str] = field(default_factory=list)
+    # Reverse-extraction boundary fields (issue #520)
+    is_best_effort: bool = False
+    expected_gaps: list[str] = field(default_factory=list)
+    actionable_gaps: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         """One-line summary for CLI output."""
         status = "OK" if self.success else "FAILED"
         parts = [f"[{status}] {self.source_format} -> {self.target_format}"]
+        if self.is_best_effort:
+            parts.append("best-effort")
         if self.confidence < 1.0:
             parts.append(f"confidence={self.confidence:.2f}")
         if self.unmapped_sections:

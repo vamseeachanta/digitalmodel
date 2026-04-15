@@ -83,6 +83,9 @@ class SingleToSpecConverter:
             unmapped_sections=report2.unmapped_sections,
             confidence=report2.confidence,
             warnings=all_warnings,
+            is_best_effort=report2.is_best_effort,
+            expected_gaps=report2.expected_gaps,
+            actionable_gaps=report2.actionable_gaps,
         )
 
     def supported_formats(self) -> tuple[str, str]:
