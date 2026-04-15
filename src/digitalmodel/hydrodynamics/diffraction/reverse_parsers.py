@@ -497,10 +497,7 @@ class OrcaWaveInputParser:
         values = data.get("PeriodOrFrequency", [])
 
         if not values:
-            return FrequencySpec(
-                input_type=FrequencyInputType.FREQUENCY,
-                values=[0.1],
-            )
+            raise ValueError("No frequency data found in OrcaWave YAML")
 
         if "period" in referred_by.lower():
             # Convert periods (s) to frequencies (rad/s)

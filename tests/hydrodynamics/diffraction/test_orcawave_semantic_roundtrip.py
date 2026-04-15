@@ -134,6 +134,16 @@ class TestOrcaWaveReverseParserHardening:
         with pytest.raises(ValueError, match="No bodies found"):
             OrcaWaveInputParser().parse(yml_path)
 
+    def test_missing_frequencies_raise_instead_of_fallback(self, tmp_path: Path) -> None:
+        yml_path = tmp_path / "missing-frequencies.yml"
+        yml_path.write_text(
+            "WaterDepth: 100\nWaterDensity: 1.025\nWaveHeading: [0.0]\nBodies:\n  - BodyName: Hull\n    BodyMeshFileName: hull.gdf\n    BodyMeshFormat: Wamit gdf\n    BodyMeshSymmetry: None\n    BodyMeshLengthUnits: m\n    BodyMass: 1000.0\n    BodyCentreOfMass: [0.0, 0.0, 0.0]\n",
+            encoding="utf-8",
+        )
+
+        with pytest.raises(ValueError, match="No frequency data found"):
+            OrcaWaveInputParser().parse(yml_path)
+
     def test_free_floating_mode_roundtrip_is_preserved_if_present(self, tmp_path: Path) -> None:
         original = _load_ship_spec()
         data = original.model_dump(mode="json", exclude_none=True)
