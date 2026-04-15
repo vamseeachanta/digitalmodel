@@ -77,6 +77,28 @@ docs/domains/orcawave/
 
 ---
 
+## Semantic-equivalence claim boundary
+
+The current OrcaWave workflow should be described conservatively:
+- near-equivalent for key engineering inputs and tested round-trip pathways
+- not guaranteed 100% semantically equivalent across every strict OrcaWave YAML field
+
+Practical interpretation:
+- preserved and regression-tested fields include frequency values, heading values, COG, inertia tensor, fixed DOFs / constraints, and representative solver options
+- accepted normalization differences include unit/representation changes such as kg/m^3 <-> t/m^3, rad/s <-> period(s), bool <-> Yes/No, and Infinity <-> infinite
+- some strict OrcaWave fields are intentionally classified rather than preserved literally:
+  - `output_only`
+  - `gui_only`
+  - `internal_default_only`
+  - `known_non_configurable_in_spec`
+  - `solver_mode_significant`
+  - `physics_significant`
+  - `representation_normalization_only`
+
+This means the repo is strong for engineering round-trip fidelity, but it does not claim universal identity across every strict OrcaWave YAML key or solver-internal default.
+
+---
+
 ## Workflow Phases
 
 The OrcaWave orchestrator provides a **5-phase workflow**:

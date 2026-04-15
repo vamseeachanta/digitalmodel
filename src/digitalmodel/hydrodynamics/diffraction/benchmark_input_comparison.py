@@ -8,11 +8,29 @@ No circular dependencies — imports only html, typing, output_schemas.
 from __future__ import annotations
 
 import html as html_mod
+from collections import Counter
 from typing import Any, Dict, List, Optional
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
 )
+
+
+SEMANTIC_TAXONOMY = [
+    "physics_significant",
+    "solver_mode_significant",
+    "representation_normalization_only",
+    "output_only",
+    "gui_only",
+    "internal_default_only",
+    "known_non_configurable_in_spec",
+]
+
+LEGACY_LEVEL_TO_TAXONOMY = {
+    "significant": "physics_significant",
+    "convention": "representation_normalization_only",
+    "cosmetic": "gui_only",
+}
 
 
 def build_input_comparison_html(
@@ -221,8 +239,12 @@ def build_semantic_equivalence_html(
     cosmetic_count = sem_data.get("cosmetic_count", 0)
     convention_count = sem_data.get("convention_count", 0)
     sig_count = sem_data.get("significant_count", 0)
-    total = match_count + cosmetic_count + convention_count + sig_count
     diffs = sem_data.get("diffs", [])
+    taxonomy_counter = Counter(
+        d.get("category") or LEGACY_LEVEL_TO_TAXONOMY.get(d.get("level", ""), "")
+        for d in diffs
+    )
+    total = match_count + cosmetic_count + convention_count + sig_count
 
     if sig_count == 0:
         badge_color = "#27ae60"
@@ -244,7 +266,11 @@ def build_semantic_equivalence_html(
         "<li><strong>Convention</strong> \u2014 equivalent data in "
         "different representation (e.g. Hz vs rad/s)</li>"
         "<li><strong>Significant</strong> \u2014 real solver parameter "
-        "difference that may affect results</li></ul>",
+        "difference that may affect results</li>"
+        "<li><strong>Taxonomy</strong> \u2014 each diff may also carry one of: "
+        "physics_significant, solver_mode_significant, "
+        "representation_normalization_only, output_only, gui_only, "
+        "internal_default_only, known_non_configurable_in_spec</li></ul>",
         "<table class='stats-table' style='max-width:500px;"
         "margin-bottom:1em;'>",
         "<tr><th>Metric</th><th>Count</th></tr>",
@@ -259,6 +285,13 @@ def build_semantic_equivalence_html(
         f"<td style='color:{'#e74c3c' if sig_count > 0 else '#27ae60'}"
         f";font-weight:bold'>{sig_count}</td></tr>",
         f"<tr><td>Total keys compared</td><td>{total}</td></tr>",
+        "</table>",
+        "<table class='stats-table' style='max-width:700px;margin-bottom:1em;'>",
+        "<tr><th>Taxonomy class</th><th>Count</th></tr>",
+        *[
+            f"<tr><td>{taxonomy}</td><td>{taxonomy_counter.get(taxonomy, 0)}</td></tr>"
+            for taxonomy in SEMANTIC_TAXONOMY
+        ],
         "</table>",
         f"<div style='display:inline-block;padding:4px 16px;"
         f"border-radius:4px;color:white;font-weight:bold;"

@@ -453,26 +453,8 @@ class OrcaWaveInputParser:
                 metadata=MetadataSpec(),
             )
         else:
-            # No bodies found; create a placeholder
-            vessel = VesselSpec(
-                name="Unknown",
-                geometry=VesselGeometry(mesh_file="mesh.gdf"),
-                inertia=VesselInertia(
-                    mass=1.0,
-                    centre_of_gravity=[0.0, 0.0, 0.0],
-                    radii_of_gyration=[1.0, 1.0, 1.0],
-                ),
-            )
-            return DiffractionSpec(
-                version="1.0",
-                analysis_type=AnalysisType.DIFFRACTION,
-                vessel=vessel,
-                environment=environment,
-                frequencies=frequencies,
-                wave_headings=headings,
-                solver_options=solver_options,
-                outputs=OutputSpec(),
-                metadata=MetadataSpec(),
+            raise ValueError(
+                f"No bodies found in OrcaWave YAML: {yml_path}"
             )
 
     # -----------------------------------------------------------------
@@ -559,8 +541,17 @@ class OrcaWaveInputParser:
             isinstance(qtf_pressure, str) and qtf_pressure.lower() == "yes"
         )
 
+        remove_irreg = False
+        for body in data.get("Bodies", []) or []:
+            add_interior = body.get("BodyAddInteriorSurfacePanels", False)
+            if add_interior is True or (
+                isinstance(add_interior, str) and add_interior.lower() == "yes"
+            ):
+                remove_irreg = True
+                break
+
         return SolverOptions(
-            remove_irregular_frequencies=True,
+            remove_irregular_frequencies=remove_irreg,
             qtf_calculation=qtf_enabled,
         )
 
@@ -587,20 +578,32 @@ class OrcaWaveInputParser:
             length_units=length_units,
         )
 
-        # Mass: OrcaWave SI uses tonnes -> spec uses kg
-        mass_tonnes = float(body_data.get("BodyMass", 0.0))
-        mass_kg = tonnes_to_kg(mass_tonnes)
-
+        # Mass / inertia mode
+        inertia_spec = str(body_data.get("BodyInertiaSpecifiedBy", ""))
         cog = body_data.get("BodyCentreOfMass", [0.0, 0.0, 0.0])
+        inertia_kwargs: dict[str, Any]
+        if "free-floating body" in inertia_spec.lower():
+            radii = self._parse_radii_of_gyration(body_data)
+            cog_z = float(body_data.get("BodyCentreOfMassZRelativeToFreeSurface", 0.0))
+            inertia_kwargs = {
+                "mode": "free_floating",
+                "mass": 1.0,
+                "centre_of_gravity": [0.0, 0.0, cog_z],
+                "radii_of_gyration": radii,
+                "cog_z": cog_z,
+            }
+        else:
+            # OrcaWave SI uses tonnes -> spec uses kg
+            mass_tonnes = float(body_data.get("BodyMass", 0.0))
+            mass_kg = tonnes_to_kg(mass_tonnes)
+            inertia_tensor = self._parse_body_inertia(body_data, mass_tonnes)
+            inertia_kwargs = {
+                "mass": mass_kg,
+                "centre_of_gravity": [float(c) for c in cog],
+                "inertia_tensor": inertia_tensor,
+            }
 
-        # Inertia tensor
-        inertia_tensor = self._parse_body_inertia(body_data, mass_tonnes)
-
-        inertia = VesselInertia(
-            mass=mass_kg,
-            centre_of_gravity=[float(c) for c in cog],
-            inertia_tensor=inertia_tensor,
-        )
+        inertia = VesselInertia(**inertia_kwargs)
 
         # External stiffness
         external_stiffness = self._parse_6x6_matrix(body_data, "Stiffness")
@@ -633,6 +636,25 @@ class OrcaWaveInputParser:
             attitude=[float(a) for a in attitude],
             connection_parent=connection if connection != "Free" else None,
         )
+
+    def _parse_radii_of_gyration(self, body_data: dict[str, Any]) -> list[float]:
+        """Extract radii of gyration for free-floating bodies."""
+        radii_key = (
+            "BodyRadiiOfGyrationRx, "
+            "BodyRadiiOfGyrationRy, "
+            "BodyRadiiOfGyrationRz"
+        )
+        radii_data = body_data.get(radii_key)
+        if isinstance(radii_data, list) and len(radii_data) >= 3:
+            row0 = radii_data[0]
+            row1 = radii_data[1]
+            row2 = radii_data[2]
+            return [
+                float(row0[0]) if len(row0) > 0 else 0.0,
+                float(row1[1]) if len(row1) > 1 else 0.0,
+                float(row2[2]) if len(row2) > 2 else 0.0,
+            ]
+        return [1.0, 1.0, 1.0]
 
     def _parse_body_inertia(
         self, body_data: dict[str, Any], mass_tonnes: float

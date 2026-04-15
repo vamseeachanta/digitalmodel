@@ -128,6 +128,15 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
 - Frequency coverage and heading completeness checks.
 - Cross-tool benchmark comparisons where data is available.
 - OrcaFlex import checks using generated vessel type files.
+- Semantic-equivalence review should classify strict OrcaWave YAML differences into:
+  - `physics_significant`
+  - `solver_mode_significant`
+  - `representation_normalization_only`
+  - `output_only`
+  - `gui_only`
+  - `internal_default_only`
+  - `known_non_configurable_in_spec`
+- Documentation and reports should describe the current guarantee conservatively as near-equivalent for key engineering inputs and tested round-trip pathways, not universal 100% equivalence across every strict OrcaWave YAML field.
 
 ## Next Actions
 
