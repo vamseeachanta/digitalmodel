@@ -8,6 +8,7 @@ Hand-calc references (from parachute-aerodynamics.md and WRK-5082):
   rho = 0.002378 slug/ft^3 (sea level)
 """
 
+import pytest
 import yaml
 
 from digitalmodel.structural.parachute.parachute_drag import (
@@ -17,6 +18,7 @@ from digitalmodel.structural.parachute.chute_assessment import (
     DualChuteResult, TractionAssessment,
     calculate_aero_lift, calculate_dual_chute_drag,
     calculate_tire_traction, assess_all_load_cases, export_results_yaml,
+    simulate_deployment_transient,
 )
 
 RHO = 0.002378
@@ -162,3 +164,115 @@ class TestExportResultsYaml:
         governing = next(c for c in results if c.is_governing)
         assert data["governing_case_id"] == governing.case_id
         assert abs(data["governing_force_lbs"] - governing.drag_force_lbs) < 1.0
+
+
+class TestTransientDeploymentModel:
+    """Reduced-order transient deployment model for WRK-5095."""
+
+    def test_returns_time_history_and_summary_metrics(self):
+        result = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=0.35,
+            duration_s=2.0,
+            dt_s=0.1,
+        )
+
+        assert result.time_s
+        assert len(result.time_s) == len(result.total_drag_lbs)
+        assert len(result.time_s) == len(result.vehicle_speed_mph)
+        assert len(result.time_s) == len(result.deceleration_g)
+        assert result.peak_force_lbs == max(result.total_drag_lbs)
+        assert result.time_to_peak_s in result.time_s
+        assert result.impulse_lbf_s > 0.0
+
+    def test_vehicle_speed_decreases_monotonically(self):
+        result = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=0.35,
+            duration_s=2.0,
+            dt_s=0.1,
+        )
+
+        assert result.vehicle_speed_mph[0] == 250.0
+        assert result.vehicle_speed_mph[-1] < result.vehicle_speed_mph[0]
+        assert all(
+            later <= earlier + 1e-9
+            for earlier, later in zip(result.vehicle_speed_mph, result.vehicle_speed_mph[1:])
+        )
+
+    def test_peak_force_occurs_at_deployment_start_for_simple_opening_profile(self):
+        result = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=0.35,
+            duration_s=1.0,
+            dt_s=0.1,
+            inflation_time_constant_s=0.0,
+        )
+
+        assert result.time_to_peak_s == 0.0
+        assert result.peak_force_lbs == result.total_drag_lbs[0]
+
+    def test_time_history_includes_requested_end_time(self):
+        result = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=0.35,
+            duration_s=1.0,
+            dt_s=0.3,
+        )
+
+        assert result.time_s[-1] == 1.0
+        assert result.vehicle_speed_mph[-1] == pytest.approx(156.60, abs=0.5)
+        assert result.total_drag_lbs[-1] == pytest.approx(14480.86, abs=20.0)
+
+    def test_lift_sensitive_case_updates_cfd_recommendation(self):
+        low_lift = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=0.05,
+            duration_s=1.0,
+            dt_s=0.1,
+        )
+        high_lift = simulate_deployment_transient(
+            initial_speed_mph=250.0,
+            vehicle_weight_lbs=3600.0,
+            chute_diameter_ft=12.0,
+            cd=1.4,
+            opening_shock_factor=1.5,
+            rho=RHO,
+            frontal_area_ft2=25.0,
+            cl=2.0,
+            duration_s=1.0,
+            dt_s=0.1,
+        )
+
+        assert max(high_lift.aero_lift_lbs) > max(low_lift.aero_lift_lbs)
+        assert "vehicle-only CFD next" in high_lift.cfd_recommendation

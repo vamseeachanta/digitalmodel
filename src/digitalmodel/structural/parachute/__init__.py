@@ -4,6 +4,7 @@ ABOUTME: Drag force, frame geometry (2D/3D), solver, and member checks
 """
 
 from digitalmodel.structural.parachute.chute_assessment import (
+    DeploymentTransientResult,
     DualChuteResult,
     LoadCaseResult,
     TractionAssessment,
@@ -12,6 +13,7 @@ from digitalmodel.structural.parachute.chute_assessment import (
     calculate_dual_chute_drag,
     calculate_tire_traction,
     export_results_yaml,
+    simulate_deployment_transient,
 )
 from digitalmodel.structural.parachute.stroud_sizing import (
     StroudRecommendation,

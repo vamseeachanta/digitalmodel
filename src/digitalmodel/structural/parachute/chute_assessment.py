@@ -3,6 +3,7 @@ ABOUTME: Single and dual chute drag assessment with load case orchestrator
 ABOUTME: WRK-1362 — aero lift, tire traction, YAML export for downstream WRKs
 """
 
+import math
 from dataclasses import asdict, dataclass
 
 import yaml
@@ -49,6 +50,23 @@ class LoadCaseResult:
     drag_force_n: float
     traction: TractionAssessment
     is_governing: bool = False
+
+
+@dataclass
+class DeploymentTransientResult:
+    """Reduced-order transient deployment response summary."""
+
+    time_s: list[float]
+    vehicle_speed_mph: list[float]
+    chute_drag_lbs: list[float]
+    car_drag_lbs: list[float]
+    aero_lift_lbs: list[float]
+    total_drag_lbs: list[float]
+    deceleration_g: list[float]
+    peak_force_lbs: float
+    time_to_peak_s: float
+    impulse_lbf_s: float
+    cfd_recommendation: str
 
 
 # Default dual chute diameter (ft) — conservative estimate pending Stroud data
@@ -166,6 +184,113 @@ def assess_all_load_cases(
             break
 
     return cases
+
+
+def simulate_deployment_transient(
+    initial_speed_mph: float,
+    vehicle_weight_lbs: float,
+    chute_diameter_ft: float,
+    cd: float,
+    opening_shock_factor: float,
+    rho: float,
+    frontal_area_ft2: float,
+    cl: float,
+    duration_s: float,
+    dt_s: float,
+    *,
+    car_cd: float = 0.28,
+    inflation_time_constant_s: float = 0.35,
+) -> DeploymentTransientResult:
+    """Reduced-order transient deployment model.
+
+    Uses a simple explicit time-marching update with chute drag ramped by an
+    exponential inflation factor. This is intended as the minimum engineering
+    time-history model before any CFD refinement.
+    """
+    if initial_speed_mph <= 0:
+        raise ValueError("initial_speed_mph must be positive")
+    if vehicle_weight_lbs <= 0:
+        raise ValueError("vehicle_weight_lbs must be positive")
+    if duration_s <= 0 or dt_s <= 0:
+        raise ValueError("duration_s and dt_s must be positive")
+
+    mass_slugs = vehicle_weight_lbs / 32.174
+    steps = max(1, math.ceil(duration_s / dt_s))
+
+    time_s: list[float] = []
+    vehicle_speed_mph: list[float] = []
+    chute_drag_lbs: list[float] = []
+    car_drag_lbs: list[float] = []
+    aero_lift_lbs: list[float] = []
+    total_drag_lbs: list[float] = []
+    deceleration_g: list[float] = []
+
+    speed_mph = initial_speed_mph
+    for step in range(steps + 1):
+        t = min(round(step * dt_s, 10), duration_s)
+        inflation_factor = 1.0
+        if inflation_time_constant_s > 0.0:
+            inflation_factor = 1.0 - math.exp(-t / inflation_time_constant_s)
+
+        base_chute = calculate_drag_force(
+            speed_mph,
+            chute_diameter_ft,
+            cd,
+            opening_shock_factor,
+            rho,
+        ).force_lbs
+        chute_force = base_chute * inflation_factor
+
+        v_fps = mph_to_fps(speed_mph)
+        car_force = 0.5 * rho * v_fps**2 * car_cd * frontal_area_ft2
+        lift_force = calculate_aero_lift(speed_mph, cl, frontal_area_ft2, rho)
+        total_force = chute_force + car_force
+        accel_fps2 = total_force / mass_slugs
+        accel_g = accel_fps2 / 32.174
+
+        time_s.append(t)
+        vehicle_speed_mph.append(speed_mph)
+        chute_drag_lbs.append(chute_force)
+        car_drag_lbs.append(car_force)
+        aero_lift_lbs.append(lift_force)
+        total_drag_lbs.append(total_force)
+        deceleration_g.append(accel_g)
+
+        step_dt = max(min((step + 1) * dt_s, duration_s) - t, 0.0)
+        speed_fps = max(v_fps - accel_fps2 * step_dt, 0.0)
+        speed_mph = speed_fps * 3600.0 / 5280.0
+
+    peak_force = max(total_drag_lbs)
+    peak_index = total_drag_lbs.index(peak_force)
+    impulse = 0.0
+    for t0, t1, a, b in zip(time_s, time_s[1:], total_drag_lbs, total_drag_lbs[1:]):
+        impulse += 0.5 * (a + b) * (t1 - t0)
+
+    max_lift_ratio = max(aero_lift_lbs) / vehicle_weight_lbs if vehicle_weight_lbs else 0.0
+    if max_lift_ratio >= 0.1:
+        cfd_recommendation = (
+            "Reduced-order transient model provides the first-pass force history, but vehicle aero lift reaches a meaningful fraction of weight; "
+            "run vehicle-only CFD next if lift/downforce uncertainty is decision-critical."
+        )
+    else:
+        cfd_recommendation = (
+            "Reduced-order transient model is sufficient for the first engineering pass; "
+            "use CFD later only if sensitivity to car aero coefficients materially changes peak-load conclusions."
+        )
+
+    return DeploymentTransientResult(
+        time_s=time_s,
+        vehicle_speed_mph=vehicle_speed_mph,
+        chute_drag_lbs=chute_drag_lbs,
+        car_drag_lbs=car_drag_lbs,
+        aero_lift_lbs=aero_lift_lbs,
+        total_drag_lbs=total_drag_lbs,
+        deceleration_g=deceleration_g,
+        peak_force_lbs=peak_force,
+        time_to_peak_s=time_s[peak_index],
+        impulse_lbf_s=impulse,
+        cfd_recommendation=cfd_recommendation,
+    )
 
 
 def export_results_yaml(
