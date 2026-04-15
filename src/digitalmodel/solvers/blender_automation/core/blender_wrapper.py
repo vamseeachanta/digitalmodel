@@ -27,20 +27,32 @@ class BlenderWrapper:
             blender_path: Path to Blender executable. If None, uses system default.
         """
         self.blender_path = blender_path or "blender"
+        self.version: Optional[str] = None
+        self._available: bool = False
         self._verify_installation()
 
     def _verify_installation(self) -> None:
-        """Verify Blender is installed and accessible."""
+        """Verify Blender is installed and accessible.
+
+        Sets self._available and self.version without raising on failure.
+        """
         try:
             result = subprocess.run(
                 [self.blender_path, "--version"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             self.version = result.stdout.split('\n')[0]
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            raise RuntimeError(f"Blender not found or not accessible: {e}")
+            self._available = True
+        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+            self.version = None
+            self._available = False
+
+    @property
+    def is_available(self) -> bool:
+        """Whether a working Blender executable was found."""
+        return self._available
 
     def run_script(
         self,
@@ -61,6 +73,15 @@ class BlenderWrapper:
         Returns:
             Dictionary with execution results
         """
+        if not self._available:
+            return {
+                "success": False,
+                "stdout": "",
+                "stderr": "",
+                "returncode": -1,
+                "error": "Blender is not available on this system",
+            }
+
         cmd = [self.blender_path]
 
         if background:
