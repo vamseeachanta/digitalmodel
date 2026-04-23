@@ -33,20 +33,55 @@ def load_json(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
+def fixture_metadata_path(fixture_name: str) -> Path:
+    return REPORTING_FIXTURES_ROOT / f"{fixture_name}.metadata.json"
+
+
+def fixture_snapshot_path(fixture_name: str) -> Path:
+    return REPORTING_FIXTURES_ROOT / f"{fixture_name}.report.snapshot.html"
+
+
 def minimal_fixture_metadata_path() -> Path:
-    return REPORTING_FIXTURES_ROOT / "minimal_test.metadata.json"
+    return fixture_metadata_path("minimal_test")
 
 
 def minimal_fixture_snapshot_path() -> Path:
-    return REPORTING_FIXTURES_ROOT / "minimal_test.report.snapshot.html"
+    return fixture_snapshot_path("minimal_test")
+
+
+def fpso_fixture_metadata_path() -> Path:
+    return fixture_metadata_path("fpso_turret")
+
+
+def fpso_fixture_snapshot_path() -> Path:
+    return fixture_snapshot_path("fpso_turret")
+
+
+def load_fixture_metadata(fixture_name: str) -> dict[str, Any]:
+    return load_json(fixture_metadata_path(fixture_name))
 
 
 def load_minimal_fixture_metadata() -> dict[str, Any]:
-    return load_json(minimal_fixture_metadata_path())
+    return load_fixture_metadata("minimal_test")
+
+
+def load_fpso_fixture_metadata() -> dict[str, Any]:
+    return load_fixture_metadata("fpso_turret")
 
 
 def _build_geometry(metadata: dict[str, Any]) -> GeometryData:
     water_depth = metadata["environment"].get("water_depth_m")
+    key_points = [
+        KeyPointData(label="Hang-off", arc_length_m=0.0, x=0.0, y=0.0, z=0.0),
+        KeyPointData(label="Anchor", arc_length_m=250.0, x=0.0, y=0.0, z=-100.0),
+    ]
+    if metadata["fixture"]["name"] == "fpso_turret":
+        key_points = [
+            KeyPointData(label="Turret buoy", arc_length_m=0.0, x=0.0, y=0.0, z=-15.0),
+            KeyPointData(label="Vessel", arc_length_m=50.0, x=0.0, y=0.0, z=0.0),
+            KeyPointData(label="Leg1 anchor", arc_length_m=250.0, x=120.0, y=0.0, z=-80.0),
+        ]
+
     return GeometryData(
         water_depth_m=water_depth,
         line_profile=LineProfileData(
@@ -55,36 +90,35 @@ def _build_geometry(metadata: dict[str, Any]) -> GeometryData:
             y=[0.0, 0.0, 0.0],
             z=[0.0, -50.0, -100.0],
         ),
-        key_points=[
-            KeyPointData(label="Hang-off", arc_length_m=0.0, x=0.0, y=0.0, z=0.0),
-            KeyPointData(label="Anchor", arc_length_m=250.0, x=0.0, y=0.0, z=-100.0),
-        ],
+        key_points=key_points,
     )
 
 
 def _build_materials(metadata: dict[str, Any]) -> MaterialData:
-    line_type_name = "Chain"
-    if metadata["objects"].get("line_types"):
-        line_type_name = metadata["objects"]["line_types"][0].get("name", "Chain")
-    return MaterialData(
-        line_types=[
+    line_types_meta = metadata["objects"].get("line_types") or [{"name": "Chain"}]
+    line_types = []
+    weight_profile = [1.0] * len(line_types_meta)
+    for idx, lt_meta in enumerate(line_types_meta[:4]):
+        line_types.append(
             LineTypeData(
-                name=line_type_name,
-                od=0.10,
-                id=0.0,
-                wt=0.05,
-                grade="N/A",
-                youngs_modulus_mpa=210000.0,
-                density_kg_m3=7850.0,
-                ea_kn=1000.0,
-                ei_knm2=100.0,
-                gj_knm2=50.0,
-                mass_per_m_kg_m=150.0,
+                name=lt_meta.get("name", f"LineType{idx+1}"),
+                od=float(lt_meta.get("od", 0.10)),
+                id=float(lt_meta.get("id", 0.0)),
+                wt=float(lt_meta.get("wt", max(float(lt_meta.get("od", 0.10)) / 2.0, 0.01))),
+                grade=lt_meta.get("grade", "N/A"),
+                youngs_modulus_mpa=float(lt_meta.get("youngs_modulus_mpa", 210000.0)),
+                density_kg_m3=float(lt_meta.get("density_kg_m3", 7850.0)),
+                ea_kn=float(lt_meta.get("ea_kn", 1000.0 + idx * 100.0)),
+                ei_knm2=float(lt_meta.get("ei_knm2", 100.0 + idx * 10.0)),
+                gj_knm2=float(lt_meta.get("gj_knm2", 50.0 + idx * 5.0)),
+                mass_per_m_kg_m=float(lt_meta.get("mass_per_m_kg_m", 150.0 + idx * 10.0)),
             )
-        ],
+        )
+    return MaterialData(
+        line_types=line_types,
         submerged_weight_profile={
-            "arc_length": [0.0, 125.0, 250.0],
-            "w_s": [1.0, 1.0, 1.0],
+            "arc_length": [float(i) * 50.0 for i in range(len(weight_profile))],
+            "w_s": weight_profile,
         },
     )
 
@@ -93,24 +127,26 @@ def _build_boundary_conditions(metadata: dict[str, Any]) -> BCData:
     line = metadata["objects"]["lines"][0]
     vessel = metadata["objects"]["vessels"][0]["name"]
     water_depth = metadata["environment"].get("water_depth_m", 100.0)
+    end_a_type = line.get("end_a_type", "Fixed")
+    end_b_type = line.get("end_b_type", "Vessel")
     return BCData(
         end_a=BCEndData(
             name="End A",
-            type="Fixed",
+            type=end_a_type,
             x=0.0,
             y=0.0,
             z=-float(water_depth),
             connected_to=line.get("end_a_connection", "Anchored"),
-            dof_fixity="All Fixed",
+            dof_fixity="All Fixed" if end_a_type == "Fixed" else None,
         ),
         end_b=BCEndData(
             name="End B",
-            type="Vessel",
+            type=end_b_type,
             x=0.0,
             y=0.0,
             z=0.0,
             connected_to=line.get("end_b_connection", vessel),
-            dof_fixity="Vessel Coupled",
+            dof_fixity="Vessel Coupled" if end_b_type == "Vessel" else None,
         ),
         seabed=SeabedModelData(
             type="Linear",
@@ -123,24 +159,29 @@ def _build_boundary_conditions(metadata: dict[str, Any]) -> BCData:
 
 
 def _build_loads(metadata: dict[str, Any]) -> EnvironmentData:
-    water_depth = metadata["environment"].get("water_depth_m", 100.0)
+    env = metadata["environment"]
+    water_depth = env.get("water_depth_m", 100.0)
     return EnvironmentData(
         load_cases=[
             LoadCaseData(
-                case_id="Fixture Baseline",
-                description=f"Minimal reporting fixture in {water_depth:.1f} m water depth",
+                case_id=metadata["report_summary"].get("load_case_id", "Fixture Baseline"),
+                hs_m=env.get("wave_height_m"),
+                tp_s=env.get("wave_period_s"),
+                current_velocity_m_s=env.get("current_speed_mps"),
+                current_direction_deg=env.get("current_direction_deg"),
+                description=f"Fixture reporting baseline in {water_depth:.1f} m water depth",
             )
         ],
         hydrodynamic_coefficients=[
             HydroCoeffData(
-                line_type_name="Chain",
+                line_type_name=(metadata["objects"].get("line_types") or [{"name": "Chain"}])[0].get("name", "Chain"),
                 cd_normal=1.0,
                 ca_normal=1.0,
             )
         ],
         current_profile={
             "depth": [0.0, -float(water_depth)],
-            "velocity": [0.0, 0.0],
+            "velocity": [0.0, float(env.get("current_speed_mps", 0.0) or 0.0)],
         },
     )
 
