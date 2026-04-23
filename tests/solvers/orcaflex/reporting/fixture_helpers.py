@@ -23,7 +23,7 @@ from digitalmodel.solvers.orcaflex.reporting.models import (
     SegmentData,
 )
 
-FIXTURES_ROOT = Path(__file__).resolve().parents[2] / "fixtures"
+FIXTURES_ROOT = Path(__file__).resolve().parents[3] / "fixtures"
 REPORTING_FIXTURES_ROOT = FIXTURES_ROOT / "reporting"
 FIXTURE_REPORT_DATE = datetime(2025, 8, 14)
 
