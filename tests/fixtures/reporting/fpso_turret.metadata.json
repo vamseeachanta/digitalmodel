@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0.0",
+  "fixture": {
+    "name": "fpso_turret",
+    "source_spec": "digitalmodel/docs/domains/orcaflex/library/model_library/c03_turret_moored_fpso/spec.yml",
+    "source_monolithic": "digitalmodel/docs/domains/orcaflex/library/model_library/c03_turret_moored_fpso/monolithic/C03 Turret moored FPSO.yml",
+    "source_modular_master": "digitalmodel/docs/domains/orcaflex/library/model_library/c03_turret_moored_fpso/modular/master.yml",
+    "description": "Turret-moored FPSO generic-track proof fixture derived from the model library C03 case"
+  },
+  "provenance": {
+    "generated_on_machine": "dev-primary",
+    "generated_from": "repo-grounded source set",
+    "orcaflex_version": "11.6-reference",
+    "extraction_mode": "bounded_static_fixture",
+    "notes": [
+      "Initial stable metadata baseline for #2454 generic-track proof path",
+      "Counts and names are grounded in repo source artifacts and intentionally bounded for regression"
+    ]
+  },
+  "model": {
+    "state": 4,
+    "state_label": "reference-fixture",
+    "structure_type_guess": "mooring",
+    "object_count": 24,
+    "object_counts_by_type": {
+      "Vessel": 1,
+      "VesselType": 1,
+      "6DBuoy": 1,
+      "Line": 13,
+      "LineType": 8,
+      "Constraint": 1
+    }
+  },
+  "general": {
+    "units_system": "SI",
+    "stage_count": 1,
+    "stage_durations_s": [10.0],
+    "simulation_duration_s": 10.0
+  },
+  "environment": {
+    "water_depth_m": 80.0,
+    "wave_type": "Dean stream",
+    "wave_height_m": 5.0,
+    "wave_period_s": 13.0,
+    "wave_direction_deg": 120.0,
+    "current_speed_mps": 2.0,
+    "current_direction_deg": 125.0,
+    "wind_speed_mps": 0.0,
+    "wind_direction_deg": 210.0
+  },
+  "objects": {
+    "vessels": [
+      {
+        "name": "Vessel",
+        "vessel_type": "Vessel Type"
+      }
+    ],
+    "buoys": [
+      {
+        "name": "Turret buoy",
+        "buoy_type": "Spar buoy"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "Turret rotation",
+        "connection": "Vessel"
+      }
+    ],
+    "lines": [
+      {
+        "name": "10\" Prod 1",
+        "end_a_connection": "Turret buoy",
+        "end_b_connection": "Vessel",
+        "end_a_type": "Buoy",
+        "end_b_type": "Vessel"
+      },
+      {
+        "name": "Leg1",
+        "end_a_connection": "Anchored",
+        "end_b_connection": "Turret buoy",
+        "end_a_type": "Fixed",
+        "end_b_type": "Buoy"
+      },
+      {
+        "name": "Leg2",
+        "end_a_connection": "Anchored",
+        "end_b_connection": "Turret buoy",
+        "end_a_type": "Fixed",
+        "end_b_type": "Buoy"
+      },
+      {
+        "name": "Leg3",
+        "end_a_connection": "Anchored",
+        "end_b_connection": "Turret buoy",
+        "end_a_type": "Fixed",
+        "end_b_type": "Buoy"
+      }
+    ],
+    "line_types": [
+      {
+        "name": "10\"Product",
+        "od": 0.3926,
+        "id": 0.254,
+        "mass_per_m_kg_m": 221.35,
+        "category": "General"
+      },
+      {
+        "name": "10\"P+Buoys",
+        "od": 0.8888,
+        "id": 0.254,
+        "mass_per_m_kg_m": 422.24,
+        "category": "General"
+      },
+      {
+        "name": "12\" Chain",
+        "od": 1.0,
+        "id": 0.0,
+        "mass_per_m_kg_m": 1000.0,
+        "category": "General"
+      }
+    ]
+  },
+  "report_summary": {
+    "project_name": "c03_turret_moored_fpso",
+    "structure_id": "fpso_turret",
+    "structure_type": "mooring",
+    "load_case_id": "C03 Baseline",
+    "segment_count": 3,
+    "segment_length_m": 80.0,
+    "has_geometry": true,
+    "has_materials": true,
+    "has_boundary_conditions": true,
+    "has_loads": true,
+    "has_mesh": true,
+    "has_design_checks": false,
+    "has_static_results": false,
+    "has_dynamic_results": false
+  },
+  "normalization": {
+    "excluded_fields": [
+      "absolute_machine_paths",
+      "timestamps",
+      "volatile_internal_ids",
+      "non_deterministic_ordering",
+      "full_raw_object_property_bags"
+    ],
+    "ordering_rules": {
+      "object_names_sorted": true,
+      "dict_keys_sorted": true
+    }
+  }
+}

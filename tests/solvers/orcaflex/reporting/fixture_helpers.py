@@ -186,18 +186,21 @@ def _build_loads(metadata: dict[str, Any]) -> EnvironmentData:
     )
 
 
-def _build_mesh() -> MeshData:
+def _build_mesh(metadata: dict[str, Any]) -> MeshData:
+    total_segment_count = int(metadata["report_summary"].get("segment_count", 2))
+    segment_length = float(metadata["report_summary"].get("segment_length_m", 125.0))
+    segments = [
+        SegmentData(arc_length_m=float(i) * segment_length, length_m=segment_length)
+        for i in range(total_segment_count)
+    ]
     return MeshData(
-        total_segment_count=2,
-        segments=[
-            SegmentData(arc_length_m=0.0, length_m=125.0),
-            SegmentData(arc_length_m=125.0, length_m=125.0),
-        ],
+        total_segment_count=total_segment_count,
+        segments=segments,
         quality=MeshQualityData(
             max_adjacent_ratio=1.0,
-            worst_ratio_arc_length_m=125.0,
+            worst_ratio_arc_length_m=segment_length,
             verdict="PASS",
-            adjacent_ratios=[1.0],
+            adjacent_ratios=[1.0] * max(total_segment_count - 1, 1),
         ),
     )
 
@@ -218,16 +221,24 @@ def build_report_from_metadata(metadata: dict[str, Any]) -> OrcaFlexAnalysisRepo
         materials=_build_materials(metadata) if report_summary.get("has_materials") else None,
         boundary_conditions=_build_boundary_conditions(metadata) if report_summary.get("has_boundary_conditions") else None,
         loads=_build_loads(metadata) if report_summary.get("has_loads") else None,
-        mesh=_build_mesh() if report_summary.get("has_mesh") else None,
+        mesh=_build_mesh(metadata) if report_summary.get("has_mesh") else None,
     )
     return report
 
 
-def generate_minimal_fixture_report(tmp_path: Path, include_plotlyjs: bool | str = False) -> Path:
-    metadata = load_minimal_fixture_metadata()
+def generate_fixture_report(
+    fixture_name: str,
+    tmp_path: Path,
+    include_plotlyjs: bool | str = False,
+) -> Path:
+    metadata = load_fixture_metadata(fixture_name)
     report = build_report_from_metadata(metadata)
-    output_path = tmp_path / "minimal_test.report.html"
+    output_path = tmp_path / f"{fixture_name}.report.html"
     return generate_orcaflex_report(report, output_path=output_path, include_plotlyjs=include_plotlyjs)
+
+
+def generate_minimal_fixture_report(tmp_path: Path, include_plotlyjs: bool | str = False) -> Path:
+    return generate_fixture_report("minimal_test", tmp_path, include_plotlyjs=include_plotlyjs)
 
 
 def load_snapshot_text(name: str = "minimal_test.report.snapshot.html") -> str:
