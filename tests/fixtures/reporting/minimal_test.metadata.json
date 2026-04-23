@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "fixture": {
+    "name": "minimal_test",
+    "source_sim": "digitalmodel/tests/fixtures/minimal_test.sim",
+    "source_dat": "digitalmodel/tests/fixtures/minimal_test.dat",
+    "description": "Minimal OrcaFlex fixture with one vessel and one mooring line for reporting proof tests"
+  },
+  "provenance": {
+    "generated_on_machine": "licensed-win-1",
+    "generated_with": "digitalmodel/scripts/orcaflex/extract_fixture_metadata.py",
+    "orcaflex_version": "11.6",
+    "extraction_mode": "OrcFxAPI",
+    "notes": [
+      "Stable metadata baseline for fixture-backed reporting tests",
+      "Exclude volatile/internal IDs and machine-local paths"
+    ]
+  },
+  "model": {
+    "state": 4,
+    "state_label": "post-simulation",
+    "structure_type_guess": "mooring",
+    "object_count": 11,
+    "object_counts_by_type": {
+      "Vessel": 1,
+      "Line": 1,
+      "LineType": 1
+    }
+  },
+  "general": {
+    "units_system": "SI",
+    "stage_count": 1,
+    "stage_durations_s": [10.0],
+    "simulation_duration_s": 10.0
+  },
+  "environment": {
+    "water_depth_m": 100.0,
+    "wave_type": null,
+    "wave_height_m": null,
+    "wave_period_s": null,
+    "current_speed_mps": null,
+    "wind_speed_mps": null
+  },
+  "objects": {
+    "vessels": [
+      {
+        "name": "TestVessel"
+      }
+    ],
+    "lines": [
+      {
+        "name": "MooringLine1",
+        "line_type": "Chain",
+        "end_a_connection": "Anchored",
+        "end_b_connection": "TestVessel"
+      }
+    ],
+    "line_types": [
+      {
+        "name": "Chain"
+      }
+    ]
+  },
+  "report_summary": {
+    "project_name": "minimal_test",
+    "structure_id": "minimal_test",
+    "structure_type": "mooring",
+    "has_geometry": true,
+    "has_materials": true,
+    "has_boundary_conditions": true,
+    "has_loads": true,
+    "has_mesh": true,
+    "has_design_checks": false,
+    "has_static_results": false,
+    "has_dynamic_results": false
+  },
+  "normalization": {
+    "excluded_fields": [
+      "absolute_machine_paths",
+      "timestamps",
+      "volatile_internal_ids",
+      "non_deterministic_ordering"
+    ],
+    "ordering_rules": {
+      "object_names_sorted": true,
+      "dict_keys_sorted": true
+    }
+  }
+}
