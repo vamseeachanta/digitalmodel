@@ -1,10 +1,11 @@
-"""Semantic roundtrip regression tests for OrcaWave strict YAML (#521)."""
+"""Semantic roundtrip regression tests for OrcaWave strict YAML (#521, #2457)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
+import yaml
 
 from digitalmodel.hydrodynamics.diffraction.benchmark_input_comparison import (
     build_semantic_equivalence_html,
@@ -14,6 +15,14 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBack
 from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+L03_SPEC_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "docs"
+    / "domains"
+    / "orcawave"
+    / "L03_ship_benchmark"
+    / "spec.yml"
+)
 
 
 def _load_ship_spec() -> DiffractionSpec:
@@ -26,6 +35,10 @@ def _load_multibody_spec() -> DiffractionSpec:
 
 def _load_semisub_spec() -> DiffractionSpec:
     return DiffractionSpec.from_yaml(FIXTURES_DIR / "spec_semisub.yml")
+
+
+def _load_l03_ship_benchmark_spec() -> DiffractionSpec:
+    return DiffractionSpec.from_yaml(L03_SPEC_PATH)
 
 
 def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
@@ -121,6 +134,76 @@ class TestOrcaWaveSemanticRoundTripMultiBody:
         assert parsed.bodies is not None
         turret = next(body for body in parsed.bodies if body.vessel.name == "Turret")
         assert turret.connection_parent == "FPSO_Hull"
+
+
+class TestOrcaWaveL03ShipBenchmarkRoundTrip:
+    """Flagship L03 ship benchmark proof for #2457.
+
+    The L03 fixture is the richest single-body OrcaWave benchmark in the
+    repository: ship mesh, finite water depth, explicit inertia tensor, roll
+    damping, dense heading/period grid, and QTF-enabled solve intent.  These
+    tests lock the engineering-significant canonical-spec contract without
+    claiming byte-for-byte OrcaWave YAML identity.
+    """
+
+    def test_l03_spec_file_exists_and_is_ship_benchmark(self) -> None:
+        original = _load_l03_ship_benchmark_spec()
+
+        assert L03_SPEC_PATH.exists()
+        assert original.vessel.name == "Body1"
+        assert original.vessel.type == "ship"
+        assert "L03" in original.metadata.tags
+        assert original.environment.water_depth == pytest.approx(500.0)
+
+    def test_l03_roundtrip_preserves_frequency_and_heading_grid(self, tmp_path: Path) -> None:
+        original = _load_l03_ship_benchmark_spec()
+        yml_path = _generate_orcawave_yml(original, tmp_path)
+        parsed = OrcaWaveInputParser().parse(yml_path)
+
+        assert parsed.frequencies.to_periods_s() == pytest.approx(
+            original.frequencies.to_periods_s(), rel=1e-6
+        )
+        assert parsed.wave_headings.to_heading_list() == pytest.approx(
+            original.wave_headings.to_heading_list(), abs=1e-9
+        )
+
+    def test_l03_roundtrip_preserves_inertia_cog_and_roll_damping(self, tmp_path: Path) -> None:
+        original = _load_l03_ship_benchmark_spec()
+        yml_path = _generate_orcawave_yml(original, tmp_path)
+        parsed = OrcaWaveInputParser().parse(yml_path)
+
+        assert parsed.vessel is not None
+        assert parsed.vessel.inertia.centre_of_gravity == pytest.approx(
+            original.vessel.inertia.centre_of_gravity, rel=1e-9
+        )
+        for key, expected in original.vessel.inertia.inertia_tensor.items():
+            assert parsed.vessel.inertia.inertia_tensor[key] == pytest.approx(
+                expected, rel=1e-9
+            )
+        assert parsed.vessel.external_damping[3][3] == pytest.approx(36010.0)
+
+    def test_l03_generated_native_yaml_preserves_qtf_solve_intent(self, tmp_path: Path) -> None:
+        """QTF min/max are native backend settings, not currently reverse-parsed.
+
+        The forward native YAML must still carry the analysis-significant QTF
+        solve controls from the canonical L03 spec.  This keeps the #2457 claim
+        boundary explicit: native forward fidelity for QTF intent, roundtrip for
+        the core engineering grid/inertia/damping fields.
+        """
+        original = _load_l03_ship_benchmark_spec()
+        yml_path = _generate_orcawave_yml(original, tmp_path)
+        native = yaml.safe_load(yml_path.read_text(encoding="utf-8"))
+        parsed = OrcaWaveInputParser().parse(yml_path)
+
+        assert original.solver_options.qtf_calculation is True
+        assert native["SolveType"] == "Full QTF calculation"
+        assert native["QuadraticLoadPressureIntegration"] is True
+        assert native["QuadraticLoadControlSurface"] is False
+        assert native["QTFFrequencyTypes"] == "Sum frequencies"
+        assert native["QTFMinPeriodOrFrequency"] == pytest.approx(2.0, rel=1e-6)
+        assert native["QTFMaxPeriodOrFrequency"] == pytest.approx(10.0, rel=1e-6)
+        assert parsed.solver_options.qtf_calculation is True
+        assert parsed.solver_options.remove_irregular_frequencies is True
 
 
 class TestOrcaWaveReverseParserHardening:
