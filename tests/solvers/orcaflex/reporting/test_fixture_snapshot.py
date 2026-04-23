@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from .fixture_helpers import generate_minimal_fixture_report, minimal_fixture_snapshot_path
-from .snapshot_helpers import load_normalized_snapshot, normalize_report_html, normalized_report_text
+from tests.solvers.orcaflex.reporting.fixture_helpers import (
+    generate_minimal_fixture_report,
+    minimal_fixture_snapshot_path,
+)
+from tests.solvers.orcaflex.reporting.snapshot_helpers import (
+    load_normalized_snapshot,
+    normalize_report_html,
+    normalized_report_text,
+)
 
 
 def test_minimal_fixture_snapshot_baseline_exists() -> None:
@@ -35,8 +42,12 @@ def test_snapshot_scope_is_structural_not_incidental(tmp_path) -> None:
     report_path = generate_minimal_fixture_report(tmp_path, include_plotlyjs=False)
     actual = normalized_report_text(report_path)
     assert "<html" in actual.lower()
-    assert "<title>" in actual.lower()
-    assert "<footer>" in actual.lower()
+    assert 'id="model-overview"' in actual
+    assert 'id="geometry"' in actual
+    assert 'id="materials"' in actual
+    assert 'id="boundary-conditions"' in actual
+    assert 'id="mesh"' in actual
+    assert 'id="loads"' in actual
 
 
 def test_mooring_with_raos_snapshot_is_deferred_until_minimal_fixture_stable() -> None:

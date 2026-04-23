@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .fixture_helpers import (
+from tests.solvers.orcaflex.reporting.fixture_helpers import (
     generate_minimal_fixture_report,
     load_minimal_fixture_metadata,
     minimal_fixture_metadata_path,
@@ -63,9 +63,12 @@ def test_build_report_from_minimal_fixture_metadata(tmp_path: Path) -> None:
 def test_generated_report_from_minimal_fixture_contains_expected_sections(tmp_path: Path) -> None:
     report_path = generate_minimal_fixture_report(tmp_path, include_plotlyjs=False)
     html_text = report_path.read_text(encoding="utf-8")
-    # TODO: tighten these section expectations once fixture-backed report mapping is implemented.
-    assert "<title>" in html_text
-    assert "<footer>" in html_text
+    assert 'id="model-overview"' in html_text
+    assert 'id="geometry"' in html_text
+    assert 'id="materials"' in html_text
+    assert 'id="boundary-conditions"' in html_text
+    assert 'id="mesh"' in html_text
+    assert 'id="loads"' in html_text
 
 
 def test_minimal_fixture_metadata_excludes_volatile_fields() -> None:

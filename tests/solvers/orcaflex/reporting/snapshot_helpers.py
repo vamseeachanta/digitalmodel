@@ -6,9 +6,9 @@ from pathlib import Path
 
 VOLATILE_PATTERNS: list[tuple[str, str]] = [
     # Example placeholders; tighten once real generated HTML is available.
-    (r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", "<TIMESTAMP>"),
-    (r"/mnt/[^"]+", "<PATH>"),
-    (r"[A-Fa-f0-9]{32,}", "<HEX>"),
+    (r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z', '<TIMESTAMP>'),
+    (r'/mnt/[^"\s>]+', '<PATH>'),
+    (r'[A-Fa-f0-9]{32,}', '<HEX>'),
 ]
 
 
