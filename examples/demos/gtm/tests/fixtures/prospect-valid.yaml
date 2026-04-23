@@ -1,0 +1,30 @@
+# Valid prospect intake — demo_05 + canonical heavy-lift-csv vessel.
+# Used by test_prospect_adapter.py::test_valid_yaml_passes_schema and
+# test_prospect_pipeline_e2e.py happy-path tests.
+prospect:
+  company: "Acme Marine Contractors"
+  contact: "jane.doe@acme.example"
+  nda_in_place: true
+  target_demo: "demo_05"
+  delivery_deadline_utc: "2026-04-21T17:00:00Z"
+vessel:
+  shape: "csv_hlv"
+  source: "canonical_ref"
+  canonical_ref: "heavy-lift-csv"
+structure:
+  kind: "rigid_jumper"
+  body:
+    outer_diameter_m: 0.3239
+    wall_thickness_m: 0.0254
+    length_m: 45.0
+    material: "X65"
+environment:
+  water_depths_m: [1500, 2000, 2500]
+  hs_values_m: [1.5, 2.0, 2.5]
+  current_velocity_ms: 0.5
+output:
+  brand_header: "Prepared for Acme Marine Contractors"
+  brand_footer: "Confidential — NDA 2026-04-23"
+  publish_private_url: true
+  gating: "hash"
+  purge_after_utc: "2026-05-20T00:00:00Z"

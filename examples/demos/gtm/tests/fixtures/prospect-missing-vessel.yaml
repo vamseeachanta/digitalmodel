@@ -1,0 +1,17 @@
+# Invalid intake — demo_03 MUST include a vessel block (Q6 conditional-required
+# rule). Used by test_prospect_adapter.py::test_missing_vessel_body_fails and
+# the Q6 schema-rejection coverage.
+prospect:
+  company: "Acme Marine Contractors"
+  contact: "jane.doe@acme.example"
+  nda_in_place: true
+  target_demo: "demo_03"
+  delivery_deadline_utc: "2026-04-21T17:00:00Z"
+structure:
+  kind: "mudmat"
+  body:
+    plan_area_m2: 120.0
+output:
+  brand_header: "Prepared for Acme Marine Contractors"
+  brand_footer: "Confidential — NDA"
+  publish_private_url: false
