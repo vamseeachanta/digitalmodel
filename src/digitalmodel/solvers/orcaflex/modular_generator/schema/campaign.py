@@ -64,6 +64,28 @@ class InstallationSection(BaseModel):
     enabled: bool = Field(default=True)
 
 
+class ParameterSweep(BaseModel):
+    """Dotted-path parameter sweep axis for campaign matrix."""
+
+    parameter: str = Field(
+        ...,
+        min_length=1,
+        description="Dotted path into ProjectInputSpec (e.g., 'environment.waves.height')",
+    )
+    values: list[Any] = Field(
+        ...,
+        min_length=1,
+        description="Discrete values; cross-multiplied with other axes at combination time",
+    )
+
+    @field_validator("parameter")
+    @classmethod
+    def _no_trailing_dot(cls, v: str) -> str:
+        if v.endswith("."):
+            raise ValueError("parameter must not end with '.'")
+        return v
+
+
 class CampaignMatrix(BaseModel):
     """Defines the parametric variation space for batch generation."""
 

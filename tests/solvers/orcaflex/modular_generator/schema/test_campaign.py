@@ -114,6 +114,32 @@ class TestSoilVariation:
         assert sv.slope is None
 
 
+class TestParameterSweep:
+    def test_parameter_sweep_valid(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        ps = ParameterSweep(
+            parameter="environment.waves.height",
+            values=[1.0, 2.0, 3.0],
+        )
+        assert ps.parameter == "environment.waves.height"
+        assert ps.values == [1.0, 2.0, 3.0]
+
+    def test_parameter_sweep_empty_values_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="environment.waves.height", values=[])
+
+    def test_parameter_sweep_empty_parameter_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="", values=[1.0, 2.0])
+
+    def test_parameter_sweep_dot_terminal_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="environment.waves.", values=[1.0, 2.0])
+
+
 class TestCampaignMatrixCombinations:
     def test_depths_only(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
