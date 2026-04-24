@@ -48,7 +48,7 @@ _DOCS_ROOT = Path(__file__).parent.parent.parent.parent.parent / "docs"
 
 PIPELINE_24IN = (
     _DOCS_ROOT
-    / "modules/orcaflex/pipeline/installation/floating/24in_pipeline"
+    / "domains/orcaflex/pipeline/installation/floating/24in_pipeline"
 )
 SPEC_24IN = PIPELINE_24IN / "spec.yml"
 MONOLITHIC_24IN_YML = (
@@ -61,7 +61,7 @@ MONOLITHIC_24IN_SIM = PIPELINE_24IN / "monolithic/basefile/statics.sim"
 
 PIPELINE_30IN = (
     _DOCS_ROOT
-    / "modules/orcaflex/pipeline/installation/floating/30in_pipeline"
+    / "domains/orcaflex/pipeline/installation/floating/30in_pipeline"
 )
 MONOLITHIC_30IN_SIM = PIPELINE_30IN / "monolithic.sim"
 MODULAR_30IN_SIM = PIPELINE_30IN / "modular/master.sim"
@@ -74,18 +74,18 @@ SPEC_24IN_QA = PIPELINE_24IN / "spec_qa.yml"
 
 # A01 Catenary Riser - simple model for instant validation (<10s statics)
 A01_RISER = (
-    _DOCS_ROOT / "modules/orcaflex/examples/raw/A01/A01 Catenary riser.dat"
+    _DOCS_ROOT / "domains/orcaflex/examples/raw/A01/A01 Catenary riser.dat"
 )
 
 # Additional Tier 2 fast models for library validation
 A01_LAZY_WAVE = (
-    _DOCS_ROOT / "modules/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml"
+    _DOCS_ROOT / "domains/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml"
 )
 C09_FENDERS = (
-    _DOCS_ROOT / "modules/orcaflex/examples/raw/C09/C09 Fenders.yml"
+    _DOCS_ROOT / "domains/orcaflex/examples/raw/C09/C09 Fenders.yml"
 )
 D02_PULL_IN = (
-    _DOCS_ROOT / "modules/orcaflex/examples/raw/D02/D02 Pull in analysis.yml"
+    _DOCS_ROOT / "domains/orcaflex/examples/raw/D02/D02 Pull in analysis.yml"
 )
 
 # ---------------------------------------------------------------------------
