@@ -364,6 +364,20 @@ def _build_body_dict(
     return body
 
 
+def _effective_solve_type(spec: DiffractionSpec) -> str:
+    """Resolve OrcaWave solve type from explicit solver options + analysis type.
+
+    Older canonical specs may set ``analysis_type: full_qtf`` while relying on
+    default ``solver_options.solve_type``.  Treat that top-level analysis intent
+    as authoritative unless the solver option is explicitly a non-default mode.
+    """
+    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    analysis_type = getattr(getattr(spec, "analysis_type", None), "value", None)
+    if analysis_type == "full_qtf" and solve_type == "potential_and_source":
+        return "full_qtf"
+    return solve_type
+
+
 # ---------------------------------------------------------------------------
 # Section builders
 # ---------------------------------------------------------------------------
@@ -383,7 +397,7 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     }
 
     section: dict[str, Any] = {}
-    solve_type_key = getattr(solver, "solve_type", "potential_and_source")
+    solve_type_key = _effective_solve_type(spec)
     section["SolveType"] = _SOLVE_TYPE_MAP.get(
         solve_type_key, "Potential and source formulations"
     )
@@ -495,13 +509,23 @@ def _build_headings_section(spec: DiffractionSpec) -> dict[str, Any]:
     section: dict[str, Any] = {
         "WaveHeading": _headings_from_spec(spec),
     }
-    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    solve_type = _effective_solve_type(spec)
     is_qtf = solve_type in ("diagonal_qtf", "full_qtf")
     if spec.solver_options.qtf_calculation or is_qtf:
         section["QTFMinCrossingAngle"] = 0
         section["QTFMaxCrossingAngle"] = 180
-        section["QTFMinPeriodOrFrequency"] = 0
-        section["QTFMaxPeriodOrFrequency"] = "Infinity"
+        qtf_max_period = "Infinity"
+        qtf_min_period: float | int = 0
+        if spec.solver_options.qtf_max_frequency is not None:
+            qtf_min_period = round(
+                rad_per_s_to_period_s(spec.solver_options.qtf_max_frequency), 6
+            )
+        if spec.solver_options.qtf_min_frequency is not None:
+            qtf_max_period = round(
+                rad_per_s_to_period_s(spec.solver_options.qtf_min_frequency), 6
+            )
+        section["QTFMinPeriodOrFrequency"] = qtf_min_period
+        section["QTFMaxPeriodOrFrequency"] = qtf_max_period
         if solve_type == "full_qtf":
             section["QTFFrequencyTypes"] = "Sum frequencies"
             section["IncludeMeanDriftFullQTFs"] = "No"
@@ -519,7 +543,7 @@ def _build_solver_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build the outputs section."""
-    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    solve_type = _effective_solve_type(spec)
     has_source = solve_type != "potential_only"
 
     section: dict[str, Any] = {}
@@ -547,7 +571,7 @@ def _build_damping_lid_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build QTF-specific properties for Full QTF / diagonal QTF solve types."""
-    solve_type = getattr(spec.solver_options, "solve_type", "potential_and_source")
+    solve_type = _effective_solve_type(spec)
     if solve_type not in ("diagonal_qtf", "full_qtf"):
         return {}
 
