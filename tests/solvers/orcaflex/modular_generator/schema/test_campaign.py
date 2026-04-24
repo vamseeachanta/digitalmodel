@@ -295,6 +295,50 @@ class TestCampaignMatrixCombinations:
         assert all(set(c.keys()) == {"water_depth"} for c in combos)
 
 
+class TestApplyOverridesWithSweeps:
+    def test_apply_overrides_with_sweep_modifies_spec(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, ParameterSweep,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[5.0])]
+        )
+        combo = {"environment.waves.trains.0.height": 5.0}
+        result = _apply_overrides(spec, combo, matrix)
+        assert result.environment.waves.height == 5.0
+
+    def test_apply_overrides_sweep_applies_after_typed_axis(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, ParameterSweep,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            water_depths=[50],
+            sweeps=[ParameterSweep(parameter="environment.water.depth", values=[200])],
+        )
+        combo = {"water_depth": 50, "environment.water.depth": 200}
+        result = _apply_overrides(spec, combo, matrix)
+        assert result.environment.water.depth == 200
+
+    def test_validate_output_naming_warns_on_sweep_axis_without_alias(self, caplog):
+        import logging
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec, CampaignMatrix, ParameterSweep,
+        )
+        base = _make_base_spec()
+        caplog.set_level(logging.WARNING)
+        CampaignSpec(
+            base=base,
+            campaign=CampaignMatrix(
+                water_depths=[10],
+                sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0])]
+            ),
+            output_naming="{base_name}_wd{water_depth}m",
+        )
+        assert any("environment.waves.trains.0.height" in r.message for r in caplog.records)
+
+
 class TestCampaignSpecValidators:
     def test_tensions_without_slay_raises(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
