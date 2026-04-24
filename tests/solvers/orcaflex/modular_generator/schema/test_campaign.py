@@ -237,6 +237,63 @@ class TestCampaignMatrixCombinations:
         with pytest.raises(ValidationError):
             CampaignMatrix(water_depths=[-5, 10])
 
+    def test_campaign_matrix_single_sweep_only(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0, 3.0])]
+        )
+        combos = m.combinations()
+        assert len(combos) == 3
+        assert [c["environment.waves.trains.0.height"] for c in combos] == [1.0, 2.0, 3.0]
+
+    def test_campaign_matrix_sweeps_crossed_with_typed_axis(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            water_depths=[10, 20],
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0])],
+        )
+        combos = m.combinations()
+        assert len(combos) == 4  # 2 x 2
+
+    def test_campaign_matrix_two_sweeps_crossed(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            sweeps=[
+                ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0]),
+                ParameterSweep(parameter="environment.waves.trains.0.period", values=[6, 8, 10]),
+            ]
+        )
+        combos = m.combinations()
+        assert len(combos) == 6  # 2 x 3
+
+    def test_campaign_matrix_no_axes_and_no_sweeps_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
+        with pytest.raises(ValidationError):
+            CampaignMatrix()
+
+    def test_sweep_parameter_shadowing_typed_axis_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        with pytest.raises(ValidationError):
+            CampaignMatrix(
+                water_depths=[10, 20],
+                sweeps=[ParameterSweep(parameter="water_depth", values=[30, 40])],
+            )
+
+    def test_backward_compat_no_sweeps_field(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
+        m = CampaignMatrix(water_depths=[10, 20])
+        combos = m.combinations()
+        assert len(combos) == 2
+        assert all(set(c.keys()) == {"water_depth"} for c in combos)
+
 
 class TestCampaignSpecValidators:
     def test_tensions_without_slay_raises(self):

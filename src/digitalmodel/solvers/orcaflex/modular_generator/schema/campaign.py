@@ -89,7 +89,10 @@ class ParameterSweep(BaseModel):
 class CampaignMatrix(BaseModel):
     """Defines the parametric variation space for batch generation."""
 
-    water_depths: list[float] = Field(..., min_length=1, description="Water depths (m)")
+    water_depths: list[float] | None = Field(
+        default=None,
+        description="Water depths (m). Optional when sweeps populate the axis space.",
+    )
     route_lengths: list[float] | None = Field(
         default=None,
         description="Route lengths (m). Adjusts last pipeline segment only.",
@@ -100,27 +103,43 @@ class CampaignMatrix(BaseModel):
     )
     environments: list[EnvironmentVariation] | None = None
     soils: list[SoilVariation] | None = None
+    sweeps: list[ParameterSweep] = Field(
+        default_factory=list,
+        description="Dotted-path parameter sweep axes.",
+    )
 
     @field_validator("water_depths")
     @classmethod
-    def validate_water_depths(cls, v: list[float]) -> list[float]:
+    def validate_water_depths(cls, v: list[float] | None) -> list[float] | None:
+        if v is None:
+            return v
         for depth in v:
             if depth <= 0:
                 raise ValueError(f"Water depth must be positive, got {depth}")
         return v
 
-    def combinations(self) -> list[dict[str, float | str]]:
-        """Generate cartesian product of all non-None parameters.
+    @model_validator(mode="after")
+    def _validate_axes(self):
+        if not any([
+            self.water_depths, self.route_lengths, self.tensions,
+            self.environments, self.soils, self.sweeps,
+        ]):
+            raise ValueError("CampaignMatrix requires at least one populated axis")
+        typed_axis_keys = {"water_depth", "route_length", "tension", "environment", "soil"}
+        for sweep in self.sweeps:
+            if sweep.parameter in typed_axis_keys:
+                raise ValueError(
+                    f"sweep parameter {sweep.parameter!r} shadows typed axis combo key; "
+                    "use the corresponding typed field instead"
+                )
+        return self
 
-        Returns list of dicts with keys:
-          - "water_depth": float (always present)
-          - "route_length": float (if route_lengths specified)
-          - "tension": float (if tensions specified)
-          - "environment": str (name, if environments specified)
-          - "soil": str (name, if soils specified)
-        """
-        axes: list[tuple[str, list]] = [("water_depth", self.water_depths)]
+    def combinations(self) -> list[dict[str, Any]]:
+        """Generate cartesian product of all non-None parameters and sweeps."""
+        axes: list[tuple[str, list]] = []
 
+        if self.water_depths:
+            axes.append(("water_depth", self.water_depths))
         if self.route_lengths:
             axes.append(("route_length", self.route_lengths))
         if self.tensions:
@@ -129,6 +148,8 @@ class CampaignMatrix(BaseModel):
             axes.append(("environment", [e.name for e in self.environments]))
         if self.soils:
             axes.append(("soil", [s.name for s in self.soils]))
+        for sweep in self.sweeps:
+            axes.append((sweep.parameter, sweep.values))
 
         keys = [k for k, _ in axes]
         value_lists = [v for _, v in axes]
