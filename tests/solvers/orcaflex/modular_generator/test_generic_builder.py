@@ -205,8 +205,8 @@ class TestBuildListSections:
 # ---------------------------------------------------------------------------
 
 
-class TestBuildVariableDataSources:
-    """Tests for building VariableDataSources section."""
+class TestBuildVariableData:
+    """Tests for building VariableData section."""
 
     def test_build_variable_data_sources(self):
         model = GenericModel(
@@ -222,10 +222,10 @@ class TestBuildVariableDataSources:
         builder, _ = _make_builder(model)
         result = builder.build()
 
-        assert "VariableDataSources" in result
-        vds = result["VariableDataSources"][0]
+        assert "VariableData" in result
+        assert "Dragcoefficient" in result["VariableData"]
+        vds = result["VariableData"]["Dragcoefficient"][0]
         assert vds["Name"] == "GenericDrag"
-        assert vds["DataType"] == "Dragcoefficient"
         assert vds["Interpolation"] == "Linear"
 
 
@@ -246,8 +246,8 @@ class TestBuildSingletonSections:
         builder, _ = _make_builder(model)
         result = builder.build()
 
-        assert "SolidFrictionCoefficients" in result
-        assert result["SolidFrictionCoefficients"]["StaticFriction"] == 0.3
+        assert "FrictionCoefficients" in result
+        assert result["FrictionCoefficients"]["StaticFriction"] == 0.3
 
     def test_build_line_contact_data(self):
         model = GenericModel(
@@ -266,7 +266,7 @@ class TestBuildSingletonSections:
         builder, _ = _make_builder(model)
         result = builder.build()
 
-        assert "SolidFrictionCoefficients" not in result
+        assert "FrictionCoefficients" not in result
         assert "LineContactData" not in result
 
     def test_empty_singleton_data_is_skipped(self):
@@ -276,7 +276,7 @@ class TestBuildSingletonSections:
         builder, _ = _make_builder(model)
         result = builder.build()
 
-        assert "SolidFrictionCoefficients" not in result
+        assert "FrictionCoefficients" not in result
 
 
 # ---------------------------------------------------------------------------

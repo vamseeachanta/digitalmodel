@@ -353,7 +353,7 @@ class TestFieldToSection:
         assert FIELD_TO_SECTION["buoys_6d"] == "6DBuoys"
 
     def test_contains_variable_data_sources(self):
-        assert FIELD_TO_SECTION["variable_data_sources"] == "VariableDataSources"
+        assert FIELD_TO_SECTION["variable_data_sources"] == "VariableData"
 
     def test_contains_links(self):
         assert FIELD_TO_SECTION["links"] == "Links"
@@ -411,7 +411,7 @@ class TestSectionRegistry:
 
 class TestSingletonSections:
     def test_solid_friction_coefficients(self):
-        assert SINGLETON_SECTIONS["SolidFrictionCoefficients"] == "friction_coefficients"
+        assert SINGLETON_SECTIONS["FrictionCoefficients"] == "friction_coefficients"
 
     def test_line_contact_data(self):
         assert SINGLETON_SECTIONS["LineContactData"] == "line_contact_data"

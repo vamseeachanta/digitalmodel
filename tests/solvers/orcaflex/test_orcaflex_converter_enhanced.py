@@ -25,8 +25,8 @@ import shutil
 from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexConverterEnhanced
 
 
-# Test data paths
-TEST_EXAMPLES_DIR = Path("docs/domains/orcaflex/examples/raw")
+# Test data paths — anchored to repo root so tests pass regardless of pytest's cwd
+TEST_EXAMPLES_DIR = Path(__file__).resolve().parents[3] / "docs/domains/orcaflex/examples/raw"
 
 
 class TestOrcaFlexConverterEnhanced:
