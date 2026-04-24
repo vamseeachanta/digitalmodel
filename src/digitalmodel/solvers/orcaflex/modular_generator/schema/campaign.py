@@ -10,6 +10,7 @@ from typing import Any, Iterator
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ._overrides import apply_dotted_override
 from .environment import Current, SeabedStiffness, Waves, Wind
 from .root import ProjectInputSpec
 
@@ -317,6 +318,12 @@ class CampaignSpec(BaseModel):
                     f"Parameter '{param}' varies in campaign but is missing from "
                     f"output_naming template: '{self.output_naming}'"
                 )
+        for sweep in self.campaign.sweeps:
+            logger.warning(
+                f"Sweep parameter '{sweep.parameter}' varies in campaign but has "
+                f"no alias; it will not appear by name in output_naming template "
+                f"'{self.output_naming}'."
+            )
         return self
 
     def generate_run_specs(self) -> Iterator[tuple[str, ProjectInputSpec]]:
@@ -331,7 +338,7 @@ class CampaignSpec(BaseModel):
             if i >= limit:
                 break
             spec = self.base.model_copy(deep=True)
-            _apply_overrides(spec, combo, self.campaign)
+            spec = _apply_overrides(spec, combo, self.campaign)
             name = self.output_naming.format(
                 base_name=spec.metadata.name, **combo
             )
@@ -340,10 +347,15 @@ class CampaignSpec(BaseModel):
 
 def _apply_overrides(
     spec: ProjectInputSpec,
-    combo: dict[str, float | str],
+    combo: dict[str, Any],
     matrix: CampaignMatrix,
-) -> None:
-    """Apply parameter overrides to a deep-copied spec."""
+) -> ProjectInputSpec:
+    """Apply parameter overrides to a deep-copied spec.
+
+    Typed-axis overrides mutate spec in-place; sweeps rebind spec through
+    apply_dotted_override (Pydantic re-validation). Sweeps apply last so
+    their values win if a dotted path overlaps a typed axis's target.
+    """
     if "water_depth" in combo:
         old_depth = spec.environment.water.depth
         new_depth = combo["water_depth"]
@@ -389,6 +401,12 @@ def _apply_overrides(
         spec.environment.seabed.friction_coefficient = soil_var.friction_coefficient
         if soil_var.slope is not None:
             spec.environment.seabed.slope = soil_var.slope
+
+    for sweep in matrix.sweeps:
+        if sweep.parameter in combo:
+            spec = apply_dotted_override(spec, sweep.parameter, combo[sweep.parameter])
+
+    return spec
 
 
 @dataclass
