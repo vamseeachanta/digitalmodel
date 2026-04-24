@@ -140,6 +140,42 @@ class TestParameterSweep:
             ParameterSweep(parameter="environment.waves.", values=[1.0, 2.0])
 
 
+class TestApplyDottedOverride:
+    def test_apply_dotted_override_leaf_value_set(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        assert spec.environment.waves.height == 1.0
+        result = apply_dotted_override(spec, "environment.waves.trains.0.height", 5.0)
+        assert result.environment.waves.height == 5.0
+        assert spec.environment.waves.height == 1.0
+
+    def test_apply_dotted_override_pydantic_validates_type_error(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(ValidationError):
+            apply_dotted_override(spec, "environment.waves.trains.0.height", "not-a-float")
+
+    def test_apply_dotted_override_unresolvable_path_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(KeyError):
+            apply_dotted_override(spec, "environment.nonexistent.foo", 1.0)
+
+    def test_apply_dotted_override_list_index_sets_value(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        assert spec.pipeline.segments[0].length == 2000
+        result = apply_dotted_override(spec, "pipeline.segments.0.length", 999.0)
+        assert result.pipeline.segments[0].length == 999
+        assert spec.pipeline.segments[0].length == 2000
+
+    def test_apply_dotted_override_list_index_out_of_bounds_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(IndexError):
+            apply_dotted_override(spec, "pipeline.segments.99.length", 1.0)
+
+
 class TestCampaignMatrixCombinations:
     def test_depths_only(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
