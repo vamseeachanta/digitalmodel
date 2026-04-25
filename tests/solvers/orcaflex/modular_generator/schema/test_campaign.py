@@ -114,6 +114,74 @@ class TestSoilVariation:
         assert sv.slope is None
 
 
+class TestParameterSweep:
+    def test_parameter_sweep_valid(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        ps = ParameterSweep(
+            parameter="environment.waves.height",
+            values=[1.0, 2.0, 3.0],
+        )
+        assert ps.parameter == "environment.waves.height"
+        assert ps.values == [1.0, 2.0, 3.0]
+
+    def test_parameter_sweep_empty_values_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="environment.waves.height", values=[])
+
+    def test_parameter_sweep_empty_parameter_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="", values=[1.0, 2.0])
+
+    def test_parameter_sweep_dot_terminal_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        with pytest.raises(ValidationError):
+            ParameterSweep(parameter="environment.waves.", values=[1.0, 2.0])
+
+
+class TestApplyDottedOverride:
+    def test_apply_dotted_override_leaf_value_set(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        assert spec.environment.waves.height == 1.0
+        result = apply_dotted_override(spec, "environment.waves.trains.0.height", 5.0)
+        assert result.environment.waves.height == 5.0
+        assert spec.environment.waves.height == 1.0
+
+    def test_apply_dotted_override_pydantic_validates_type_error(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(ValidationError):
+            apply_dotted_override(spec, "environment.waves.trains.0.height", "not-a-float")
+
+    def test_apply_dotted_override_unresolvable_path_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(KeyError):
+            apply_dotted_override(spec, "environment.nonexistent.foo", 1.0)
+
+    def test_apply_dotted_override_list_index_sets_value(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        assert spec.pipeline.segments[0].length == 2000
+        result = apply_dotted_override(spec, "pipeline.segments.0.length", 999.0)
+        assert result.pipeline.segments[0].length == 999
+        assert spec.pipeline.segments[0].length == 2000
+
+    def test_apply_dotted_override_list_index_out_of_bounds_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(IndexError):
+            apply_dotted_override(spec, "pipeline.segments.99.length", 1.0)
+
+    def test_apply_dotted_override_terminal_typo_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(KeyError, match="heigh"):
+            apply_dotted_override(spec, "environment.waves.trains.0.heigh", 5.0)
+
+
 class TestCampaignMatrixCombinations:
     def test_depths_only(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
@@ -174,6 +242,191 @@ class TestCampaignMatrixCombinations:
         from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
         with pytest.raises(ValidationError):
             CampaignMatrix(water_depths=[-5, 10])
+
+    def test_campaign_matrix_single_sweep_only(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0, 3.0])]
+        )
+        combos = m.combinations()
+        assert len(combos) == 3
+        assert [c["environment.waves.trains.0.height"] for c in combos] == [1.0, 2.0, 3.0]
+
+    def test_campaign_matrix_sweeps_crossed_with_typed_axis(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            water_depths=[10, 20],
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0])],
+        )
+        combos = m.combinations()
+        assert len(combos) == 4  # 2 x 2
+
+    def test_campaign_matrix_two_sweeps_crossed(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        m = CampaignMatrix(
+            sweeps=[
+                ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0]),
+                ParameterSweep(parameter="environment.waves.trains.0.period", values=[6, 8, 10]),
+            ]
+        )
+        combos = m.combinations()
+        assert len(combos) == 6  # 2 x 3
+
+    def test_campaign_matrix_no_axes_and_no_sweeps_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
+        with pytest.raises(ValidationError):
+            CampaignMatrix()
+
+    def test_sweep_parameter_shadowing_typed_axis_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        with pytest.raises(ValidationError):
+            CampaignMatrix(
+                water_depths=[10, 20],
+                sweeps=[ParameterSweep(parameter="water_depth", values=[30, 40])],
+            )
+
+    def test_sweep_alias_shadowing_typed_axis_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        with pytest.raises(ValidationError):
+            CampaignMatrix(
+                water_depths=[10, 20],
+                sweeps=[ParameterSweep(
+                    parameter="environment.waves.trains.0.height",
+                    values=[1.0, 2.0],
+                    alias="water_depth",
+                )],
+            )
+
+    def test_backward_compat_no_sweeps_field(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignMatrix
+        m = CampaignMatrix(water_depths=[10, 20])
+        combos = m.combinations()
+        assert len(combos) == 2
+        assert all(set(c.keys()) == {"water_depth"} for c in combos)
+
+
+class TestApplyOverridesWithSweeps:
+    def test_apply_overrides_with_sweep_modifies_spec(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, ParameterSweep,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[5.0])]
+        )
+        combo = {"environment.waves.trains.0.height": 5.0}
+        result = _apply_overrides(spec, combo, matrix)
+        assert result.environment.waves.height == 5.0
+
+    def test_apply_overrides_sweep_applies_after_typed_axis(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, ParameterSweep,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            water_depths=[50],
+            sweeps=[ParameterSweep(parameter="environment.water.depth", values=[200])],
+        )
+        combo = {"water_depth": 50, "environment.water.depth": 200}
+        result = _apply_overrides(spec, combo, matrix)
+        assert result.environment.water.depth == 200
+
+    def test_validate_output_naming_warns_on_sweep_axis_without_alias(self, caplog):
+        import logging
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec, CampaignMatrix, ParameterSweep,
+        )
+        base = _make_base_spec()
+        caplog.set_level(logging.WARNING)
+        CampaignSpec(
+            base=base,
+            campaign=CampaignMatrix(
+                water_depths=[10],
+                sweeps=[ParameterSweep(parameter="environment.waves.trains.0.height", values=[1.0, 2.0])]
+            ),
+            output_naming="{base_name}_wd{water_depth}m",
+        )
+        assert any("environment.waves.trains.0.height" in r.message for r in caplog.records)
+
+
+class TestSweepNaming:
+    def test_parameter_sweep_alias_accepted(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import ParameterSweep
+        ps = ParameterSweep(
+            parameter="environment.waves.trains.0.height",
+            values=[1.0, 2.0],
+            alias="wave_h",
+        )
+        assert ps.alias == "wave_h"
+
+    def test_sweep_naming_with_alias(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec, CampaignMatrix, ParameterSweep,
+        )
+        base = _make_base_spec()
+        spec = CampaignSpec(
+            base=base,
+            campaign=CampaignMatrix(
+                water_depths=[10],
+                sweeps=[ParameterSweep(
+                    parameter="environment.waves.trains.0.height",
+                    values=[1.5, 2.5],
+                    alias="wave_h",
+                )]
+            ),
+            output_naming="{base_name}_wd{water_depth}m_h{wave_h}",
+        )
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert len(names) == 2
+        assert "h1.5" in names[0] and "h2.5" in names[1]
+
+    def test_sweep_naming_slug_fallback(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec, CampaignMatrix, ParameterSweep,
+        )
+        base = _make_base_spec()
+        spec = CampaignSpec(
+            base=base,
+            campaign=CampaignMatrix(
+                water_depths=[10],
+                sweeps=[ParameterSweep(
+                    parameter="environment.waves.trains.0.height",
+                    values=[1.5],
+                )]
+            ),
+            output_naming="{base_name}_wd{water_depth}m_h{environment-waves-trains-0-height}",
+        )
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert "h1.5" in names[0]
+
+    def test_validate_output_naming_raises_on_aliased_sweep_missing_from_template(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec, CampaignMatrix, ParameterSweep,
+        )
+        base = _make_base_spec()
+        with pytest.raises(ValidationError, match="alias"):
+            CampaignSpec(
+                base=base,
+                campaign=CampaignMatrix(
+                    water_depths=[10],
+                    sweeps=[ParameterSweep(
+                        parameter="environment.waves.trains.0.height",
+                        values=[1.0],
+                        alias="wave_h",
+                    )]
+                ),
+                output_naming="{base_name}_wd{water_depth}m",
+            )
 
 
 class TestCampaignSpecValidators:

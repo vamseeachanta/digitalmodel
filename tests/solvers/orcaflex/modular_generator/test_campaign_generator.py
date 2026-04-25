@@ -247,6 +247,70 @@ class TestCampaignGeneratorGenerate:
         assert sorted(result.matrix_summary["environment"]) == ["calm", "storm"]
 
 
+class TestCampaignGeneratorSpecOnly:
+    def test_campaign_generator_spec_only_writes_spec_yml_per_combo(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+        # 2 water_depths × 2 environments = 4 runs
+        assert result.run_count == 4
+        spec_files = sorted(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+
+    def test_campaign_generator_spec_only_skips_master_and_includes(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+        master_files = list(out.glob("*/master.yml"))
+        includes_dirs = list(out.glob("*/includes"))
+        assert master_files == []
+        assert includes_dirs == []
+
+    def test_spec_only_writes_top_level_manifest_with_combo_index(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        manifest = out / "manifest.yml"
+        assert manifest.exists()
+        assert result.manifest_path == manifest
+
+        data = yaml.safe_load(manifest.read_text())
+        assert data["total_runs"] == 4
+        assert len(data["runs"]) == 4
+
+    def test_preflight_warning_above_max_runs_threshold(self, tmp_path, caplog):
+        import logging
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["water_depths"] = [10, 20, 30, 40, 50]  # 5 × 2 envs = 10 combos
+        data["max_runs"] = 3
+        cf = tmp_path / "campaign_overload.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        caplog.set_level(logging.WARNING)
+        gen.generate(tmp_path / "out", spec_only=True)
+        assert any(
+            "max_runs" in r.message and "10" in r.message
+            for r in caplog.records
+        )
+
+
 class TestCampaignGeneratorMaxRuns:
     """Test 8: max_runs limits generation count."""
 
@@ -346,3 +410,141 @@ class TestCLICampaignGenerate:
         exit_code = cmd_campaign(args)
 
         assert exit_code == 1
+
+
+class TestCLICampaignSpecOnly:
+    def test_cli_campaign_spec_only_flag(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        out = tmp_path / "cli_spec_only_out"
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(cf), "--output", str(out), "--spec-only",
+        ])
+        exit_code = cmd_campaign(args)
+        assert exit_code == 0
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+        assert (out / "manifest.yml").exists()
+        assert list(out.glob("*/master.yml")) == []
+
+    def test_cli_preview_shows_sweep_counts(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0, 3.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        parser = create_parser()
+        args = parser.parse_args(["campaign", str(cf), "--preview"])
+        exit_code = cmd_campaign(args)
+        captured = capsys.readouterr()
+
+        assert exit_code == 0
+        assert "sweep" in captured.out.lower()
+        assert "12 runs" in captured.out  # 2 depths × 2 envs × 3 sweep values
+
+
+class TestCampaignE2E:
+    def test_e2e_two_dotted_sweeps_produce_n_spec_ymls(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"] = {
+            "water_depths": [10],
+            "sweeps": [
+                {
+                    "parameter": "environment.waves.trains.0.height",
+                    "values": [1.0, 2.0],
+                    "alias": "wave_h",
+                },
+                {
+                    "parameter": "environment.waves.trains.0.period",
+                    "values": [6, 8, 10],
+                    "alias": "wave_p",
+                },
+            ],
+        }
+        data["output_naming"] = "{base_name}_wd{water_depth}m_h{wave_h}_p{wave_p}"
+        cf = tmp_path / "campaign_two_sweeps.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        assert result.run_count == 6  # 1 × 2 × 3
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 6
+
+    def test_e2e_each_spec_yml_validates_as_project_input_spec(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validates.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) > 0
+        for spec_file in spec_files:
+            loaded = yaml.safe_load(spec_file.read_text())
+            ProjectInputSpec.model_validate(loaded)
+
+    def test_campaign_loader_handles_bom_encoded_yaml(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = tmp_path / "campaign_bom.yml"
+        yaml_text = yaml.dump(_make_campaign_data(), default_flow_style=False)
+        cf.write_bytes(b"\xef\xbb\xbf" + yaml_text.encode("utf-8"))
+
+        gen = CampaignGenerator(cf)
+        assert gen.spec.base.metadata.name == "test_pipe"
+
+    def test_validate_with_sweeps_does_not_crash(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validate_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        warnings = gen.validate()
+        assert isinstance(warnings, list)

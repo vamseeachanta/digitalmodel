@@ -10,6 +10,7 @@ from typing import Any, Iterator
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ._overrides import apply_dotted_override
 from .environment import Current, SeabedStiffness, Waves, Wind
 from .root import ProjectInputSpec
 
@@ -64,10 +65,59 @@ class InstallationSection(BaseModel):
     enabled: bool = Field(default=True)
 
 
+class ParameterSweep(BaseModel):
+    """Dotted-path parameter sweep axis for campaign matrix."""
+
+    parameter: str = Field(
+        ...,
+        min_length=1,
+        description="Dotted path into ProjectInputSpec (e.g., 'environment.waves.trains.0.height')",
+    )
+    values: list[Any] = Field(
+        ...,
+        min_length=1,
+        description="Discrete values; cross-multiplied with other axes at combination time",
+    )
+    alias: str | None = Field(
+        default=None,
+        description="Short name for output_naming template; full-path slug is used when absent.",
+    )
+
+    @field_validator("parameter")
+    @classmethod
+    def _no_trailing_dot(cls, v: str) -> str:
+        if v.endswith("."):
+            raise ValueError("parameter must not end with '.'")
+        return v
+
+
+def _slug(parameter: str) -> str:
+    """Convert dotted path to slug for output_naming template (e.g., a.b.0.c → a-b-0-c)."""
+    return parameter.replace(".", "-")
+
+
+def _resolve_combo_for_naming(
+    combo: dict[str, Any], sweeps: list[ParameterSweep]
+) -> dict[str, Any]:
+    """Rename sweep dotted-path keys in combo to alias-or-slug for str.format compatibility."""
+    sweep_by_param = {s.parameter: s for s in sweeps}
+    resolved: dict[str, Any] = {}
+    for k, v in combo.items():
+        sweep = sweep_by_param.get(k)
+        if sweep is None:
+            resolved[k] = v
+        else:
+            resolved[sweep.alias if sweep.alias else _slug(k)] = v
+    return resolved
+
+
 class CampaignMatrix(BaseModel):
     """Defines the parametric variation space for batch generation."""
 
-    water_depths: list[float] = Field(..., min_length=1, description="Water depths (m)")
+    water_depths: list[float] | None = Field(
+        default=None,
+        description="Water depths (m). Optional when sweeps populate the axis space.",
+    )
     route_lengths: list[float] | None = Field(
         default=None,
         description="Route lengths (m). Adjusts last pipeline segment only.",
@@ -78,27 +128,48 @@ class CampaignMatrix(BaseModel):
     )
     environments: list[EnvironmentVariation] | None = None
     soils: list[SoilVariation] | None = None
+    sweeps: list[ParameterSweep] = Field(
+        default_factory=list,
+        description="Dotted-path parameter sweep axes.",
+    )
 
     @field_validator("water_depths")
     @classmethod
-    def validate_water_depths(cls, v: list[float]) -> list[float]:
+    def validate_water_depths(cls, v: list[float] | None) -> list[float] | None:
+        if v is None:
+            return v
         for depth in v:
             if depth <= 0:
                 raise ValueError(f"Water depth must be positive, got {depth}")
         return v
 
-    def combinations(self) -> list[dict[str, float | str]]:
-        """Generate cartesian product of all non-None parameters.
+    @model_validator(mode="after")
+    def _validate_axes(self):
+        if not any([
+            self.water_depths, self.route_lengths, self.tensions,
+            self.environments, self.soils, self.sweeps,
+        ]):
+            raise ValueError("CampaignMatrix requires at least one populated axis")
+        typed_axis_keys = {"water_depth", "route_length", "tension", "environment", "soil"}
+        for sweep in self.sweeps:
+            if sweep.parameter in typed_axis_keys:
+                raise ValueError(
+                    f"sweep parameter {sweep.parameter!r} shadows typed axis combo key; "
+                    "use the corresponding typed field instead"
+                )
+            if sweep.alias and sweep.alias in typed_axis_keys:
+                raise ValueError(
+                    f"sweep alias {sweep.alias!r} shadows typed axis combo key; "
+                    "choose a different alias"
+                )
+        return self
 
-        Returns list of dicts with keys:
-          - "water_depth": float (always present)
-          - "route_length": float (if route_lengths specified)
-          - "tension": float (if tensions specified)
-          - "environment": str (name, if environments specified)
-          - "soil": str (name, if soils specified)
-        """
-        axes: list[tuple[str, list]] = [("water_depth", self.water_depths)]
+    def combinations(self) -> list[dict[str, Any]]:
+        """Generate cartesian product of all non-None parameters and sweeps."""
+        axes: list[tuple[str, list]] = []
 
+        if self.water_depths:
+            axes.append(("water_depth", self.water_depths))
         if self.route_lengths:
             axes.append(("route_length", self.route_lengths))
         if self.tensions:
@@ -107,6 +178,8 @@ class CampaignMatrix(BaseModel):
             axes.append(("environment", [e.name for e in self.environments]))
         if self.soils:
             axes.append(("soil", [s.name for s in self.soils]))
+        for sweep in self.sweeps:
+            axes.append((sweep.parameter, sweep.values))
 
         keys = [k for k, _ in axes]
         value_lists = [v for _, v in axes]
@@ -274,6 +347,19 @@ class CampaignSpec(BaseModel):
                     f"Parameter '{param}' varies in campaign but is missing from "
                     f"output_naming template: '{self.output_naming}'"
                 )
+        for sweep in self.campaign.sweeps:
+            if sweep.alias:
+                if f"{{{sweep.alias}}}" not in self.output_naming:
+                    raise ValueError(
+                        f"Sweep alias '{sweep.alias}' (parameter '{sweep.parameter}') "
+                        f"is missing from output_naming template '{self.output_naming}'"
+                    )
+            else:
+                logger.warning(
+                    f"Sweep parameter '{sweep.parameter}' has no alias; "
+                    f"slug '{_slug(sweep.parameter)}' must appear in template "
+                    f"'{self.output_naming}' to be referenced by name."
+                )
         return self
 
     def generate_run_specs(self) -> Iterator[tuple[str, ProjectInputSpec]]:
@@ -288,19 +374,25 @@ class CampaignSpec(BaseModel):
             if i >= limit:
                 break
             spec = self.base.model_copy(deep=True)
-            _apply_overrides(spec, combo, self.campaign)
+            spec = _apply_overrides(spec, combo, self.campaign)
+            naming_combo = _resolve_combo_for_naming(combo, self.campaign.sweeps)
             name = self.output_naming.format(
-                base_name=spec.metadata.name, **combo
+                base_name=spec.metadata.name, **naming_combo
             )
             yield (name, spec)
 
 
 def _apply_overrides(
     spec: ProjectInputSpec,
-    combo: dict[str, float | str],
+    combo: dict[str, Any],
     matrix: CampaignMatrix,
-) -> None:
-    """Apply parameter overrides to a deep-copied spec."""
+) -> ProjectInputSpec:
+    """Apply parameter overrides to a deep-copied spec.
+
+    Typed-axis overrides mutate spec in-place; sweeps rebind spec through
+    apply_dotted_override (Pydantic re-validation). Sweeps apply last so
+    their values win if a dotted path overlaps a typed axis's target.
+    """
     if "water_depth" in combo:
         old_depth = spec.environment.water.depth
         new_depth = combo["water_depth"]
@@ -347,6 +439,12 @@ def _apply_overrides(
         if soil_var.slope is not None:
             spec.environment.seabed.slope = soil_var.slope
 
+    for sweep in matrix.sweeps:
+        if sweep.parameter in combo:
+            spec = apply_dotted_override(spec, sweep.parameter, combo[sweep.parameter])
+
+    return spec
+
 
 @dataclass
 class CampaignResult:
@@ -357,6 +455,7 @@ class CampaignResult:
     run_dirs: list[Path]
     errors: list[str]
     matrix_summary: dict[str, list]
+    manifest_path: Path | None = None
 
 
 class CampaignGenerator:
@@ -383,8 +482,9 @@ class CampaignGenerator:
         # Check for duplicate run names after template formatting
         names: set[str] = set()
         for combo in combos:
+            naming_combo = _resolve_combo_for_naming(combo, self.spec.campaign.sweeps)
             name = self.spec.output_naming.format(
-                base_name=self.spec.base.metadata.name, **combo
+                base_name=self.spec.base.metadata.name, **naming_combo
             )
             if name in names:
                 warnings.append(f"Duplicate run name: '{name}'")
@@ -409,31 +509,59 @@ class CampaignGenerator:
         output_dir: Path,
         force: bool = False,
         resume: bool = False,
+        spec_only: bool = False,
     ) -> CampaignResult:
         """Generate all campaign runs.
-
-        Streams through the matrix one run at a time.
 
         Args:
             output_dir: Root directory for all generated run directories.
             force: If True, overwrite existing run directories.
-            resume: If True, skip runs where master.yml already exists.
+            resume: If True, skip runs where the sentinel file already exists.
+            spec_only: If True, emit per-run spec.yml only (no master.yml /
+                includes/), plus a top-level manifest.yml mapping run name to
+                combo parameters.
 
         Returns:
-            CampaignResult with aggregated statistics.
+            CampaignResult with aggregated statistics. manifest_path is set
+            only in spec_only mode.
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        combos = self.spec.campaign.combinations()
+        n_combos = len(combos)
+        limit = self.spec.max_runs if self.spec.max_runs else n_combos
+
+        if self.spec.max_runs and n_combos > self.spec.max_runs:
+            logger.warning(
+                "Campaign produces %d combinations but max_runs=%d; only first %d will be generated.",
+                n_combos, self.spec.max_runs, self.spec.max_runs,
+            )
+        elif self.spec.max_runs is None and n_combos > 100:
+            logger.warning(
+                "Campaign produces %d combinations (>100); consider setting max_runs to limit batch size.",
+                n_combos,
+            )
+
         run_dirs: list[Path] = []
         errors: list[str] = []
         skipped = 0
+        manifest_runs: list[dict] = []
+        sentinel = "spec.yml" if spec_only else "master.yml"
 
-        for name, spec in self.spec.generate_run_specs():
+        for i, combo in enumerate(combos):
+            if i >= limit:
+                break
+            spec = self.spec.base.model_copy(deep=True)
+            spec = _apply_overrides(spec, combo, self.spec.campaign)
+            naming_combo = _resolve_combo_for_naming(combo, self.spec.campaign.sweeps)
+            name = self.spec.output_naming.format(
+                base_name=spec.metadata.name, **naming_combo
+            )
             run_dir = output_dir / name
 
             if run_dir.exists():
-                if resume and (run_dir / "master.yml").exists():
+                if resume and (run_dir / sentinel).exists():
                     logger.info("Skipping (resume): %s", name)
                     skipped += 1
                     continue
@@ -443,34 +571,43 @@ class CampaignGenerator:
                     continue
 
             try:
-                # Import here to avoid circular imports
-                from digitalmodel.solvers.orcaflex.modular_generator import (
-                    ModularModelGenerator,
-                )
-
-                gen = ModularModelGenerator.from_spec(spec)
-
-                # Use generate_with_overrides if campaign has sections
-                if self.spec.sections:
-                    gen.generate_with_overrides(
-                        output_dir=run_dir,
-                        sections=self.spec.sections,
-                        variables={"water_depth": spec.environment.water.depth},
-                        template_base_dir=self.campaign_file.parent,
+                if spec_only:
+                    run_dir.mkdir(parents=True, exist_ok=True)
+                    (run_dir / "spec.yml").write_text(
+                        yaml.dump(spec.model_dump(), default_flow_style=False)
                     )
+                    manifest_runs.append({"name": name, "combo": combo})
+                    logger.info("Generated spec: %s", name)
                 else:
-                    gen.generate(run_dir)
-
+                    from digitalmodel.solvers.orcaflex.modular_generator import (
+                        ModularModelGenerator,
+                    )
+                    gen_obj = ModularModelGenerator.from_spec(spec)
+                    if self.spec.sections:
+                        gen_obj.generate_with_overrides(
+                            output_dir=run_dir,
+                            sections=self.spec.sections,
+                            variables={"water_depth": spec.environment.water.depth},
+                            template_base_dir=self.campaign_file.parent,
+                        )
+                    else:
+                        gen_obj.generate(run_dir)
+                    logger.info("Generated: %s", name)
                 run_dirs.append(run_dir)
-                logger.info("Generated: %s", name)
-
             except Exception as exc:
                 msg = f"Failed to generate run '{name}': {exc}"
                 logger.error(msg)
                 errors.append(msg)
 
-        # Build matrix summary
-        combos = self.preview()
+        manifest_path: Path | None = None
+        if spec_only and manifest_runs:
+            manifest_path = output_dir / "manifest.yml"
+            manifest_path.write_text(yaml.dump({
+                "campaign": self.spec.base.metadata.name,
+                "total_runs": len(manifest_runs),
+                "runs": manifest_runs,
+            }, default_flow_style=False))
+
         matrix_summary: dict[str, list] = {}
         if combos:
             for key in combos[0]:
@@ -484,4 +621,5 @@ class CampaignGenerator:
             run_dirs=run_dirs,
             errors=errors,
             matrix_summary=matrix_summary,
+            manifest_path=manifest_path,
         )

@@ -318,7 +318,9 @@ def cmd_campaign(args: argparse.Namespace) -> int:
         combos = gen.preview()
         print(f"Campaign: {gen.spec.base.metadata.name}")
         matrix = gen.spec.campaign
-        parts = [f"{len(matrix.water_depths)} depths"]
+        parts: list[str] = []
+        if matrix.water_depths:
+            parts.append(f"{len(matrix.water_depths)} depths")
         if matrix.route_lengths:
             parts.append(f"{len(matrix.route_lengths)} lengths")
         if matrix.tensions:
@@ -327,6 +329,8 @@ def cmd_campaign(args: argparse.Namespace) -> int:
             parts.append(f"{len(matrix.environments)} environments")
         if matrix.soils:
             parts.append(f"{len(matrix.soils)} soils")
+        if matrix.sweeps:
+            parts.append(f"{len(matrix.sweeps)} sweep(s)")
         print(f"Matrix: {' x '.join(parts)} = {len(combos)} runs")
         print()
 
@@ -355,6 +359,7 @@ def cmd_campaign(args: argparse.Namespace) -> int:
         output_dir=output_dir,
         force=getattr(args, "force", False),
         resume=getattr(args, "resume", False),
+        spec_only=getattr(args, "spec_only", False),
     )
 
     print("Campaign generation complete:")
@@ -461,7 +466,12 @@ For more information, see the documentation at:
     campaign_parser.add_argument(
         "--resume",
         action="store_true",
-        help="Skip runs with existing master.yml",
+        help="Skip runs with existing master.yml (or spec.yml in --spec-only mode)",
+    )
+    campaign_parser.add_argument(
+        "--spec-only",
+        action="store_true",
+        help="Emit per-run spec.yml only (no master.yml/includes), plus top-level manifest.yml",
     )
     campaign_parser.add_argument(
         "--verbose",
