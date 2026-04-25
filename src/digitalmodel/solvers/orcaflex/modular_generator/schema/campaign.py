@@ -71,12 +71,16 @@ class ParameterSweep(BaseModel):
     parameter: str = Field(
         ...,
         min_length=1,
-        description="Dotted path into ProjectInputSpec (e.g., 'environment.waves.height')",
+        description="Dotted path into ProjectInputSpec (e.g., 'environment.waves.trains.0.height')",
     )
     values: list[Any] = Field(
         ...,
         min_length=1,
         description="Discrete values; cross-multiplied with other axes at combination time",
+    )
+    alias: str | None = Field(
+        default=None,
+        description="Short name for output_naming template; full-path slug is used when absent.",
     )
 
     @field_validator("parameter")
@@ -85,6 +89,26 @@ class ParameterSweep(BaseModel):
         if v.endswith("."):
             raise ValueError("parameter must not end with '.'")
         return v
+
+
+def _slug(parameter: str) -> str:
+    """Convert dotted path to slug for output_naming template (e.g., a.b.0.c → a-b-0-c)."""
+    return parameter.replace(".", "-")
+
+
+def _resolve_combo_for_naming(
+    combo: dict[str, Any], sweeps: list[ParameterSweep]
+) -> dict[str, Any]:
+    """Rename sweep dotted-path keys in combo to alias-or-slug for str.format compatibility."""
+    sweep_by_param = {s.parameter: s for s in sweeps}
+    resolved: dict[str, Any] = {}
+    for k, v in combo.items():
+        sweep = sweep_by_param.get(k)
+        if sweep is None:
+            resolved[k] = v
+        else:
+            resolved[sweep.alias if sweep.alias else _slug(k)] = v
+    return resolved
 
 
 class CampaignMatrix(BaseModel):
@@ -319,11 +343,18 @@ class CampaignSpec(BaseModel):
                     f"output_naming template: '{self.output_naming}'"
                 )
         for sweep in self.campaign.sweeps:
-            logger.warning(
-                f"Sweep parameter '{sweep.parameter}' varies in campaign but has "
-                f"no alias; it will not appear by name in output_naming template "
-                f"'{self.output_naming}'."
-            )
+            if sweep.alias:
+                if f"{{{sweep.alias}}}" not in self.output_naming:
+                    raise ValueError(
+                        f"Sweep alias '{sweep.alias}' (parameter '{sweep.parameter}') "
+                        f"is missing from output_naming template '{self.output_naming}'"
+                    )
+            else:
+                logger.warning(
+                    f"Sweep parameter '{sweep.parameter}' has no alias; "
+                    f"slug '{_slug(sweep.parameter)}' must appear in template "
+                    f"'{self.output_naming}' to be referenced by name."
+                )
         return self
 
     def generate_run_specs(self) -> Iterator[tuple[str, ProjectInputSpec]]:
@@ -339,8 +370,9 @@ class CampaignSpec(BaseModel):
                 break
             spec = self.base.model_copy(deep=True)
             spec = _apply_overrides(spec, combo, self.campaign)
+            naming_combo = _resolve_combo_for_naming(combo, self.campaign.sweeps)
             name = self.output_naming.format(
-                base_name=spec.metadata.name, **combo
+                base_name=spec.metadata.name, **naming_combo
             )
             yield (name, spec)
 
