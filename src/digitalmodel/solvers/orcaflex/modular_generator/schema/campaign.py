@@ -450,6 +450,7 @@ class CampaignResult:
     run_dirs: list[Path]
     errors: list[str]
     matrix_summary: dict[str, list]
+    manifest_path: Path | None = None
 
 
 class CampaignGenerator:
@@ -502,31 +503,59 @@ class CampaignGenerator:
         output_dir: Path,
         force: bool = False,
         resume: bool = False,
+        spec_only: bool = False,
     ) -> CampaignResult:
         """Generate all campaign runs.
-
-        Streams through the matrix one run at a time.
 
         Args:
             output_dir: Root directory for all generated run directories.
             force: If True, overwrite existing run directories.
-            resume: If True, skip runs where master.yml already exists.
+            resume: If True, skip runs where the sentinel file already exists.
+            spec_only: If True, emit per-run spec.yml only (no master.yml /
+                includes/), plus a top-level manifest.yml mapping run name to
+                combo parameters.
 
         Returns:
-            CampaignResult with aggregated statistics.
+            CampaignResult with aggregated statistics. manifest_path is set
+            only in spec_only mode.
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        combos = self.spec.campaign.combinations()
+        n_combos = len(combos)
+        limit = self.spec.max_runs if self.spec.max_runs else n_combos
+
+        if self.spec.max_runs and n_combos > self.spec.max_runs:
+            logger.warning(
+                "Campaign produces %d combinations but max_runs=%d; only first %d will be generated.",
+                n_combos, self.spec.max_runs, self.spec.max_runs,
+            )
+        elif self.spec.max_runs is None and n_combos > 100:
+            logger.warning(
+                "Campaign produces %d combinations (>100); consider setting max_runs to limit batch size.",
+                n_combos,
+            )
+
         run_dirs: list[Path] = []
         errors: list[str] = []
         skipped = 0
+        manifest_runs: list[dict] = []
+        sentinel = "spec.yml" if spec_only else "master.yml"
 
-        for name, spec in self.spec.generate_run_specs():
+        for i, combo in enumerate(combos):
+            if i >= limit:
+                break
+            spec = self.spec.base.model_copy(deep=True)
+            spec = _apply_overrides(spec, combo, self.spec.campaign)
+            naming_combo = _resolve_combo_for_naming(combo, self.spec.campaign.sweeps)
+            name = self.spec.output_naming.format(
+                base_name=spec.metadata.name, **naming_combo
+            )
             run_dir = output_dir / name
 
             if run_dir.exists():
-                if resume and (run_dir / "master.yml").exists():
+                if resume and (run_dir / sentinel).exists():
                     logger.info("Skipping (resume): %s", name)
                     skipped += 1
                     continue
@@ -536,34 +565,43 @@ class CampaignGenerator:
                     continue
 
             try:
-                # Import here to avoid circular imports
-                from digitalmodel.solvers.orcaflex.modular_generator import (
-                    ModularModelGenerator,
-                )
-
-                gen = ModularModelGenerator.from_spec(spec)
-
-                # Use generate_with_overrides if campaign has sections
-                if self.spec.sections:
-                    gen.generate_with_overrides(
-                        output_dir=run_dir,
-                        sections=self.spec.sections,
-                        variables={"water_depth": spec.environment.water.depth},
-                        template_base_dir=self.campaign_file.parent,
+                if spec_only:
+                    run_dir.mkdir(parents=True, exist_ok=True)
+                    (run_dir / "spec.yml").write_text(
+                        yaml.dump(spec.model_dump(), default_flow_style=False)
                     )
+                    manifest_runs.append({"name": name, "combo": combo})
+                    logger.info("Generated spec: %s", name)
                 else:
-                    gen.generate(run_dir)
-
+                    from digitalmodel.solvers.orcaflex.modular_generator import (
+                        ModularModelGenerator,
+                    )
+                    gen_obj = ModularModelGenerator.from_spec(spec)
+                    if self.spec.sections:
+                        gen_obj.generate_with_overrides(
+                            output_dir=run_dir,
+                            sections=self.spec.sections,
+                            variables={"water_depth": spec.environment.water.depth},
+                            template_base_dir=self.campaign_file.parent,
+                        )
+                    else:
+                        gen_obj.generate(run_dir)
+                    logger.info("Generated: %s", name)
                 run_dirs.append(run_dir)
-                logger.info("Generated: %s", name)
-
             except Exception as exc:
                 msg = f"Failed to generate run '{name}': {exc}"
                 logger.error(msg)
                 errors.append(msg)
 
-        # Build matrix summary
-        combos = self.preview()
+        manifest_path: Path | None = None
+        if spec_only and manifest_runs:
+            manifest_path = output_dir / "manifest.yml"
+            manifest_path.write_text(yaml.dump({
+                "campaign": self.spec.base.metadata.name,
+                "total_runs": len(manifest_runs),
+                "runs": manifest_runs,
+            }, default_flow_style=False))
+
         matrix_summary: dict[str, list] = {}
         if combos:
             for key in combos[0]:
@@ -577,4 +615,5 @@ class CampaignGenerator:
             run_dirs=run_dirs,
             errors=errors,
             matrix_summary=matrix_summary,
+            manifest_path=manifest_path,
         )

@@ -247,6 +247,70 @@ class TestCampaignGeneratorGenerate:
         assert sorted(result.matrix_summary["environment"]) == ["calm", "storm"]
 
 
+class TestCampaignGeneratorSpecOnly:
+    def test_campaign_generator_spec_only_writes_spec_yml_per_combo(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+        # 2 water_depths × 2 environments = 4 runs
+        assert result.run_count == 4
+        spec_files = sorted(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+
+    def test_campaign_generator_spec_only_skips_master_and_includes(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+        master_files = list(out.glob("*/master.yml"))
+        includes_dirs = list(out.glob("*/includes"))
+        assert master_files == []
+        assert includes_dirs == []
+
+    def test_spec_only_writes_top_level_manifest_with_combo_index(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        manifest = out / "manifest.yml"
+        assert manifest.exists()
+        assert result.manifest_path == manifest
+
+        data = yaml.safe_load(manifest.read_text())
+        assert data["total_runs"] == 4
+        assert len(data["runs"]) == 4
+
+    def test_preflight_warning_above_max_runs_threshold(self, tmp_path, caplog):
+        import logging
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["water_depths"] = [10, 20, 30, 40, 50]  # 5 × 2 envs = 10 combos
+        data["max_runs"] = 3
+        cf = tmp_path / "campaign_overload.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        caplog.set_level(logging.WARNING)
+        gen.generate(tmp_path / "out", spec_only=True)
+        assert any(
+            "max_runs" in r.message and "10" in r.message
+            for r in caplog.records
+        )
+
+
 class TestCampaignGeneratorMaxRuns:
     """Test 8: max_runs limits generation count."""
 
