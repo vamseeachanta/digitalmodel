@@ -456,3 +456,75 @@ class TestCLICampaignSpecOnly:
         assert exit_code == 0
         assert "sweep" in captured.out.lower()
         assert "12 runs" in captured.out  # 2 depths × 2 envs × 3 sweep values
+
+
+class TestCampaignE2E:
+    def test_e2e_two_dotted_sweeps_produce_n_spec_ymls(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"] = {
+            "water_depths": [10],
+            "sweeps": [
+                {
+                    "parameter": "environment.waves.trains.0.height",
+                    "values": [1.0, 2.0],
+                    "alias": "wave_h",
+                },
+                {
+                    "parameter": "environment.waves.trains.0.period",
+                    "values": [6, 8, 10],
+                    "alias": "wave_p",
+                },
+            ],
+        }
+        data["output_naming"] = "{base_name}_wd{water_depth}m_h{wave_h}_p{wave_p}"
+        cf = tmp_path / "campaign_two_sweeps.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        assert result.run_count == 6  # 1 × 2 × 3
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 6
+
+    def test_e2e_each_spec_yml_validates_as_project_input_spec(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validates.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) > 0
+        for spec_file in spec_files:
+            loaded = yaml.safe_load(spec_file.read_text())
+            ProjectInputSpec.model_validate(loaded)
+
+    def test_campaign_loader_handles_bom_encoded_yaml(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = tmp_path / "campaign_bom.yml"
+        yaml_text = yaml.dump(_make_campaign_data(), default_flow_style=False)
+        cf.write_bytes(b"\xef\xbb\xbf" + yaml_text.encode("utf-8"))
+
+        gen = CampaignGenerator(cf)
+        assert gen.spec.base.metadata.name == "test_pipe"
