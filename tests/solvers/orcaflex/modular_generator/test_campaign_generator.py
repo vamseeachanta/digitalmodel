@@ -410,3 +410,49 @@ class TestCLICampaignGenerate:
         exit_code = cmd_campaign(args)
 
         assert exit_code == 1
+
+
+class TestCLICampaignSpecOnly:
+    def test_cli_campaign_spec_only_flag(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        out = tmp_path / "cli_spec_only_out"
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(cf), "--output", str(out), "--spec-only",
+        ])
+        exit_code = cmd_campaign(args)
+        assert exit_code == 0
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+        assert (out / "manifest.yml").exists()
+        assert list(out.glob("*/master.yml")) == []
+
+    def test_cli_preview_shows_sweep_counts(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0, 3.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        parser = create_parser()
+        args = parser.parse_args(["campaign", str(cf), "--preview"])
+        exit_code = cmd_campaign(args)
+        captured = capsys.readouterr()
+
+        assert exit_code == 0
+        assert "sweep" in captured.out.lower()
+        assert "12 runs" in captured.out  # 2 depths × 2 envs × 3 sweep values
