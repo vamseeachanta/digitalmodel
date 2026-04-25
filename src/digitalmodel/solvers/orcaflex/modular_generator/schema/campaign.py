@@ -157,6 +157,11 @@ class CampaignMatrix(BaseModel):
                     f"sweep parameter {sweep.parameter!r} shadows typed axis combo key; "
                     "use the corresponding typed field instead"
                 )
+            if sweep.alias and sweep.alias in typed_axis_keys:
+                raise ValueError(
+                    f"sweep alias {sweep.alias!r} shadows typed axis combo key; "
+                    "choose a different alias"
+                )
         return self
 
     def combinations(self) -> list[dict[str, Any]]:
@@ -477,8 +482,9 @@ class CampaignGenerator:
         # Check for duplicate run names after template formatting
         names: set[str] = set()
         for combo in combos:
+            naming_combo = _resolve_combo_for_naming(combo, self.spec.campaign.sweeps)
             name = self.spec.output_naming.format(
-                base_name=self.spec.base.metadata.name, **combo
+                base_name=self.spec.base.metadata.name, **naming_combo
             )
             if name in names:
                 warnings.append(f"Duplicate run name: '{name}'")

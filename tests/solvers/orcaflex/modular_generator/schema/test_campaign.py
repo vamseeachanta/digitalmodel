@@ -175,6 +175,12 @@ class TestApplyDottedOverride:
         with pytest.raises(IndexError):
             apply_dotted_override(spec, "pipeline.segments.99.length", 1.0)
 
+    def test_apply_dotted_override_terminal_typo_raises(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
+        spec = _make_base_spec()
+        with pytest.raises(KeyError, match="heigh"):
+            apply_dotted_override(spec, "environment.waves.trains.0.heigh", 5.0)
+
 
 class TestCampaignMatrixCombinations:
     def test_depths_only(self):
@@ -285,6 +291,20 @@ class TestCampaignMatrixCombinations:
             CampaignMatrix(
                 water_depths=[10, 20],
                 sweeps=[ParameterSweep(parameter="water_depth", values=[30, 40])],
+            )
+
+    def test_sweep_alias_shadowing_typed_axis_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignMatrix, ParameterSweep,
+        )
+        with pytest.raises(ValidationError):
+            CampaignMatrix(
+                water_depths=[10, 20],
+                sweeps=[ParameterSweep(
+                    parameter="environment.waves.trains.0.height",
+                    values=[1.0, 2.0],
+                    alias="water_depth",
+                )],
             )
 
     def test_backward_compat_no_sweeps_field(self):

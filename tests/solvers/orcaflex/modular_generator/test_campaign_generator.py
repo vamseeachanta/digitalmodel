@@ -528,3 +528,23 @@ class TestCampaignE2E:
 
         gen = CampaignGenerator(cf)
         assert gen.spec.base.metadata.name == "test_pipe"
+
+    def test_validate_with_sweeps_does_not_crash(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validate_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        warnings = gen.validate()
+        assert isinstance(warnings, list)

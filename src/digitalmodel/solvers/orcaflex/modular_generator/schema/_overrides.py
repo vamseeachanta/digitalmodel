@@ -31,7 +31,7 @@ def _set_nested_safe(d: dict, path: str, value: Any) -> None:
             else:
                 cursor = cursor[idx]
         elif isinstance(cursor, dict):
-            if not is_terminal and k not in cursor:
+            if k not in cursor:
                 raise KeyError(
                     f"path segment {k!r} not found in dotted path {path!r}"
                 )
