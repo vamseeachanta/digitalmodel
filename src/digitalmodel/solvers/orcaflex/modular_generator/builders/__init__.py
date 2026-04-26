@@ -14,6 +14,10 @@ from .supports_builder import SupportsBuilder
 from .morison_builder import MorisonBuilder
 from .shapes_builder import ShapesBuilder
 from .buoys_builder import BuoysBuilder
+from .roller_builder import RollerBuilder
+from .tug_builder import TugBuilder
+from .buoyancy_builder import BuoyancyBuilder
+from .end_buoy_builder import EndBuoyBuilder
 from .lines_builder import LinesBuilder
 from .groups_builder import GroupsBuilder
 from .vessel_type_builder import VesselTypeBuilder
@@ -37,7 +41,8 @@ __all__ = [
     # Pipeline builders
     'GeneralBuilder', 'EnvironmentBuilder', 'VarDataBuilder',
     'LineTypeBuilder', 'SupportsBuilder', 'MorisonBuilder',
-    'ShapesBuilder', 'BuoysBuilder', 'LinesBuilder', 'GroupsBuilder',
+    'ShapesBuilder', 'BuoysBuilder', 'RollerBuilder', 'TugBuilder',
+    'BuoyancyBuilder', 'EndBuoyBuilder', 'LinesBuilder', 'GroupsBuilder',
     'VesselTypeBuilder', 'VesselBuilder', 'WinchBuilder',
     # Riser builders
     'RiserClumpTypeBuilder', 'RiserLineTypeBuilder',
