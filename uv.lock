@@ -1446,6 +1446,7 @@ dependencies = [
     { name = "pygmt" },
     { name = "pyjwt" },
     { name = "pykalman" },
+    { name = "pylife" },
     { name = "pymssql" },
     { name = "pypdf2" },
     { name = "pyproj" },
@@ -1655,6 +1656,7 @@ requires-dist = [
     { name = "pygmt", specifier = ">=0.13.0,<1.0.0" },
     { name = "pyjwt", specifier = "==2.10.1" },
     { name = "pykalman", specifier = "==0.9.5" },
+    { name = "pylife", specifier = ">=2.2,<3.0" },
     { name = "pymssql", specifier = "==2.3.8" },
     { name = "pypdf2", specifier = ">=3.0.0,<4.0.0" },
     { name = "pyproj", specifier = "==3.6.1" },
@@ -5055,6 +5057,36 @@ name = "pykalman"
 version = "0.9.5"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2f/62/a4adc4516bd5974aa5583090199dd4b78d1e87018d14e9279f72ccbf0b9b/pykalman-0.9.5.tar.gz", hash = "sha256:816af47720d924a4c6016fa74b9e2c8c21165a08d91693c322a1741e8e07fb38", size = 228855, upload-time = "2013-07-07T06:42:33.318Z" }
+
+[[package]]
+name = "pylife"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "h5py" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/d9/56e7d76f1d992cbed1c97de0cff6e3b4dc696aa158ba5b18756978bc6f0a/pylife-2.3.0.tar.gz", hash = "sha256:6b8eba97f5b27e449c0c996ce130aa2c2dfd62845e4294b8ecfc6de3815d2303", size = 12115211, upload-time = "2026-04-24T11:14:13.496Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/bf/f1e31f66caf3100ea58138cd70b3dd69c0878bf5bf17c56ec3d4e87716fb/pylife-2.3.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e953644167e1fde6d878afed8e751f936bc5398f60acfe0a06fefdaad884438a", size = 2295759, upload-time = "2026-04-24T11:13:39.159Z" },
+    { url = "https://files.pythonhosted.org/packages/63/ca/fd219eb92d586e7f632d11e4046f6d89bd2363dfe9986f7fed44d3ee3f8d/pylife-2.3.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:c43f238e710b45c2858cc47c7e1bdfb6a67902c8d16ba01d3f50963eac5d82d0", size = 2341970, upload-time = "2026-04-24T11:13:41.036Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/b7/e3db8edf7491f82889979344a9f3062e2f27029cb461bd2058b311fbb3ca/pylife-2.3.0-cp311-cp311-win32.whl", hash = "sha256:e7d84216f5621f11277fef4876b33b5838d8169f4de5091860d5775081b87247", size = 398292, upload-time = "2026-04-24T11:13:42.621Z" },
+    { url = "https://files.pythonhosted.org/packages/65/3b/368ac4c72fb419ac43b8abc7954a4bb7509c3889eb402da2a75089d2960a/pylife-2.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:8a674f977ea57a20cf1948b90f2422ece4d716891d914995a31e6f7b1779fcdc", size = 442256, upload-time = "2026-04-24T11:13:44.272Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/61/b632fd9e3adf221d5598ee92ff09477f63ec929f70292a7f14792219930e/pylife-2.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a5bee550f7f828dc6fc5be4f9f50f38e88612fae68d7de4cdf50b0cfe4814477", size = 2230838, upload-time = "2026-04-24T11:13:45.764Z" },
+    { url = "https://files.pythonhosted.org/packages/94/4b/c4461569b9f0bbc3eca42221960f4f4f17a737415abfce6367e515be2295/pylife-2.3.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:0cba86004f5c5c6f140a6b6996ef880cf40e5afb3c7f50b13a3a9fd80744965e", size = 2295861, upload-time = "2026-04-24T11:13:47.24Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/be/9952413db294f805d4e920506c016c4d29042a199cd607a39536410921bb/pylife-2.3.0-cp312-cp312-win32.whl", hash = "sha256:02a313992aa05758db6f3becdb0bfb4ebd140a4ef86559e06065afef230f5b4e", size = 392669, upload-time = "2026-04-24T11:13:49.307Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/f1/c96cabd21e2389166f57765ea9d173e4cbf9f12e0ac337fa3b093bbd8bb1/pylife-2.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:85a32717bc47917810da3873913f7519245003c364b9e1371ce979b6f4a9f5b0", size = 431601, upload-time = "2026-04-24T11:13:50.965Z" },
+    { url = "https://files.pythonhosted.org/packages/77/f1/469290da72848fb2656277c6e3bd743c9b5774cedb69e29bdc64865083c9/pylife-2.3.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:2f5eda8377ea022ab2a3800289473b5792939b4a72b8bc7e0c4da753fc3cf1ce", size = 2220489, upload-time = "2026-04-24T11:13:52.426Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/7d/af130f60d7a688519d1109fb1ed4cf255d64add3f50a54f77c62849a9bf4/pylife-2.3.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:b3012320537821ec33f1abbdfd6cfef8d967af1f9c33aca216ba96c7c8ae02e9", size = 2263403, upload-time = "2026-04-24T11:13:54.426Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/6b/0d68ac28c4f48c95bfc58550ceeaebabb6345d3415ab4ece8f1d528e06e1/pylife-2.3.0-cp313-cp313-win32.whl", hash = "sha256:c811baaafa006889374d86ba6c9679abbfd7711f5b06c638887325a52942cf61", size = 392321, upload-time = "2026-04-24T11:13:56.46Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/dc/c27c11c948e4a227eb119cc6e721c8f3209ac0a859974cbd8470b2ef5731/pylife-2.3.0-cp313-cp313-win_amd64.whl", hash = "sha256:195a849be2fbbe73afff77465aaed311c2159def60abb1505f002e41015d89da", size = 434467, upload-time = "2026-04-24T11:13:57.907Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/37/f881971119435085d25b8f2142376d30be9936a69a4ba53d7e24833d80dd/pylife-2.3.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:c5eb2064ffcc94410f0c9f4c7e5a278540befd065afa6af29180793b02eedc53", size = 2197948, upload-time = "2026-04-24T11:13:59.559Z" },
+    { url = "https://files.pythonhosted.org/packages/31/92/3ea7ff9ce90d26088f04326b7ea5c7f0fd48767ce51c6fd3973fe5dbeca9/pylife-2.3.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:2bd3f281bda91cd9d0c1398314f37625863756d4b10e4a968865476a41b01b9d", size = 2249502, upload-time = "2026-04-24T11:14:01.33Z" },
+    { url = "https://files.pythonhosted.org/packages/34/9f/26d2f66eca3d37ce828ee9cb6cbc1d7d5cdfdaba0b3bc4dda440aa413214/pylife-2.3.0-cp314-cp314-win32.whl", hash = "sha256:1c11444d26b027060813373ec52bf06f23fc5ed4fdee30ea8f145b09705f60da", size = 396079, upload-time = "2026-04-24T11:14:02.957Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/5f/23f1392780a295bedaa647aef1e16a828c983972976d2cad5d28476aaca3/pylife-2.3.0-cp314-cp314-win_amd64.whl", hash = "sha256:398b86cb3dce2f54d943d7aa3b0c08d34b692398c2cce13951afc7bbaf6c284e", size = 440743, upload-time = "2026-04-24T11:14:04.702Z" },
+]
 
 [[package]]
 name = "pymdown-extensions"
