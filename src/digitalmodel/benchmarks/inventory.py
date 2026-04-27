@@ -186,6 +186,26 @@ def build_model_inventory() -> List[ModelInventoryEntry]:
                 "Cached hydrodynamic coefficient loading and RAO queries"),
             tags=["hydrodynamics", "rao", "frequency_domain", "cache"],
         ),
+        ModelInventoryEntry(
+            name="multibody_fpso_turret_v1",
+            category=ModelCategory.FREQUENCY_DOMAIN,
+            path=Path(
+                "tests/hydrodynamics/diffraction/fixtures/benchmarks/"
+                "multibody_fpso_turret_v1/spec.yml"
+            ),
+            description=(
+                "Multi-body OrcaWave benchmark - FPSO hull + turret with "
+                "fixed DOFs and parent connection"
+            ),
+            tags=[
+                "orcawave",
+                "multibody",
+                "fpso",
+                "turret",
+                "benchmark",
+                "roundtrip",
+            ],
+        ),
         # ----------------------------------------------------------------
         # Fatigue — time domain and frequency domain
         # ----------------------------------------------------------------
