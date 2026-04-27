@@ -1,0 +1,19 @@
+Command:
+UV_COMPILE_BYTECODE=0 uv run --no-sync pytest tests/docs/test_digitalmodel_routing_contract.py -q
+
+Outcome:
+7 failed, 1 passed in 17.67s
+
+Expected red-phase failures:
+- missing docs/README.md
+- missing docs/maps/digitalmodel-operator-map.md
+- missing docs/registry/module-routing.yaml
+- README.md and ROADMAP.md still referenced specs/module-registry.yaml
+- docs/domains/README.md and AGENTS.md did not link the repo-wide operator map
+
+Note:
+The initial `uv run pytest tests/docs/test_digitalmodel_routing_contract.py -q`
+command spent several minutes building/installing the virtualenv and was stopped
+while stuck in bytecode compilation. The red phase above reran through uv with
+`--no-sync` against the installed environment and captured the intended contract
+failures.

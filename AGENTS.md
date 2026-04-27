@@ -9,3 +9,4 @@ maturity: beta
 
 Contract: ../AGENTS.md | Source: src/digitalmodel/
 Key modules: engine.py, asset_integrity/, cathodic_protection/, gis/, hydrodynamics/, field_development/
+Routing: docs/README.md | docs/maps/digitalmodel-operator-map.md | docs/registry/module-routing.yaml

@@ -1,0 +1,196 @@
+schema_version: 1
+repo: digitalmodel
+canonical_operator_map: docs/maps/digitalmodel-operator-map.md
+modules:
+  - module: ansys
+    entry_point: src/digitalmodel/ansys/
+    maturity: beta
+    owner_wiki: docs/domains/ansys/
+    key_tests: [tests/ansys/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#ansys
+  - module: asset_integrity
+    entry_point: src/digitalmodel/asset_integrity/
+    maturity: stable
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/asset_integrity/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#asset_integrity
+  - module: benchmarks
+    entry_point: src/digitalmodel/benchmarks/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/benchmarks/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
+  - module: cathodic_protection
+    entry_point: src/digitalmodel/cathodic_protection/
+    maturity: beta
+    owner_wiki: docs/domains/cathodic_protection/
+    key_tests: [tests/cathodic_protection/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#cathodic_protection
+  - module: citations
+    entry_point: src/digitalmodel/citations/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/citations/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
+  - module: data_models
+    entry_point: src/digitalmodel/data_models/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#data_models
+  - module: data_systems
+    entry_point: src/digitalmodel/data_systems/
+    maturity: beta
+    owner_wiki: docs/domains/data_systems/
+    key_tests: [tests/data_systems/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#data_systems
+  - module: drilling_riser
+    entry_point: src/digitalmodel/drilling_riser/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/drilling_riser/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#drilling_riser
+  - module: fatigue
+    entry_point: src/digitalmodel/fatigue/
+    maturity: production
+    owner_wiki: docs/domains/fatigue/
+    key_tests: [tests/fatigue/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#fatigue
+  - module: field_development
+    entry_point: src/digitalmodel/field_development/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/field_development/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#field_development
+  - module: geotechnical
+    entry_point: src/digitalmodel/geotechnical/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/geotechnical/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#geotechnical
+  - module: gis
+    entry_point: src/digitalmodel/gis/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/gis/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#gis
+  - module: hydrodynamics
+    entry_point: src/digitalmodel/hydrodynamics/
+    maturity: production
+    owner_wiki: docs/domains/hydrodynamics/
+    key_tests: [tests/hydrodynamics/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
+  - module: infrastructure
+    entry_point: src/digitalmodel/infrastructure/
+    maturity: beta
+    owner_wiki: docs/domains/infrastructure/
+    key_tests: [tests/infrastructure/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#infrastructure
+  - module: marine_ops
+    entry_point: src/digitalmodel/marine_ops/
+    maturity: beta
+    owner_wiki: docs/domains/marine_ops/
+    key_tests: [tests/marine_ops/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
+  - module: naval_architecture
+    entry_point: src/digitalmodel/naval_architecture/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/naval_architecture/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#naval_architecture
+  - module: nde
+    entry_point: src/digitalmodel/nde/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/nde/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#nde
+  - module: orcaflex
+    entry_point: src/digitalmodel/orcaflex/
+    maturity: production
+    owner_wiki: docs/domains/orcaflex/
+    key_tests: [tests/orcaflex/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#orcaflex
+  - module: orcawave
+    entry_point: src/digitalmodel/orcawave/
+    maturity: beta
+    owner_wiki: docs/domains/orcawave/
+    key_tests: [tests/orcawave/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#orcawave
+  - module: power
+    entry_point: src/digitalmodel/power/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/power/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#power
+  - module: production_engineering
+    entry_point: src/digitalmodel/production_engineering/
+    maturity: production
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/production_engineering/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#production_engineering
+  - module: reservoir
+    entry_point: src/digitalmodel/reservoir/
+    maturity: development
+    owner_wiki: docs/domains/reservoir/
+    key_tests: [tests/reservoir/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
+  - module: signal_processing
+    entry_point: src/digitalmodel/signal_processing/
+    maturity: beta
+    owner_wiki: docs/domains/signal_processing/
+    key_tests: [tests/signal_processing/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#signal_processing
+  - module: solvers
+    entry_point: src/digitalmodel/solvers/
+    maturity: beta
+    owner_wiki: docs/domains/solvers/
+    key_tests: [tests/solvers/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
+  - module: specialized
+    entry_point: src/digitalmodel/specialized/
+    maturity: stub
+    owner_wiki: docs/domains/specialized/
+    key_tests: [tests/specialized/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#specialized
+  - module: specs
+    entry_point: src/digitalmodel/specs/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/specs/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#specs
+  - module: structural
+    entry_point: src/digitalmodel/structural/
+    maturity: stable
+    owner_wiki: docs/domains/structural/
+    key_tests: [tests/structural/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
+  - module: subsea
+    entry_point: src/digitalmodel/subsea/
+    maturity: stable
+    owner_wiki: docs/domains/subsea/
+    key_tests: [tests/subsea/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
+  - module: visualization
+    entry_point: src/digitalmodel/visualization/
+    maturity: beta
+    owner_wiki: docs/domains/visualization/
+    key_tests: [tests/visualization/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#visualization
+  - module: web
+    entry_point: src/digitalmodel/web/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/web/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#web
+  - module: well
+    entry_point: src/digitalmodel/well/
+    maturity: stable
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/well/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#well
+  - module: workflows
+    entry_point: src/digitalmodel/workflows/
+    maturity: beta
+    owner_wiki: docs/domains/workflows/
+    key_tests: [tests/workflows/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#workflows
