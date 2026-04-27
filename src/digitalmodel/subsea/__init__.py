@@ -1,1 +1,1 @@
-"""digitalmodel.subsea - Riser, mooring, and pipeline analysis."""
+"""digitalmodel.subsea - Riser, mooring, pipeline, and cross-section schemas."""

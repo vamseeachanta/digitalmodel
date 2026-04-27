@@ -1,0 +1,38 @@
+id: power-optical-hybrid-umbilical
+name: Representative power and optical hybrid umbilical
+family: power_optical_hybrid_umbilical
+duty: static
+description: Packed component schema fixture for a hybrid power/optical umbilical.
+design_metadata:
+  voltage_class: {value: 33, unit: kV}
+  notes: Representative mix for schema validation.
+provenance:
+  - source_id: wiki-cross-section-recon-2026-04-26
+    source_type: wiki
+    citation: Offshore cable/umbilical cross-section reconnaissance, 2026-04-26
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: project-assumption-2514
+    source_type: project_assumption
+    citation: Issue #2514 representative fixture assumptions
+    note: Representative layer dimensions are examples for schema validation, not design defaults.
+  - source_id: prysmian-power-optical-umbilical
+    source_type: vendor_catalogue
+    citation: Prysmian power/optical umbilical source noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+radial_layers: []
+packed_components:
+  - name: medium voltage power cores
+    component_type: power_core
+    service_role: power
+    material: copper and XLPE
+    count: 3
+    diameter: {value: 24, unit: mm}
+    voltage_rating: {value: 33, unit: kV}
+    provenance: {source_id: prysmian-power-optical-umbilical, source_type: vendor_catalogue}
+  - name: optical fibre package
+    component_type: optical_fibre
+    service_role: fiber_optic
+    material: glass fibre in polymer tube
+    count: 1
+    diameter: {value: 9, unit: mm}
+    provenance: {source_id: prysmian-power-optical-umbilical, source_type: vendor_catalogue}

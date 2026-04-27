@@ -215,6 +215,9 @@ where = ["src"]
 include = ["digitalmodel*"]
 exclude = ["tests*", "docs*"]
 
+[tool.setuptools.package-data]
+digitalmodel = ["subsea/cross_sections/fixtures/*.yml"]
+
 [tool.black]
 line-length = 88
 target-version = ['py311', 'py312']
