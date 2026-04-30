@@ -216,7 +216,7 @@ include = ["digitalmodel*"]
 exclude = ["tests*", "docs*"]
 
 [tool.setuptools.package-data]
-digitalmodel = ["subsea/cross_sections/fixtures/*.yml"]
+digitalmodel = ["subsea/cross_sections/fixtures/*.yml", "naval_architecture/data/*.yml"]
 
 [tool.black]
 line-length = 88

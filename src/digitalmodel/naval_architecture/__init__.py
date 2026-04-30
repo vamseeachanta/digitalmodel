@@ -37,6 +37,13 @@ from digitalmodel.naval_architecture.ship_dimensions import (
     merge_template_into_registry,
     validate_vessel_entry,
 )
+from digitalmodel.naval_architecture.yaw_moment import (
+    load_packaged_typical_ship_yaml,
+    load_yaw_moment_input,
+    rudder_yaw_moment,
+    run_yaw_moment_sweep,
+    write_yaw_moment_results,
+)
 
 __all__ = [
     "capacity_plan",
@@ -52,6 +59,8 @@ __all__ = [
     "hull_weight_groups",
     "list_ships",
     "load_dimension_template",
+    "load_packaged_typical_ship_yaml",
+    "load_yaw_moment_input",
     "merge_template_into_registry",
     "RigHullEstimate",
     "RigHullValidation",
@@ -60,9 +69,12 @@ __all__ = [
     "register_drilling_rigs",
     "register_fleet_vessels",
     "rig_type_to_hull_form",
+    "rudder_yaw_moment",
+    "run_yaw_moment_sweep",
     "stability_curve_estimate",
     "summarize_drilling_rig_hull_validation",
     "validate_drilling_rig_fleet",
     "validate_drilling_rig_hull_form",
     "validate_vessel_entry",
+    "write_yaw_moment_results",
 ]

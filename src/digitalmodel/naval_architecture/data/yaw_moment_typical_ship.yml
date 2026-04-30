@@ -1,0 +1,35 @@
+case:
+  id: typical_single_screw_ship
+  description: Preliminary rudder-induced yaw moment sweep for a typical ship
+vessel:
+  name: Typical Ship
+  length_between_perpendiculars_m: 180.0
+  draft_m: 10.0
+  displacement_t: 30000.0
+rudder:
+  area_m2: 20.0
+  span_m: 5.0
+  x_from_cg_m: -45.0
+  behind_hull: false
+sign_convention:
+  axes: "+x forward, +y port, +z up"
+  positive_yaw_moment: "bow_to_port"
+  positive_force_direction: port
+environment:
+  rho_kg_m3: 1025.0
+sweep:
+  speeds:
+    units: kn
+    values: [0, 2, 5, 10, 15]
+  rudder_angles_deg: [-35, -20, -10, 0, 10, 20, 35]
+outputs:
+  directory: results/yaw_moment_typical_ship
+  tables: [csv, json]
+  charts:
+    enabled: true
+    formats: [png, html]
+    required:
+      - yaw_moment_vs_rudder_angle_by_speed
+      - yaw_moment_vs_speed_by_rudder_angle
+      - transverse_force_vs_rudder_angle_by_speed
+      - yaw_moment_speed_angle_heatmap
