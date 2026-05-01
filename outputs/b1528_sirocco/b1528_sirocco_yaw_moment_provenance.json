@@ -1,0 +1,8 @@
+{
+  "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+  "formula_boundary": {
+    "workbook_regression": "F=beta*AR*V^2*Cr; Ft=F*sin(alpha)*cos(alpha); Fn=F*sin(alpha); evaluated yaw moment=(Fn/1000/g)*(0.6*LBP)",
+    "digitalmodel_static_yaw": "digitalmodel yaw_moment.rudder_yaw_moment with legacy 0.6*LBP mapped for comparison only"
+  },
+  "limitations": "preliminary static rudder-induced yaw moment; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion"
+}
