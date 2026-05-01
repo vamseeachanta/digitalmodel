@@ -1,0 +1,45 @@
+case:
+  id: b1528_sirocco_time_trace
+  description: B1528 SIROCCO preliminary first-order Nomoto time-trace with rudder-local inflow diagnostics.
+  aliases:
+    - SIROCCO
+    - Sirocco
+    - Sorrocco
+source_pack:
+  issue: https://github.com/vamseeachanta/workspace-hub/issues/2569
+  source_pack_path: docs/projects/acma/B1528/sirocco-rudder-source-pack.md
+  benchmark_path: docs/projects/acma/B1528/sirocco-turning-benchmark.yaml
+static_report:
+  issue: https://github.com/vamseeachanta/workspace-hub/issues/2570
+  packaged_input: digitalmodel.naval_architecture.data/b1528_sirocco_yaw_moment.yml
+vessel:
+  lbp_m: 225.5
+  rudder_x_from_cg_m: -135.3
+rudder:
+  area_m2: 44.93956319369854
+  span_m: 9.0
+scenario:
+  speed_kn: 2.5
+  rudder_angle_deg: 1.0
+  duration_s: 600.0
+  dt_s: 1.0
+nomoto:
+  k_per_s: 0.018
+  t_s: 55.0
+  assumption: Assumed first-order Nomoto sensitivity for preliminary source-gap reporting; not calibrated from B1528 telemetry.
+environment:
+  rho_kg_m3: 1025.0
+benchmark:
+  classification: narrative_benchmark_not_instrumented_validation_dataset
+  comparison_mode: source_gap_panel
+  notes: VDR/Rosepoint points have heading/SOG narrative anchors but no x/y coordinates and include tug/current/anchor effects.
+outputs:
+  directory: outputs/b1528_sirocco/time_trace
+limitations:
+  - source-gap sensitivity mode; Nomoto K/T are assumptions, not B1528 calibration evidence
+  - preliminary first-order Nomoto time trace only
+  - rudder force and yaw moment are diagnostics only and are not fed back into r_dot
+  - not a full MMG simulation
+  - not an incident reconstruction
+  - not an IMO compliance assessment
+  - no class compliance conclusion
