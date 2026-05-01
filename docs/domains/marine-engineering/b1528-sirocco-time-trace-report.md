@@ -40,7 +40,7 @@ The Nomoto coefficients are marked as assumptions for source-gap sensitivity rep
 
 ## Generated outputs
 
-Default output directory: `outputs/b1528_sirocco/time_trace/`
+Default output directory: `../acma-projects/B1528/yaw-and-time-trace/time_trace/` (project-specific outputs are owned by `acma-projects`, not `digitalmodel`).
 
 - `b1528_sirocco_time_trace_results.csv`
 - `b1528_sirocco_time_trace_results.json`
