@@ -1,0 +1,8 @@
+{
+  "csv": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_results.csv",
+  "json": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_results.json",
+  "provenance": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_provenance.json",
+  "markdown_report": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.md",
+  "html_report": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html",
+  "manifest": "outputs/b1528_sirocco/b1528_sirocco_yaw_moment_manifest.json"
+}
