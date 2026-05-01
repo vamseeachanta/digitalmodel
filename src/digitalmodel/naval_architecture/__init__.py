@@ -37,12 +37,10 @@ from digitalmodel.naval_architecture.ship_dimensions import (
     merge_template_into_registry,
     validate_vessel_entry,
 )
-from digitalmodel.naval_architecture.rudder_stock_torque import (
-    load_packaged_rudder_stock_torque_yaml,
-    load_rudder_stock_torque_input,
-    rudder_stock_torque,
-    run_rudder_stock_torque_sweep,
-    write_rudder_stock_torque_results,
+from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
+    load_packaged_b1528_yaw_config,
+    run_b1528_static_yaw_report,
+    write_b1528_static_yaw_report,
 )
 from digitalmodel.naval_architecture.yaw_moment import (
     load_packaged_typical_ship_yaml,
@@ -66,9 +64,8 @@ __all__ = [
     "hull_weight_groups",
     "list_ships",
     "load_dimension_template",
-    "load_packaged_rudder_stock_torque_yaml",
+    "load_packaged_b1528_yaw_config",
     "load_packaged_typical_ship_yaml",
-    "load_rudder_stock_torque_input",
     "load_yaw_moment_input",
     "merge_template_into_registry",
     "RigHullEstimate",
@@ -78,15 +75,14 @@ __all__ = [
     "register_drilling_rigs",
     "register_fleet_vessels",
     "rig_type_to_hull_form",
-    "rudder_stock_torque",
     "rudder_yaw_moment",
-    "run_rudder_stock_torque_sweep",
+    "run_b1528_static_yaw_report",
     "run_yaw_moment_sweep",
     "stability_curve_estimate",
     "summarize_drilling_rig_hull_validation",
     "validate_drilling_rig_fleet",
     "validate_drilling_rig_hull_form",
     "validate_vessel_entry",
-    "write_rudder_stock_torque_results",
+    "write_b1528_static_yaw_report",
     "write_yaw_moment_results",
 ]
