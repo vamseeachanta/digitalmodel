@@ -1,0 +1,13 @@
+{
+  "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+  "static_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+  "formula_boundary": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
+  "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+  "limitations": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
+  "benchmark": {
+    "panel_id": "benchmark-source-gap",
+    "classification": "narrative_benchmark_not_instrumented_validation_dataset",
+    "source": "docs/projects/acma/B1528/sirocco-turning-benchmark.yaml",
+    "summary": "Extracted heading/SOG narrative anchors have no x/y coordinates and include tug/current/anchor effects; this report therefore shows source-gap/sensitivity context rather than fabricated trajectory overlay."
+  }
+}
