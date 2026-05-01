@@ -29,9 +29,9 @@ from digitalmodel.hydrodynamics.hull_library.profile_schema import HullType
 # Fixtures
 # ---------------------------------------------------------------------------
 
-GDF_DIR = Path(
-    "/mnt/local-analysis/workspace-hub/digitalmodel"
-    "/specs/modules/orcawave/test-configs/geometry"
+GDF_DIR = (
+    Path(__file__).resolve().parents[3]
+    / "specs/modules/orcawave/test-configs/geometry"
 )
 
 _HAS_GDF_FILES = GDF_DIR.exists() and any(GDF_DIR.glob("*.gdf"))

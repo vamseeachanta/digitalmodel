@@ -39,6 +39,9 @@ jobs:
       - name: Create reports directory
         run: mkdir -p reports
 
+      - name: Check no developer-machine absolute paths
+        run: bash scripts/enforcement/check-no-abs-paths.sh
+
       - name: Run Quality Gates
         run: |
           python -m digitalmodel.workflows.automation.quality_gates_cli check --json

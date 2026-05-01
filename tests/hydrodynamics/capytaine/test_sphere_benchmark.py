@@ -18,11 +18,6 @@ import sys
 import numpy as np
 import pytest
 
-# Capytaine env may be at a non-standard location
-CAPYTAINE_ENV = "/mnt/local-analysis/capytaine-env/lib/python3.12/site-packages"
-if CAPYTAINE_ENV not in sys.path:
-    sys.path.insert(0, CAPYTAINE_ENV)
-
 # Skip all tests if capytaine not available
 cpt = pytest.importorskip("capytaine")
 
