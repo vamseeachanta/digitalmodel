@@ -1,0 +1,45 @@
+case:
+  id: b1528_sirocco_static_yaw_moment
+  description: B1528 SIROCCO static rudder-induced yaw moment sweep for source-pack workbook regression and reusable digitalmodel comparison.
+  aliases:
+    - SIROCCO
+    - Sirocco
+    - Sorrocco
+source_pack:
+  issue: https://github.com/vamseeachanta/workspace-hub/issues/2569
+  source_pack_path: docs/projects/acma/B1528/sirocco-rudder-source-pack.md
+  benchmark_path: docs/projects/acma/B1528/sirocco-turning-benchmark.yaml
+  source_repo: github://vamseeachanta/acma-projects/B1528
+vessel:
+  lbp_m: 225.5
+  breadth_molded_m: 32.26
+  design_draft_m: 12.2
+rudder:
+  area_m2: 44.93956319369854
+  span_m: 9.0
+  center_aft_of_ap_m: -1.0520261378949631
+  center_frame_no: -1.4027015171932842
+workbook_regression:
+  beta: 600.0
+  legacy_yaw_lever_m: 135.3
+  legacy_yaw_lever_note: 0.6 * LBP from Barrass workbook family; not automatically equivalent to CG-to-rudder arm.
+  force_semantics: evaluated workbook yaw moment uses Fn via C23; workbook text mentions Ft.
+  prop_rotation_factors:
+    port: 1.065
+    stbd: 0.935
+calculation_modes:
+  - workbook_regression
+  - digitalmodel_static_yaw
+sweep:
+  speeds_kn: [0.0, 1.0, 2.5, 5.0]
+  rudder_angles_deg: [-5.0, -2.0, -1.0, 0.0, 1.0, 2.0, 5.0]
+environment:
+  rho_kg_m3: 1025.0
+outputs:
+  directory: outputs/b1528_sirocco
+  report_basename: b1528_sirocco_yaw_moment_report
+limitations:
+  - preliminary static rudder-induced yaw moment only
+  - not a full MMG simulation
+  - not an IMO compliance assessment
+  - no class compliance conclusion
