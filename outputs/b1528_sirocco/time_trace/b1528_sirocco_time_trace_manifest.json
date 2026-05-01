@@ -1,0 +1,8 @@
+{
+  "csv": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_results.csv",
+  "json": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_results.json",
+  "provenance": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_provenance.json",
+  "markdown_report": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+  "html_report": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html",
+  "manifest": "outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_manifest.json"
+}
