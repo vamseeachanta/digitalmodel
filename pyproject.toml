@@ -276,6 +276,10 @@ omit = [
     "setup.py",
     "*/migrations/*",
     "*/gis/outputlatlongs_wells.py",
+    # Data-placeholder catalog (29.7k lines of `# Placeholder: ...` comments,
+    # not real Python; coverage tokenizer fails with "EOF in multi-line statement").
+    # See commit 6a2a1982 "document curves.py as data placeholders".
+    "*/naval_architecture/curves.py",
 ]
 branch = true
 parallel = true
