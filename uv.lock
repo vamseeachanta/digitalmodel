@@ -1477,6 +1477,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "scrapy" },
+    { name = "seaborn" },
     { name = "sectionproperties" },
     { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "slowapi" },
@@ -1542,7 +1543,6 @@ test = [
 viz = [
     { name = "dash" },
     { name = "kaleido" },
-    { name = "seaborn" },
 ]
 web = [
     { name = "fastapi" },
@@ -1694,7 +1694,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = "==1.3.2" },
     { name = "scipy", specifier = ">=1.10.0,<2.0.0" },
     { name = "scrapy", specifier = ">=2.11.0,<3.0.0" },
-    { name = "seaborn", marker = "extra == 'viz'", specifier = ">=0.13.0,<1.0.0" },
+    { name = "seaborn", specifier = ">=0.13.0,<1.0.0" },
     { name = "sectionproperties", specifier = ">=3.4.0,<4.0.0" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = "==1.38.0" },
     { name = "slowapi", specifier = "==0.1.9" },
