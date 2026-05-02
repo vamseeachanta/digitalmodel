@@ -21,10 +21,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-CAPYTAINE_ENV = "/mnt/local-analysis/capytaine-env/lib/python3.12/site-packages"
-if CAPYTAINE_ENV not in sys.path:
-    sys.path.insert(0, CAPYTAINE_ENV)
-
 cpt = pytest.importorskip("capytaine")
 
 from digitalmodel.hydrodynamics.capytaine import (

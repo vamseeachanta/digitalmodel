@@ -1,15 +1,15 @@
 &id004 !!python/object/new:digitalmodel.asset_integrity.common.update_deep.AttributeDict
 dictitems:
   Analysis:
-    CustomInputFile: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/fracture_mechanics_py_circumferential_single_process.yml
+    CustomInputFile: src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/fracture_mechanics_py_circumferential_single_process.yml
     DefaultInputFile: ~
-    analysis_root_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics
+    analysis_root_folder: src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics
     basename: fracture_mechanics
     cfg_array_file_names: ~
     file_name: app_fracture_mechanics_fracture_mechanics_py_circumferential_single_process
     file_name_for_overwrite: app_fracture_mechanics_fracture_mechanics_py_circumferential_single_process
-    log_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\logs\
-    result_folder: /mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics\results\
+    log_folder: src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/logs/
+    result_folder: src/digitalmodel/asset_integrity/tests/test_data/fracture_mechanics/results/
     start_time: 2026-02-18 04:23:09.784500
   Inner_Pipe: ~
   Material:
@@ -183,7 +183,7 @@ dictitems:
         component_label:
         - Buoyancy Jt. at Bottom
         index_col: ~
-        io: tests\test_data\histograms\2500ft_WT0750_064pcf_combined_histograms.xlsx
+        io: tests/test_data/histograms/2500ft_WT0750_064pcf_combined_histograms.xlsx
         label: combined_histograms
         replace: ~
         sheet_name: combined_fatigue

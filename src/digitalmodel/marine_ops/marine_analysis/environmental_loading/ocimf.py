@@ -24,7 +24,6 @@ from scipy.interpolate import RBFInterpolator, interp2d, LinearNDInterpolator
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
 import warnings
 
 # Optional plotly for interactive 3D charts

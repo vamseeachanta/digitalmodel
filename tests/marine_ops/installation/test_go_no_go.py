@@ -1,6 +1,7 @@
 """Tests for Go/No-Go integration into the pipeline."""
 import sys
 import importlib.util
+from pathlib import Path
 import pytest
 
 # Load modules directly (avoid namespace issues)
@@ -12,8 +13,9 @@ def load_module(name, path):
     spec.loader.exec_module(mod)
     return mod
 
-gng = load_module("go_no_go", "/mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/marine_ops/installation/go_no_go.py")
-jl = load_module("jumper_lift", "/mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/marine_ops/installation/jumper_lift.py")
+_INSTALLATION_DIR = Path(__file__).resolve().parents[3] / "src/digitalmodel/marine_ops/installation"
+gng = load_module("go_no_go", str(_INSTALLATION_DIR / "go_no_go.py"))
+jl = load_module("jumper_lift", str(_INSTALLATION_DIR / "jumper_lift.py"))
 
 
 class TestGoNoGoDecision:

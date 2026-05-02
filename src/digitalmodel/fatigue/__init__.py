@@ -66,6 +66,23 @@ from .environmental_correction import (
     apply_environment_to_sn, EnvironmentInput, EnvironmentResult,
 )
 
+# Re-exports from digitalmodel.structural.fatigue for the migration-test
+# convenience API (see tests/structural/fatigue/test_fatigue_migration.py).
+from digitalmodel.structural.fatigue.analysis import (
+    FatigueAnalysisEngine,
+    FatigueAnalysisConfig,
+    MultislopeSNCurve,
+    quick_time_domain_analysis,
+    quick_frequency_domain_analysis,
+)
+from digitalmodel.structural.fatigue.sn_curves import (
+    StandardSNCurves,
+    get_dnv_curve,
+)
+from digitalmodel.structural.fatigue.damage_accumulation import (
+    LinearDamageAccumulation,
+)
+
 __all__ = [
     # Original modules
     "get_sn_curve",
@@ -155,4 +172,13 @@ __all__ = [
     "CurveInfo",
     "SNCurve",
     "ComparisonData",
+    # Re-exports from digitalmodel.structural.fatigue (migration test API)
+    "FatigueAnalysisEngine",
+    "FatigueAnalysisConfig",
+    "MultislopeSNCurve",
+    "quick_time_domain_analysis",
+    "quick_frequency_domain_analysis",
+    "StandardSNCurves",
+    "get_dnv_curve",
+    "LinearDamageAccumulation",
 ]
