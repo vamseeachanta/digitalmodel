@@ -24,6 +24,14 @@ _wed_src = Path(__file__).resolve().parents[3] / "worldenergydata" / "src"
 if _wed_src.exists() and str(_wed_src) not in sys.path:
     sys.path.insert(0, str(_wed_src))
 
+# Probe for the worldenergydata DCF bridge so test classes that depend on it
+# can skip on CI (where the sibling repo is not checked out) instead of erroring.
+try:
+    import worldenergydata.economics.dcf  # noqa: F401
+    _HAS_WED_DCF = True
+except ImportError:
+    _HAS_WED_DCF = False
+
 from digitalmodel.field_development.economics import (
     DeclineType,
     EconomicsInput,
@@ -475,6 +483,15 @@ class TestCostPredictorWiring:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _HAS_WED_DCF,
+    reason=(
+        "Cross-repo dep: worldenergydata.economics.dcf not importable. "
+        "digitalmodel CI installs the package standalone (no sibling repo "
+        "checkout) so this class is gated on CI but runs locally under "
+        "workspace-hub."
+    ),
+)
 class TestBuildEconomicsSchedule:
     """Test the CashFlowSchedule bridge function."""
 
@@ -986,12 +1003,6 @@ class TestEURDeclineParameterization:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skip(
-    reason=(
-        "CI-vs-local divergence: all 11 tests pass locally on linux/python 3.11.14 "
-        "with default seed but fail in CI on python 3.11.15. Tracked in workspace-hub #2581."
-    )
-)
 class TestFiscalRegimeTaxAdjustment:
     """Test fiscal regime tax adjustment applied to economics cashflows."""
 
