@@ -8,12 +8,8 @@ from pathlib import Path
 import pytest
 
 _CSV_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "worldenergydata"
-    / "data"
-    / "modules"
-    / "vessel_fleet"
-    / "curated"
+    Path(__file__).resolve().parent
+    / "fixtures"
     / "drilling_riser_components.csv"
 )
 

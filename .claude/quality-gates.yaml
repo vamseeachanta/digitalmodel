@@ -7,7 +7,7 @@ gates:
     enabled: true
     order: 1
     description: "All tests must pass"
-    command: "python -m pytest --maxfail=10 -p no:asyncio -p no:randomly -p no:sugar -p no:capture --no-header -q --tb=line --cov=src --cov-report=json"
+    command: "python -m pytest --maxfail=20 -rfE -p no:asyncio -p no:randomly -p no:sugar -p no:capture --no-header -q --tb=line --cov=src --cov-report=json"
     failure_action: "block"
     warning_action: "report"
 
