@@ -36,10 +36,12 @@ sweep:
 environment:
   rho_kg_m3: 1025.0
 outputs:
-  directory: outputs/b1528_sirocco
+  directory: ../acma-projects/B1528/yaw-and-time-trace
+  directory_note: project-specific outputs live in acma-projects; caller passes output_dir explicitly
   report_basename: b1528_sirocco_yaw_moment_report
 limitations:
   - preliminary static rudder-induced yaw moment only
   - not a full MMG simulation
+  - not an incident reconstruction
   - not an IMO compliance assessment
   - no class compliance conclusion

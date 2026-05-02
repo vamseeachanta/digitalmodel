@@ -34,7 +34,8 @@ benchmark:
   comparison_mode: source_gap_panel
   notes: VDR/Rosepoint points have heading/SOG narrative anchors but no x/y coordinates and include tug/current/anchor effects.
 outputs:
-  directory: outputs/b1528_sirocco/time_trace
+  directory: ../acma-projects/B1528/yaw-and-time-trace/time_trace
+  directory_note: project-specific outputs live in acma-projects; caller passes output_dir explicitly
 limitations:
   - source-gap sensitivity mode; Nomoto K/T are assumptions, not B1528 calibration evidence
   - preliminary first-order Nomoto time trace only

@@ -3,10 +3,12 @@
 This document records the durable report contract for issue #2570. The generated interactive report is produced by:
 
 ```bash
+# Project-specific outputs land in acma-projects/B1528/yaw-and-time-trace/.
+# Adjust the path to your local acma-projects checkout.
 UV_NO_SYNC=1 PYTHONPATH=src uv run --with pyyaml --with plotly python - <<'PY'
 from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import load_packaged_b1528_yaw_config, run_b1528_static_yaw_report, write_b1528_static_yaw_report
 result = run_b1528_static_yaw_report(load_packaged_b1528_yaw_config())
-print(write_b1528_static_yaw_report(result, 'outputs/b1528_sirocco'))
+print(write_b1528_static_yaw_report(result, '../acma-projects/B1528/yaw-and-time-trace'))
 PY
 ```
 
