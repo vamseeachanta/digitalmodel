@@ -43,19 +43,21 @@ fi
 PATTERN='(/mnt/local-analysis/|/home/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects)|/Users/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects))'
 
 declare -a VIOLATIONS=()
-for file in "${TARGETS[@]}"; do
-  [[ -f "$file" ]] || continue
-  rel="${file#$REPO_ROOT/}"
-  line_no=0
-  while IFS= read -r line; do
-    line_no=$((line_no + 1))
-    [[ "$line" == *'# abs-path-allowed' ]] && continue
-    if [[ "$line" =~ $PATTERN ]]; then
-      printf '%s:%d: %s\n' "$rel" "$line_no" "$line"
-      VIOLATIONS+=("$rel:$line_no")
-    fi
-  done < "$file"
-done
+# Single grep pass per file batch: orders of magnitude faster than per-line bash.
+# `grep -nE` emits "<file>:<line>:<content>"; we strip the allowlist marker and
+# convert to repo-relative paths.
+if (( ${#TARGETS[@]} > 0 )); then
+  while IFS= read -r match; do
+    [[ -z "$match" ]] && continue
+    [[ "$match" == *'# abs-path-allowed' ]] && continue
+    rel="${match#$REPO_ROOT/}"
+    line_no="${rel#*:}"
+    line_no="${line_no%%:*}"
+    rel_path="${rel%%:*}"
+    printf '%s\n' "$match" | sed "s|^$REPO_ROOT/||"
+    VIOLATIONS+=("$rel_path:$line_no")
+  done < <(grep -nHE "$PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
+fi
 
 if (( ${#VIOLATIONS[@]} > 0 )); then
   if [[ "${ALLOW_ABS_PATHS:-0}" == "1" ]]; then

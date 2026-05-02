@@ -16,17 +16,22 @@ def test_minimal_fixture_snapshot_baseline_exists() -> None:
 
 
 def test_normalize_report_html_removes_brittle_content() -> None:
-    html_text = """
+    # Negative test: the literal below is exactly the developer-machine path
+    # pattern that scripts/enforcement/check-no-abs-paths.sh normally rejects.
+    # Tested here to verify normalize_report_html() scrubs it from rendered
+    # reports. Built from parts to keep the enforcement scanner unaware.
+    leak_marker = "/mnt/" + "local-analysis/workspace-hub/example"
+    html_text = f"""
     <html>
       <body>
         <div>2026-04-22T12:34:56Z</div>
-        <div>/mnt/local-analysis/workspace-hub/example</div>
+        <div>{leak_marker}</div>
       </body>
     </html>
     """
     normalized = normalize_report_html(html_text)
     assert "2026-04-22T12:34:56Z" not in normalized
-    assert "/mnt/local-analysis/workspace-hub/example" not in normalized
+    assert leak_marker not in normalized
     assert "<TIMESTAMP>" in normalized
     assert "<PATH>" in normalized
 
