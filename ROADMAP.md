@@ -6,7 +6,7 @@
 
 Modules are tiered by client project demand. Tier 1 = build next, Tier 2 = build when needed, Tier 3 = backlog. Tiers are re-evaluated when new client projects arrive -- this is event-driven, not calendar-driven. aceengineer.com calculator potential is a secondary signal: modules that make good web calculators get a small priority boost but never override client demand.
 
-Module IDs reference `specs/module-registry.yaml`. Maturity levels (production, stable, beta, development, stub) track readiness, not priority.
+Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (production, stable, beta, development, stub) track readiness, not priority.
 
 ## Tier 1: Active Development
 
@@ -47,7 +47,7 @@ Module IDs reference `specs/module-registry.yaml`. Maturity levels (production, 
 - [ ] Audit DNV-RP-B401, API RP 1632, and ISO 15589-2 for missing clauses within implemented scope
 - [ ] Add worked-example tests from each standard's appendices
 - [ ] Implement ABS GN for Building and Classing Ships/Offshore Installations CP requirements
-- [ ] Add module entry to `specs/module-registry.yaml` with full capabilities and gaps
+- [ ] Add module entry to `docs/registry/module-routing.yaml` with full capabilities and gaps
 - [ ] Create manifest.yaml with clause-level traceability
 
 **Calculator potential:** High -- CP sizing (anode quantity, coating breakdown factor, current demand) is a natural web calculator for aceengineer.com. Similar in complexity to the existing wall-thickness calculator.

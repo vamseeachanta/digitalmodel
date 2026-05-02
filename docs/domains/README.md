@@ -27,7 +27,7 @@ digitalmodel/
 │   ├── solvers/orcaflex/
 │   ├── hydrodynamics/diffraction/
 │   └── ...
-└── ../docs/maps/                  # Workspace-level operator maps and audits
+└── docs/maps/                     # Repo-level operator maps and audits
 ```
 
 ## Important note
@@ -36,10 +36,15 @@ Some older documentation still refers to `src/modules/` and `tests/domains/`.
 That is not the current layout for active OrcaWave/OrcaFlex work.
 Use the actual source tree under `src/digitalmodel/` and tests under `tests/`.
 
-## Start here for OrcaWave / OrcaFlex work
+## Start here for repo-wide domain work
 
-Use the canonical workspace-level operator map:
-- `../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md`
+Use the canonical repo-wide operator map:
+- `docs/maps/digitalmodel-operator-map.md`
 
-That document links the main code surfaces, tests, issue clusters, queue scripts,
-and machine boundaries for future work.
+That document links the main code surfaces, tests, issue clusters, domain docs,
+and routing registry entries for future work.
+
+For non-OrcaWave/OrcaFlex work, route through the repo-wide operator map first
+instead of rediscovering paths from the raw domain-doc tree. The historical
+OrcaWave/OrcaFlex slice map remains useful as context, but the repo-wide map is
+the active starting point.

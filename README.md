@@ -43,7 +43,7 @@ from digitalmodel.cathodic_protection import dnv_rp_b401
 | power | Generator controls, microgrid EMS, protection relays | IEEE 1547, NFPA 110, IEEE C37.112 | 210+ |
 | gis | CRS transforms, spatial queries, multi-format I/O | -- | -- |
 
-For OrcaWave/OrcaFlex current-state navigation, see [../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md](../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md) (#1752). The earlier `specs/module-registry.yaml` reference is currently stale and should not be treated as canonical until restored.
+For repo-wide current-state navigation, see [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md). The canonical machine-readable routing registry is [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml).
 
 ## Development Roadmap
 
@@ -55,9 +55,11 @@ Current Tier 1 priorities:
 
 ## Documentation
 
+- [docs/README.md](docs/README.md) -- Canonical documentation entry point and common issue routing
 - [ROADMAP.md](ROADMAP.md) -- Development priorities and tech debt
 - [docs/vision/CALCULATIONS-VISION.md](docs/vision/CALCULATIONS-VISION.md) -- Ecosystem vision, current state, gap register
-- [../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md](../docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md) -- Canonical operator map for OrcaWave/OrcaFlex code, tests, issues, and machine boundaries
+- [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md) -- Canonical repo-wide operator map for source, tests, docs, and issue routing
+- [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
 - [specs/data-needs.yaml](specs/data-needs.yaml) -- Data dependency lifecycle tracker
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 
