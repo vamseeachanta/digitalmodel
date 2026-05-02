@@ -16,11 +16,11 @@ from digitalmodel.citations.registry import (
 
 
 def _repo_root() -> Path:
-    here = Path(__file__).resolve()
-    for parent in here.parents:
-        if (parent / "knowledge" / "wikis").is_dir():
-            return parent
-    raise RuntimeError("could not locate workspace-hub root above test file")
+    # Option B (workspace-hub #2580): vendor wiki fixtures into the test tree so
+    # the citation resolver works regardless of how digitalmodel is checked out
+    # (workspace-hub overlay vs. standalone CI clone). The fixture tree mirrors
+    # the resolver's expected `knowledge/wikis/...` subpath bit-for-bit.
+    return Path(__file__).resolve().parent / "fixtures"
 
 
 def test_intact_quasi_static_factor_emits_cited_value():
