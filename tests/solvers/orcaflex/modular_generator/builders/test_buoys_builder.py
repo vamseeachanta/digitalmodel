@@ -161,6 +161,59 @@ class TestBuoysBuilderRollerArrangement:
         assert len(roller_buoys) == 1
 
 
+class TestBuoysBuilderOrchestration:
+    def test_output_ordering_rollers_tugs_bm_end_buoy(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
+
+        spec = _make_floating_spec(
+            roller_arrangement={
+                "type": "v_roller",
+                "stations": [{"position": [5, 0, -2]}],
+            }
+        )
+        result = BuoysBuilder(spec, BuilderContext()).build()
+        names = [b["Name"] for b in result["6DBuoys"]]
+        # Order: roller(s), then tugs, then BM, then 6D buoy1
+        roller_idx = next(i for i, n in enumerate(names) if "Roller" in n)
+        tug_idx = next(i for i, n in enumerate(names) if n.startswith("Tug"))
+        bm_idx = names.index("BM")
+        end_idx = names.index("6D buoy1")
+        assert roller_idx < tug_idx < bm_idx < end_idx
+
+    def test_end_buoy_name_registered_in_context(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
+
+        spec = _make_floating_spec()
+        ctx = BuilderContext()
+        BuoysBuilder(spec, ctx).build()
+        assert ctx.end_buoy_name == "6D buoy1"
+
+    def test_all_buoy_names_registered_in_context(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
+
+        spec = _make_floating_spec()
+        ctx = BuilderContext()
+        BuoysBuilder(spec, ctx).build()
+        assert "6D buoy1" in ctx.all_buoy_names
+        assert "Mid-pipe" in ctx.all_buoy_names
+
+
+class TestGetSupportGeometryShim:
+    def test_shim_delegates_to_roller_builder(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.roller_builder import RollerBuilder
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.equipment import RollerStation
+        from digitalmodel.solvers.orcaflex.modular_generator.schema._enums import RollerType
+
+        station = RollerStation(position=[5, 0, -2], v_angle=120, diameter=0.5, support_count=2)
+        via_shim = BuoysBuilder.get_support_geometry(station, RollerType.V_ROLLER)
+        via_roller = RollerBuilder.get_support_geometry(station, RollerType.V_ROLLER)
+        assert via_shim == via_roller
+
+
 class TestSupportGeometry:
     def test_v_roller_geometry(self):
         from digitalmodel.solvers.orcaflex.modular_generator.builders.buoys_builder import BuoysBuilder
