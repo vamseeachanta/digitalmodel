@@ -15,6 +15,15 @@ import yaml
 from digitalmodel.naval_architecture.maneuverability import rudder_normal_force
 
 
+# Serialize wheel-build tests across this module under pytest-xdist:
+# default `--dist loadscope` keeps a module on one worker, but adding
+# `xdist_group` is defense-in-depth in case dispatch policy changes.
+# The load-bearing fix is removing `--no-isolation` below — isolated
+# builds prevent shared-state races on `build/` and `digitalmodel.egg-info/`
+# (issue #2617).
+pytestmark = pytest.mark.xdist_group(name="wheel_build")
+
+
 BASE_RUDDER_KWARGS = {
     "velocity_m_s": 5.0,
     "rho_kg_m3": 1025.0,
@@ -149,7 +158,6 @@ def test_packaged_yaml_in_built_distribution(tmp_path):
             "-m",
             "build",
             "--wheel",
-            "--no-isolation",
             "--outdir",
             str(tmp_path),
         ],
