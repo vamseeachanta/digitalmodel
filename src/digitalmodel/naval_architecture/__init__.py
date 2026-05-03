@@ -48,6 +48,10 @@ from digitalmodel.naval_architecture.b1528_sirocco_time_trace import (
     simulate_b1528_time_trace,
     write_b1528_time_trace_report,
 )
+from digitalmodel.naval_architecture.rudder_stock_torque import (
+    load_packaged_rudder_stock_torque_yaml,
+    run_rudder_stock_torque_sweep,
+)
 from digitalmodel.naval_architecture.yaw_moment import (
     load_packaged_typical_ship_yaml,
     load_yaw_moment_input,
@@ -72,6 +76,7 @@ __all__ = [
     "load_dimension_template",
     "load_packaged_b1528_time_trace_config",
     "load_packaged_b1528_yaw_config",
+    "load_packaged_rudder_stock_torque_yaml",
     "load_packaged_typical_ship_yaml",
     "load_yaw_moment_input",
     "merge_template_into_registry",
@@ -85,6 +90,7 @@ __all__ = [
     "rudder_yaw_moment",
     "run_b1528_static_yaw_report",
     "run_b1528_time_trace_report",
+    "run_rudder_stock_torque_sweep",
     "run_yaw_moment_sweep",
     "simulate_b1528_time_trace",
     "stability_curve_estimate",
