@@ -55,6 +55,7 @@ jobs:
           path: |
             reports/quality_gates_results.json
             reports/bandit_report.json
+            reports/quality-gates-pytest-full.log
             coverage.json
           retention-days: 30
 
