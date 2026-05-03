@@ -19,7 +19,9 @@ class _FakeDiffraction:
     def __init__(self, source_path: str, export_raises: bool = False) -> None:
         self.source_path = source_path
         self.state = "loaded"
-        self.frequencyCount = 3
+        # OrcFxAPI v11+ exposes plural sequence attributes; mock matches that surface.
+        self.frequencies = [0.1, 0.2, 0.3]
+        self.headings = [0.0, 90.0, 180.0]
         self._export_raises = export_raises
 
     def Calculate(self) -> None:
@@ -28,13 +30,13 @@ class _FakeDiffraction:
     def SaveData(self, target: str) -> None:
         Path(target).write_text(f"saved from {self.source_path}\n", encoding="utf-8")
 
-    def ExportResults(self, target: str) -> None:
+    def SaveResults(self, target: str) -> None:
+        Path(target).write_text(f"results from {self.source_path}\n", encoding="utf-8")
+
+    def SaveResultsSpreadsheet(self, target: str) -> None:
         if self._export_raises:
             raise RuntimeError("native export unavailable")
         Path(target).write_text("native export\n", encoding="utf-8")
-
-    def frequency(self, index: int) -> float:
-        return [0.1, 0.2, 0.3][index]
 
 
 def _install_fake_orcfxapi(monkeypatch, export_raises: bool = False) -> None:
