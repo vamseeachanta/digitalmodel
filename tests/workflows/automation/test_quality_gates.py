@@ -179,6 +179,53 @@ class TestQualityGateValidator:
         assert result.status == GateStatus.FAILURE
         assert result.metrics["exit_code"] == 1
 
+    @patch("subprocess.run")
+    def test_execute_tests_gate_writes_full_log(self, mock_run, validator, tmp_path):
+        """Tests gate must write reports/quality-gates-pytest-full.log on every run (#546)."""
+        fake_output = ("FAILED tests/x.py::test_a - AssertionError\n" * 1200)  # ~50 KB
+        mock_run.return_value = MagicMock(returncode=1, stdout=fake_output, stderr="")
+        validator.reports_dir = tmp_path  # redirect writes
+
+        result = validator._execute_tests_gate({"command": "pytest --maxfail=20"})
+
+        log_path = tmp_path / "quality-gates-pytest-full.log"
+        assert log_path.exists(), "full pytest log must be written"
+        contents = log_path.read_text(encoding="utf-8")
+        assert "FAILED tests/x.py::test_a" in contents
+        assert len(contents) >= 50_000, "full log must contain entire pytest output, not truncated tail"
+        # Existing JSON metric stays intact
+        assert "output_tail" in result.metrics
+
+    def test_execute_tests_gate_writes_full_log_live(self, validator, tmp_path):
+        """Live (un-mocked) subprocess invocation: tiny shell command stands in for pytest (#546).
+
+        Note: _execute_tests_gate uses command.split() (whitespace tokenization),
+        so we use a command whose arguments contain no spaces.
+        """
+        validator.reports_dir = tmp_path
+        # 'yes' would be unbounded; use 'seq 1 100' which prints 1\n2\n...\n100\n (100 newlines).
+        cmd = "seq 1 100"
+
+        validator._execute_tests_gate({"command": cmd})
+
+        log_path = tmp_path / "quality-gates-pytest-full.log"
+        assert log_path.exists()
+        assert log_path.read_text().count("\n") >= 100
+
+    @patch("subprocess.run")
+    def test_execute_tests_gate_writes_full_log_on_timeout(self, mock_run, validator, tmp_path):
+        """Even on TimeoutExpired, partial pytest stdout must be written to the full log (#546)."""
+        from subprocess import TimeoutExpired
+        mock_run.side_effect = TimeoutExpired(cmd="pytest", timeout=600, output="partial output before kill\n")
+        validator.reports_dir = tmp_path
+
+        result = validator._execute_tests_gate({"command": "pytest --maxfail=20"})
+
+        log_path = tmp_path / "quality-gates-pytest-full.log"
+        assert log_path.exists()
+        assert "partial output before kill" in log_path.read_text()
+        assert result.status == GateStatus.ERROR
+
     def test_execute_coverage_gate_pass(self, validator, tmp_path):
         """Test coverage gate execution - passing coverage."""
         coverage_data = {

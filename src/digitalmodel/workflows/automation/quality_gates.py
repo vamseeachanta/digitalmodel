@@ -227,6 +227,16 @@ class QualityGateValidator:
             # (exit code may be wrong due to capture plugin bug)
             import re
             combined = (result.stdout or "") + "\n" + (result.stderr or "")
+
+            # Write full pytest output to a sibling log file for CI artifact upload (#546).
+            # The existing output_tail JSON field is preserved for backward compatibility.
+            full_log_path = self.reports_dir / "quality-gates-pytest-full.log"
+            try:
+                full_log_path.write_text(combined, encoding="utf-8", errors="replace")
+                logger.info(f"Pytest full log written to {full_log_path} ({len(combined)} bytes)")
+            except OSError as e:
+                logger.warning(f"Could not write pytest full log: {e}")
+
             summary_match = re.search(
                 r"(\d+) passed", combined
             )
@@ -267,7 +277,19 @@ class QualityGateValidator:
                     },
                     errors=[result.stderr] if result.stderr else [],
                 )
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as e:
+            # Capture whatever pytest emitted before SIGKILL so triagers still
+            # get partial output in the CI artifact (#546).
+            partial = e.stdout
+            if isinstance(partial, bytes):
+                partial = partial.decode("utf-8", errors="replace")
+            partial = partial or ""
+            full_log_path = self.reports_dir / "quality-gates-pytest-full.log"
+            try:
+                full_log_path.write_text(partial, encoding="utf-8", errors="replace")
+                logger.info(f"Pytest full log written to {full_log_path} ({len(partial)} bytes, timeout)")
+            except OSError as write_err:
+                logger.warning(f"Could not write pytest full log on timeout: {write_err}")
             return GateResult(
                 gate_name="tests",
                 status=GateStatus.ERROR,
