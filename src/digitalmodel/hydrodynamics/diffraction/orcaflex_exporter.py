@@ -85,11 +85,11 @@ class OrcaFlexExporter:
                 'CreatedDate': self.results.created_date,
 
                 # RAO data references
-                'RAODataFile': f"{self.vessel_name}_raos.csv",
+                'RAODataFile': f"{self.vessel_name}_RAOs.csv",
 
                 # Added mass and damping data
-                'AddedMassDataFile': f"{self.vessel_name}_added_mass.csv",
-                'DampingDataFile': f"{self.vessel_name}_damping.csv",
+                'AddedMassDataFile': f"{self.vessel_name}_AddedMass.csv",
+                'DampingDataFile': f"{self.vessel_name}_Damping.csv",
 
                 # Metadata
                 'Notes': self.results.notes or f"Generated from {self.results.analysis_tool} analysis"
@@ -113,7 +113,7 @@ class OrcaFlexExporter:
         Returns:
             Path to created CSV file
         """
-        output_file = self.output_dir / f"{self.vessel_name}_raos.csv"
+        output_file = self.output_dir / f"{self.vessel_name}_RAOs.csv"
 
         raos = self.results.raos
         freqs = raos.surge.frequencies.values
@@ -170,7 +170,7 @@ class OrcaFlexExporter:
         Returns:
             Path to created CSV file
         """
-        output_file = self.output_dir / f"{self.vessel_name}_added_mass.csv"
+        output_file = self.output_dir / f"{self.vessel_name}_AddedMass.csv"
 
         am_set = self.results.added_mass
 
@@ -205,7 +205,7 @@ class OrcaFlexExporter:
         Returns:
             Path to created CSV file
         """
-        output_file = self.output_dir / f"{self.vessel_name}_damping.csv"
+        output_file = self.output_dir / f"{self.vessel_name}_Damping.csv"
 
         damp_set = self.results.damping
 
@@ -247,7 +247,7 @@ class OrcaFlexExporter:
         Returns:
             Path to created Excel file
         """
-        output_file = self.output_dir / f"{self.vessel_name}_hydrodynamics.xlsx"
+        output_file = self.output_dir / f"{self.vessel_name}_Results.xlsx"
 
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             # Summary sheet
@@ -267,6 +267,10 @@ class OrcaFlexExporter:
 
         print(f"Excel workbook exported: {output_file}")
         return output_file
+
+    def export_summary(self) -> Path:
+        """Alias for export_summary_report kept for CLI/batch compatibility."""
+        return self.export_summary_report()
 
     def export_summary_report(self) -> Path:
         """
@@ -306,10 +310,10 @@ class OrcaFlexExporter:
         # Output files
         lines.append("Generated Files:")
         lines.append(f"  - {self.vessel_name}_vessel_type.yml")
-        lines.append(f"  - {self.vessel_name}_raos.csv")
-        lines.append(f"  - {self.vessel_name}_added_mass.csv")
-        lines.append(f"  - {self.vessel_name}_damping.csv")
-        lines.append(f"  - {self.vessel_name}_hydrodynamics.xlsx")
+        lines.append(f"  - {self.vessel_name}_RAOs.csv")
+        lines.append(f"  - {self.vessel_name}_AddedMass.csv")
+        lines.append(f"  - {self.vessel_name}_Damping.csv")
+        lines.append(f"  - {self.vessel_name}_Results.xlsx")
         lines.append("")
 
         lines.append("=" * 80)

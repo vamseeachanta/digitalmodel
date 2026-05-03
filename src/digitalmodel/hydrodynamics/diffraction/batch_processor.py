@@ -128,6 +128,12 @@ class BatchProcessor:
             else:
                 raise ValueError(f"Unknown source type: {config.source_type}")
 
+            # Ensure output directory exists for validation + export.
+            # Without this, validate_results() can fail with FileNotFoundError
+            # writing the validation JSON before the exporter has a chance to
+            # mkdir, leaving the per-vessel output directory absent.
+            config.output_dir.mkdir(parents=True, exist_ok=True)
+
             # Validate if requested
             if config.validate:
                 print(f"  Validating results...")
