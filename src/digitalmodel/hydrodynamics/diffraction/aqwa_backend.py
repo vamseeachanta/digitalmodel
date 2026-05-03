@@ -207,10 +207,15 @@ class AQWABackend:
         self._mesh_cache.clear()
 
         deck_builders = self._ordered_deck_builders(spec)
+        header = self._workbench_header()
         for idx, (deck_num, cards) in enumerate(deck_builders):
             file_name = f"deck_{idx:02d}_{deck_num:02d}.dat"
             file_path = output_dir / file_name
-            file_path.write_text("\n".join(cards) + "\n")
+            # Prepend the Workbench-compatible file header to the first
+            # deck file so concatenating modular outputs reproduces the
+            # single-file output byte-for-byte (after whitespace strip).
+            file_cards = header + cards if idx == 0 else cards
+            file_path.write_text("\n".join(file_cards) + "\n")
 
         return output_dir
 
