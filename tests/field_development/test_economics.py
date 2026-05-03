@@ -574,6 +574,15 @@ class TestBuildEconomicsSchedule:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _HAS_WED_DCF,
+    reason=(
+        "Cross-repo dep: worldenergydata.economics.dcf not importable. "
+        "digitalmodel CI installs the package standalone (no sibling repo "
+        "checkout) so this class is gated on CI but runs locally under "
+        "workspace-hub."
+    ),
+)
 class TestCarbonSensitivity:
     """Test the carbon sensitivity pass-through."""
 
@@ -826,6 +835,15 @@ class TestProductionFactors:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _HAS_WED_DCF,
+    reason=(
+        "Cross-repo dep: worldenergydata.economics.dcf not importable. "
+        "digitalmodel CI installs the package standalone (no sibling repo "
+        "checkout) so this class is gated on CI but runs locally under "
+        "workspace-hub."
+    ),
+)
 class TestDeclineBackwardCompatibility:
     """Verify that adding decline fields does not break existing behaviour."""
 
@@ -857,6 +875,15 @@ class TestDeclineBackwardCompatibility:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _HAS_WED_DCF,
+    reason=(
+        "Cross-repo dep: worldenergydata.economics.dcf not importable. "
+        "digitalmodel CI installs the package standalone (no sibling repo "
+        "checkout) so this class is gated on CI but runs locally under "
+        "workspace-hub."
+    ),
+)
 class TestScheduleDeclineIntegration:
     """Verify build_economics_schedule uses decline params, not hardcoded linear."""
 
@@ -1003,6 +1030,15 @@ class TestEURDeclineParameterization:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    not _HAS_WED_DCF,
+    reason=(
+        "Cross-repo dep: worldenergydata.economics.dcf not importable. "
+        "digitalmodel CI installs the package standalone (no sibling repo "
+        "checkout) so this class is gated on CI but runs locally under "
+        "workspace-hub."
+    ),
+)
 class TestFiscalRegimeTaxAdjustment:
     """Test fiscal regime tax adjustment applied to economics cashflows."""
 
