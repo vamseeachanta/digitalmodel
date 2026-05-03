@@ -1,5 +1,6 @@
 """YAML utility functions for configuration loading and merging."""
 
+import logging
 import os
 import yaml
 import pkgutil
@@ -15,6 +16,7 @@ from .saveData import saveDataYaml
 from .utilities import is_file_valid_func, get_common_name_from_2_filenames
 from .data import ReadData
 
+logger = logging.getLogger(__name__)
 read_data = ReadData()
 
 library_name = __name__.rsplit('.', 1)[0]  # resolves to the asset_integrity package name
@@ -40,7 +42,7 @@ def ymlInput(defaultYml, updateYml=None):
     # print(cfgUpdateValues)
             cfg = update_deep(cfg, cfgUpdateValues)
         except:
-            print(
+            logger.warning(
                 "Update Input file could not be loaded successfully. Running program default values"
             )
 
@@ -81,7 +83,7 @@ class WorkingWithYAML():
     # Analyze Yaml file
     def analyze_yaml_keys(self, file_name):
         file_name_content = ymlInput(file_name)
-        print(file_name_content.keys())
+        logger.info("yaml root keys: %s", file_name_content.keys())
 
     # Compare 2 yaml files
     def compare_yaml_root_keys(self, file_name1, file_name2):
@@ -90,10 +92,10 @@ class WorkingWithYAML():
         file_name1_keys = file_name1_content.keys()
         file_name2_keys = file_name2_content.keys()
         if file_name1_keys == file_name2_keys:
-            print("Yaml files have the same root keys")
+            logger.info("Yaml files have the same root keys")
         else:
-            print(f"The root keys for {file_name1}: {file_name1_keys}")
-            print(f"The root keys for {file_name2}: {file_name2_keys}")
+            logger.info(f"The root keys for {file_name1}: {file_name1_keys}")
+            logger.info(f"The root keys for {file_name2}: {file_name2_keys}")
 
     # Compare 2 yaml files using DeepDiff
     def compare_yaml_files_deepdiff(self, cfg):
@@ -105,7 +107,7 @@ class WorkingWithYAML():
                              file_name2_content,
                              ignore_order=True)
         if file_diff == {}:    # if there is no difference
-            print("Yaml files are the same")
+            logger.info("Yaml files are the same")
         else:
             # get file root directory
             file_directory = os.path.dirname(file_name1)
@@ -132,7 +134,7 @@ class WorkingWithYAML():
         file_name1 = cfg['file_name1']
         file_name2 = cfg['file_name2']
         if file_diff == {}:    # if there is no difference
-            print("Yaml files are the same")
+            logger.info("Yaml files are the same")
         else:
             # get file root directory
             file_directory = os.path.dirname(file_name1)
@@ -159,7 +161,7 @@ class WorkingWithYAML():
                 dict(file_diff)['values_changed'],
                 f"{file_directory}/wwyaml_{uniquebasename}_values_changed")
 
-            print(
+            logger.info(
                 "Yaml files are different. See wwyaml files saved in the current file directory"
             )
 
