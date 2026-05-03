@@ -3,6 +3,7 @@
 
 import json
 import math
+import tomllib
 from importlib import resources
 from pathlib import Path
 
@@ -107,5 +108,26 @@ def test_interactive_report_outputs_and_no_compliance_overclaim(tmp_path):
 
 
 def test_packaged_b1528_yaml_declared_as_package_data():
-    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
-    assert 'digitalmodel = ["naval_architecture/data/*.yml"]' in pyproject
+    # Pin path to the digitalmodel repo root so this test is robust to pytest's
+    # invocation cwd. Mirrors the sibling pattern in
+    # ``test_packaged_yaml_in_built_distribution_preserves_existing_package_data``.
+    pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    pyproject_text = pyproject_path.read_text(encoding="utf-8")
+    toml = tomllib.loads(pyproject_text)
+
+    try:
+        package_data = toml["tool"]["setuptools"]["package-data"]["digitalmodel"]
+    except KeyError as exc:  # pragma: no cover - diagnostic path
+        # Surface a readable assertion instead of a bare ``KeyError`` so the
+        # diagnostic clearly identifies which key in the pyproject.toml chain
+        # is missing.
+        raise AssertionError(
+            "pyproject.toml is missing [tool.setuptools.package-data].digitalmodel "
+            f"(missing key: {exc!r}); cannot verify b1528 yaml is shipped as package data"
+        ) from exc
+
+    assert "naval_architecture/data/*.yml" in package_data, (
+        "Expected 'naval_architecture/data/*.yml' to be declared in "
+        "[tool.setuptools.package-data].digitalmodel so the packaged b1528 "
+        f"YAML ships with the wheel; got: {package_data!r}"
+    )

@@ -205,6 +205,20 @@ class TestRegisterFleetVessels:
         assert added == 1
         assert skipped == 0
 
+        # Verify the registry was actually mutated by the overwrite — not just
+        # that counters changed.  The overwritten entry must be retrievable and
+        # carry THIALF_RECORD's converted dimensions and displacement.
+        # Note: merge_template_into_registry strips hull_id and stores it as
+        # hull_number on the registry entry.
+        result = get_ship("THIALF")
+        assert result is not None
+        assert result["hull_number"] == "THIALF"
+        assert result["loa_ft"] == pytest.approx(201.0 * _M_TO_FT, rel=1e-3)
+        assert result["beam_ft"] == pytest.approx(88.4 * _M_TO_FT, rel=1e-3)
+        assert result["displacement_lt"] == pytest.approx(
+            71368.0 * _TONNES_TO_LT, rel=1e-3
+        )
+
 
 class TestStabilityIntegration:
     """Integration: fleet vessel dimensions feed into hydrostatics calculations."""

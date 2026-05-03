@@ -343,7 +343,7 @@ print_blob = false
 python = "3.11"
 system = false
 seed = true
-compile = true
+compile = false
 
 [tool.uv.pip]
 index-url = "https://pypi.org/simple"
