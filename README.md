@@ -15,6 +15,16 @@ A Python package of engineering calculations where every function traces to an i
 
 ## Installation
 
+### System prerequisites
+
+A few transitive dependencies (notably `lxml`) need native compilation when a pre-built wheel is not available for your platform/Python combination. On Ubuntu/Debian, install the build toolchain and XML headers before `pip install`:
+
+```bash
+sudo apt-get install build-essential python3-dev libxml2-dev libxslt1-dev
+```
+
+Other Linux distros / macOS / Windows: install equivalents of those packages or use a pre-built `lxml` wheel. A follow-up issue tracks bumping `lxml` to a version with broader wheel coverage so this step is no longer required for most users.
+
 ```bash
 pip install digitalmodel
 ```
