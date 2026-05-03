@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+import logging
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -8,6 +9,8 @@ import pytest
 import yaml
 
 from digitalmodel.asset_integrity.common import yml_utilities as yu
+
+_YU_LOGGER = "digitalmodel.asset_integrity.common.yml_utilities"
 
 
 def test_ymlinput_raises_for_invalid_file() -> None:
@@ -97,28 +100,33 @@ def test_yml_read_stream_raises_stopping_program_on_bad_source(
 
 
 def test_ymlinput_ignores_bad_update_file_and_keeps_defaults(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     default_yml = tmp_path / "default.yml"
     update_yml = tmp_path / "update.yml"
     default_yml.write_text(yaml.safe_dump({"keep": 1, "nested": {"x": 2}}))
     update_yml.write_text(":\n  - bad-yaml")
 
+    caplog.set_level(logging.WARNING, logger=_YU_LOGGER)
     cfg = yu.ymlInput(str(default_yml), str(update_yml))
     assert cfg["keep"] == 1
     assert cfg["nested"]["x"] == 2
-    assert "Update Input file could not be loaded successfully" in capsys.readouterr().out
+    assert any(
+        "Update Input file could not be loaded successfully" in r.message
+        for r in caplog.records
+    )
 
 
 def test_analyze_yaml_keys_prints_root_keys(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     ww = yu.WorkingWithYAML()
     yml = tmp_path / "sample.yml"
     yml.write_text(yaml.safe_dump({"alpha": 1, "beta": 2}))
+    caplog.set_level(logging.INFO, logger=_YU_LOGGER)
     ww.analyze_yaml_keys(str(yml))
-    out = capsys.readouterr().out
-    assert "alpha" in out and "beta" in out
+    messages = " ".join(r.getMessage() for r in caplog.records)
+    assert "alpha" in messages and "beta" in messages
 
 
 def test_get_library_filename_returns_direct_existing_file(tmp_path: Path) -> None:
@@ -167,7 +175,7 @@ def test_get_library_filename_raises_when_not_found(
 
 
 def test_compare_yaml_root_keys_same_and_different(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     ww = yu.WorkingWithYAML()
     a = tmp_path / "a.yml"
@@ -177,17 +185,20 @@ def test_compare_yaml_root_keys_same_and_different(
     b.write_text(yaml.safe_dump({"x": 10, "y": 20}))
     c.write_text(yaml.safe_dump({"x": 1, "z": 2}))
 
+    caplog.set_level(logging.INFO, logger=_YU_LOGGER)
+
     ww.compare_yaml_root_keys(str(a), str(b))
-    out1 = capsys.readouterr().out
+    out1 = " ".join(r.getMessage() for r in caplog.records)
     assert "same root keys" in out1
 
+    caplog.clear()
     ww.compare_yaml_root_keys(str(a), str(c))
-    out2 = capsys.readouterr().out
+    out2 = " ".join(r.getMessage() for r in caplog.records)
     assert "The root keys" in out2
 
 
 def test_compare_yaml_files_deepdiff_emits_same_message_for_identical(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     ww = yu.WorkingWithYAML()
     a = tmp_path / "a.yml"
@@ -196,13 +207,17 @@ def test_compare_yaml_files_deepdiff_emits_same_message_for_identical(
     a.write_text(yaml.safe_dump(content))
     b.write_text(yaml.safe_dump(content))
 
+    caplog.set_level(logging.INFO, logger=_YU_LOGGER)
     ww.compare_yaml_files_deepdiff({"file_name1": str(a), "file_name2": str(b)})
-    out = capsys.readouterr().out
-    assert "Yaml files are the same" in out
+    assert any(
+        "Yaml files are the same" in r.getMessage() for r in caplog.records
+    )
 
 
 def test_save_diff_files_writes_expected_outputs_and_invokes_save_data(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     ww = yu.WorkingWithYAML()
     a = tmp_path / "a.yml"
@@ -217,9 +232,11 @@ def test_save_diff_files_writes_expected_outputs_and_invokes_save_data(
 
     monkeypatch.setattr(yu, "saveDataYaml", fake_save)
     diff = {"values_changed": {"root['a']": {"old_value": 1, "new_value": 2}}}
+    caplog.set_level(logging.INFO, logger=_YU_LOGGER)
     ww.save_diff_files(diff, {"file_name1": str(a), "file_name2": str(b)}, deepdiff_save=True)
-    out = capsys.readouterr().out
-    assert "Yaml files are different" in out
+    assert any(
+        "Yaml files are different" in r.getMessage() for r in caplog.records
+    )
     assert any("deepdiff" in c[0] for c in calls)
     assert any("values_changed" in c[0] for c in calls)
     updated = next(tmp_path.glob("wwyaml_*_updated_values.yml"))
@@ -228,15 +245,18 @@ def test_save_diff_files_writes_expected_outputs_and_invokes_save_data(
 
 
 def test_save_diff_files_reports_same_when_no_diff(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     ww = yu.WorkingWithYAML()
     a = tmp_path / "a.yml"
     b = tmp_path / "b.yml"
     a.write_text("a: 1\n")
     b.write_text("a: 1\n")
+    caplog.set_level(logging.INFO, logger=_YU_LOGGER)
     ww.save_diff_files({}, {"file_name1": str(a), "file_name2": str(b)})
-    assert "Yaml files are the same" in capsys.readouterr().out
+    assert any(
+        "Yaml files are the same" in r.getMessage() for r in caplog.records
+    )
 
 
 def test_save_diff_files_handles_mixed_diff_keys(

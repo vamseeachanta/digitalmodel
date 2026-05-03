@@ -40,10 +40,6 @@ collect_ignore = [
     # CP tests fail intermittently with random ordering (shared state issue)
     str(_tests_dir / "specialized/cathodic_protection/test_abs_ship_variants_wrk271.py"),
     str(_tests_dir / "specialized/cathodic_protection/test_cathodic_protection_b401.py"),
-    # yml_utilities_additional uses capsys fixture which is unavailable under
-    # pytest-xdist worker mode (worker_id fixture loaded but capsys/capfd are not).
-    # Tracked for proper fix in workspace-hub #2580.
-    str(_tests_dir / "asset_integrity/test_yml_utilities_additional.py"),
 ]
 
 # Add src/ to Python path
