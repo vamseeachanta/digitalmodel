@@ -16,7 +16,7 @@ class TestCLIAvailability:
     def test_orcaflex_universal_command_exists(self):
         """Test orcaflex-universal command is installed"""
         result = subprocess.run(
-            ['orcaflex-universal', '--version'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--version'],
             capture_output=True,
             text=True
         )
@@ -26,7 +26,7 @@ class TestCLIAvailability:
     def test_run_to_sim_command_exists(self):
         """Test run-to-sim command is installed"""
         result = subprocess.run(
-            ['run-to-sim', '--version'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--version'],
             capture_output=True,
             text=True
         )
@@ -39,7 +39,7 @@ class TestUniversalCLIHelp:
     def test_universal_help(self):
         """Test orcaflex-universal --help"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -50,7 +50,7 @@ class TestUniversalCLIHelp:
     def test_universal_version(self):
         """Test orcaflex-universal --version"""
         result = subprocess.run(
-            ['orcaflex-universal', '--version'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--version'],
             capture_output=True,
             text=True
         )
@@ -65,7 +65,7 @@ class TestRunToSimCLIHelp:
     def test_run_to_sim_help(self):
         """Test run-to-sim --help"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -76,7 +76,7 @@ class TestRunToSimCLIHelp:
     def test_run_to_sim_version(self):
         """Test run-to-sim --version"""
         result = subprocess.run(
-            ['run-to-sim', '--version'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--version'],
             capture_output=True,
             text=True
         )
@@ -90,7 +90,7 @@ class TestCLIOptions:
     def test_universal_pattern_option(self):
         """Test --pattern option is recognized"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -99,7 +99,7 @@ class TestCLIOptions:
     def test_universal_output_option(self):
         """Test --output-dir option is recognized"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -108,7 +108,7 @@ class TestCLIOptions:
     def test_universal_parallel_option(self):
         """Test --parallel option is recognized"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -117,7 +117,7 @@ class TestCLIOptions:
     def test_universal_mock_option(self):
         """Test --mock option is recognized"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -126,7 +126,7 @@ class TestCLIOptions:
     def test_run_to_sim_all_option(self):
         """Test --all option is recognized"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -135,7 +135,7 @@ class TestCLIOptions:
     def test_run_to_sim_models_option(self):
         """Test --models option is recognized"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -144,7 +144,7 @@ class TestCLIOptions:
     def test_run_to_sim_threads_option(self):
         """Test --threads option is recognized"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -157,7 +157,7 @@ class TestCLIErrorHandling:
     def test_universal_invalid_option(self):
         """Test invalid option produces error"""
         result = subprocess.run(
-            ['orcaflex-universal', '--invalid-option-xyz'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--invalid-option-xyz'],
             capture_output=True,
             text=True
         )
@@ -167,7 +167,7 @@ class TestCLIErrorHandling:
     def test_run_to_sim_invalid_option(self):
         """Test invalid option produces error"""
         result = subprocess.run(
-            ['run-to-sim', '--invalid-option-xyz'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--invalid-option-xyz'],
             capture_output=True,
             text=True
         )
@@ -180,7 +180,7 @@ class TestCLIExamples:
     def test_universal_help_shows_examples(self):
         """Test that help includes usage examples"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -190,7 +190,7 @@ class TestCLIExamples:
     def test_run_to_sim_help_shows_examples(self):
         """Test that help includes usage examples"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -215,7 +215,7 @@ class TestCLIModuleIntegration:
         """Test CLI commands list from module"""
         result = subprocess.run(
             [sys.executable, '-c',
-             'from digitalmodel.orcaflex import list_cli_commands; '
+             'from digitalmodel.solvers.orcaflex import list_cli_commands; '
              'cmds = list_cli_commands(); '
              'print(cmds)'],
             capture_output=True,
@@ -232,7 +232,7 @@ class TestCLIOutputFormats:
     def test_universal_verbose_output(self):
         """Test --verbose flag affects output"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -241,7 +241,7 @@ class TestCLIOutputFormats:
     def test_run_to_sim_verbose_output(self):
         """Test --verbose flag exists"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -255,14 +255,14 @@ class TestCLICompatibility:
         """Test CLI works with current Python version"""
         # Just test that help works - indicates CLI is functional
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
         assert result.returncode == 0
 
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -275,7 +275,7 @@ class TestCLIDefaults:
     def test_universal_defaults_shown_in_help(self):
         """Test default values are documented"""
         result = subprocess.run(
-            ['orcaflex-universal', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.universal_cli', '--help'],
             capture_output=True,
             text=True
         )
@@ -285,7 +285,7 @@ class TestCLIDefaults:
     def test_run_to_sim_defaults_shown_in_help(self):
         """Test default values are documented"""
         result = subprocess.run(
-            ['run-to-sim', '--help'],
+            [sys.executable, '-m', 'digitalmodel.solvers.orcaflex.run_to_sim_cli', '--help'],
             capture_output=True,
             text=True
         )
