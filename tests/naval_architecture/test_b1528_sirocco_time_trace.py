@@ -1,6 +1,7 @@
 # ABOUTME: Tests for B1528 SIROCCO preliminary Nomoto time-trace report workflow.
 # ABOUTME: Locks source-gap caveats, rudder-local inflow diagnostics, and generated artifacts.
 
+import json
 from pathlib import Path
 
 import pytest
@@ -86,9 +87,11 @@ def test_report_contains_interactive_charts(tmp_path):
     html = Path(manifest["html_report"]).read_text(encoding="utf-8")
     assert "Plotly.newPlot('trajectory-chart'" in html
     assert "Plotly.newPlot('heading-chart'" in html
+    assert "Heading angle vs time" in html
     assert "Plotly.newPlot('yaw-rate-chart'" in html
     assert "Plotly.newPlot('alpha-chart'" in html
     assert "Plotly.newPlot('moment-chart'" in html
+    assert "Yaw moment vs time (diagnostic, Cr=1)" in html
     assert "sample-chart" in html
     assert "benchmark-source-gap" in html
 
@@ -97,6 +100,7 @@ def test_report_contains_interactive_charts(tmp_path):
     assert "https://github.com/vamseeachanta/workspace-hub/issues/2571" in report
     assert "Propeller rotation factor Cr" in report
     assert "Cr=1.0" in report
+    assert "neutral time-trace diagnostic value" in report
     assert "Sample working example" in report
     assert "rudder-local inflow feedback" in report
     assert "diagnostic only" in report
@@ -105,6 +109,11 @@ def test_report_contains_interactive_charts(tmp_path):
     payload = Path(manifest["json"]).read_text(encoding="utf-8")
     assert "sample_working_example" in payload
     assert "traceability_links" in payload
+    parsed = json.loads(payload)
+    assert parsed["metadata"]["prop_rotation_factor"] == pytest.approx(1.0)
+    first_row = parsed["runs"][0]["rows"][0]
+    assert first_row["prop_rotation_factor"] == pytest.approx(1.0)
+    assert parsed["sample_working_example"]["prop_rotation_factor"] == pytest.approx(1.0)
 
 
 def test_no_mmg_or_compliance_overclaim(tmp_path):

@@ -275,9 +275,10 @@ The rudder force and yaw moment are diagnostic only in this time-trace mode.
 They are not fed back into `r_dot`, which avoids double-counting direct moment
 balance and Nomoto `K/T` response in a preliminary model.
 
-The time-trace workflow does not apply workbook `Cr`; it uses the reusable
-digitalmodel static-yaw rudder-force diagnostic rather than the legacy workbook
-regression formula.
+The time-trace workflow does not apply the workbook side-dependent `Cr=1.065`
+or `Cr=0.935` values. It uses the reusable digitalmodel static-yaw rudder-force
+diagnostic rather than the legacy workbook regression formula, and its rows
+carry `Cr=1.0` as the neutral non-rotating/no-rotation-correction multiplier.
 
 Current packaged defaults:
 
@@ -357,7 +358,7 @@ interactive Plotly charts and a highlighted sample point for visual checking.
 | Reusable yaw moment | [`yaw-moment-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/yaw-moment-sweep.md) lists yaw moment vs angle, yaw moment vs speed, transverse force, and heatmap charts. | With the normal-force sample and `x_R=-45.0 m`, port force mapping gives `M_z=-4383.783 kN*m`. |
 | Rudder-stock torque | [`rudder-stock-torque-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-stock-torque-sweep.md) lists torque vs angle, torque vs speed, scalar normal force, and heatmap charts. | With the normal-force sample and stock arm `0.75 m`, `T_stock=73.063 kN*m` and `T_holding=-73.063 kN*m`. |
 | B1528 static yaw | Generated HTML: [`b1528_sirocco_yaw_moment_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html). | `workbook_regression`, `2.5 kn`, `+1 deg`, port `Cr=1.065`: `F=47498.422 N`, `Fn=828.962 N`, `M_z=112.158527 kN*m`. |
-| B1528 time trace | Generated HTML: [`b1528_sirocco_time_trace_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html). | Positive-rudder first step: `alpha_R=1.000000 deg`, `r_dot=0.0000057120 rad/s^2`, yaw rate after `1 s` is `0.000327273 deg/s`. |
+| B1528 time trace | Generated HTML: [`b1528_sirocco_time_trace_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html). Includes heading angle vs time and yaw moment vs time with neutral `Cr=1.0`. | Positive-rudder first step: `alpha_R=1.000000 deg`, `r_dot=0.0000057120 rad/s^2`, yaw rate after `1 s` is `0.000327273 deg/s`. |
 | Passing-ship force | Benchmark HTML: [`benchmark_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/passing_ship/wang_benchmark/benchmark_report.html). | Basic template at separation `40 m`, stagger `75 m`, velocity `5 m/s` gives surge `98219.321 N`, sway `-70399.784 N`, yaw `-4289.950 kN*m`. |
 
 ## Review Findings

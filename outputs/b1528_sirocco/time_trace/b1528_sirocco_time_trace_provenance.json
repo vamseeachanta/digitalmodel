@@ -3,7 +3,7 @@
   "static_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
   "formula_boundary": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
   "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
-  "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply Cr because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression.",
+  "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply workbook side-dependent Cr values because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression. The reported time-trace diagnostic rows therefore carry Cr=1.0 as the neutral non-rotating/no-rotation-correction multiplier.",
   "traceability_links": {
     "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
     "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
@@ -25,6 +25,8 @@
     "initial_r_dot_rad_s2": 5.7119866428905325e-06,
     "calculated_yaw_rate_deg_s": 0.00032727272727272726,
     "reported_yaw_rate_deg_s": 0.00032727272727272726,
+    "prop_rotation_factor": 1.0,
+    "prop_rotation_factor_basis": "Cr=1.0 neutral time-trace diagnostic value: non-rotating propeller or no workbook propeller-rotation correction applied",
     "initial_diagnostic_yaw_moment_kN_m": -339.51331549587866
   },
   "limitations": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",

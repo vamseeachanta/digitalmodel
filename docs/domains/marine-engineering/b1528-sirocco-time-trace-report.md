@@ -35,11 +35,12 @@ Rudder force and yaw moment are computed as diagnostics only from `U_R` and `alp
 
 ## Propeller rotation factor `Cr`
 
-`Cr` is not applied in this Nomoto time-trace workflow. It belongs to the
-B1528 static workbook-regression formula `F = beta * AR * V^2 * Cr`, where the
-legacy workbook uses `Cr=1.065` for the port rotation case and `Cr=0.935` for
-the starboard rotation case. The time-trace diagnostics instead use the reusable
-`digitalmodel` static-yaw rudder-force model.
+The Nomoto time-trace workflow does not apply the workbook side-dependent
+rotation values `Cr=1.065` or `Cr=0.935`. Those belong to the B1528 static
+workbook-regression formula `F = beta * AR * V^2 * Cr`. The time-trace
+diagnostics instead use the reusable `digitalmodel` static-yaw rudder-force
+model and carry `Cr=1.0` as the neutral non-rotating/no-rotation-correction
+multiplier.
 
 If the workbook-regression formula is run for a non-rotating propeller, or for
 a case where no propeller-rotation correction is intended, the applicable value
@@ -79,10 +80,10 @@ Default output directory: `../acma-projects/B1528/yaw-and-time-trace/time_trace/
 The HTML report includes interactive Plotly charts for:
 
 - trajectory
-- heading vs time
+- heading angle vs time
 - yaw rate vs time
 - effective rudder angle vs time
-- diagnostic yaw moment vs time
+- yaw moment vs time using neutral `Cr=1.0`
 - benchmark source-gap panel
 - sample verification point
 
@@ -98,7 +99,7 @@ Initial effective rudder angle: alpha_R = 1.000000 deg = 0.01745329 rad
 Nomoto K/T: K = 0.018 1/s, T = 55 s
 r_dot = (K * alpha_R - 0) / T = 0.0000057120 rad/s^2
 yaw rate after 1 s = 0.000327273 deg/s
-initial diagnostic yaw moment = -339.513315 kN-m
+initial diagnostic yaw moment = -339.513315 kN-m using Cr = 1.0
 ```
 
 The generated HTML report highlights this first-step yaw-rate point in the

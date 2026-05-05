@@ -23,6 +23,7 @@ import yaml
 from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
     GITHUB_REPO_BLOB,
     KNOT_TO_M_PER_S,
+    NON_ROTATING_PROPELLER_CR,
     PROPELLER_ROTATION_FACTOR_NOTE,
     WORKSPACE_HUB_ISSUES,
 )
@@ -36,8 +37,14 @@ SCOPE_CAVEAT = (
 )
 TIME_TRACE_CR_NOTE = (
     f"{PROPELLER_ROTATION_FACTOR_NOTE} This time-trace report does not apply "
-    "Cr because its rudder diagnostics use the reusable digitalmodel static-yaw "
-    "force model, not the legacy workbook regression."
+    "workbook side-dependent Cr values because its rudder diagnostics use the "
+    "reusable digitalmodel static-yaw force model, not the legacy workbook "
+    "regression. The reported time-trace diagnostic rows therefore carry "
+    "Cr=1.0 as the neutral non-rotating/no-rotation-correction multiplier."
+)
+TIME_TRACE_CR_BASIS = (
+    "Cr=1.0 neutral time-trace diagnostic value: non-rotating propeller or no "
+    "workbook propeller-rotation correction applied"
 )
 
 
@@ -205,7 +212,7 @@ def write_b1528_time_trace_report(result: dict[str, Any], output_dir: str | Path
         for row in run["rows"]:
             flat_rows.append({"scenario_id": run["scenario_id"], **row})
     with csv_path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(flat_rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=list(flat_rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(flat_rows)
 
@@ -268,6 +275,8 @@ def _row(
         "rudder_inflow_angle_deg": math.degrees(local["beta_r_rad"]),
         "effective_rudder_angle_deg": math.degrees(local["effective_alpha_rad"]),
         "rudder_local_speed_m_s": local["local_speed_m_s"],
+        "prop_rotation_factor": NON_ROTATING_PROPELLER_CR,
+        "prop_rotation_factor_basis": TIME_TRACE_CR_BASIS,
         "diagnostic_transverse_force_N": diagnostic.transverse_force_N,
         "diagnostic_normal_force_N": diagnostic.scalar_normal_force_N,
         "diagnostic_yaw_moment_kN_m": diagnostic.yaw_moment_Nm / 1000.0,
@@ -311,6 +320,8 @@ def _metadata(cfg: B1528TimeTraceConfig) -> dict[str, Any]:
         "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
         "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
         "prop_rotation_factor_note": TIME_TRACE_CR_NOTE,
+        "prop_rotation_factor": NON_ROTATING_PROPELLER_CR,
+        "prop_rotation_factor_basis": TIME_TRACE_CR_BASIS,
         "traceability_links": {
             "source_pack_issue": f"{WORKSPACE_HUB_ISSUES}/2569",
             "static_yaw_report_issue": f"{WORKSPACE_HUB_ISSUES}/2570",
@@ -380,6 +391,8 @@ def _markdown_report(result: dict[str, Any]) -> str:
             "",
             result["metadata"]["prop_rotation_factor_note"],
             "",
+            f"Time-trace diagnostic rows use `{result['metadata']['prop_rotation_factor_basis']}`.",
+            "",
             "## Sample working example",
             "",
             f"Data point: `{sample['data_point']}`.",
@@ -388,7 +401,7 @@ def _markdown_report(result: dict[str, Any]) -> str:
             f"- Initial effective rudder angle: `alpha_R = {sample['initial_effective_rudder_angle_deg']:.6f} deg = {sample['initial_effective_rudder_angle_rad']:.8f} rad`.",
             f"- Initial Nomoto acceleration: `r_dot = ({sample['nomoto_k_per_s']:.6f} * {sample['initial_effective_rudder_angle_rad']:.8f} - 0) / {sample['nomoto_t_s']:.3f} = {sample['initial_r_dot_rad_s2']:.10f} rad/s^2`.",
             f"- After `{sample['sample_dt_s']:.1f} s`, calculated yaw rate is `{sample['calculated_yaw_rate_deg_s']:.9f} deg/s`; the generated row reports `{sample['reported_yaw_rate_deg_s']:.9f} deg/s`.",
-            f"- Initial diagnostic yaw moment is `{sample['initial_diagnostic_yaw_moment_kN_m']:.6f} kN-m`.",
+            f"- Initial diagnostic yaw moment is `{sample['initial_diagnostic_yaw_moment_kN_m']:.6f} kN-m` using neutral `Cr={sample['prop_rotation_factor']:.1f}`.",
             "",
             "The HTML report includes a sample-verification chart that highlights this early yaw-rate data point.",
             "",
@@ -436,8 +449,9 @@ def _html_report(result: dict[str, Any]) -> str:
 </ul>
 <h2>Propeller rotation factor Cr</h2>
 <p>{result['metadata']['prop_rotation_factor_note']}</p>
+<p>{result['metadata']['prop_rotation_factor_basis']}</p>
 <h2>Sample working example</h2>
-<p>{sample['data_point']}: alpha_R={sample['initial_effective_rudder_angle_deg']:.6f} deg, r_dot={sample['initial_r_dot_rad_s2']:.10f} rad/s^2, reported yaw rate after {sample['sample_dt_s']:.1f} s={sample['reported_yaw_rate_deg_s']:.9f} deg/s.</p>
+<p>{sample['data_point']}: alpha_R={sample['initial_effective_rudder_angle_deg']:.6f} deg, r_dot={sample['initial_r_dot_rad_s2']:.10f} rad/s^2, reported yaw rate after {sample['sample_dt_s']:.1f} s={sample['reported_yaw_rate_deg_s']:.9f} deg/s, Cr={sample['prop_rotation_factor']:.1f}.</p>
 <div id=\"trajectory-chart\"></div>
 <div id=\"heading-chart\"></div>
 <div id=\"yaw-rate-chart\"></div>
@@ -452,10 +466,10 @@ const sample = {sample_json};
 const scenarios = [...new Set(rows.map(r => r.scenario_id))];
 function traces(xKey, yKey) {{ return scenarios.map(s => {{ const pts = rows.filter(r => r.scenario_id === s); return {{x: pts.map(r => r[xKey]), y: pts.map(r => r[yKey]), mode: 'lines', name: s}}; }}); }}
 Plotly.newPlot('trajectory-chart', traces('x_m', 'y_m'), {{title: 'Trajectory', xaxis: {{title: 'x (m)'}}, yaxis: {{title: 'y (m)'}}}});
-Plotly.newPlot('heading-chart', traces('time_s', 'heading_deg'), {{title: 'Heading vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Heading (deg)'}}}});
+Plotly.newPlot('heading-chart', traces('time_s', 'heading_deg'), {{title: 'Heading angle vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Heading angle (deg)'}}}});
 Plotly.newPlot('yaw-rate-chart', traces('time_s', 'yaw_rate_deg_s'), {{title: 'Yaw rate vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw rate (deg/s)'}}}});
 Plotly.newPlot('alpha-chart', traces('time_s', 'effective_rudder_angle_deg'), {{title: 'Effective rudder angle vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Effective rudder angle (deg)'}}}});
-Plotly.newPlot('moment-chart', traces('time_s', 'diagnostic_yaw_moment_kN_m'), {{title: 'Diagnostic yaw moment vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
+Plotly.newPlot('moment-chart', traces('time_s', 'diagnostic_yaw_moment_kN_m'), {{title: 'Yaw moment vs time (diagnostic, Cr=1)', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
 document.getElementById('benchmark-source-gap').innerHTML = `<h2>benchmark-source-gap</h2><p>${{benchmark.summary}}</p>`;
 const sampleWindow = rows.filter(r => r.scenario_id === sample.scenario_id && r.time_s <= Math.max(10, sample.sample_time_s));
 Plotly.newPlot('sample-chart', [
@@ -491,6 +505,8 @@ def _sample_working_example(result: dict[str, Any]) -> dict[str, Any]:
         "initial_r_dot_rad_s2": initial_r_dot_rad_s2,
         "calculated_yaw_rate_deg_s": calculated_yaw_rate_deg_s,
         "reported_yaw_rate_deg_s": second["yaw_rate_deg_s"],
+        "prop_rotation_factor": first["prop_rotation_factor"],
+        "prop_rotation_factor_basis": first["prop_rotation_factor_basis"],
         "initial_diagnostic_yaw_moment_kN_m": first["diagnostic_yaw_moment_kN_m"],
     }
 
