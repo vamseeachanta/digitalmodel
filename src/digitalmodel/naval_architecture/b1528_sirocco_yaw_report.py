@@ -24,6 +24,19 @@ from digitalmodel.naval_architecture.yaw_moment import rudder_yaw_moment
 
 KNOT_TO_M_PER_S = 0.51444
 G_M_PER_S2 = 9.80665
+NON_ROTATING_PROPELLER_CR = 1.0
+GITHUB_REPO_BLOB = "https://github.com/vamseeachanta/digitalmodel/blob/main"
+WORKSPACE_HUB_ISSUES = "https://github.com/vamseeachanta/workspace-hub/issues"
+PROPELLER_ROTATION_FACTOR_NOTE = (
+    "Cr is the legacy workbook propeller-rotation correction multiplier in "
+    "F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port "
+    "uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a "
+    "side-dependent empirical allowance for propeller/rudder inflow asymmetry. "
+    "If the propeller is not rotating, or if the calculation intentionally "
+    "excludes propeller-rotation correction, use Cr=1.0 so the base force is "
+    "not amplified or reduced. This neutral Cr value does not model locked or "
+    "freewheeling propeller drag/wake effects."
+)
 
 
 @dataclass(frozen=True)
@@ -115,17 +128,32 @@ def run_b1528_static_yaw_report(config: B1528YawConfig | None = None) -> dict[st
                 cr = cfg.prop_rotation_factors[rotation_case]
                 rows.append(_workbook_regression_row(cfg, speed_kn, speed_m_s, angle, rotation_case, cr))
             rows.append(_digitalmodel_static_row(cfg, speed_kn, speed_m_s, angle))
-    return {
+    result = {
         "metadata": {
             "case_id": cfg.case_id,
             "aliases": list(cfg.aliases),
             "source_pack_issue": cfg.source_pack_issue,
             "scope": "preliminary static rudder-induced yaw moment; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
             "workbook_note": "evaluated workbook yaw moment uses Fn via C23; workbook text mentions Ft",
+            "prop_rotation_factor_note": PROPELLER_ROTATION_FACTOR_NOTE,
+            "non_rotating_propeller_cr": NON_ROTATING_PROPELLER_CR,
+            "workbook_beta": cfg.workbook_beta,
+            "rudder_area_m2": cfg.rudder_area_m2,
+            "legacy_yaw_lever_m": cfg.legacy_yaw_lever_m,
+            "traceability_links": {
+                "source_pack_issue": f"{WORKSPACE_HUB_ISSUES}/2569",
+                "static_yaw_report_issue": f"{WORKSPACE_HUB_ISSUES}/2570",
+                "reusable_yaw_issue": f"{WORKSPACE_HUB_ISSUES}/2564",
+                "durable_report": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/b1528-sirocco-yaw-moment-report.md",
+                "generated_markdown_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.md",
+                "generated_html_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html",
+            },
         },
         "rows": rows,
         "operating_points": _operating_points(rows),
     }
+    result["sample_working_example"] = _sample_working_example(result)
+    return result
 
 
 def _workbook_regression_row(
@@ -149,6 +177,7 @@ def _workbook_regression_row(
         "rudder_angle_deg": angle_deg,
         "rotation_case": rotation_case,
         "prop_rotation_factor": cr,
+        "prop_rotation_factor_basis": _prop_rotation_factor_basis(rotation_case, cr),
         "base_force_N": base_force_N,
         "transverse_force_N": transverse_force_N,
         "normal_force_N": normal_force_N,
@@ -183,6 +212,7 @@ def _digitalmodel_static_row(
         "rudder_angle_deg": angle_deg,
         "rotation_case": "not_applicable",
         "prop_rotation_factor": None,
+        "prop_rotation_factor_basis": "not_applicable: reusable digitalmodel_static_yaw does not use workbook Cr",
         "base_force_N": None,
         "transverse_force_N": result.transverse_force_N,
         "normal_force_N": result.scalar_normal_force_N,
@@ -223,7 +253,7 @@ def write_b1528_static_yaw_report(result: dict[str, Any], output_dir: str | Path
     rows = result["rows"]
     headers = list(rows[0])
     with csv_path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=headers)
+        writer = csv.DictWriter(stream, fieldnames=headers, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     json_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -250,12 +280,18 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
             "workbook_regression": "F=beta*AR*V^2*Cr; Ft=F*sin(alpha)*cos(alpha); Fn=F*sin(alpha); evaluated yaw moment=(Fn/1000/g)*(0.6*LBP)",
             "digitalmodel_static_yaw": "digitalmodel yaw_moment.rudder_yaw_moment with legacy 0.6*LBP mapped for comparison only",
         },
+        "prop_rotation_factor_note": result["metadata"]["prop_rotation_factor_note"],
+        "non_rotating_propeller_cr": result["metadata"]["non_rotating_propeller_cr"],
+        "traceability_links": result["metadata"]["traceability_links"],
+        "sample_working_example": result["sample_working_example"],
         "limitations": result["metadata"]["scope"],
     }
 
 
 def _markdown_report(result: dict[str, Any]) -> str:
     op_rows = result["operating_points"]
+    sample = result["sample_working_example"]
+    links = result["metadata"]["traceability_links"]
     table_lines = [
         "| Mode | Speed (kn) | Rudder (deg) | Rotation | Yaw moment (kN-m) | Notes |",
         "|---|---:|---:|---|---:|---|",
@@ -268,7 +304,16 @@ def _markdown_report(result: dict[str, Any]) -> str:
         [
             "# B1528 SIROCCO Static Yaw-Moment Report",
             "",
-            "This report supports issue #2570 using the completed #2569 source pack.",
+            f"This report supports [workspace-hub #2570]({links['static_yaw_report_issue']}) using the completed [#2569 source pack]({links['source_pack_issue']}).",
+            "",
+            "## Traceability links",
+            "",
+            f"- Source pack issue: [workspace-hub #2569]({links['source_pack_issue']})",
+            f"- Static yaw report issue: [workspace-hub #2570]({links['static_yaw_report_issue']})",
+            f"- Reusable yaw-moment issue: [workspace-hub #2564]({links['reusable_yaw_issue']})",
+            f"- Durable report page: [b1528-sirocco-yaw-moment-report.md]({links['durable_report']})",
+            f"- Generated Markdown report: [b1528_sirocco_yaw_moment_report.md]({links['generated_markdown_report']})",
+            f"- Generated HTML report: [b1528_sirocco_yaw_moment_report.html]({links['generated_html_report']})",
             "",
             "## 2.5 kn ±1° operating-point table",
             "",
@@ -278,27 +323,59 @@ def _markdown_report(result: dict[str, Any]) -> str:
             "",
             "Workbook-regression rows reproduce the evaluated workbook family: the workbook text mentions Ft, but the evaluated yaw-moment cell uses Fn via C23. Digitalmodel rows are separately labeled and map the legacy 0.6*LBP lever to x_rudder_from_cg_m for comparison only.",
             "",
+            "## Propeller rotation factor Cr",
+            "",
+            result["metadata"]["prop_rotation_factor_note"],
+            "",
+            "## Sample working example",
+            "",
+            f"Data point: `{sample['data_point']}`.",
+            "",
+            f"- Speed conversion: `V = {sample['speed_kn']:.1f} kn * {KNOT_TO_M_PER_S:.5f} = {sample['speed_m_s']:.5f} m/s`.",
+            f"- Base force: `F = {sample['beta']:.1f} * {sample['rudder_area_m2']:.6f} * {sample['speed_m_s']:.5f}^2 * {sample['cr']:.3f} = {sample['base_force_N']:.3f} N`.",
+            f"- Normal force: `Fn = F * sin({sample['rudder_angle_deg']:.1f} deg) = {sample['normal_force_N']:.3f} N`.",
+            f"- Yaw moment: `Mz = Fn / 1000 * {sample['lever_arm_m']:.3f} = {sample['yaw_moment_kN_m']:.6f} kN-m`.",
+            "",
+            "The HTML report charts this sample as a highlighted marker so the numeric point can be checked visually against the plotted workbook-regression curve.",
+            "",
             "This is not a full MMG simulation, not an incident reconstruction, not an IMO compliance assessment, and no class compliance conclusion is made.",
             "",
             "## Interactive charts",
             "",
-            "Open `b1528_sirocco_yaw_moment_report.html` for interactive Plotly charts of yaw moment versus rudder angle and speed.",
+            "Open `b1528_sirocco_yaw_moment_report.html` for interactive Plotly charts of yaw moment versus rudder angle, yaw moment versus speed, and the sample verification point.",
         ]
     )
 
 
 def _html_report(result: dict[str, Any]) -> str:
     rows_json = json.dumps(result["rows"])
+    sample = result["sample_working_example"]
+    sample_json = json.dumps(sample)
+    links = result["metadata"]["traceability_links"]
     return f"""<!doctype html>
 <html lang=\"en\">
 <head><meta charset=\"utf-8\"><title>B1528 SIROCCO Yaw Moment</title><script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script></head>
 <body>
 <h1>B1528 SIROCCO Static Yaw-Moment Report</h1>
 <p>Preliminary static rudder-induced yaw moment; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion.</p>
+<h2>Traceability links</h2>
+<ul>
+<li><a href=\"{links['source_pack_issue']}\">workspace-hub #2569 source pack</a></li>
+<li><a href=\"{links['static_yaw_report_issue']}\">workspace-hub #2570 static yaw report issue</a></li>
+<li><a href=\"{links['reusable_yaw_issue']}\">workspace-hub #2564 reusable yaw-moment issue</a></li>
+<li><a href=\"{links['durable_report']}\">durable report page</a></li>
+<li><a href=\"{links['generated_markdown_report']}\">generated Markdown report on GitHub</a></li>
+</ul>
+<h2>Propeller rotation factor Cr</h2>
+<p>{result['metadata']['prop_rotation_factor_note']}</p>
+<h2>Sample working example</h2>
+<p>{sample['data_point']}: V={sample['speed_m_s']:.5f} m/s, F={sample['base_force_N']:.3f} N, Fn={sample['normal_force_N']:.3f} N, Mz={sample['yaw_moment_kN_m']:.6f} kN-m.</p>
 <div id=\"angle-chart\"></div>
 <div id=\"speed-chart\"></div>
+<div id=\"sample-chart\"></div>
 <script>
 const rows = {rows_json};
+const sample = {sample_json};
 function groupedTrace(filterMode, xKey, groupKey) {{
   const subset = rows.filter(r => r.calculation_mode === filterMode && (filterMode !== 'workbook_regression' || r.rotation_case !== 'stbd' || r.rudder_angle_deg <= 0));
   const groups = [...new Set(subset.map(r => r[groupKey]))];
@@ -309,7 +386,49 @@ function groupedTrace(filterMode, xKey, groupKey) {{
 }}
 Plotly.newPlot('angle-chart', groupedTrace('workbook_regression', 'rudder_angle_deg', 'speed_kn'), {{title: 'Workbook-regression yaw moment vs rudder angle', xaxis: {{title: 'Rudder angle (deg)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
 Plotly.newPlot('speed-chart', groupedTrace('digitalmodel_static_yaw', 'speed_kn', 'rudder_angle_deg'), {{title: 'Digitalmodel static yaw moment vs speed', xaxis: {{title: 'Speed (kn)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
+Plotly.newPlot('sample-chart', [{{
+  x: [sample.rudder_angle_deg],
+  y: [sample.yaw_moment_kN_m],
+  mode: 'markers+text',
+  text: [`${{sample.yaw_moment_kN_m.toFixed(3)}} kN-m`],
+  textposition: 'top center',
+  marker: {{size: 14}}
+}}], {{title: 'Sample verification point: workbook regression 2.5 kn, +1 deg, port', xaxis: {{title: 'Rudder angle (deg)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
 </script>
 </body>
 </html>
 """
+
+
+def _sample_working_example(result: dict[str, Any]) -> dict[str, Any]:
+    row = next(
+        item
+        for item in result["rows"]
+        if item["calculation_mode"] == "workbook_regression"
+        and item["speed_kn"] == 2.5
+        and item["rudder_angle_deg"] == 1.0
+        and item["rotation_case"] == "port"
+    )
+    metadata = result["metadata"]
+    return {
+        "data_point": "workbook_regression, 2.5 kn, +1 deg rudder, port rotation case",
+        "speed_kn": row["speed_kn"],
+        "speed_m_s": row["speed_m_s"],
+        "rudder_angle_deg": row["rudder_angle_deg"],
+        "rotation_case": row["rotation_case"],
+        "cr": row["prop_rotation_factor"],
+        "beta": metadata["workbook_beta"],
+        "rudder_area_m2": metadata["rudder_area_m2"],
+        "lever_arm_m": metadata["legacy_yaw_lever_m"],
+        "base_force_N": row["base_force_N"],
+        "normal_force_N": row["normal_force_N"],
+        "yaw_moment_kN_m": row["yaw_moment_kN_m"],
+    }
+
+
+def _prop_rotation_factor_basis(rotation_case: str, cr: float) -> str:
+    if rotation_case == "port":
+        return "port workbook rotation case: Cr=1.065 increases base force by 6.5%"
+    if rotation_case == "stbd":
+        return "starboard workbook rotation case: Cr=0.935 reduces base force by 6.5%"
+    return f"unrecognized workbook rotation case {rotation_case!r}: Cr={cr:g}"

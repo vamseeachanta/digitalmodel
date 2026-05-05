@@ -20,7 +20,12 @@ from typing import Any
 
 import yaml
 
-from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import KNOT_TO_M_PER_S
+from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
+    GITHUB_REPO_BLOB,
+    KNOT_TO_M_PER_S,
+    PROPELLER_ROTATION_FACTOR_NOTE,
+    WORKSPACE_HUB_ISSUES,
+)
 from digitalmodel.naval_architecture.yaw_moment import rudder_yaw_moment
 
 SCOPE_CAVEAT = (
@@ -28,6 +33,11 @@ SCOPE_CAVEAT = (
     "rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; "
     "not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; "
     "no class compliance conclusion"
+)
+TIME_TRACE_CR_NOTE = (
+    f"{PROPELLER_ROTATION_FACTOR_NOTE} This time-trace report does not apply "
+    "Cr because its rudder diagnostics use the reusable digitalmodel static-yaw "
+    "force model, not the legacy workbook regression."
 )
 
 
@@ -169,11 +179,13 @@ def run_b1528_time_trace_report(config: B1528TimeTraceConfig | None = None) -> d
         run = simulate_b1528_time_trace(scenario_cfg)
         run["scenario_id"] = scenario_id
         runs.append(run)
-    return {
+    result = {
         "metadata": _metadata(cfg),
         "runs": runs,
         "benchmark": _benchmark_panel(),
     }
+    result["sample_working_example"] = _sample_working_example(result)
+    return result
 
 
 def write_b1528_time_trace_report(result: dict[str, Any], output_dir: str | Path) -> dict[str, str]:
@@ -298,6 +310,15 @@ def _metadata(cfg: B1528TimeTraceConfig) -> dict[str, Any]:
         "scope": SCOPE_CAVEAT,
         "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
         "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+        "prop_rotation_factor_note": TIME_TRACE_CR_NOTE,
+        "traceability_links": {
+            "source_pack_issue": f"{WORKSPACE_HUB_ISSUES}/2569",
+            "static_yaw_report_issue": f"{WORKSPACE_HUB_ISSUES}/2570",
+            "time_trace_report_issue": f"{WORKSPACE_HUB_ISSUES}/2571",
+            "durable_report": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
+            "generated_markdown_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+            "generated_html_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html",
+        },
         "nomoto": {"K_per_s": cfg.nomoto_k_per_s, "T_s": cfg.nomoto_t_s, "calibration": "assumed_source_gap_sensitivity"},
     }
 
@@ -317,12 +338,17 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
         "static_report_issue": result["metadata"]["static_report_issue"],
         "formula_boundary": result["metadata"]["method"],
         "diagnostic_boundary": result["metadata"]["diagnostic_boundary"],
+        "prop_rotation_factor_note": result["metadata"]["prop_rotation_factor_note"],
+        "traceability_links": result["metadata"]["traceability_links"],
+        "sample_working_example": result["sample_working_example"],
         "limitations": result["metadata"]["scope"],
         "benchmark": result["benchmark"],
     }
 
 
 def _markdown_report(result: dict[str, Any]) -> str:
+    sample = result["sample_working_example"]
+    links = result["metadata"]["traceability_links"]
     metric_lines = ["| Scenario | Final heading (deg) | Final yaw rate (deg/s) | Advance (m) | Tactical diameter proxy (m) |", "|---|---:|---:|---:|---:|"]
     for run in result["runs"]:
         m = run["metrics"]
@@ -333,13 +359,38 @@ def _markdown_report(result: dict[str, Any]) -> str:
         [
             "# B1528 SIROCCO Time-Trace Benchmark Report",
             "",
-            "This report supports #2571 with a preliminary Nomoto time trace and rudder-local inflow feedback.",
+            f"This report supports [workspace-hub #2571]({links['time_trace_report_issue']}) with a preliminary Nomoto time trace and rudder-local inflow feedback.",
+            "",
+            "## Traceability links",
+            "",
+            f"- Source pack issue: [workspace-hub #2569]({links['source_pack_issue']})",
+            f"- Static yaw report issue: [workspace-hub #2570]({links['static_yaw_report_issue']})",
+            f"- Time-trace report issue: [workspace-hub #2571]({links['time_trace_report_issue']})",
+            f"- Durable report page: [b1528-sirocco-time-trace-report.md]({links['durable_report']})",
+            f"- Generated Markdown report: [b1528_sirocco_time_trace_report.md]({links['generated_markdown_report']})",
+            f"- Generated HTML report: [b1528_sirocco_time_trace_report.html]({links['generated_html_report']})",
             "",
             "## Method boundary",
             "",
             result["metadata"]["scope"],
             "",
             "The yaw-rate equation is Nomoto-driven. Rudder force and yaw moment are diagnostic only and are not fed back into `r_dot`, avoiding double-counting of Nomoto `K/T` and direct moment balance.",
+            "",
+            "## Propeller rotation factor Cr",
+            "",
+            result["metadata"]["prop_rotation_factor_note"],
+            "",
+            "## Sample working example",
+            "",
+            f"Data point: `{sample['data_point']}`.",
+            "",
+            f"- Initial local speed: `U_R = {sample['initial_local_speed_m_s']:.5f} m/s`.",
+            f"- Initial effective rudder angle: `alpha_R = {sample['initial_effective_rudder_angle_deg']:.6f} deg = {sample['initial_effective_rudder_angle_rad']:.8f} rad`.",
+            f"- Initial Nomoto acceleration: `r_dot = ({sample['nomoto_k_per_s']:.6f} * {sample['initial_effective_rudder_angle_rad']:.8f} - 0) / {sample['nomoto_t_s']:.3f} = {sample['initial_r_dot_rad_s2']:.10f} rad/s^2`.",
+            f"- After `{sample['sample_dt_s']:.1f} s`, calculated yaw rate is `{sample['calculated_yaw_rate_deg_s']:.9f} deg/s`; the generated row reports `{sample['reported_yaw_rate_deg_s']:.9f} deg/s`.",
+            f"- Initial diagnostic yaw moment is `{sample['initial_diagnostic_yaw_moment_kN_m']:.6f} kN-m`.",
+            "",
+            "The HTML report includes a sample-verification chart that highlights this early yaw-rate data point.",
             "",
             "## Scenario metrics",
             "",
@@ -351,12 +402,14 @@ def _markdown_report(result: dict[str, Any]) -> str:
             "",
             "## Interactive charts",
             "",
-            "Open `b1528_sirocco_time_trace_report.html` for trajectory, heading, yaw-rate, effective rudder angle, yaw moment, and benchmark-source-gap panels.",
+            "Open `b1528_sirocco_time_trace_report.html` for trajectory, heading, yaw-rate, effective rudder angle, yaw moment, benchmark-source-gap, and sample-verification panels.",
         ]
     )
 
 
 def _html_report(result: dict[str, Any]) -> str:
+    sample = result["sample_working_example"]
+    links = result["metadata"]["traceability_links"]
     rows_json = json.dumps(
         [
             {"scenario_id": run["scenario_id"], **row}
@@ -365,6 +418,7 @@ def _html_report(result: dict[str, Any]) -> str:
         ]
     )
     benchmark_json = json.dumps(result["benchmark"])
+    sample_json = json.dumps(sample)
     return f"""<!doctype html>
 <html lang=\"en\">
 <head><meta charset=\"utf-8\"><title>B1528 SIROCCO Time Trace</title><script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script></head>
@@ -372,15 +426,29 @@ def _html_report(result: dict[str, Any]) -> str:
 <h1>B1528 SIROCCO Time-Trace Benchmark Report</h1>
 <p>{result['metadata']['scope']}</p>
 <p>Rudder force and yaw moment are diagnostic only in the Nomoto mode.</p>
+<h2>Traceability links</h2>
+<ul>
+<li><a href=\"{links['source_pack_issue']}\">workspace-hub #2569 source pack</a></li>
+<li><a href=\"{links['static_yaw_report_issue']}\">workspace-hub #2570 static yaw report issue</a></li>
+<li><a href=\"{links['time_trace_report_issue']}\">workspace-hub #2571 time-trace report issue</a></li>
+<li><a href=\"{links['durable_report']}\">durable report page</a></li>
+<li><a href=\"{links['generated_markdown_report']}\">generated Markdown report on GitHub</a></li>
+</ul>
+<h2>Propeller rotation factor Cr</h2>
+<p>{result['metadata']['prop_rotation_factor_note']}</p>
+<h2>Sample working example</h2>
+<p>{sample['data_point']}: alpha_R={sample['initial_effective_rudder_angle_deg']:.6f} deg, r_dot={sample['initial_r_dot_rad_s2']:.10f} rad/s^2, reported yaw rate after {sample['sample_dt_s']:.1f} s={sample['reported_yaw_rate_deg_s']:.9f} deg/s.</p>
 <div id=\"trajectory-chart\"></div>
 <div id=\"heading-chart\"></div>
 <div id=\"yaw-rate-chart\"></div>
 <div id=\"alpha-chart\"></div>
 <div id=\"moment-chart\"></div>
 <div id=\"benchmark-source-gap\"></div>
+<div id=\"sample-chart\"></div>
 <script>
 const rows = {rows_json};
 const benchmark = {benchmark_json};
+const sample = {sample_json};
 const scenarios = [...new Set(rows.map(r => r.scenario_id))];
 function traces(xKey, yKey) {{ return scenarios.map(s => {{ const pts = rows.filter(r => r.scenario_id === s); return {{x: pts.map(r => r[xKey]), y: pts.map(r => r[yKey]), mode: 'lines', name: s}}; }}); }}
 Plotly.newPlot('trajectory-chart', traces('x_m', 'y_m'), {{title: 'Trajectory', xaxis: {{title: 'x (m)'}}, yaxis: {{title: 'y (m)'}}}});
@@ -389,10 +457,42 @@ Plotly.newPlot('yaw-rate-chart', traces('time_s', 'yaw_rate_deg_s'), {{title: 'Y
 Plotly.newPlot('alpha-chart', traces('time_s', 'effective_rudder_angle_deg'), {{title: 'Effective rudder angle vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Effective rudder angle (deg)'}}}});
 Plotly.newPlot('moment-chart', traces('time_s', 'diagnostic_yaw_moment_kN_m'), {{title: 'Diagnostic yaw moment vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
 document.getElementById('benchmark-source-gap').innerHTML = `<h2>benchmark-source-gap</h2><p>${{benchmark.summary}}</p>`;
+const sampleWindow = rows.filter(r => r.scenario_id === sample.scenario_id && r.time_s <= Math.max(10, sample.sample_time_s));
+Plotly.newPlot('sample-chart', [
+  {{x: sampleWindow.map(r => r.time_s), y: sampleWindow.map(r => r.yaw_rate_deg_s), mode: 'lines+markers', name: 'positive_rudder yaw rate'}},
+  {{x: [sample.sample_time_s], y: [sample.reported_yaw_rate_deg_s], mode: 'markers+text', text: [`${{sample.reported_yaw_rate_deg_s.toFixed(9)}} deg/s`], textposition: 'top center', marker: {{size: 14}}, name: 'sample point'}}
+], {{title: 'Sample verification point: first Nomoto yaw-rate step', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw rate (deg/s)'}}}});
 </script>
 </body>
 </html>
 """
+
+
+def _sample_working_example(result: dict[str, Any]) -> dict[str, Any]:
+    run = next(item for item in result["runs"] if item["scenario_id"] == "positive_rudder")
+    first = run["rows"][0]
+    second = run["rows"][1]
+    sample_dt_s = second["time_s"] - first["time_s"]
+    alpha_rad = math.radians(first["effective_rudder_angle_deg"])
+    k_per_s = result["metadata"]["nomoto"]["K_per_s"]
+    t_s = result["metadata"]["nomoto"]["T_s"]
+    initial_r_dot_rad_s2 = (k_per_s * alpha_rad) / t_s
+    calculated_yaw_rate_deg_s = math.degrees(initial_r_dot_rad_s2 * sample_dt_s)
+    return {
+        "data_point": "positive_rudder first time step",
+        "scenario_id": "positive_rudder",
+        "sample_time_s": second["time_s"],
+        "sample_dt_s": sample_dt_s,
+        "initial_local_speed_m_s": first["rudder_local_speed_m_s"],
+        "initial_effective_rudder_angle_deg": first["effective_rudder_angle_deg"],
+        "initial_effective_rudder_angle_rad": alpha_rad,
+        "nomoto_k_per_s": k_per_s,
+        "nomoto_t_s": t_s,
+        "initial_r_dot_rad_s2": initial_r_dot_rad_s2,
+        "calculated_yaw_rate_deg_s": calculated_yaw_rate_deg_s,
+        "reported_yaw_rate_deg_s": second["yaw_rate_deg_s"],
+        "initial_diagnostic_yaw_moment_kN_m": first["diagnostic_yaw_moment_kN_m"],
+    }
 
 
 def _positive(name: str, value: float) -> float:

@@ -89,12 +89,22 @@ def test_report_contains_interactive_charts(tmp_path):
     assert "Plotly.newPlot('yaw-rate-chart'" in html
     assert "Plotly.newPlot('alpha-chart'" in html
     assert "Plotly.newPlot('moment-chart'" in html
+    assert "sample-chart" in html
     assert "benchmark-source-gap" in html
 
     report = Path(manifest["markdown_report"]).read_text(encoding="utf-8")
+    assert "Traceability links" in report
+    assert "https://github.com/vamseeachanta/workspace-hub/issues/2571" in report
+    assert "Propeller rotation factor Cr" in report
+    assert "Cr=1.0" in report
+    assert "Sample working example" in report
     assert "rudder-local inflow feedback" in report
     assert "diagnostic only" in report
     assert "source-gap" in report
+
+    payload = Path(manifest["json"]).read_text(encoding="utf-8")
+    assert "sample_working_example" in payload
+    assert "traceability_links" in payload
 
 
 def test_no_mmg_or_compliance_overclaim(tmp_path):

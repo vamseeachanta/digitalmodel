@@ -22,6 +22,8 @@ def test_packaged_b1528_yaml_loads_with_source_refs():
     assert "Sorrocco" in payload["case"]["aliases"]
     assert payload["source_pack"]["issue"] == "https://github.com/vamseeachanta/workspace-hub/issues/2569"
     assert payload["calculation_modes"] == ["workbook_regression", "digitalmodel_static_yaw"]
+    assert payload["workbook_regression"]["non_rotating_propeller_cr"] == pytest.approx(1.0)
+    assert "Cr=1.0" in payload["workbook_regression"]["prop_rotation_factor_logic"]
 
 
 def test_b1528_required_values_from_source_pack():
@@ -64,6 +66,10 @@ def test_b1528_workbook_regression_operating_points_match_source_pack():
     assert plus["yaw_moment_kN_m"] == pytest.approx(112.158527, rel=2e-5)
     assert minus["yaw_moment_kN_m"] == pytest.approx(-98.467815, rel=2e-5)
     assert plus["workbook_force_for_yaw_moment"] == "Fn"
+    assert plus["prop_rotation_factor"] == pytest.approx(1.065)
+    assert plus["prop_rotation_factor_basis"].startswith("port workbook rotation case")
+    assert minus["prop_rotation_factor"] == pytest.approx(0.935)
+    assert minus["prop_rotation_factor_basis"].startswith("starboard workbook rotation case")
     assert plus["normal_force_N"] > plus["transverse_force_N"]
     assert math.copysign(1.0, minus["yaw_moment_kN_m"]) == -1.0
 
@@ -98,13 +104,30 @@ def test_interactive_report_outputs_and_no_compliance_overclaim(tmp_path):
     html = (tmp_path / "b1528_sirocco_yaw_moment_report.html").read_text(encoding="utf-8")
     md = (tmp_path / "b1528_sirocco_yaw_moment_report.md").read_text(encoding="utf-8")
     assert "Plotly.newPlot" in html
+    assert "sample-chart" in html
     assert "2.5 kn ±1° operating-point table" in md
+    assert "Traceability links" in md
+    assert "https://github.com/vamseeachanta/workspace-hub/issues/2570" in md
+    assert "Propeller rotation factor Cr" in md
+    assert "Cr=1.0" in md
+    assert "Cr=1.0" in html
+    assert "Sample working example" in md
+    assert "112.158527" in md
     assert "not an IMO compliance assessment" in md
     assert "not a full MMG" in md
     assert "class compliance" not in md.lower().replace("no class compliance", "")
 
     payload = json.loads((tmp_path / "b1528_sirocco_yaw_moment_results.json").read_text())
     assert payload["metadata"]["source_pack_issue"].endswith("/2569")
+    assert payload["metadata"]["non_rotating_propeller_cr"] == pytest.approx(1.0)
+    assert "Cr=1.0" in payload["metadata"]["prop_rotation_factor_note"]
+    assert payload["sample_working_example"]["yaw_moment_kN_m"] == pytest.approx(112.158527, rel=2e-5)
+    assert payload["metadata"]["traceability_links"]["static_yaw_report_issue"].endswith("/2570")
+
+    provenance = json.loads((tmp_path / "b1528_sirocco_yaw_moment_provenance.json").read_text())
+    assert provenance["non_rotating_propeller_cr"] == pytest.approx(1.0)
+    assert "Cr=1.0" in provenance["prop_rotation_factor_note"]
+    assert provenance["traceability_links"]["source_pack_issue"].endswith("/2569")
 
 
 def test_packaged_b1528_yaml_declared_as_package_data():

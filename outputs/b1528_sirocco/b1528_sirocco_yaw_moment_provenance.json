@@ -4,5 +4,29 @@
     "workbook_regression": "F=beta*AR*V^2*Cr; Ft=F*sin(alpha)*cos(alpha); Fn=F*sin(alpha); evaluated yaw moment=(Fn/1000/g)*(0.6*LBP)",
     "digitalmodel_static_yaw": "digitalmodel yaw_moment.rudder_yaw_moment with legacy 0.6*LBP mapped for comparison only"
   },
+  "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects.",
+  "non_rotating_propeller_cr": 1.0,
+  "traceability_links": {
+    "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+    "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+    "reusable_yaw_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2564",
+    "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-yaw-moment-report.md",
+    "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.md",
+    "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html"
+  },
+  "sample_working_example": {
+    "data_point": "workbook_regression, 2.5 kn, +1 deg rudder, port rotation case",
+    "speed_kn": 2.5,
+    "speed_m_s": 1.2861,
+    "rudder_angle_deg": 1.0,
+    "rotation_case": "port",
+    "cr": 1.065,
+    "beta": 600.0,
+    "rudder_area_m2": 44.93956319369854,
+    "lever_arm_m": 135.3,
+    "base_force_N": 47498.421975425816,
+    "normal_force_N": 828.9617654447301,
+    "yaw_moment_kN_m": 112.158526864672
+  },
   "limitations": "preliminary static rudder-induced yaw moment; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion"
 }

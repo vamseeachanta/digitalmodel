@@ -1,6 +1,20 @@
 # B1528 SIROCCO Time-Trace Benchmark Report
 
-This page documents the #2571 B1528 SIROCCO preliminary time-trace workflow in `digitalmodel`.
+This page documents the [workspace-hub #2571](https://github.com/vamseeachanta/workspace-hub/issues/2571)
+B1528 SIROCCO preliminary time-trace workflow in `digitalmodel`.
+
+## Traceability links
+
+| Item | GitHub link |
+|---|---|
+| Source pack issue | [workspace-hub #2569](https://github.com/vamseeachanta/workspace-hub/issues/2569) |
+| Static yaw report issue | [workspace-hub #2570](https://github.com/vamseeachanta/workspace-hub/issues/2570) |
+| Time-trace report issue | [workspace-hub #2571](https://github.com/vamseeachanta/workspace-hub/issues/2571) |
+| Time-trace generator | [`b1528_sirocco_time_trace.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_time_trace.py) |
+| Packaged input YAML | [`b1528_sirocco_time_trace.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_time_trace.yml) |
+| Generated Markdown report | [`b1528_sirocco_time_trace_report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md) |
+| Generated HTML report | [`b1528_sirocco_time_trace_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html) |
+| Master calculation review | [`rudder-and-ship-force-calculation-review.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md) |
 
 ## Scope
 
@@ -18,6 +32,19 @@ y_dot = U * sin(psi)
 ```
 
 Rudder force and yaw moment are computed as diagnostics only from `U_R` and `alpha_R`. They are **not** fed back into `r_dot`; this avoids double-counting a direct moment balance and Nomoto `K/T` response in the same preliminary model.
+
+## Propeller rotation factor `Cr`
+
+`Cr` is not applied in this Nomoto time-trace workflow. It belongs to the
+B1528 static workbook-regression formula `F = beta * AR * V^2 * Cr`, where the
+legacy workbook uses `Cr=1.065` for the port rotation case and `Cr=0.935` for
+the starboard rotation case. The time-trace diagnostics instead use the reusable
+`digitalmodel` static-yaw rudder-force model.
+
+If the workbook-regression formula is run for a non-rotating propeller, or for
+a case where no propeller-rotation correction is intended, the applicable value
+is `Cr=1.0`. That neutral multiplier means no rotation-induced amplification or
+reduction; it does not model locked or freewheeling propeller drag/wake effects.
 
 ## Packaged input
 
@@ -57,10 +84,35 @@ The HTML report includes interactive Plotly charts for:
 - effective rudder angle vs time
 - diagnostic yaw moment vs time
 - benchmark source-gap panel
+- sample verification point
+
+## Sample working example
+
+Sample point for visual verification:
+
+```text
+Scenario: positive_rudder
+Time step: first step, 0 s to 1 s
+Initial local speed: U_R = 1.28610 m/s
+Initial effective rudder angle: alpha_R = 1.000000 deg = 0.01745329 rad
+Nomoto K/T: K = 0.018 1/s, T = 55 s
+r_dot = (K * alpha_R - 0) / T = 0.0000057120 rad/s^2
+yaw rate after 1 s = 0.000327273 deg/s
+initial diagnostic yaw moment = -339.513315 kN-m
+```
+
+The generated HTML report highlights this first-step yaw-rate point in the
+sample verification chart, so the plotted marker can be checked against the
+worked value above.
 
 ## Benchmark boundary
 
-The #2569 benchmark source pack contains narrative VDR/Rosepoint heading and speed anchors but no instrumented x/y trajectory, and the notes include tug, current, anchor, and bank effects. Therefore #2571 reports a benchmark **source-gap** panel rather than fabricating a quantitative overlay.
+The [#2569 benchmark source pack](https://github.com/vamseeachanta/workspace-hub/issues/2569)
+contains narrative VDR/Rosepoint heading and speed anchors but no instrumented
+x/y trajectory, and the notes include tug, current, anchor, and bank effects.
+Therefore [#2571](https://github.com/vamseeachanta/workspace-hub/issues/2571)
+reports a benchmark **source-gap** panel rather than fabricating a quantitative
+overlay.
 
 ## Limitations
 

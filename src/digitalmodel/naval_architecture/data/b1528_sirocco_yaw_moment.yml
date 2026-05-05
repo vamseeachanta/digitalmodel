@@ -27,6 +27,15 @@ workbook_regression:
   prop_rotation_factors:
     port: 1.065
     stbd: 0.935
+  non_rotating_propeller_cr: 1.0
+  prop_rotation_factor_logic: >-
+    Cr is selected by the legacy workbook propeller rotation case before the
+    trigonometric force split. Port uses Cr=1.065 and starboard uses Cr=0.935
+    because the workbook applies a side-dependent empirical allowance for
+    propeller/rudder inflow asymmetry. For a non-rotating propeller, or when no
+    propeller-rotation correction is intended, use Cr=1.0 so the base force is
+    not amplified or reduced. This neutral value does not model locked or
+    freewheeling propeller drag/wake effects.
 calculation_modes:
   - workbook_regression
   - digitalmodel_static_yaw

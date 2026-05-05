@@ -15,15 +15,30 @@ scantling or steering-gear machinery sizing calculation.
 
 | Issue | State | Calculation role | Primary artifacts |
 |---|---|---|---|
-| workspace-hub #1317 | Open | Older maneuverability umbrella for rudder forces and turning circle. | `src/digitalmodel/naval_architecture/maneuverability.py` |
-| workspace-hub #2564 | Closed, done | Reusable typical-ship yaw-moment sweep from rudder normal force. | `yaw_moment.py`, `yaw_moment_typical_ship.yml`, `test_yaw_moment_sweep.py`, `yaw-moment-sweep.md` |
-| workspace-hub #2565 | Closed, done | Rudder-stock torque and equal/opposite holding torque sweep. | `rudder_stock_torque.py`, `rudder_stock_torque_typical_ship.yml`, `test_rudder_stock_torque_sweep.py`, `rudder-stock-torque-sweep.md` |
-| workspace-hub #2567 | Closed | Standards/source crosswalk for future steering gear and rudder-stock design checks. No formulas implemented. | naval-architecture wiki source map, concept page, standards crosswalk |
-| workspace-hub #2568 | Closed but left at plan-review | Preliminary turning-circle/tactical-diameter estimator planning stream. Later review found blockers. | plan/review artifacts; no tracked `turning_circle.py` implementation in this checkout |
-| workspace-hub #2570 | Closed, done | B1528 SIROCCO static yaw-moment workbook-regression and digitalmodel comparison report. | `b1528_sirocco_yaw_report.py`, B1528 YAML, outputs under `outputs/b1528_sirocco/` |
-| workspace-hub #2571 | Closed, done | B1528 SIROCCO first-order Nomoto time trace with rudder-local inflow diagnostics. | `b1528_sirocco_time_trace.py`, B1528 time-trace YAML, outputs under `outputs/b1528_sirocco/time_trace/` |
-| workspace-hub #2603 | Closed | Public API fix for rudder-stock torque loader and runner exports. | `src/digitalmodel/naval_architecture/__init__.py` |
-| digitalmodel #283 | Open | Separate passing-ship hydrodynamic force calculation for moored vessels. | `src/digitalmodel/hydrodynamics/passing_ship/` |
+| [workspace-hub #1317](https://github.com/vamseeachanta/workspace-hub/issues/1317) | Open | Older maneuverability umbrella for rudder forces and turning circle. | [`maneuverability.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/maneuverability.py) |
+| [workspace-hub #2564](https://github.com/vamseeachanta/workspace-hub/issues/2564) | Closed, done | Reusable typical-ship yaw-moment sweep from rudder normal force. | [`yaw_moment.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/yaw_moment.py), [`yaw_moment_typical_ship.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/yaw_moment_typical_ship.yml), [`yaw-moment-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/yaw-moment-sweep.md) |
+| [workspace-hub #2565](https://github.com/vamseeachanta/workspace-hub/issues/2565) | Closed, done | Rudder-stock torque and equal/opposite holding torque sweep. | [`rudder_stock_torque.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/rudder_stock_torque.py), [`rudder_stock_torque_typical_ship.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_stock_torque_typical_ship.yml), [`rudder-stock-torque-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-stock-torque-sweep.md) |
+| [workspace-hub #2567](https://github.com/vamseeachanta/workspace-hub/issues/2567) | Closed | Standards/source crosswalk for future steering gear and rudder-stock design checks. No formulas implemented. | naval-architecture wiki source map, concept page, standards crosswalk |
+| [workspace-hub #2568](https://github.com/vamseeachanta/workspace-hub/issues/2568) | Closed but left at plan-review | Preliminary turning-circle/tactical-diameter estimator planning stream. Later review found blockers. | plan/review artifacts; no tracked `turning_circle.py` implementation in this checkout |
+| [workspace-hub #2570](https://github.com/vamseeachanta/workspace-hub/issues/2570) | Closed, done | B1528 SIROCCO static yaw-moment workbook-regression and digitalmodel comparison report. | [`b1528_sirocco_yaw_report.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_yaw_report.py), [`b1528_sirocco_yaw_moment.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_yaw_moment.yml), [`b1528-sirocco-yaw-moment-report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-yaw-moment-report.md), [`generated output`](https://github.com/vamseeachanta/digitalmodel/tree/main/outputs/b1528_sirocco) |
+| [workspace-hub #2571](https://github.com/vamseeachanta/workspace-hub/issues/2571) | Closed, done | B1528 SIROCCO first-order Nomoto time trace with rudder-local inflow diagnostics. | [`b1528_sirocco_time_trace.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_time_trace.py), [`b1528_sirocco_time_trace.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_time_trace.yml), [`b1528-sirocco-time-trace-report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md), [`generated output`](https://github.com/vamseeachanta/digitalmodel/tree/main/outputs/b1528_sirocco/time_trace) |
+| [workspace-hub #2603](https://github.com/vamseeachanta/workspace-hub/issues/2603) | Closed | Public API fix for rudder-stock torque loader and runner exports. | [`__init__.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/__init__.py) |
+| [digitalmodel #283](https://github.com/vamseeachanta/digitalmodel/issues/283) | Open | Separate passing-ship hydrodynamic force calculation for moored vessels. | [`passing_ship/`](https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/hydrodynamics/passing_ship), [`benchmark_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/passing_ship/wang_benchmark/benchmark_report.html) |
+
+## Report Links
+
+| Report | GitHub link |
+|---|---|
+| Master rudder and ship-force calculation review | [`rudder-and-ship-force-calculation-review.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md) |
+| Reusable yaw-moment sweep report | [`yaw-moment-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/yaw-moment-sweep.md) |
+| Rudder-stock torque sweep report | [`rudder-stock-torque-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-stock-torque-sweep.md) |
+| B1528 static yaw durable report | [`b1528-sirocco-yaw-moment-report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-yaw-moment-report.md) |
+| B1528 generated static Markdown report | [`b1528_sirocco_yaw_moment_report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.md) |
+| B1528 generated static HTML report | [`b1528_sirocco_yaw_moment_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html) |
+| B1528 time-trace durable report | [`b1528-sirocco-time-trace-report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md) |
+| B1528 generated time-trace Markdown report | [`b1528_sirocco_time_trace_report.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md) |
+| B1528 generated time-trace HTML report | [`b1528_sirocco_time_trace_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html) |
+| Passing-ship benchmark HTML report | [`benchmark_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/passing_ship/wang_benchmark/benchmark_report.html) |
 
 ## Associated Calculations
 
@@ -198,6 +213,22 @@ digitalmodel_static_yaw:
 M_z = x_rudder_from_cg_m * transverse_force_N
 ```
 
+`Cr` is the legacy workbook propeller-rotation correction multiplier. It is
+selected by the workbook rotation case before the force is decomposed into
+`Ft` and `Fn`:
+
+- port rotation case: `Cr=1.065`, which increases the workbook base force by
+  6.5%;
+- starboard rotation case: `Cr=0.935`, which reduces the workbook base force by
+  6.5%;
+- non-rotating propeller, or no propeller-rotation correction: `Cr=1.0`.
+
+The logic is that the side-dependent values reproduce the workbook's empirical
+allowance for propeller/rudder inflow asymmetry. With no propeller rotation,
+there is no rotation correction to apply, so `Cr=1.0` is the neutral multiplier.
+This neutral value does not model locked or freewheeling propeller drag/wake
+effects; those require a separate propeller/wake/slipstream model.
+
 The workbook text mentions `Ft`, but the evaluated yaw-moment cell uses `Fn`.
 The code records that distinction as provenance rather than silently blending
 the two methods.
@@ -243,6 +274,10 @@ y_dot = U * sin(psi)
 The rudder force and yaw moment are diagnostic only in this time-trace mode.
 They are not fed back into `r_dot`, which avoids double-counting direct moment
 balance and Nomoto `K/T` response in a preliminary model.
+
+The time-trace workflow does not apply workbook `Cr`; it uses the reusable
+digitalmodel static-yaw rudder-force diagnostic rather than the legacy workbook
+regression formula.
 
 Current packaged defaults:
 
@@ -296,6 +331,10 @@ sway  = (2/3) * rho * U^2 * A1 * A2 * integral(F)
 yaw   = (2/3) * rho * U^2 * A1 * A2 * integral(eta * F)
 ```
 
+Workbook `Cr` is not used in this passing-ship calculation. `Cr` is only a
+propeller-rotation multiplier in the B1528 static workbook-regression rudder
+force formula.
+
 There is a coordinate convention difference that matters if the passing-ship
 loads are compared against the rudder-yaw family:
 
@@ -306,31 +345,52 @@ loads are compared against the rudder-yaw family:
 The passing-ship calculation is adjacent hydrodynamics work, but it is not part
 of the rudder-force/yaw-moment/stock-torque chain.
 
+## Charts and Sample Verification Points
+
+The detailed report pages linked above include the chart inventory for each
+workflow. Where generated output exists in this repository, the HTML reports add
+interactive Plotly charts and a highlighted sample point for visual checking.
+
+| Calculation | Chart/report reference | Sample point |
+|---|---|---|
+| Rudder normal force | Used by [`yaw-moment-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/yaw-moment-sweep.md) and [`rudder-stock-torque-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-stock-torque-sweep.md). | `V=5.0 m/s`, `rho=1025 kg/m^3`, `area=20.0 m^2`, `span=5.0 m`, `delta=+10 deg`, `behind_hull=false` gives `F_N=97417.403 N`. |
+| Reusable yaw moment | [`yaw-moment-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/yaw-moment-sweep.md) lists yaw moment vs angle, yaw moment vs speed, transverse force, and heatmap charts. | With the normal-force sample and `x_R=-45.0 m`, port force mapping gives `M_z=-4383.783 kN*m`. |
+| Rudder-stock torque | [`rudder-stock-torque-sweep.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-stock-torque-sweep.md) lists torque vs angle, torque vs speed, scalar normal force, and heatmap charts. | With the normal-force sample and stock arm `0.75 m`, `T_stock=73.063 kN*m` and `T_holding=-73.063 kN*m`. |
+| B1528 static yaw | Generated HTML: [`b1528_sirocco_yaw_moment_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/b1528_sirocco_yaw_moment_report.html). | `workbook_regression`, `2.5 kn`, `+1 deg`, port `Cr=1.065`: `F=47498.422 N`, `Fn=828.962 N`, `M_z=112.158527 kN*m`. |
+| B1528 time trace | Generated HTML: [`b1528_sirocco_time_trace_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html). | Positive-rudder first step: `alpha_R=1.000000 deg`, `r_dot=0.0000057120 rad/s^2`, yaw rate after `1 s` is `0.000327273 deg/s`. |
+| Passing-ship force | Benchmark HTML: [`benchmark_report.html`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/passing_ship/wang_benchmark/benchmark_report.html). | Basic template at separation `40 m`, stagger `75 m`, velocity `5 m/s` gives surge `98219.321 N`, sway `-70399.784 N`, yaw `-4289.950 kN*m`. |
+
 ## Review Findings
 
 1. The reusable rudder chain is internally traceable: normal force -> transverse
    force -> yaw moment -> stock torque. Output metadata records units and
    limitations.
-2. B1528 #2570 correctly separates workbook-regression outputs from reusable
+2. [B1528 #2570](https://github.com/vamseeachanta/workspace-hub/issues/2570)
+   correctly separates workbook-regression outputs from reusable
    digitalmodel yaw outputs. This separation is necessary because the workbook
    regression uses `beta`, prop-rotation factor, `Fn`, and `0.6*LBP`, while the
    reusable digitalmodel calculation uses the Whicker/Fehlner-style rudder force
    helper and an explicit CG lever arm.
-3. B1528 #2571 correctly treats rudder force/yaw moment as diagnostics in the
+3. [B1528 #2571](https://github.com/vamseeachanta/workspace-hub/issues/2571)
+   correctly treats rudder force/yaw moment as diagnostics in the
    Nomoto time trace. Feeding those moments back into the yaw-rate equation would
    double-count the steering response unless the model were rebuilt as a direct
    moment-balance/MMG model.
-4. #2567 correctly holds standards-backed rudder-stock design checks out of the
-   preliminary #2565 torque envelope. The current torque result is an input to
+4. [#2567](https://github.com/vamseeachanta/workspace-hub/issues/2567)
+   correctly holds standards-backed rudder-stock design checks out of the
+   preliminary [#2565](https://github.com/vamseeachanta/workspace-hub/issues/2565)
+   torque envelope. The current torque result is an input to
    later design checks, not a compliance answer.
-5. #2568 should not be treated as an implemented reusable turning-circle module
+5. [#2568](https://github.com/vamseeachanta/workspace-hub/issues/2568)
+   should not be treated as an implemented reusable turning-circle module
    in this checkout. The issue history records unresolved plan-review blockers,
    and the local worktree contains an untracked `tests/naval_architecture/test_turning_circle_estimator.py`
    but no tracked `src/digitalmodel/naval_architecture/turning_circle.py`.
 6. The largest integration risk is sign convention mixing. Rudder/yaw uses `+y`
    port; passing-ship uses `+y` starboard. Any combined report must include an
    explicit force/moment mapping table.
-7. The second largest technical gap is hydrodynamic interaction. The #2564/#2565
+7. The second largest technical gap is hydrodynamic interaction. The
+   [#2564](https://github.com/vamseeachanta/workspace-hub/issues/2564)/[#2565](https://github.com/vamseeachanta/workspace-hub/issues/2565)
    chain excludes propeller slipstream, hull interaction amplification, drift,
    yaw inertia, MMG derivatives, and environmental loads.
 

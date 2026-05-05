@@ -11,6 +11,15 @@
     "scope": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
     "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
     "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+    "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply Cr because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression.",
+    "traceability_links": {
+      "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+      "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+      "time_trace_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2571",
+      "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
+      "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+      "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html"
+    },
     "nomoto": {
       "K_per_s": 0.018,
       "T_s": 55.0,
@@ -31,6 +40,15 @@
         "scope": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
         "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
         "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+        "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply Cr because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression.",
+        "traceability_links": {
+          "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+          "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+          "time_trace_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2571",
+          "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
+          "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+          "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html"
+        },
         "nomoto": {
           "K_per_s": 0.018,
           "T_s": 55.0,
@@ -8483,6 +8501,15 @@
         "scope": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
         "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
         "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+        "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply Cr because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression.",
+        "traceability_links": {
+          "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+          "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+          "time_trace_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2571",
+          "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
+          "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+          "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html"
+        },
         "nomoto": {
           "K_per_s": 0.018,
           "T_s": 55.0,
@@ -16935,6 +16962,15 @@
         "scope": "preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion",
         "method": "v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)",
         "diagnostic_boundary": "rudder force and yaw moment are diagnostic only and are not fed back into r_dot",
+        "prop_rotation_factor_note": "Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply Cr because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression.",
+        "traceability_links": {
+          "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+          "static_yaw_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2570",
+          "time_trace_report_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2571",
+          "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
+          "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
+          "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html"
+        },
         "nomoto": {
           "K_per_s": 0.018,
           "T_s": 55.0,
@@ -25380,5 +25416,20 @@
     "classification": "narrative_benchmark_not_instrumented_validation_dataset",
     "source": "docs/projects/acma/B1528/sirocco-turning-benchmark.yaml",
     "summary": "Extracted heading/SOG narrative anchors have no x/y coordinates and include tug/current/anchor effects; this report therefore shows source-gap/sensitivity context rather than fabricated trajectory overlay."
+  },
+  "sample_working_example": {
+    "data_point": "positive_rudder first time step",
+    "scenario_id": "positive_rudder",
+    "sample_time_s": 1.0,
+    "sample_dt_s": 1.0,
+    "initial_local_speed_m_s": 1.2861,
+    "initial_effective_rudder_angle_deg": 1.0,
+    "initial_effective_rudder_angle_rad": 0.017453292519943295,
+    "nomoto_k_per_s": 0.018,
+    "nomoto_t_s": 55.0,
+    "initial_r_dot_rad_s2": 5.7119866428905325e-06,
+    "calculated_yaw_rate_deg_s": 0.00032727272727272726,
+    "reported_yaw_rate_deg_s": 0.00032727272727272726,
+    "initial_diagnostic_yaw_moment_kN_m": -339.51331549587866
   }
 }

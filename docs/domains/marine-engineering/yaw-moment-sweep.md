@@ -1,11 +1,22 @@
 # Yaw moment sweep for a typical ship
 
-Issue: workspace-hub #2564
+Issue: [workspace-hub #2564](https://github.com/vamseeachanta/workspace-hub/issues/2564)
 
 This workflow evaluates preliminary rudder-induced yaw moment about the vessel
 CG over a grid of forward speeds and rudder angles. It is a first-cut lever-arm
 calculation, not a full MMG model, IMO maneuverability prediction, class-rule
 calculation, or dynamic yaw-response simulation.
+
+## Traceability links
+
+| Item | GitHub link |
+|---|---|
+| Yaw-moment issue | [workspace-hub #2564](https://github.com/vamseeachanta/workspace-hub/issues/2564) |
+| Calculation source | [`yaw_moment.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/yaw_moment.py) |
+| Rudder force source | [`maneuverability.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/maneuverability.py) |
+| Packaged input YAML | [`yaw_moment_typical_ship.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/yaw_moment_typical_ship.yml) |
+| Validation tests | [`test_yaw_moment_sweep.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/tests/naval_architecture/test_yaw_moment_sweep.py) |
+| Master calculation review | [`rudder-and-ship-force-calculation-review.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md) |
 
 ## Packaged input
 
@@ -51,6 +62,37 @@ makes the force-direction mapping explicit with `positive_force_direction`:
 
 - `port`: positive scalar normal force is reported as positive transverse force.
 - `starboard`: positive scalar normal force is mapped to negative transverse force.
+
+## Propeller rotation factor `Cr`
+
+The reusable yaw-moment sweep does not use the B1528 workbook propeller rotation
+factor `Cr`. `Cr` belongs to the legacy workbook-regression formula
+`F = beta * AR * V^2 * Cr`, not to the Whicker/Fehlner-style rudder normal-force
+helper used here. If that legacy workbook formula is run for a non-rotating
+propeller, the neutral value is `Cr=1.0`.
+
+## Sample working example
+
+For a visual and arithmetic check, use:
+
+```text
+V = 5.0 m/s
+rho = 1025 kg/m^3
+rudder area = 20.0 m^2
+rudder span = 5.0 m
+rudder angle = +10 deg
+behind_hull = false
+x_rudder_from_cg = -45.0 m
+positive_force_direction = port
+
+scalar normal force = 97417.403 N
+transverse force = 97417.403 N
+Mz = -45.0 * 97417.403 = -4383783.130 N*m = -4383.783 kN*m
+```
+
+The generated yaw-moment charts should show the `+10 deg`, `5 m/s` equivalent
+point on the negative yaw-moment side for a stern rudder with the stated sign
+convention.
 
 ## Outputs
 
