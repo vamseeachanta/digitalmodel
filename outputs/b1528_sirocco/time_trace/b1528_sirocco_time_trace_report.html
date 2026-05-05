@@ -87,6 +87,75 @@ ul {
   border-radius: 6px;
   padding: 16px 18px;
 }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 22px;
+  font-size: 0.94rem;
+}
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.data-table th {
+  width: 32%;
+  color: var(--muted);
+  font-weight: 700;
+}
+.diagram-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.schematic {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+.schematic svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.schematic text {
+  fill: var(--ink);
+  font-family: Aptos, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}
+.schematic .small-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+figcaption {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-top: 8px;
+}
+.method-block {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #243246;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.86rem;
+  overflow-x: auto;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+}
+.method-list,
+.reference-list {
+  padding-left: 1.3rem;
+}
+.method-list li,
+.reference-list li {
+  margin: 6px 0;
+}
 @media (max-width: 760px) {
   .report-shell {
     width: min(100% - 28px, 1180px);
@@ -97,6 +166,7 @@ ul {
   }
   h1 { font-size: 1.7rem; }
   .chart { height: 380px; }
+  .diagram-grid { grid-template-columns: 1fr; }
 }
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
@@ -117,6 +187,9 @@ ul {
   .chart {
     height: 360px;
     margin: 12px 0 22px;
+  }
+  .diagram-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
@@ -140,6 +213,106 @@ ul {
 <li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md">generated Markdown report on GitHub</a></li>
 </ul>
 </section>
+<section class="report-section">
+<h2>Design data</h2>
+<table class="data-table">
+<tbody>
+<tr><th>Case ID</th><td>b1528_sirocco_time_trace</td></tr>
+<tr><th>LBP</th><td>225.500 m</td></tr>
+<tr><th>Rudder x from CG</th><td>-135.300 m</td></tr>
+<tr><th>Rudder area</th><td>44.939563 m^2</td></tr>
+<tr><th>Rudder span</th><td>9.000 m</td></tr>
+<tr><th>Forward speed</th><td>2.500 kn / 1.28610 m/s</td></tr>
+<tr><th>Rudder command</th><td>1.000 deg</td></tr>
+<tr><th>Duration / time step</th><td>600.0 s / 1.0 s</td></tr>
+<tr><th>Water density</th><td>1025.0 kg/m^3</td></tr>
+<tr><th>Nomoto K / T</th><td>0.018000 1/s / 55.000 s</td></tr>
+<tr><th>Propeller rotation factor</th><td>Cr = 1.0</td></tr>
+<tr><th>Sign convention</th><td>vessel-fixed x positive forward from CG; y positive port; rudder x is negative/aft</td></tr>
+</tbody>
+</table>
+
+<div class="diagram-grid">
+  <figure class="schematic">
+    <svg viewBox="0 0 620 310" role="img" aria-label="Vessel plan-view geometry schematic">
+      <defs>
+        <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#155e95" />
+        </marker>
+        <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#64748b" />
+        </marker>
+      </defs>
+      <rect x="1" y="1" width="618" height="308" rx="10" fill="#f8fafc" stroke="#d5dde8" />
+      <path d="M96 155 C125 76, 415 76, 535 155 C415 234, 125 234, 96 155 Z" fill="#ffffff" stroke="#155e95" stroke-width="3" />
+      <line x1="80" y1="155" x2="555" y2="155" stroke="#94a3b8" stroke-dasharray="8 6" />
+      <circle cx="310" cy="155" r="8" fill="#155e95" />
+      <text x="310" y="135" text-anchor="middle">CG</text>
+      <line x1="310" y1="155" x2="135" y2="155" stroke="#ef4444" stroke-width="3" marker-end="url(#arrow-gray)" />
+      <rect x="118" y="125" width="12" height="60" fill="#ef4444" />
+      <text x="124" y="112" text-anchor="middle">Rudder</text>
+      <text x="220" y="144" text-anchor="middle">x_R = -135.3 m</text>
+      <line x1="96" y1="258" x2="535" y2="258" stroke="#155e95" stroke-width="2" marker-end="url(#arrow-blue)" marker-start="url(#arrow-blue)" />
+      <line x1="96" y1="238" x2="96" y2="270" stroke="#155e95" />
+      <line x1="535" y1="238" x2="535" y2="270" stroke="#155e95" />
+      <text x="316" y="286" text-anchor="middle">LBP = 225.5 m</text>
+      <line x1="310" y1="155" x2="420" y2="155" stroke="#155e95" stroke-width="3" marker-end="url(#arrow-blue)" />
+      <text x="424" y="146">+x forward</text>
+      <line x1="310" y1="155" x2="310" y2="92" stroke="#155e95" stroke-width="3" marker-end="url(#arrow-blue)" />
+      <text x="320" y="91">+y port</text>
+      <text x="104" y="52">Plan-view geometry schematic</text>
+      <text x="104" y="72" class="small-label">Schematic only; not a scaled hull drawing.</text>
+    </svg>
+    <figcaption>Vessel-fixed geometry convention used by the time-trace calculation.</figcaption>
+  </figure>
+  <figure class="schematic">
+    <svg viewBox="0 0 620 310" role="img" aria-label="Rudder local inflow and diagnostic force schematic">
+      <defs>
+        <marker id="arrow-blue-inflow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#155e95" />
+        </marker>
+        <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#0f766e" />
+        </marker>
+        <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#dc2626" />
+        </marker>
+      </defs>
+      <rect x="1" y="1" width="618" height="308" rx="10" fill="#f8fafc" stroke="#d5dde8" />
+      <line x1="95" y1="178" x2="520" y2="178" stroke="#94a3b8" stroke-dasharray="8 6" />
+      <line x1="220" y1="218" x2="432" y2="128" stroke="#0f766e" stroke-width="4" marker-end="url(#arrow-green)" />
+      <line x1="220" y1="218" x2="432" y2="218" stroke="#155e95" stroke-width="3" marker-end="url(#arrow-blue-inflow)" />
+      <line x1="220" y1="218" x2="220" y2="128" stroke="#155e95" stroke-width="3" marker-end="url(#arrow-blue-inflow)" />
+      <line x1="425" y1="103" x2="445" y2="253" stroke="#111827" stroke-width="7" />
+      <line x1="430" y1="178" x2="430" y2="83" stroke="#dc2626" stroke-width="3" marker-end="url(#arrow-red)" />
+      <path d="M280 218 A82 82 0 0 1 303 165" fill="none" stroke="#0f766e" stroke-width="2" />
+      <text x="305" y="193">beta_R</text>
+      <text x="335" y="111">U_R</text>
+      <text x="330" y="238">U = 1.2861 m/s</text>
+      <text x="125" y="148">v_R = x_R r</text>
+      <text x="450" y="82">diagnostic F_y</text>
+      <text x="454" y="155">delta = 1.0 deg</text>
+      <text x="91" y="52">Rudder-local inflow and diagnostic force convention</text>
+      <text x="91" y="72" class="small-label">alpha_R = delta - beta_R; yaw moment is reported but not fed back into r_dot.</text>
+      <text x="92" y="286">Cr = 1.0; neutral no-rotation correction multiplier.</text>
+    </svg>
+    <figcaption>Rudder-local velocity, effective angle, and diagnostic yaw moment boundary.</figcaption>
+  </figure>
+</div>
+</section>
+<section class="report-section">
+<h2>Analysis methodology and assumptions</h2>
+<p>The calculation sequence follows the source-gap preliminary Nomoto workflow below. Rudder force and yaw moment are reported as diagnostics and are not fed back into the Nomoto yaw-rate state.</p>
+<pre class="method-block">v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)</pre>
+<ul class="method-list">
+<li>First-order Nomoto yaw-rate model is used for preliminary source-gap sensitivity only.</li>
+<li>Nomoto K/T values are assumed and are not calibrated B1528 telemetry evidence.</li>
+<li>Rudder-local inflow feedback changes diagnostic alpha_R and U_R.</li>
+<li>Rudder force and yaw moment are diagnostic only and are not fed back into r_dot.</li>
+<li>Cr=1.0 is used as the neutral non-rotating/no workbook propeller-rotation correction multiplier.</li>
+<li>Benchmark source data are narrative anchors, not instrumented x/y trajectory data.</li>
+</ul>
+</section>
 <section class="report-section note-panel">
 <h2>Propeller rotation factor Cr</h2>
 <p>Cr is the legacy workbook propeller-rotation correction multiplier in F = beta * AR * V^2 * Cr. In the B1528 workbook-regression rows, port uses Cr=1.065 and starboard uses Cr=0.935 because the workbook applies a side-dependent empirical allowance for propeller/rudder inflow asymmetry. If the propeller is not rotating, or if the calculation intentionally excludes propeller-rotation correction, use Cr=1.0 so the base force is not amplified or reduced. This neutral Cr value does not model locked or freewheeling propeller drag/wake effects. This time-trace report does not apply workbook side-dependent Cr values because its rudder diagnostics use the reusable digitalmodel static-yaw force model, not the legacy workbook regression. The reported time-trace diagnostic rows therefore carry Cr=1.0 as the neutral non-rotating/no-rotation-correction multiplier.</p>
@@ -159,6 +332,20 @@ ul {
 <section id="benchmark-source-gap" class="report-section source-gap"></section>
 <section class="report-section">
 <div id="sample-chart" class="chart"></div>
+</section>
+<section class="report-section">
+<h2>References</h2>
+<ol class="reference-list">
+<li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2569">Source pack issue</a></li>
+<li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2570">Static yaw report issue</a></li>
+<li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2571">Time-trace report issue</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_time_trace.yml">Packaged input YAML</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_time_trace.py">Report generator</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md">Durable report page</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md">Master calculation review</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md">Generated Markdown report</a></li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html">Generated HTML report</a></li>
+</ol>
 </section>
 </article>
 </main>

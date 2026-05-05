@@ -92,6 +92,14 @@ def test_report_contains_interactive_charts(tmp_path):
     assert "const STANDARD_CHART_HEIGHT = 430" in html
     assert "const CHART_CONFIG = {responsive: true, displaylogo: false}" in html
     assert "margin: {l: 72, r: 36, t: 64, b: 60}" in html
+    assert "Design data" in html
+    assert "Analysis methodology and assumptions" in html
+    assert "References" in html
+    assert "Vessel plan-view geometry schematic" in html
+    assert "Rudder-local inflow and diagnostic force convention" in html
+    assert "LBP = 225.5 m" in html
+    assert "Rudder x from CG" in html
+    assert "not fed back into the Nomoto yaw-rate state" in html
     assert "Plotly.newPlot('trajectory-chart'" in html
     assert "Plotly.newPlot('heading-chart'" in html
     assert "Heading angle vs time" in html
@@ -109,6 +117,9 @@ def test_report_contains_interactive_charts(tmp_path):
     assert "Cr=1.0" in report
     assert "neutral time-trace diagnostic value" in report
     assert "Sample working example" in report
+    assert "Design data" in report
+    assert "Analysis methodology and assumptions" in report
+    assert "References" in report
     assert "rudder-local inflow feedback" in report
     assert "diagnostic only" in report
     assert "source-gap" in report
@@ -118,6 +129,9 @@ def test_report_contains_interactive_charts(tmp_path):
     assert "traceability_links" in payload
     parsed = json.loads(payload)
     assert parsed["metadata"]["prop_rotation_factor"] == pytest.approx(1.0)
+    assert parsed["metadata"]["design_data"]["lbp_m"] == pytest.approx(225.5)
+    assert parsed["metadata"]["design_data"]["rudder_x_from_cg_m"] == pytest.approx(-135.3)
+    assert "analysis_assumptions" in parsed["metadata"]
     first_row = parsed["runs"][0]["rows"][0]
     assert first_row["prop_rotation_factor"] == pytest.approx(1.0)
     assert parsed["sample_working_example"]["prop_rotation_factor"] == pytest.approx(1.0)

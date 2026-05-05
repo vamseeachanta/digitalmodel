@@ -322,6 +322,31 @@ def _metadata(cfg: B1528TimeTraceConfig) -> dict[str, Any]:
         "prop_rotation_factor_note": TIME_TRACE_CR_NOTE,
         "prop_rotation_factor": NON_ROTATING_PROPELLER_CR,
         "prop_rotation_factor_basis": TIME_TRACE_CR_BASIS,
+        "design_data": {
+            "case_id": cfg.case_id,
+            "lbp_m": cfg.lbp_m,
+            "rudder_x_from_cg_m": cfg.rudder_x_from_cg_m,
+            "rudder_area_m2": cfg.rudder_area_m2,
+            "rudder_span_m": cfg.rudder_span_m,
+            "speed_kn": cfg.speed_kn,
+            "speed_m_s": cfg.speed_m_s,
+            "rudder_angle_deg": cfg.rudder_angle_deg,
+            "duration_s": cfg.duration_s,
+            "dt_s": cfg.dt_s,
+            "rho_kg_m3": cfg.rho_kg_m3,
+            "nomoto_k_per_s": cfg.nomoto_k_per_s,
+            "nomoto_t_s": cfg.nomoto_t_s,
+            "prop_rotation_factor": NON_ROTATING_PROPELLER_CR,
+            "sign_convention": "vessel-fixed x positive forward from CG; y positive port; rudder x is negative/aft",
+        },
+        "analysis_assumptions": [
+            "First-order Nomoto yaw-rate model is used for preliminary source-gap sensitivity only.",
+            "Nomoto K/T values are assumed and are not calibrated B1528 telemetry evidence.",
+            "Rudder-local inflow feedback changes diagnostic alpha_R and U_R.",
+            "Rudder force and yaw moment are diagnostic only and are not fed back into r_dot.",
+            "Cr=1.0 is used as the neutral non-rotating/no workbook propeller-rotation correction multiplier.",
+            "Benchmark source data are narrative anchors, not instrumented x/y trajectory data.",
+        ],
         "traceability_links": {
             "source_pack_issue": f"{WORKSPACE_HUB_ISSUES}/2569",
             "static_yaw_report_issue": f"{WORKSPACE_HUB_ISSUES}/2570",
@@ -329,6 +354,9 @@ def _metadata(cfg: B1528TimeTraceConfig) -> dict[str, Any]:
             "durable_report": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md",
             "generated_markdown_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md",
             "generated_html_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html",
+            "packaged_input_yaml": f"{GITHUB_REPO_BLOB}/src/digitalmodel/naval_architecture/data/b1528_sirocco_time_trace.yml",
+            "report_generator": f"{GITHUB_REPO_BLOB}/src/digitalmodel/naval_architecture/b1528_sirocco_time_trace.py",
+            "master_calculation_review": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md",
         },
         "nomoto": {"K_per_s": cfg.nomoto_k_per_s, "T_s": cfg.nomoto_t_s, "calibration": "assumed_source_gap_sensitivity"},
     }
@@ -349,6 +377,8 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
         "static_report_issue": result["metadata"]["static_report_issue"],
         "formula_boundary": result["metadata"]["method"],
         "diagnostic_boundary": result["metadata"]["diagnostic_boundary"],
+        "design_data": result["metadata"]["design_data"],
+        "analysis_assumptions": result["metadata"]["analysis_assumptions"],
         "prop_rotation_factor_note": result["metadata"]["prop_rotation_factor_note"],
         "traceability_links": result["metadata"]["traceability_links"],
         "sample_working_example": result["sample_working_example"],
@@ -357,9 +387,155 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _design_data_rows(design: dict[str, Any]) -> list[tuple[str, str]]:
+    return [
+        ("Case ID", str(design["case_id"])),
+        ("LBP", f"{design['lbp_m']:.3f} m"),
+        ("Rudder x from CG", f"{design['rudder_x_from_cg_m']:.3f} m"),
+        ("Rudder area", f"{design['rudder_area_m2']:.6f} m^2"),
+        ("Rudder span", f"{design['rudder_span_m']:.3f} m"),
+        ("Forward speed", f"{design['speed_kn']:.3f} kn / {design['speed_m_s']:.5f} m/s"),
+        ("Rudder command", f"{design['rudder_angle_deg']:.3f} deg"),
+        ("Duration / time step", f"{design['duration_s']:.1f} s / {design['dt_s']:.1f} s"),
+        ("Water density", f"{design['rho_kg_m3']:.1f} kg/m^3"),
+        ("Nomoto K / T", f"{design['nomoto_k_per_s']:.6f} 1/s / {design['nomoto_t_s']:.3f} s"),
+        ("Propeller rotation factor", f"Cr = {design['prop_rotation_factor']:.1f}"),
+        ("Sign convention", design["sign_convention"]),
+    ]
+
+
+def _design_data_markdown(design: dict[str, Any]) -> list[str]:
+    rows = ["| Item | Value |", "|---|---:|"]
+    for label, value in _design_data_rows(design):
+        rows.append(f"| {label} | `{value}` |")
+    return rows
+
+
+def _assumptions_markdown(assumptions: list[str]) -> list[str]:
+    return [f"- {item}" for item in assumptions]
+
+
+def _references_markdown(links: dict[str, str]) -> list[str]:
+    return [
+        f"- Source pack issue: [workspace-hub #2569]({links['source_pack_issue']})",
+        f"- Static yaw report issue: [workspace-hub #2570]({links['static_yaw_report_issue']})",
+        f"- Time-trace report issue: [workspace-hub #2571]({links['time_trace_report_issue']})",
+        f"- Packaged input YAML: [b1528_sirocco_time_trace.yml]({links['packaged_input_yaml']})",
+        f"- Report generator: [b1528_sirocco_time_trace.py]({links['report_generator']})",
+        f"- Durable report page: [b1528-sirocco-time-trace-report.md]({links['durable_report']})",
+        f"- Master calculation review: [rudder-and-ship-force-calculation-review.md]({links['master_calculation_review']})",
+        f"- Generated HTML report: [b1528_sirocco_time_trace_report.html]({links['generated_html_report']})",
+    ]
+
+
+def _design_data_table_html(design: dict[str, Any]) -> str:
+    rows = "\n".join(
+        f"<tr><th>{label}</th><td>{value}</td></tr>"
+        for label, value in _design_data_rows(design)
+    )
+    return f"""<table class=\"data-table\">
+<tbody>
+{rows}
+</tbody>
+</table>"""
+
+
+def _engineering_schematics_html(design: dict[str, Any]) -> str:
+    return f"""
+<div class=\"diagram-grid\">
+  <figure class=\"schematic\">
+    <svg viewBox=\"0 0 620 310\" role=\"img\" aria-label=\"Vessel plan-view geometry schematic\">
+      <defs>
+        <marker id=\"arrow-blue\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\">
+          <path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#155e95\" />
+        </marker>
+        <marker id=\"arrow-gray\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\">
+          <path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#64748b\" />
+        </marker>
+      </defs>
+      <rect x=\"1\" y=\"1\" width=\"618\" height=\"308\" rx=\"10\" fill=\"#f8fafc\" stroke=\"#d5dde8\" />
+      <path d=\"M96 155 C125 76, 415 76, 535 155 C415 234, 125 234, 96 155 Z\" fill=\"#ffffff\" stroke=\"#155e95\" stroke-width=\"3\" />
+      <line x1=\"80\" y1=\"155\" x2=\"555\" y2=\"155\" stroke=\"#94a3b8\" stroke-dasharray=\"8 6\" />
+      <circle cx=\"310\" cy=\"155\" r=\"8\" fill=\"#155e95\" />
+      <text x=\"310\" y=\"135\" text-anchor=\"middle\">CG</text>
+      <line x1=\"310\" y1=\"155\" x2=\"135\" y2=\"155\" stroke=\"#ef4444\" stroke-width=\"3\" marker-end=\"url(#arrow-gray)\" />
+      <rect x=\"118\" y=\"125\" width=\"12\" height=\"60\" fill=\"#ef4444\" />
+      <text x=\"124\" y=\"112\" text-anchor=\"middle\">Rudder</text>
+      <text x=\"220\" y=\"144\" text-anchor=\"middle\">x_R = {design['rudder_x_from_cg_m']:.1f} m</text>
+      <line x1=\"96\" y1=\"258\" x2=\"535\" y2=\"258\" stroke=\"#155e95\" stroke-width=\"2\" marker-end=\"url(#arrow-blue)\" marker-start=\"url(#arrow-blue)\" />
+      <line x1=\"96\" y1=\"238\" x2=\"96\" y2=\"270\" stroke=\"#155e95\" />
+      <line x1=\"535\" y1=\"238\" x2=\"535\" y2=\"270\" stroke=\"#155e95\" />
+      <text x=\"316\" y=\"286\" text-anchor=\"middle\">LBP = {design['lbp_m']:.1f} m</text>
+      <line x1=\"310\" y1=\"155\" x2=\"420\" y2=\"155\" stroke=\"#155e95\" stroke-width=\"3\" marker-end=\"url(#arrow-blue)\" />
+      <text x=\"424\" y=\"146\">+x forward</text>
+      <line x1=\"310\" y1=\"155\" x2=\"310\" y2=\"92\" stroke=\"#155e95\" stroke-width=\"3\" marker-end=\"url(#arrow-blue)\" />
+      <text x=\"320\" y=\"91\">+y port</text>
+      <text x=\"104\" y=\"52\">Plan-view geometry schematic</text>
+      <text x=\"104\" y=\"72\" class=\"small-label\">Schematic only; not a scaled hull drawing.</text>
+    </svg>
+    <figcaption>Vessel-fixed geometry convention used by the time-trace calculation.</figcaption>
+  </figure>
+  <figure class=\"schematic\">
+    <svg viewBox=\"0 0 620 310\" role=\"img\" aria-label=\"Rudder local inflow and diagnostic force schematic\">
+      <defs>
+        <marker id=\"arrow-blue-inflow\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\">
+          <path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#155e95\" />
+        </marker>
+        <marker id=\"arrow-green\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\">
+          <path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#0f766e\" />
+        </marker>
+        <marker id=\"arrow-red\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"5\" orient=\"auto\">
+          <path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#dc2626\" />
+        </marker>
+      </defs>
+      <rect x=\"1\" y=\"1\" width=\"618\" height=\"308\" rx=\"10\" fill=\"#f8fafc\" stroke=\"#d5dde8\" />
+      <line x1=\"95\" y1=\"178\" x2=\"520\" y2=\"178\" stroke=\"#94a3b8\" stroke-dasharray=\"8 6\" />
+      <line x1=\"220\" y1=\"218\" x2=\"432\" y2=\"128\" stroke=\"#0f766e\" stroke-width=\"4\" marker-end=\"url(#arrow-green)\" />
+      <line x1=\"220\" y1=\"218\" x2=\"432\" y2=\"218\" stroke=\"#155e95\" stroke-width=\"3\" marker-end=\"url(#arrow-blue-inflow)\" />
+      <line x1=\"220\" y1=\"218\" x2=\"220\" y2=\"128\" stroke=\"#155e95\" stroke-width=\"3\" marker-end=\"url(#arrow-blue-inflow)\" />
+      <line x1=\"425\" y1=\"103\" x2=\"445\" y2=\"253\" stroke=\"#111827\" stroke-width=\"7\" />
+      <line x1=\"430\" y1=\"178\" x2=\"430\" y2=\"83\" stroke=\"#dc2626\" stroke-width=\"3\" marker-end=\"url(#arrow-red)\" />
+      <path d=\"M280 218 A82 82 0 0 1 303 165\" fill=\"none\" stroke=\"#0f766e\" stroke-width=\"2\" />
+      <text x=\"305\" y=\"193\">beta_R</text>
+      <text x=\"335\" y=\"111\">U_R</text>
+      <text x=\"330\" y=\"238\">U = {design['speed_m_s']:.4f} m/s</text>
+      <text x=\"125\" y=\"148\">v_R = x_R r</text>
+      <text x=\"450\" y=\"82\">diagnostic F_y</text>
+      <text x=\"454\" y=\"155\">delta = {design['rudder_angle_deg']:.1f} deg</text>
+      <text x=\"91\" y=\"52\">Rudder-local inflow and diagnostic force convention</text>
+      <text x=\"91\" y=\"72\" class=\"small-label\">alpha_R = delta - beta_R; yaw moment is reported but not fed back into r_dot.</text>
+      <text x=\"92\" y=\"286\">Cr = {design['prop_rotation_factor']:.1f}; neutral no-rotation correction multiplier.</text>
+    </svg>
+    <figcaption>Rudder-local velocity, effective angle, and diagnostic yaw moment boundary.</figcaption>
+  </figure>
+</div>"""
+
+
+def _assumptions_html(assumptions: list[str]) -> str:
+    items = "\n".join(f"<li>{item}</li>" for item in assumptions)
+    return f"<ul class=\"method-list\">\n{items}\n</ul>"
+
+
+def _references_html(links: dict[str, str]) -> str:
+    items = [
+        ("Source pack issue", links["source_pack_issue"]),
+        ("Static yaw report issue", links["static_yaw_report_issue"]),
+        ("Time-trace report issue", links["time_trace_report_issue"]),
+        ("Packaged input YAML", links["packaged_input_yaml"]),
+        ("Report generator", links["report_generator"]),
+        ("Durable report page", links["durable_report"]),
+        ("Master calculation review", links["master_calculation_review"]),
+        ("Generated Markdown report", links["generated_markdown_report"]),
+        ("Generated HTML report", links["generated_html_report"]),
+    ]
+    rows = "\n".join(f"<li><a href=\"{href}\">{label}</a></li>" for label, href in items)
+    return f"<ol class=\"reference-list\">\n{rows}\n</ol>"
+
+
 def _markdown_report(result: dict[str, Any]) -> str:
     sample = result["sample_working_example"]
     links = result["metadata"]["traceability_links"]
+    design = result["metadata"]["design_data"]
     metric_lines = ["| Scenario | Final heading (deg) | Final yaw rate (deg/s) | Advance (m) | Tactical diameter proxy (m) |", "|---|---:|---:|---:|---:|"]
     for run in result["runs"]:
         m = run["metrics"]
@@ -381,11 +557,27 @@ def _markdown_report(result: dict[str, Any]) -> str:
             f"- Generated Markdown report: [b1528_sirocco_time_trace_report.md]({links['generated_markdown_report']})",
             f"- Generated HTML report: [b1528_sirocco_time_trace_report.html]({links['generated_html_report']})",
             "",
+            "## Design data",
+            "",
+            *_design_data_markdown(design),
+            "",
+            "The HTML/PDF report includes schematic figures for vessel-fixed geometry and rudder-local inflow/diagnostic force convention.",
+            "",
             "## Method boundary",
             "",
             result["metadata"]["scope"],
             "",
             "The yaw-rate equation is Nomoto-driven. Rudder force and yaw moment are diagnostic only and are not fed back into `r_dot`, avoiding double-counting of Nomoto `K/T` and direct moment balance.",
+            "",
+            "## Analysis methodology and assumptions",
+            "",
+            "Calculation sequence:",
+            "",
+            "```text",
+            result["metadata"]["method"],
+            "```",
+            "",
+            *_assumptions_markdown(result["metadata"]["analysis_assumptions"]),
             "",
             "## Propeller rotation factor Cr",
             "",
@@ -413,6 +605,10 @@ def _markdown_report(result: dict[str, Any]) -> str:
             "",
             f"`{result['benchmark']['panel_id']}`: {result['benchmark']['summary']}",
             "",
+            "## References",
+            "",
+            *_references_markdown(links),
+            "",
             "## Interactive charts",
             "",
             "Open `b1528_sirocco_time_trace_report.html` for trajectory, heading, yaw-rate, effective rudder angle, yaw moment, benchmark-source-gap, and sample-verification panels.",
@@ -423,6 +619,11 @@ def _markdown_report(result: dict[str, Any]) -> str:
 def _html_report(result: dict[str, Any]) -> str:
     sample = result["sample_working_example"]
     links = result["metadata"]["traceability_links"]
+    design = result["metadata"]["design_data"]
+    design_table_html = _design_data_table_html(design)
+    schematics_html = _engineering_schematics_html(design)
+    assumptions_html = _assumptions_html(result["metadata"]["analysis_assumptions"])
+    references_html = _references_html(links)
     rows_json = json.dumps(
         [
             {"scenario_id": run["scenario_id"], **row}
@@ -521,6 +722,75 @@ ul {{
   border-radius: 6px;
   padding: 16px 18px;
 }}
+.data-table {{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 22px;
+  font-size: 0.94rem;
+}}
+.data-table th,
+.data-table td {{
+  border-bottom: 1px solid var(--line);
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
+}}
+.data-table th {{
+  width: 32%;
+  color: var(--muted);
+  font-weight: 700;
+}}
+.diagram-grid {{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}}
+.schematic {{
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}}
+.schematic svg {{
+  display: block;
+  width: 100%;
+  height: auto;
+}}
+.schematic text {{
+  fill: var(--ink);
+  font-family: Aptos, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}}
+.schematic .small-label {{
+  fill: var(--muted);
+  font-size: 12px;
+}}
+figcaption {{
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-top: 8px;
+}}
+.method-block {{
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #243246;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.86rem;
+  overflow-x: auto;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+}}
+.method-list,
+.reference-list {{
+  padding-left: 1.3rem;
+}}
+.method-list li,
+.reference-list li {{
+  margin: 6px 0;
+}}
 @media (max-width: 760px) {{
   .report-shell {{
     width: min(100% - 28px, 1180px);
@@ -531,6 +801,7 @@ ul {{
   }}
   h1 {{ font-size: 1.7rem; }}
   .chart {{ height: 380px; }}
+  .diagram-grid {{ grid-template-columns: 1fr; }}
 }}
 @media print {{
   @page {{ size: A4 landscape; margin: 12mm; }}
@@ -551,6 +822,9 @@ ul {{
   .chart {{
     height: 360px;
     margin: 12px 0 22px;
+  }}
+  .diagram-grid {{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }}
 }}
 </style>
@@ -574,6 +848,17 @@ ul {{
 <li><a href=\"{links['generated_markdown_report']}\">generated Markdown report on GitHub</a></li>
 </ul>
 </section>
+<section class=\"report-section\">
+<h2>Design data</h2>
+{design_table_html}
+{schematics_html}
+</section>
+<section class=\"report-section\">
+<h2>Analysis methodology and assumptions</h2>
+<p>The calculation sequence follows the source-gap preliminary Nomoto workflow below. Rudder force and yaw moment are reported as diagnostics and are not fed back into the Nomoto yaw-rate state.</p>
+<pre class=\"method-block\">{result['metadata']['method']}</pre>
+{assumptions_html}
+</section>
 <section class=\"report-section note-panel\">
 <h2>Propeller rotation factor Cr</h2>
 <p>{result['metadata']['prop_rotation_factor_note']}</p>
@@ -593,6 +878,10 @@ ul {{
 <section id=\"benchmark-source-gap\" class=\"report-section source-gap\"></section>
 <section class=\"report-section\">
 <div id=\"sample-chart\" class=\"chart\"></div>
+</section>
+<section class=\"report-section\">
+<h2>References</h2>
+{references_html}
 </section>
 </article>
 </main>

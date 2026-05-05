@@ -11,11 +11,45 @@ This report supports [workspace-hub #2571](https://github.com/vamseeachanta/work
 - Generated Markdown report: [b1528_sirocco_time_trace_report.md](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.md)
 - Generated HTML report: [b1528_sirocco_time_trace_report.html](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html)
 
+## Design data
+
+| Item | Value |
+|---|---:|
+| Case ID | `b1528_sirocco_time_trace` |
+| LBP | `225.500 m` |
+| Rudder x from CG | `-135.300 m` |
+| Rudder area | `44.939563 m^2` |
+| Rudder span | `9.000 m` |
+| Forward speed | `2.500 kn / 1.28610 m/s` |
+| Rudder command | `1.000 deg` |
+| Duration / time step | `600.0 s / 1.0 s` |
+| Water density | `1025.0 kg/m^3` |
+| Nomoto K / T | `0.018000 1/s / 55.000 s` |
+| Propeller rotation factor | `Cr = 1.0` |
+| Sign convention | `vessel-fixed x positive forward from CG; y positive port; rudder x is negative/aft` |
+
+The HTML/PDF report includes schematic figures for vessel-fixed geometry and rudder-local inflow/diagnostic force convention.
+
 ## Method boundary
 
 preliminary first-order Nomoto time trace with rudder-local inflow diagnostics; rudder force and yaw moment are diagnostic only; source-gap sensitivity mode; not a full MMG simulation; not an incident reconstruction; not an IMO compliance assessment; no class compliance conclusion
 
 The yaw-rate equation is Nomoto-driven. Rudder force and yaw moment are diagnostic only and are not fed back into `r_dot`, avoiding double-counting of Nomoto `K/T` and direct moment balance.
+
+## Analysis methodology and assumptions
+
+Calculation sequence:
+
+```text
+v_R=x_R*r; beta_R=atan2(-x_R*r,U); alpha_R=delta-beta_R; U_R=hypot(U,v_R); r_dot=(K*alpha_R-r)/T; psi_dot=r; x_dot=U*cos(psi); y_dot=U*sin(psi)
+```
+
+- First-order Nomoto yaw-rate model is used for preliminary source-gap sensitivity only.
+- Nomoto K/T values are assumed and are not calibrated B1528 telemetry evidence.
+- Rudder-local inflow feedback changes diagnostic alpha_R and U_R.
+- Rudder force and yaw moment are diagnostic only and are not fed back into r_dot.
+- Cr=1.0 is used as the neutral non-rotating/no workbook propeller-rotation correction multiplier.
+- Benchmark source data are narrative anchors, not instrumented x/y trajectory data.
 
 ## Propeller rotation factor Cr
 
@@ -46,6 +80,17 @@ The HTML report includes a sample-verification chart that highlights this early 
 ## Benchmark source-gap panel
 
 `benchmark-source-gap`: Extracted heading/SOG narrative anchors have no x/y coordinates and include tug/current/anchor effects; this report therefore shows source-gap/sensitivity context rather than fabricated trajectory overlay.
+
+## References
+
+- Source pack issue: [workspace-hub #2569](https://github.com/vamseeachanta/workspace-hub/issues/2569)
+- Static yaw report issue: [workspace-hub #2570](https://github.com/vamseeachanta/workspace-hub/issues/2570)
+- Time-trace report issue: [workspace-hub #2571](https://github.com/vamseeachanta/workspace-hub/issues/2571)
+- Packaged input YAML: [b1528_sirocco_time_trace.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_time_trace.yml)
+- Report generator: [b1528_sirocco_time_trace.py](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_time_trace.py)
+- Durable report page: [b1528-sirocco-time-trace-report.md](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-time-trace-report.md)
+- Master calculation review: [rudder-and-ship-force-calculation-review.md](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md)
+- Generated HTML report: [b1528_sirocco_time_trace_report.html](https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/time_trace/b1528_sirocco_time_trace_report.html)
 
 ## Interactive charts
 
