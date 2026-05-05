@@ -48,6 +48,11 @@ from digitalmodel.naval_architecture.b1528_sirocco_time_trace import (
     simulate_b1528_time_trace,
     write_b1528_time_trace_report,
 )
+from digitalmodel.naval_architecture.b1528_sirocco_moored_current_report import (
+    load_packaged_b1528_moored_current_config,
+    run_b1528_moored_current_report,
+    write_b1528_moored_current_report,
+)
 from digitalmodel.naval_architecture.rudder_stock_torque import (
     load_packaged_rudder_stock_torque_yaml,
     run_rudder_stock_torque_sweep,
@@ -74,6 +79,7 @@ __all__ = [
     "hull_weight_groups",
     "list_ships",
     "load_dimension_template",
+    "load_packaged_b1528_moored_current_config",
     "load_packaged_b1528_time_trace_config",
     "load_packaged_b1528_yaw_config",
     "load_packaged_rudder_stock_torque_yaml",
@@ -89,6 +95,7 @@ __all__ = [
     "rig_type_to_hull_form",
     "rudder_yaw_moment",
     "run_b1528_static_yaw_report",
+    "run_b1528_moored_current_report",
     "run_b1528_time_trace_report",
     "run_rudder_stock_torque_sweep",
     "run_yaw_moment_sweep",
@@ -99,6 +106,7 @@ __all__ = [
     "validate_drilling_rig_hull_form",
     "validate_vessel_entry",
     "write_b1528_static_yaw_report",
+    "write_b1528_moored_current_report",
     "write_b1528_time_trace_report",
     "write_yaw_moment_results",
 ]

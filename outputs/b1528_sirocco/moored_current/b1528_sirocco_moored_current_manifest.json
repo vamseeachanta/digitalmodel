@@ -1,0 +1,8 @@
+{
+  "csv": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_results.csv",
+  "json": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_results.json",
+  "provenance": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_provenance.json",
+  "markdown_report": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_report.md",
+  "html_report": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_report.html",
+  "manifest": "outputs/b1528_sirocco/moored_current/b1528_sirocco_moored_current_manifest.json"
+}
