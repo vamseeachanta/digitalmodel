@@ -85,6 +85,13 @@ def test_report_contains_interactive_charts(tmp_path):
         assert Path(manifest[key]).exists(), key
 
     html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+    assert 'class="report-shell"' in html
+    assert 'class="report-page"' in html
+    assert 'class="chart"' in html
+    assert "@page { size: A4 landscape; margin: 12mm; }" in html
+    assert "const STANDARD_CHART_HEIGHT = 430" in html
+    assert "const CHART_CONFIG = {responsive: true, displaylogo: false}" in html
+    assert "margin: {l: 72, r: 36, t: 64, b: 60}" in html
     assert "Plotly.newPlot('trajectory-chart'" in html
     assert "Plotly.newPlot('heading-chart'" in html
     assert "Heading angle vs time" in html

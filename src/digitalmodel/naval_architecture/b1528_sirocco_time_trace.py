@@ -434,11 +434,137 @@ def _html_report(result: dict[str, Any]) -> str:
     sample_json = json.dumps(sample)
     return f"""<!doctype html>
 <html lang=\"en\">
-<head><meta charset=\"utf-8\"><title>B1528 SIROCCO Time Trace</title><script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script></head>
+<head>
+<meta charset=\"utf-8\">
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+<title>B1528 SIROCCO Time Trace</title>
+<script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script>
+<style>
+:root {{
+  --page-bg: #eef2f7;
+  --paper: #ffffff;
+  --ink: #18212f;
+  --muted: #5d6877;
+  --line: #d5dde8;
+  --accent: #155e95;
+  --accent-soft: #e8f2fb;
+}}
+* {{ box-sizing: border-box; }}
+body {{
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: Aptos, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}}
+a {{ color: var(--accent); }}
+.report-shell {{
+  width: min(1180px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 40px 0 56px;
+}}
+.report-page {{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 40px 48px 48px;
+}}
+.report-header {{
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+}}
+.eyebrow {{
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}}
+h1 {{
+  font-size: 2.1rem;
+  line-height: 1.15;
+  margin: 0 0 12px;
+}}
+h2 {{
+  font-size: 1.25rem;
+  margin: 0 0 12px;
+}}
+p {{ margin: 0 0 12px; }}
+ul {{
+  margin: 0;
+  padding-left: 1.2rem;
+}}
+.report-section {{
+  margin: 30px 0;
+}}
+.note-panel {{
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  padding: 14px 18px;
+}}
+.note-panel p:last-child {{ margin-bottom: 0; }}
+.chart {{
+  width: 100%;
+  height: 430px;
+  margin: 18px 0 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}}
+.source-gap {{
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px 18px;
+}}
+@media (max-width: 760px) {{
+  .report-shell {{
+    width: min(100% - 28px, 1180px);
+    padding: 18px 0 32px;
+  }}
+  .report-page {{
+    padding: 26px 20px 30px;
+  }}
+  h1 {{ font-size: 1.7rem; }}
+  .chart {{ height: 380px; }}
+}}
+@media print {{
+  @page {{ size: A4 landscape; margin: 12mm; }}
+  body {{ background: #ffffff; }}
+  .report-shell {{
+    width: 100%;
+    padding: 0;
+  }}
+  .report-page {{
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }}
+  .report-section, .chart, .source-gap {{
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }}
+  .chart {{
+    height: 360px;
+    margin: 12px 0 22px;
+  }}
+}}
+</style>
+</head>
 <body>
-<h1>B1528 SIROCCO Time-Trace Benchmark Report</h1>
+<main class=\"report-shell\">
+<article class=\"report-page\">
+<header class=\"report-header\">
+<p class=\"eyebrow\">B1528 SIROCCO</p>
+<h1>Time-Trace Benchmark Report</h1>
 <p>{result['metadata']['scope']}</p>
 <p>Rudder force and yaw moment are diagnostic only in the Nomoto mode.</p>
+</header>
+<section class=\"report-section\">
 <h2>Traceability links</h2>
 <ul>
 <li><a href=\"{links['source_pack_issue']}\">workspace-hub #2569 source pack</a></li>
@@ -447,35 +573,75 @@ def _html_report(result: dict[str, Any]) -> str:
 <li><a href=\"{links['durable_report']}\">durable report page</a></li>
 <li><a href=\"{links['generated_markdown_report']}\">generated Markdown report on GitHub</a></li>
 </ul>
+</section>
+<section class=\"report-section note-panel\">
 <h2>Propeller rotation factor Cr</h2>
 <p>{result['metadata']['prop_rotation_factor_note']}</p>
 <p>{result['metadata']['prop_rotation_factor_basis']}</p>
+</section>
+<section class=\"report-section\">
 <h2>Sample working example</h2>
 <p>{sample['data_point']}: alpha_R={sample['initial_effective_rudder_angle_deg']:.6f} deg, r_dot={sample['initial_r_dot_rad_s2']:.10f} rad/s^2, reported yaw rate after {sample['sample_dt_s']:.1f} s={sample['reported_yaw_rate_deg_s']:.9f} deg/s, Cr={sample['prop_rotation_factor']:.1f}.</p>
-<div id=\"trajectory-chart\"></div>
-<div id=\"heading-chart\"></div>
-<div id=\"yaw-rate-chart\"></div>
-<div id=\"alpha-chart\"></div>
-<div id=\"moment-chart\"></div>
-<div id=\"benchmark-source-gap\"></div>
-<div id=\"sample-chart\"></div>
+</section>
+<section class=\"report-section\">
+<div id=\"trajectory-chart\" class=\"chart\"></div>
+<div id=\"heading-chart\" class=\"chart\"></div>
+<div id=\"yaw-rate-chart\" class=\"chart\"></div>
+<div id=\"alpha-chart\" class=\"chart\"></div>
+<div id=\"moment-chart\" class=\"chart\"></div>
+</section>
+<section id=\"benchmark-source-gap\" class=\"report-section source-gap\"></section>
+<section class=\"report-section\">
+<div id=\"sample-chart\" class=\"chart\"></div>
+</section>
+</article>
+</main>
 <script>
 const rows = {rows_json};
 const benchmark = {benchmark_json};
 const sample = {sample_json};
 const scenarios = [...new Set(rows.map(r => r.scenario_id))];
-function traces(xKey, yKey) {{ return scenarios.map(s => {{ const pts = rows.filter(r => r.scenario_id === s); return {{x: pts.map(r => r[xKey]), y: pts.map(r => r[yKey]), mode: 'lines', name: s}}; }}); }}
-Plotly.newPlot('trajectory-chart', traces('x_m', 'y_m'), {{title: 'Trajectory', xaxis: {{title: 'x (m)'}}, yaxis: {{title: 'y (m)'}}}});
-Plotly.newPlot('heading-chart', traces('time_s', 'heading_deg'), {{title: 'Heading angle vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Heading angle (deg)'}}}});
-Plotly.newPlot('yaw-rate-chart', traces('time_s', 'yaw_rate_deg_s'), {{title: 'Yaw rate vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw rate (deg/s)'}}}});
-Plotly.newPlot('alpha-chart', traces('time_s', 'effective_rudder_angle_deg'), {{title: 'Effective rudder angle vs time', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Effective rudder angle (deg)'}}}});
-Plotly.newPlot('moment-chart', traces('time_s', 'diagnostic_yaw_moment_kN_m'), {{title: 'Yaw moment vs time (diagnostic, Cr=1)', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw moment (kN-m)'}}}});
-document.getElementById('benchmark-source-gap').innerHTML = `<h2>benchmark-source-gap</h2><p>${{benchmark.summary}}</p>`;
+const STANDARD_CHART_HEIGHT = 430;
+const CHART_CONFIG = {{responsive: true, displaylogo: false}};
+function traces(xKey, yKey) {{
+  return scenarios.map(s => {{
+    const pts = rows.filter(r => r.scenario_id === s);
+    return {{
+      x: pts.map(r => r[xKey]),
+      y: pts.map(r => r[yKey]),
+      mode: 'lines',
+      name: s,
+      line: {{width: 2.2}}
+    }};
+  }});
+}}
+function chartLayout(title, xTitle, yTitle, options = {{}}) {{
+  return {{
+    title: {{text: title, x: 0.02, xanchor: 'left', font: {{size: 18, color: '#18212f'}}}},
+    height: STANDARD_CHART_HEIGHT,
+    autosize: true,
+    margin: {{l: 72, r: 36, t: 64, b: 60}},
+    font: {{family: 'Aptos, Segoe UI, system-ui, sans-serif', size: 13, color: '#253244'}},
+    paper_bgcolor: '#ffffff',
+    plot_bgcolor: '#ffffff',
+    hovermode: 'x unified',
+    legend: {{orientation: 'h', x: 0, y: -0.22}},
+    xaxis: {{title: {{text: xTitle}}, gridcolor: '#e6ebf2', zerolinecolor: '#cfd7e3', automargin: true}},
+    yaxis: {{title: {{text: yTitle}}, gridcolor: '#e6ebf2', zerolinecolor: '#cfd7e3', automargin: true}},
+    ...options
+  }};
+}}
+Plotly.newPlot('trajectory-chart', traces('x_m', 'y_m'), chartLayout('Trajectory', 'x (m)', 'y (m)', {{hovermode: 'closest'}}), CHART_CONFIG);
+Plotly.newPlot('heading-chart', traces('time_s', 'heading_deg'), chartLayout('Heading angle vs time', 'Time (s)', 'Heading angle (deg)'), CHART_CONFIG);
+Plotly.newPlot('yaw-rate-chart', traces('time_s', 'yaw_rate_deg_s'), chartLayout('Yaw rate vs time', 'Time (s)', 'Yaw rate (deg/s)'), CHART_CONFIG);
+Plotly.newPlot('alpha-chart', traces('time_s', 'effective_rudder_angle_deg'), chartLayout('Effective rudder angle vs time', 'Time (s)', 'Effective rudder angle (deg)'), CHART_CONFIG);
+Plotly.newPlot('moment-chart', traces('time_s', 'diagnostic_yaw_moment_kN_m'), chartLayout('Yaw moment vs time (diagnostic, Cr=1)', 'Time (s)', 'Yaw moment (kN-m)'), CHART_CONFIG);
+document.getElementById('benchmark-source-gap').innerHTML = `<h2>Benchmark source gap</h2><p>${{benchmark.summary}}</p>`;
 const sampleWindow = rows.filter(r => r.scenario_id === sample.scenario_id && r.time_s <= Math.max(10, sample.sample_time_s));
 Plotly.newPlot('sample-chart', [
-  {{x: sampleWindow.map(r => r.time_s), y: sampleWindow.map(r => r.yaw_rate_deg_s), mode: 'lines+markers', name: 'positive_rudder yaw rate'}},
+  {{x: sampleWindow.map(r => r.time_s), y: sampleWindow.map(r => r.yaw_rate_deg_s), mode: 'lines+markers', name: 'positive_rudder yaw rate', line: {{width: 2.2}}}},
   {{x: [sample.sample_time_s], y: [sample.reported_yaw_rate_deg_s], mode: 'markers+text', text: [`${{sample.reported_yaw_rate_deg_s.toFixed(9)}} deg/s`], textposition: 'top center', marker: {{size: 14}}, name: 'sample point'}}
-], {{title: 'Sample verification point: first Nomoto yaw-rate step', xaxis: {{title: 'Time (s)'}}, yaxis: {{title: 'Yaw rate (deg/s)'}}}});
+], chartLayout('Sample verification point: first Nomoto yaw-rate step', 'Time (s)', 'Yaw rate (deg/s)'), CHART_CONFIG);
 </script>
 </body>
 </html>
