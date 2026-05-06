@@ -1,0 +1,31 @@
+# Invalid intake — environment.water_depths_m exceeds the canonical vessel's
+# rated max_water_depth_m (3000 m for heavy-lift-csv). Used by
+# test_prospect_adapter.py::test_depth_exceeds_vessel_rating which validates
+# the third cross-field gate (numeric sanity).
+prospect:
+  company: "Ultra Deep Ventures"
+  contact: "ops@ultradeep.example"
+  nda_in_place: true
+  target_demo: "demo_05"
+  delivery_deadline_utc: "2026-04-22T17:00:00Z"
+vessel:
+  shape: "csv_hlv"
+  source: "canonical_ref"
+  canonical_ref: "heavy-lift-csv"
+structure:
+  kind: "rigid_jumper"
+  body:
+    outer_diameter_m: 0.3239
+    wall_thickness_m: 0.0254
+    length_m: 55.0
+    material: "X65"
+environment:
+  water_depths_m: [2500, 3200, 3500]   # max 3500 > canonical max 3000 → F5 reduced-scope or F1 refuse
+  hs_values_m: [2.0]
+  current_velocity_ms: 0.6
+output:
+  brand_header: "Prepared for Ultra Deep Ventures"
+  brand_footer: "Confidential — NDA"
+  publish_private_url: true
+  gating: "hash"
+  purge_after_utc: "2026-05-22T00:00:00Z"
