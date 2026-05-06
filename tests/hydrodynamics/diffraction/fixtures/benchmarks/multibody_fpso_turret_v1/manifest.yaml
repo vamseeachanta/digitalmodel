@@ -1,0 +1,31 @@
+benchmark_id: multibody_fpso_turret_v1
+title: "Multi-body OrcaWave benchmark - FPSO hull + turret"
+category: frequency_domain
+solvers_proven:
+  - solver: orcawave
+    direction: forward
+    path: "spec.yml -> native OrcaWave YAML"
+  - solver: orcawave
+    direction: reverse
+    path: "native OrcaWave YAML -> DiffractionSpec"
+body_count: 2
+bodies:
+  - name: FPSO_Hull
+    free_body: true
+  - name: Turret
+    fixed_dofs: [surge, sway, yaw]
+    connection_parent: FPSO_Hull
+claim_boundary: "near-equivalent for key engineering inputs and tested round-trip pathways; not strict identity across every native OrcaWave YAML field"
+bridge_candidates:
+  - "future OrcaWave -> OrcaFlex handoff validation"
+source_history:
+  - "promoted from tests/hydrodynamics/diffraction/fixtures/spec_fpso_turret.yml under #2458"
+meshes_referenced:
+  - "tests/hydrodynamics/bemrosetta/fixtures/sample_box.gdf"
+  - "tests/hydrodynamics/bemrosetta/fixtures/sample_box.dat"
+related_issues:
+  promotion: 2458
+  delivered_foundations: [1605, 1592, 1768, 1638]
+  parent_roadmap: 1572
+  sibling_single_body: 2457
+version: 1

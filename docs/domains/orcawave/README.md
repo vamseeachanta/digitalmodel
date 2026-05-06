@@ -97,6 +97,12 @@ Practical interpretation:
 
 This means the repo is strong for engineering round-trip fidelity, but it does not claim universal identity across every strict OrcaWave YAML key or solver-internal default.
 
+## Named multi-body benchmark (#2458)
+
+`multibody_fpso_turret_v1` promotes the FPSO hull plus turret fixture as a named OrcaWave benchmark under `tests/hydrodynamics/diffraction/fixtures/benchmarks/multibody_fpso_turret_v1/`. The benchmark manifest records the claim boundary as near-equivalent for key engineering inputs and tested round-trip pathways, not strict identity across every native OrcaWave YAML field.
+
+The benchmark is a bridge candidate for future OrcaWave -> OrcaFlex handoff validation. It extends the delivered foundations from #1605, #1592, and #1768 with a stable multi-body case that preserves body count, body identity, fixed DOFs, connection parent, body position, attitude, mass, COG, and radii-of-gyration-derived inertia through the OrcaWave forward and reverse path.
+
 ---
 
 ## Workflow Phases
