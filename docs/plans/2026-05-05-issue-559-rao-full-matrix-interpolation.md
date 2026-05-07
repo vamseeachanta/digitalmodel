@@ -185,14 +185,21 @@ No production-code change. No fixture-data change.
 
 | Provider | Verdict | Key findings |
 |---|---|---|
-| Claude | _pending_ | _to be filled after Step 4_ |
-| Codex | _pending_ | _to be filled after Step 4_ |
-| Gemini | _pending_ | _to be filled after Step 4_ |
+| Claude | APPROVE | 1× P2 (dimensional inconsistency in retained translational-row check — call out as fixture invariant, not physics invariant), 4× P3 (relative PSD tolerance, inline symmetry assertion before `eigvalsh`, `B_matrix` coverage gap, sibling-test enumeration), 5× author questions. APPROVE because root cause correctly identified, reproduction embedded with numerical witness, Option 1 well-justified on blast-radius and false-negative grounds. |
+| Codex | UNAVAILABLE — INCOMPATIBLE_VERSION | CLI 0.128.0 in known-bad range (>= 0.124.0), upstream `openai/codex#19945`, see workspace-hub#2479. Remediation: `scripts/install/pin-codex.sh` to downgrade. |
+| Gemini | NO_OUTPUT | Wrapper returned no review content (likely related to `feedback_gemini_sandbox_overlay_blindness.md`). |
 
-**Overall result:** _pending_
+**Overall result:** Single-provider Claude APPROVE with documented Codex/Gemini unavailability. Per `feedback_permission_gate_blocks_cross_review.md`, treat as r1-complete with transparent provenance; user-approval surface accepts the documented provider gaps.
+
+**Review artifacts (2026-05-07T03:21:51Z):**
+- Claude: `scripts/review/results/20260507T032151Z-2026-05-05-issue-559-rao-full-matrix-interpolation.md-plan-claude.md`
+- Codex: `scripts/review/results/20260507T032151Z-2026-05-05-issue-559-rao-full-matrix-interpolation.md-plan-codex.md`
+- Gemini: `scripts/review/results/20260507T032151Z-2026-05-05-issue-559-rao-full-matrix-interpolation.md-plan-gemini.md`
+
+**P2/P3 polish deferred to implementation review:** none of Claude's findings are blocking. The P2 (mark retained translational-row check as *fixture invariant*, not physics invariant) and 4 P3s should be folded into the implementation PR as test-code comments and assertion refinements, not into the plan text.
 
 Revisions made based on review:
-- _none yet — this draft replaces the prior plan that mis-diagnosed the root cause as float-equality on a strict-greater-than. Reviewers should specifically attack the choice of Option 1 (weakened assertion) over Option 2 (reshape fixture coupling magnitudes) — the fixture currently encodes a 2:1 coupling-to-rotational-diagonal ratio at `(2,4)/(4,2)` which a stricter author might want to fix at the fixture instead._
+- r1 returned APPROVE — no plan revisions required to clear blockers. P2/P3 findings tracked as implementation-PR checklist items.
 
 ---
 
