@@ -472,8 +472,17 @@ class StressStrainAnalyzer:
 
         properties = {}
 
-        # Elastic modulus (initial slope)
-        properties['elastic_modulus'] = curve.get_elastic_modulus()
+        # Elastic modulus (initial engineering slope).  The curve-level helper
+        # intentionally fits several initial points for noisy experimental
+        # data, but engineering property extraction should preserve the first
+        # elastic segment before yielding/nonlinearity enters the fit.
+        initial_slope = None
+        for i in range(1, len(strains)):
+            delta_strain = strains[i] - strains[i - 1]
+            if abs(delta_strain) > 1e-15:
+                initial_slope = (stresses[i] - stresses[i - 1]) / delta_strain
+                break
+        properties['elastic_modulus'] = float(initial_slope if initial_slope is not None else curve.get_elastic_modulus())
 
         # Yield strength (0.2% offset method)
         if max(strains) >= 0.002:
