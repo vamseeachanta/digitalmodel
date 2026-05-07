@@ -6,14 +6,13 @@ ABOUTME: Validates core utilities like YAML loading, parameter extraction, and c
 """
 
 import sys
-import io
 from pathlib import Path
 import tempfile
 import yaml
 
-# Force UTF-8 encoding for stdout
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+# Force UTF-8 encoding for stdout on Windows without replacing the stream.
+if sys.platform == 'win32' and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))

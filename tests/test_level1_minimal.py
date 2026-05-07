@@ -6,15 +6,17 @@ Tests YAML syntax and includefile resolution
 """
 
 import sys
-import io
 from pathlib import Path
 
-# Set UTF-8 encoding for Windows console
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+# Set UTF-8 encoding for Windows console without replacing pytest-managed streams.
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
 
 # Add src directory to path
-repo_root = Path("D:/workspace-hub/digitalmodel")
+repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root / "src"))
 
 from digitalmodel.solvers.orcaflex.modular_input_validation.level_1_yaml import Level1YAMLValidator
