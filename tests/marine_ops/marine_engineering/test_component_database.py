@@ -221,7 +221,7 @@ class ComponentDatabase:
         print(f"Loaded {len(self.line_db)} synthetic line components")
 
     def _generate_chain_database(self) -> pd.DataFrame:
-        """Generate chain database (60 components)."""
+        """Generate chain database (72 components)."""
         data = []
 
         # Standard diameters (16mm to 162mm)
@@ -233,7 +233,7 @@ class ComponentDatabase:
         grades = [ChainGrade.R3, ChainGrade.R4, ChainGrade.R5]
         link_types = [LinkType.STUD_LINK]
 
-        for diameter in diameters[:20]:  # Generate 60 components
+        for diameter in diameters[:24]:  # Generate 72 components (24 diameters × 3 grades, includes 76mm)
             for grade in grades:
                 chain = ChainProperties.from_excel_formula(diameter, grade, link_types[0])
                 data.append({
@@ -562,10 +562,10 @@ class TestComponentDatabase:
         return ComponentDatabase()
 
     def test_database_loading(self, database):
-        """Validate all 336 components load correctly."""
-        # Chain: 60 components (20 diameters × 3 grades)
-        assert len(database.chain_db) == 60, (
-            f"Expected 60 chain components, got {len(database.chain_db)}"
+        """Validate all 348 components load correctly."""
+        # Chain: 72 components (24 diameters × 3 grades)
+        assert len(database.chain_db) == 72, (
+            f"Expected 72 chain components, got {len(database.chain_db)}"
         )
 
         # Wire: 24 components (8 diameters × 3 constructions)
@@ -578,10 +578,10 @@ class TestComponentDatabase:
             f"Expected 252 synthetic components, got {len(database.line_db)}"
         )
 
-        # Total: 336 components
+        # Total: 348 components
         total = len(database.chain_db) + len(database.wire_db) + len(database.line_db)
-        assert total == 336, (
-            f"Expected 336 total components, got {total}"
+        assert total == 348, (
+            f"Expected 348 total components, got {total}"
         )
 
     def test_get_chain_by_specification(self, database):
