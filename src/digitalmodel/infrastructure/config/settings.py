@@ -3,11 +3,12 @@ ABOUTME: Global configuration settings using Pydantic BaseSettings
 ABOUTME: Supports environment variables, .env files, and runtime overrides
 """
 
-from pathlib import Path
-from typing import Optional, Literal
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator, AliasChoices
 import os
+from pathlib import Path
+from typing import Literal, Optional
+
+from pydantic import AliasChoices, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class GlobalSettings(BaseSettings):
@@ -251,6 +252,16 @@ class GlobalSettings(BaseSettings):
 _global_settings: Optional[GlobalSettings] = None
 
 
+def _ensure_directory(dir_path: Path) -> None:
+    """Create a directory when possible without failing on unwritable roots."""
+    try:
+        dir_path.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        # Allow absolute env overrides to point at managed/system paths that are
+        # valid configuration values but not writable in local CI/test envs.
+        pass
+
+
 def get_settings() -> GlobalSettings:
     """
     Get global settings instance (singleton pattern).
@@ -275,7 +286,7 @@ def get_settings() -> GlobalSettings:
             _global_settings.log_dir,
             _global_settings.cache_dir
         ]:
-            dir_path.mkdir(parents=True, exist_ok=True)
+            _ensure_directory(dir_path)
 
     return _global_settings
 
@@ -311,7 +322,7 @@ def override_settings(**kwargs) -> GlobalSettings:
         _global_settings.log_dir,
         _global_settings.cache_dir
     ]:
-        dir_path.mkdir(parents=True, exist_ok=True)
+        _ensure_directory(dir_path)
 
     return _global_settings
 
