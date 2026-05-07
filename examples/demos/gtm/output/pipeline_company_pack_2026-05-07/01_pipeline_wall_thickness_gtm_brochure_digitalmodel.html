@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline Wall Thickness GTM Brochure — digitalmodel</title>
+  <style>
+    :root {
+      --navy: #071d33;
+      --blue: #0b3d91;
+      --teal: #2bb2a6;
+      --orange: #ff8a00;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #d9e2ec;
+      --warn-bg: #fff7ed;
+      --warn-text: #9a3412;
+      --good: #166534;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    .topbar {
+      background: var(--navy);
+      color: #fff;
+      padding: 14px 26px;
+      border-bottom: 4px solid var(--orange);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 65%, #164e63 100%);
+      color: #fff;
+      padding: 44px 26px 34px;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      color: #fbbf24;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.1;
+      max-width: 980px;
+    }
+    .subtitle {
+      margin-top: 16px;
+      font-size: 18px;
+      max-width: 900px;
+      color: rgba(255,255,255,0.9);
+    }
+    .headline-band {
+      margin-top: 20px;
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 26px;
+    }
+    .metric {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .metric .value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .metric .label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.82);
+    }
+    .notice {
+      max-width: 1120px;
+      margin: 18px auto 0;
+      padding: 14px 18px;
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-left: 5px solid var(--orange);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 26px 40px;
+    }
+    section {
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 28px rgba(7, 29, 51, 0.05);
+    }
+    h2 {
+      margin: 0 0 14px;
+      color: var(--navy);
+      font-size: 24px;
+      border-bottom: 2px solid #fde7c7;
+      padding-bottom: 8px;
+    }
+    h3 {
+      margin: 18px 0 8px;
+      color: var(--blue);
+      font-size: 18px;
+    }
+    p { margin: 10px 0; }
+    ul {
+      margin: 10px 0 0 18px;
+      padding: 0;
+    }
+    li { margin: 6px 0; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+    }
+    .cards-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .cards-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+    }
+    .mini-card .kicker {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .mini-card .big {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .mini-card .small {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--navy);
+      color: #fff;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    tr:nth-child(even) td { background: #fafcff; }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e6f6f4;
+      color: #0f766e;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 0 6px 6px 0;
+    }
+    .source-list code {
+      display: block;
+      white-space: normal;
+      word-break: break-all;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      color: #1e3a8a;
+      font-size: 13px;
+    }
+    .footer {
+      max-width: 1120px;
+      margin: 0 auto 24px;
+      padding: 16px 26px 28px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .good { color: var(--good); font-weight: 700; }
+    @media (max-width: 900px) {
+      h1 { font-size: 31px; }
+      .metrics, .cards-3, .cards-2, .grid-2 { grid-template-columns: 1fr; }
+      .hero, main, .topbar { padding-left: 18px; padding-right: 18px; }
+      section { padding: 18px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .topbar { border-bottom-width: 3px; }
+      section { box-shadow: none; break-inside: avoid; }
+      @page { margin: 1.2cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">digitalmodel · pipeline company brochure pack · 2026-05-07</div>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Client collateral · wall thickness GTM brochure</div>
+      <h1>Pipeline wall thickness screening that turns a 72-case multi-code study into a fast pilot conversation.</h1>
+      <p class="subtitle">Headline: 72 cases, DNV-ST-F101/API RP 1111/PD 8010-2, 6 pipe sizes, X65, 500m water depth.</p>
+      <div class="headline-band">7.62 mm to 23.87 mm minimum wall thickness envelope identified across the published comparison set.</div>
+      <div class="metrics">
+        <div class="metric"><div class="value">72</div><div class="label">parametric cases in the underlying results set</div></div>
+        <div class="metric"><div class="value">6</div><div class="label">pipe sizes from 6 in to 20 in</div></div>
+        <div class="metric"><div class="value">3</div><div class="label">code bases compared side by side</div></div>
+        <div class="metric"><div class="value">500 m</div><div class="label">water depth basis with X65 steel and 1.0 mm corrosion allowance</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="notice"><strong>Client-use note.</strong> This brochure is derived from the existing demo dataset and report artifacts in the repository. It is suitable for prospect-facing GTM discussion and pilot scoping, but it is not a substitute for project-specific wall thickness design, certified material data, installation loading definition, or formal code compliance sign-off.</div>
+
+  <main>
+    <section>
+      <h2>Executive hook</h2>
+      <div class="grid-2">
+        <div>
+          <p>Pipeline teams often need a quick, defensible view of how code choice changes required wall thickness before they commit to a deeper design cycle. This digitalmodel brochure packages an existing multi-code comparison into a client-ready narrative that shows where thickness requirements move, what tends to govern, and how a pilot could be framed.</p>
+          <p>In the reference dataset, the published minimum-wall-thickness summary spans <strong>7.62 mm to 23.87 mm</strong> across <strong>6 in, 8 in, 10 in, 12 in, 16 in, and 20 in</strong> pipe sizes. The comparison covers <strong>DNV-ST-F101</strong>, <strong>API RP 1111</strong>, and <strong>PD 8010-2</strong> at <strong>10, 15, 20, and 25 MPa</strong> internal pressure for <strong>X65</strong> at <strong>500 m water depth</strong>.</p>
+          <p>The value proposition is simple: give a pipeline company a transparent screening pack they can review in one meeting, then convert interest into a tightly scoped pilot with auditable inputs and reproducible outputs.</p>
+        </div>
+        <div>
+          <div class="mini-card">
+            <div class="kicker">Dataset signal</div>
+            <div class="big">24 / 72</div>
+            <div class="small">candidate result rows in the raw sweep are marked unsafe, which demonstrates why automated sizing and code-to-code comparison matter before a client locks an envelope.</div>
+          </div>
+          <div class="mini-card" style="margin-top:12px;">
+            <div class="kicker">Typical governing pattern</div>
+            <div class="big">Propagation-led</div>
+            <div class="small">Propagation or propagation buckling governs most rows in the existing data, with pressure/burst/hoop checks governing only a small subset at higher pressure.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>What the pack does</h2>
+      <div class="cards-3">
+        <div class="mini-card">
+          <div class="kicker">1 · Compares codes</div>
+          <p>Shows how the three cited code bases change minimum required wall thickness for the same size, grade, depth, and pressure basis.</p>
+        </div>
+        <div class="mini-card">
+          <div class="kicker">2 · Surfaces governing checks</div>
+          <p>Highlights which checks govern the result set so engineering and business stakeholders can discuss where conservatism enters the envelope.</p>
+        </div>
+        <div class="mini-card">
+          <div class="kicker">3 · Frames a pilot</div>
+          <p>Converts a demo analysis into a prospect-facing pilot package with clear inputs, outputs, and limitations rather than vague digital-twin marketing claims.</p>
+        </div>
+      </div>
+      <h3>Client discussion outcomes enabled by this brochure</h3>
+      <ul>
+        <li>Rapid screening of whether code basis materially shifts wall thickness and tonnage envelope.</li>
+        <li>Early alignment on which pipe sizes and pressure points deserve detailed engineering follow-up.</li>
+        <li>Clear separation between reusable automation and the project-specific verification still required for final design.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Sample outputs</h2>
+      <p>The table below reproduces representative minimum-wall-thickness outputs from the existing JSON summary. In this dataset, API RP 1111 is the lowest thickness result for each listed size, while PD 8010-2 is the highest by approximately 0.95 mm to 1.00 mm over the same sizes.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Pipe size</th>
+            <th>OD (mm)</th>
+            <th>DNV-ST-F101 min WT (mm)</th>
+            <th>API RP 1111 min WT (mm)</th>
+            <th>PD 8010-2 min WT (mm)</th>
+            <th>Observed spread</th>
+            <th>Typical governing check</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>6 in</td><td>168.3</td><td>8.51</td><td>7.62</td><td>8.57</td><td>0.95 mm</td><td>Propagation / propagation buckling</td></tr>
+          <tr><td>8 in</td><td>219.1</td><td>10.79</td><td>9.90</td><td>10.90</td><td>1.00 mm</td><td>Propagation / propagation buckling</td></tr>
+          <tr><td>10 in</td><td>273.1</td><td>13.19</td><td>12.30</td><td>13.30</td><td>1.00 mm</td><td>Propagation / propagation buckling</td></tr>
+          <tr><td>12 in</td><td>323.9</td><td>15.47</td><td>14.58</td><td>15.58</td><td>1.00 mm</td><td>Propagation / propagation buckling</td></tr>
+          <tr><td>16 in</td><td>406.4</td><td>19.14</td><td>18.31</td><td>19.31</td><td>1.00 mm</td><td>Propagation / propagation buckling</td></tr>
+          <tr><td>20 in</td><td>508.0</td><td>23.65</td><td>22.87</td><td>23.87</td><td>1.00 mm</td><td>Propagation / propagation buckling</td></tr>
+        </tbody>
+      </table>
+
+      <div class="cards-2" style="margin-top:16px;">
+        <div class="mini-card">
+          <div class="kicker">Illustrative insight</div>
+          <p>The raw result set includes <span class="good">48 safe rows</span> and 24 rows flagged unsafe at candidate wall thicknesses in the sweep, with the largest published utilisation in the dataset occurring for a <strong>20 in DNV-ST-F101</strong> case at <strong>15.1 mm</strong> wall thickness.</p>
+        </div>
+        <div class="mini-card">
+          <div class="kicker">Source references used</div>
+          <div class="source-list">
+            <code>/mnt/local-analysis/workspace-hub/digitalmodel/examples/demos/gtm/results/demo_02_wall_thickness_results.json</code>
+            <code>/mnt/local-analysis/workspace-hub/digitalmodel/examples/demos/gtm/output/demo_02_wall_thickness_report.html</code>
+            <code>/mnt/local-analysis/workspace-hub/digitalmodel/examples/demos/gtm/media/demo_02_wall_thickness.gif</code>
+            <code>/mnt/local-analysis/workspace-hub/digitalmodel/examples/demos/gtm/media/demo_02_wall_thickness_workflow.gif</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Methodology / code basis</h2>
+      <p>This brochure is grounded in the existing repository artifacts rather than new calculations. The data source identifies the demo as a <strong>wall thickness multi-code comparison</strong> with these explicit metadata values:</p>
+      <div>
+        <span class="tag">72 total cases</span>
+        <span class="tag">6 pipe sizes</span>
+        <span class="tag">DNV-ST-F101</span>
+        <span class="tag">API RP 1111</span>
+        <span class="tag">PD 8010-2</span>
+        <span class="tag">10/15/20/25 MPa</span>
+        <span class="tag">500 m water depth</span>
+        <span class="tag">X65</span>
+        <span class="tag">SMYS 448 MPa</span>
+        <span class="tag">SMTS 531 MPa</span>
+        <span class="tag">1.0 mm corrosion allowance</span>
+      </div>
+      <h3>How to read the outputs</h3>
+      <ul>
+        <li>The summary values shown in this brochure are the minimum published wall thicknesses per pipe size and code from the existing demo results.</li>
+        <li>The raw results include governing-check labels such as propagation buckling, propagation, pressure containment, burst, and hoop stress.</li>
+        <li>Because this is brochure collateral, the emphasis is on transparent comparison and pilot framing rather than reproducing every intermediate equation or load case in the full workflow.</li>
+      </ul>
+      <h3>Why this matters commercially</h3>
+      <p>A pipeline company does not need a generic AI pitch. It needs a clear view of whether automated multi-code screening can shorten concept selection, narrow design envelopes faster, and hand off a traceable basis to detailed engineering. This pack is designed to support that conversation.</p>
+    </section>
+
+    <section>
+      <h2>Pipeline-company pilot deliverables</h2>
+      <ul>
+        <li><strong>Client-specific input register:</strong> nominated diameters, design pressures, grade assumptions, corrosion allowance, depth basis, and any required load-case notes.</li>
+        <li><strong>Automated comparison workbook or JSON export:</strong> auditable case matrix with code-by-code minimum wall thickness and governing checks.</li>
+        <li><strong>Management-ready PDF/HTML pack:</strong> summary pages for engineering, project, and procurement stakeholders.</li>
+        <li><strong>Engineering handoff note:</strong> explicit list of items that remain project-specific, including material data confirmation, fabrication tolerances, installation loads, collapse inputs, and final compliance review.</li>
+        <li><strong>Pilot closeout review:</strong> a short session showing what the automation resolved quickly and where detailed project engineering still governs the final answer.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Limitations / caveat</h2>
+      <ul>
+        <li>This brochure does <strong>not</strong> claim final wall thickness design, code compliance certification, or fitness-for-purpose approval for any real project.</li>
+        <li>The content is limited to the repository dataset and referenced media/report artifacts cited above.</li>
+        <li>Actual project execution would require verified inputs, project-specific load definitions, fabrication and installation criteria, material certificates, and formal engineering review under the client’s approved procedures.</li>
+        <li>The raw sweep includes both safe and unsafe candidate rows; that pattern should be treated as evidence of screening logic, not as a direct recommendation to use any single unsafeguarded thickness value.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="footer">
+    Prepared as self-contained digitalmodel client collateral for the pipeline-company brochure pack. No external fonts, scripts, or network dependencies are required to view this file.
+  </div>
+</body>
+</html>

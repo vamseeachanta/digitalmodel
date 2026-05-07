@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rigid Jumper VIV Screening Brochure — digitalmodel</title>
+  <style>
+    :root {
+      --navy: #0b2545;
+      --blue: #1f4e79;
+      --teal: #1c7c7d;
+      --accent: #ff8a00;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #dbe3ee;
+      --pass: #1f9d55;
+      --inline: #d69e2e;
+      --failcf: #e67e22;
+      --lockin: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #eef3f9 0%, #f8fafc 140px, var(--bg) 100%);
+      line-height: 1.58;
+    }
+    .topbar {
+      background: #071d33;
+      color: #fff;
+      border-bottom: 4px solid var(--accent);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .topbar .brand {
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+    .topbar .kicker {
+      color: #fbbf24;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 62%, #2b6cb0 100%);
+      color: #fff;
+      padding: 56px 28px 34px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      top: -80px;
+      width: 360px;
+      height: 360px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .hero-inner, .content, .footer {
+      max-width: 1140px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 2.25rem;
+      line-height: 1.15;
+      max-width: 900px;
+    }
+    .subtitle {
+      font-size: 1.05rem;
+      max-width: 920px;
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 22px;
+    }
+    .badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+    .metric {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(2px);
+    }
+    .metric .value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .metric .label {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.84);
+    }
+    .content {
+      padding: 28px;
+    }
+    .notice {
+      background: #fff7ed;
+      border-left: 5px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 8px;
+      color: #7c2d12;
+      margin-bottom: 22px;
+      font-size: 0.96rem;
+    }
+    .section {
+      margin-bottom: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+    }
+    .section h2 {
+      margin: 0 0 14px;
+      color: var(--navy);
+      font-size: 1.35rem;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e8eef7;
+    }
+    .section h3 {
+      color: var(--blue);
+      margin: 18px 0 8px;
+      font-size: 1.04rem;
+    }
+    .lede {
+      font-size: 1.02rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .callout {
+      background: linear-gradient(135deg, #edf4ff 0%, #f8fbff 100%);
+      border: 1px solid #cfe0f5;
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .callout strong {
+      color: var(--navy);
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fbfdff;
+    }
+    .mini-card .big {
+      display: block;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.94rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    tr:nth-child(even) td { background: #fbfdff; }
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+    .pass { background: var(--pass); }
+    .inline { background: var(--inline); }
+    .failcf { background: var(--failcf); }
+    .lockin { background: var(--lockin); }
+    .dist-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 80px;
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0;
+    }
+    .bar {
+      display: flex;
+      height: 16px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e5edf7;
+      border: 1px solid #d4deeb;
+    }
+    .bar > div { height: 100%; }
+    .bar .pass { width: 15.5%; }
+    .bar .inline { width: 17.5%; }
+    .bar .failcf { width: 49.5%; }
+    .bar .lockin { width: 17.5%; }
+    ul { margin: 10px 0 0 20px; padding: 0; }
+    li { margin: 8px 0; }
+    .footer {
+      padding: 4px 28px 34px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .footer-box {
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+    .caption {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px) {
+      .metrics, .grid-2, .mini-grid { grid-template-columns: 1fr; }
+      .dist-row { grid-template-columns: 1fr; }
+      h1 { font-size: 1.8rem; }
+    }
+    @media print {
+      body { background: #fff; }
+      .section, .metric { break-inside: avoid; }
+      @page { margin: 1.2cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">digitalmodel</div>
+    <div class="kicker">pipeline company brochure pack · rigid jumper VIV screening</div>
+  </div>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>Rigid jumper VIV screening that gives pipeline teams an early, reviewable go/no-go view before detailed fatigue work starts.</h1>
+      <p class="subtitle">
+        This brochure summarizes a digitalmodel parametric screening pack built from the existing GTM demo dataset: 680 freespan/VIV cases overall, including 200 rigid jumper cases aligned to DNV-RP-F105 (2017) screening logic.
+      </p>
+      <div class="badge-row">
+        <div class="badge">680 freespan/VIV cases</div>
+        <div class="badge">200 rigid jumper cases</div>
+        <div class="badge">Jumper spans 5-40 m</div>
+        <div class="badge">Currents 0.2-1.0 m/s</div>
+        <div class="badge">Gap ratios 0.5 to infinity</div>
+        <div class="badge">PASS / INLINE_ONLY / FAIL_CF / FAIL_LOCKIN</div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="value">33%</div>
+          <div class="label">Acceptable jumper screen outcomes<br />(PASS + INLINE_ONLY)</div>
+        </div>
+        <div class="metric">
+          <div class="value">67%</div>
+          <div class="label">Cases pushed into cross-flow or lock-in concern bands</div>
+        </div>
+        <div class="metric">
+          <div class="value">10.3-25.6 m</div>
+          <div class="label">Computed jumper max allowable span range in the sample dataset</div>
+        </div>
+        <div class="metric">
+          <div class="value">0.143-45.631</div>
+          <div class="label">Reduced velocity range across jumper screening cases</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="notice">
+      <strong>Client-use note.</strong> This is prospect-facing collateral generated from the existing digitalmodel demo data and nearby pack artifacts. It is intended to illustrate screening workflow, output style, and pilot scope readiness — not to replace project-specific hydrodynamic modelling, fatigue assessment, or design approval.
+    </div>
+
+    <section class="section">
+      <h2>Executive hook</h2>
+      <div class="grid-2">
+        <div>
+          <p class="lede">
+            For pipeline operators and subsea engineering teams, rigid jumper integrity questions often appear before the project is ready for a full bespoke VIV or fatigue program. The practical need at that stage is simple: <strong>which jumper/current/gap combinations are likely benign, which are marginal, and which clearly deserve escalation?</strong>
+          </p>
+          <p>
+            The pack screens that early question using a consistent DNV-RP-F105 (2017) basis across a structured parametric matrix. In the current demo dataset, the rigid jumper subset covers <strong>200 cases</strong> for an 8 in rigid jumper, spanning <strong>5-40 m</strong>, currents from <strong>0.2-1.0 m/s</strong>, and seabed or mid-water gap ratios from <strong>0.5 through infinity</strong>.
+          </p>
+          <p>
+            The result is not a black-box verdict. It is a reviewable screen with natural frequency, reduced velocity, estimated response amplitude ratio, status category, and maximum allowable span output for each case.
+          </p>
+        </div>
+        <div class="callout">
+          <strong>What this gives a pipeline company early:</strong>
+          <ul>
+            <li>Fast triage of jumper geometries that remain in a likely acceptable screening band.</li>
+            <li>Clear identification of cases that enter cross-flow onset or lock-in regimes.</li>
+            <li>A repeatable basis for deciding where to spend detailed engineering effort.</li>
+            <li>Client-ready tables that can be reviewed internally without waiting for a long study cycle.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>What the pack screens</h2>
+      <div class="mini-grid">
+        <div class="mini-card">
+          <span class="big">Geometry</span>
+          8 in rigid jumper sample set with Sch 120 wall, eight jumper spans from 5 m to 40 m.
+        </div>
+        <div class="mini-card">
+          <span class="big">Hydrodynamics</span>
+          Uniform current screening at 0.2, 0.4, 0.6, 0.8, and 1.0 m/s.
+        </div>
+        <div class="mini-card">
+          <span class="big">Support condition</span>
+          Gap ratios e/D of 0.5, 1.0, 2.0, 5.0, and infinity, covering near-seabed to mid-water conditions.
+        </div>
+        <div class="mini-card">
+          <span class="big">Decision output</span>
+          PASS, INLINE_ONLY, FAIL_CF, and FAIL_LOCKIN categories with case-level computed screening values.
+        </div>
+      </div>
+      <p class="caption">
+        Dataset source used for this brochure: <code>examples/demos/gtm/results/demo_01_freespan_results.json</code>.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Sample output and status distribution</h2>
+      <p>
+        Across the 200 rigid jumper cases, the status split is <strong>31 PASS</strong>, <strong>35 INLINE_ONLY</strong>, <strong>99 FAIL_CF</strong>, and <strong>35 FAIL_LOCKIN</strong>. That means <strong>66 of 200 cases</strong> remain in the acceptable screening band used in the sample pack.
+      </p>
+
+      <div class="dist-row">
+        <div><strong>Status mix</strong></div>
+        <div class="bar" aria-label="status distribution">
+          <div class="pass" title="PASS 15.5%"></div>
+          <div class="inline" title="INLINE_ONLY 17.5%"></div>
+          <div class="failcf" title="FAIL_CF 49.5%"></div>
+          <div class="lockin" title="FAIL_LOCKIN 17.5%"></div>
+        </div>
+        <div>200 cases</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Meaning in the screening pack</th>
+            <th>Cases</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="status-pill pass">PASS</span></td>
+            <td>Reduced velocity below inline onset threshold; no VIV expected in the screen.</td>
+            <td>31</td>
+            <td>15.5%</td>
+          </tr>
+          <tr>
+            <td><span class="status-pill inline">INLINE_ONLY</span></td>
+            <td>Inline response only; often acceptable for early triage but still visible for engineering review.</td>
+            <td>35</td>
+            <td>17.5%</td>
+          </tr>
+          <tr>
+            <td><span class="status-pill failcf">FAIL_CF</span></td>
+            <td>Cross-flow VIV onset reached; detailed engineering should be considered.</td>
+            <td>99</td>
+            <td>49.5%</td>
+          </tr>
+          <tr>
+            <td><span class="status-pill lockin">FAIL_LOCKIN</span></td>
+            <td>Lock-in regime triggered; treated as a critical screen outcome in this pack.</td>
+            <td>35</td>
+            <td>17.5%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Representative case outputs from the rigid jumper subset</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Case ID</th>
+            <th>Span (m)</th>
+            <th>Current (m/s)</th>
+            <th>Gap ratio</th>
+            <th>f<sub>n</sub> (Hz)</th>
+            <th>V<sub>R</sub></th>
+            <th>A/D</th>
+            <th>Status</th>
+            <th>Max allowable span (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>JM-0001</td>
+            <td>5</td>
+            <td>0.2</td>
+            <td>0.5</td>
+            <td>6.4015</td>
+            <td>0.143</td>
+            <td>0.000</td>
+            <td><span class="status-pill pass">PASS</span></td>
+            <td>25.6</td>
+          </tr>
+          <tr>
+            <td>JM-0032</td>
+            <td>10</td>
+            <td>0.4</td>
+            <td>1.0</td>
+            <td>1.6004</td>
+            <td>1.141</td>
+            <td>0.057</td>
+            <td><span class="status-pill inline">INLINE_ONLY</span></td>
+            <td>16.2</td>
+          </tr>
+          <tr>
+            <td>JM-0061</td>
+            <td>15</td>
+            <td>0.6</td>
+            <td>0.5</td>
+            <td>0.7113</td>
+            <td>3.850</td>
+            <td>0.442</td>
+            <td><span class="status-pill failcf">FAIL_CF</span></td>
+            <td>14.8</td>
+          </tr>
+          <tr>
+            <td>JM-0066</td>
+            <td>15</td>
+            <td>0.8</td>
+            <td>0.5</td>
+            <td>0.7113</td>
+            <td>5.133</td>
+            <td>0.900</td>
+            <td><span class="status-pill lockin">FAIL_LOCKIN</span></td>
+            <td>12.8</td>
+          </tr>
+          <tr>
+            <td>JM-0200</td>
+            <td>40</td>
+            <td>1.0</td>
+            <td>infinity</td>
+            <td>0.1000</td>
+            <td>45.631</td>
+            <td>0.900</td>
+            <td><span class="status-pill failcf">FAIL_CF</span></td>
+            <td>10.3</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Pattern visible in the current sample set</h3>
+      <ul>
+        <li>All 5 m jumper cases screened as PASS in the current matrix.</li>
+        <li>10 m cases split between PASS and INLINE_ONLY, showing the transition into dynamic sensitivity.</li>
+        <li>By 15-20 m, the matrix begins to populate FAIL_CF and FAIL_LOCKIN outcomes.</li>
+        <li>At 30-40 m, most cases screen into cross-flow concern in this simplified dataset.</li>
+        <li>Current-level acceptability in the sample set drops from 52% at 0.2 m/s to 25% at 0.6-1.0 m/s.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Methodology and code basis</h2>
+      <p>
+        The underlying demo follows a DNV-style freespan/VIV screening workflow, using the existing digitalmodel results pack labeled to <strong>DNV-RP-F105 (2017)</strong>. For each case, the screen evaluates natural frequency, reduced velocity, onset bands, and an estimated response amplitude ratio for an early integrity triage.
+      </p>
+      <ul>
+        <li><strong>Code basis:</strong> DNV-RP-F105 (2017) for free-spanning pipelines; the demo report also cites DNV-RP-C205 and DNV-OS-F101 as adjacent reference context.</li>
+        <li><strong>Boundary condition in the sample data:</strong> pinned-pinned, with C<sub>n</sub> = 3.56.</li>
+        <li><strong>Dataset constants shown in source metadata:</strong> content density 800 kg/m³, steel Young's modulus 207 GPa, inline onset V<sub>R</sub> = 1.0, cross-flow onset V<sub>R</sub> = 3.0, lock-in window V<sub>R</sub> = 4.0-8.0.</li>
+        <li><strong>Status interpretation used here:</strong> PASS for V<sub>R</sub> &lt; 1.0; INLINE_ONLY for 1.0 ≤ V<sub>R</sub> &lt; 3.0; FAIL_CF for cross-flow onset; FAIL_LOCKIN for lock-in conditions.</li>
+      </ul>
+      <p>
+        This is deliberately framed as a screening tool rather than a final fatigue assessment. Its value is consistency, speed, and traceable escalation logic.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Installation suitability extension</h2>
+      <p>
+        Some clients need the structural screen paired with an installation screen so engineering and execution questions can be reviewed together. The brochure pack can therefore be paired with the adjacent digitalmodel installation collateral for rigid jumpers.
+      </p>
+      <div class="callout">
+        <strong>Optional extension available in the current pack:</strong>
+        a separate rigid jumper installation vessel capability example covers <strong>300 parametric cases</strong> across <strong>2 vessels</strong>, <strong>6 water depths</strong>, <strong>5 jumper lengths</strong>, and <strong>5 sea states</strong>, screening lift-off, in-air bending, splash zone, lowering, and tie-in phases.
+      </div>
+      <p>
+        In the repository pack, that adjacent collateral is represented by the installation vessel capability file titled <em>05_rigid_jumper_installation_vessel_capability_digitalmodel</em>. Used together, the VIV brochure and installation extension help a pipeline company discuss both <strong>integrity susceptibility</strong> and <strong>execution suitability</strong> in one review cycle.
+      </p>
+      <p class="caption">
+        Important scope distinction: the installation extension is a separate screening example using class-typical vessel assumptions and is not the same as owner-approved installation engineering.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Pipeline-company pilot deliverables</h2>
+      <ul>
+        <li>A project-specific rigid jumper screening matrix using the client's nominated diameters, wall thicknesses, spans, current bins, and support assumptions.</li>
+        <li>Client-ready summary tables showing PASS / INLINE_ONLY / FAIL_CF / FAIL_LOCKIN distributions by jumper family or field area.</li>
+        <li>Case-level output extracts with f<sub>n</sub>, V<sub>R</sub>, A/D, and screen-based maximum allowable span values.</li>
+        <li>A concise engineering memo documenting calculation basis, assumptions, escalation criteria, and where detailed analysis is recommended.</li>
+        <li>Optional linkage to installation suitability screening where jumper handling or vessel selection is part of the same decision package.</li>
+      </ul>
+      <p>
+        A practical pilot structure is a low-risk fixed-fee sprint focused on one field, one jumper family, or one approval bottleneck so the client can judge turnaround and technical fit quickly.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Limitations and caveat</h2>
+      <ul>
+        <li>This brochure is based on the existing demo dataset and should be read as <strong>illustrative screening collateral</strong>.</li>
+        <li>It does not replace project-specific VIV fatigue analysis, detailed hydrodynamic modelling, support stiffness characterization, or design verification.</li>
+        <li>The source demo assumes simplified boundary conditions, current-only screening, and fixed threshold bands; real projects may require more detailed loading and response treatment.</li>
+        <li>Gap ratio infinity in the sample set represents a mid-water or unsupported screening condition in the demo matrix, not a universal physical installation state.</li>
+        <li>Installation feasibility, if required, should rely on owner-approved vessel particulars, certified motions/RAOs, and final marine engineering checks.</li>
+        <li>All outputs require qualified engineering review before use in procurement, design, operations, or integrity decisions.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-box">
+      <div><strong>Source basis used:</strong> <code>examples/demos/gtm/results/demo_01_freespan_results.json</code></div>
+      <div><strong>Adjacent optional reference in pack:</strong> <code>examples/demos/gtm/output/client_pdf_pack_2026-05-07/05_rigid_jumper_installation_vessel_capability_digitalmodel.pdf</code></div>
+      <div><strong>digitalmodel note:</strong> Prepared as self-contained client collateral for the pipeline-company brochure pack on 2026-05-07.</div>
+    </div>
+  </footer>
+</body>
+</html>
