@@ -1,6 +1,6 @@
 # Plan for #596: chore(repo-structure): normalize digitalmodel folder/file structure
 
-> **Status:** final no-MAJOR re-review complete — ready for `status:plan-review` / user approval
+> **Status:** plan-approved — approved by user on 2026-05-08; approval marker `.planning/plan-approved/596.md` records reviewed plan/review blob SHAs
 > **Complexity:** T3
 > **Date:** 2026-05-07
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/596
