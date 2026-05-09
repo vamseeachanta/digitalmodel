@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Issue #598 Placeholder — SIROCCO Current / Heading / Rudder Force Components</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --paper: #f8f2e7;
+      --panel: #fffaf1;
+      --ink: #243142;
+      --muted: #667085;
+      --line: #d9cbb7;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --blue: #2563eb;
+      --red: #dc2626;
+      --green: #16a34a;
+      --shadow: 0 12px 35px rgba(36, 49, 66, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #fbf7ee 0%, #efe3d0 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    header {
+      padding: 36px 32px 24px;
+      border-bottom: 1px solid var(--line);
+      background: radial-gradient(circle at top left, rgba(15,118,110,0.14), transparent 34%), var(--paper);
+    }
+    main { max-width: 1320px; margin: 0 auto; padding: 28px 24px 52px; }
+    h1 { margin: 0 0 10px; font-size: clamp(1.8rem, 3vw, 3rem); letter-spacing: -0.03em; }
+    h2 { margin-top: 0; font-size: 1.35rem; }
+    h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .subtitle { max-width: 980px; color: var(--muted); font-size: 1.02rem; }
+    .badge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: #344054; font-size: 0.9rem; }
+    .badge.warn { color: var(--warn); border-color: #f5c26b; background: #fffbeb; }
+    .grid { display: grid; gap: 18px; }
+    .grid.two { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+    @media (max-width: 960px) { .grid.two { grid-template-columns: 1fr; } }
+    .card {
+      background: rgba(255,250,241,0.95);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .notice {
+      border-left: 5px solid var(--warn);
+      background: #fff7ed;
+      padding: 14px 16px;
+      border-radius: 12px;
+      color: #7c2d12;
+      margin-bottom: 18px;
+    }
+    .controls {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: end;
+      margin: 18px 0;
+      padding: 14px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    label { display: grid; gap: 5px; font-weight: 650; font-size: 0.92rem; color: #344054; }
+    select {
+      min-width: 190px;
+      padding: 9px 12px;
+      border: 1px solid #c7b99f;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+    .chart { width: 100%; height: 480px; }
+    .chart.heatmap { height: 540px; }
+    .formula {
+      overflow-x: auto;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #1f2937;
+      color: #f9fafb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      white-space: pre;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { border-bottom: 1px solid var(--line); text-align: left; padding: 9px 8px; vertical-align: top; }
+    th { background: rgba(15,118,110,0.08); }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    a { color: var(--accent); font-weight: 650; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SIROCCO Current / Heading / Rudder Force Components</h1>
+    <p class="subtitle">Placeholder engineering-calculation report and interactive chart concept for GitHub issue #598. This preview demonstrates the proposed chart titles, axis labels, units, controls, calculation traceability, and review wording before implementation begins.</p>
+    <div class="badge-row">
+      <span class="badge">Issue: #598</span>
+      <span class="badge">Report type: engineering calculation placeholder</span>
+      <span class="badge">Frame: ship-fixed COG components</span>
+      <span class="badge warn">Concept only — not final validated output</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="notice">
+      <strong>Review note:</strong> This HTML is a placeholder review artifact prepared under the repo ecosystem's <code>engineering/calculation-methodology</code> and <code>data/calculation-report</code> patterns. It uses the proposed simplified B1528/SIROCCO formula from the issue plan to populate example traces. It is not the final TDD-backed implementation report and must not be treated as an approved engineering deliverable.
+    </section>
+
+    <section class="grid two">
+      <article class="card">
+        <h2>Calculation scope and assumptions</h2>
+        <p>The requested sweep varies current speed, heading offset, and rudder angle. The placeholder includes the requested engineering speed grid plus the requested exact default chart plane at <strong>4.56 kn</strong>.</p>
+        <table aria-label="Input sweep table">
+          <thead><tr><th>Input</th><th>Placeholder value / range</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td>Current speed</td><td>1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5 plus default 4.56</td><td>kn</td></tr>
+            <tr><td>Heading offset, ψ</td><td>-10 to +10, step 1</td><td>deg</td></tr>
+            <tr><td>Rudder angle, δ</td><td>-10 to +10, step 1</td><td>deg</td></tr>
+            <tr><td>Rudder area, A<sub>R</sub></td><td>44.9396</td><td>m²</td></tr>
+            <tr><td>Yaw lever arm</td><td>135.3</td><td>m</td></tr>
+            <tr><td>Model status</td><td>First-cut rudder-induced current load visualization</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card">
+        <h2>Method summary</h2>
+        <p>Local current-frame force components are calculated first, then rotated into ship-fixed components for charting. Positive <code>Y_ship</code> and <code>N_ship</code> indicate port sway force and bow-to-port yaw moment.</p>
+        <div class="formula">V = current_speed_kn × 0.51444
+F = β × A_R × V² × C_r
+α = δ - ψ
+F_n = F × sin(α)
+X_local = F × sin²(α)
+Y_local = F × sin(α) × cos(α)
+
+X_ship = X_local × cos(ψ) - Y_local × sin(ψ)
+Y_ship = X_local × sin(ψ) + Y_local × cos(ψ)
+N_ship = Y_ship × yaw_lever_m</div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <h2>Interactive placeholder chart controls</h2>
+      <div class="controls">
+        <label>Current speed for both charts
+          <select id="speedSelect" aria-label="Current speed dropdown"></select>
+        </label>
+        <label>Rudder angle for Chart 1
+          <select id="rudderSelect" aria-label="Rudder angle dropdown"></select>
+        </label>
+        <span class="muted small">Default current speed is 4.56 kn, flagged as an extra chart-default plane outside the requested engineering sweep.</span>
+      </div>
+      <div class="grid two">
+        <div>
+          <h3>Chart 1 — Ship-fixed force components vs heading offset</h3>
+          <p class="muted small">X axis: heading offset ψ (deg). Y axis: ship-fixed force component (kN). Traces: X_ship, Y_ship, and resultant horizontal force for the selected rudder angle.</p>
+          <div id="forceChart" class="chart" role="img" aria-label="Ship-fixed force components versus heading offset"></div>
+        </div>
+        <div>
+          <h3>Chart 2 — Ship-fixed yaw moment heatmap over heading and rudder</h3>
+          <p class="muted small">X axis: heading offset ψ (deg). Y axis: rudder angle δ (deg). Color: yaw moment N_ship (kN-m), signed about vertical axis.</p>
+          <div id="momentChart" class="chart heatmap" role="img" aria-label="Yaw moment heatmap over heading and rudder"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-top:18px;">
+      <article class="card">
+        <h2>Chart interpretation</h2>
+        <ul>
+          <li><strong>Force component chart:</strong> supports quick reading of surge/sway component magnitudes as heading changes for a selected rudder angle.</li>
+          <li><strong>Yaw moment heatmap:</strong> shows full heading × rudder interaction for the selected speed, including zero-response bands where δ approximately equals ψ under the simplified relative-inflow model.</li>
+          <li><strong>Dropdown behavior:</strong> all requested current speeds are available, with 4.56 kn selected by default for reviewer convenience.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>Limitations to carry into implementation</h2>
+        <ul>
+          <li>Rudder-induced current loads only; no hull current force, bank effect, tug load, mooring-line stiffness, propeller race, or class/IMO conclusion.</li>
+          <li>The oblique-current treatment is a first-cut visualization assumption, not a validated MMG/hull-rudder interaction model.</li>
+          <li>Final report must be TDD-backed and must include CSV/JSON/provenance/manifest artifacts per the issue plan.</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer>
+      Placeholder prepared for review against issue #598. Final implementation remains blocked until the issue is approved and moved from <code>status:plan-review</code> to <code>status:plan-approved</code>.
+    </footer>
+  </main>
+
+  <script>
+    const KNOT_TO_M_PER_S = 0.51444;
+    const rudderAreaM2 = 44.93956319369854;
+    const yawLeverM = 135.3;
+    const beta = 1.0;
+    const Cr = 1.0;
+    const speeds = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 4.56];
+    const headings = Array.from({length: 21}, (_, i) => i - 10);
+    const rudders = Array.from({length: 21}, (_, i) => i - 10);
+
+    function degToRad(deg) { return deg * Math.PI / 180; }
+    function row(speedKn, headingDeg, rudderDeg) {
+      const V = speedKn * KNOT_TO_M_PER_S;
+      const F = beta * rudderAreaM2 * V * V * Cr;
+      const psi = degToRad(headingDeg);
+      const alphaDeg = rudderDeg - headingDeg;
+      const alpha = degToRad(alphaDeg);
+      const xLocal = F * Math.sin(alpha) * Math.sin(alpha);
+      const yLocal = F * Math.sin(alpha) * Math.cos(alpha);
+      const xShip = xLocal * Math.cos(psi) - yLocal * Math.sin(psi);
+      const yShip = xLocal * Math.sin(psi) + yLocal * Math.cos(psi);
+      const nShip = yShip * yawLeverM;
+      return {
+        speedKn, headingDeg, rudderDeg, alphaDeg,
+        xShipKN: xShip / 1000,
+        yShipKN: yShip / 1000,
+        resultantKN: Math.hypot(xShip, yShip) / 1000,
+        nShipKNm: nShip / 1000,
+        isDefaultExtra: speedKn === 4.56
+      };
+    }
+
+    function fmtSpeed(s) {
+      return s === 4.56 ? '4.56 kn — chart default extra plane' : `${s.toFixed(s % 1 === 0 ? 0 : 1)} kn`;
+    }
+
+    function populateControls() {
+      const speedSelect = document.getElementById('speedSelect');
+      const rudderSelect = document.getElementById('rudderSelect');
+      speeds.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = String(s);
+        opt.textContent = fmtSpeed(s);
+        if (s === 4.56) opt.selected = true;
+        speedSelect.appendChild(opt);
+      });
+      rudders.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = String(r);
+        opt.textContent = `${r >= 0 ? '+' : ''}${r} deg`;
+        if (r === 10) opt.selected = true;
+        rudderSelect.appendChild(opt);
+      });
+    }
+
+    function updateForceChart() {
+      const speed = Number(document.getElementById('speedSelect').value);
+      const rudder = Number(document.getElementById('rudderSelect').value);
+      const rows = headings.map(h => row(speed, h, rudder));
+      const hover = rows.map(r => `speed=${r.speedKn} kn<br>heading=${r.headingDeg} deg<br>rudder=${r.rudderDeg} deg<br>alpha=${r.alphaDeg} deg<br>N_ship=${r.nShipKNm.toFixed(2)} kN-m`);
+      const data = [
+        {x: headings, y: rows.map(r => r.xShipKN), type: 'scatter', mode: 'lines+markers', name: 'X_ship surge force (kN)', line: {color: '#2563eb'}, text: hover, hovertemplate: '%{text}<br>X_ship=%{y:.4f} kN<extra></extra>'},
+        {x: headings, y: rows.map(r => r.yShipKN), type: 'scatter', mode: 'lines+markers', name: 'Y_ship sway force to port (kN)', line: {color: '#dc2626'}, text: hover, hovertemplate: '%{text}<br>Y_ship=%{y:.4f} kN<extra></extra>'},
+        {x: headings, y: rows.map(r => r.resultantKN), type: 'scatter', mode: 'lines+markers', name: 'Resultant horizontal force (kN)', line: {color: '#16a34a', dash: 'dash'}, text: hover, hovertemplate: '%{text}<br>Resultant=%{y:.4f} kN<extra></extra>'}
+      ];
+      const layout = {
+        title: {text: `Chart 1 — Ship-fixed force components vs heading offset<br><sup>Current ${speed} kn, rudder ${rudder >= 0 ? '+' : ''}${rudder} deg</sup>`},
+        xaxis: {title: 'Heading offset, ψ (deg)', dtick: 2, zeroline: true},
+        yaxis: {title: 'Ship-fixed force component (kN)', zeroline: true},
+        legend: {orientation: 'h', y: -0.25},
+        margin: {l: 72, r: 24, t: 80, b: 100},
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: '#fffaf1'
+      };
+      Plotly.react('forceChart', data, layout, {responsive: true, displaylogo: false});
+    }
+
+    function updateMomentChart() {
+      const speed = Number(document.getElementById('speedSelect').value);
+      const z = rudders.map(r => headings.map(h => row(speed, h, r).nShipKNm));
+      const customdata = rudders.map(r => headings.map(h => {
+        const rr = row(speed, h, r);
+        return [rr.alphaDeg, rr.xShipKN, rr.yShipKN, rr.resultantKN];
+      }));
+      const data = [{
+        x: headings,
+        y: rudders,
+        z,
+        customdata,
+        type: 'heatmap',
+        colorscale: 'RdBu',
+        reversescale: true,
+        zmid: 0,
+        colorbar: {title: 'N_ship<br>(kN-m)'},
+        hovertemplate: 'heading=%{x} deg<br>rudder=%{y} deg<br>alpha=%{customdata[0]} deg<br>X_ship=%{customdata[1]:.4f} kN<br>Y_ship=%{customdata[2]:.4f} kN<br>Resultant=%{customdata[3]:.4f} kN<br>N_ship=%{z:.2f} kN-m<extra></extra>'
+      }];
+      const layout = {
+        title: {text: `Chart 2 — Ship-fixed yaw moment response surface<br><sup>Current ${speed} kn; heading × rudder sweep</sup>`},
+        xaxis: {title: 'Heading offset, ψ (deg)', dtick: 2, zeroline: true},
+        yaxis: {title: 'Rudder angle, δ (deg)', dtick: 2, zeroline: true},
+        margin: {l: 72, r: 82, t: 80, b: 70},
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: '#fffaf1'
+      };
+      Plotly.react('momentChart', data, layout, {responsive: true, displaylogo: false});
+    }
+
+    function updateAll() {
+      updateForceChart();
+      updateMomentChart();
+    }
+
+    populateControls();
+    document.getElementById('speedSelect').addEventListener('change', updateAll);
+    document.getElementById('rudderSelect').addEventListener('change', updateForceChart);
+    updateAll();
+  </script>
+</body>
+</html>

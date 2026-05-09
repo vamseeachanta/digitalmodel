@@ -162,7 +162,8 @@ This avoids a dropdown default that points to a missing dataset. If the user rej
 
 | Artifact | Path | Purpose | Commit timing |
 |---|---|---|---|
-| Plan | `docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md` | Review/approval artifact | Commit before implementation if user wants persistent plan; otherwise attach/link via issue comment. |
+| Plan | `docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md` | Review/approval artifact | Committed before implementation. |
+| Placeholder HTML concept | `docs/plans/assets/issue-598-sirocco-current-heading-rudder-placeholder.html` | Review-only engineering calculation/chart concept using the repo ecosystem's `engineering/calculation-methodology` and `data/calculation-report` patterns; not a final implementation artifact. | Committed during plan-review for issue discussion. |
 | Input YAML | `src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml` | Packaged input contract | Implementation after approval. |
 | Report module | `src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py` | Calculation and report writer | Implementation after approval. |
 | Package exports | `src/digitalmodel/naval_architecture/__init__.py` | Public API exports | Implementation after approval. |
@@ -419,6 +420,7 @@ PYTHONPATH=src uv run python -m pytest tests/naval_architecture -q
 ## 12. Review Artifact Paths
 
 - Draft plan: `docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md`
+- Placeholder HTML concept: `docs/plans/assets/issue-598-sirocco-current-heading-rudder-placeholder.html`
 - Adversarial review summary: embedded in Section 14.
 - Issue comment/update target: https://github.com/vamseeachanta/digitalmodel/issues/598
 
