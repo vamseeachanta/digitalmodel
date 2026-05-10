@@ -211,15 +211,23 @@ def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path)
     for speed in ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "4.56"]:
         assert f'<option value="{speed}"' in html
     assert 'id="rudder-angle-select"' in html
-    assert '<option value="10.0" selected>10.0 deg</option>' in html
+    assert '<option value="0.0" selected>0.0 deg</option>' in html
+    assert '<option value="10.0" selected>10.0 deg</option>' not in html
     for angle in range(-10, 11):
         assert f'<option value="{float(angle):.1f}"' in html
+    assert '<title>B1528 SIROCCO Rudder-Induced Current-Heading Force Components</title>' in html
+    assert '<h1>Rudder-induced current-heading force component chart set</h1>' in html
+    assert 'selected-speed-envelope-summary' in html
+    assert 'Selected-speed envelope summary' in html
+    assert 'Max |Y_ship| at selected speed' in html
+    assert 'Max |N_ship| at selected speed' in html
+    assert 'updateSelectedSpeedEnvelope' in html
     assert 'id="force-components-chart"' in html
     assert 'id="yaw-moment-heatmap"' in html
     assert "Plotly.newPlot('force-components-chart'" in html
     assert "Plotly.newPlot('yaw-moment-heatmap'" in html
-    assert "Ship-fixed force component (kN)" in html
-    assert "N_ship yaw moment (kN-m)" in html
+    assert "Rudder-induced ship-fixed force component (kN)" in html
+    assert "Rudder-induced N_ship yaw moment (kN-m)" in html
     assert "is_chart_default_extra_speed" in html
     assert "4.56 kn is an extra chart-default case" in html
     assert "Chart 1" in html and "Chart 2" in html

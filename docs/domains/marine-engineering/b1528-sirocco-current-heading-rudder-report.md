@@ -1,4 +1,4 @@
-# B1528 SIROCCO Current-Heading/Rudder Force Component Report
+# B1528 SIROCCO Rudder-Induced Current-Heading Force Component Report
 
 Prepared for engineer review on 2026-05-09.
 
@@ -92,16 +92,23 @@ current load.
 
 ## Chart set
 
-The generated HTML report uses two Plotly chart areas:
+The generated HTML report uses Plotly from the CDN
+`https://cdn.plot.ly/plotly-2.35.2.min.js` and includes one selected-speed
+summary panel plus two chart areas:
 
-1. **Ship-fixed force component chart** — line traces of `X_ship`, `Y_ship`, and
+1. **Selected-speed envelope summary** — a table that updates with the
+   current-speed selector and reports selected-speed row count, max `|Y_ship|`,
+   max `|N_ship|`, and max resultant horizontal force over the full
+   heading-by-rudder grid at that speed.
+2. **Rudder-induced ship-fixed force component chart** — line traces of `X_ship`, `Y_ship`, and
    resultant horizontal force over heading offset for the selected current speed
    and selected rudder angle.
-2. **Yaw-moment heatmap** — signed `N_ship` yaw moment over heading offset and
+3. **Rudder-induced yaw-moment heatmap** — signed `N_ship` yaw moment over heading offset and
    rudder angle for the selected current speed.
 
 The current-speed dropdown defaults to `4.56 kn`. The rudder-angle dropdown for
-Chart 1 defaults to `+10 deg` so the first view has visible non-zero response.
+Chart 1 defaults to neutral `0 deg` so screenshots open on the chart-default
+speed without implying an extreme rudder command.
 
 ## Generated outputs
 

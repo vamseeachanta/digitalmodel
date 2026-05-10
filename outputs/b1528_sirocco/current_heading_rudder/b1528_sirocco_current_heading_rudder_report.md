@@ -1,4 +1,4 @@
-# B1528 SIROCCO Current-Heading/Rudder Force Component Report
+# B1528 SIROCCO Rudder-Induced Current-Heading Force Component Report
 
 Prepared for engineer review on 2026-05-09.
 
@@ -56,7 +56,7 @@ Data point: `chart-default 4.56 kn, heading 0 deg, rudder +1 deg, Cr=1.0`.
 
 ## Interpretation charts
 
-Chart 1 plots ship-fixed `X_ship`, `Y_ship`, and resultant horizontal force versus heading for the selected current speed and rudder angle. Chart 2 is a signed yaw-moment heatmap over heading offset and rudder angle for the selected current speed.
+Chart 1 plots rudder-induced ship-fixed `X_ship`, `Y_ship`, and resultant horizontal force versus heading for the selected current speed and rudder angle. Chart 2 is a signed rudder-induced yaw-moment heatmap over heading offset and rudder angle for the selected current speed. The HTML report also includes a selected-speed envelope summary panel that updates with the current-speed selector.
 
 ## Limitations
 

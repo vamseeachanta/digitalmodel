@@ -29,6 +29,7 @@ from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
 )
 
 REPORT_REVIEW_TARGET_DATE = "2026-05-09"
+DEFAULT_CHART_RUDDER_ANGLE_DEG = 0.0
 REPORT_SCOPE = (
     "rudder-induced SIROCCO current-heading/rudder force-component sweep at COG; "
     "ship-fixed X/Y/N components are derived by rotating local current-frame "
@@ -383,7 +384,7 @@ def _markdown_report(result: dict[str, Any]) -> str:
     sample = result["sample_working_example"]
     links = metadata["traceability_links"]
     lines = [
-        "# B1528 SIROCCO Current-Heading/Rudder Force Component Report",
+        "# B1528 SIROCCO Rudder-Induced Current-Heading Force Component Report",
         "",
         f"Prepared for engineer review on {metadata['review_target_date']}.",
         "",
@@ -432,7 +433,7 @@ def _markdown_report(result: dict[str, Any]) -> str:
         "",
         "## Interpretation charts",
         "",
-        "Chart 1 plots ship-fixed `X_ship`, `Y_ship`, and resultant horizontal force versus heading for the selected current speed and rudder angle. Chart 2 is a signed yaw-moment heatmap over heading offset and rudder angle for the selected current speed.",
+        "Chart 1 plots rudder-induced ship-fixed `X_ship`, `Y_ship`, and resultant horizontal force versus heading for the selected current speed and rudder angle. Chart 2 is a signed rudder-induced yaw-moment heatmap over heading offset and rudder angle for the selected current speed. The HTML report also includes a selected-speed envelope summary panel that updates with the current-speed selector.",
         "",
         "## Limitations",
         "",
@@ -449,7 +450,7 @@ def _html_report(result: dict[str, Any]) -> str:
         for speed in sorted({row["current_speed_kn"] for row in result["rows"]})
     )
     rudder_options = "\n".join(
-        f'<option value="{float(angle):.1f}"{ " selected" if float(angle) == 10.0 else ""}>{float(angle):.1f} deg</option>'
+        f'<option value="{float(angle):.1f}"{ " selected" if float(angle) == DEFAULT_CHART_RUDDER_ANGLE_DEG else ""}>{float(angle):.1f} deg</option>'
         for angle in metadata["rudder_angles_deg"]
     )
     summary_json = json.dumps(result["summary"], indent=2)
@@ -458,7 +459,7 @@ def _html_report(result: dict[str, Any]) -> str:
 <head>
 <meta charset=\"utf-8\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-<title>B1528 SIROCCO Current-Heading/Rudder Forces</title>
+<title>B1528 SIROCCO Rudder-Induced Current-Heading Force Components</title>
 <script src=\"https://cdn.plot.ly/plotly-2.35.2.min.js\"></script>
 <style>
 :root {{ --page-bg:#eef2f7; --paper:#fff; --ink:#172033; --muted:#607085; --line:#d7dee8; --accent:#155e95; --soft:#e8f2fb; }}
@@ -483,7 +484,8 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <body>
 <div class=\"report-shell\"><main class=\"report-page\">
 <p class=\"eyebrow\">B1528 SIROCCO · Issue #598</p>
-<h1>Current-heading/rudder force component chart set</h1>
+<h1>Rudder-induced current-heading force component chart set</h1>
+<p>This interactive report visualizes <strong>rudder-induced</strong> force and yaw-moment components for B1528 SIROCCO current-heading/rudder combinations. It is not a total current-load, mooring, tug, bank-effect, or compliance model.</p>
 <p>{REPORT_SCOPE}</p>
 <div class=\"note-panel\"><strong>Default speed policy:</strong> 4.56 kn is an extra chart-default case outside the requested engineering sweep list. Rows are flagged with <code>is_chart_default_extra_speed</code>.</div>
 
@@ -497,13 +499,25 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </label>
 </div>
 
-<h2>Chart 1 — Ship-fixed force components over heading</h2>
-<p>Shows <code>X_ship</code>, <code>Y_ship</code>, and resultant horizontal force in kN for the selected current speed and rudder angle. All 21 rudder angles are selectable.</p>
-<div id=\"force-components-chart\" class=\"chart\" aria-label=\"Ship-fixed force component chart\"></div>
+<h2>Selected-speed envelope summary</h2>
+<p>Envelope values below update with the current-speed selector and use the full heading × rudder grid at that speed. This panel is intended to keep the chart default <strong>4.56 kn</strong> visible in screenshots while preserving requested sweep row counts.</p>
+<table id="selected-speed-envelope-summary" class="data-table" aria-label="Selected speed envelope summary">
+<thead><tr><th>Metric</th><th>Envelope case</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Selected speed</td><td id="selected-speed-case">—</td><td id="selected-speed-value">—</td></tr>
+<tr><td>Max |Y_ship| at selected speed</td><td id="selected-speed-max-y-case">—</td><td id="selected-speed-max-y-value">—</td></tr>
+<tr><td>Max |N_ship| at selected speed</td><td id="selected-speed-max-n-case">—</td><td id="selected-speed-max-n-value">—</td></tr>
+<tr><td>Max resultant horizontal force</td><td id="selected-speed-max-h-case">—</td><td id="selected-speed-max-h-value">—</td></tr>
+</tbody>
+</table>
 
-<h2>Chart 2 — Ship-fixed yaw moment heatmap over heading × rudder</h2>
-<p>Shows signed <code>N_ship yaw moment (kN-m)</code> over heading offset and rudder angle for the selected current speed.</p>
-<div id=\"yaw-moment-heatmap\" class=\"chart\" aria-label=\"Yaw moment heatmap\"></div>
+<h2>Chart 1 — Rudder-induced ship-fixed force components over heading</h2>
+<p>Shows rudder-induced <code>X_ship</code>, <code>Y_ship</code>, and resultant horizontal force in kN for the selected current speed and rudder angle. All 21 rudder angles are selectable; the default rudder angle is neutral <strong>0.0 deg</strong>.</p>
+<div id=\"force-components-chart\" class=\"chart\" aria-label=\"Rudder-induced ship-fixed force component chart\"></div>
+
+<h2>Chart 2 — Rudder-induced ship-fixed yaw moment heatmap over heading × rudder</h2>
+<p>Shows signed rudder-induced <code>N_ship yaw moment (kN-m)</code> over heading offset and rudder angle for the selected current speed.</p>
+<div id=\"yaw-moment-heatmap\" class=\"chart\" aria-label=\"Rudder-induced yaw moment heatmap\"></div>
 
 <h2>Method and provenance</h2>
 <pre class=\"method-block\">{metadata['method']}</pre>
@@ -526,6 +540,26 @@ function selectedRudder() {{ return parseFloat(document.getElementById('rudder-a
 function same(a, b) {{ return Math.abs(a - b) < 1e-9; }}
 function byHeading(a, b) {{ return a.heading_offset_deg - b.heading_offset_deg; }}
 function rowsForSpeed(speed) {{ return ROWS.filter(row => same(row.current_speed_kn, speed)); }}
+function absMax(rows, key) {{ return rows.reduce((best, row) => Math.abs(row[key]) > Math.abs(best[key]) ? row : best, rows[0]); }}
+function maxBy(rows, key) {{ return rows.reduce((best, row) => row[key] > best[key] ? row : best, rows[0]); }}
+function caseLabel(row) {{ return `heading ${{row.heading_offset_deg}} deg · rudder ${{row.rudder_angle_deg}} deg`; }}
+function updateText(id, text) {{ document.getElementById(id).textContent = text; }}
+function updateSelectedSpeedEnvelope() {{
+  const speed = selectedSpeed();
+  const speedRows = rowsForSpeed(speed);
+  const maxY = absMax(speedRows, 'force_y_ship_port_N');
+  const maxN = absMax(speedRows, 'moment_n_yaw_bow_port_kN_m');
+  const maxH = maxBy(speedRows, 'resultant_horizontal_force_N');
+  const extra = speedRows.some(row => row.is_chart_default_extra_speed) ? 'chart-default extra plane' : 'requested engineering sweep plane';
+  updateText('selected-speed-case', extra);
+  updateText('selected-speed-value', `${{speed}} kn · ${{speedRows.length}} rows`);
+  updateText('selected-speed-max-y-case', caseLabel(maxY));
+  updateText('selected-speed-max-y-value', `${{(maxY.force_y_ship_port_N/1000).toFixed(3)}} kN`);
+  updateText('selected-speed-max-n-case', caseLabel(maxN));
+  updateText('selected-speed-max-n-value', `${{maxN.moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m`);
+  updateText('selected-speed-max-h-case', caseLabel(maxH));
+  updateText('selected-speed-max-h-value', `${{(maxH.resultant_horizontal_force_N/1000).toFixed(3)}} kN`);
+}}
 function updateForceChart() {{
   const speed = selectedSpeed();
   const rudder = selectedRudder();
@@ -537,7 +571,7 @@ function updateForceChart() {{
     {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Y_ship port (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Y_ship=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
     {{x, y: rows.map(row => row.resultant_horizontal_force_N/1000), name:'Resultant H (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Resultant=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
   ];
-  Plotly.newPlot('force-components-chart', traces, {{title:`Ship-fixed force component (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset (deg)'}}, yaxis:{{title:'Ship-fixed force component (kN)', zeroline:true}}, height:STANDARD_CHART_HEIGHT, margin:{{l:70,r:28,t:60,b:60}}, legend:{{orientation:'h'}}}}, CHART_CONFIG);
+  Plotly.newPlot('force-components-chart', traces, {{title:`Rudder-induced ship-fixed force component (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder-induced ship-fixed force component (kN)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
 }}
 function updateYawHeatmap() {{
   const speed = selectedSpeed();
@@ -548,10 +582,10 @@ function updateYawHeatmap() {{
     const row = speedRows.find(item => same(item.heading_offset_deg, heading) && same(item.rudder_angle_deg, rudder));
     return row ? row.moment_n_yaw_bow_port_kN_m : null;
   }}));
-  const trace = {{type:'heatmap', x:headings, y:rudders, z, colorscale:'RdBu', reversescale:true, zmid:0, colorbar:{{title:'N_ship yaw moment (kN-m)'}}, hovertemplate:'heading=%{{x}} deg<br>rudder=%{{y}} deg<br>N_ship yaw moment (kN-m)=%{{z:.3f}}<extra></extra>'}};
-  Plotly.newPlot('yaw-moment-heatmap', [trace], {{title:`N_ship yaw moment (kN-m) · current ${{speed}} kn`, xaxis:{{title:'Heading offset (deg)'}}, yaxis:{{title:'Rudder angle (deg)'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:70,r:90,t:60,b:60}}}}, CHART_CONFIG);
+  const trace = {{type:'heatmap', x:headings, y:rudders, z, colorscale:'RdBu', reversescale:true, zmid:0, colorbar:{{title:'Rudder-induced N_ship yaw moment (kN-m)'}}, hovertemplate:'heading=%{{x}} deg<br>rudder=%{{y}} deg<br>Rudder-induced N_ship yaw moment=%{{z:.3f}} kN-m<extra></extra>'}};
+  Plotly.newPlot('yaw-moment-heatmap', [trace], {{title:`Rudder-induced N_ship yaw moment (kN-m) · current ${{speed}} kn`, xaxis:{{title:'Heading offset ψ (deg)', gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder angle δ (deg)', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:132,t:66,b:64}}, template:'plotly_white'}}, CHART_CONFIG);
 }}
-function updateCharts() {{ updateForceChart(); updateYawHeatmap(); }}
+function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawHeatmap(); }}
 document.getElementById('current-speed-select').addEventListener('change', updateCharts);
 document.getElementById('rudder-angle-select').addEventListener('change', updateForceChart);
 updateCharts();
