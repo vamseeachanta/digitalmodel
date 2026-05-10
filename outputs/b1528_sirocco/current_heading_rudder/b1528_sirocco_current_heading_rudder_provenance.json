@@ -1,0 +1,88 @@
+{
+  "scope": "rudder-induced SIROCCO current-heading/rudder force-component sweep at COG; ship-fixed X/Y/N components are derived by rotating local current-frame loads by heading offset; hull current loads, bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded; no class compliance conclusion",
+  "method": "V=kn*0.51444; F=beta*A_R*V^2*Cr; alpha=delta-psi; X_local=F*sin(alpha)^2; Y_local=F*sin(alpha)*cos(alpha); X_ship=X_local*cos(psi)-Y_local*sin(psi); Y_ship=X_local*sin(psi)+Y_local*cos(psi); N=Y_ship*yaw_lever",
+  "heading_rudder_effective_angle_convention": "alpha = rudder_angle_deg - heading_offset_deg",
+  "local_to_ship_transform": {
+    "x_ship": "X_local*cos(psi)-Y_local*sin(psi)",
+    "y_ship": "X_local*sin(psi)+Y_local*cos(psi)",
+    "n_ship": "Y_ship*yaw_lever_m"
+  },
+  "default_speed_policy": "4.56 kn is an extra chart-default case outside the requested engineering sweep list.",
+  "scope_exclusions": [
+    "rudder-induced moored-current loads only",
+    "hull current loads, bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded",
+    "oblique-current extension is a first-cut visualization using alpha = rudder angle - heading offset",
+    "not a validated oblique-current hull/rudder interaction model",
+    "Cr=1.0 is a neutral no-propeller-rotation correction value",
+    "no class compliance conclusion"
+  ],
+  "design_data": {
+    "lbp_m": 225.5,
+    "yaw_lever_m": 135.3,
+    "rudder_area_m2": 44.93956319369854,
+    "rudder_span_m": 9.0,
+    "ship_sog_kn": 0.0,
+    "rho_kg_m3": 1025.0,
+    "beta": 600.0,
+    "prop_rotation_factor": 1.0,
+    "force_convention": {
+      "x_positive": "+X_ship forward/downstream reference for zero heading",
+      "y_positive": "+Y_ship port",
+      "z_positive": "upward",
+      "heading_positive": "local downstream current-force axis rotated toward port from +X_ship",
+      "rudder_positive": "rudder to port",
+      "yaw_positive": "bow_to_port",
+      "transform": "Local-to-ship transform rotates current-frame X/Y loads by heading offset into ship-fixed COG axes.",
+      "yaw_lever_basis": "B1528 Barrass workbook family, 0.6 * LBP"
+    }
+  },
+  "analysis_assumptions": [
+    "Vessel is moored with ship speed over ground equal to 0 kn.",
+    "Heading/rudder effective-angle convention: alpha = rudder_angle_deg - heading_offset_deg.",
+    "Positive heading rotates the local downstream current-force axis toward port from +X_ship.",
+    "Local-to-ship transform rotates local current-frame X/Y loads into ship-fixed COG axes.",
+    "4.56 kn is an extra chart-default case outside the requested engineering sweep list.",
+    "Only rudder-induced COG force components are reported; hull current loads require vessel current coefficients.",
+    "Mooring reactions are equal and opposite loads for static-equilibrium context only."
+  ],
+  "traceability_links": {
+    "source_pack_issue": "https://github.com/vamseeachanta/workspace-hub/issues/2569",
+    "current_heading_rudder_issue": "https://github.com/vamseeachanta/digitalmodel/issues/598",
+    "plan": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md",
+    "durable_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/b1528-sirocco-current-heading-rudder-report.md",
+    "generated_markdown_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_report.md",
+    "generated_html_report": "https://github.com/vamseeachanta/digitalmodel/blob/main/outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_report.html",
+    "packaged_input_yaml": "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml",
+    "report_generator": "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py",
+    "moored_current_reference": "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_moored_current_report.py"
+  },
+  "sample_working_example": {
+    "data_point": "chart-default 4.56 kn, heading 0 deg, rudder +1 deg, Cr=1.0",
+    "current_speed_kn": 4.56,
+    "current_speed_m_s": 2.3458463999999997,
+    "heading_offset_deg": 0.0,
+    "rudder_angle_deg": 1.0,
+    "effective_rudder_inflow_angle_deg": 1.0,
+    "beta": 600.0,
+    "rudder_area_m2": 44.93956319369854,
+    "cr": 1.0,
+    "base_force_N": 148381.3238968209,
+    "normal_force_N": 2589.6111723495264,
+    "force_x_ship_N": 45.194946694374174,
+    "force_y_ship_port_N": 2589.2167620249143,
+    "moment_n_yaw_bow_port_kN_m": 350.321027901971
+  },
+  "summary": {
+    "row_count": 3969,
+    "requested_engineering_row_count": 3528,
+    "extra_default_row_count": 441,
+    "max_abs_ship_sway_force_N": 43950.27106965368,
+    "max_abs_ship_sway_signed_force_N": 43950.27106965368,
+    "max_abs_ship_sway_case": "current 4.56 kn, heading -10 deg, rudder 10 deg",
+    "max_abs_yaw_moment_kN_m": 5946.471675724143,
+    "max_abs_yaw_signed_moment_kN_m": 5946.471675724143,
+    "max_abs_yaw_case": "current 4.56 kn, heading -10 deg, rudder 10 deg",
+    "max_resultant_horizontal_force_N": 50749.40166604315,
+    "max_resultant_case": "current 4.56 kn, heading -10 deg, rudder 10 deg"
+  }
+}

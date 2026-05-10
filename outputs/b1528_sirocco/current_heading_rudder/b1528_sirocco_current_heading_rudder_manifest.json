@@ -1,0 +1,8 @@
+{
+  "csv": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_results.csv",
+  "json": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_results.json",
+  "provenance": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_provenance.json",
+  "markdown_report": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_report.md",
+  "html_report": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_report.html",
+  "manifest": "outputs/b1528_sirocco/current_heading_rudder/b1528_sirocco_current_heading_rudder_manifest.json"
+}

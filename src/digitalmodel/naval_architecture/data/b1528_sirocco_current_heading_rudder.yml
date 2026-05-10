@@ -1,0 +1,52 @@
+case:
+  id: b1528_sirocco_current_heading_rudder_forces
+  description: B1528 SIROCCO current-heading/rudder force component sweep at COG.
+  aliases:
+    - SIROCCO
+    - Sirocco
+    - Sorocco
+    - Sorrocco
+source_pack:
+  issue: https://github.com/vamseeachanta/workspace-hub/issues/2569
+  source_pack_path: docs/projects/acma/B1528/sirocco-rudder-source-pack.md
+current_heading_rudder_report:
+  issue: https://github.com/vamseeachanta/digitalmodel/issues/598
+  plan: docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md
+vessel:
+  lbp_m: 225.5
+  yaw_lever_m: 135.3
+rudder:
+  area_m2: 44.93956319369854
+  span_m: 9.0
+scenario:
+  vessel_condition: moored
+  ship_sog_kn: 0.0
+  current_speeds_kn: [1, 1.5, 2.0, 2.5, 3, 3.5, 4, 4.5]
+  chart_default_current_speed_kn: 4.56
+  default_speed_policy: 4.56 kn is an extra chart-default case outside the requested engineering sweep list.
+  heading_offsets_deg: [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  rudder_angles_deg: [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+environment:
+  rho_kg_m3: 1025.0
+workbook_regression:
+  beta: 600.0
+  prop_rotation_factor: 1.0
+  prop_rotation_factor_logic: Cr=1.0 because the vessel is moored and the requested case excludes propeller-rotation correction.
+force_convention:
+  x_positive: +X_ship forward/downstream reference for zero heading
+  y_positive: +Y_ship port
+  z_positive: upward
+  heading_positive: local downstream current-force axis rotated toward port from +X_ship
+  rudder_positive: rudder to port
+  yaw_positive: bow_to_port
+  transform: Local-to-ship transform rotates current-frame X/Y loads by heading offset into ship-fixed COG axes.
+  yaw_lever_basis: B1528 Barrass workbook family, 0.6 * LBP
+outputs:
+  directory: outputs/b1528_sirocco/current_heading_rudder
+limitations:
+  - rudder-induced moored-current loads only
+  - hull current loads, bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded
+  - oblique-current extension is a first-cut visualization using alpha = rudder angle - heading offset
+  - not a validated oblique-current hull/rudder interaction model
+  - Cr=1.0 is a neutral no-propeller-rotation correction value
+  - no class compliance conclusion
