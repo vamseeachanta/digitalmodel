@@ -1,0 +1,170 @@
+# OrcaFlex YAML Semantic-Equivalence Model Claim Registry
+#
+# Authority: docs/domains/orcaflex/SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md
+# Taxonomy:  docs/domains/orcaflex/SEMANTIC_DIFF_TAXONOMY.md
+# Issue:     https://github.com/vamseeachanta/digitalmodel/issues/515 (iteration 2/7)
+#
+# This file is the SINGLE SOURCE OF TRUTH for what the repo is allowed to claim
+# about per-model semantic equivalence. Adding an entry asserts that the named
+# `test_enforcing` path proves the named `highest_validated_level` per the
+# taxonomy doc. The reconciliation test (iteration 3/7) validates that every
+# `test_enforcing` path resolves to a real test module on disk.
+#
+# Adding a claim: see SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md §4.
+# Removing a claim: must accompany a PR explaining the regression or
+# scope reduction. NEVER silently delete an entry.
+#
+# Schema:
+#   models:
+#     - name: <model directory name in library/model_library/, OR fixture name>
+#       family: <riser|fpso|jumper|mooring|spar|buoy|drilling|other>
+#       builder_track: <generic|riser|pipeline|jumper|other>
+#       highest_validated_level: <L1|L2|L3|pending>
+#       test_enforcing: <relative path[::class][::method]>
+#       known_diffs: [<taxonomy-class>:<section>.<property-or-group>, ...]
+#       proof_plan: <link to workspace-hub plan or "n/a">
+#       notes: <free-text context, optional>
+#       pending: <true if highest_validated_level == pending>
+#
+# Taxonomy class shorthand for `known_diffs`:
+#   C1 — UI / Cosmetic
+#   C2 — Normalization
+#   C3 — Known Intentional Omission
+#   C4 — Reference Resolution
+#   C5 — Loadability
+#   C6 — Physics-Significant
+#   OQ-N — Open Question N (#515 §5.1 dispositions)
+#
+# Pending entries are tolerated but NOT a claim — they are inventory of
+# attempted-but-unfinished proofs. Treat them as known gaps.
+
+schema_version: "1.0.0"
+last_updated: "2026-05-11"
+ratified_by_issue: 515
+
+models:
+
+  # ----------------------------------------------------------------------
+  # Catenary riser (generic track) — the original #515 evidence model.
+  # ----------------------------------------------------------------------
+  - name: a01_catenary_riser
+    family: riser
+    builder_track: generic
+    highest_validated_level: L1
+    test_enforcing: tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py::TestRoundtripPreservesLineTypes
+    known_diffs:
+      - "C1:General.DefaultViewMode"
+      - "C1:General.DefaultShadedFillMode"
+      - "C1:General.DefaultShadedProjectionMode"
+      - "C1:General.DefaultViewSize"
+      - "C1:General.DefaultViewCentre"
+      - "C1:General.DefaultViewAzimuth"
+      - "C1:General.DefaultViewElevation"
+      - "C2:Environment.bool_yes_no_vs_true_false"
+      - "C2:Environment.int_vs_float"
+      - "C3:Groups.generic_track_policy"
+      - "C3:Environment.VerticalWindVariationFactor_WindType_conditional"
+    proof_plan: "workspace-hub/docs/plans/2026-04-24-issue-515-semantic-equivalence-yaml-strict.md"
+    notes: |
+      Canonical evidence model for #515. Forward generation (spec → strict) is
+      validator-clean. Reverse extraction confidence = 0.88 (17/17 mapped fields
+      out of full canonical set).
+      OQ-1 closed iter 5/7: VerticalWindVariationFactor is conditional C3
+      (only emitted under spectrum-class WindTypes; absent for Constant /
+      Full field). OQ-4 closed iter 4/7: bool ↔ Yes/No normalized at compare
+      time, no longer surfaces as SIGNIFICANT in semantic_validate.
+
+  # ----------------------------------------------------------------------
+  # Turret-moored FPSO (generic track) — workspace-hub #2454 family target.
+  # ----------------------------------------------------------------------
+  - name: c03_turret_moored_fpso
+    family: fpso
+    builder_track: generic
+    highest_validated_level: L1
+    test_enforcing: tests/solvers/orcaflex/test_spec_upgrader.py
+    known_diffs:
+      - "C1:General.view_keys"
+      - "C2:Environment.bool_yes_no_vs_true_false"
+      - "C3:Groups.generic_track_policy"
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2454-c03-fpso-semantic-proof.md"
+    notes: |
+      Spec validation enforced by test_spec_upgrader.py. Dedicated semantic
+      proof test (test_c03_fpso_semantic_proof.py) is planned under #2454 but
+      not yet on disk. Reporting-side regression coverage exists at
+      tests/solvers/orcaflex/reporting/test_fpso_fixture_integration.py
+      (treated as a weak L1 proxy, not L2 evidence).
+
+  # ----------------------------------------------------------------------
+  # Rigid jumper (PLET-to-PLEM) — workspace-hub #2455 family target.
+  # Only family with a dedicated semantic-proof test landed.
+  # ----------------------------------------------------------------------
+  - name: rigid_jumper_plet_plem
+    family: jumper
+    builder_track: generic
+    highest_validated_level: L1
+    test_enforcing: tests/solvers/orcaflex/modular_generator/test_jumper_plet_to_plem_semantic.py
+    known_diffs:
+      - "C1:General.view_keys"
+      - "C2:Environment.bool_yes_no_vs_true_false"
+      - "C3:Groups.generic_track_policy"
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2455-rigid-jumper-plet-to-plem-semantic-proof.md"
+    notes: |
+      Strongest per-family proof currently landed. Asserts that three jumper
+      line-type variants (bare coated / with buoyancy / with strakes) survive
+      generation, OCS 200-V connector mass-per-length, CoatingThickness on
+      coated variant, every LineType reference in Lines resolves to a
+      LineType definition by name. Runs deterministic YAML generation only;
+      does not require OrcFxAPI (so it is L1-loadable but not L2-behavioral).
+
+  # ----------------------------------------------------------------------
+  # Pending — attested gaps, NOT a claim.
+  # Listed for inventory truth so a partial registry doesn't read as a full one.
+  # ----------------------------------------------------------------------
+  - name: a05_lazy_wave_with_fpso
+    family: riser
+    builder_track: riser
+    highest_validated_level: pending
+    pending: true
+    test_enforcing: null
+    known_diffs: []
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2456-lazy-wave-riser-semantic-proof.md"
+    notes: |
+      Plan #2456 proposes test_lazy_wave_semantic_fidelity.py; test not yet
+      on disk. Until landed, NO claims may be made about lazy-wave-riser
+      semantic equivalence.
+
+  - name: c06_calm_buoy
+    family: buoy
+    builder_track: generic
+    highest_validated_level: pending
+    pending: true
+    test_enforcing: null
+    known_diffs: []
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2472-calm-spm-buoy.md"
+    notes: |
+      workspace-hub #2472 plans the CALM/SPM-buoy semantic proof; not yet
+      executed. No tests under tests/ reference c06_calm_buoy.
+
+  - name: c05_single_point_mooring
+    family: mooring
+    builder_track: generic
+    highest_validated_level: pending
+    pending: true
+    test_enforcing: null
+    known_diffs: []
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2472-calm-spm-buoy.md"
+    notes: |
+      Companion to c06_calm_buoy. SPM family proof not yet planned beyond
+      the parent #2472 plan above.
+
+# Roll-up coverage (informational; not asserted by reconciliation test):
+#   Attested L1 families: 3 (riser/a01, fpso/c03, jumper/rigid)
+#   Attested L2 families: 0 (all L2 work blocked on licensed-win-1 statics runs)
+#   Attested L3 families: 0 (L3 unreachable on generic track per claim boundary §1.2)
+#   Pending entries:      3 (a05_lazy_wave_with_fpso, c06_calm_buoy, c05_single_point_mooring)
+#   Total model_library/:  20 directories — registry covers 6 (30%) of inventory
+#
+# Coverage gap is expected. Inventory of unclaimed models is NOT a defect; it
+# is the surface area awaiting future per-family proof PRs. Closing #515 does
+# NOT require 100% inventory coverage; it requires the claim boundary doc
+# (§1.3) to not over-claim what the registry can attest.
