@@ -77,7 +77,7 @@ and `_SKIP_GENERAL_KEYS` in `generic_builder.py`):
 
 | Sub-group | Properties | Source |
 |-----------|-----------|--------|
-| View defaults | `DefaultViewAngle1`, `DefaultViewAngle2`, `DefaultViewCentre`, `DefaultViewSize`, `DefaultViewOrientation`, `DefaultViewResetWhenConnectedObjectMoved`, `DefaultViewDistortionX/Y/Z`, `DefaultViewAzimuth`, `DefaultViewElevation`, `DefaultViewMode`, `DefaultShadedFillMode`, `DefaultShadedProjectionMode` | `_SKIP_GENERAL_KEYS` |
+| View defaults | `DefaultViewAngle1`, `DefaultViewAngle2`, `DefaultViewCentre`, `DefaultViewSize`, `DefaultViewOrientation`, `DefaultViewResetWhenConnectedObjectMoved`, `DefaultViewDistortionX`, `DefaultViewDistortionY`, `DefaultViewDistortionZ`, `DefaultViewAzimuth`, `DefaultViewElevation`, `DefaultViewMode`, `DefaultShadedFillMode`, `DefaultShadedProjectionMode` | `_SKIP_GENERAL_KEYS` |
 | Background | `BackgroundColour`, `WireframeMode` | `_SKIP_GENERAL_KEYS` |
 | Sea/seabed rendering | `SeaSurfaceTranslucency`, `SeabedTranslucency`, `SeaSurfaceGridDensity`, `SeabedGridDensity`, `SeaSurfacePen` | `_SKIP_GENERAL_KEYS`, `ALLOWED_DIFF_PROPS` |
 | Node/shaded drawing | `DrawNodes`, `DrawNodesSize`, `DrawNodesAsDiscs`, `DrawShaded`, `DrawShadedDiameter`, `DrawShadedSections`, `DrawShadedNodesAsSpheres`, `DrawNodeSymbol`, `DrawNodeSize`, `DrawShadedModel`, `ShadedDrawingCullingMode`, `DrawShadedSmoothShading`, `DrawShadedOnSeabed`, `DrawAxialColour`, `DrawShadedColour`, `DrawShadedFillColour`, `DrawShadedWallThickness`, `NodeColour`, `Colour`, `ShowDeflectedShape`, `PenWidth` | `ALLOWED_DIFF_PROPS` |
