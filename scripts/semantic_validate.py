@@ -343,6 +343,31 @@ def _is_numeric(val: Any) -> bool:
     return isinstance(val, (int, float)) and not isinstance(val, bool)
 
 
+# OQ-4 fix (#515): OrcFxAPI emits booleans as the strings "Yes"/"No" via
+# yaml_utils.OrcaFlexDumper; raw YAML loaders read them back as bool. Without
+# normalization at the value-comparison layer, every bool diff surfaces as
+# TYPE_MISMATCH / SIGNIFICANT — a C2 false-positive per SEMANTIC_DIFF_TAXONOMY.md
+# §7 OQ-4 and SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md §5.1. Fix-at-compare keeps
+# the dump-side Yes/No convention OrcaFlex expects on load.
+_YES_NO_TO_BOOL: dict[str, bool] = {"Yes": True, "No": False}
+
+
+def _bool_str_match(a: Any, b: Any) -> tuple[bool, bool]:
+    """Detect and resolve a bool ↔ "Yes"/"No" pair.
+
+    Returns ``(handled, equal)``. ``handled`` is True only when one argument
+    is a bool and the other is "Yes" or "No"; in that case ``equal`` reports
+    whether the normalized boolean values match. Returns ``(False, False)``
+    for any other pair so the caller falls through to existing comparison
+    branches.
+    """
+    if isinstance(a, bool) and isinstance(b, str) and b in _YES_NO_TO_BOOL:
+        return True, a == _YES_NO_TO_BOOL[b]
+    if isinstance(b, bool) and isinstance(a, str) and a in _YES_NO_TO_BOOL:
+        return True, _YES_NO_TO_BOOL[a] == b
+    return False, False
+
+
 def _classify_diff(pct: float) -> str:
     """Classify a percentage difference into a significance level."""
     if pct == 0.0:
@@ -370,6 +395,15 @@ def values_equal(
 
     # One None, one not — treat as missing/extra elsewhere
     if mono_val is None or mod_val is None:
+        return False, float("inf"), Significance.SIGNIFICANT
+
+    # OQ-4 (#515): bool ↔ "Yes"/"No" representational equivalence. Classified
+    # COSMETIC so the diff stays visible in reports but does NOT count toward
+    # has_significant_diffs.
+    handled, equal = _bool_str_match(mono_val, mod_val)
+    if handled:
+        if equal:
+            return True, 0.0, Significance.COSMETIC
         return False, float("inf"), Significance.SIGNIFICANT
 
     # Numeric comparison
