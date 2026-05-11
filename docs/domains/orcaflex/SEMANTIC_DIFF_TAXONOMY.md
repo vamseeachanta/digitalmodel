@@ -1,7 +1,8 @@
 # OrcaFlex YAML Semantic-Diff Taxonomy
 
 **Date:** 2026-04-11
-**Issue:** #517 (parent: #515)
+**Adopted by:** [#515](https://github.com/vamseeachanta/digitalmodel/issues/515) on **2026-05-11** as the ratified classification policy for the OrcaFlex YAML semantic-equivalence claim boundary (`SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md`). The four Open Questions (OQ-1..OQ-4) in §7 close inline under #515 Approach A across iterations 4–6 of the implementation loop; see `SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md` §5.1 for per-OQ disposition.
+**Issue:** #517 (parent: #515) — taxonomy authoring; #515 ratifies and closes the Open Questions.
 **Scope:** Classification policy for differences between OrcaFlex strict YAML representations
 
 ## Purpose
