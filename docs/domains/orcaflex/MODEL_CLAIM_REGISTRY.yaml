@@ -63,14 +63,16 @@ models:
       - "C2:Environment.bool_yes_no_vs_true_false"
       - "C2:Environment.int_vs_float"
       - "C3:Groups.generic_track_policy"
-      - "OQ-1:Environment.VerticalWindVariationFactor"
+      - "C3:Environment.VerticalWindVariationFactor_WindType_conditional"
     proof_plan: "workspace-hub/docs/plans/2026-04-24-issue-515-semantic-equivalence-yaml-strict.md"
     notes: |
       Canonical evidence model for #515. Forward generation (spec → strict) is
       validator-clean. Reverse extraction confidence = 0.88 (17/17 mapped fields
-      out of full canonical set). The bool-normalization C2 entries currently
-      surface as false-positive SIGNIFICANT diffs in semantic_validate.py
-      pending OQ-4 closure (iteration 4/7).
+      out of full canonical set).
+      OQ-1 closed iter 5/7: VerticalWindVariationFactor is conditional C3
+      (only emitted under spectrum-class WindTypes; absent for Constant /
+      Full field). OQ-4 closed iter 4/7: bool ↔ Yes/No normalized at compare
+      time, no longer surfaces as SIGNIFICANT in semantic_validate.
 
   # ----------------------------------------------------------------------
   # Turret-moored FPSO (generic track) — workspace-hub #2454 family target.

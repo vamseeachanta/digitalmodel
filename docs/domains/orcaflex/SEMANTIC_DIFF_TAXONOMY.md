@@ -151,7 +151,45 @@ and the reason is recorded.
 | `ImplicitVariableMaxTimeStep` | General | OrcFxAPI internal; not in YAML-strict schema | SECTION_FIDELITY_ANALYSIS.md |
 | `ApplySeabedContactLoadsAtCentreline` | (objects) | Dormant mode-dependent property | generic_builder.py |
 | `SeabedDamping` | (objects) | Dormant mode-dependent property | generic_builder.py |
-| `Groups` section (generic track) | Groups | Not generated for generic-track models | groups_builder.py |
+| `Groups` section (generic track) | Groups | Not generated for generic-track models — see C3 Groups policy below | groups_builder.py |
+| `VerticalWindVariationFactor` | Environment | Conditional C3 — only emitted under spectrum-class WindTypes (API/NPD/ESDU); absent for `Constant` and `Full field` | environment_builder.py `_WIND_TYPE_PROPS` |
+
+#### C3 sub-policy: `VerticalWindVariationFactor` (OQ-1 closure)
+
+This property's emission is **WindType-conditional**, not unconditional. Per
+`environment_builder._WIND_TYPE_PROPS`:
+
+| `WindType` value | `VerticalWindVariationFactor` emitted? | Classification |
+|---|---|---|
+| `API spectrum` | yes | not a diff |
+| `NPD spectrum` | yes | not a diff |
+| `ESDU spectrum` | yes | not a diff |
+| `Constant` | no | **C3** — property is dormant when wind is constant |
+| `Full field` | no | **C3** — property is dormant when wind is from a full-field file |
+
+If a monolithic model has `WindType: Constant` and emits
+`VerticalWindVariationFactor`, the generated model legitimately drops it as
+C3. If a monolithic model has `WindType: API spectrum` and the generator does
+NOT emit `VerticalWindVariationFactor`, that is **C6** — a real generator
+defect, not C3. The classification depends on the model's WindType context.
+
+#### C3 sub-policy: `Groups` section (OQ-2 closure)
+
+Generation is **builder-track-conditional** per `GroupsBuilder.should_generate()`:
+
+| Builder track | `Groups` emitted? | Classification |
+|---|---|---|
+| Generic (`spec.is_generic()`) | no | **C3** — generic-track policy: Groups are a UI-organization construct without spec-side authoring; omitting them is intentional |
+| Pipeline (`spec.is_pipeline()`) | yes (derived from context entity names) | partial — derived Groups may not match user-authored monolithic Groups; track via registry `known_diffs` |
+| Riser (`spec.is_riser()`) | yes (derived from context entity names) | partial — same as pipeline track |
+
+Generic-track Groups absence is a C3 intentional omission. Pipeline / riser
+derivation is a partial match by construction — the generator builds Groups
+from the spec's known entities, which can never reconstruct a user's hand-
+authored grouping (e.g. logical clusters spanning unrelated objects). Per-
+family registry entries MUST list residual Groups differences under
+`known_diffs` when the model is on the pipeline or riser track and the
+monolithic Groups carry user-authored content.
 
 **Observed examples:**
 - `General.ImplicitVariableMaxTimeStep`: present in monolithic, rejected by
@@ -371,17 +409,20 @@ Based on the `a01_catenary_riser` comparison evidence (issue #515):
 
 ## 7. Open Questions
 
-**OQ-1: `VerticalWindVariationFactor` classification.**
-Is the OrcaFlex default for `VerticalWindVariationFactor` identical to the value
-in the monolithic export? If yes → C3 (omission of a default). If no → C6.
-**Follow-up:** #515 Phase 3.
+**OQ-1: `VerticalWindVariationFactor` classification.** — **RESOLVED 2026-05-11 (#515 iter 5/7)**
+Classified as **conditional C3** per the §C3 sub-policy table above:
+- Emitted when `WindType ∈ {API spectrum, NPD spectrum, ESDU spectrum}` → not a diff
+- Omitted when `WindType ∈ {Constant, Full field}` → C3 intentional omission
+- If `WindType` is spectrum-class AND property is missing in generated → C6 defect
+Enforced by `tests/solvers/orcaflex/test_oq1_oq2_classifications.py::TestOQ1WindFactorClassification`.
 
-**OQ-2: `Groups` section for pipeline/riser tracks.**
-The GroupsBuilder generates Groups for pipeline/riser models using context-derived
-entity names. Is the generated structure always equivalent to the monolithic
-Groups? The monolithic Groups may contain user-defined groupings not derivable
-from the spec.
-**Follow-up:** #515 Phase 3.
+**OQ-2: `Groups` section for pipeline/riser tracks.** — **RESOLVED 2026-05-11 (#515 iter 5/7)**
+Classified as **builder-track-conditional C3** per the §C3 sub-policy table above:
+- Generic track → omitted → C3 intentional (UI-organization construct)
+- Pipeline / riser tracks → derived from context entity names → may not match
+  user-authored monolithic Groups; residual differences tracked per-family in
+  `MODEL_CLAIM_REGISTRY.yaml::known_diffs` rather than as taxonomy-level diffs.
+Enforced by `tests/solvers/orcaflex/test_oq1_oq2_classifications.py::TestOQ2GroupsPolicy`.
 
 **OQ-3: Environment builder hardcoded defaults.**
 `environment_builder.py` defines 21 defaults (e.g., `KinematicViscosity: 1.35e-06`,
