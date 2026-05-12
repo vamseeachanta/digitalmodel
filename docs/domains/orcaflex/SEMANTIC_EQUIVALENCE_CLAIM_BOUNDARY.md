@@ -95,8 +95,18 @@ The claim boundary is enforced by **four mechanisms**, each in tension with the 
 |---|---|---|---|---|
 | 1 | **Per-model proof test** | highest | `tests/solvers/orcaflex/test_*_semantic.py` (and per-family `test_<model>_*.py`) | Level 2 (script — pytest) |
 | 2 | **Skip-list reconciliation test** | high | `tests/solvers/orcaflex/test_skip_list_reconciliation.py` | Level 2 (script — pytest) |
-| 3 | **Claim registry** | medium | `MODEL_CLAIM_REGISTRY.yaml` | Level 1 (machine-readable doc, asserted by mechanism 2) |
-| 4 | **Taxonomy doc** | medium | `SEMANTIC_DIFF_TAXONOMY.md` | Level 0 (prose, asserted by mechanism 2) |
+| 3 | **Claim registry** (attested only) | medium | `MODEL_CLAIM_REGISTRY.yaml` | Level 1 (machine-readable doc, asserted by mechanism 2) |
+| 4 | **Claim inventory** (NOT a claim — gap awareness) | informational | `MODEL_CLAIM_INVENTORY.yaml` | Level 1 (machine-readable doc, schema-asserted by mechanism 2) |
+| 5 | **Taxonomy doc** | medium | `SEMANTIC_DIFF_TAXONOMY.md` | Level 0 (prose, asserted by mechanism 2) |
+
+**Registry vs inventory split** (added 2026-05-11 per #515 follow-up CF1):
+The registry carries *only attested claims* so any read of that file is
+unambiguous about what the repo stands behind. The inventory file carries
+*pending entries* — models where a per-family proof is planned or in-progress
+but not yet attested. The inventory is **not a claim surface**; its entries
+must NOT be cited as equivalence assertions. Moving an entry from inventory
+to registry requires a landed test_enforcing path that the reconciliation
+test can resolve.
 
 ### 3.1 Reconciliation test contract
 

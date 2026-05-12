@@ -24,6 +24,62 @@ Failure modes (when run on licensed-win-1):
     ``environment_builder.py``.
 
 Disposition: SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md §5.1 OQ-3 row.
+
+────────────────────────────────────────────────────────────────────────────
+OPERATOR RUNBOOK — running this scaffold on licensed-win-1
+────────────────────────────────────────────────────────────────────────────
+
+This test runs ONLY on a machine that has both:
+  (a) Python 3.11+ with the OrcFxAPI extension installed, AND
+  (b) a valid OrcaFlex license accessible to OrcFxAPI at runtime.
+
+Currently that's ``machine:licensed-win-1`` in the project's machine inventory.
+On any other machine (dev-primary Linux, CI), the module is skipped at import
+time via ``pytest.importorskip("OrcFxAPI")``.
+
+To run the OQ-3 verification:
+
+  1. Sync repo to latest main on licensed-win-1:
+       cd <path>/digitalmodel
+       git fetch && git checkout main && git pull --ff-only
+
+  2. Confirm OrcFxAPI is importable:
+       uv run --frozen python -c "import OrcFxAPI; print(OrcFxAPI.Model().environment)"
+     Expected: prints the Environment object. Failure here means OrcFxAPI
+     isn't installed; install via Orcina installer per `digitalmodel/docs/
+     domains/orcaflex/install/` before continuing.
+
+  3. Opt in to the ``solver`` marker (default config deselects it):
+       uv run --frozen pytest tests/solvers/orcaflex/test_environment_defaults_vs_orcfxapi.py -v -m solver
+
+     Expected outcomes:
+       * All-pass         → OQ-3 closes; the 21 _DEFAULTS match OrcFxAPI's
+                            own blank-model defaults. Update issue #519 with
+                            the run transcript and remove OQ-3 from the §5.3
+                            silent-substitution register in SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md.
+       * Some-fail        → A real mismatch. Two paths:
+                            (a) If legitimate (e.g. SI vs imperial choice),
+                                add the property to ``_EXPECTED_OVERRIDES``
+                                below with a rationale comment, commit, push,
+                                and re-run.
+                            (b) If not legitimate, fix _DEFAULTS in
+                                ``src/digitalmodel/solvers/orcaflex/modular_generator/
+                                builders/environment_builder.py``, commit,
+                                push, and re-run.
+       * Skip (no OrcFxAPI) → You're not on a licensed machine; switch to
+                              licensed-win-1.
+
+  4. Capture the run output to ``workspace-hub/scripts/review/results/`` so
+     downstream auditors can see the evidence:
+       gh issue comment 519 --repo vamseeachanta/digitalmodel \\
+           --body "OQ-3 verification run $(date -u +%Y-%m-%d): <pasted output>"
+
+  5. If all pass, close #519's OQ-3 row in the §5.3 register. If failures
+     surfaced and were legitimately-overridden via ``_EXPECTED_OVERRIDES``,
+     update the register to cite this test's whitelist as the authoritative
+     source for "intentional deviations from OrcFxAPI default".
+
+────────────────────────────────────────────────────────────────────────────
 """
 
 from __future__ import annotations

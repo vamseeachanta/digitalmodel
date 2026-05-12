@@ -1,0 +1,80 @@
+# OrcaFlex YAML Semantic-Equivalence Model Claim INVENTORY
+#
+# Authority: docs/domains/orcaflex/SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY.md
+# Companion: docs/domains/orcaflex/MODEL_CLAIM_REGISTRY.yaml (attested claims)
+# Issue:     https://github.com/vamseeachanta/digitalmodel/issues/515 follow-up CF1
+#
+# This file is **NOT a claim**. It is an inventory of model families and
+# specific models where a per-family proof is planned or in-progress but
+# NOT YET ATTESTED. Entries here MUST NOT be used to make any equivalence
+# claim about the named model.
+#
+# Why two files:
+#   The registry file (MODEL_CLAIM_REGISTRY.yaml) carries only attested
+#   claims so any read of that file is unambiguous about what the repo
+#   stands behind. This inventory file preserves the gap-awareness signal
+#   (Gemini + Claude-self convergent MINOR CF1) without conflating it
+#   with the claim surface.
+#
+# How an entry moves from this file to the registry:
+#   1. Per-family proof test lands on disk under tests/solvers/orcaflex/
+#   2. Test runs green on dev-primary (or licensed-win-1 for L2+)
+#   3. Add entry to MODEL_CLAIM_REGISTRY.yaml with `highest_validated_level`
+#      set to the proven level and `test_enforcing` pointing at the test
+#   4. Remove entry from this inventory file in the same commit
+#   5. Reconciliation test (test_skip_list_reconciliation.py) verifies
+#      the new attested entry's test_enforcing path resolves
+#
+# Schema (subset of registry schema — pending entries only):
+#   inventory:
+#     - name: <model directory name>
+#       family: <riser|fpso|jumper|mooring|spar|buoy|drilling|other>
+#       builder_track: <generic|riser|pipeline|jumper|other>
+#       proof_plan: <link to workspace-hub plan>
+#       notes: <free-text context>
+#       blocked_on: <optional — what's blocking the proof>
+
+schema_version: "1.0.0"
+last_updated: "2026-05-11"
+purpose: "inventory_not_claim"
+
+inventory:
+
+  - name: a05_lazy_wave_with_fpso
+    family: riser
+    builder_track: riser
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2456-lazy-wave-riser-semantic-proof.md"
+    blocked_on: "test_lazy_wave_semantic_fidelity.py not yet authored"
+    notes: |
+      Plan #2456 proposes the test; not yet on disk. Until landed,
+      NO claims may be made about lazy-wave-riser semantic equivalence.
+
+  - name: c06_calm_buoy
+    family: buoy
+    builder_track: generic
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2472-calm-spm-buoy.md"
+    blocked_on: "no per-family proof test yet authored; #2472 plan covers strategy not implementation"
+    notes: |
+      workspace-hub #2472 plans the CALM/SPM-buoy semantic proof; not yet
+      executed. No tests under tests/ currently reference c06_calm_buoy.
+
+  - name: c05_single_point_mooring
+    family: mooring
+    builder_track: generic
+    proof_plan: "workspace-hub/docs/plans/2026-04-23-issue-2472-calm-spm-buoy.md"
+    blocked_on: "SPM family proof not yet planned beyond the parent #2472 plan"
+    notes: |
+      Companion to c06_calm_buoy. The #2472 plan focuses on CALM buoys;
+      SPM-specific proof remains TBD.
+
+# Roll-up:
+#   Total entries: 3
+#   By family: 1 riser, 1 buoy, 1 mooring
+#   By builder_track: 1 riser, 2 generic
+#   All entries have proof_plan references but no test_enforcing path.
+#
+# Coverage gap (informational): MODEL_CLAIM_REGISTRY.yaml lists 3 attested
+# L1 entries; this inventory lists 3 pending. Together they describe 6 of
+# 20 model_library/ directories (30%). The remaining 14 models are not
+# inventoried here — adding them would imply intent-to-prove, which has
+# not been established.
