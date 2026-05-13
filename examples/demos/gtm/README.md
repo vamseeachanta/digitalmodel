@@ -131,7 +131,6 @@ All input data lives in `data/`:
 | File | Description |
 |------|-------------|
 | `csv_hlv_vessels.json` | Construction / heavy-lift vessel specs (crane capacity, RAOs) |
-| `ctv_operability_kincardine.json` | CTV access/operability reference data from SeaOps Kincardine monthly workability infographic; supports vessel/access suitability GTM storylines |
 | `design_codes.json` | Wall thickness code parameters (DNV, API, PD 8010) |
 | `freespan_scenarios.json` | Freespan geometry and current profiles for Demo 1 |
 | `mudmat_structures.json` | Mudmat dimensions, weights, and lift points |

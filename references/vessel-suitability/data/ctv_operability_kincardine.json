@@ -1,18 +1,40 @@
 {
-  "_description": "User-provided SeaOps Solutions CTV workability reference for Kincardine: month-by-month Crew Transfer Vessel operability comparing as-built north-column landing ([N] only) against adding a south-column landing ([N] + [S]). Intended as GTM reference data for vessel/access suitability, operability uplift, and weather-window storytelling; not a design-basis metocean dataset.",
-  "_version": "1.0",
+  "_description": "Internal reference dataset derived from user-provided SeaOps Solutions CTV workability material for Kincardine. It preserves traceability for future vessel-operability methodology design and must not be used as GTM, client, project, or design-basis material without explicit user approval, source-rights review, and a separate approved issue.",
+  "_version": "1.1",
   "_source": {
     "title": "Month-by-month CTV operability as-built [N] only vs [N] + [S]",
     "publisher": "SeaOps Solutions",
     "project_area": "Kincardine",
     "source_type": "user-provided infographic / reference image",
     "captured_in": "Hermes chat attachment, 2026-05-07",
-    "license_note": "Treat as reference/prospect-facing inspiration until source rights are confirmed; preserve attribution to SeaOps Solutions if used in external GTM material."
+    "license_note": "Internal reference retention only. No external use, publication, client reuse, or marketing reuse until source rights are resolved and the user explicitly approves a separately planned issue. Preserve attribution to SeaOps Solutions in internal records."
   },
   "_references": [
     "SeaOps Solutions infographic: CTV Workability · Kincardine — Month-by-month CTV operability as-built [N] only vs [N]+[S]",
     "NORA3 hindcast / climatology basis stated in source graphic: 56.95°N, 1.87°W; 1979-2025; 411,264 hours"
   ],
+  "usage_boundary": {
+    "classification": "internal_reference_only",
+    "competitor_context": "SeaOps Solutions is competitor-adjacent reference material; do not copy wording, layout, claims, or digitized values into deliverables.",
+    "promotion_rule": "Project, client, or marketing reuse requires explicit user approval, source-rights review, and a separate approved issue.",
+    "forbidden_default_uses": [
+      "client deliverables",
+      "project engineering analysis",
+      "public collateral",
+      "sales collateral",
+      "design-basis decisions"
+    ]
+  },
+  "data_confidence": {
+    "digitized_values": "rights_unresolved_no_external_use",
+    "engineering_use": "not_design_basis",
+    "source_native_requirement": "Regenerate from licensed or public metocean and project data before engineering or external use."
+  },
+  "methodology_boundary": {
+    "reference_observation": "Use only to study high-level operability-reporting concepts such as monthly access windows, configuration sensitivity, daylight/environmental constraints, and bottleneck-month identification.",
+    "design_basis_engineering": "Requires source-native metocean data, vessel/access limits, landing geometry, validated criteria, provenance, uncertainty handling, and project-specific review before any engineering decision.",
+    "original_work_requirement": "Future AceEngineer/digitalmodel outputs must use original wording, original visual hierarchy, verified source data, and explicit provenance rather than copying competitor material."
+  },
   "units": {
     "operability": "percent of hours operable today",
     "wind_speed": "m/s",
@@ -64,19 +86,18 @@
     {"month": "Nov", "as_built_n_only_pct": 5.0, "with_s_landing_n_plus_s_pct": 8.5},
     {"month": "Dec", "as_built_n_only_pct": 3.6, "with_s_landing_n_plus_s_pct": 6.2, "note": "Winter/daylight-bound; source callout reports Dec 6.2% with [S]."}
   ],
-  "gtm_storyline": {
-    "primary_message": "A simple second landing direction can materially increase annual CTV access operability and expose monthly bottlenecks that static vessel specs miss.",
-    "demo_use_cases": [
-      "vessel suitability analysis",
-      "CTV / SOV access operability screening",
-      "installation and maintenance weather-window planning",
-      "prospect-facing monthly operability uplift chart",
-      "LIVE MODE teaser for VMMS/IMMS and metocean-fed go/no-go dashboards"
+  "reference_insights": {
+    "primary_observation": "A second landing direction may materially change access-window availability and reveal monthly bottlenecks that static vessel specifications do not expose.",
+    "internal_analysis_questions": [
+      "How should access mode and landing direction be represented in a source-native data model?",
+      "Which monthly and seasonal operability summaries are useful for engineering triage?",
+      "Which daylight, wind, wave, and transfer criteria must be explicit before design-basis use?",
+      "How should future reports separate observation, provenance, confidence class, and engineering caveat language?"
     ],
     "engineering_caveats": [
-      "Monthly bar values are digitized/approximated from the supplied infographic; use source data for engineering decisions.",
+      "Monthly bar values are digitized or approximated from the supplied infographic; use source data for engineering decisions.",
       "Annual headline metrics are source-stated and should be treated as more authoritative than approximate chart digitization.",
-      "This reference supports GTM storytelling and data-shape design; it is not a substitute for site-specific marine operations analysis."
+      "This reference supports internal data-shape design only and is not a substitute for site-specific marine operations analysis."
     ]
   }
 }
