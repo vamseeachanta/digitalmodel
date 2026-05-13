@@ -1,7 +1,7 @@
 # Plan: digitalmodel #594 — Vessel operability reference synthesis for CTV/SOV/W2W suitability
 
 **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/594  
-**Status:** revised after T3 adversarial review; not approval-ready until user approval  
+**Status:** user-approved for implementation on 2026-05-13T13:02:56Z; local approval marker required before edits  
 **Scope:** docs/metadata/reference-boundary correction only; no engineering implementation  
 **Review depth:** T3 plan review complete — Claude, Codex, Gemini artifacts saved  
 **Created:** 2026-05-13T11:28:05Z  
@@ -118,7 +118,7 @@ gh issue edit 594 \
 ```
 
 - Post a scope-correction comment linking this plan and the review artifacts.
-- Do **not** add `status:plan-approved` and do **not** implement until the user explicitly approves.
+- Approval is now recorded; do not implement beyond Tasks 0–6 without a separate approval.
 
 ### Task 1 — Write boundary-first failing tests
 
@@ -300,4 +300,4 @@ Resolved in this revision:
 
 ## Current stop point
 
-This is a revised plan after adversarial review. Do not implement Tasks 0–6 until the user approves #594 for implementation and the approval marker/label workflow is completed.
+This plan is now approved for implementation. User approval was recorded in-session on 2026-05-13T13:02:56Z, and live GitHub labels show `status:plan-approved`. Before implementation edits, verify `.planning/plan-approved/594.md` is present in the executing checkout and preserve the approved scope boundary for Tasks 0–6 only.
