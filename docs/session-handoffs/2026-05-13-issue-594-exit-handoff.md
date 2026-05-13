@@ -108,21 +108,11 @@ No external send/action was performed during exit closeout beyond GitHub issue/s
 
 This handoff itself was committed and pushed after the implementation closeout.
 
-Final handoff commit:
+Initial handoff commit:
 
 - `834330e86ed543cc678ebd45d2d057ac499202de` — `docs: add issue 594 exit handoff`
 
-Post-push live state immediately after fetch:
-
-```text
-branch: main
-HEAD:   834330e86ed543cc678ebd45d2d057ac499202de
-origin/main: 834330e86ed543cc678ebd45d2d057ac499202de
-ahead/behind: 0 / 0
-status: clean except this proof-section edit until the final proof-update commit is created
-```
-
-Because this proof section creates one more handoff edit, the final user response must use the latest post-push verification after the proof-update commit, not the hash above as repository tip.
+A later proof-update commit may be the repository tip. Use the live final user response / git log for the exact final pushed HEAD. The invariant for closeout is that `digitalmodel/main` is fetched, clean, and `HEAD == origin/main` after the final proof-update commit.
 
 ## Restart notes
 
