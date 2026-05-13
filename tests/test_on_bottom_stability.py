@@ -8,7 +8,7 @@ import math
 class TestSubmergedWeight:
     def test_concrete_coated_pipe(self):
         """Submerged weight of concrete-coated pipe."""
-        from digitalmodel.geotechnical.on_bottom_stability import submerged_weight
+        from digitalmodel.subsea.on_bottom_stability import submerged_weight
         result = submerged_weight(
             od_steel_m=0.3239,
             wt_steel_m=0.0127,
@@ -22,7 +22,7 @@ class TestSubmergedWeight:
         assert result.buoyancy_n_per_m > 0
 
     def test_empty_pipe_may_float(self):
-        from digitalmodel.geotechnical.on_bottom_stability import submerged_weight
+        from digitalmodel.subsea.on_bottom_stability import submerged_weight
         result = submerged_weight(
             od_steel_m=0.6096,
             wt_steel_m=0.0127,
@@ -38,7 +38,7 @@ class TestSubmergedWeight:
 class TestHydrodynamicLoads:
     def test_drag_and_inertia_forces(self):
         """Hydrodynamic forces on seabed pipe per Morison."""
-        from digitalmodel.geotechnical.on_bottom_stability import hydrodynamic_loads
+        from digitalmodel.subsea.on_bottom_stability import hydrodynamic_loads
         result = hydrodynamic_loads(
             od_total_m=0.4239,
             water_velocity_m_s=1.0,
@@ -53,7 +53,7 @@ class TestHydrodynamicLoads:
 
     def test_drag_force_per_meter(self):
         """Drag force per unit length: F_D = 0.5 * rho * C_D * D * U^2"""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             drag_force_per_meter,
         )
         result = drag_force_per_meter(
@@ -67,7 +67,7 @@ class TestHydrodynamicLoads:
 
     def test_lift_force_per_meter(self):
         """Lift force per unit length: F_L = 0.5 * rho * C_L * D * U^2"""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             lift_force_per_meter,
         )
         result = lift_force_per_meter(
@@ -81,7 +81,7 @@ class TestHydrodynamicLoads:
 
     def test_inertia_force_per_meter(self):
         """Inertia force per unit length: F_I = rho * C_M * pi/4 * D^2 * a"""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             inertia_force_per_meter,
         )
         result = inertia_force_per_meter(
@@ -97,7 +97,7 @@ class TestHydrodynamicLoads:
 class TestLateralStability:
     def test_stable_pipe(self):
         """Heavy pipe in mild conditions — should be stable."""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             lateral_stability_check,
         )
         result = lateral_stability_check(
@@ -113,7 +113,7 @@ class TestLateralStability:
 
     def test_unstable_pipe(self):
         """Light pipe in severe conditions — should be unstable."""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             lateral_stability_check,
         )
         result = lateral_stability_check(
@@ -127,7 +127,7 @@ class TestLateralStability:
         assert result.utilization > 1.0
 
     def test_zero_weight_raises(self):
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             lateral_stability_check,
         )
         with pytest.raises(ValueError):
@@ -141,7 +141,7 @@ class TestLateralStability:
 
     def test_check_lateral_stability_passes(self):
         """Pipeline is laterally stable when friction > horizontal load."""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             check_lateral_stability,
         )
         result = check_lateral_stability(
@@ -157,7 +157,7 @@ class TestLateralStability:
 
     def test_check_lateral_stability_fails(self):
         """Pipeline is NOT laterally stable when friction < horizontal load."""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             check_lateral_stability,
         )
         result = check_lateral_stability(
@@ -174,7 +174,7 @@ class TestLateralStability:
 class TestVerticalStability:
     def test_vertical_stability_passes(self):
         """Pipeline is vertically stable when weight > lift force."""
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             check_vertical_stability,
         )
         result = check_vertical_stability(
@@ -185,7 +185,7 @@ class TestVerticalStability:
         assert result.is_stable is True
 
     def test_vertical_stability_fails(self):
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             check_vertical_stability,
         )
         result = check_vertical_stability(
@@ -196,7 +196,7 @@ class TestVerticalStability:
         assert result.is_stable is False
 
     def test_zero_weight_raises(self):
-        from digitalmodel.geotechnical.on_bottom_stability import (
+        from digitalmodel.subsea.on_bottom_stability import (
             check_vertical_stability,
         )
         with pytest.raises(ValueError):

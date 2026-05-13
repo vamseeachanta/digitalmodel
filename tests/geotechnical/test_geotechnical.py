@@ -38,7 +38,8 @@ class TestPackageImport:
         assert hasattr(anchors, "suction_anchor_capacity")
 
     def test_import_on_bottom_stability(self):
-        from digitalmodel.geotechnical import on_bottom_stability
+        # workspace-hub#2694: on_bottom_stability canonicalised under subsea/
+        from digitalmodel.subsea import on_bottom_stability
         assert hasattr(on_bottom_stability, "submerged_weight")
         assert hasattr(on_bottom_stability, "lateral_stability_check")
 
@@ -102,7 +103,7 @@ class TestOnBottomStability:
     """Test on-bottom stability calculations (DNV-RP-F109)."""
 
     def test_submerged_weight_steel_pipe(self):
-        from digitalmodel.geotechnical.on_bottom_stability import submerged_weight
+        from digitalmodel.subsea.on_bottom_stability import submerged_weight
         result = submerged_weight(
             od_steel_m=0.3048,       # 12 inch pipe
             wt_steel_m=0.0127,       # 0.5 inch wall
@@ -117,7 +118,7 @@ class TestOnBottomStability:
         assert result.dry_weight_n_per_m > result.buoyancy_n_per_m
 
     def test_hydrodynamic_loads_positive(self):
-        from digitalmodel.geotechnical.on_bottom_stability import hydrodynamic_loads
+        from digitalmodel.subsea.on_bottom_stability import hydrodynamic_loads
         result = hydrodynamic_loads(
             od_total_m=0.4,
             water_velocity_m_s=1.5,
@@ -134,7 +135,7 @@ class TestOnBottomStability:
         )
 
     def test_lateral_stability_stable_pipe(self):
-        from digitalmodel.geotechnical.on_bottom_stability import lateral_stability_check
+        from digitalmodel.subsea.on_bottom_stability import lateral_stability_check
         result = lateral_stability_check(
             submerged_weight_n_per_m=2000.0,
             horizontal_force_n_per_m=200.0,
@@ -146,7 +147,7 @@ class TestOnBottomStability:
         assert result.utilization < 1.0
 
     def test_lateral_stability_unstable_pipe(self):
-        from digitalmodel.geotechnical.on_bottom_stability import lateral_stability_check
+        from digitalmodel.subsea.on_bottom_stability import lateral_stability_check
         result = lateral_stability_check(
             submerged_weight_n_per_m=100.0,
             horizontal_force_n_per_m=2000.0,
@@ -158,7 +159,7 @@ class TestOnBottomStability:
         assert result.utilization > 1.0
 
     def test_lateral_stability_zero_weight_raises(self):
-        from digitalmodel.geotechnical.on_bottom_stability import lateral_stability_check
+        from digitalmodel.subsea.on_bottom_stability import lateral_stability_check
         with pytest.raises(ValueError):
             lateral_stability_check(
                 submerged_weight_n_per_m=0.0,

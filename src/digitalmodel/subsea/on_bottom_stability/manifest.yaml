@@ -36,3 +36,55 @@ functions:
     description: "Generalized lateral stability with soil resistance"
     inputs: [W_s_N_m, F_H_N_m, F_L_N_m, mu_soil, F_R_N_m]
     outputs: [StabilityResult]
+  # Simplified surface (workspace-hub#2694, ported from former
+  # digitalmodel.geotechnical.on_bottom_stability). Provides kN wrappers,
+  # combined hydrodynamic-load entry, and vertical-stability check.
+  - name: submerged_weight
+    clause: "S2.2"
+    equation: ""
+    description: "Submerged weight (dataclass return; simplified surface)"
+    inputs: [od_steel_m, wt_steel_m, coating_thickness_m, rho_steel, rho_coating, rho_contents, rho_seawater]
+    outputs: [SubmergedWeightResult]
+    submodule: simplified
+  - name: hydrodynamic_loads
+    clause: "S3.2.1"
+    equation: "Eq 3.1, 3.2"
+    description: "Combined Morison drag + inertia + lift forces per meter"
+    inputs: [od_total_m, water_velocity_m_s, water_acceleration_m_s2, rho_seawater, cd, cm, cl]
+    outputs: [HydrodynamicLoadResult]
+    submodule: simplified
+  - name: drag_force_per_meter
+    clause: "S3.2.1"
+    equation: "Eq 3.1 (drag term)"
+    description: "Drag force component per unit length"
+    inputs: [current_velocity_ms, pipe_od_m, water_density_kg_m3, drag_coeff]
+    outputs: [force_N_per_m]
+    submodule: simplified
+  - name: inertia_force_per_meter
+    clause: "S3.2.1"
+    equation: "Eq 3.1 (inertia term)"
+    description: "Inertia force component per unit length"
+    inputs: [acceleration_ms2, pipe_od_m, water_density_kg_m3, inertia_coeff]
+    outputs: [force_N_per_m]
+    submodule: simplified
+  - name: lateral_stability_check
+    clause: "S4.3.2"
+    equation: "Eq 4.5 with F_R=0"
+    description: "Simplified lateral stability (kwargs match historical geotechnical surface); routes to generalized_stability_check(F_R_N_m=0); raises ValueError on W_s<=0"
+    inputs: [submerged_weight_n_per_m, horizontal_force_n_per_m, lift_force_n_per_m, friction_coefficient, safety_factor]
+    outputs: [StabilityResult]
+    submodule: simplified
+  - name: check_lateral_stability
+    clause: "S4.3.2"
+    equation: "Eq 4.5 with F_R=0"
+    description: "kN/m wrapper around lateral_stability_check"
+    inputs: [submerged_weight_per_meter_kn, horizontal_load_per_meter_kn, lift_load_per_meter_kn, friction_coeff, safety_factor]
+    outputs: [StabilityResult]
+    submodule: simplified
+  - name: check_vertical_stability
+    clause: "S3.4"
+    equation: "γ * F_L / W_s <= 1"
+    description: "Vertical (uplift) stability check with kN/m inputs"
+    inputs: [submerged_weight_per_meter_kn, lift_load_per_meter_kn, safety_factor]
+    outputs: [VerticalStabilityResult]
+    submodule: simplified
