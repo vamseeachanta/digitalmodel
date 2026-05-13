@@ -104,6 +104,26 @@ status: dirty, with session/generated/review/report churn including .claude/stat
 
 No external send/action was performed during exit closeout beyond GitHub issue/status reads and the repository commit/push workflow.
 
+## Post-handoff commit proof
+
+This handoff itself was committed and pushed after the implementation closeout.
+
+Final handoff commit:
+
+- `834330e86ed543cc678ebd45d2d057ac499202de` — `docs: add issue 594 exit handoff`
+
+Post-push live state immediately after fetch:
+
+```text
+branch: main
+HEAD:   834330e86ed543cc678ebd45d2d057ac499202de
+origin/main: 834330e86ed543cc678ebd45d2d057ac499202de
+ahead/behind: 0 / 0
+status: clean except this proof-section edit until the final proof-update commit is created
+```
+
+Because this proof section creates one more handoff edit, the final user response must use the latest post-push verification after the proof-update commit, not the hash above as repository tip.
+
 ## Restart notes
 
 If future work resumes here:
