@@ -42,4 +42,12 @@ No external send/action performed. No GTM publication or client/project reuse ap
 
 ## Exit closeout evidence
 
-Final proof to be captured after committing/pushing this handoff and reference README.
+Captured after committing/pushing the first closeout commit:
+
+- Closeout commit: `e1e4ee760817d08a00f03f845c50eda8421bac01` — `docs: document CTV operability reference boundary`
+- Branch: `main`
+- Remote proof at capture time: `HEAD == origin/main == e1e4ee760817d08a00f03f845c50eda8421bac01`
+- Ahead/behind at capture time: `0/0`
+- Scoped path status at capture time: clean for `references/vessel-suitability/README.md` and this handoff file
+
+Final live proof is reported in the session-exit response after the proof-section commit is pushed.
