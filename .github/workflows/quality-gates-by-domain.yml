@@ -1,0 +1,137 @@
+name: Quality Gates by Domain
+
+"on":
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  detect-domains:
+    name: Detect touched test domains
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has-domains: ${{ steps.detect.outputs.has_domains }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Detect matrix
+        id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
+              --mode touched \
+              --base "$PR_BASE_SHA" \
+              --head "$PR_HEAD_SHA" \
+              --domains-file tests/DOMAINS.md \
+              --output-format json-matrix)
+          else
+            matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
+              --mode full \
+              --domains-file tests/DOMAINS.md \
+              --output-format json-matrix)
+          fi
+
+          has_domains=$(uv run --no-sources python -c 'import json,sys; print("true" if json.loads(sys.argv[1])["include"] else "false")' "$matrix")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "has_domains=$has_domains" >> "$GITHUB_OUTPUT"
+
+  domain-tests:
+    name: tests-${{ matrix.domain }}
+    needs: detect-domains
+    if: needs.detect-domains.outputs.has-domains == 'true'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Read domain gate command
+        id: gate
+        env:
+          GATE_NAME: tests-${{ matrix.domain }}
+        run: |
+          command=$(uv run --no-sources --with pyyaml python - <<'PY'
+          import os
+          import yaml
+
+          with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
+              gates = yaml.safe_load(handle)["gates"]
+          print(gates[os.environ["GATE_NAME"]]["command"])
+          PY
+          )
+          {
+            echo "command<<EOF"
+            echo "$command"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run domain gate
+        run: ${{ steps.gate.outputs.command }}
+
+      - name: Upload domain artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-gate-${{ matrix.domain }}
+          path: |
+            reports/
+            coverage.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  domain-tests-required:
+    name: Domain test aggregate
+    needs: [detect-domains, domain-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce required domain result
+        env:
+          HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
+          DETECT_RESULT: ${{ needs.detect-domains.result }}
+          DOMAIN_RESULT: ${{ needs.domain-tests.result }}
+        run: |
+          if [ "$DETECT_RESULT" != "success" ]; then
+            echo "Domain detection did not succeed: $DETECT_RESULT"
+            exit 1
+          fi
+
+          if [ "$HAS_DOMAINS" = "true" ] && [ "$DOMAIN_RESULT" != "success" ]; then
+            echo "At least one required domain test job failed: $DOMAIN_RESULT"
+            exit 1
+          fi
+
+          echo "Required domain test jobs passed."
