@@ -1,5 +1,11 @@
-"""Cathodic protection calculations — API RP 1632, ISO 15589-2, DNV-RP-B401,
-and impressed current fuel system CP design."""
+"""Cathodic protection calculations — API RP 1632, ISO 15589-2, DNV-RP-B401
+2017/2021, and impressed current fuel system CP design."""
+
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+)
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
     anode_driving_voltage,
@@ -185,6 +191,9 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
 )
 
 __all__ = [
+    "DEFAULT_EDITION",
+    "Edition",
+    "normalize_edition",
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
     "current_demand",
