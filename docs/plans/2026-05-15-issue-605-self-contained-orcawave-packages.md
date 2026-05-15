@@ -4,13 +4,13 @@
 > **Complexity:** T2
 > **Date:** 2026-05-15
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/605
-> **Review artifacts (target paths; created by completed fanout, not pre-existing evidence):** scripts/review/results/2026-05-15-plan-605-claude.md | scripts/review/results/2026-05-15-plan-605-codex.md
+> **Review artifacts (target paths; created by completed fanout, not pre-existing evidence):** scripts/review/results/2026-05-15-plan-605-claude.md | scripts/review/results/2026-05-15-plan-605-codex.md | scripts/review/results/2026-05-15-plan-605-gemini.md
 
 ---
 
 ## Scope
 
-Package-generation scope only. This issue does not implement mesh format conversion (#606), mesh quality metrics (#608), body-level control-surface normalization (#609), or the given-mesh UX (#607). Because #500 is already `status:plan-approved` but the runner copy/validate helpers exist at HEAD, #605 implementation must start by reconciling #500's stale issue body against current code: comment on #500/#605 with the observed HEAD behavior, identify any remaining #500 delta, and then extract the current runner path-resolution/copy behavior into one shared resolver. #605 must not create a second resolver/copy path.
+Package-generation scope only. This issue does not implement mesh format conversion (#606), mesh quality metrics (#608), body-level control-surface normalization (#609), or the given-mesh UX (#607). #605 copies only mesh references already emitted by the current OrcaWave backend; #609 owns any new auxiliary-mesh semantics, precedence, or additional emitted references. Because #500 is already `status:plan-approved` but its plan artifacts are not present in this checkout and runner copy/validate helpers exist at HEAD, #605 implementation must start by reconciling #500 from available evidence: current GitHub issue/comments plus current HEAD code. If the referenced #500 plan artifact is still unavailable, document that in #500/#605 comments and proceed from HEAD helper behavior rather than blocking on a missing local file. #605 must not create a second resolver/copy path.
 
 ## Resource Intelligence Summary
 
@@ -66,10 +66,10 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 
 ## Proposed Tasks
 
-1. Create a shared `OrcaWaveAssetResolver` interface, extracted from the current runner helpers after the #500 reconciliation comment: `resolve_assets(spec, spec_path, output_dir, strict=False, copy=False) -> OrcaWaveAssetPackage` with source path, destination path, YAML filename, asset type, copied/generated status, and warning/error findings.
-2. Keep current runner compatibility explicit: `SpecConverter`/CLI preflight must call the resolver in strict mode and fail on missing required package assets, while `OrcaWaveRunner.prepare()` keeps the current warning-soft behavior unless #500 has already approved a stricter runner contract. Audit all runner callers before changing warning-soft behavior.
-3. Split preflight into a validate-only pass and a staged copy pass. Strict converter preflight validates all required OrcaWave asset references and collision rules before any YAML or final-output asset is written; only after that succeeds may the staged copy write assets into the output directory.
-4. Copy body meshes, damping lid mesh, emitted per-body `VesselSpec.control_surface` meshes, and QTF-enabled free-surface panelled-zone meshes into the output directory. Relative paths resolve from `spec_path.parent`; absolute paths are accepted and copied by basename unless a basename or stale-destination conflict is detected.
+1. Create a shared `OrcaWaveAssetResolver` interface, extracted from the current runner helpers after the #500 reconciliation comment: `resolve_assets(spec, spec_path, output_dir, strict=False, stage_dir=None) -> OrcaWaveAssetPackage` with source path, destination path, YAML filename, asset type, copied/generated status, and warning/error findings.
+2. Keep current runner compatibility explicit: `SpecConverter`/CLI preflight must call the resolver in strict mode and fail on missing required package assets, while `OrcaWaveRunner.prepare()` keeps warning-soft behavior for body and auxiliary asset misses unless #500 has already approved a stricter runner contract. Audit all runner callers before changing warning-soft behavior.
+3. Split preflight into validate-only and staged-package phases. Strict converter preflight validates all required OrcaWave asset references and collision rules before any YAML or final-output asset is written. The package phase copies assets and writes YAML into a temporary staging directory first, then atomically moves/renames into final output only after all copies and backend writes succeed.
+4. Copy body meshes, damping lid mesh, emitted per-body `VesselSpec.control_surface` meshes, and QTF-enabled free-surface panelled-zone meshes that are already emitted by the backend into the output directory. Relative paths resolve from `spec_path.parent`; absolute paths are accepted and copied by basename unless a basename or stale-destination conflict is detected.
 5. Define collision behavior: two distinct source assets that would package to the same basename fail before YAML is written and the error lists both source paths. An existing destination basename with different content/source also fails instead of being overwritten. Re-running with the same source/destination pair, or with a destination that is `samefile()`/content-identical to the source, is idempotent and not a collision.
 6. Explicitly reject per-body `BodySpec.control_surface.mesh_file` in strict #605 packaging with a clear message pointing to #609; do not silently claim a package is self-contained when the backend only uses that field for the quadratic-load control-surface flag.
 7. Verify generated YAML continues to reference packaged basenames already emitted by `OrcaWaveBackend`; #605 should not rewrite YAML except for future prepared filenames supplied by #606.
@@ -80,19 +80,21 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 ## Pseudocode
 
 ```text
-resolve_assets(spec, spec_path, output_dir, strict, copy):
+resolve_assets(spec, spec_path, output_dir, strict, stage_dir=None):
   collect emitted OrcaWave asset references from body, per-body VesselSpec.control_surface, damping lid, QTF FSZ
   reject BodySpec.control_surface in strict mode until #609
   resolve relative paths from spec_path.parent and absolute paths as-is
   validate missing files, duplicate basenames, stale destination conflicts
-  if copy: stage copies then move into output_dir only after validation succeeds
+  if stage_dir: copy assets into stage_dir and record staged paths
   return OrcaWaveAssetPackage(assets, warnings, errors)
 
 convert_orcawave_package(spec, output_dir):
   package = resolve_assets(..., strict=True, copy=False)
-  backend.generate_single_or_modular(spec, output_dir)
-  resolve_assets(..., strict=True, copy=True)
-  assert every emitted MeshFileName resolves under output_dir
+  stage_dir = create temp dir next to output_dir
+  resolve_assets(..., strict=True, stage_dir=stage_dir)
+  backend.generate_single_or_modular(spec, stage_dir)
+  assert every emitted MeshFileName resolves under stage_dir
+  atomically replace/move stage_dir to output_dir
 ```
 
 ## Artifact Map
@@ -102,6 +104,7 @@ convert_orcawave_package(spec, output_dir):
 | This plan | `docs/plans/2026-05-15-issue-605-self-contained-orcawave-packages.md` |
 | Plan review - Claude (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-605-claude.md` |
 | Plan review - Codex (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-605-codex.md` |
+| Plan review - Gemini (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-605-gemini.md` |
 | Plan review disagreement (optional if generated by fanout) | `scripts/review/results/2026-05-15-plan-605-disagreement.md` |
 | Plan index | N/A - `digitalmodel/docs/plans/README.md` does not exist; follow existing standalone-plan convention |
 
@@ -136,6 +139,8 @@ convert_orcawave_package(spec, output_dir):
 | `test_orcawave_asset_resolver_absolute_path_copies_by_basename` | absolute mesh path policy | spec references absolute mesh path outside spec dir | output contains copied basename and YAML resolves locally |
 | `test_orcawave_asset_resolver_no_optional_fsz_ok` | optional free-surface zone absent is allowed | spec without free-surface panelled-zone mesh | resolver succeeds and no free-surface filename is emitted |
 | `test_runner_prepare_missing_mesh_remains_warning_soft` | resolver extraction preserves runner compatibility | `OrcaWaveRunner.prepare()` with missing mesh | result records warning/error message per current behavior and does not raise unless separately approved |
+| `test_runner_prepare_missing_auxiliary_meshes_remain_warning_soft` | aux validation does not tighten runner by accident | `OrcaWaveRunner.prepare()` with missing damping lid/control/FSZ refs | result records warnings/findings and does not raise unless #500 approves stricter behavior |
+| `test_convert_spec_orcawave_stage_copy_failure_rolls_back` | atomic package behavior covers copy/write failures | simulated copy failure after validation | no final YAML/assets remain in output dir |
 | `test_convert_spec_orcawave_modular_packages_assets` | modular output path is self-contained too | OrcaWave conversion using `format="modular"` | modular YAML files and emitted referenced assets resolve from output dir; if modular aux sections are deferred, the test asserts that deferral explicitly |
 
 ## Acceptance Criteria
@@ -145,6 +150,7 @@ convert_orcawave_package(spec, output_dir):
 - [ ] Duplicate source basenames and stale destination basenames fail before YAML/assets are written, while same-source reruns are idempotent.
 - [ ] Body and auxiliary mesh references in generated YAML resolve from a clean package directory without relying on original source paths.
 - [ ] Tests cover the currently emitted backend mesh keys: `BodyMeshFileName`, per-body `VesselSpec.control_surface` emitted as `BodyControlSurfaceMeshFileName`, `DampingLidMeshFileName`, and QTF-mode `FreeSurfacePanelledZoneMeshFileName`; per-body `BodySpec.control_surface` fails explicitly and is deferred to #609.
+- [ ] #605 does not change auxiliary precedence/semantics owned by #609; it only packages auxiliary references already emitted by the backend.
 - [ ] Documentation states relative paths resolve from the source `spec.yml` directory, absolute mesh paths are copied by basename, duplicate distinct basenames fail, same-source reruns are idempotent, and `--solver all` packages only OrcaWave output in this issue.
 ## Plan Review Gating
 
@@ -157,16 +163,17 @@ convert_orcawave_package(spec, output_dir):
 |---|---|---|
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
+| Gemini | PENDING | Awaiting review artifact |
 
 **Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is plan-approved but partly stale against HEAD; #605 implementation must document the exact remaining #500 delta before extracting runner helper behavior, otherwise planning waits on an unclear dependency.
+- **Risk:** #500 is plan-approved but partly stale against HEAD and its local plan artifact is unavailable; #605 implementation must document the available #500 evidence and proceed from HEAD helper behavior unless the maintainer supplies the missing #500 artifact.
 - **Risk:** The converter needs fail-loud package preflight, while the current runner path is warning-soft. The shared resolver must expose findings/severity so converter strict mode does not accidentally make every `OrcaWaveRunner.prepare()` caller fail without an approved compatibility decision.
 - **Risk:** `FreeSurfacePanelledZoneMeshFileName` is emitted only for diagonal/full QTF solve types, and modular output currently omits some auxiliary sections. Tests must use QTF-enabled fixtures where FSZ behavior is claimed, and modular auxiliary packaging must either update backend emission or be explicitly deferred.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
-- **Open:** T2 complexity requires two-provider review; Claude + Codex are the selected review pair for this plan.
+- **Open:** Default review policy uses three-provider review; Claude, Codex, and Gemini are the selected review set for this plan.
 
 ## Complexity: T2
 
