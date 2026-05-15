@@ -10,7 +10,7 @@
 
 ## Scope
 
-Diagnostics only. This issue should not change solver execution behavior except to share pure detection helpers safely. It should make the current "dry-run-only fallback" visible to users before they attempt a solve.
+Diagnostics only, plus a user-visible warning when an attempted solve falls back to dry-run because no API/executable is available. This issue should not change solver execution outcomes except to share pure detection helpers safely and make the current "dry-run-only fallback" visible.
 
 ## Resource Intelligence Summary
 
@@ -37,6 +37,8 @@ Verified on 2026-05-15 via GitHub issue fetch:
 - `_detect_executable()` checks explicit path, `ORCAWAVE_PATH`, standard install paths, and `shutil.which("orcawave")`.
 - `run()` silently returns `DRY_RUN` when neither API nor executable is available and `dry_run` was not requested.
 - `tests/solver/smoke_test.py` prints OrcFxAPI DLL version when available but is not a general doctor command.
+- `_detect_executable()` currently collapses unset, set-but-missing, and set-but-not-executable candidates into `None`; the doctor must inspect each source independently so diagnostics can name the failed candidate.
+- Current OrcFxAPI usage in `orcawave_runner.py` and `tests/solver/smoke_test.py` proves version/import checks (`DLLVersion`) but no separate license-check API has been identified in repo code; license readiness should default to `UNKNOWN` unless a verified API is added.
 
 ### Gaps identified
 
@@ -66,12 +68,32 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 
 ## Proposed Tasks
 
-1. Add a diagnostics service that checks OrcFxAPI import, DLL/version when available, executable detection, `ORCAWAVE_PATH`, configured executable path, output writability, platform, and optional thread count.
-2. Investigate whether OrcFxAPI exposes a license check; if not, report license capability as `UNKNOWN` rather than guessing or failing.
+1. Add a diagnostics service that checks OrcFxAPI import, DLL/version when available, license status (`UNKNOWN` unless a verified check exists), executable candidates, `ORCAWAVE_PATH`, configured `--executable`, output writability, platform, thread count, and basic memory/runtime guidance.
+2. Inspect each executable candidate source independently: explicit `--executable`, `ORCAWAVE_PATH`, standard install paths, and `PATH`. Report set-but-invalid paths distinctly from "not configured".
 3. Add `diffraction orcawave-doctor` as a Click command with human-readable output and optional JSON output.
-4. Define PASS/WARN/FAIL severity and exit-code policy: FAIL only for explicit requested requirements that are unmet, WARN for dry-run-only/unknown license status, PASS for available capability.
-5. Reuse runner detection helpers only after making them pure/idempotent; no doctor check may mutate run state or create solver output.
-6. Add tests for no-OrcFxAPI, mocked OrcFxAPI, explicit executable, env executable, JSON output, and output directory failure.
+4. Define requirement flags that drive nonzero exit codes: `--require-api`, `--require-executable`, and `--require-output-writable`. Default Linux/no-OrcFxAPI/no-executable behavior is WARN/dry-run-only and exits 0 unless a requirement flag is unmet.
+5. Define JSON schema: `{schema_version, overall_status, checks:[{name,status,message,details}], execution_mode, exit_code}` where status is `PASS|WARN|FAIL|UNKNOWN`.
+6. Reuse runner detection helpers only after making them pure/idempotent; no doctor check may mutate run state or create solver output. Add a runner regression test showing `OrcaWaveRunner.run()` still returns `DRY_RUN` in no-API/no-exec conditions while surfacing a warning message.
+7. Add tests for no-OrcFxAPI, mocked OrcFxAPI, explicit executable, env executable, invalid env path, JSON output, license UNKNOWN, thread-count/memory guidance, output directory failure, and requirement-flag exit policy.
+
+## Pseudocode
+
+```text
+orcawave_doctor(options):
+  checks = [
+    check_orcfxapi_import_and_version(),
+    check_license_status_or_unknown(),
+    check_executable_candidate("--executable", options.executable),
+    check_executable_candidate("ORCAWAVE_PATH", env),
+    check_standard_install_paths(),
+    check_path_lookup("orcawave"),
+    check_output_dir_writable(options.output_dir),
+    check_thread_count_guidance(options.thread_count),
+  ]
+  overall = FAIL only if requested requirement check failed else worst(PASS/WARN/UNKNOWN)
+  render human or JSON schema_version=1
+  exit 1 only when requirement failed
+```
 
 ## Artifact Map
 
@@ -89,7 +111,7 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 |---|---|---|
 | Modify | `src/digitalmodel/hydrodynamics/diffraction/cli.py` | add doctor command |
 | Create | `src/digitalmodel/hydrodynamics/diffraction/orcawave_doctor.py` | diagnostics logic |
-| Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` | expose pure detection helpers if needed |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` | expose pure detection helpers and warn on implicit dry-run fallback without changing status semantics |
 | Create | `tests/hydrodynamics/diffraction/test_orcawave_doctor.py` | diagnostic tests |
 | Modify | `docs/domains/orcawave/README.md` | document readiness check |
 
@@ -97,17 +119,27 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 
 | Test name | What it verifies | Expected input | Expected output |
 |---|---|---|---|
-| `test_orcawave_doctor_no_orcfxapi_reports_dry_run_only` | Linux fallback clear | import unavailable | WARN/FAIL text, no stack trace |
+| `test_orcawave_doctor_no_orcfxapi_reports_dry_run_only` | Linux fallback clear | import unavailable | WARN text, exit 0 by default, no stack trace |
 | `test_orcawave_doctor_mock_orcfxapi_reports_version` | API version shown | mocked DLLVersion | PASS line |
 | `test_orcawave_doctor_detects_env_executable` | env path included | `ORCAWAVE_PATH` | path in report |
+| `test_orcawave_doctor_detects_explicit_executable` | explicit path included | `--executable` | path in report |
+| `test_orcawave_doctor_invalid_env_path_reports_source` | set-but-invalid path distinct | bad `ORCAWAVE_PATH` | WARN/FAIL check names env var and bad path |
 | `test_orcawave_doctor_json_output_is_structured` | machine output stable | `--json` | checks contain name, status, message, details |
-| `test_orcawave_doctor_unwritable_output_policy` | exit policy applied | bad output dir | nonzero only per policy |
+| `test_orcawave_doctor_license_unknown_without_verified_api` | no false license claim | OrcFxAPI version available but no license API | license check status `UNKNOWN`/WARN |
+| `test_orcawave_doctor_require_api_exit_policy` | hard requirement applied | `--require-api` and no OrcFxAPI | nonzero exit |
+| `test_orcawave_doctor_unwritable_output_policy` | exit policy applied | bad output dir with/without `--require-output-writable` | nonzero only when required |
+| `test_orcawave_doctor_thread_memory_guidance` | issue guidance covered | thread count option/config | report includes thread count and memory/runtime guidance source |
+| `test_orcawave_runner_fallback_warning_preserves_status` | runner behavior not regressed | no API/no executable run | status remains `DRY_RUN` and warning/error message is visible |
 
 ## Acceptance Criteria
 
 - [ ] CLI reports PASS/WARN/FAIL diagnostics for OrcaWave execution readiness.
 - [ ] Missing OrcFxAPI produces a clear dry-run-only message, not a stack trace.
 - [ ] Explicit executable path and `ORCAWAVE_PATH` are reported.
+- [ ] Set-but-invalid executable candidates are reported with their source.
+- [ ] JSON output follows the documented schema.
+- [ ] License status is `UNKNOWN` unless a verified check exists; the doctor must not imply a license is available from DLL import alone.
+- [ ] Thread-count and basic memory/runtime guidance are reported.
 - [ ] Exit-code policy is documented and tested.
 - [ ] Tests cover Linux/no-OrcFxAPI and mocked OrcFxAPI behavior.
 ## Plan Review Gating
@@ -129,7 +161,7 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 - **Risk:** The doctor must not imply a full license is available unless OrcFxAPI/executable exposes a reliable check. Unknown license state should remain WARN/UNKNOWN.
 - **Risk:** Sharing detection helpers with `OrcaWaveRunner` must preserve current run behavior; diagnostics should not change solve/dry-run semantics.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
-- **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
+- **Open:** T2 complexity requires two-provider review; Claude + Codex are the selected review pair for this plan.
 
 ## Complexity: T2
 

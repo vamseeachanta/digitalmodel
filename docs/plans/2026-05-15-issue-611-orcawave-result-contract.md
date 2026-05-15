@@ -10,7 +10,7 @@
 
 ## Scope
 
-Output contract scope. It should avoid changing numerical extraction formulas unless tests show a contract gap. This issue defines metadata and artifact paths for completed/dry-run runs; it does not change package generation (#605/#606) or licensed acceptance coverage (#610).
+Output contract scope. It should avoid changing numerical extraction formulas unless tests show a contract gap. This issue defines metadata and artifact paths for API, subprocess, and dry-run OrcaWave runs; it does not change package generation (#605/#606) or licensed acceptance coverage (#610).
 
 ## Resource Intelligence Summary
 
@@ -37,6 +37,8 @@ Verified on 2026-05-15 via GitHub issue fetch:
 - `_execute_via_api()` saves `.owr` with `SaveResults()` and a data file with `SaveData()`, then stores the `.owr` path in `log_file`.
 - `orcawave_to_orcaflex.py` consumes `.xlsx` sidecars for OrcaFlex handoff without OrcFxAPI.
 - `solver/report_extractors.py` consumes `.owr` through OrcFxAPI for reports.
+- `tests/solver/smoke_test.py` uses `diff.SaveResultsSpreadsheet(...)` for Excel export on licensed hosts; #611 should use that API for opt-in `.xlsx` export.
+- `output_schemas.py`, `output_validator.py`, `result_extractor.py`, `orcawave_batch_runner.py`, and `report_generator.py` are existing result/report contract surfaces that must be considered to avoid a parallel manifest.
 
 ### Gaps identified
 
@@ -67,12 +69,30 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 
 ## Proposed Tasks
 
-1. Extend `RunResult` or add a nested result-artifact dataclass/model for `.owr`, saved data, optional `.xlsx`, report, and metadata manifest paths. Keep `log_file` backward-compatible as a real log path only; do not silently use it as the `.owr` result path.
-2. Make `.xlsx` export opt-in through a runner config/CLI flag because it can be large and is only needed for selected handoff flows; document the rationale and default.
-3. Update OrcFxAPI execution to populate explicit result fields and preserve a compatibility alias or migration note for callers that previously inspected `log_file`.
-4. Emit a run manifest with solver version when available, thread count, timings, input file, mesh files, warnings, result files, and dry-run/completed status.
-5. Update CLI output and downstream handoff/report utilities to use the contract without requiring callers to guess sidecar names.
-6. Add dry-run and mocked API tests; licensed extraction behavior remains covered by #610.
+1. Add `OrcaWaveResultArtifacts` to `RunResult` or as a nested field with explicit names: `results_file` (`.owr`, optional until completed), `saved_data_file` (`.owd`/saved data path), `excel_file` (`.xlsx`, optional and opt-in), `report_file` (optional generated report), and `manifest_file` (`orcawave_run_manifest.json`). Paths are stored as `Path` objects in Python and serialized relative to `output_dir` in the manifest.
+2. Define `orcawave_run_manifest.json` schema with `schema_version`, `status`, `input_file`, `output_dir`, `mesh_files`, `artifacts`, `solver_version`, `thread_count`, `duration_seconds`, `warnings`, `return_code`, `execution_mode` (`api|subprocess|dry_run`), and `error_message`.
+3. Make `.xlsx` export opt-in through a runner config/CLI flag such as `export_xlsx`; implement licensed API export via `OrcFxAPI.Diffraction.SaveResultsSpreadsheet(...)`. Dry-run never fabricates `.xlsx`; subprocess mode records discovered `.xlsx` only if produced by OrcaWave/external workflow.
+4. Update API execution to populate actual `.owr`, saved-data, optional `.xlsx`, and manifest fields. Update subprocess completed execution to discover expected result artifacts in `output_dir` after process exit and record missing artifacts as warnings rather than guessing success paths. Dry-run records generated inputs and package assets with no fake result files.
+5. Stop overloading `log_file` for `.owr`: set `log_file` only to captured text logs if present and migrate tests/callers to `result.artifacts.results_file`.
+6. Update CLI output, `result_extractor.py`, `orcawave_batch_runner.py`, `benchmark_runner.py`, `solver/report_extractors.py`, and `report_generator.py` integration points so downstream `.xlsx -> OrcaFlex` and `.owr -> report` paths use the manifest/artifact fields rather than guessed names.
+7. Add dry-run, mocked API, mocked subprocess, manifest-schema, and downstream-integration tests; licensed extraction behavior remains covered by #610.
+
+## Pseudocode
+
+```text
+execute_via_api(result, config):
+  diffraction.Calculate()
+  result.artifacts.results_file = output/name.owr after SaveResults()
+  result.artifacts.saved_data_file = output/name.owd after SaveData()
+  if config.export_xlsx: result.artifacts.excel_file = output/name.xlsx after SaveResultsSpreadsheet()
+  result.artifacts.manifest_file = write_manifest(result)
+
+execute_via_subprocess(result, config):
+  run executable and capture return_code/stdout/stderr/log_file
+  if completed: discover .owr/.xlsx/report files in output_dir by configured names
+  missing expected artifacts become warnings, not fabricated paths
+  write_manifest(result)
+```
 
 ## Artifact Map
 
@@ -90,8 +110,13 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 |---|---|---|
 | Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` | result contract fields and API population |
 | Modify | `src/digitalmodel/hydrodynamics/diffraction/cli.py` | print artifacts/flags |
-| Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py` | consume standard paths if applicable |
-| Modify | `src/digitalmodel/hydrodynamics/diffraction/solver/report_extractors.py` | integrate with manifest if applicable |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py` | consume standard Excel artifact path from the result contract |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/solver/report_extractors.py` | consume explicit `.owr` artifact path |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/report_generator.py` | record generated report path in manifest/result artifacts |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/result_extractor.py` | consume OrcaWave artifact fields instead of scanning only `.sim`/`.dat` |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/orcawave_batch_runner.py` | pass structured artifacts to extraction/report steps |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py` | migrate `.owr` metadata lookup to result manifest/artifact contract or document adapter |
+| Modify | `src/digitalmodel/hydrodynamics/diffraction/output_schemas.py` | reuse/extend existing output schema definitions for manifest validation |
 | Create/modify | `tests/hydrodynamics/diffraction/test_orcawave_runner.py` | metadata/export tests |
 
 ## TDD Test List
@@ -101,16 +126,20 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 | `test_run_result_records_api_artifacts` | explicit artifact fields | mocked OrcFxAPI success | `.owr` and data paths populated |
 | `test_runner_optional_xlsx_export_records_path` | Excel policy works | export flag enabled | `.xlsx` path populated |
 | `test_runner_default_does_not_export_xlsx` | default avoids large sidecar | mocked OrcFxAPI success with default config | `.xlsx` path absent and manifest explains disabled export |
-| `test_log_file_no_longer_overloaded_with_owr` | compatibility contract clear | mocked OrcFxAPI success | `.owr` field populated; `log_file` is absent or points to log, not result file |
+| `test_log_file_no_longer_overloaded_with_owr` | compatibility contract clear | mocked OrcFxAPI success | `.owr` field populated; `log_file is None` unless a real text log is captured |
+| `test_subprocess_completed_discovers_result_artifacts` | subprocess path contract | mocked executable success and fake `.owr` in output | `results_file` populated and manifest written |
+| `test_subprocess_completed_missing_artifact_warns` | no guessed result paths | mocked executable success with no `.owr` | warning recorded, no fake `.owr` path |
 | `test_cli_prints_result_artifacts` | user-visible paths | mocked completed run | paths in CLI output |
 | `test_dry_run_manifest_has_inputs_no_results` | dry-run contract | dry run | generated inputs, no fake results |
+| `test_manifest_schema_records_required_metadata` | issue-required metadata covered | mocked API result | OrcFxAPI version, thread count, timing, warnings, and artifact paths serialized |
+| `test_batch_and_report_paths_use_artifact_contract` | downstream paths stop guessing | mocked `RunResult` with artifacts | batch/report helpers consume `results_file`/manifest |
 
 ## Acceptance Criteria
 
 - [ ] Successful runs expose `.owr`, saved data, optional `.xlsx`, and report/manifest paths in structured metadata.
 - [ ] CLI output prints the same paths clearly.
 - [ ] Downstream `.xlsx -> OrcaFlex` and `.owr -> report` paths do not require manual guessing.
-- [ ] Tests cover dry-run metadata and mocked successful API execution metadata.
+- [ ] Tests cover dry-run metadata, mocked successful API execution metadata, mocked subprocess metadata, manifest schema, and downstream batch/report integration.
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
@@ -130,7 +159,7 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 - **Risk:** Existing callers may treat `RunResult.log_file` as the `.owr` result path. Implementation needs an explicit compatibility/migration check before changing that behavior.
 - **Risk:** Excel export can be large and slow; making it opt-in avoids surprising normal runs while still supporting OrcaFlex handoff.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
-- **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
+- **Open:** T2 complexity requires two-provider review; Claude + Codex are the selected review pair for this plan.
 
 ## Complexity: T2
 

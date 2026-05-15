@@ -10,7 +10,7 @@
 
 ## Scope
 
-Documentation-only. Do not implement new CLI behavior here; link future commands as planned/dependent when not yet implemented. Documentation must distinguish current commands from future work so users do not follow non-existent workflows.
+Documentation-only. Do not implement new CLI behavior here; link future commands as planned/dependent when not yet implemented. Documentation must distinguish current commands from future work so users do not follow non-existent workflows. In particular, #605 self-contained packaging is planned, not current behavior.
 
 ## Resource Intelligence Summary
 
@@ -36,7 +36,9 @@ Verified on 2026-05-15 via GitHub issue fetch:
 - `docs/domains/orcawave/README.md` contains OrcaWave domain documentation and older examples.
 - `docs/domains/orcawave/examples/` contains parameter/reference material that should remain but can be cross-linked.
 - `cli.py` is the source of truth for existing commands: `validate-spec`, `convert-spec`, and `run-orcawave`.
-- #605, #607, #610, and #613 define planned packaging, given-mesh, licensed acceptance, and doctor workflows.
+- #500, #605, #606, #607, #610, and #613 define planned/current path-resolution, packaging, mesh preparation, given-mesh, licensed acceptance, and doctor workflows.
+- `docs/domains/orcawave/README.md` currently links to missing `diffraction/QUICK_START.md` and contains legacy `src/digitalmodel/modules/diffraction_cli.py` commands.
+- `docs/domains/orcawave/PHASE_1_COMPLETION.md` and `docs/domains/orcawave/L01_aqwa_benchmark/COMPARISON_SUMMARY.md` contain additional stale `diffraction_cli.py` / old `src/digitalmodel/modules/diffraction` references.
 
 ### Gaps identified
 
@@ -56,22 +58,23 @@ sed -n '400,590p' src/digitalmodel/hydrodynamics/diffraction/cli.py
 sed -n '1,180p' src/digitalmodel/hydrodynamics/diffraction/spec_converter.py
 sed -n '220,560p' src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py
 sed -n '1,280p' src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py
+rg -n 'diffraction_cli\\.py|src/digitalmodel/modules/diffraction|diffraction/QUICK_START' docs/domains/orcawave -g '*.md'
 ```
 
-Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleged runtime regression or failing-test report. Implementation must still start with the TDD tests below.
+Reproduction proof: the `rg` command above found stale legacy CLI/module references in `docs/domains/orcawave/README.md`, `docs/domains/orcawave/PHASE_1_COMPLETION.md`, and `docs/domains/orcawave/L01_aqwa_benchmark/COMPARISON_SUMMARY.md`, plus a broken README quickstart link to missing `diffraction/QUICK_START.md`.
 
 ## Deliverable
 
-OrcaWave documentation reflects the current canonical `spec.yml -> validate -> convert/package -> dry-run/licensed run` command workflow and removes stale legacy command examples.
+OrcaWave documentation reflects the current canonical `spec.yml -> validate -> convert YAML -> dry-run/licensed run` command workflow, labels #605 self-contained packaging as planned, and removes or labels stale legacy command examples.
 
 ## Proposed Tasks
 
-1. Audit OrcaWave docs for stale legacy command examples, including `python diffraction_cli.py` examples and standalone `run_orcawave.py` scripts.
-2. Replace current-command examples with `diffraction validate-spec`, `diffraction convert-spec --solver orcawave`, and `diffraction run-orcawave`.
-3. Add a minimal quickstart: prepare spec, validate, dry-run/package, run on licensed host.
-4. Document mesh path-resolution/package behavior based on #500/#605 state; label future behavior as planned if not implemented.
-5. Link related future-work issues without claiming they are complete.
-6. Add a lightweight docs test or grep-based guard if the repo has a suitable pattern. The guard should allow historical/example script references only when clearly labeled as historical or example-only.
+1. Audit OrcaWave docs for stale legacy command examples, including `python diffraction_cli.py`, `src/digitalmodel/modules/diffraction*`, and broken quickstart links. Do not treat working `docs/domains/orcawave/examples/Lxx/run_orcawave.py` scripts as stale merely because they are scripts; they can remain as example scripts when clearly separated from canonical CLI docs.
+2. Replace current-command examples with `diffraction validate-spec`, `diffraction convert-spec --solver orcawave`, and `diffraction run-orcawave`, while stating that `convert-spec` at HEAD writes OrcaWave YAML and #605 will add self-contained packaging.
+3. Add a minimal current quickstart: prepare spec, validate, convert YAML, dry-run, then run on licensed host. Add a separate "Planned workflow" callout for #605 packaging, #606 mesh preparation, #607 given-mesh, #610 licensed acceptance, and #613 doctor.
+4. Document mesh path-resolution/package behavior based on current #500/#605 state; label future behavior as planned if not implemented.
+5. Link related issues explicitly: #500, #605, #606, #607, #610, and #613.
+6. Add required docs guard tests. The guard should fail stale canonical docs, allow working `examples/Lxx/run_orcawave.py` references when labeled as examples, and require any `diffraction_cli.py` references to be historical rather than quickstart/current workflow.
 
 ## Artifact Map
 
@@ -88,8 +91,10 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 | Action | Path | Reason |
 |---|---|---|
 | Modify | `docs/domains/orcawave/README.md` | canonical quickstart and stale example cleanup |
+| Modify | `docs/domains/orcawave/PHASE_1_COMPLETION.md` | label or update legacy CLI/module references |
+| Modify | `docs/domains/orcawave/L01_aqwa_benchmark/COMPARISON_SUMMARY.md` | label or update legacy CLI/module references |
 | Modify | `docs/domains/orcawave/examples/` | update cross-links only if stale examples live there |
-| Modify/create | `tests/docs/test_orcawave_docs.py` | optional docs guard if pattern fits |
+| Create/modify | `tests/docs/test_orcawave_docs.py` | required docs guard for canonical/current command references |
 
 ## TDD Test List
 
@@ -97,16 +102,18 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 |---|---|---|---|
 | `test_orcawave_docs_reference_existing_cli_commands` | docs command names match Click commands | README text | no legacy-only examples |
 | `test_orcawave_docs_mark_future_commands_as_planned` | no premature docs | future workflow refs | issue links/planned wording |
-| `test_orcawave_docs_quickstart_paths_present` | quickstart complete | README text | validate/convert/run path present |
-| `test_orcawave_docs_legacy_scripts_labeled_historical` | stale script refs are not canonical | docs text with `diffraction_cli.py`/`run_orcawave.py` | references are absent from quickstart or marked historical/example-only |
+| `test_orcawave_docs_current_quickstart_paths_present` | current quickstart complete | README text | validate/convert-YAML/dry-run/licensed-run path present without claiming package is current |
+| `test_orcawave_docs_legacy_cli_refs_labeled_historical` | stale CLI refs are not canonical | docs text with `diffraction_cli.py` or old module paths | references are absent from quickstart/current docs or marked historical |
+| `test_orcawave_docs_examples_scripts_allowed_as_examples` | working scripts not mislabeled stale | `examples/Lxx/run_orcawave.py` references | allowed only under examples/reference wording |
+| `test_orcawave_docs_no_broken_quickstart_link` | README link valid | README links | no link to missing `diffraction/QUICK_START.md` |
 
 ## Acceptance Criteria
 
-- [ ] Stale legacy command examples are replaced or marked historical.
-- [ ] Docs include a minimal `spec.yml -> dry-run package -> licensed solve` quickstart.
+- [ ] Stale legacy command examples in README, PHASE_1 completion notes, and L01 comparison docs are replaced or marked historical.
+- [ ] Docs include a minimal current `spec.yml -> validate -> convert YAML -> dry-run -> licensed solve` quickstart without claiming #605 packaging is current.
 - [ ] Docs explain mesh path resolution and package layout according to implemented/current behavior.
-- [ ] Docs link to related validation, packaging, doctor, given-mesh, and licensed-smoke-test issues.
-- [ ] Commands in docs match actual Click CLI names.
+- [ ] Docs link to related issues #500, #605, #606, #607, #610, and #613 with planned/current wording.
+- [ ] Commands in current quickstart docs match actual Click CLI names for the scoped canonical commands: `validate-spec`, `convert-spec`, and `run-orcawave`.
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
@@ -125,7 +132,7 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 
 - **Risk:** The docs can easily overstate planned #605/#607/#610/#613 behavior. The implementation must mark future workflows as planned until the corresponding issue lands.
 - **Risk:** Existing OrcaWave example scripts may remain useful as references. The goal is to remove them from the canonical quickstart or label them historical/example-only, not delete working reference material blindly.
-- **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
+- **Open:** T1 documentation scope uses the same Claude + Codex review pair as this OrcaWave future-work planning batch.
 
 ## Complexity: T1
 
