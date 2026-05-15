@@ -13,11 +13,61 @@ References:
 """
 
 import math
+import os
+import warnings
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
+
+from digitalmodel.citations import Citation, CitationResolutionError, CitedValue
+from digitalmodel.citations.registry import (
+    MooringCondition,
+    get_mooring_safety_factor,
+)
+
+
+_INTACT_FIELD_DEFAULT: float = 1.67
+_DAMAGED_FIELD_DEFAULT: float = 1.25
+_REPO_ROOT_WALK_HARD_CAP: int = 8
+_REPO_ROOT_RESOLUTION_CACHE: dict = {}
+
+
+def _default_repo_root(explicit: Optional[Path] = None) -> Optional[Path]:
+    """Resolve workspace-hub repo_root for citation validation (#2685).
+
+    Layered fallback (caller treats None as 'skip citation emission, warn once'):
+      1. Explicit kwarg.
+      2. DIGITALMODEL_REPO_ROOT env var (set-but-invalid raises CitationResolutionError).
+      3. Bounded parent walk capped at _REPO_ROOT_WALK_HARD_CAP levels.
+      4. site-packages / dist-packages detection -> return None (graceful no-op).
+      5. Checked-out source tree without knowledge/ overlay -> return None.
+    """
+    if explicit is not None:
+        return Path(explicit)
+
+    env = os.environ.get("DIGITALMODEL_REPO_ROOT")
+    if env:
+        env_path = Path(env)
+        if (env_path / "knowledge" / "wikis").is_dir():
+            return env_path
+        raise CitationResolutionError(
+            code_id="DNV-OS-E301",
+            wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+            reason=(
+                f"DIGITALMODEL_REPO_ROOT={env_path!s} does not contain knowledge/wikis/; "
+                "set to the workspace-hub root or unset to fall through to standalone mode"
+            ),
+        )
+
+    here = Path(__file__).resolve()
+    for parent in [here, *here.parents][:_REPO_ROOT_WALK_HARD_CAP]:
+        if (parent / "knowledge" / "wikis").is_dir():
+            return parent
+
+    return None  # standalone / shallow-clone: caller emits one-shot WARNING
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +365,151 @@ class MooringLineDesign(BaseModel):
             utilisation = max_tension_kn / mat.mbl
             results[seg.material_key] = round(utilisation, 4)
         return results
+
+    def _resolve_sf_for_condition(
+        self,
+        condition: str,
+        *,
+        repo_root_override: Optional[Path] = None,
+    ) -> Tuple[float, Optional[Citation]]:
+        """Return (safety_factor, citation_or_None) for DNV-OS-E301 pilot (#2685).
+
+        Honors user override on self.safety_factor_intact / _damaged: if user's
+        value differs from the field default, returns user value with the
+        registry value cited as a 'user override' reference. Otherwise returns
+        the registry value with its primary citation. Standalone mode (no
+        knowledge/wikis/ tree) returns (user_value, None) plus a one-shot
+        RuntimeWarning.
+        """
+        if condition == "intact":
+            field_default = _INTACT_FIELD_DEFAULT
+            registry_key = MooringCondition.INTACT_QUASI_STATIC
+            user_value = self.safety_factor_intact
+        elif condition == "damaged":
+            field_default = _DAMAGED_FIELD_DEFAULT
+            registry_key = MooringCondition.DAMAGED_QUASI_STATIC
+            user_value = self.safety_factor_damaged
+        else:
+            raise ValueError(
+                f"condition must be 'intact' or 'damaged', got {condition!r}"
+            )
+
+        user_overrode = user_value != field_default
+
+        repo_root = _default_repo_root(repo_root_override)
+        if repo_root is None:
+            key = ("standalone_no_citation", condition)
+            if key not in _REPO_ROOT_RESOLUTION_CACHE:
+                warnings.warn(
+                    "digitalmodel standalone mode: DNV-OS-E301 citation unavailable "
+                    "(no knowledge/wikis/ tree found; set DIGITALMODEL_REPO_ROOT to "
+                    f"enable). Calc proceeds with SF={user_value}.",
+                    RuntimeWarning,
+                    stacklevel=3,
+                )
+                _REPO_ROOT_RESOLUTION_CACHE[key] = True
+            return user_value, None
+
+        cited = get_mooring_safety_factor(registry_key, repo_root=repo_root)
+        if user_overrode:
+            ref_citation = Citation(
+                code_id=cited.citation.code_id,
+                publisher=cited.citation.publisher,
+                revision=cited.citation.revision,
+                section=cited.citation.section,
+                wiki_path=cited.citation.wiki_path,
+                note=(
+                    f"user override (value={user_value}); "
+                    f"registry reference value={cited.value}"
+                ),
+            )
+            return user_value, ref_citation
+        return cited.value, cited.citation
+
+    def get_intact_safety_factor(
+        self, *, repo_root: Optional[Path] = None
+    ) -> CitedValue:
+        """Return DNV-OS-E301 intact-condition SF as a CitedValue (#2685).
+
+        Honors `safety_factor_intact` field override. Raises CitationResolutionError
+        in standalone mode (no knowledge/wikis/ tree) — use
+        check_mbl_with_safety_factor() if you need graceful degradation.
+        """
+        value, citation = self._resolve_sf_for_condition(
+            "intact", repo_root_override=repo_root
+        )
+        if citation is None:
+            raise CitationResolutionError(
+                code_id="DNV-OS-E301",
+                wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+                reason=(
+                    "standalone_no_citation: set DIGITALMODEL_REPO_ROOT or use "
+                    "check_mbl_with_safety_factor() which degrades gracefully"
+                ),
+            )
+        return CitedValue(value=value, citation=citation, units="dimensionless")
+
+    def get_damaged_safety_factor(
+        self, *, repo_root: Optional[Path] = None
+    ) -> CitedValue:
+        """Return DNV-OS-E301 damaged-condition SF as a CitedValue (#2685)."""
+        value, citation = self._resolve_sf_for_condition(
+            "damaged", repo_root_override=repo_root
+        )
+        if citation is None:
+            raise CitationResolutionError(
+                code_id="DNV-OS-E301",
+                wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+                reason=(
+                    "standalone_no_citation: set DIGITALMODEL_REPO_ROOT or use "
+                    "check_mbl_with_safety_factor() which degrades gracefully"
+                ),
+            )
+        return CitedValue(value=value, citation=citation, units="dimensionless")
+
+    def check_mbl_with_safety_factor(
+        self,
+        max_tension_kn: float,
+        *,
+        condition: str = "intact",
+        repo_root: Optional[Path] = None,
+    ) -> Dict:
+        """Apply DNV-OS-E301 SF to MBL utilisation; emit citation sidecar (#2685).
+
+        SEMANTIC DIFFERENCE FROM check_mbl():
+          check_mbl():                       utilisation = max_tension / mbl
+          check_mbl_with_safety_factor():    utilisation_with_sf = (max_tension * SF) / mbl
+
+        A caller migrating from check_mbl() WILL see utilisation multiplied by
+        1.67 (intact) or 1.25 (damaged). Loads at 0.60 utilisation under the
+        legacy method land at ~1.002 (FAIL) under this one. Intentional per
+        DNV-OS-E301 Section 2.2.3; callers MUST recalibrate utilisation
+        thresholds before adopting.
+        """
+        if condition not in ("intact", "damaged"):
+            raise ValueError(
+                f"condition must be 'intact' or 'damaged', got {condition!r} "
+                "(prevents typos like 'damagd' silently selecting wrong SF)"
+            )
+        sf, citation = self._resolve_sf_for_condition(
+            condition, repo_root_override=repo_root
+        )
+        per_segment: Dict[str, Dict] = {}
+        for seg in self.segments:
+            mat = MOORING_MATERIAL_LIBRARY[seg.material_key]
+            util_no_sf = max_tension_kn / mat.mbl
+            util_with_sf = (max_tension_kn * sf) / mat.mbl
+            per_segment[seg.material_key] = {
+                "utilisation_no_sf": round(util_no_sf, 4),
+                "utilisation_with_sf": round(util_with_sf, 4),
+                "passes": util_with_sf < 1.0,
+            }
+        return {
+            "results": per_segment,
+            "safety_factor": sf,
+            "condition": condition,
+            "citations": [citation] if citation is not None else [],
+        }
 
 
 # ---------------------------------------------------------------------------
