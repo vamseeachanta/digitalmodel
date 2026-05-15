@@ -10,7 +10,7 @@
 
 ## Scope
 
-Quality gate scope only. Mesh conversion policy belongs to #606; package layout belongs to #605.
+Quality gate scope only. Mesh conversion policy belongs to #606; package layout belongs to #605. #608 should consume resolved/prepared asset paths from the #605/#606 flow instead of doing independent path resolution.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -34,6 +34,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 ### Issue-specific code findings
 
 - `MeshPipeline.validate()` delegates to the BEMRosetta handler for a `MeshQualityReport`.
+- `MeshQualityReport` already exposes `n_vertices`, `n_panels`, panel-area stats, `aspect_ratio_max`, `aspect_ratio_mean`, `skewness_max`, degenerate-panel count/flag, normal consistency flags, `quality_score`, warnings, and errors.
 - `SpecConverter.validate()` does not load mesh files or inspect mesh quality.
 - `OrcaWaveRunner._validate_mesh_references()` only warns about missing packaged mesh files in output, not geometry quality.
 - BEMRosetta mesh handlers live under `src/digitalmodel/hydrodynamics/bemrosetta/mesh/`.
@@ -66,12 +67,12 @@ OrcaWave validation/preflight produces blocking mesh errors and non-blocking qua
 
 ## Proposed Tasks
 
-1. Inventory available `MeshQualityReport` fields and BEMRosetta validation behavior.
-2. Define OrcaWave severity thresholds for existence, supported format, panel count, degenerate panels, aspect ratio/skew, normals, waterline sanity, units, and symmetry.
-3. Add a QA runner that resolves mesh paths from `spec.yml`, loads meshes with `MeshPipeline`, and emits structured findings.
-4. Wire QA into `validate-spec` or add a dedicated `orcawave-preflight` command; keep hard-fail policy explicit.
-5. Emit machine-readable metadata and concise CLI output.
-6. Add valid and invalid mesh fixtures/tests.
+1. Inventory available `MeshQualityReport` fields and BEMRosetta validation behavior, then define an `OrcaWaveMeshQAPolicy` with configurable thresholds rather than hardcoding engineering cutoffs inside the runner.
+2. Define severity mapping for missing files, unsupported format, zero panels, degenerate panels, extreme aspect ratio/skew, inconsistent normals, units/symmetry metadata, and any waterline checks that can be defended from available mesh/spec fields. Do not invent waterline physics checks if the needed datum is absent.
+3. Add a QA runner that consumes resolved/prepared asset paths from #605/#606 when available, loads meshes with `MeshPipeline`, and emits structured findings with `asset_type`, source path, metric, severity, threshold, and recommendation.
+4. Add a dedicated `diffraction orcawave-preflight` command and an opt-in `validate-spec --mesh-qa` integration; keep hard-fail policy explicit for package/solve preflight.
+5. Emit machine-readable JSON metadata and concise CLI output.
+6. Add valid and invalid mesh fixtures/tests, including a fixture that exercises BEMRosetta error handling without needing a licensed OrcaWave host.
 
 ## Artifact Map
 
@@ -100,7 +101,9 @@ OrcaWave validation/preflight produces blocking mesh errors and non-blocking qua
 | `test_orcawave_mesh_qa_valid_mesh_passes` | nominal mesh accepted | known valid GDF | no blocking findings |
 | `test_orcawave_mesh_qa_missing_file_blocks` | missing asset hard fails | absent mesh path | blocking finding |
 | `test_orcawave_mesh_qa_degenerate_panels_warn_or_block` | geometry metric mapped | bad fixture | severity per policy |
-| `test_validate_spec_reports_mesh_qa` | CLI integration | spec + bad mesh | human-readable issue list |
+| `test_orcawave_mesh_qa_policy_overrides_thresholds` | thresholds configurable | strict/relaxed policy | same report metrics map to expected severity |
+| `test_validate_spec_mesh_qa_reports_findings` | CLI integration | spec + bad mesh and `--mesh-qa` | human-readable issue list and nonzero only for blocking findings |
+| `test_orcawave_preflight_writes_json_report` | machine-readable output | spec + valid mesh | JSON report contains asset type, metric, severity, and path |
 
 ## Acceptance Criteria
 
@@ -112,7 +115,7 @@ OrcaWave validation/preflight produces blocking mesh errors and non-blocking qua
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -121,11 +124,11 @@ OrcaWave validation/preflight produces blocking mesh errors and non-blocking qua
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** QA must run on the same resolved/prepared asset paths that package/solve will use. Duplicating path resolution outside #605/#606 would let QA pass a different file than OrcaWave receives.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

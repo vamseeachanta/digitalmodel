@@ -10,7 +10,7 @@
 
 ## Scope
 
-Auxiliary mesh consistency scope. Body mesh packaging remains #605; conversion remains #606.
+Auxiliary mesh consistency scope. Body mesh packaging remains #605; conversion remains #606. This issue defines the schema/backend/runner contract for auxiliary assets, then routes those assets through the shared resolver/preparer from #605/#606.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -66,11 +66,11 @@ Control surface, damping lid, and free-surface panelled-zone mesh references use
 
 ## Proposed Tasks
 
-1. Decide canonical control-surface location or implement explicit precedence: body-level overrides vessel-level, with warning on conflict.
-2. Add helper accessors for body auxiliary meshes and use them from backend, packager, validation, and runner.
-3. Include damping lid and free-surface panelled-zone meshes in the same preflight/copy flow.
-4. Add QTF/free-surface checks for symmetry/global-coordinate assumptions where metadata exists.
-5. Document schema behavior and migration guidance.
+1. Make the precedence rule explicit before implementation: for a given `BodySpec`, `BodySpec.control_surface` overrides `BodySpec.vessel.control_surface`; if both are set and reference different files, emit a structured warning naming both paths. A vessel-level control surface remains the default for bodies that do not define a body-level override.
+2. Add helper accessors for body auxiliary meshes and use them from backend, packager, validation, and runner. The helper must return the canonical asset id/type consumed by `orcawave_asset_resolver.py` and `orcawave_mesh_preparer.py`.
+3. Include damping lid and free-surface panelled-zone meshes in the same preflight/copy flow without changing #606 format-conversion policy.
+4. Add QTF/free-surface checks for symmetry/global-coordinate assumptions only where schema metadata exists; otherwise report an informational finding rather than guessing.
+5. Document schema behavior, conflict warning behavior, and migration guidance from vessel-level defaults to body-level overrides for multi-body specs.
 6. Add multi-body tests proving per-body auxiliary meshes are not ignored.
 
 ## Artifact Map
@@ -98,7 +98,8 @@ Control surface, damping lid, and free-surface panelled-zone mesh references use
 | Test name | What it verifies | Expected input | Expected output |
 |---|---|---|---|
 | `test_body_level_control_surface_generates_yaml` | body-level field honored | multi-body spec | `BodyControlSurfaceMeshFileName` present |
-| `test_control_surface_precedence_conflict_warns` | conflict not silent | vessel + body control surface | documented warning/choice |
+| `test_vessel_level_control_surface_applies_when_body_missing` | legacy/default behavior preserved | body without override, vessel-level control surface | `BodyControlSurfaceMeshFileName` present from vessel-level field |
+| `test_control_surface_precedence_conflict_warns` | conflict not silent | vessel + body control surface with different files | body-level file emitted and warning lists both paths |
 | `test_runner_packages_auxiliary_meshes` | packaging parity | spec with aux meshes | files copied/preflighted |
 | `test_free_surface_qtf_mesh_checks` | QTF assumptions reported | free-surface mesh spec | symmetry/global-coordinate finding |
 
@@ -112,7 +113,7 @@ Control surface, damping lid, and free-surface panelled-zone mesh references use
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -121,11 +122,12 @@ Control surface, damping lid, and free-surface panelled-zone mesh references use
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** Auxiliary asset precedence must be applied before backend YAML and before package/run path resolution. If backend and runner call different accessors, multi-body cases can still diverge.
+- **Risk:** #605/#606 own resolver/preparer mechanics; #609 should add asset discovery/precedence only, then delegate packaging/conversion.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

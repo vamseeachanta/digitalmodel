@@ -10,7 +10,7 @@
 
 ## Scope
 
-Output contract scope. It should avoid changing numerical extraction formulas unless tests show a contract gap.
+Output contract scope. It should avoid changing numerical extraction formulas unless tests show a contract gap. This issue defines metadata and artifact paths for completed/dry-run runs; it does not change package generation (#605/#606) or licensed acceptance coverage (#610).
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -67,12 +67,12 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 
 ## Proposed Tasks
 
-1. Extend `RunResult` or add a nested result-artifact dataclass/model for `.owr`, saved data, optional `.xlsx`, report, and metadata manifest paths.
-2. Decide whether `.xlsx` export is default, optional flag, or follow-on command; document rationale.
-3. Update OrcFxAPI execution to populate explicit result fields and stop overloading `log_file` for `.owr`.
-4. Emit a run manifest with solver version, thread count, timings, input file, mesh files, warnings, and result files.
-5. Update CLI output and downstream handoff/report utilities to use the contract.
-6. Add dry-run and mocked API tests.
+1. Extend `RunResult` or add a nested result-artifact dataclass/model for `.owr`, saved data, optional `.xlsx`, report, and metadata manifest paths. Keep `log_file` backward-compatible as a real log path only; do not silently use it as the `.owr` result path.
+2. Make `.xlsx` export opt-in through a runner config/CLI flag because it can be large and is only needed for selected handoff flows; document the rationale and default.
+3. Update OrcFxAPI execution to populate explicit result fields and preserve a compatibility alias or migration note for callers that previously inspected `log_file`.
+4. Emit a run manifest with solver version when available, thread count, timings, input file, mesh files, warnings, result files, and dry-run/completed status.
+5. Update CLI output and downstream handoff/report utilities to use the contract without requiring callers to guess sidecar names.
+6. Add dry-run and mocked API tests; licensed extraction behavior remains covered by #610.
 
 ## Artifact Map
 
@@ -100,6 +100,8 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 |---|---|---|---|
 | `test_run_result_records_api_artifacts` | explicit artifact fields | mocked OrcFxAPI success | `.owr` and data paths populated |
 | `test_runner_optional_xlsx_export_records_path` | Excel policy works | export flag enabled | `.xlsx` path populated |
+| `test_runner_default_does_not_export_xlsx` | default avoids large sidecar | mocked OrcFxAPI success with default config | `.xlsx` path absent and manifest explains disabled export |
+| `test_log_file_no_longer_overloaded_with_owr` | compatibility contract clear | mocked OrcFxAPI success | `.owr` field populated; `log_file` is absent or points to log, not result file |
 | `test_cli_prints_result_artifacts` | user-visible paths | mocked completed run | paths in CLI output |
 | `test_dry_run_manifest_has_inputs_no_results` | dry-run contract | dry run | generated inputs, no fake results |
 
@@ -112,7 +114,7 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -121,11 +123,12 @@ OrcaWave run results expose explicit structured paths and metadata for `.owr`, s
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** Existing callers may treat `RunResult.log_file` as the `.owr` result path. Implementation needs an explicit compatibility/migration check before changing that behavior.
+- **Risk:** Excel export can be large and slow; making it opt-in avoids surprising normal runs while still supporting OrcaFlex handoff.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

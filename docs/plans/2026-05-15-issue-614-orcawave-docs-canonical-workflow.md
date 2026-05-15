@@ -10,7 +10,7 @@
 
 ## Scope
 
-Documentation-only. Do not implement new CLI behavior here; link future commands as planned/dependent when not yet implemented.
+Documentation-only. Do not implement new CLI behavior here; link future commands as planned/dependent when not yet implemented. Documentation must distinguish current commands from future work so users do not follow non-existent workflows.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -66,12 +66,12 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 
 ## Proposed Tasks
 
-1. Audit OrcaWave docs for stale legacy command examples.
+1. Audit OrcaWave docs for stale legacy command examples, including `python diffraction_cli.py` examples and standalone `run_orcawave.py` scripts.
 2. Replace current-command examples with `diffraction validate-spec`, `diffraction convert-spec --solver orcawave`, and `diffraction run-orcawave`.
 3. Add a minimal quickstart: prepare spec, validate, dry-run/package, run on licensed host.
 4. Document mesh path-resolution/package behavior based on #500/#605 state; label future behavior as planned if not implemented.
 5. Link related future-work issues without claiming they are complete.
-6. Add a lightweight docs test or grep-based guard if the repo has a suitable pattern.
+6. Add a lightweight docs test or grep-based guard if the repo has a suitable pattern. The guard should allow historical/example script references only when clearly labeled as historical or example-only.
 
 ## Artifact Map
 
@@ -98,6 +98,7 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 | `test_orcawave_docs_reference_existing_cli_commands` | docs command names match Click commands | README text | no legacy-only examples |
 | `test_orcawave_docs_mark_future_commands_as_planned` | no premature docs | future workflow refs | issue links/planned wording |
 | `test_orcawave_docs_quickstart_paths_present` | quickstart complete | README text | validate/convert/run path present |
+| `test_orcawave_docs_legacy_scripts_labeled_historical` | stale script refs are not canonical | docs text with `diffraction_cli.py`/`run_orcawave.py` | references are absent from quickstart or marked historical/example-only |
 
 ## Acceptance Criteria
 
@@ -109,7 +110,7 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -118,12 +119,12 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
-- **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
+- **Risk:** The docs can easily overstate planned #605/#607/#610/#613 behavior. The implementation must mark future workflows as planned until the corresponding issue lands.
+- **Risk:** Existing OrcaWave example scripts may remain useful as references. The goal is to remove them from the canonical quickstart or label them historical/example-only, not delete working reference material blindly.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 
 ## Complexity: T1

@@ -10,7 +10,7 @@
 
 ## Scope
 
-Diagnostics only. This issue should not change solver execution behavior except to share detection helpers safely.
+Diagnostics only. This issue should not change solver execution behavior except to share pure detection helpers safely. It should make the current "dry-run-only fallback" visible to users before they attempt a solve.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -66,12 +66,12 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 
 ## Proposed Tasks
 
-1. Add a diagnostics service that checks OrcFxAPI import, DLL/version when available, executable detection, environment variables, output writability, and optional thread count.
-2. Investigate whether OrcFxAPI exposes a license check; if not, report capability as unknown rather than guessing.
-3. Add `diffraction orcawave-doctor` or equivalent Click command.
-4. Define PASS/WARN/FAIL severity and exit-code policy.
-5. Reuse runner detection helpers without mutating run state.
-6. Add tests for no-OrcFxAPI, mocked OrcFxAPI, explicit executable, and output directory failure.
+1. Add a diagnostics service that checks OrcFxAPI import, DLL/version when available, executable detection, `ORCAWAVE_PATH`, configured executable path, output writability, platform, and optional thread count.
+2. Investigate whether OrcFxAPI exposes a license check; if not, report license capability as `UNKNOWN` rather than guessing or failing.
+3. Add `diffraction orcawave-doctor` as a Click command with human-readable output and optional JSON output.
+4. Define PASS/WARN/FAIL severity and exit-code policy: FAIL only for explicit requested requirements that are unmet, WARN for dry-run-only/unknown license status, PASS for available capability.
+5. Reuse runner detection helpers only after making them pure/idempotent; no doctor check may mutate run state or create solver output.
+6. Add tests for no-OrcFxAPI, mocked OrcFxAPI, explicit executable, env executable, JSON output, and output directory failure.
 
 ## Artifact Map
 
@@ -100,6 +100,7 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 | `test_orcawave_doctor_no_orcfxapi_reports_dry_run_only` | Linux fallback clear | import unavailable | WARN/FAIL text, no stack trace |
 | `test_orcawave_doctor_mock_orcfxapi_reports_version` | API version shown | mocked DLLVersion | PASS line |
 | `test_orcawave_doctor_detects_env_executable` | env path included | `ORCAWAVE_PATH` | path in report |
+| `test_orcawave_doctor_json_output_is_structured` | machine output stable | `--json` | checks contain name, status, message, details |
 | `test_orcawave_doctor_unwritable_output_policy` | exit policy applied | bad output dir | nonzero only per policy |
 
 ## Acceptance Criteria
@@ -112,7 +113,7 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -121,11 +122,12 @@ A diagnostic CLI command reports whether the host can run OrcaWave diffraction o
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** The doctor must not imply a full license is available unless OrcFxAPI/executable exposes a reliable check. Unknown license state should remain WARN/UNKNOWN.
+- **Risk:** Sharing detection helpers with `OrcaWaveRunner` must preserve current run behavior; diagnostics should not change solve/dry-run semantics.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

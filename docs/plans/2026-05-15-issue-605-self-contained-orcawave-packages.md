@@ -10,7 +10,7 @@
 
 ## Scope
 
-Package-generation scope only. This issue does not implement mesh format conversion (#606), mesh quality metrics (#608), body-level control-surface normalization (#609), or the given-mesh UX (#607). Because #500 is already `status:plan-approved` and touches the same runner/converter path-resolution surface, #605 implementation must start by reconciling with #500: either implement after #500 is merged/closed, or make the first approved implementation step an extraction of the current #500 runner helpers into the shared resolver used by both issues. Do not maintain parallel resolver/copy paths.
+Package-generation scope only. This issue does not implement mesh format conversion (#606), mesh quality metrics (#608), body-level control-surface normalization (#609), or the given-mesh UX (#607). Because #500 is already `status:plan-approved` and touches the same runner/converter path-resolution surface, #605 implementation is blocked until #500 is merged/closed or the maintainer explicitly supersedes #500 in the #605 issue thread. This plan assumes the #605 implementation will reuse the landed #500 runner path-resolution/copy behavior by extracting it into one shared resolver; it must not create a second resolver/copy path.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -36,7 +36,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 - `SpecConverter.convert()` currently calls `backend.generate_single()` / `generate_modular()` directly and has no packaging step.
 - `OrcaWaveBackend` writes `BodyMeshFileName` as `Path(geom.mesh_file).name`, so generated YAML assumes files are colocated with the generated input.
 - `OrcaWaveRunner.prepare()` sets `spec_dir = Path(spec_path).parent if spec_path else None` and passes it to `_copy_mesh_files()`, so the existing runner convention is already "relative paths resolve from the source `spec.yml` directory when `spec_path` is provided."
-- `_copy_mesh_files()` already copies body mesh, damping lid, vessel-level control surface, and free-surface mesh; #605 should extract/share that existing convention for converter packaging rather than redesign it. Body-level `BodySpec.control_surface` remains #609 scope because backend/runner do not consistently emit/copy it today.
+- `_copy_mesh_files()` already copies body mesh, damping lid, vessel-level control surface, and free-surface mesh; #605 should extract/share that existing convention for converter packaging rather than redesign it. Vessel-level `VesselSpec.control_surface` is in #605 because the backend emits it today; body-level `BodySpec.control_surface` remains #609 scope because backend/runner do not consistently emit/copy it today.
 
 ### Gaps identified
 
@@ -66,13 +66,14 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 
 ## Proposed Tasks
 
-1. Create a shared `OrcaWaveAssetResolver` interface, extracted from the existing runner helpers: `resolve_assets(spec, spec_path, output_dir) -> OrcaWaveAssetPackage` with source path, destination path, YAML filename, asset type, and copied/generated status.
-2. Make `OrcaWaveRunner._copy_mesh_files()` and `_validate_mesh_references()` thin wrappers around the resolver or remove them after replacing their callers; the runner and converter must share exactly one path-resolution/copy implementation.
-3. Preflight all OrcaWave asset references before backend YAML generation. Copy body meshes, damping lid mesh, emitted vessel-level control surface meshes, and free-surface panelled-zone meshes into the output directory. Relative paths resolve from `spec_path.parent`; absolute paths are accepted and copied by basename unless a documented safety conflict is detected.
-4. Define basename collision behavior: if two distinct source assets would package to the same basename, fail before writing YAML with both source paths in the error. #605 does not rename assets; future filename rewriting belongs to #606 prepared-asset mapping.
+1. Create a shared `OrcaWaveAssetResolver` interface, extracted from the landed #500 runner helpers: `resolve_assets(spec, spec_path, output_dir, strict=False) -> OrcaWaveAssetPackage` with source path, destination path, YAML filename, asset type, copied/generated status, and warning/error findings.
+2. Keep current runner compatibility explicit: `SpecConverter`/CLI preflight must call the resolver in strict mode and fail on missing required package assets, while `OrcaWaveRunner.prepare()` keeps the current warning-soft behavior unless #500 has already approved a stricter runner contract. Audit all runner callers before changing warning-soft behavior.
+3. Preflight all OrcaWave asset references before backend YAML generation. Copy body meshes, damping lid mesh, emitted vessel-level control surface meshes, and free-surface panelled-zone meshes into the output directory. Relative paths resolve from `spec_path.parent`; absolute paths are accepted and copied by basename unless a basename conflict is detected.
+4. Define basename collision behavior: two distinct source assets that would package to the same basename fail before YAML is written and the error lists both source paths. Re-running with the same source/destination pair, or with a destination that is `samefile()`/content-identical to the source, is idempotent and not a collision.
 5. Verify generated YAML continues to reference packaged basenames already emitted by `OrcaWaveBackend`; #605 should not rewrite YAML except for future prepared filenames supplied by #606.
 6. Add clear `FileNotFoundError`/Click error messages for missing required files, and ensure missing OrcaWave assets fail before any OrcaWave `.yml` is written.
-7. Add explicit `--solver all` behavior: preflight OrcaWave assets before writing any solver output; if OrcaWave preflight fails, do not create a partial AQWA success tree. When preflight passes, OrcaWave output is packaged, AQWA remains current behavior, and CLI/docs state that only the OrcaWave output is self-contained in this issue.
+7. Refactor `SpecConverter.convert_all()` into an OrcaWave-aware two-pass flow: if OrcaWave is among selected solvers, run strict OrcaWave asset preflight before any backend writes; only after preflight succeeds may AQWA and OrcaWave generation proceed in the current solver order.
+8. Cover both `generate_single()` and `generate_modular()` paths so modular OrcaWave packages are not left as YAML-only output.
 
 ## Artifact Map
 
@@ -108,7 +109,10 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 | `test_convert_spec_solver_all_documents_orcawave_only_package` | default CLI behavior is not misleading | `--solver all` conversion | OrcaWave sub-output has packaged refs; AQWA behavior unchanged and CLI/doc message states scope |
 | `test_convert_spec_solver_all_missing_orcawave_asset_is_preflight_atomic` | default path avoids partial success | `--solver all` spec with missing OrcaWave mesh | command fails before AQWA/OrcaWave output trees are written |
 | `test_orcawave_asset_resolver_rejects_duplicate_basenames` | basename collision policy | two distinct meshes named `body.gdf` | preflight error lists both sources and no YAML is written |
+| `test_orcawave_asset_resolver_samefile_idempotent_rerun` | re-running a package does not fail as a false collision | source and existing destination are the same file or identical packaged asset | no collision and package remains valid |
 | `test_orcawave_asset_resolver_absolute_path_copies_by_basename` | absolute mesh path policy | spec references absolute mesh path outside spec dir | output contains copied basename and YAML resolves locally |
+| `test_orcawave_asset_resolver_no_optional_fsz_ok` | optional free-surface zone absent is allowed | spec without free-surface panelled-zone mesh | resolver succeeds and no free-surface filename is emitted |
+| `test_convert_spec_orcawave_modular_packages_assets` | modular output path is self-contained too | OrcaWave conversion using `format_type="modular"` | modular YAML files and referenced assets resolve from output dir |
 
 ## Acceptance Criteria
 
@@ -116,11 +120,11 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 - [ ] Missing required mesh assets and duplicate basename collisions fail before OrcaWave YAML or partial `--solver all` outputs are written.
 - [ ] Body and auxiliary mesh references in generated YAML resolve from a clean package directory without relying on original source paths.
 - [ ] Tests cover the currently emitted backend mesh keys: `BodyMeshFileName`, vessel-level `BodyControlSurfaceMeshFileName`, `DampingLidMeshFileName`, and `FreeSurfacePanelledZoneMeshFileName`; body-level control-surface behavior is explicitly deferred to #609.
-- [ ] Documentation states relative paths resolve from the source `spec.yml` directory, absolute mesh paths are copied by basename, and `--solver all` packages only OrcaWave output in this issue.
+- [ ] Documentation states relative paths resolve from the source `spec.yml` directory, absolute mesh paths are copied by basename, duplicate distinct basenames fail, same-source reruns are idempotent, and `--solver all` packages only OrcaWave output in this issue.
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -129,11 +133,12 @@ Reproduction proofs: N/A - this is a future-work enhancement issue, not an alleg
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled by a revised plan and re-review.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must wait for #500 to land or explicit maintainer supersession, then reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** The converter needs fail-loud package preflight, while the current runner path is warning-soft. The shared resolver must expose findings/severity so converter strict mode does not accidentally make every `OrcaWaveRunner.prepare()` caller fail without an approved compatibility decision.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

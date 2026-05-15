@@ -10,7 +10,7 @@
 
 ## Scope
 
-CLI/spec authoring scope. It must not infer mass properties that require engineering input unless an explicit template supplies them.
+CLI/spec authoring scope. It must not infer mass properties that require engineering input unless an explicit template supplies them. The `mesh-to-spec` command may land as a schema-writing workflow, but `run-orcawave-from-mesh` must depend on the #605 package path and #606 mesh preparation policy; #607 must not introduce a second mesh resolver or converter.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -66,10 +66,10 @@ A user-facing CLI workflow can create and optionally dry-run an OrcaWave diffrac
 
 ## Proposed Tasks
 
-1. Design command shape consistent with existing Click CLI conventions, especially `mesh-build`: implement `mesh-to-spec` and a thin `run-orcawave-from-mesh` dry-run wrapper because the acceptance test requires the wrapper path.
+1. Design command shape consistent with existing Click CLI conventions, especially `mesh-build`: implement `mesh-to-spec` and a thin `run-orcawave-from-mesh` dry-run wrapper because the acceptance test requires the wrapper path. Keep `diffraction_cli.py` unchanged in #607 and document Click CLI as canonical.
 2. Require or template vessel name, mass, COG, ROG/inertia, water depth, frequency grid, heading grid, mesh units, and symmetry; default vessel name may be the mesh stem but must be explicit in generated YAML.
 3. Generate canonical `DiffractionSpec` YAML using existing schema classes rather than ad hoc string assembly; `validate-spec` passing is necessary but not sufficient for physical quality, so command help must identify non-physical placeholder risk.
-4. Add wrapper behavior that calls `OrcaWaveRunner.run(spec, spec_path=generated_spec_path)` in dry-run mode, with licensed solve still requiring explicit `run-orcawave` or an approved flag policy.
+4. Add wrapper behavior that calls the configured `OrcaWaveRunner.run(...)` path in dry-run mode using the generated spec path, with licensed solve still requiring explicit `run-orcawave` or an approved flag policy. If #605/#606 have not landed, the wrapper must be blocked/deferred rather than implementing duplicate packaging or mesh-preparation logic.
 5. Add help text that states mesh-only inputs are insufficient for physics-ready diffraction.
 6. Add tests with `CliRunner` and schema reload validation, extending existing CLI test patterns in `tests/hydrodynamics/diffraction/test_cli_integration.py` or documenting why a standalone test file is cleaner.
 
@@ -112,7 +112,7 @@ A user-facing CLI workflow can create and optionally dry-run an OrcaWave diffrac
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -121,11 +121,11 @@ A user-facing CLI workflow can create and optionally dry-run an OrcaWave diffrac
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #606 must provide the mesh-loading/preparation policy. #607 should not create a competing mesh pipeline; it should depend on #606 or use a thin adapter that is replaced by #606 once approved/landed.
+- **Risk:** #605/#606 must provide packaging and mesh-loading/preparation policy for the dry-run wrapper. #607 should not create a competing mesh pipeline; the wrapper is blocked until those dependencies are available or explicitly approved for sequencing in the issue thread.
 - **Risk:** The legacy `diffraction_cli.py` argparse entry point will not receive this command in #607; docs must explicitly steer users to the Click CLI or a follow-up parity/deprecation issue.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 

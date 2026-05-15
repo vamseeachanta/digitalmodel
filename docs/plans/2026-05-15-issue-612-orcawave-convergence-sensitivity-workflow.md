@@ -10,7 +10,7 @@
 
 ## Scope
 
-Study orchestration and reporting scope. It should depend on the result contract in #611 for stable comparison inputs.
+Study orchestration and reporting scope. It depends on the result contract in #611 for stable comparison inputs and on the #605/#606 package/preparation path for creating case directories. It should not implement new numerical solvers or duplicate result extraction formulas.
 
 ## Resource Intelligence Summary
 
@@ -25,7 +25,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
 - `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
-- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-spec`, `validate-spec`, `run-orcawave`, and `batch-orcawave`; there is no given-mesh or doctor command yet.
+- `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
 - `src/digitalmodel/hydrodynamics/diffraction/mesh_pipeline.py` - existing pipeline can load/validate/prepare meshes and maps OrcaWave target format to GDF, but it is not integrated into `SpecConverter` or `OrcaWaveRunner`.
@@ -66,12 +66,12 @@ A batch study workflow can define OrcaWave mesh/grid variants, prepare/run or dr
 
 ## Proposed Tasks
 
-1. Define a convergence-study YAML schema for mesh variants, grid variants, solver settings, and comparison metrics.
-2. Extend or wrap `OrcaWaveBatchRunner` to prepare one run directory per case and support dry-run planning.
-3. Consume standardized result metadata from #611 for comparisons.
-4. Implement comparison tables/plots for selected outputs and warnings.
-5. Add runtime/memory estimates using documented OrcaWave notes and case dimensions.
-6. Add tests for schema parsing, dry-run case planning, mocked result comparison, and report generation.
+1. Define a convergence-study YAML schema for mesh variants, grid variants, solver settings, comparison metrics, tolerances, and baseline/reference selection.
+2. Extend or wrap `OrcaWaveBatchRunner` to prepare one run directory per case and support dry-run planning. Licensed execution remains opt-in and should reuse runner config rather than adding a second execution path.
+3. Consume standardized result metadata from #611 for comparisons; if #611 is absent, #612 implementation must stop at dry-run planning and report this dependency.
+4. Implement comparison tables/plots for selected outputs and warnings: added mass, radiation damping, excitation, RAOs, hydrostatics, solver warnings, and missing-artifact status.
+5. Add runtime/memory estimates using documented OrcaWave notes and case dimensions, clearly marked as estimates rather than solver guarantees.
+6. Add tests for schema parsing, dry-run case planning, mocked result comparison, tolerance/outlier behavior, and report generation.
 
 ## Artifact Map
 
@@ -101,6 +101,7 @@ A batch study workflow can define OrcaWave mesh/grid variants, prepare/run or dr
 | `test_convergence_study_config_parses_cases` | YAML schema expands cases | mesh/grid study | expected case matrix |
 | `test_convergence_study_dry_run_creates_case_dirs` | planning works without license | dry-run study | per-case directories/manifests |
 | `test_convergence_study_compares_mock_results` | metrics computed | mocked artifacts | convergence table |
+| `test_convergence_study_requires_result_contract_for_compare` | dependency is explicit | compare requested without #611 metadata | clear dependency error, no guessed sidecar paths |
 | `test_convergence_study_report_flags_outliers` | report highlights risk | divergent mock values | outlier warning |
 
 ## Acceptance Criteria
@@ -113,7 +114,7 @@ A batch study workflow can define OrcaWave mesh/grid variants, prepare/run or dr
 ## Plan Review Gating
 
 - [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for at least two providers and each non-empty artifact contains a `## Verdict` section; 0-byte in-progress files do not satisfy this gate.
-- [ ] Issue is commented with this plan and moved to `status:plan-review` only after review artifacts exist.
+- [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary
 
@@ -122,11 +123,12 @@ A batch study workflow can define OrcaWave mesh/grid variants, prepare/run or dr
 | Claude | PENDING | Awaiting review artifact |
 | Codex | PENDING | Awaiting review artifact |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and MAJOR findings, if any, are handled or explicitly carried as blockers.
+**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
 
 ## Risks and Open Questions
 
-- **Risk:** #500 is already plan-approved and runner-side `_copy_mesh_files()` / `_validate_mesh_references()` exist at HEAD; implementation must reuse or refactor that code instead of creating divergent path-resolution/copy logic.
+- **Risk:** #611 is a hard dependency for comparison mode. Without structured result metadata, #612 should not infer sidecar paths or parse arbitrary output trees.
+- **Risk:** Batch convergence workflows can be expensive. Dry-run planning and explicit licensed execution opt-in are required to keep normal tests and CI stable.
 - **Risk:** Licensed OrcaWave/OrcFxAPI behavior cannot be fully verified on Linux; tests requiring a license must skip cleanly and be proven on the licensed host where applicable.
 - **Open:** Gemini was unavailable in this environment; use Claude + Codex as the required two-provider review set for plan-review.
 
