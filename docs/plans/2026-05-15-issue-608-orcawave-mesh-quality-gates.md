@@ -1,6 +1,6 @@
 # Plan for #608: OrcaWave: add mesh quality gates before diffraction solve
 
-> **Status:** draft - awaiting adversarial review
+> **Status:** plan-review
 > **Complexity:** T2
 > **Date:** 2026-05-15
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/608
@@ -24,7 +24,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 ### Sources consulted
 
 - `AGENTS.md` - digitalmodel declares `PYTHONPATH=src uv run python -m pytest` as the repository test command and points source ownership at `src/digitalmodel/`.
-- `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template; issue #596 explicitly recorded "no `docs/plans/README.md` in this issue", so these plans follow the existing standalone-file convention.
+- `docs/plans/` - repo has standalone plan files but no `docs/plans/README.md` index/template at the reviewed checkout; these plans follow the existing standalone-file convention.
 - `src/digitalmodel/hydrodynamics/diffraction/cli.py` - current Click surface includes `convert-aqwa`, `convert-orcawave`, `compare`, `batch`, `convert-spec`, `validate-spec`, `run-orcawave`, `run-aqwa`, `batch-aqwa`, `batch-orcawave`, `plot-raos`, `mesh-build`, and benchmark commands; there is no given-mesh or doctor command yet.
 - `src/digitalmodel/hydrodynamics/diffraction/spec_converter.py` - `SpecConverter.convert()` delegates directly to backends and `validate()` checks non-empty mesh strings, frequencies, headings, and positive mass only.
 - `src/digitalmodel/hydrodynamics/diffraction/orcawave_runner.py` - runner can generate OrcaWave input, copy existing mesh files, prefer OrcFxAPI, and fall back to dry-run when no API/executable is available.
@@ -95,8 +95,8 @@ Missing-file, unsupported-format, and path-resolution errors are not owned by #6
 5. Add waterline/submergence as warning-only in #608 using `VesselGeometry.waterline_z` and `PanelMesh.bounding_box`: with tolerance `max(1e-6, 1e-4 * max(z_span, 1.0))`, warn if `waterline_z < z_min - tol` (mesh entirely above the declared waterline) or `waterline_z > z_max + tol` (mesh entirely below the declared waterline). If `waterline_z` lies inside `[z_min - tol, z_max + tol]`, emit no waterline finding. Do not make this blocking until a later policy issue approves stronger hydrostatic/submergence thresholds.
 6. Add a QA runner that operates from #500/#605/#606 resolved/prepared asset manifests and #609 selected-auxiliary metadata. Implementation is dependency-blocked until #500/#605/#606/#609 are merged to `main` and their APIs are importable; their current issue/plan-review state is not enough to start code. Before coding, add failing import/API gate tests for `mesh_preflight` from #500, `OrcaWaveAssetResolver`, `OrcaWaveMeshPreparer`, and `orcawave_auxiliary_assets` selected asset helpers. These are CI/pre-implementation gates, not runtime branches: if any import/API gate fails, stop implementation and revise/re-review #608 rather than shipping fallback behavior. `OrcaWaveMeshQAReport` is the locked public report schema for #608; upstream resolver/preparer fields are adapted into normalized `asset_id`, `source_field`, and `resolver_status` fields. If landed upstream APIs cannot supply those normalized fields without adding a parallel resolver/preparer, revise/re-review #608 before implementation. The compatibility helper for direct `spec.yml` may resolve paths only by delegating to the shared resolver with `spec_path.parent` semantics; it must not implement a parallel resolver or create its own missing-file finding. It emits structured findings with `asset_type`, source path, metric, severity, threshold, and recommendation. Asset collection must include every mesh reference the current backend can emit/copy: body mesh, selected control surface from #609, damping lid, and free-surface panelled-zone mesh.
 7. Handle symmetry explicitly. Record raw `num_panels` and an `effective_panel_count` for guidance using multiplier 2 for `xz` or `yz` symmetry and 4 for `xz+yz`; panel-count warnings report both values and make clear which threshold was applied. Symmetry does not change panel edge lengths. Waterline z-bounds are not mirrored by xz/yz symmetry planes, so the waterline check uses raw mesh z-bounds and records the symmetry setting for context.
-8. For FDF free-surface assets, consume #606's structural FDF validator result if available. If the validator API is unavailable, return an `UNAVAILABLE` finding for that asset in strict mode rather than implementing an independent FDF parser in #608. Geometric panel metrics use `geometry_metrics.status="STRUCTURAL_ONLY"` for FDF assets because they do not load through the same `PanelMesh` path.
-9. Define the shared function signature: `run_orcawave_mesh_qa(spec_path: Path, policy: Literal["off","warn","strict"], output_json: Path | None = None, threshold_overrides: OrcaWaveMeshQAThresholds | None = None, source: Literal["preflight","validate-spec","convert-spec","run-orcawave","batch-orcawave"] = "preflight") -> OrcaWaveMeshQAReport`. All entry points pass through this signature so schema, `off` handling, and threshold configuration cannot diverge silently.
+8. For FDF free-surface assets, consume #606's structural FDF validator result if available. If the validator API is unavailable, return an `UNAVAILABLE` finding for that asset in both warn and strict modes rather than implementing an independent FDF parser in #608; warn mode records it as non-blocking and strict mode maps it to blocking through the shared policy. Geometric panel metrics use `geometry_metrics.status="STRUCTURAL_ONLY"` for FDF assets because they do not load through the same `PanelMesh` path.
+9. Define the shared function signature around the assets actually used by package/solve, not only around a path: `run_orcawave_mesh_qa(*, policy: Literal["off","warn","strict"], spec: DiffractionSpec | None = None, spec_path: Path | None = None, resolved_assets: Sequence[OrcaWaveQAAsset] | None = None, package_manifest_path: Path | None = None, mesh_manifest_path: Path | None = None, output_json: Path | None = None, threshold_overrides: OrcaWaveMeshQAThresholds | None = None, source: Literal["preflight","validate-spec","convert-spec","run-orcawave","batch-orcawave"] = "preflight") -> OrcaWaveMeshQAReport`. `resolved_assets` is the preferred runner/package input and is adapted from #605/#606 manifests plus #609 auxiliary metadata. CLI-only `validate-spec`/`orcawave-preflight` may pass `spec_path` and let the shared #605 resolver produce the same normalized asset list. If QA is enabled inside `OrcaWaveRunner.run(spec, spec_path=None)` and no manifest/resolved asset set is available, fail before solve/package output with an actionable error requiring `spec_path` or a package/mesh manifest; do not silently rerun an independent resolver from the process working directory. All entry points pass through this signature so schema, `off` handling, asset provenance, and threshold configuration cannot diverge silently.
 10. Add a dedicated top-level Click command `diffraction orcawave-preflight`, plus `validate-spec --mesh-qa=off|warn|strict`, `convert-spec --mesh-qa=off|warn|strict`, `run-orcawave --mesh-qa=off|warn|strict`, and `batch-orcawave` integration after dependencies land. The runner-level contract is a `RunConfig.mesh_qa` field (policy plus optional JSON report path/threshold overrides) consumed inside `OrcaWaveRunner.prepare()` before solve/package output; `run-orcawave` CLI and `OrcaWaveBatchRunner` both populate the same `RunConfig` field so batch jobs cannot bypass QA by calling `OrcaWaveRunner(config).run(...)` directly. Batch configuration supports a global `run_config.mesh_qa` default plus per-job non-null overrides using the same precedence pattern as other run settings.
 11. All entry points call `run_orcawave_mesh_qa(...)` and emit the same JSON schema when a report is requested. Defaults: `validate-spec` remains `off` because it is schema validation; `orcawave-preflight` defaults to `strict`; `convert-spec` and `run-orcawave` default to `warn` so ordinary OrcaWave package/solve paths run pre-solve QA and block structurally unusable geometry by default while keeping stricter heuristic blocking opt-in; `batch-orcawave` defaults from `RunConfig.mesh_qa`, with absent config equivalent to `warn` for OrcaWave jobs. Explicit `--mesh-qa=off` is the documented bypass for compatibility. `convert-spec --solver aqwa` skips OrcaWave mesh QA because it does not emit OrcaWave inputs. `convert-spec --solver orcawave` runs OrcaWave QA before writing OrcaWave output. `convert-spec --solver all` runs OrcaWave QA once before writing any solver output; if the OrcaWave QA result is blocking under the selected policy, no solver output is written, avoiding a partial success report for a multi-solver conversion. `run-orcawave` and `batch-orcawave` QA tests must use dry-run or mocked runner paths and must not require OrcFxAPI on Linux. When `validate-spec` runs with default `off`, emit one concise note only in verbose/help contexts documenting `--mesh-qa=warn|strict` rather than silently implying physical QA ran.
 12. Emit machine-readable JSON metadata and concise CLI output. INFO-only reports have overall status `PASS` but must display `info_count` and INFO finding labels in both JSON and human summary; warning-only reports have overall status `WARN` and exit zero unless their mapped `blocking` flag is true.
@@ -105,12 +105,17 @@ Missing-file, unsupported-format, and path-resolution errors are not owned by #6
 ## Pseudocode
 
 ```text
-orcawave_preflight(spec_path, policy, source="standalone"):
-  spec = DiffractionSpec.from_yaml(spec_path)
-  assets = #500/#605/#606 manifest plus #609 selected-auxiliary metadata; if unavailable, fail the pre-implementation gate
+orcawave_preflight(spec_path=None, spec=None, resolved_assets=None, package_manifest_path=None, mesh_manifest_path=None, policy, source="standalone"):
+  if resolved_assets is None:
+    if spec_path is None: fail with "mesh QA requires spec_path or resolved assets"
+    spec = DiffractionSpec.from_yaml(spec_path)
+    assets = delegate to #500/#605/#606 resolver/manifests plus #609 selected-auxiliary metadata
+  else:
+    assets = resolved_assets adapted from the package/mesh manifests already used by package/solve
+    spec = spec or load spec_path only when available for frequency/environment context
   for asset in assets:
     if missing/path error from resolver -> carry resolver finding; do not duplicate #500/#605 blocking semantics
-    if asset is FDF free-surface zone -> run #606 structural FDF validator if available, else UNAVAILABLE; mark geometric metrics STRUCTURAL_ONLY
+    if asset is FDF free-surface zone -> run #606 structural FDF validator if available, else record UNAVAILABLE in all policies; mark geometric metrics STRUCTURAL_ONLY
     try: mesh = MeshPipeline.load(asset.path)
     except (ValueError, MeshError) as exc: record UNAVAILABLE finding for this asset and continue
     if mesh has zero vertices or zero valid panels after dropping -1 sentinels: record BLOCK without calling GeometryQualityChecker.generate_report(); continue
@@ -156,6 +161,8 @@ orcawave_preflight(spec_path, policy, source="standalone"):
 | `test_geometry_quality_checker_handles_quad_panels_quietly` | adapter does not crash/noise on common meshes | one quad-panel `PanelMesh` | no `IndexError`; quiet mode produces no unsolicited stdout |
 | `test_geometry_quality_checker_element_sizes_handles_quad_panels` | CV metric is not left broken after aspect-ratio fix | one quad-panel `PanelMesh` | `check_element_sizes()` computes metrics without `IndexError` |
 | `test_orcawave_mesh_qa_missing_file_uses_resolver_finding` | #608 does not duplicate #500 path preflight | absent mesh path returned by shared resolver | report carries resolver-owned finding; #608 does not create a separate missing-file check |
+| `test_orcawave_mesh_qa_uses_resolved_assets_without_reresolving` | runner/package QA uses the actual package asset set | prebuilt #605/#606 resolved asset list and no `spec_path` | QA evaluates supplied assets and does not call path discovery again |
+| `test_run_orcawave_mesh_qa_requires_spec_path_or_assets` | library runner cannot silently guess paths | QA enabled with parsed `DiffractionSpec`, `spec_path=None`, and no resolved assets/manifests | clear error before solve/package output |
 | `test_orcawave_mesh_qa_degenerate_panels_strict_blocks` | strict policy blocks bad geometry | bad fixture + strict policy | blocking finding |
 | `test_orcawave_mesh_qa_degenerate_panels_warn_policy_blocks` | default warn policy blocks structurally unusable panels | bad fixture + warn policy | `BLOCK` finding and nonzero/blocking exit mapping |
 | `test_orcawave_mesh_qa_nonplanar_quad_strict_blocks_at_high_threshold` | issue-required non-planar panel QA is planned | non-planar quad fixture + strict policy | `metric=quad_nonplanarity_ratio` finding blocks only past the strict threshold |
@@ -201,6 +208,7 @@ orcawave_preflight(spec_path, policy, source="standalone"):
 - [ ] Tests include the explicit fixture matrix from task 13, including valid, invalid/poor-quality, non-planar, implausible-scale, unsupported/corrupt, FDF, and auxiliary-asset meshes.
 - [ ] Package/solve integration uses #500/#605/#606 resolved/prepared asset APIs and #609 selected-auxiliary metadata; #608 does not introduce a circular dependency or a parallel resolver/preparer.
 - [ ] `RunConfig.mesh_qa`, single-run CLI flags, and batch global/per-job config feed the same runner-level QA gate, so `OrcaWaveRunner(config).run(...)` cannot bypass enabled QA.
+- [ ] Runner/library QA receives either the exact resolved/prepared asset set used for package/solve or a `spec_path` that the shared resolver can use; `spec_path=None` with no manifest/assets fails clearly when QA is enabled.
 - [ ] `convert-spec --solver aqwa`, `orcawave`, and `all` have explicit tested mesh-QA scoping; `all` writes no partial solver outputs when OrcaWave QA blocks.
 - [ ] `OrcaWaveMeshQAReport` remains the locked #608 public report schema; upstream asset shapes are normalized into it or the plan is revised/re-reviewed before implementation.
 - [ ] Pre-implementation import/API gates pass against `main` for #500/#605/#606/#609 surfaces before code changes begin, or this plan is revised to match the landed APIs.
@@ -213,11 +221,11 @@ orcawave_preflight(spec_path, policy, source="standalone"):
 
 | Provider | Verdict | Key findings |
 |---|---|---|
-| Claude | PENDING | Awaiting review artifact |
-| Codex | PENDING | Awaiting review artifact |
-| Gemini | PENDING | Awaiting review artifact |
+| Claude | UNAVAILABLE | Review command failed; completed artifact retained |
+| Codex | UNAVAILABLE | Codex CLI quota/usage unavailable on final rerun after plan patch |
+| Gemini | APPROVE | Verified quality-checker gaps, mesh-validation scope, quiet-report need, and dependency gates; no blockers |
 
-**Overall result:** PENDING - do not label `status:plan-review` until artifacts exist and no unresolved `MAJOR` findings remain.
+**Overall result:** READY FOR USER REVIEW - completed artifacts exist, prior MAJOR findings were addressed by plan revisions, and no fresh unresolved MAJOR remains. Implementation remains gated by upstream dependencies named in the plan.
 
 ## Risks and Open Questions
 
