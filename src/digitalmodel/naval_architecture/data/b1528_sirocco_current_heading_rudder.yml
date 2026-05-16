@@ -1,6 +1,6 @@
 case:
   id: b1528_sirocco_current_heading_rudder_forces
-  description: B1528 SIROCCO current-heading/rudder force component sweep at COG.
+  description: B1528 SIROCCO current-heading/rudder force component sweep at COG, retained as the 10 deg rudder limit report.
   aliases:
     - SIROCCO
     - Sirocco
@@ -14,6 +14,8 @@ current_heading_rudder_report:
   plan: docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md
 vessel:
   lbp_m: 225.5
+  beam_m: 32.26
+  draft_m: 12.2
   yaw_lever_m: 135.3
 rudder:
   area_m2: 44.93956319369854
@@ -42,10 +44,11 @@ force_convention:
   transform: Local-to-ship transform rotates current-frame X/Y loads by heading offset into ship-fixed COG axes.
   yaw_lever_basis: B1528 Barrass workbook family, 0.6 * LBP
 outputs:
-  directory: outputs/b1528_sirocco/current_heading_rudder
+  directory: outputs/b1528_sirocco/current_heading_rudder_10deg_limit
 limitations:
-  - rudder-induced moored-current loads only
-  - hull current loads, bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded
+  - rudder-induced moored-current loads plus first-cut OCIMF-inspired hull-current review loads are reported for comparison
+  - hull-current terms use transparent placeholder heading functions, not vessel-specific OCIMF/current-coefficient curves or certified coefficients
+  - bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded
   - oblique-current extension is a first-cut visualization using alpha = rudder angle - heading offset
   - not a validated oblique-current hull/rudder interaction model
   - Cr=1.0 is a neutral no-propeller-rotation correction value

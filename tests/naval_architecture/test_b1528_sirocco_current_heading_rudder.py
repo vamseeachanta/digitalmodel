@@ -11,6 +11,7 @@ from digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report
     KNOT_TO_M_PER_S,
     load_packaged_b1528_current_heading_rudder_config,
     run_b1528_current_heading_rudder_report,
+    validate_b1528_current_heading_rudder_config,
     write_b1528_current_heading_rudder_report,
 )
 
@@ -35,6 +36,9 @@ def test_yaml_loads_exact_sweep_and_default_contract():
     assert cfg.chart_default_current_speed_kn == pytest.approx(4.56)
     assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-10, 11))
     assert cfg.rudder_angles_deg == tuple(float(value) for value in range(-10, 11))
+    assert max(abs(value) for value in cfg.rudder_angles_deg) == pytest.approx(10.0)
+    assert "10 deg rudder limit" in cfg.raw["case"]["description"].lower()
+    assert cfg.raw["outputs"]["directory"].endswith("current_heading_rudder_10deg_limit")
     assert cfg.prop_rotation_factor == pytest.approx(1.0)
     assert cfg.lbp_m == pytest.approx(225.5)
     assert cfg.yaw_lever_m == pytest.approx(135.3)
@@ -154,9 +158,9 @@ def test_ship_fixed_transform_independent_formula():
     assert row["force_x_ship_N"] == pytest.approx(expected_x)
     assert row["force_y_ship_port_N"] == pytest.approx(expected_y)
     assert row["moment_n_yaw_bow_port_Nm"] == pytest.approx(expected_y * 135.3)
-    assert row["mooring_reaction_x_N"] == pytest.approx(-expected_x)
-    assert row["mooring_reaction_y_N"] == pytest.approx(-expected_y)
-    assert row["mooring_reaction_n_Nm"] == pytest.approx(-expected_y * 135.3)
+    assert row["mooring_reaction_x_N"] == pytest.approx(-row["total_force_x_ship_N"])
+    assert row["mooring_reaction_y_N"] == pytest.approx(-row["total_force_y_ship_port_N"])
+    assert row["mooring_reaction_n_Nm"] == pytest.approx(-row["total_moment_n_yaw_bow_port_Nm"])
 
 
 def test_speed_squared_scaling_for_same_heading_and_rudder():
@@ -194,12 +198,54 @@ def test_formula_sample_for_default_speed():
     assert sample["moment_n_yaw_bow_port_kN_m"] == pytest.approx(expected_y * 135.3 / 1000.0)
 
 
+def test_ocimf_current_rudder_and_total_resultants_are_reported_about_cog():
+    result = run_b1528_current_heading_rudder_report()
+    row = _find_row(result["rows"], 4.56, 5.0, 10.0)
+    psi = math.radians(5.0)
+    q = 0.5 * 1025.0 * row["current_speed_m_s"] ** 2
+    expected_current_x = q * (32.26 * 12.2) * (1.05 * abs(math.cos(psi)))
+    expected_current_y = q * (225.5 * 12.2) * math.sin(psi)
+    expected_current_n = q * (225.5 * 12.2) * 225.5 * (0.55 * math.sin(psi))
+
+    assert row["ocimf_current_force_x_ship_N"] == pytest.approx(expected_current_x)
+    assert row["ocimf_current_force_y_ship_port_N"] == pytest.approx(expected_current_y)
+    assert row["ocimf_current_moment_n_yaw_bow_port_Nm"] == pytest.approx(expected_current_n)
+    assert row["ocimf_current_resultant_horizontal_force_N"] == pytest.approx(
+        math.hypot(expected_current_x, expected_current_y)
+    )
+    assert row["total_force_x_ship_N"] == pytest.approx(
+        row["ocimf_current_force_x_ship_N"] + row["force_x_ship_N"]
+    )
+    assert row["total_force_y_ship_port_N"] == pytest.approx(
+        row["ocimf_current_force_y_ship_port_N"] + row["force_y_ship_port_N"]
+    )
+    assert row["total_moment_n_yaw_bow_port_Nm"] == pytest.approx(
+        row["ocimf_current_moment_n_yaw_bow_port_Nm"] + row["moment_n_yaw_bow_port_Nm"]
+    )
+    assert row["total_resultant_horizontal_force_N"] == pytest.approx(
+        math.hypot(row["total_force_x_ship_N"], row["total_force_y_ship_port_N"])
+    )
+    assert row["rudder_to_ocimf_current_resultant_ratio"] == pytest.approx(
+        row["resultant_horizontal_force_N"] / row["ocimf_current_resultant_horizontal_force_N"]
+    )
+
+
 def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = write_b1528_current_heading_rudder_report(result, tmp_path)
 
-    for key in ["csv", "json", "provenance", "markdown_report", "html_report", "manifest"]:
+    expected_names = {
+        "csv": "b1528_sirocco_current_heading_rudder_10deg_limit_results.csv",
+        "json": "b1528_sirocco_current_heading_rudder_10deg_limit_results.json",
+        "provenance": "b1528_sirocco_current_heading_rudder_10deg_limit_provenance.json",
+        "markdown_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.md",
+        "html_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.html",
+        "pdf_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.pdf",
+        "manifest": "b1528_sirocco_current_heading_rudder_10deg_limit_manifest.json",
+    }
+    for key, expected_name in expected_names.items():
         assert Path(manifest[key]).exists(), key
+        assert Path(manifest[key]).name == expected_name
 
     html = Path(manifest["html_report"]).read_text(encoding="utf-8")
     report = Path(manifest["markdown_report"]).read_text(encoding="utf-8")
@@ -215,8 +261,8 @@ def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path)
     assert '<option value="10.0" selected>10.0 deg</option>' not in html
     for angle in range(-10, 11):
         assert f'<option value="{float(angle):.1f}"' in html
-    assert '<title>B1528 SIROCCO Rudder-Induced Current-Heading Force Components</title>' in html
-    assert '<h1>Rudder-induced current-heading force component chart set</h1>' in html
+    assert '<title>B1528 SIROCCO Current-Heading/Rudder Force Comparison — 10 deg Rudder Limit</title>' in html
+    assert '<h1>B1528 SIROCCO current-heading/rudder force comparison — 10 deg rudder limit</h1>' in html
     assert 'selected-speed-envelope-summary' in html
     assert 'Selected-speed envelope summary' in html
     assert 'Max |Y_ship| at selected speed' in html
@@ -224,26 +270,64 @@ def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path)
     assert 'updateSelectedSpeedEnvelope' in html
     assert 'id="force-components-chart"' in html
     assert 'id="yaw-moment-heatmap"' in html
+    assert 'id="ocimf-rudder-resultant-force-chart"' in html
+    assert 'id="ocimf-rudder-resultant-yaw-chart"' in html
+    assert 'id="selected-case-force-breakdown"' in html
     assert "Plotly.newPlot('force-components-chart'" in html
     assert "Plotly.newPlot('yaw-moment-heatmap'" in html
+    assert "Plotly.newPlot('ocimf-rudder-resultant-force-chart'" in html
+    assert "Plotly.newPlot('ocimf-rudder-resultant-yaw-chart'" in html
+    assert "updateSelectedCaseBreakdown" in html
     assert "Rudder-induced ship-fixed force component (kN)" in html
     assert "Rudder-induced N_ship yaw moment (kN-m)" in html
+    assert "OCIMF current vs rudder vs total horizontal resultant (kN)" in html
+    assert "OCIMF current vs rudder vs total yaw moment about COG (kN-m)" in html
     assert "is_chart_default_extra_speed" in html
     assert "4.56 kn is an extra chart-default case" in html
     assert "Chart 1" in html and "Chart 2" in html
+    assert "id=\"input-data-section\"" in html
+    assert "Input data" in html
+    assert "LBP" in html
+    assert "Rudder area" in html
+    assert "4.56 kn =" in html
+    assert "id=\"sample-calculation-section\"" in html
+    assert "Sample calculation" in html
+    assert "F = 600.0 × 44.939563" in html
+    assert "alpha = δ - ψ = 1.0 deg - 0.0 deg = 1.0 deg" in html
+    assert "break-inside:avoid" in html
+    assert ".print-section" in html
+    assert "break-after:page" in html
+    assert 'id="heading-rudder-schematic"' in html
+    assert 'id="ship-current-rudder-svg"' in html
+    assert 'id="schematic-current-heading-line"' in html
+    assert 'id="schematic-rudder-line"' in html
+    assert "Ship/current/rudder geometry schematic" in html
+    assert "updateHeadingRudderSchematic" in html
+    assert "alpha = δ - ψ" in html
+    assert "positive bow-to-port" in html.lower()
 
+    assert "heading/rudder schematic" in report.lower()
     assert "heading/rudder effective-angle convention" in report.lower()
     assert "local-to-ship transform" in report.lower()
     assert "4.56 kn is an extra chart-default case" in report
-    assert "hull current loads" in report.lower()
+    assert "hull-current" in report.lower()
+    assert "ocimf-inspired placeholder heading functions" in report.lower()
+    assert "not vessel-specific ocimf current-coefficient curves" in report.lower()
     assert "not a validated oblique-current hull/rudder interaction model" in report.lower()
 
     assert parsed["metadata"]["chart_default_current_speed_kn"] == pytest.approx(4.56)
     assert parsed["metadata"]["chart_default_extra_speed_included"] is True
     assert parsed["summary"]["row_count"] == 3969
     assert "local_to_ship_transform" in provenance
+    assert provenance["ocimf_first_cut_current_loads"]["coefficient_caveat"] == (
+        "OCIMF-inspired placeholder heading functions, not vessel-specific OCIMF current-coefficient curves"
+    )
     assert "default_speed_policy" in provenance
     assert "scope_exclusions" in provenance
+    assert not any(
+        item.lower().startswith("hull current loads") and "excluded" in item.lower()
+        for item in provenance["scope_exclusions"]
+    )
 
 
 def test_generated_csv_has_expected_rows(tmp_path):
