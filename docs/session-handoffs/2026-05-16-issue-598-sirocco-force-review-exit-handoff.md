@@ -93,31 +93,11 @@ workspace-hub dirty/untracked paths present: unrelated generated/provider/learni
 
 No external send/action was performed. Links are ready for the user to send manually.
 
-## Final post-push closeout proof
+## Closeout proof note
 
-This section was added after committing the handoff file and re-running the closeout proof loop.
+The handoff file itself is committed and pushed as part of closeout, so the authoritative final `HEAD == origin/main`, ahead/behind, and dirty-count proof must be captured after the final handoff commit lands. Use the final chat closeout response for that live post-push proof.
 
-`digitalmodel` final proof:
-
-```text
-branch=main
-HEAD=aa1116dd1fd717ff7a04bd4679fc062a2eccb6a0
-origin/main=aa1116dd1fd717ff7a04bd4679fc062a2eccb6a0
-ahead/behind=0/0
-dirty_count=0
-```
-
-`workspace-hub` final inspected control-repo proof:
-
-```text
-branch=main
-HEAD=bc280bd4303e708801d533265ba8b2aec851c647
-origin/main=bc280bd4303e708801d533265ba8b2aec851c647
-ahead/behind=0/0
-dirty_count=52
-```
-
-Workspace-hub dirty state is unrelated generated/provider/learning/report state and was intentionally not staged for this digitalmodel closeout.
+At the time of control-repo inspection, `workspace-hub` was synced to `origin/main` and had unrelated generated/provider/learning/report dirty state. Those paths were intentionally not staged for this `digitalmodel` closeout.
 
 ## Remaining restart steps, if needed
 
