@@ -79,6 +79,10 @@ def test_smoke_sirocco_consumer_readiness():
             data, silhouette,
             force_arrow_kind=ForceArrowKind.RESULTANT_2D,
             title="SIROCCO smoke test",
+            # SIROCCO data spans only ~10° (rudder ±5°); use a finer step
+            # than the default 30° so the smoke test actually exercises arrow
+            # placement across the sweep. Documents the consumer-side knob.
+            arrow_sample_step_deg=2.0,
         )
 
     # Sub-condition (a): returns a Figure
