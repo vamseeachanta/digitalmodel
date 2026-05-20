@@ -1,0 +1,23 @@
+Warning: Basic terminal detected (TERM=dumb). Visual rendering will be limited. For the best experience, use a terminal emulator with truecolor support.
+Warning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.
+Ripgrep is not available. Falling back to GrepTool.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-05-15T10-05-07-042Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 20h55m7s.
+    at classifyGoogleError (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:270063:18)
+    at retryWithBackoff (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:270707:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async GeminiChat.makeApiCallAndProcessStream (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:293631:28)
+    at async GeminiChat.streamWithRetries (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:293450:29)
+    at async Turn.run (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:294024:24)
+    at async GeminiClient.processTurn (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:306709:22)
+    at async GeminiClient.sendMessageStream (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-7VVHSNDQ.js:306797:14)
+    at async file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/gemini-QSTQ2DBG.js:10859:26
+    at async main (file:///home/vamsee/.npm-global/lib/node_modules/@google/gemini-cli/bundle/gemini-QSTQ2DBG.js:16137:5) {
+  cause: {
+    code: 429,
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 20h55m7s.',
+    details: [ [Object], [Object] ]
+  },
+  retryDelayMs: 75307030.783748,
+  reason: 'QUOTA_EXHAUSTED'
+}
+An unexpected critical error occurred:[object Object]
