@@ -1,0 +1,41 @@
+# temp_ocimf_db.csv — SYNTHETIC SAMPLE DATA
+
+This CSV is generator output from `OCIMFDatabase.create_sample_database()` —
+**not** the real published OCIMF MEG3/MEG4 coefficient corpus.
+
+- 118 rows
+- VLCC class only
+- Displacement-axis (legacy; real OCIMF uses WD/T ratio)
+- Used for test fixtures and module demos
+
+## For the real corpus, see
+
+- **Digitized lookup tables (master)**:
+  `/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx` (17 sheets, Annex A A5-A19)
+- **Interactive explorer** (open in browser):
+  `docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html`
+- **Cross-project lookup prompt**:
+  `docs/domains/charts/phase2/ocimf/PROMPT_TEMPLATE.md`
+- **Figure PDF extracts**:
+  `/mnt/ace/acma-codes/OCIMF/Figures/` and
+  `/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/`
+- **Full standard PDFs**:
+  - MEG3 — `/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf`
+  - MEG4 — `/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf`
+
+## Known issues with this synthetic data
+
+- The 2D RBF thin-plate-spline interpolator on this small sample can return
+  unphysical extrapolations outside the data hull (e.g., CYw = -3.56 in
+  digitalmodel#556 — the real Cyw range from MEG3 Annex A is [-1.165, -0.006]).
+- Schema (`vessel_type, displacement, heading, ...`) uses displacement as the
+  secondary axis; real OCIMF uses **WD/T ratio (water-depth/draft)**.
+- Vessel-class taxonomy is single (VLCC); real MEG3 partitions
+  Tanker Loaded / Tanker Ballast 40%T / Gas Carrier Prismatic / Gas Carrier Spherical.
+
+## Replacement path
+
+`OCIMFExcelAdapter` (digitalmodel#563) will ingest the real `OCIMF Coef.xlsx`
+and produce a long-form DataFrame the existing `OCIMFDatabase` interpolator can
+consume after a small schema adapter — see the prototype parser in
+`scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py`.

@@ -1,18 +1,31 @@
 """
 OCIMF Environmental Loading Module.
 
-This module provides functionality for calculating environmental forces on vessels
-using OCIMF (Oil Companies International Marine Forum) coefficients database.
+Computes wind and current forces/moments on moored vessels using OCIMF
+coefficient tables. Coefficient lookup is keyed by heading angle and a
+secondary axis (WD/T for current, tank type for gas-carrier wind, bow shape
+for loaded-tanker Cxc).
 
-Features:
-- Wind/current coefficient database (186+ vessels)
-- 2D interpolation (heading × displacement)
-- Force/moment calculations
-- Comprehensive visualization charts
+References (off-repo per feedback_offrepo_intel_routing):
+- OCIMF MEG3 (2008) — /mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
+- OCIMF MEG4 (2018) — /mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf
+- Digitized lookup tables — /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx (17 sheets,
+  Annex A Figures A5-A19; A15 absent from digitization)
+- Figure PDF extracts — /mnt/ace/acma-codes/OCIMF/Figures/
+- Project-bundled extracts — /mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/
+- OCIMF "Prediction of Wind and Current Loads on VLCCs" (1994) — separately
+  referenced for tanker wind; NOT in OCIMF Coef.xlsx
+- Interactive explorer — docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html
+- Cross-project prompt — docs/domains/charts/phase2/ocimf/PROMPT_TEMPLATE.md
 
-References:
-- OCIMF "Prediction of Wind and Current Loads on VLCCs" (1994)
-- OCIMF "Mooring Equipment Guidelines" (MEG4)
+Citation contract: standards-derived coefficients should emit a Citation sidecar
+binding to knowledge/wikis/engineering/wiki/standards/ocimf-meg4.md (tracked at
+workspace-hub#2284). Precedent: orcaflex/mooring_design.py::check_mbl_with_safety_factor.
+
+Current state: this module uses a synthetic 118-row sample CSV from
+create_sample_database(); real-corpus ingestion via OCIMFExcelAdapter is
+scope-tracked at digitalmodel#563. The 2D RBF interpolator can produce
+unphysical extrapolations outside the sample hull (cf. #556).
 """
 
 from dataclasses import dataclass, field
