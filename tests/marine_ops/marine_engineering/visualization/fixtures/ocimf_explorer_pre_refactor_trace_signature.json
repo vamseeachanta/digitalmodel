@@ -1,0 +1,103 @@
+{
+  "source_commit_sha": "c12624942c025e3d68182fa157cb479616a95f5d",
+  "captured_at": "2026-05-20",
+  "build_script_path": "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py",
+  "build_script_function": "make_polar_overlay",
+  "polar_call_sites": [
+    {
+      "figure_key": "A10",
+      "coef": "Cyc",
+      "group_col": "wdt_ratio"
+    },
+    {
+      "figure_key": "A18",
+      "coef": "Cyw",
+      "group_col": "hull_shape"
+    }
+  ],
+  "signatures": {
+    "A10_Cyc_wdt_ratio": {
+      "trace_count": 6,
+      "trace_names": [
+        "wdt_ratio=1.05 (+)",
+        "wdt_ratio=1.1 (+)",
+        "wdt_ratio=1.2 (+)",
+        "wdt_ratio=1.5 (+)",
+        "wdt_ratio=3 (+)",
+        "wdt_ratio=>6 (+)"
+      ],
+      "sum_theta_lengths": 114,
+      "sum_r_lengths": 114,
+      "per_trace": [
+        {
+          "name": "wdt_ratio=1.05 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "c9d0bd8e248ab62a"
+        },
+        {
+          "name": "wdt_ratio=1.1 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "23860d612d1be3c2"
+        },
+        {
+          "name": "wdt_ratio=1.2 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "40d809b7673df5cf"
+        },
+        {
+          "name": "wdt_ratio=1.5 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "e160eb3b1014a9f7"
+        },
+        {
+          "name": "wdt_ratio=3 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "0186d6bc4985d63c"
+        },
+        {
+          "name": "wdt_ratio=>6 (+)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "f652cbde26453cb2"
+        }
+      ]
+    },
+    "A18_Cyw_hull_shape": {
+      "trace_count": 2,
+      "trace_names": [
+        "hull_shape=Prismatic Tank (\u2212)",
+        "hull_shape=Spherical Tank (\u2212)"
+      ],
+      "sum_theta_lengths": 38,
+      "sum_r_lengths": 38,
+      "per_trace": [
+        {
+          "name": "hull_shape=Prismatic Tank (\u2212)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "92da6eed5ff024b7"
+        },
+        {
+          "name": "hull_shape=Spherical Tank (\u2212)",
+          "theta_len": 19,
+          "r_len": 19,
+          "theta_hash": "8f1f74b73cddb940",
+          "r_hash": "87e42fd91df6a1d6"
+        }
+      ]
+    }
+  },
+  "note": "Captured BEFORE any refactor of build_coefficient_explorer.py. The source_commit_sha must predate any refactor commit; regression test #13 enforces this via git log assertion."
+}
