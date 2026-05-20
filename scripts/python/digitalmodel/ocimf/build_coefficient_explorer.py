@@ -394,25 +394,64 @@ def make_comparison_cyl_vs_conv_ballast(df):
 
 
 def make_polar_overlay(df, figure_key, coef, group_col):
-    """Polar plot for a wind/current coefficient at multiple group levels."""
+    """Polar plot preserving sign of the coefficient.
+
+    Convention: radial axis = |C| (magnitude), angular axis = wind/current
+    incidence heading (0deg=bow, 90deg=starboard beam, 180deg=stern). Sign of
+    the coefficient is encoded by line style and marker shape:
+      - Solid line + circle marker  = C >= 0 (force in +Y vessel-fixed dir)
+      - Dashed line + x marker      = C <  0 (force in -Y vessel-fixed dir)
+    Hover restores the signed value. Angular position equals the physical
+    heading (intuitive for lookup) while sign remains unambiguous.
+    """
     block = df[df.figure == figure_key].copy()
     fig = go.Figure()
-    for grp in sorted(block[group_col].dropna().unique()):
+    base_palette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#17becf"]
+    groups = sorted(block[group_col].dropna().unique())
+    for i, grp in enumerate(groups):
         sub = block[block[group_col] == grp].sort_values("x")
         if sub.empty:
             continue
-        # Polar: theta = heading, r = |coefficient| (sign shown by color/dash on hover)
-        fig.add_trace(go.Scatterpolar(
-            r=sub.y.abs(), theta=sub.x, mode="lines+markers",
-            name=f"{group_col}={grp}", marker=dict(size=4),
-            hovertemplate=f"Heading: %{{theta}}°<br>|{coef}|: %{{r:.4f}}<extra>{group_col}={grp}</extra>",
-        ))
+        base_c = base_palette[i % len(base_palette)]
+        pos = sub[sub.y >= 0]
+        neg = sub[sub.y < 0]
+        if not pos.empty:
+            fig.add_trace(go.Scatterpolar(
+                r=pos.y, theta=pos.x, mode="lines+markers",
+                name=f"{group_col}={grp} (+)",
+                line=dict(color=base_c, width=2),
+                marker=dict(size=6, color=base_c, symbol="circle"),
+                hovertemplate=(
+                    f"Heading: %{{theta}}°<br>{coef}: +%{{r:.4f}} (force +Y, starboard)"
+                    f"<extra>{group_col}={grp}</extra>"
+                ),
+            ))
+        if not neg.empty:
+            fig.add_trace(go.Scatterpolar(
+                r=neg.y.abs(), theta=neg.x, mode="lines+markers",
+                name=f"{group_col}={grp} (−)",
+                line=dict(color=base_c, width=2, dash="dash"),
+                marker=dict(size=9, color=base_c, symbol="x-thin", line=dict(color=base_c, width=2)),
+                customdata=neg.y,
+                hovertemplate=(
+                    f"Heading: %{{theta}}°<br>{coef}: %{{customdata:.4f}} (force −Y, port)"
+                    f"<extra>{group_col}={grp}</extra>"
+                ),
+            ))
     fig.update_layout(
-        title=dict(text=f"<b>Polar diagram — {figure_key} {coef}</b><br>"
-                        f"<span style='font-size:13px;color:#666'>|{coef}| vs heading (0°=bow, 90°=beam, 180°=stern)</span>",
+        title=dict(text=f"<b>Polar diagram — {figure_key} {coef} (signed)</b><br>"
+                        f"<span style='font-size:13px;color:#666'>r=|{coef}|, θ=incidence heading; "
+                        f"solid/circle = positive (+Y starboard), dashed/x = negative (−Y port). "
+                        f"Hover shows signed value.</span>",
                    x=0.02, xanchor="left"),
-        polar=dict(angularaxis=dict(direction="clockwise", rotation=90), radialaxis=dict(gridcolor="#e0e0e0")),
-        height=480, margin=dict(l=60, r=180, t=80, b=40),
+        polar=dict(
+            angularaxis=dict(direction="clockwise", rotation=90, tickmode="array",
+                             tickvals=[0, 45, 90, 135, 180, 225, 270, 315],
+                             ticktext=["0° bow", "45°", "90° stbd beam", "135°",
+                                       "180° stern", "225°", "270° port beam", "315°"]),
+            radialaxis=dict(gridcolor="#e0e0e0", title=dict(text=f"|{coef}|", font=dict(size=11))),
+        ),
+        height=520, margin=dict(l=60, r=200, t=100, b=40),
         paper_bgcolor="white", showlegend=True, legend=dict(font=dict(size=10)),
     )
     return fig
@@ -711,12 +750,12 @@ def main():
     figs_meta["parametric"].append((
         "Polar — Tanker Loaded Cyc by WD/T (A10)",
         fig_to_html(make_polar_overlay(df, "A10", "Cyc", "wdt_ratio")),
-        "Polar projection emphasizes the directional pattern of lateral current drag. The radial extent at WD/T=1.05 vastly exceeds deep-water — visual confirmation that shallow water dominates lateral mooring loads.",
+        "Polar projection emphasizes the directional pattern of lateral current drag. The radial extent at WD/T=1.05 vastly exceeds deep-water — visual confirmation that shallow water dominates lateral mooring loads. All Cyc values in A10 are positive in OCIMF's vessel-fixed convention, so all traces appear solid/circle (force points to +Y starboard for a starboard-incidence current heading).",
     ))
     figs_meta["parametric"].append((
         "Polar — Gas Carrier Cyw by tank type (A18)",
         fig_to_html(make_polar_overlay(df, "A18", "Cyw", "hull_shape")),
-        "Gas carrier lateral wind drag polar — prismatic and spherical curves are similar at most headings; differences cluster near beam wind.",
+        "Gas carrier lateral wind drag polar — prismatic and spherical curves are similar at most headings; differences cluster near beam wind. All Cyw values are negative across 0-180° (all traces dashed/×) because OCIMF tabulates only the starboard-incidence half; the negative sign indicates lateral force pointing to port. For port-incidence wind (180-360°), the published curves are mirrored with sign flipped (Cyw becomes positive, force to starboard) — vessel port/starboard symmetry.",
     ))
 
     print("Rendering HTML...")
