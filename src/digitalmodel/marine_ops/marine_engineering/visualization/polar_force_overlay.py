@@ -92,8 +92,20 @@ def _validate_theta_range(data: pd.DataFrame) -> None:
 # ---------- Silhouette rendering ----------
 
 
-def _add_silhouette_traces(fig: go.Figure, spec: VesselSilhouetteSpec) -> None:
-    """Add the vessel silhouette as a closed Scatterpolar polygon with transparent fill."""
+def _add_silhouette_traces(
+    fig: go.Figure,
+    spec: VesselSilhouetteSpec,
+    max_data_r: float,
+    silhouette_radial_fraction: float,
+) -> None:
+    """Add the vessel silhouette as a closed Scatterpolar polygon with transparent fill.
+
+    Per reopen-fix-bug-1: silhouette polygon is RESCALED to fit within
+    `silhouette_radial_fraction * max_data_r` so it never dominates the radial
+    axis. Without this, silhouette's literal meters (e.g., length_bp/2 = 150m)
+    would dwarf dimensionless coefficient data (Cyc 0-3) and compress the
+    actual signal to a dot at the origin.
+    """
     poly = get_polygon(
         spec.silhouette_kind,
         length_bp_m=spec.hull_profile.length_bp,
@@ -103,14 +115,24 @@ def _add_silhouette_traces(fig: go.Figure, spec: VesselSilhouetteSpec) -> None:
     # Convert (x_body, y_body) -> polar (r, theta_deg) in DATA frame
     # OCIMF convention: +X_body = bow (θ=0), +Y_body = port (θ=90, anti-clockwise positive).
     # For a point at (x, y), r = sqrt(x²+y²), θ = atan2(y, x) in degrees [0, 360).
-    rs: list[float] = []
+    raw_rs: list[float] = []
     thetas: list[float] = []
     for x, y in poly:
         r = math.hypot(x, y)
         theta_rad = math.atan2(y, x)
         theta_deg = math.degrees(theta_rad) % 360.0
-        rs.append(r)
+        raw_rs.append(r)
         thetas.append(theta_deg)
+
+    # Rescale to fit within silhouette_radial_fraction * max_data_r
+    raw_max_r = max(raw_rs) if raw_rs else 1.0
+    if raw_max_r > 0 and max_data_r > 0:
+        target_max_r = silhouette_radial_fraction * max_data_r
+        scale = target_max_r / raw_max_r
+        rs = [r * scale for r in raw_rs]
+    else:
+        rs = raw_rs
+
     fig.add_trace(
         go.Scatterpolar(
             r=rs,
@@ -257,6 +279,7 @@ def polar_force_overlay(
     title: str = "",
     group_col: str | None = None,
     arrow_sample_step_deg: float = 30.0,
+    silhouette_radial_fraction: float = 0.25,
 ) -> go.Figure:
     """Produce a Plotly polar Figure with vessel silhouette + force-arrow overlay.
 
@@ -279,10 +302,19 @@ def polar_force_overlay(
     schema = _detect_schema(data)
     _validate_theta_range(data)
 
+    # Compute max data radial value for silhouette + arrow scaling
+    if schema == "long":
+        max_data_r = float(data["value"].abs().max()) if not data.empty else 1.0
+    else:
+        force_cols = [c for c in ("fx", "fy", "fz", "mx", "my", "mz") if c in data.columns]
+        max_data_r = float(data[force_cols].abs().to_numpy().max()) if force_cols else 1.0
+    if max_data_r <= 0:
+        max_data_r = 1.0
+
     fig = go.Figure()
 
     # ---------- 2. Silhouette first (drawn behind data) ----------
-    _add_silhouette_traces(fig, silhouette)
+    _add_silhouette_traces(fig, silhouette, max_data_r, silhouette_radial_fraction)
 
     # ---------- 3. Data traces ----------
     _add_data_traces(fig, data, schema, radial_axis_mode, group_col)
@@ -338,10 +370,23 @@ def _render_force_arrows(
     Samples at every `arrow_sample_step_deg` so arrow count is bounded at
     `360 / step` regardless of data density.
     """
-    # Build a (theta, lateral_value) view independent of schema
+    # Build a (theta, lateral_value) view independent of schema.
+    # Per reopen-fix-bug-2: long-format lateral-component detection must recognize
+    # OCIMF coefficient names (Cyc, Cyw) in addition to the generic "Y" / "fy"
+    # column-name conventions. Cy* coefficients are lateral force components;
+    # Cxy* coefficients are yaw moments (excluded here — moments belong to a
+    # future ForceArrowKind.YAW_MOMENT path, not LATERAL_ONLY).
     if schema == "long":
         records = data[["theta_deg", "value", "component"]].copy()
-        records = records[records["component"].isin(["Y", "fy"])]
+        def _is_lateral(comp: str) -> bool:
+            if not isinstance(comp, str):
+                return False
+            if comp in ("Y", "fy"):
+                return True
+            # OCIMF lateral: starts with "Cy" but NOT "Cxy" (yaw moment).
+            # "Cyc" starts with "Cy"; "Cxyc" starts with "Cx" so startswith("Cy") is False — clean discriminator.
+            return comp.startswith("Cy")
+        records = records[records["component"].map(_is_lateral)]
     else:
         records = data[["theta_deg", "fy"]].rename(columns={"fy": "value"}).copy()
         records["component"] = "fy"

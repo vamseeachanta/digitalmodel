@@ -229,6 +229,83 @@ def test_arrow_direction_180_degree_invariant_under_sign_flip(theta: float):
 
 # ---------- TDD #17: only ONE @dataclass declared in visualization module ----------
 
+# ---------- TDD #18: silhouette scale is proportional to data range ----------
+
+def test_silhouette_radial_extent_proportional_to_data():
+    """Per reopen-bug-1: silhouette polygon's max radial value must be ≤ 50% of
+    the data's max radial value in the rendered figure. Catches the failure mode
+    where the silhouette is scaled in meters (length_bp/2) while data is
+    dimensionless coefficients (0-3), causing the silhouette to dominate the
+    polar radial axis and compress data to invisibility.
+    """
+    # Dimensionless coefficient data, max ≈ 3.3 (similar to OCIMF Cyc)
+    headings = [0, 30, 60, 90, 120, 150, 180]
+    values = [0.1, 1.5, 2.5, 3.3, 2.5, 1.5, 0.1]
+    data = pd.DataFrame({
+        "theta_deg": headings,
+        "value": values,
+        "component": ["Cyc"] * len(headings),
+    })
+    # Large vessel (300m length, 50m beam) — would dominate without scaling fix
+    silhouette = _make_silhouette_spec(length_bp_m=300.0, beam_m=50.0)
+    fig = polar_force_overlay(data, silhouette)
+
+    max_data_r = max(values)
+    silhouette_traces = [t for t in fig.data if getattr(t, "fill", None) == "toself"]
+    assert silhouette_traces, "no silhouette trace found"
+    sil = silhouette_traces[0]
+    max_silhouette_r = max(sil.r) if sil.r is not None else 0.0
+    ratio = max_silhouette_r / max_data_r
+    assert ratio <= 0.50, (
+        f"silhouette max-r ({max_silhouette_r:.3f}) must be ≤ 50% of data max-r "
+        f"({max_data_r:.3f}); got ratio {ratio:.3f}. Silhouette dominates the radial axis."
+    )
+
+
+# ---------- TDD #19: arrows render for OCIMF coefficient names ----------
+
+def test_arrows_render_for_ocimf_coefficient_long_format():
+    """Per reopen-bug-2: long-format data with OCIMF coefficient names (Cyc,
+    Cyw, Cxc, etc.) must produce arrow traces. Original implementation only
+    matched component ∈ {Y, fy}, so the build script's integration (which
+    delivers component=coef like 'Cyc') rendered zero arrows.
+    """
+    headings = list(range(0, 360, 30))
+    data = pd.DataFrame({
+        "theta_deg": headings,
+        "value": [1.0 + 0.1 * h / 30 for h in headings],
+        "component": ["Cyc"] * len(headings),
+    })
+    silhouette = _make_silhouette_spec()
+    fig = polar_force_overlay(
+        data, silhouette,
+        force_arrow_kind=ForceArrowKind.LATERAL_ONLY,
+        arrow_sample_step_deg=30.0,
+    )
+    arrow_heads = [t for t in fig.data if getattr(t.marker, "symbol", None) == "triangle-up"]
+    assert len(arrow_heads) >= 3, (
+        f"long-format with OCIMF coefficient name 'Cyc' should render arrows; "
+        f"got {len(arrow_heads)} arrow-head traces"
+    )
+
+    # Also verify Cyw (gas-carrier wind)
+    data2 = pd.DataFrame({
+        "theta_deg": headings,
+        "value": [-0.5 - 0.05 * h / 30 for h in headings],
+        "component": ["Cyw"] * len(headings),
+    })
+    fig2 = polar_force_overlay(
+        data2, silhouette,
+        force_arrow_kind=ForceArrowKind.LATERAL_ONLY,
+        arrow_sample_step_deg=30.0,
+    )
+    arrow_heads2 = [t for t in fig2.data if getattr(t.marker, "symbol", None) == "triangle-up"]
+    assert len(arrow_heads2) >= 3, (
+        f"long-format with OCIMF coefficient name 'Cyw' should render arrows; "
+        f"got {len(arrow_heads2)} arrow-head traces"
+    )
+
+
 def test_visualization_module_declares_exactly_one_dataclass():
     """Per plan r1 M2 + r2 n3: the visualization module exists to NOT duplicate
     HullProfile-overlapping geometry. Enforce by AST analysis: across all .py
