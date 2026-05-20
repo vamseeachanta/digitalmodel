@@ -396,64 +396,73 @@ def make_comparison_cyl_vs_conv_ballast(df):
 def make_polar_overlay(df, figure_key, coef, group_col):
     """Polar plot preserving sign of the coefficient.
 
-    Convention: radial axis = |C| (magnitude), angular axis = wind/current
-    incidence heading (0deg=bow, 90deg=starboard beam, 180deg=stern). Sign of
-    the coefficient is encoded by line style and marker shape:
-      - Solid line + circle marker  = C >= 0 (force in +Y vessel-fixed dir)
-      - Dashed line + x marker      = C <  0 (force in -Y vessel-fixed dir)
-    Hover restores the signed value. Angular position equals the physical
-    heading (intuitive for lookup) while sign remains unambiguous.
+    REFACTORED for #616 (Phase 5): delegates to
+    digitalmodel.marine_ops.marine_engineering.visualization.polar_force_overlay,
+    which adds a transparent vessel silhouette in the middle + on-body force
+    arrows at sampled headings. The data-trace shape (named pos/neg traces per
+    group) is preserved for regression-test compatibility per the trace-signature
+    fixture captured pre-refactor.
+
+    Citation gate: OCIMF MEG3 §A1 / MEG4 §A2 convention is bound by
+    OCIMF_CONVENTION_AUTHORITY in the new module's _convention.py.
     """
-    block = df[df.figure == figure_key].copy()
-    fig = go.Figure()
-    base_palette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#17becf"]
-    groups = sorted(block[group_col].dropna().unique())
-    for i, grp in enumerate(groups):
-        sub = block[block[group_col] == grp].sort_values("x")
-        if sub.empty:
-            continue
-        base_c = base_palette[i % len(base_palette)]
-        pos = sub[sub.y >= 0]
-        neg = sub[sub.y < 0]
-        if not pos.empty:
-            fig.add_trace(go.Scatterpolar(
-                r=pos.y, theta=pos.x, mode="lines+markers",
-                name=f"{group_col}={grp} (+)",
-                line=dict(color=base_c, width=2),
-                marker=dict(size=6, color=base_c, symbol="circle"),
-                hovertemplate=(
-                    f"Heading: %{{theta}}°<br>{coef}: +%{{r:.4f}} (force +Y, starboard)"
-                    f"<extra>{group_col}={grp}</extra>"
-                ),
-            ))
-        if not neg.empty:
-            fig.add_trace(go.Scatterpolar(
-                r=neg.y.abs(), theta=neg.x, mode="lines+markers",
-                name=f"{group_col}={grp} (−)",
-                line=dict(color=base_c, width=2, dash="dash"),
-                marker=dict(size=9, color=base_c, symbol="x-thin", line=dict(color=base_c, width=2)),
-                customdata=neg.y,
-                hovertemplate=(
-                    f"Heading: %{{theta}}°<br>{coef}: %{{customdata:.4f}} (force −Y, port)"
-                    f"<extra>{group_col}={grp}</extra>"
-                ),
-            ))
-    fig.update_layout(
-        title=dict(text=f"<b>Polar diagram — {figure_key} {coef} (signed)</b><br>"
-                        f"<span style='font-size:13px;color:#666'>r=|{coef}|, θ=incidence heading; "
-                        f"solid/circle = positive (+Y starboard), dashed/x = negative (−Y port). "
-                        f"Hover shows signed value.</span>",
-                   x=0.02, xanchor="left"),
-        polar=dict(
-            angularaxis=dict(direction="clockwise", rotation=90, tickmode="array",
-                             tickvals=[0, 45, 90, 135, 180, 225, 270, 315],
-                             ticktext=["0° bow", "45°", "90° stbd beam", "135°",
-                                       "180° stern", "225°", "270° port beam", "315°"]),
-            radialaxis=dict(gridcolor="#e0e0e0", title=dict(text=f"|{coef}|", font=dict(size=11))),
-        ),
-        height=520, margin=dict(l=60, r=200, t=100, b=40),
-        paper_bgcolor="white", showlegend=True, legend=dict(font=dict(size=10)),
+    from digitalmodel.hydrodynamics.hull_library.profile_schema import (
+        HullProfile, HullStation, HullType,
     )
+    from digitalmodel.marine_ops.marine_engineering.visualization import (
+        ForceArrowKind, VesselSilhouetteSpec, polar_force_overlay,
+    )
+
+    # Convert build-script DataFrame to long-format expected by the new module
+    block = df[df.figure == figure_key].copy()
+    block = block.rename(columns={"x": "theta_deg", "y": "value"})
+    block["component"] = coef
+    # theta in workbook may be in [0, 360]; clamp/validate
+    block = block[(block["theta_deg"] >= 0) & (block["theta_deg"] < 360)]
+
+    # Default silhouette per figure-key convention: tanker for Cxc/Cyc/Cxyc,
+    # gas_carrier for Cxw/Cyw/Cxyw. Coef string discriminates.
+    silhouette_kind = "gas_carrier" if coef.endswith("w") else "tanker"
+    # Representative VLCC dimensions for tanker / standard for gas carrier.
+    if silhouette_kind == "tanker":
+        length_bp, beam, draft, depth = 320.0, 58.0, 22.0, 30.0
+    else:
+        length_bp, beam, draft, depth = 280.0, 44.0, 11.5, 24.0
+    half_beam = beam / 2.0
+    hull = HullProfile(
+        name=f"reference-{silhouette_kind}",
+        hull_type=HullType.TANKER if silhouette_kind == "tanker" else HullType.LNGC,
+        length_bp=length_bp, beam=beam, draft=draft, depth=depth,
+        source=f"reference silhouette for OCIMF {coef} explorer (no engineering use)",
+        stations=[
+            HullStation(x_position=0.0,
+                        waterline_offsets=[(0.0, 0.0), (depth * 0.7, half_beam * 0.5)]),
+            HullStation(x_position=length_bp / 2.0,
+                        waterline_offsets=[(0.0, 0.0), (depth * 0.7, half_beam)]),
+            HullStation(x_position=length_bp,
+                        waterline_offsets=[(0.0, 0.0), (depth * 0.7, half_beam * 0.5)]),
+        ],
+    )
+    silhouette = VesselSilhouetteSpec(hull_profile=hull, silhouette_kind=silhouette_kind)
+
+    title_text = (f"<b>Polar diagram — {figure_key} {coef} (signed)</b><br>"
+                  f"<span style='font-size:13px;color:#666'>r=|{coef}|, θ=incidence heading; "
+                  f"transparent silhouette = vessel (bow up); on-body arrows indicate "
+                  f"force direction per OCIMF MEG3 §A1 / MEG4 §A2 convention. "
+                  f"Solid/circle = positive Cy (force toward +Y_body = port per OCIMF).</span>")
+
+    fig = polar_force_overlay(
+        data=block,
+        silhouette=silhouette,
+        force_arrow_kind=ForceArrowKind.LATERAL_ONLY,
+        title=title_text,
+        group_col=group_col,
+        arrow_sample_step_deg=30.0,
+    )
+    # Update radial-axis title to match original ("|{coef}|") for visual continuity.
+    fig.update_layout(polar=dict(radialaxis=dict(
+        gridcolor="#e0e0e0", title=dict(text=f"|{coef}|", font=dict(size=11)),
+    )))
     return fig
 
 
