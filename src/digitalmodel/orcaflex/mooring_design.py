@@ -38,57 +38,29 @@ _REPO_ROOT_RESOLUTION_CACHE: dict = {}
 def _default_repo_root(explicit: Optional[Path] = None) -> Optional[Path]:
     """Resolve wiki base for citation validation (#2685, #617).
 
-    Layered fallback (caller treats None as 'skip citation emission, warn once'):
-      1. Explicit kwarg.
-      2. LLM_WIKI_PATH env var (set-but-invalid raises CitationResolutionError).
-      3. DIGITALMODEL_REPO_ROOT (legacy alias, accepts both layouts).
-      4. Bounded parent walk capped at _REPO_ROOT_WALK_HARD_CAP levels (both layouts).
-      5. Standalone / shallow-clone with no wiki overlay -> return None.
+    Delegates to digitalmodel.citations.resolver.resolve_wiki_base() which owns
+    the canonical 6-level precedence chain (override → LLM_WIKI_PATH →
+    DIGITALMODEL_REPO_ROOT legacy with DeprecationWarning → parent walk cap=8 →
+    known local clones → fail-closed).
 
-    Accepts BOTH layouts:
-      - standalone llm-wiki clone:  <base>/wikis/...
-      - workspace-hub overlay:      <base>/knowledge/wikis/...
+    Translates the resolver's fail-closed `CitationResolutionError` into `None`
+    for this caller's standalone-mode-graceful-warn semantics: the
+    `_resolve_sf_for_condition` helper above emits a one-shot RuntimeWarning
+    when resolution returns None. Invalid-env-var errors (stale clone,
+    nonexistent path) still propagate — those are user-configuration mistakes,
+    not standalone mode.
     """
-    if explicit is not None:
-        return Path(explicit)
+    from digitalmodel.citations.resolver import resolve_wiki_base
 
-    def _has_wiki(p: Path) -> bool:
-        return (p / "wikis").is_dir() or (p / "knowledge" / "wikis").is_dir()
-
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        env_path = Path(env)
-        if _has_wiki(env_path):
-            return env_path
-        raise CitationResolutionError(
-            code_id="DNV-OS-E301",
-            wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
-            reason=(
-                f"LLM_WIKI_PATH={env_path!s} does not contain wikis/ or knowledge/wikis/; "
-                "set to an llm-wiki clone or unset to fall through to standalone mode"
-            ),
-        )
-
-    legacy_env = os.environ.get("DIGITALMODEL_REPO_ROOT")
-    if legacy_env:
-        legacy_path = Path(legacy_env)
-        if _has_wiki(legacy_path):
-            return legacy_path
-        raise CitationResolutionError(
-            code_id="DNV-OS-E301",
-            wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
-            reason=(
-                f"DIGITALMODEL_REPO_ROOT={legacy_path!s} does not contain wikis/ or knowledge/wikis/; "
-                "set to the workspace-hub root or unset to fall through to standalone mode"
-            ),
-        )
-
-    here = Path(__file__).resolve()
-    for parent in [here, *here.parents][:_REPO_ROOT_WALK_HARD_CAP]:
-        if _has_wiki(parent):
-            return parent
-
-    return None  # standalone / shallow-clone: caller emits one-shot WARNING
+    try:
+        return resolve_wiki_base(override=explicit)
+    except CitationResolutionError as e:
+        # resolver_unconfigured → caller wants None (standalone mode + warn)
+        # Anything else (llm_wiki_path_invalid, llm_wiki_path_stale_clone,
+        # override_invalid) → user-configuration mistake; propagate.
+        if e.reason.startswith("resolver_unconfigured"):
+            return None
+        raise
 
 
 # ---------------------------------------------------------------------------

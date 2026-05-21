@@ -124,11 +124,22 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
                 validated,
             )
             return validated
-        # legacy env var set but invalid — fall through to remaining steps rather than raise
-        _LOGGER.warning(
-            "DIGITALMODEL_REPO_ROOT set but path %s is not a valid wiki clone; "
-            "falling through to remaining precedence steps",
+        # legacy env var set but invalid — raise hard (symmetric with LLM_WIKI_PATH).
+        # If a user has gone out of their way to set this env var, an invalid value
+        # is almost certainly a misconfiguration they want to know about, not silent
+        # fall-through to whatever else happens to be lying around.
+        _emit_error_log(
+            "DIGITALMODEL_REPO_ROOT set but path is not a valid wiki clone: %s",
             legacy_path,
+        )
+        raise CitationResolutionError(
+            code_id="<resolver>",
+            wiki_path="<base>",
+            reason=(
+                f"digitalmodel_repo_root_invalid: DIGITALMODEL_REPO_ROOT={legacy_path!s} "
+                "does not exist or does not contain wikis/ or knowledge/wikis/. "
+                "Consider migrating to LLM_WIKI_PATH (the legacy alias is deprecated)."
+            ),
         )
 
     # 4. Bounded parent walk from __file__

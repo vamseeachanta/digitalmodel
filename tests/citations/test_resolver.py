@@ -119,25 +119,29 @@ def test_resolver_llm_wiki_path_env_valid_workspace_hub_layout(tmp_path, monkeyp
 
 
 def test_resolver_llm_wiki_path_env_invalid_path(tmp_path, monkeypatch, isolated_known_clones):
-    """LLM_WIKI_PATH set but path doesn't exist → fail-closed."""
+    """LLM_WIKI_PATH set but path doesn't exist → fail-closed with specific reason."""
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path / "nonexistent"))
 
     with pytest.raises(CitationResolutionError) as exc:
         resolve_wiki_base()
-    assert "llm_wiki_path_invalid" in exc.value.reason or "resolver_unconfigured" in exc.value.reason
+    assert exc.value.reason.startswith("llm_wiki_path_invalid:"), (
+        f"expected reason to start with 'llm_wiki_path_invalid:'; got {exc.value.reason!r}"
+    )
     assert "LLM_WIKI_PATH" in str(exc.value)
 
 
 def test_resolver_llm_wiki_path_env_stale_clone_detection(tmp_path, monkeypatch, isolated_known_clones):
-    """LLM_WIKI_PATH path exists but is missing the expected wiki structure."""
+    """LLM_WIKI_PATH path exists but is missing the expected wiki structure.
+    Distinct reason from invalid-path so operators can diagnose the misconfiguration."""
     bare = tmp_path / "stale"
     bare.mkdir()
     monkeypatch.setenv("LLM_WIKI_PATH", str(bare))
 
     with pytest.raises(CitationResolutionError) as exc:
         resolve_wiki_base()
-    reason = exc.value.reason
-    assert "stale_clone" in reason or "llm_wiki_path_invalid" in reason or "resolver_unconfigured" in reason
+    assert exc.value.reason.startswith("llm_wiki_path_stale_clone:"), (
+        f"expected reason to start with 'llm_wiki_path_stale_clone:'; got {exc.value.reason!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

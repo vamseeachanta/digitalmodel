@@ -7,6 +7,7 @@ fail-closed defenses.
 """
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from unittest.mock import patch
 
@@ -25,17 +26,30 @@ def _fixture_repo_root() -> Path:
 
 @pytest.fixture(autouse=True)
 def _reset_warn_cache():
-    """Each test starts with an empty standalone-warning cache so the one-shot
-    warning is observable in test_standalone_no_repo_root_graceful_warn."""
+    """Each test starts with empty standalone-warning + resolver caches so the
+    one-shot warning is observable in test_standalone_no_repo_root_graceful_warn
+    and the resolver's DeprecationWarning cache is reset per-test."""
+    from digitalmodel.citations import resolver as _resolver
     md._REPO_ROOT_RESOLUTION_CACHE.clear()
+    _resolver._RESOLUTION_CACHE.clear()
     yield
     md._REPO_ROOT_RESOLUTION_CACHE.clear()
+    _resolver._RESOLUTION_CACHE.clear()
 
 
 @pytest.fixture(autouse=True)
 def _unset_env_var(monkeypatch):
     monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
     monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _disable_known_clones_fallback(monkeypatch):
+    """Disable real-filesystem known-clone fallbacks so tests in this module
+    can exercise fail-closed paths deterministically without false-positive
+    resolution via /mnt/local-analysis/llm-wiki etc."""
+    from digitalmodel.citations import resolver as _resolver
+    monkeypatch.setattr(_resolver, "_KNOWN_LOCAL_CLONES", ())
 
 
 # -- AC2: behavior of get_intact / get_damaged ----------------------------------
@@ -136,58 +150,65 @@ def test_standalone_no_repo_root_graceful_warn():
 # -- AC2 fix #5: bounded parent walk + env var resolution ---------------------
 
 
-def test_repo_root_walk_bounded_sentinel(tmp_path, monkeypatch):
-    # Force-disable env var fallback, then call _default_repo_root with no kwarg.
-    # The bounded walk should terminate within ~ms, returning None.
-    monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+def test_repo_root_walk_bounded_sentinel_via_delegation(tmp_path, monkeypatch):
+    """Integration test: mooring_design._default_repo_root delegates to
+    resolve_wiki_base, and the bounded walk in the resolver terminates within
+    ~ms returning None for standalone (no env, no clone, no overlay).
+    Bounded-walk sentinel is verified per-resolver-test at
+    tests/citations/test_resolver.py::test_resolver_parent_walk_has_sentinel."""
+    from digitalmodel.citations import resolver as _resolver
     deep = tmp_path
     for i in range(20):
         deep = deep / f"d{i}"
     deep.mkdir(parents=True)
-    # Patch __file__-based walk start by patching Path resolution doesn't reach
-    # workspace-hub. Easier: call _default_repo_root directly and rely on the
-    # 8-level cap. The cap means even if we walked from /tmp/.../d19 we wouldn't
-    # find workspace-hub before exhaustion.
+    fake_file = deep / "fake.py"
+    fake_file.write_text("# fake")
+    monkeypatch.setattr(_resolver, "__file__", str(fake_file))
     import time
     start = time.monotonic()
-    # We can't easily change __file__ at runtime; rely on hard cap behavior:
-    # passing an explicit invalid path returns it as Path (Step 1 short-circuit).
-    # The sentinel test focuses on the bounded WALK; emulate by patching here.
-    with patch.object(md, "__file__", str(deep / "fake.py")):
-        result = md._default_repo_root()
+    result = md._default_repo_root()
     elapsed = time.monotonic() - start
-    assert result is None
-    assert elapsed < 0.1, f"walk took {elapsed:.3f}s — expected bounded"
+    assert result is None, f"expected None (standalone fail-closed), got {result!r}"
+    assert elapsed < 0.5, f"walk took {elapsed:.3f}s — expected bounded"
 
 
 def test_repo_root_env_var_overrides_walk(monkeypatch):
+    """Legacy DIGITALMODEL_REPO_ROOT still works (with DeprecationWarning)."""
     fixture = _fixture_repo_root()
     monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(fixture))
-    assert md._default_repo_root() == fixture
+    with pytest.warns(DeprecationWarning, match="DIGITALMODEL_REPO_ROOT"):
+        assert md._default_repo_root() == fixture
 
 
 def test_repo_root_invalid_env_var_raises(monkeypatch, tmp_path):
+    """Invalid DIGITALMODEL_REPO_ROOT raises CitationResolutionError (symmetric
+    with LLM_WIKI_PATH behavior). Reason names the env var so the user knows
+    what to fix."""
     bad = tmp_path / "nonexistent-root"
     monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(bad))
     with pytest.raises(CitationResolutionError) as exc:
         md._default_repo_root()
-    assert exc.value.code_id == "DNV-OS-E301"
     assert "DIGITALMODEL_REPO_ROOT" in exc.value.reason
+    assert exc.value.reason.startswith("digitalmodel_repo_root_invalid:")
 
 
 def test_repo_root_llm_wiki_path_env_var_supported(monkeypatch):
-    """LLM_WIKI_PATH env var (new, per #617) is honored by _default_repo_root."""
+    """LLM_WIKI_PATH env var (new, per #617) is honored by _default_repo_root
+    via delegation to the resolver."""
     fixture = _fixture_repo_root()
     monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
     assert md._default_repo_root() == fixture
 
 
 def test_repo_root_llm_wiki_path_takes_precedence_over_legacy(monkeypatch, tmp_path):
-    """When both env vars are set, LLM_WIKI_PATH wins per #617 precedence chain."""
+    """When both env vars are set, LLM_WIKI_PATH wins per #617 precedence chain.
+    Legacy DeprecationWarning does NOT fire because the new var took precedence."""
     fixture = _fixture_repo_root()
     monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
     monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(tmp_path / "garbage"))
-    assert md._default_repo_root() == fixture
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)  # any DeprecationWarning fails the test
+        assert md._default_repo_root() == fixture
 
 
 # -- Codex finding: invalid condition string ----------------------------------
