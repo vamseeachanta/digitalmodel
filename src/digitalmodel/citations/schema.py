@@ -11,9 +11,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
-_WIKI_PATH_PREFIX = "knowledge/wikis/"
+_WIKI_PATH_PREFIX = "wikis/"
 _FORBIDDEN_SEGMENTS = ("..", "")
 
 
@@ -99,7 +99,23 @@ def _read_frontmatter(path: Path) -> Mapping[str, Any]:
     return fm
 
 
-def validate_citation(citation: Citation, *, repo_root: Path) -> None:
+def _join_with_layout_detection(base: Path, wiki_path: str) -> Path:
+    """Join base + wiki_path handling both standalone and workspace-hub layouts.
+
+    Canonical wiki_path form is `wikis/<domain>/...` (no knowledge/ prefix).
+    Tries the standalone layout first, then the workspace-hub overlay layout.
+    Returns the standalone-form path (for error reporting) when neither hits.
+    """
+    standalone = base / wiki_path
+    if standalone.is_file():
+        return standalone
+    overlay = base / "knowledge" / wiki_path
+    if overlay.is_file():
+        return overlay
+    return standalone
+
+
+def validate_citation(citation: Citation, *, repo_root: Optional[Path] = None) -> None:
     """Fail-closed resolution check.
 
     Raises CitationResolutionError if:
@@ -107,9 +123,18 @@ def validate_citation(citation: Citation, *, repo_root: Path) -> None:
     - the page frontmatter lacks code_id / publisher / revision
     - any of the three fields disagree with the citation
 
+    When repo_root is None, defers to the resolver (LLM_WIKI_PATH precedence chain).
+    When repo_root is provided, joins directly but tries both standalone and
+    workspace-hub-overlay layouts to find the file.
+
     Does NOT validate the `section` locator — that's a human-readable field.
     """
-    path = repo_root / citation.wiki_path
+    if repo_root is None:
+        # Defer to resolver for path resolution
+        from digitalmodel.citations.resolver import resolve_wiki_path
+        path = resolve_wiki_path(citation.wiki_path)
+    else:
+        path = _join_with_layout_detection(Path(repo_root), citation.wiki_path)
     if not path.is_file():
         raise CitationResolutionError(
             code_id=citation.code_id, wiki_path=citation.wiki_path, reason="page_missing"

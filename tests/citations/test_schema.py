@@ -18,7 +18,7 @@ from digitalmodel.citations import (
 from digitalmodel.citations.schema import CitationValidationError
 
 
-REAL_DNV_PAGE = "knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md"
+REAL_DNV_PAGE = "wikis/engineering/wiki/standards/dnv-os-e301.md"
 
 
 def _repo_root() -> Path:
@@ -69,7 +69,7 @@ def test_schema_rejects_wiki_path_absolute():
 
 def test_schema_rejects_wiki_path_with_backslash():
     with pytest.raises(CitationValidationError):
-        Citation(**_valid_kwargs(wiki_path="knowledge\\wikis\\engineering.md"))
+        Citation(**_valid_kwargs(wiki_path="wikis\\engineering.md"))
 
 
 def test_resolution_passes_for_real_page():
@@ -78,7 +78,7 @@ def test_resolution_passes_for_real_page():
 
 
 def test_resolution_fails_on_missing_page():
-    c = Citation(**_valid_kwargs(wiki_path="knowledge/wikis/engineering/wiki/standards/does-not-exist.md"))
+    c = Citation(**_valid_kwargs(wiki_path="wikis/engineering/wiki/standards/does-not-exist.md"))
     with pytest.raises(CitationResolutionError) as exc:
         validate_citation(c, repo_root=_repo_root())
     assert "DNV-OS-E301" in str(exc.value)

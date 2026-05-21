@@ -7,10 +7,39 @@ ecosystem, what schema it uses, and how digitalmodel consumes it.
 
 The real OCIMF MEG3/MEG4 coefficient corpus is **off-repo** at
 `/mnt/ace/acma-codes/OCIMF/` and `/mnt/ace/acma-codes/OCIMF (MEG 4)/`. It is
-NOT in this repository, and should not be committed here (vendor-licensed
-standard, correctly routed off-repo per workspace-hub's
-`feedback_offrepo_intel_routing` rule). The in-repo sample CSV is synthetic
-test data, not the real corpus.
+NOT in this repository (vendor-licensed standard, correctly routed off-repo).
+Digitized Annex A tables landed in the **private `vamseeachanta/llm-wiki`** repo
+on 2026-05-20 at `wikis/marine-engineering/wiki/datasets/ocimf-meg4-annex-a/`
+(commit `707af307`). The in-repo sample CSV here is synthetic test data, not the
+real corpus.
+
+## Citation env-var contract (#617)
+
+The calc-citation resolver in `digitalmodel.citations.resolver` looks up the
+wiki base directory using a 6-level precedence chain:
+
+1. Explicit `override=Path(...)` kwarg
+2. `LLM_WIKI_PATH` env var — **the documented contract surface**
+3. `DIGITALMODEL_REPO_ROOT` env var — legacy alias, emits `DeprecationWarning`
+4. Bounded parent walk (cap=8) from `__file__` for workspace-hub overlay
+5. Known local-clone fallbacks (`/mnt/local-analysis/llm-wiki`, `~/workspace-hub/llm-wiki`)
+6. Fail-closed with an actionable error message naming the env var, the
+   private repo URL (https://github.com/vamseeachanta/llm-wiki), and the
+   routing-rule pointer
+
+**External `pip install digitalmodel` users**: the wiki is private as of
+2026-05-20, so the resolver fails closed unless you set `LLM_WIKI_PATH` to a
+local clone you have authorized access to. Example:
+
+    git clone https://github.com/vamseeachanta/llm-wiki.git
+    export LLM_WIKI_PATH=$(pwd)/llm-wiki
+
+**Canonical citation `wiki_path` form**: `wikis/<domain>/...` (no `knowledge/`
+prefix). The resolver detects layout — standalone llm-wiki repos use
+`<base>/wikis/...`; workspace-hub overlay uses `<base>/knowledge/wikis/...` —
+and joins accordingly.
+
+Routing rule: [workspace-hub:.claude/rules/codes-standards-data-routing.md §4](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/codes-standards-data-routing.md).
 
 ## Canonical sources
 

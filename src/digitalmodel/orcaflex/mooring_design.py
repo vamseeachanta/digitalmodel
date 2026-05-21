@@ -36,35 +36,56 @@ _REPO_ROOT_RESOLUTION_CACHE: dict = {}
 
 
 def _default_repo_root(explicit: Optional[Path] = None) -> Optional[Path]:
-    """Resolve workspace-hub repo_root for citation validation (#2685).
+    """Resolve wiki base for citation validation (#2685, #617).
 
     Layered fallback (caller treats None as 'skip citation emission, warn once'):
       1. Explicit kwarg.
-      2. DIGITALMODEL_REPO_ROOT env var (set-but-invalid raises CitationResolutionError).
-      3. Bounded parent walk capped at _REPO_ROOT_WALK_HARD_CAP levels.
-      4. site-packages / dist-packages detection -> return None (graceful no-op).
-      5. Checked-out source tree without knowledge/ overlay -> return None.
+      2. LLM_WIKI_PATH env var (set-but-invalid raises CitationResolutionError).
+      3. DIGITALMODEL_REPO_ROOT (legacy alias, accepts both layouts).
+      4. Bounded parent walk capped at _REPO_ROOT_WALK_HARD_CAP levels (both layouts).
+      5. Standalone / shallow-clone with no wiki overlay -> return None.
+
+    Accepts BOTH layouts:
+      - standalone llm-wiki clone:  <base>/wikis/...
+      - workspace-hub overlay:      <base>/knowledge/wikis/...
     """
     if explicit is not None:
         return Path(explicit)
 
-    env = os.environ.get("DIGITALMODEL_REPO_ROOT")
+    def _has_wiki(p: Path) -> bool:
+        return (p / "wikis").is_dir() or (p / "knowledge" / "wikis").is_dir()
+
+    env = os.environ.get("LLM_WIKI_PATH")
     if env:
         env_path = Path(env)
-        if (env_path / "knowledge" / "wikis").is_dir():
+        if _has_wiki(env_path):
             return env_path
         raise CitationResolutionError(
             code_id="DNV-OS-E301",
-            wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+            wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
             reason=(
-                f"DIGITALMODEL_REPO_ROOT={env_path!s} does not contain knowledge/wikis/; "
+                f"LLM_WIKI_PATH={env_path!s} does not contain wikis/ or knowledge/wikis/; "
+                "set to an llm-wiki clone or unset to fall through to standalone mode"
+            ),
+        )
+
+    legacy_env = os.environ.get("DIGITALMODEL_REPO_ROOT")
+    if legacy_env:
+        legacy_path = Path(legacy_env)
+        if _has_wiki(legacy_path):
+            return legacy_path
+        raise CitationResolutionError(
+            code_id="DNV-OS-E301",
+            wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
+            reason=(
+                f"DIGITALMODEL_REPO_ROOT={legacy_path!s} does not contain wikis/ or knowledge/wikis/; "
                 "set to the workspace-hub root or unset to fall through to standalone mode"
             ),
         )
 
     here = Path(__file__).resolve()
     for parent in [here, *here.parents][:_REPO_ROOT_WALK_HARD_CAP]:
-        if (parent / "knowledge" / "wikis").is_dir():
+        if _has_wiki(parent):
             return parent
 
     return None  # standalone / shallow-clone: caller emits one-shot WARNING
@@ -441,7 +462,7 @@ class MooringLineDesign(BaseModel):
         if citation is None:
             raise CitationResolutionError(
                 code_id="DNV-OS-E301",
-                wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+                wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
                 reason=(
                     "standalone_no_citation: set DIGITALMODEL_REPO_ROOT or use "
                     "check_mbl_with_safety_factor() which degrades gracefully"
@@ -459,7 +480,7 @@ class MooringLineDesign(BaseModel):
         if citation is None:
             raise CitationResolutionError(
                 code_id="DNV-OS-E301",
-                wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+                wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
                 reason=(
                     "standalone_no_citation: set DIGITALMODEL_REPO_ROOT or use "
                     "check_mbl_with_safety_factor() which degrades gracefully"

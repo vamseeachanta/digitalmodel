@@ -35,6 +35,7 @@ def _reset_warn_cache():
 @pytest.fixture(autouse=True)
 def _unset_env_var(monkeypatch):
     monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+    monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
 
 
 # -- AC2: behavior of get_intact / get_damaged ----------------------------------
@@ -174,6 +175,21 @@ def test_repo_root_invalid_env_var_raises(monkeypatch, tmp_path):
     assert "DIGITALMODEL_REPO_ROOT" in exc.value.reason
 
 
+def test_repo_root_llm_wiki_path_env_var_supported(monkeypatch):
+    """LLM_WIKI_PATH env var (new, per #617) is honored by _default_repo_root."""
+    fixture = _fixture_repo_root()
+    monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
+    assert md._default_repo_root() == fixture
+
+
+def test_repo_root_llm_wiki_path_takes_precedence_over_legacy(monkeypatch, tmp_path):
+    """When both env vars are set, LLM_WIKI_PATH wins per #617 precedence chain."""
+    fixture = _fixture_repo_root()
+    monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
+    monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(tmp_path / "garbage"))
+    assert md._default_repo_root() == fixture
+
+
 # -- Codex finding: invalid condition string ----------------------------------
 
 
@@ -205,6 +221,6 @@ def test_wiki_page_frontmatter_matches_template():
         publisher="DNV",
         revision="2021-07",
         section="Section 2.2.3 (intact, quasi-static)",
-        wiki_path="knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md",
+        wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
     )
     validate_citation(template, repo_root=workspace_root)  # raises on drift

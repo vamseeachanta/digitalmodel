@@ -52,3 +52,22 @@ def test_registry_with_broken_repo_root_fails_closed(tmp_path):
         get_mooring_safety_factor(MooringCondition.INTACT_QUASI_STATIC, repo_root=tmp_path)
     assert exc.value.code_id == "DNV-OS-E301"
     assert exc.value.reason == "page_missing"
+
+
+def test_registry_repo_root_none_defers_to_resolver(monkeypatch):
+    """#617: repo_root=None defers to LLM_WIKI_PATH resolver chain."""
+    monkeypatch.setenv("LLM_WIKI_PATH", str(_repo_root()))
+    cv = get_mooring_safety_factor(MooringCondition.INTACT_QUASI_STATIC, repo_root=None)
+    assert cv.value == 1.67
+    assert cv.citation.code_id == "DNV-OS-E301"
+
+
+def test_registry_canonical_wiki_path_form_is_wikis_no_prefix():
+    """#617: canonical citation wiki_path form is `wikis/...` (no `knowledge/` prefix)."""
+    cv = get_mooring_safety_factor(MooringCondition.INTACT_QUASI_STATIC, repo_root=_repo_root())
+    assert cv.citation.wiki_path.startswith("wikis/"), (
+        f"Expected canonical wiki_path to start with 'wikis/', got {cv.citation.wiki_path!r}"
+    )
+    assert not cv.citation.wiki_path.startswith("knowledge/"), (
+        f"Canonical wiki_path should not have 'knowledge/' prefix, got {cv.citation.wiki_path!r}"
+    )
