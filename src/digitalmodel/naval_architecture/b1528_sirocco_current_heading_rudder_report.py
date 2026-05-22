@@ -1074,10 +1074,23 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 .current-line {{ stroke:#0b6bcb; stroke-width:4; marker-end:url(#arrow-blue); }}
 .rudder-line {{ stroke:#c2410c; stroke-width:4; marker-end:url(#arrow-orange); }}
 .force-line {{ stroke:#15803d; stroke-width:3; marker-end:url(#arrow-green); }}
-.ship-hull {{ fill:#ffffff; stroke:#172033; stroke-width:3; }}
+.ship-hull {{ fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }}
+.ship-hull-transparent {{ fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }}
 .rudder-blade {{ fill:#fed7aa; stroke:#c2410c; stroke-width:2; }}
+.rudder-blade-transparent {{ fill-opacity:0.45; fill:#fed7aa; stroke:#c2410c; stroke-width:2; }}
+.schematic-bold-arrow-blue {{ stroke:#0b6bcb; stroke-width:5; fill:none; }}
+.schematic-bold-arrow-orange {{ stroke:#c2410c; stroke-width:5; fill:none; }}
+.schematic-bold-arrow-green {{ stroke:#15803d; stroke-width:5; fill:none; }}
+.schematic-bold-arrow-purple {{ stroke:#7c3aed; stroke-width:5; fill:none; }}
+.lever-arm {{ stroke:#607085; stroke-width:2; stroke-dasharray:6 3; fill:none; }}
 .svg-label {{ font:600 13px Aptos, Segoe UI, sans-serif; fill:#172033; }}
+.svg-label-blue {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#0b6bcb; }}
+.svg-label-orange {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#c2410c; }}
+.svg-label-green {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#15803d; }}
+.svg-label-purple {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#7c3aed; }}
 .svg-muted {{ font:12px Aptos, Segoe UI, sans-serif; fill:#607085; }}
+.svg-default-annot {{ font:700 12px Aptos, Segoe UI, sans-serif; fill:#172033; }}
+.per-section-schematic {{ width:100%; max-width:340px; min-height:420px; border:1px solid var(--line); border-radius:8px; background:#fbfdff; display:block; margin:12px auto; }}
 @media print {{ @page {{ size:A4 landscape; margin:12mm; }} body {{ background:white; }} .report-shell {{ width:100%; padding:0; }} .report-page {{ border:0; padding:0; }} .print-section,.chart-section {{ break-inside:avoid; page-break-inside:avoid; }} .chart-section {{ break-after:page; page-break-after:always; }} .chart {{ break-inside:avoid; height:300px; margin-bottom:18px; }} .schematic-grid {{ grid-template-columns:1fr 1fr; }} }}
 </style>
 </head>
@@ -1184,8 +1197,41 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <h3>4.1. Force calculation</h3>
 <p>Dynamic pressure <code>q = 0.5 × ρ × V²</code>; frontal area <code>A_f = beam × draft</code>; lateral area <code>A_l = LBP × draft</code>. Force components: <strong>longitudinal Xc = q × A_f × Cxc</strong>; <strong>transverse Yc = q × A_l × Cyc</strong>.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-current-loading\" class=\"schematic-svg\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current loading schematic placeholder\">
-<text x=\"200\" y=\"250\" text-anchor=\"middle\" class=\"svg-muted\">[Pass B will fill this schematic with transparent ship + current arrow at ψ=+5°]</text>
+<svg id=\"schematic-current-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current loading schematic — transparent ship with current arrow at default heading +5 deg port\">
+<defs>
+<marker id=\"arrow-blue-curl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#0b6bcb\" /></marker>
+<marker id=\"arrow-green-curl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
+</defs>
+<!-- Title above ship -->
+<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§4 Current loading — default case ψ=+5°, V=3.08 kn</text>
+<!-- Compass: +X up (forward), +Y left (port) -->
+<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(top-down view; bow ↑, port ←)</text>
+<!-- Ship-fixed dashed axes through CoG -->
+<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
+<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
+<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
+<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
+<!-- Transparent vertical ship hull -->
+<path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
+<!-- Centerline -->
+<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
+<!-- CoG marker -->
+<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
+<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
+<!-- Current arrow: ψ = +5° off bow, port positive (current comes from forward, slightly to starboard side of bow) -->
+<line x1=\"235\" y1=\"-10\" x2=\"207\" y2=\"75\" class=\"schematic-bold-arrow-blue\" marker-end=\"url(#arrow-blue-curl)\" />
+<text x=\"248\" y=\"30\" class=\"svg-label-blue\">Current V=3.08 kn</text>
+<text x=\"248\" y=\"46\" class=\"svg-label-blue\">ψ = +5° (port)</text>
+<!-- Longitudinal force Xc — small (Cxc≈−0.0324) pointing aft (downward in this view) at hull frontal CoP -->
+<line x1=\"200\" y1=\"110\" x2=\"200\" y2=\"185\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curl)\" />
+<text x=\"208\" y=\"155\" class=\"svg-label-green\">Xc (longitudinal,</text>
+<text x=\"208\" y=\"170\" class=\"svg-label-green\">≈ aft per Cxc&lt;0)</text>
+<!-- Transverse force Yc — large (Cyc≈+0.0341) pointing port (leftward) at hull lateral CoP -->
+<line x1=\"200\" y1=\"230\" x2=\"110\" y2=\"230\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curl)\" />
+<text x=\"50\" y=\"222\" class=\"svg-label-green\">Yc (transverse,</text>
+<text x=\"50\" y=\"237\" class=\"svg-label-green\">port per Cyc&gt;0)</text>
+<!-- Sample-value annotation -->
+<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-muted\">Cxc≈−0.0324 · Cyc≈+0.0341 at table_angle 175°</text>
 </svg>
 </div>
 <p><strong>Sample calculation at default values:</strong></p>
@@ -1207,8 +1253,41 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </ul>
 <p>These two methods rest on different assumptions and <strong>may differ</strong>. Chart 4 below shows both as an overlay with an explicit non-equality caption.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-current-moment\" class=\"schematic-svg\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current moment schematic placeholder\">
-<text x=\"200\" y=\"250\" text-anchor=\"middle\" class=\"svg-muted\">[Pass B will fill this schematic with transparent ship + transverse force arrow at CoP + lever arm + yaw curved arrow]</text>
+<svg id=\"schematic-current-moment\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current moment about CoG — transverse force at center of pressure, lever arm to CoG, yaw direction\">
+<defs>
+<marker id=\"arrow-green-curm\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
+<marker id=\"arrow-purple-curm\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#7c3aed\" /></marker>
+</defs>
+<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§4.2 Current yaw moment about CoG</text>
+<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(method A: OCIMF Cxyc direct  ·  method B: Yc × lever arm)</text>
+<!-- Ship-fixed dashed axes through CoG -->
+<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
+<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
+<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
+<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
+<!-- Transparent vertical ship hull -->
+<path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
+<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
+<!-- CoG marker -->
+<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
+<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
+<!-- Center of pressure (CoP) for current — slightly forward of CoG for tanker at near-head current per OCIMF convention -->
+<circle cx=\"200\" cy=\"185\" r=\"4\" fill=\"#7c3aed\" />
+<text x=\"208\" y=\"183\" class=\"svg-label-purple\">CoP (current)</text>
+<!-- Lever arm from CoP to CoG (dashed) -->
+<line x1=\"200\" y1=\"189\" x2=\"200\" y2=\"246\" class=\"lever-arm\" />
+<text x=\"154\" y=\"222\" class=\"svg-label-purple\">lever arm</text>
+<!-- Transverse force Yc at CoP — pointing port -->
+<line x1=\"200\" y1=\"185\" x2=\"115\" y2=\"185\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curm)\" />
+<text x=\"50\" y=\"178\" class=\"svg-label-green\">Yc (transverse</text>
+<text x=\"50\" y=\"192\" class=\"svg-label-green\">at CoP)</text>
+<!-- Yaw moment arc at CoG (counter-clockwise = +N bow-to-port in this top-down +X-up view) -->
+<path d=\"M 240 250 A 40 40 0 1 0 200 290\" class=\"schematic-bold-arrow-purple\" marker-end=\"url(#arrow-purple-curm)\" />
+<text x=\"258\" y=\"295\" class=\"svg-label-purple\">+N (yaw,</text>
+<text x=\"258\" y=\"310\" class=\"svg-label-purple\">bow→port)</text>
+<!-- Annotation: method comparison -->
+<text x=\"200\" y=\"475\" text-anchor=\"middle\" class=\"svg-muted\">Method A: N = q·A_l·LBP·Cxyc(175°)</text>
+<text x=\"200\" y=\"492\" text-anchor=\"middle\" class=\"svg-muted\">Method B: N = Yc × lever_arm (different assumptions; may differ)</text>
 </svg>
 </div>
 
@@ -1236,8 +1315,46 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </ul>
 <p><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect stall-region behaviour.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-rudder-loading\" class=\"schematic-svg\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Rudder loading schematic placeholder\">
-<text x=\"200\" y=\"250\" text-anchor=\"middle\" class=\"svg-muted\">[Pass B will fill this schematic with transparent ship + rudder at δ=+28° + Model A and Model B force arrows at the rudder]</text>
+<svg id=\"schematic-rudder-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Rudder loading schematic — transparent ship with rudder at default 28 deg port and force decomposition at rudder pivot\">
+<defs>
+<marker id=\"arrow-blue-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#0b6bcb\" /></marker>
+<marker id=\"arrow-orange-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#c2410c\" /></marker>
+<marker id=\"arrow-green-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
+</defs>
+<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§5 Rudder loading — default δ=+28° port, ψ=+5°, α=+23°</text>
+<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(top-down view; bow ↑, port ←)</text>
+<!-- Ship-fixed dashed axes through CoG -->
+<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
+<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
+<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
+<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
+<!-- Transparent vertical ship hull -->
+<path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
+<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
+<!-- CoG marker -->
+<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
+<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
+<!-- Rudder pivot at stern (bottom of hull) -->
+<circle cx=\"200\" cy=\"420\" r=\"3.5\" fill=\"#c2410c\" />
+<!-- Rudder blade rotated δ=+28° port (counter-clockwise in this +X-up view, blade extends down-left from pivot) -->
+<rect class=\"rudder-blade-transparent\" x=\"193\" y=\"420\" width=\"14\" height=\"42\" rx=\"3\" transform=\"rotate(-28 200 420)\" />
+<text x=\"230\" y=\"445\" class=\"svg-label-orange\">δ = +28° (port)</text>
+<!-- Current arrow approaching from forward at ψ=+5° -->
+<line x1=\"235\" y1=\"-10\" x2=\"207\" y2=\"75\" class=\"schematic-bold-arrow-blue\" marker-end=\"url(#arrow-blue-rl)\" />
+<text x=\"248\" y=\"34\" class=\"svg-label-blue\">Current V=3.08 kn</text>
+<text x=\"248\" y=\"50\" class=\"svg-label-blue\">ψ = +5°</text>
+<!-- Normal force F at rudder, perpendicular to blade (blade is rotated -28°, so normal is at +62° from +X axis, pointing port and slightly aft) -->
+<line x1=\"200\" y1=\"420\" x2=\"118\" y2=\"385\" class=\"schematic-bold-arrow-orange\" marker-end=\"url(#arrow-orange-rl)\" />
+<text x=\"60\" y=\"376\" class=\"svg-label-orange\">F (normal to blade,</text>
+<text x=\"60\" y=\"390\" class=\"svg-label-orange\">≈ port and aft)</text>
+<!-- Decomposition: X_rudder (longitudinal, aft) and Y_rudder (transverse, port) at rudder pivot -->
+<line x1=\"200\" y1=\"420\" x2=\"160\" y2=\"420\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-rl)\" />
+<text x=\"105\" y=\"412\" class=\"svg-label-green\">Y_rudder</text>
+<line x1=\"200\" y1=\"420\" x2=\"200\" y2=\"450\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-rl)\" />
+<text x=\"208\" y=\"445\" class=\"svg-label-green\">X_rudder</text>
+<!-- α annotation: effective inflow angle at rudder -->
+<text x=\"200\" y=\"475\" text-anchor=\"middle\" class=\"svg-muted\">α = δ - ψ = 28° - 5° = +23° (effective rudder inflow)</text>
+<text x=\"200\" y=\"492\" text-anchor=\"middle\" class=\"svg-muted\">F via Model A (Whicker-Fehlner) and Model B (thin-plate) — see §5</text>
 </svg>
 </div>
 

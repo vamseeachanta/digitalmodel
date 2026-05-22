@@ -308,7 +308,7 @@ def test_issue_2760_canonical_section_layout_in_html(tmp_path):
 
 def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
     """Pass A→B handoff contract: each major calculation section has its own
-    schematic placeholder/anchor. Pass B will fill the SVG content; Pass A
+    schematic placeholder/anchor. Pass B fills the SVG content; Pass A
     only needs the anchor structure to exist so the SVGs have a home.
     """
     result = run_b1528_current_heading_rudder_report()
@@ -323,6 +323,54 @@ def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
     ]
     for sid in required_schematic_ids:
         assert f'id="{sid}"' in html, f"Missing per-section schematic anchor: {sid}"
+
+
+def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
+    """Pass B contract: per-section schematic SVGs (current-loading,
+    current-moment, rudder-loading) must contain real ship+arrow markup,
+    not just placeholder text. Each must:
+    - declare a transparent or near-transparent ship hull (fill-opacity<=0.3
+      or fill="none" plus a visible stroke)
+    - contain at least one bold arrow (stroke-width>=4) with a marker-end
+      arrowhead reference
+    - include a CoG marker (circle or text "CoG")
+    - bake in default-value annotations (PDF/DOCX-safe; no JS dependency)
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    import re
+    for sid in ("schematic-current-loading", "schematic-current-moment", "schematic-rudder-loading"):
+        # Extract the SVG block by id
+        match = re.search(
+            rf'<svg id="{sid}".*?</svg>',
+            html, re.DOTALL,
+        )
+        assert match is not None, f"Missing or unparseable SVG for {sid}"
+        svg = match.group(0)
+        assert "[Pass B will fill" not in svg, (
+            f"{sid} still contains Pass A placeholder text — Pass B did not replace it"
+        )
+        # Transparent ship hull check: fill-opacity<=0.3 or fill="none" with visible stroke
+        has_transparent_hull = (
+            re.search(r'fill-opacity\s*[:=]\s*"?0?\.\d+', svg) is not None
+            or re.search(r'fill\s*=\s*"none"', svg) is not None
+            or 'class="ship-hull-transparent"' in svg
+        )
+        assert has_transparent_hull, f"{sid} missing transparent-fill ship hull"
+        # Bold arrow with marker-end (inline stroke-width≥4 OR schematic-bold-arrow-* class
+        # OR Pass B's per-section bold-arrow color variants)
+        has_bold_arrow = (
+            re.search(r'stroke-width\s*[:=]\s*"?[4-9]\d?', svg) is not None
+            or "schematic-bold-arrow-" in svg
+        )
+        assert has_bold_arrow, f"{sid} has no bold (stroke-width>=4) arrow"
+        assert "marker-end" in svg, f"{sid} has no marker-end arrowhead reference"
+        # CoG marker
+        assert ("CoG" in svg or "COG" in svg or "C.G." in svg or "centre of gravity" in svg.lower()), (
+            f"{sid} missing CoG marker label"
+        )
 
 
 def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
