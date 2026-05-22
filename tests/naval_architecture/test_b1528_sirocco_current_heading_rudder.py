@@ -257,7 +257,9 @@ def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenanc
     assert 'id="ship-current-rudder-svg"' in html
     assert 'id="schematic-current-heading-line"' in html
     assert 'id="schematic-rudder-line"' in html
-    assert "alpha = δ - ψ" in html or "α = δ - ψ" in html
+    # HTML uses the canonical all-Unicode form `α = δ - ψ`; reject ASCII regression.
+    assert "α = δ - ψ" in html
+    assert "alpha = δ - ψ" not in html
     assert "positive bow-to-port" in html.lower()
 
     assert "heading/rudder schematic" in report.lower()

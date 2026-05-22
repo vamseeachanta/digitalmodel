@@ -116,7 +116,14 @@ def load_packaged_b1528_current_heading_rudder_config() -> B1528CurrentHeadingRu
 
 
 def issue_2760_source_preflight() -> dict[str, Any]:
-    """Fail-closed source/citation preflight for approved issue #2760 implementation."""
+    """Fail-closed source/citation preflight for approved issue #2760 implementation.
+
+    Env-var and file-existence checks run on every call so monkeypatched tests
+    still observe fail-closed behavior. The expensive Citation construction +
+    `validate_citation` work is memoized in `_issue_2760_source_preflight_cached`
+    keyed on (path, mtime) tuples; cache invalidates when the workbook or
+    provenance README is replaced.
+    """
 
     workbook_path = _resolve_ocimf_workbook_path()
     provenance_readme = _resolve_ocimf_provenance_readme()
@@ -126,7 +133,24 @@ def issue_2760_source_preflight() -> dict[str, Any]:
         )
     if not provenance_readme.exists():
         raise FileNotFoundError(f"Required OCIMF provenance README is missing: {OCIMF_PROVENANCE_README}")
+    return _issue_2760_source_preflight_cached(
+        str(workbook_path),
+        workbook_path.stat().st_mtime_ns,
+        str(provenance_readme),
+        provenance_readme.stat().st_mtime_ns,
+    )
 
+
+@lru_cache(maxsize=4)
+def _issue_2760_source_preflight_cached(
+    workbook_path_text: str,
+    workbook_mtime_ns: int,
+    readme_path_text: str,
+    readme_mtime_ns: int,
+) -> dict[str, Any]:
+    """Cached citation construction/validation; cache key invalidates on mtime change."""
+
+    del workbook_path_text, workbook_mtime_ns, readme_path_text, readme_mtime_ns
     ocimf_citation = Citation(
         code_id="OCIMF-MEG4",
         publisher="Oil Companies International Marine Forum",
