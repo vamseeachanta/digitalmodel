@@ -235,8 +235,8 @@ def validate_b1528_current_heading_rudder_config(
         limitations=tuple(str(value) for value in payload["limitations"]),
         raw=payload,
     )
-    if cfg.current_speeds_kn != (0.0, 1.0, 2.0, 3.0, 3.08, 4.0):
-        raise ValueError("current_speeds_kn must match the approved issue #2760 0..4 kn sweep including 3.08 kn")
+    if cfg.current_speeds_kn != (0.0, 1.0, 2.0, 3.0, 3.08, 4.0, 5.0):
+        raise ValueError("current_speeds_kn must match the approved issue #2760 0..5 kn sweep including 3.08 kn (Pass H sensitivity extension)")
     expected_heading_angles = tuple(float(value) for value in range(-5, 6))
     if cfg.heading_offsets_deg != expected_heading_angles:
         raise ValueError("heading_offsets_deg must be -5..+5 deg in 1 deg steps")
@@ -569,7 +569,7 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         "Differences at large angles (>20°) reflect stall-region behaviour and the "
         "simplifying assumptions of each."
     )
-    document.add_heading("5.1. Sample calculation at default values (Model A)", level=2)
+    document.add_heading("5.1. Sample calculation at default values (Whicker-Fehlner - Model A)", level=2)
     for line in (
         f"α = δ - ψ = {default_rudder:.0f}° - {default_heading:.0f}° = {default_alpha:.0f}°",
         f"F = β × A_R × V² × Cr = {design['beta']:.0f} × {design['rudder_area_m2']:.2f} × "
@@ -1232,7 +1232,7 @@ def _markdown_report(result: dict[str, Any]) -> str:
         "",
         "**Both models are screening-level**; neither is a validated rudder hydrodynamic model. Differences at large angles (>20°) reflect stall-region behaviour and the simplifying assumptions of each.",
         "",
-        "**Sample calculation at default values (Model A):**",
+        "**Sample calculation at default values (Whicker-Fehlner - Model A):**",
         "",
         f"- α = δ - ψ = {default_rudder:.0f}° − {default_heading:.0f}° = **{default_alpha:.0f}°**",
         f"- F = β × A_R × V² × Cr = {design['beta']:.0f} × {design['rudder_area_m2']:.3f} × ({v_m_s:.4f})² × {design['prop_rotation_factor']:.1f} = **{sample['base_force_N']:.1f} N**",
@@ -1527,50 +1527,54 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <tr><td><code>α</code></td><td>effective rudder inflow angle = δ - ψ</td><td>(derived)</td></tr>
 </tbody>
 </table>
-<div class=\"schematic-grid\">
-<svg id=\"schematic-axes-conventions\" class=\"schematic-svg\" viewBox=\"0 0 620 360\" role=\"img\" aria-label=\"Ship axes and sign conventions schematic\">
+<svg id=\"schematic-axes-conventions\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Figure 0 — Axes and sign conventions per OCIMF MEG4 Annex A\">
 <defs>
-<marker id=\"arrow-blue\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,6 L9,3 z\" fill=\"#0b6bcb\" /></marker>
-<marker id=\"arrow-orange\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,6 L9,3 z\" fill=\"#c2410c\" /></marker>
-<marker id=\"arrow-green\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,6 L9,3 z\" fill=\"#15803d\" /></marker>
+<marker id=\"arrow-ac\" markerWidth=\"5\" markerHeight=\"5\" refX=\"4.5\" refY=\"2.5\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,5 L5,2.5 z\" fill=\"#1a2a4a\" /></marker>
 </defs>
-<line x1=\"310\" y1=\"315\" x2=\"310\" y2=\"45\" class=\"axis-line\" />
-<line x1=\"130\" y1=\"185\" x2=\"490\" y2=\"185\" class=\"axis-line\" />
-<text x=\"318\" y=\"54\" class=\"svg-label\">+X ship / bow</text>
-<text x=\"132\" y=\"176\" class=\"svg-label\">+Y ship / port</text>
-<g id=\"schematic-current-heading-line\" transform=\"rotate(0 310 185)\">
-<line x1=\"310\" y1=\"315\" x2=\"310\" y2=\"78\" class=\"current-line\" />
+<!-- Cardinal heading labels at frame edges per OCIMF Annex A §A.1 -->
+<text x=\"200\" y=\"24\" text-anchor=\"middle\" class=\"svg-label-symbol\">180°</text>
+<text x=\"380\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">90°</text>
+<text x=\"20\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">270°</text>
+<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-label-symbol\">0°</text>
+<!-- Solid muted-terracotta ship silhouette, OCIMF house style -->
+<path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
+<!-- Hairline ship-fixed axes through CoG -->
+<line x1=\"200\" y1=\"56\" x2=\"200\" y2=\"460\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<line x1=\"60\" y1=\"250\" x2=\"340\" y2=\"250\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<!-- Current direction line (JS rotates this group) -->
+<g id=\"schematic-current-heading-line\" transform=\"rotate(0 200 250)\">
+<line x1=\"200\" y1=\"60\" x2=\"200\" y2=\"100\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-ac)\" />
 </g>
-<g id=\"schematic-rudder-line\" transform=\"rotate(0 310 268)\">
-<line x1=\"310\" y1=\"268\" x2=\"310\" y2=\"318\" class=\"rudder-line\" />
-</g>
-<g id=\"schematic-total-force-line\" transform=\"rotate(0 310 185)\">
-<line x1=\"310\" y1=\"185\" x2=\"250\" y2=\"112\" class=\"force-line\" />
-</g>
-<path class=\"ship-hull\" d=\"M310 68 C360 110 382 165 382 245 C382 285 350 306 310 316 C270 306 238 285 238 245 C238 165 260 110 310 68 Z\" />
-<line x1=\"310\" y1=\"88\" x2=\"310\" y2=\"300\" stroke=\"#172033\" stroke-width=\"1.5\" stroke-dasharray=\"4 4\" />
-<rect id=\"schematic-rudder-blade\" x=\"302\" y=\"278\" width=\"16\" height=\"42\" rx=\"3\" class=\"rudder-blade\" />
-<circle cx=\"310\" cy=\"185\" r=\"5\" fill=\"#172033\" />
-<text x=\"318\" y=\"190\" class=\"svg-muted\">COG</text>
-<text id=\"schematic-psi-label\" x=\"410\" y=\"88\" class=\"svg-label\">ψ = 0°</text>
-<text id=\"schematic-delta-label\" x=\"330\" y=\"333\" class=\"svg-label\">δ = 0°</text>
-<text id=\"schematic-alpha-label\" x=\"412\" y=\"310\" class=\"svg-label\">α = 0°</text>
-<text id=\"schematic-force-label\" x=\"176\" y=\"105\" class=\"svg-label\">total force direction</text>
+<!-- Rudder pivot + blade (JS rotates this rect) -->
+<circle cx=\"200\" cy=\"420\" r=\"2\" fill=\"#1a2a4a\" />
+<rect id=\"schematic-rudder-blade\" x=\"196\" y=\"420\" width=\"8\" height=\"32\" rx=\"1.5\" class=\"rudder-blade-transparent\" transform=\"rotate(0 200 420)\" />
+<!-- Hidden JS-target groups (preserved so updateHeadingRudderSchematic doesn't error) -->
+<g id=\"schematic-rudder-line\" transform=\"rotate(0 200 420)\" style=\"display:none\"><line x1=\"200\" y1=\"420\" x2=\"200\" y2=\"455\" class=\"ocimf-arrow\" /></g>
+<g id=\"schematic-total-force-line\" transform=\"rotate(0 200 250)\" style=\"display:none\"><line x1=\"200\" y1=\"250\" x2=\"160\" y2=\"195\" class=\"ocimf-arrow\" /></g>
+<!-- Force/moment symbol cluster at CoG, OCIMF symbol-only style -->
+<circle cx=\"200\" cy=\"250\" r=\"2.5\" fill=\"#1a2a4a\" />
+<text x=\"205\" y=\"246\" class=\"svg-label-symbol\">CoG</text>
+<line x1=\"200\" y1=\"250\" x2=\"200\" y2=\"210\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-ac)\" />
+<text x=\"206\" y=\"222\" class=\"svg-label-symbol\">+F_X</text>
+<line x1=\"200\" y1=\"250\" x2=\"150\" y2=\"250\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-ac)\" />
+<text x=\"138\" y=\"244\" class=\"svg-label-symbol\">+F_Y</text>
+<path d=\"M 222 250 A 22 22 0 0 0 200 272\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-ac)\" />
+<text x=\"228\" y=\"276\" class=\"svg-label-symbol\">+M_XY</text>
+<!-- ψ/δ/α labels (JS updates these text contents) -->
+<text id=\"schematic-psi-label\" x=\"300\" y=\"24\" class=\"svg-label-symbol\">ψ = 0°</text>
+<text id=\"schematic-delta-label\" x=\"260\" y=\"460\" class=\"svg-label-symbol\">δ = 0°</text>
+<text id=\"schematic-alpha-label\" x=\"320\" y=\"460\" class=\"svg-label-symbol\">α = 0°</text>
+<text id=\"schematic-force-label\" x=\"30\" y=\"24\" class=\"svg-label-symbol\">total F</text>
 </svg>
-<div>
-<ul class=\"schematic-legend\">
-<li><strong>Black dashed axes:</strong> ship-fixed CoG frame; +X forward and +Y port.</li>
-<li><strong>Blue arrow:</strong> current heading offset <code>ψ</code> relative to ship centreline.</li>
-<li><strong>Orange arrow:</strong> rudder command <code>δ</code>.</li>
-<li><strong>Green arrow:</strong> selected-case total X/Y force direction (current + rudder components).</li>
-<li><strong>Effective inflow:</strong> <code>α = δ - ψ</code>; when α is zero, the rudder-induced load is zero but the hull-current load remains.</li>
-</ul>
-<div class=\"schematic-readout\" aria-label=\"Selected schematic geometry readout\">
+<div class=\"schematic-caption\">
+<strong>Figure 0 — Axes &amp; Sign Conventions.</strong> Top-down plan view, ship-fixed CoG frame per OCIMF MEG4 [1] Annex A §A.1. Cardinal numerals at frame edges (0° stern, 180° bow, 90° starboard, 270° port) define heading convention; <code>ψ</code> = current heading offset from bow (port positive), <code>δ</code> = rudder angle (port positive), <code>α = δ - ψ</code> = effective rudder inflow angle.
+<code>+F_X</code> = longitudinal force component; <code>+F_Y</code> = transverse force component (positive port); <code>+M_XY</code> = yaw moment about CoG (positive bow-to-port, right-hand rule).
+The current-direction arrow rotates with the heading offset and the rudder blade rotates with the rudder angle in the interactive HTML; PDF/DOCX shows the schematic at the selected default-case angles.
+<div class=\"schematic-readout\" aria-label=\"Selected schematic geometry readout\" style=\"display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:8px\">
 <div><strong>Speed</strong><br><span id=\"schematic-speed-readout\">—</span></div>
 <div><strong>Heading ψ</strong><br><span id=\"schematic-heading-readout\">—</span></div>
 <div><strong>Rudder δ</strong><br><span id=\"schematic-rudder-readout\">—</span></div>
 <div><strong>Effective α</strong><br><span id=\"schematic-alpha-readout\">—</span></div>
-</div>
 </div>
 </div>
 </section>
@@ -1630,6 +1634,8 @@ Cardinal labels at frame edges (0° stern / 180° bow / 90° starboard / 270° p
 </ul>
 
 <h3>4.2. Yaw moment about CoG</h3>
+<p><strong>Transverse current force <code>Yc</code> input</strong> — Method B (force × lever arm) multiplies the transverse current force <code>Yc</code> by a center-of-pressure lever arm. The chart below shows <code>Yc</code> across the heading sweep -5° to +5° in 1° steps at the selected current speed (default {default_speed:.2f} kn). This is the <code>Yc</code> input that drives Method B's yaw moment estimate.</p>
+<div id=\"current-transverse-force-chart\" class=\"chart\" aria-label=\"Transverse current force Yc versus heading offset psi at selected current speed\"></div>
 <p>Two methods estimate the current yaw moment, shown side by side as a sanity check:</p>
 <ul>
 <li><strong>Method A — OCIMF direct (default):</strong> <code>Nc_A = q × A_l × LBP × Cxyc({table_angle:.0f}°)</code></li>
@@ -1743,7 +1749,7 @@ Cardinal labels at frame edges (0° stern / 180° bow / 90° starboard / 270° p
 Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3], <code>F = β·A_R·V²·Cr·sin(α)</code>) and <strong>Model B</strong> (Faltinsen [2] §6.5, <code>F = 0.5·ρ·A_R·V²·2π·sin(α)</code> with stall cap). Comparison in §5.6.
 </div>
 
-<h3>5.1. Sample calculation at default values (Model A)</h3>
+<h3>5.1. Sample calculation at default values (Whicker-Fehlner - Model A)</h3>
 <p>Representative hand-check point: <strong>{sample['data_point']}</strong>.</p>
 <ol class=\"calc-list\">
 {sample_rows_html}
@@ -1758,7 +1764,8 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 <div id=\"yaw-moment-chart\" class=\"chart\" aria-label=\"Rudder-induced yaw moment chart\"></div>
 
 <h3>5.4. Selected-speed envelope summary</h3>
-<p>Envelope values update with the current-speed selector and use the full heading × rudder grid at that speed. The selected default is <strong>{default_speed:.2f} kn</strong>; 4 kn is only the upper bound of the plotted range.</p>
+<p><strong>Key variables for this section:</strong> current speed <code>V</code> = <strong>{default_speed:.2f} kn</strong> (default) · heading sweep <code>ψ</code> ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps · rudder sweep <code>δ</code> ∈ [0°, +{default_rudder:.0f}°] at 2° steps. Envelope is the absolute-max across the full heading × rudder grid at the selected speed.</p>
+<p>Envelope values update with the current-speed selector and use the full heading × rudder grid at that speed. The selected default is <strong>{default_speed:.2f} kn</strong>; 5 kn is the upper bound of the sensitivity range.</p>
 <table id=\"selected-speed-envelope-summary\" class=\"data-table\" aria-label=\"Selected speed envelope summary\">
 <thead><tr><th>Metric</th><th>Envelope case</th><th>Value</th></tr></thead>
 <tbody>
@@ -1771,6 +1778,7 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 <p class=\"svg-muted\" style=\"margin-top:4px; font-size:11px\">Initial values are at the default current speed ({default_speed:.2f} kn); the interactive HTML updates the row above when the speed selector changes.</p>
 
 <h3>5.5. Selected-case force breakdown</h3>
+<p><strong>Key variables for this section:</strong> current speed <code>V</code> = <strong>{default_speed:.2f} kn</strong> (default; user-selectable via dropdown above) · heading <code>ψ</code> = <strong>+{default_heading:.0f}°</strong> · rudder <code>δ</code> = <strong>+{default_rudder:.0f}°</strong> · effective rudder inflow <code>α</code> = δ − ψ = <strong>+{default_alpha:.0f}°</strong>. Static rows below are at the default case; JS updates them when the user changes the speed or rudder selector.</p>
 <p>Updates with current speed and rudder angle. Values shown at the heading with maximum absolute total yaw moment for the selected trace, so individual X/Y/N component paths can be reviewed together.</p>
 <table class=\"data-table\" aria-label=\"Selected-case OCIMF current rudder component force breakdown\">
 <thead><tr><th>Component</th><th>X (kN, longitudinal)</th><th>Y (kN, transverse port)</th><th>N (kN·m, yaw bow-to-port)</th></tr></thead>
@@ -1782,19 +1790,11 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 </table>
 <p id=\"breakdown-case-label\" class=\"note-panel\">{breakdown_default_label}</p>
 
-<h3>5.6. Rudder model comparison — Model A (Whicker-Fehlner) vs Model B (thin-plate)</h3>
-<p>Side-by-side comparison of the two screening rudder models at the default case (V={default_speed:.2f} kn, ψ=+{default_heading:.0f}°, δ=+{default_rudder:.0f}°, α=+{default_alpha:.0f}°). The chart below sweeps rudder angle 0..+28° at fixed ψ=+{default_heading:.0f}° and the selected current speed, comparing Model A's <code>force_y_ship_port_N</code> and Model B's <code>simple_plate_force_y_ship_port_N</code>.</p>
-<table id=\"rudder-model-comparison-table\" class=\"data-table\" aria-label=\"Side-by-side rudder model A vs model B at default case\">
-<thead><tr><th>Quantity</th><th>Model A — Whicker-Fehlner [3]</th><th>Model B — thin-plate (Faltinsen [2] §6.5)</th></tr></thead>
-<tbody>
-<tr><td>Normal force F (N)</td><td id=\"rudder-comp-a-normal\">{comp_default_a_normal}</td><td id=\"rudder-comp-b-normal\">{comp_default_b_normal}</td></tr>
-<tr><td>Longitudinal X_rudder (kN)</td><td id=\"rudder-comp-a-x\">{comp_default_a_x}</td><td id=\"rudder-comp-b-x\">{comp_default_b_x}</td></tr>
-<tr><td>Transverse Y_rudder (kN, port)</td><td id=\"rudder-comp-a-y\">{comp_default_a_y}</td><td id=\"rudder-comp-b-y\">{comp_default_b_y}</td></tr>
-<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id=\"rudder-comp-a-n\">{comp_default_a_n}</td><td id=\"rudder-comp-b-n\">{comp_default_b_n}</td></tr>
-</tbody>
-</table>
-<p class=\"note-panel\"><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect each model's simplifying assumptions and the stall cap in Model B.</p>
-<div id=\"rudder-model-comparison-chart\" class=\"chart\" aria-label=\"Rudder model A vs model B Y force vs rudder angle\"></div>
+<h3>5.6. Current-speed sensitivity (0..5 knots)</h3>
+<p><strong>Key variables for this section:</strong> heading <code>ψ</code> = <strong>+{default_heading:.0f}°</strong> (fixed) · rudder <code>δ</code> = <strong>+{default_rudder:.0f}°</strong> (fixed) · current speed <code>V</code> sweep <strong>0..5 kn</strong>. The plots below show how the current load and rudder load scale with current speed at the default heading/rudder; the selected default case (V = {default_speed:.2f} kn) is marked on each plot.</p>
+<div id=\"sensitivity-current-load-chart\" class=\"chart\" aria-label=\"Current load sensitivity to current speed (longitudinal Xc and transverse Yc vs V)\"></div>
+<div id=\"sensitivity-rudder-load-chart\" class=\"chart\" aria-label=\"Rudder load sensitivity to current speed (longitudinal X_rudder and transverse Y_rudder vs V)\"></div>
+<p class=\"svg-muted\" style=\"font-size:11px; margin-top:4px\">Sensitivity plots use the engineering sweep at fixed heading +{default_heading:.0f}° and rudder +{default_rudder:.0f}°. Both current and rudder loads scale as V² (quadratic in current speed) per the underlying physics.</p>
 </section>
 
 <section id=\"limitations-section\" class=\"print-section\">
@@ -1821,6 +1821,22 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 <li>Scope note: hull current loads are screening estimates using OCIMF tanker-class coefficients; not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
 </ul>
 <pre class=\"method-block\">{summary_json}</pre>
+</section>
+
+<section id=\"appendix-a-rudder-model-comparison\" class=\"print-section\">
+<h2>Appendix A — Rudder model comparison (Whicker-Fehlner vs thin-plate)</h2>
+<p>Side-by-side comparison of the two screening rudder models at the default case (V={default_speed:.2f} kn, ψ=+{default_heading:.0f}°, δ=+{default_rudder:.0f}°, α=+{default_alpha:.0f}°). The chart below sweeps rudder angle 0..+{default_rudder:.0f}° at fixed ψ=+{default_heading:.0f}° and the selected current speed, comparing Model A and Model B transverse force <code>Y_rudder</code>.</p>
+<table id=\"rudder-model-comparison-table\" class=\"data-table\" aria-label=\"Side-by-side rudder model A vs model B at default case\">
+<thead><tr><th>Quantity</th><th>Model A — Whicker-Fehlner [3]</th><th>Model B — thin-plate (Faltinsen [2] §6.5)</th></tr></thead>
+<tbody>
+<tr><td>Normal force F (N)</td><td id=\"rudder-comp-a-normal\">{comp_default_a_normal}</td><td id=\"rudder-comp-b-normal\">{comp_default_b_normal}</td></tr>
+<tr><td>Longitudinal X_rudder (kN)</td><td id=\"rudder-comp-a-x\">{comp_default_a_x}</td><td id=\"rudder-comp-b-x\">{comp_default_b_x}</td></tr>
+<tr><td>Transverse Y_rudder (kN, port)</td><td id=\"rudder-comp-a-y\">{comp_default_a_y}</td><td id=\"rudder-comp-b-y\">{comp_default_b_y}</td></tr>
+<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id=\"rudder-comp-a-n\">{comp_default_a_n}</td><td id=\"rudder-comp-b-n\">{comp_default_b_n}</td></tr>
+</tbody>
+</table>
+<p class=\"note-panel\"><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect each model's simplifying assumptions and the stall cap in Model B.</p>
+<div id=\"rudder-model-comparison-chart\" class=\"chart\" aria-label=\"Rudder model A vs model B Y force vs rudder angle\"></div>
 </section>
 
 <section id=\"references-section\" class=\"print-section\">
@@ -1967,6 +1983,102 @@ function updateSelectedCaseBreakdown() {{
   updateHeadingRudderSchematic(selected);
   updateText('breakdown-case-label', `Selected breakdown case: V=${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring = ${{fmtMoment(-selected.total_moment_n_yaw_bow_port_kN_m)}} kN·m.`);
 }}
+function updateCurrentTransverseForceChart() {{
+  // H2: Transverse current force Yc vs heading sweep at selected speed and default rudder.
+  const speed = selectedSpeed();
+  const defaultRudder = 28.0;
+  const rows = ROWS
+    .filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, defaultRudder))
+    .sort(byHeading);
+  const x = rows.map(row => row.heading_offset_deg);
+  const trace = {{
+    x, y: rows.map(row => row.ocimf_current_force_y_ship_port_N / 1000),
+    name: 'Yc transverse current force (kN, port)',
+    mode: 'lines+markers',
+    line: {{color: '#155e95', width: 2.5}},
+    hovertemplate: 'ψ=%{{x}}°<br>Yc=%{{y:.0f}} kN<extra></extra>'
+  }};
+  Plotly.newPlot('current-transverse-force-chart', [trace], {{
+    title: `Transverse current force Yc vs heading (OCIMF MEG4 [1] Annex A Fig. A10) · V=${{speed}} kn`,
+    xaxis: {{title: 'Heading offset ψ (deg)', dtick: 1, gridcolor: '#e5eaf1', zeroline: true}},
+    yaxis: {{title: 'Transverse current force Yc (kN, port)', gridcolor: '#e5eaf1'}},
+    height: STANDARD_CHART_HEIGHT, margin: {{l: 82, r: 30, t: 66, b: 64}},
+    template: 'plotly_white', hovermode: 'x unified'
+  }}, CHART_CONFIG);
+}}
+function updateSensitivityCurrentLoadChart() {{
+  // H5: Current load sensitivity to current speed (0..5 kn) at default heading + rudder.
+  const defaultHeading = 5.0;
+  const defaultRudder = 28.0;
+  const selectedV = selectedSpeed();
+  // Average across rudder sweep at default heading to get speed-only dependence (all rudder
+  // angles produce the same OCIMF current load — current is rudder-independent).
+  const rowsByV = new Map();
+  ROWS.forEach(row => {{
+    if (same(row.heading_offset_deg, defaultHeading)) {{
+      if (!rowsByV.has(row.current_speed_kn)) rowsByV.set(row.current_speed_kn, row);
+    }}
+  }});
+  const speeds = [...rowsByV.keys()].sort((a, b) => a - b);
+  const xc = speeds.map(v => rowsByV.get(v).ocimf_current_force_x_ship_N / 1000);
+  const yc = speeds.map(v => rowsByV.get(v).ocimf_current_force_y_ship_port_N / 1000);
+  const selectedRow = rowsByV.get(selectedV);
+  const traces = [
+    {{x: speeds, y: xc, name: 'Xc longitudinal (kN)', mode: 'lines+markers', line: {{color: '#155e95', width: 2.5}}, hovertemplate: 'V=%{{x}} kn<br>Xc=%{{y:.0f}} kN<extra></extra>'}},
+    {{x: speeds, y: yc, name: 'Yc transverse (kN, port)', mode: 'lines+markers', line: {{color: '#c2410c', width: 2.5}}, hovertemplate: 'V=%{{x}} kn<br>Yc=%{{y:.0f}} kN<extra></extra>'}},
+  ];
+  if (selectedRow) {{
+    traces.push({{
+      x: [selectedV, selectedV],
+      y: [selectedRow.ocimf_current_force_x_ship_N / 1000, selectedRow.ocimf_current_force_y_ship_port_N / 1000],
+      name: `Selected V = ${{selectedV}} kn`,
+      mode: 'markers',
+      marker: {{color: '#7c3aed', size: 14, symbol: 'star'}},
+      hovertemplate: 'Selected V=%{{x}} kn<br>%{{y:.0f}} kN<extra></extra>'
+    }});
+  }}
+  Plotly.newPlot('sensitivity-current-load-chart', traces, {{
+    title: `Current load sensitivity to current speed (OCIMF MEG4 [1]) · ψ=+${{defaultHeading}}°, δ=+${{defaultRudder}}° fixed`,
+    xaxis: {{title: 'Current speed V (kn)', gridcolor: '#e5eaf1', zeroline: true}},
+    yaxis: {{title: 'Current force component (kN)', gridcolor: '#e5eaf1', zeroline: true}},
+    height: STANDARD_CHART_HEIGHT, margin: {{l: 82, r: 30, t: 66, b: 64}},
+    legend: {{orientation: 'h', y: -0.22}}, template: 'plotly_white', hovermode: 'x unified'
+  }}, CHART_CONFIG);
+}}
+function updateSensitivityRudderLoadChart() {{
+  // H5: Rudder load sensitivity to current speed (0..5 kn) at default heading + rudder.
+  const defaultHeading = 5.0;
+  const defaultRudder = 28.0;
+  const selectedV = selectedSpeed();
+  const rows = ROWS
+    .filter(row => same(row.heading_offset_deg, defaultHeading) && same(row.rudder_angle_deg, defaultRudder))
+    .sort((a, b) => a.current_speed_kn - b.current_speed_kn);
+  const speeds = rows.map(row => row.current_speed_kn);
+  const xr = rows.map(row => row.force_x_ship_N / 1000);
+  const yr = rows.map(row => row.force_y_ship_port_N / 1000);
+  const selectedRow = rows.find(row => same(row.current_speed_kn, selectedV));
+  const traces = [
+    {{x: speeds, y: xr, name: 'X_rudder longitudinal (kN)', mode: 'lines+markers', line: {{color: '#155e95', width: 2.5}}, hovertemplate: 'V=%{{x}} kn<br>X_rudder=%{{y:.0f}} kN<extra></extra>'}},
+    {{x: speeds, y: yr, name: 'Y_rudder transverse (kN, port)', mode: 'lines+markers', line: {{color: '#c2410c', width: 2.5}}, hovertemplate: 'V=%{{x}} kn<br>Y_rudder=%{{y:.0f}} kN<extra></extra>'}},
+  ];
+  if (selectedRow) {{
+    traces.push({{
+      x: [selectedV, selectedV],
+      y: [selectedRow.force_x_ship_N / 1000, selectedRow.force_y_ship_port_N / 1000],
+      name: `Selected V = ${{selectedV}} kn`,
+      mode: 'markers',
+      marker: {{color: '#7c3aed', size: 14, symbol: 'star'}},
+      hovertemplate: 'Selected V=%{{x}} kn<br>%{{y:.0f}} kN<extra></extra>'
+    }});
+  }}
+  Plotly.newPlot('sensitivity-rudder-load-chart', traces, {{
+    title: `Rudder load sensitivity to current speed (Whicker-Fehlner [3]) · ψ=+${{defaultHeading}}°, δ=+${{defaultRudder}}° fixed`,
+    xaxis: {{title: 'Current speed V (kn)', gridcolor: '#e5eaf1', zeroline: true}},
+    yaxis: {{title: 'Rudder force component (kN)', gridcolor: '#e5eaf1', zeroline: true}},
+    height: STANDARD_CHART_HEIGHT, margin: {{l: 82, r: 30, t: 66, b: 64}},
+    legend: {{orientation: 'h', y: -0.22}}, template: 'plotly_white', hovermode: 'x unified'
+  }}, CHART_CONFIG);
+}}
 function updateYawSideBySideChart() {{
   // Pass E: Method A (OCIMF direct Cxyc) vs Method B (Y_current × lever_arm)
   // across heading sweep, at default rudder angle for stability.
@@ -2033,7 +2145,7 @@ function updateRudderModelComparison() {{
     template: 'plotly_white'
   }}, CHART_CONFIG);
 }}
-function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateYawSideBySideChart(); updateSelectedCaseBreakdown(); updateRudderModelComparison(); }}
+function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateCurrentTransverseForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateYawSideBySideChart(); updateSelectedCaseBreakdown(); updateSensitivityCurrentLoadChart(); updateSensitivityRudderLoadChart(); updateRudderModelComparison(); }}
 document.getElementById('current-speed-select').addEventListener('change', updateCharts);
 document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }});
 updateCharts();

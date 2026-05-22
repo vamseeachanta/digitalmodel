@@ -35,7 +35,7 @@ def test_issue_2760_approved_domains_and_defaults():
 
     assert cfg.chart_default_current_speed_kn == pytest.approx(3.08)
     assert min(cfg.current_speeds_kn) == pytest.approx(0.0)
-    assert max(cfg.current_speeds_kn) == pytest.approx(4.0)
+    assert max(cfg.current_speeds_kn) == pytest.approx(5.0)  # Pass H sensitivity extension
     assert 3.08 in cfg.current_speeds_kn
     assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-5, 6))
     assert cfg.rudder_angles_deg == tuple(float(value) for value in range(0, 29, 2))
@@ -383,6 +383,38 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         assert ("CoG" in svg or "COG" in svg or "C.G." in svg or "centre of gravity" in svg.lower()), (
             f"{sid} missing CoG marker label"
         )
+
+
+def test_issue_2760_pass_h_revisions(tmp_path):
+    """Pass H contract: §4.2 transverse current force chart, §5.1 renamed to
+    Whicker-Fehlner - Model A, §5.4/§5.5 lead-in key variables, §5.6
+    current-speed sensitivity (0..5 kn) with two new charts, old §5.6 model
+    comparison relocated to Appendix A, §3 schematic uses OCIMF style.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+    md = Path(manifest["markdown_report"]).read_text(encoding="utf-8")
+
+    # H1: §3 schematic now uses OCIMF style (per-section-schematic class + cardinal labels)
+    assert 'id="schematic-axes-conventions" class="per-section-schematic"' in html
+    # H2: new transverse current force chart at §4.2
+    assert 'id="current-transverse-force-chart"' in html
+    # H3: §5.1 title renamed
+    assert "5.1. Sample calculation at default values (Whicker-Fehlner - Model A)" in html
+    assert "(Whicker-Fehlner - Model A)" in md
+    # H4: key-variables lead-in in §5.4 and §5.5
+    assert html.count("Key variables for this section:") >= 2
+    # H5: new §5.6 sensitivity charts + sweep extended to 5 kn
+    assert "5.6. Current-speed sensitivity (0..5 knots)" in html
+    assert 'id="sensitivity-current-load-chart"' in html
+    assert 'id="sensitivity-rudder-load-chart"' in html
+    assert max(result["metadata"]["current_speeds_kn"]) == pytest.approx(5.0)
+    # H6: old §5.6 rudder model comparison moved to Appendix A
+    assert "Appendix A — Rudder model comparison" in html
+    assert 'id="appendix-a-rudder-model-comparison"' in html
+    # Old §5.6 heading must no longer appear
+    assert "5.6. Rudder model comparison" not in html
 
 
 def test_issue_2760_pass_g_schematics_have_ocimf_caption_block(tmp_path):

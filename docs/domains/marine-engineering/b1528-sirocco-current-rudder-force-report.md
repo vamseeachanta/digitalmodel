@@ -119,7 +119,7 @@ Two screening rudder models are presented side by side (Pass C wires Model B num
 
 **Both models are screening-level**; neither is a validated rudder hydrodynamic model. Differences at large angles (>20°) reflect stall-region behaviour and the simplifying assumptions of each.
 
-**Sample calculation at default values (Model A):**
+**Sample calculation at default values (Whicker-Fehlner - Model A):**
 
 - α = δ - ψ = 28° − 5° = **23°**
 - F = β × A_R × V² × Cr = 600 × 44.940 × (1.5845)² × 1.0 = **67694.1 N**
@@ -135,7 +135,7 @@ Two screening rudder models are presented side by side (Pass C wires Model B num
 - Generic-reference OCIMF tanker-current coefficients are **not vessel-specific to SIROCCO**. The report basis is an off-class screening tier.
 - Both rudder models are **screening-level**; neither is a validated rudder hydrodynamic model.
 - Component sums (X_total = Xc + Xr, etc.) are reported for engineering review; they are **not a validated whole-vessel force balance**.
-- 3.08 kn is the issue #2760 default current speed; practical plots/tables are bounded to 0..4 kn.
+- 3.08 kn is the issue #2760 default current speed; sensitivity plots span 0..5 kn (4 kn = upper engineering bound; 5 kn = sensitivity extreme).
 - When rudder_angle_deg equals heading_offset_deg, alpha is zero and this rudder-induced component is zero; that is not total hull current load.
 - This report excludes: hull current force at oblique headings beyond the generic basis range, mooring-line stiffness, tug loads, bank effects, current-profile variation, propeller race, IMO/class compliance conclusions.
 
@@ -169,5 +169,5 @@ Original limitations from the project input pack:
 
 [P4] Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml).
 
-- Sweep coverage: 990 rows (990 engineering + 0 chart-default).
+- Sweep coverage: 1155 rows (1155 engineering + 0 chart-default).
 - GitHub issue: [workspace-hub #2760](https://github.com/vamseeachanta/workspace-hub/issues/2760).
