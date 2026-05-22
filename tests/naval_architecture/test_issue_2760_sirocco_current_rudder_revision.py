@@ -373,6 +373,98 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         )
 
 
+def test_issue_2760_pass_c_simple_plate_rudder_helper_exists_and_is_sane():
+    """Pass C contract: a thin-plate rudder normal-force helper exists,
+    cites Faltinsen 1990 §6.5 in its docstring, and produces sane values:
+    - F=0 at α=0
+    - F monotonically increases with α through small-angle range
+    - F is capped/bounded above a stall angle (no runaway at large α)
+    - F scales as V²
+    """
+    import math
+    helper = getattr(report_module, "_rudder_simple_plate_force_N", None)
+    assert helper is not None, (
+        "Pass C must add _rudder_simple_plate_force_N(area_m2, velocity_m_s, "
+        "alpha_deg, rho_kg_m3) per approved plan §128"
+    )
+    docstring = (helper.__doc__ or "").lower()
+    assert "faltinsen" in docstring, (
+        "Pass C helper must cite Faltinsen, Sea Loads on Ships and Offshore "
+        "Structures, 1990, §6.5 (or equivalent thin-plate marine reference)"
+    )
+
+    rho = 1025.0
+    area = 44.94
+    v = 1.5845  # 3.08 kn in m/s
+
+    # α=0 → zero force
+    assert abs(helper(area, v, 0.0, rho)) < 1e-9
+
+    # Small-angle monotonic increase
+    f_5 = helper(area, v, 5.0, rho)
+    f_15 = helper(area, v, 15.0, rho)
+    assert f_5 > 0
+    assert f_15 > f_5
+
+    # V² scaling: doubling V quadruples F at the same α
+    f_v = helper(area, v, 10.0, rho)
+    f_2v = helper(area, 2 * v, 10.0, rho)
+    assert f_2v == pytest.approx(4.0 * f_v, rel=1e-6)
+
+    # Stall cap: at very large α (e.g. 45°), F must not exceed the maximum
+    # the formula reaches in the un-stalled regime — i.e., bounded behaviour
+    f_28 = helper(area, v, 28.0, rho)
+    f_45 = helper(area, v, 45.0, rho)
+    f_60 = helper(area, v, 60.0, rho)
+    assert f_45 <= f_28 + 1e-9, (
+        "Simple-plate model must apply stall cap; got "
+        f"f(28°)={f_28:.1f} N, f(45°)={f_45:.1f} N"
+    )
+    assert f_60 <= f_28 + 1e-9
+
+
+def test_issue_2760_pass_c_simple_plate_fields_in_row_dict():
+    """Pass C contract: each row in the sweep carries simple-plate model
+    fields alongside the existing Whicker-Fehlner fields, so the HTML
+    side-by-side chart can plot both without recomputation.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    row = result["rows"][0]
+    required_fields = [
+        "simple_plate_normal_force_N",
+        "simple_plate_force_x_ship_N",
+        "simple_plate_force_y_ship_port_N",
+        "simple_plate_moment_n_yaw_bow_port_Nm",
+    ]
+    for field in required_fields:
+        assert field in row, f"Pass C row dict missing required field: {field}"
+    # At the default heading/rudder/speed, simple-plate Y should be same sign
+    # as Whicker-Fehlner Y (both lift the ship toward port for δ=+28°/ψ=+5°)
+    default_row = next(
+        r for r in result["rows"]
+        if r["current_speed_kn"] == pytest.approx(3.08)
+        and r["heading_offset_deg"] == pytest.approx(5.0)
+        and r["rudder_angle_deg"] == pytest.approx(28.0)
+    )
+    assert default_row["simple_plate_force_y_ship_port_N"] > 0
+    assert default_row["force_y_ship_port_N"] > 0
+
+
+def test_issue_2760_pass_c_html_has_side_by_side_rudder_comparison(tmp_path):
+    """Pass C contract: HTML §5 contains a Model A vs Model B side-by-side
+    comparison table at the default case AND a chart comparing both
+    rudder models across the rudder sweep.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    # Side-by-side default-case comparison table id
+    assert 'id="rudder-model-comparison-table"' in html or "model a vs model b" in html.lower()
+    # Side-by-side chart id
+    assert 'id="rudder-model-comparison-chart"' in html
+
+
 def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)

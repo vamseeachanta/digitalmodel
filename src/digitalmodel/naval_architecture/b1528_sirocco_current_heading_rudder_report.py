@@ -493,6 +493,43 @@ def _load_ocimf_workbook_basis_for_path(
     }
 
 
+SIMPLE_PLATE_STALL_ANGLE_DEG = 28.0
+"""Stall cap for the thin-plate rudder model.
+
+Selected to match the issue #2760 sweep upper bound. Above |α| > stall, the
+formula returns the value at ±stall (no growth) to prevent the linear
+sin(α)·2π formula from over-predicting in regions where it has no validity.
+"""
+
+
+def _rudder_simple_plate_force_N(
+    area_m2: float, velocity_m_s: float, alpha_deg: float, rho_kg_m3: float
+) -> float:
+    """Thin-plate rudder normal-force screening estimate per Faltinsen 1990 §6.5.
+
+    Reference: Faltinsen, "Sea Loads on Ships and Offshore Structures",
+    Cambridge University Press, 1990, §6.5 (thin-plate small-angle
+    approximation `Cn(α) ≈ 2π·sin(α)`, with empirical stall cap above the
+    angle where the formula loses validity).
+
+    F_normal = 0.5 · ρ · A_R · V² · Cn(α)
+
+    This is a screening-level model independent of the Whicker-Fehlner
+    `β·A_R·V²·Cr·sin(α)` basis used as the report default. It is intended
+    for side-by-side sanity-checking only; neither model is a validated
+    rudder hydrodynamic model. Differences at large angles reflect each
+    model's simplifying assumptions.
+    """
+
+    effective_alpha_deg = max(
+        min(alpha_deg, SIMPLE_PLATE_STALL_ANGLE_DEG),
+        -SIMPLE_PLATE_STALL_ANGLE_DEG,
+    )
+    cn = 2.0 * math.pi * math.sin(math.radians(effective_alpha_deg))
+    q = 0.5 * rho_kg_m3 * velocity_m_s ** 2
+    return q * area_m2 * cn
+
+
 def _interp_curve(curve: list[tuple[float, float]], x: float) -> float:
     """Linearly interpolate a numeric OCIMF curve."""
 
@@ -579,6 +616,23 @@ def _row(
     current_x_N = dynamic_pressure_Pa * frontal_area_current_m2 * ocimf_cx
     current_y_N = dynamic_pressure_Pa * lateral_area_current_m2 * ocimf_cy
     current_n_Nm = dynamic_pressure_Pa * lateral_area_current_m2 * cfg.lbp_m * ocimf_cm
+    # Model B (simple thin-plate, Faltinsen 1990 §6.5) — independent reference
+    # for side-by-side comparison only; does NOT contribute to total_* sums
+    # (Whicker-Fehlner Model A remains the default rudder force basis per plan §128).
+    simple_plate_normal_force_N = _rudder_simple_plate_force_N(
+        cfg.rudder_area_m2, speed_m_s, alpha_deg, cfg.rho_kg_m3
+    )
+    simple_plate_x_local_N = simple_plate_normal_force_N * math.sin(alpha_rad)
+    simple_plate_y_local_N = simple_plate_normal_force_N * math.cos(alpha_rad)
+    simple_plate_x_ship_N = (
+        simple_plate_x_local_N * math.cos(psi_rad)
+        - simple_plate_y_local_N * math.sin(psi_rad)
+    )
+    simple_plate_y_ship_N = (
+        simple_plate_x_local_N * math.sin(psi_rad)
+        + simple_plate_y_local_N * math.cos(psi_rad)
+    )
+    simple_plate_n_ship_Nm = simple_plate_y_ship_N * cfg.yaw_lever_m
     total_x_N = current_x_N + x_ship_N
     total_y_N = current_y_N + y_ship_N
     total_n_Nm = current_n_Nm + n_ship_Nm
@@ -620,6 +674,12 @@ def _row(
         "moment_m_pitch_Nm": 0.0,
         "moment_n_yaw_bow_port_Nm": n_ship_Nm,
         "moment_n_yaw_bow_port_kN_m": n_ship_Nm / 1000.0,
+        # Model B (simple thin-plate, Faltinsen 1990 §6.5) — comparison only
+        "simple_plate_normal_force_N": simple_plate_normal_force_N,
+        "simple_plate_force_x_ship_N": simple_plate_x_ship_N,
+        "simple_plate_force_y_ship_port_N": simple_plate_y_ship_N,
+        "simple_plate_moment_n_yaw_bow_port_Nm": simple_plate_n_ship_Nm,
+        "simple_plate_moment_n_yaw_bow_port_kN_m": simple_plate_n_ship_Nm / 1000.0,
         "total_force_x_ship_N": total_x_N,
         "total_force_y_ship_port_N": total_y_N,
         "total_moment_n_yaw_bow_port_Nm": total_n_Nm,
@@ -1395,6 +1455,20 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </tbody>
 </table>
 <p id=\"breakdown-case-label\" class=\"note-panel\">—</p>
+
+<h3>5.6. Rudder model comparison — Model A (Whicker-Fehlner) vs Model B (thin-plate)</h3>
+<p>Side-by-side comparison of the two screening rudder models at the default case (V={default_speed:.2f} kn, ψ=+{default_heading:.0f}°, δ=+{default_rudder:.0f}°, α=+{default_alpha:.0f}°). The chart below sweeps rudder angle 0..+28° at fixed ψ=+{default_heading:.0f}° and the selected current speed, comparing Model A's <code>force_y_ship_port_N</code> and Model B's <code>simple_plate_force_y_ship_port_N</code>.</p>
+<table id=\"rudder-model-comparison-table\" class=\"data-table\" aria-label=\"Side-by-side rudder model A vs model B at default case\">
+<thead><tr><th>Quantity</th><th>Model A (Whicker-Fehlner)</th><th>Model B (thin-plate, Faltinsen 1990 §6.5)</th></tr></thead>
+<tbody>
+<tr><td>Normal force F (N)</td><td id=\"rudder-comp-a-normal\">—</td><td id=\"rudder-comp-b-normal\">—</td></tr>
+<tr><td>Longitudinal X_rudder (kN)</td><td id=\"rudder-comp-a-x\">—</td><td id=\"rudder-comp-b-x\">—</td></tr>
+<tr><td>Transverse Y_rudder (kN, port)</td><td id=\"rudder-comp-a-y\">—</td><td id=\"rudder-comp-b-y\">—</td></tr>
+<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id=\"rudder-comp-a-n\">—</td><td id=\"rudder-comp-b-n\">—</td></tr>
+</tbody>
+</table>
+<p class=\"note-panel\"><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect each model's simplifying assumptions and the stall cap in Model B.</p>
+<div id=\"rudder-model-comparison-chart\" class=\"chart\" aria-label=\"Rudder model A vs model B Y force vs rudder angle\"></div>
 </section>
 
 <section id=\"limitations-section\" class=\"print-section\">
@@ -1542,7 +1616,49 @@ function updateSelectedCaseBreakdown() {{
   updateHeadingRudderSchematic(selected);
   updateText('breakdown-case-label', `Selected breakdown case: current ${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring context = ${{(-selected.total_moment_n_yaw_bow_port_kN_m).toFixed(3)}} kN-m.`);
 }}
-function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }}
+function updateRudderModelComparison() {{
+  // Default-case static table values (rendered into the table cells)
+  const speed = selectedSpeed();
+  const defaultHeading = 5.0;
+  const defaultRudder = 28.0;
+  const defaultCaseRow = ROWS.find(row =>
+    same(row.current_speed_kn, speed)
+    && same(row.heading_offset_deg, defaultHeading)
+    && same(row.rudder_angle_deg, defaultRudder)
+  );
+  if (defaultCaseRow) {{
+    // Model A (Whicker-Fehlner) values
+    updateText('rudder-comp-a-normal', defaultCaseRow.normal_force_N.toFixed(1));
+    updateText('rudder-comp-a-x', fmtKn(defaultCaseRow.force_x_ship_N));
+    updateText('rudder-comp-a-y', fmtKn(defaultCaseRow.force_y_ship_port_N));
+    updateText('rudder-comp-a-n', fmtMoment(defaultCaseRow.moment_n_yaw_bow_port_kN_m));
+    // Model B (thin-plate) values
+    updateText('rudder-comp-b-normal', defaultCaseRow.simple_plate_normal_force_N.toFixed(1));
+    updateText('rudder-comp-b-x', fmtKn(defaultCaseRow.simple_plate_force_x_ship_N));
+    updateText('rudder-comp-b-y', fmtKn(defaultCaseRow.simple_plate_force_y_ship_port_N));
+    updateText('rudder-comp-b-n', fmtMoment(defaultCaseRow.simple_plate_moment_n_yaw_bow_port_kN_m));
+  }}
+  // Chart: rudder sweep at fixed heading=+5° and selected speed
+  const sweepRows = ROWS
+    .filter(row => same(row.current_speed_kn, speed) && same(row.heading_offset_deg, defaultHeading))
+    .sort((a, b) => a.rudder_angle_deg - b.rudder_angle_deg);
+  const x = sweepRows.map(row => row.rudder_angle_deg);
+  const traces = [
+    {{x, y: sweepRows.map(row => row.force_y_ship_port_N / 1000), name: 'Model A: Whicker-Fehlner Y (kN, port)', mode: 'lines+markers', line: {{color: '#155e95'}}, hovertemplate: 'δ=%{{x}}°<br>Model A Y=%{{y:.2f}} kN<extra></extra>'}},
+    {{x, y: sweepRows.map(row => row.simple_plate_force_y_ship_port_N / 1000), name: 'Model B: thin-plate (Faltinsen §6.5) Y (kN, port)', mode: 'lines+markers', line: {{color: '#c2410c', dash: 'dash'}}, hovertemplate: 'δ=%{{x}}°<br>Model B Y=%{{y:.2f}} kN<extra></extra>'}}
+  ];
+  Plotly.newPlot('rudder-model-comparison-chart', traces, {{
+    title: `Rudder model comparison — Y force vs rudder angle · ψ=+${{defaultHeading}}° · V=${{speed}} kn`,
+    xaxis: {{title: 'Rudder angle δ (deg)', gridcolor: '#e5eaf1'}},
+    yaxis: {{title: 'Transverse Y_rudder (kN, port)', gridcolor: '#e5eaf1', zeroline: true}},
+    height: STANDARD_CHART_HEIGHT,
+    margin: {{l: 82, r: 30, t: 66, b: 64}},
+    legend: {{orientation: 'h', y: -0.22}},
+    hovermode: 'x unified',
+    template: 'plotly_white'
+  }}, CHART_CONFIG);
+}}
+function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); updateRudderModelComparison(); }}
 document.getElementById('current-speed-select').addEventListener('change', updateCharts);
 document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }});
 updateCharts();
