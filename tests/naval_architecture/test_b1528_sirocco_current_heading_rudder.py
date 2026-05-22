@@ -35,7 +35,7 @@ def test_yaml_loads_issue_2760_sweep_and_default_contract():
     assert cfg.current_speeds_kn == (0.0, 1.0, 2.0, 3.0, 3.08, 4.0, 5.0)
     assert cfg.chart_default_current_speed_kn == pytest.approx(3.08)
     assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-5, 6))
-    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(0, 29, 2))
+    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(-28, 29, 2))
     assert max(cfg.rudder_angles_deg) == pytest.approx(28.0)
     assert "issue #2760" in cfg.raw["case"]["description"].lower()
     assert cfg.raw["outputs"]["directory"].endswith("current_rudder_force")
@@ -59,12 +59,12 @@ def test_full_sweep_row_counts_and_default_plane_flags():
     result = run_b1528_current_heading_rudder_report()
     rows = result["rows"]
 
-    assert len(rows) == 1155  # Pass H: 7 speeds × 11 headings × 15 rudders (was 990 = 6×11×15)
-    assert sum(not row["is_chart_default_extra_speed"] for row in rows) == 1155
+    assert len(rows) == 2233  # Pass H: 7 speeds × 11 headings × 15 rudders (was 990 = 6×11×15)
+    assert sum(not row["is_chart_default_extra_speed"] for row in rows) == 2233
     assert sum(row["is_chart_default_extra_speed"] for row in rows) == 0
     assert sorted({row["current_speed_kn"] for row in rows}) == [0.0, 1.0, 2.0, 3.0, 3.08, 4.0, 5.0]
-    assert result["summary"]["row_count"] == 1155
-    assert result["summary"]["requested_engineering_row_count"] == 1155
+    assert result["summary"]["row_count"] == 2233
+    assert result["summary"]["requested_engineering_row_count"] == 2233
     assert result["summary"]["extra_default_row_count"] == 0
     assert result["summary"]["max_abs_ship_sway_force_N"] >= 0.0
     assert abs(result["summary"]["max_abs_ship_sway_signed_force_N"]) == pytest.approx(
@@ -245,7 +245,7 @@ def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenanc
         assert f'<option value="{speed}"' in html
     assert 'id="rudder-angle-select"' in html
     assert '<option value="28.0" selected>28.0 deg</option>' in html
-    for angle in range(0, 29, 2):
+    for angle in range(-28, 29, 2):
         assert f'<option value="{float(angle):.1f}"' in html
     assert '<title>B1528 SIROCCO Current/Rudder Force Review — Issue #2760</title>' in html
     assert '<h1>B1528 SIROCCO current/rudder force review — Issue #2760</h1>' in html
@@ -286,7 +286,7 @@ def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenanc
 
     assert parsed["metadata"]["chart_default_current_speed_kn"] == pytest.approx(3.08)
     assert parsed["metadata"]["chart_default_extra_speed_included"] is False
-    assert parsed["summary"]["row_count"] == 1155
+    assert parsed["summary"]["row_count"] == 2233
     assert "local_to_ship_transform" in provenance
     assert "placeholder" not in provenance["ocimf_first_cut_current_loads"]["coefficient_caveat"].lower()
     assert "default_speed_policy" in provenance
@@ -299,5 +299,5 @@ def test_generated_csv_has_expected_rows(tmp_path):
     csv_text = Path(manifest["csv"]).read_text(encoding="utf-8")
 
     assert csv_text.splitlines()[0].startswith("case_id,current_speed_kn")
-    assert len(csv_text.splitlines()) == 1156  # 1155 data rows + 1 header (Pass H 0..5 kn extension)
+    assert len(csv_text.splitlines()) == 2234  # 2233 data rows + 1 header (Pass H 0..5 kn extension)
     assert ",3.08,False,5.0,28.0," in csv_text

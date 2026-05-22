@@ -169,5 +169,5 @@ Original limitations from the project input pack:
 
 [P4] Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml).
 
-- Sweep coverage: 1155 rows (1155 engineering + 0 chart-default).
+- Sweep coverage: 2233 rows (2233 engineering + 0 chart-default).
 - GitHub issue: [workspace-hub #2760](https://github.com/vamseeachanta/workspace-hub/issues/2760).

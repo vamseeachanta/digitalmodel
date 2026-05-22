@@ -38,7 +38,7 @@ def test_issue_2760_approved_domains_and_defaults():
     assert max(cfg.current_speeds_kn) == pytest.approx(5.0)  # Pass H sensitivity extension
     assert 3.08 in cfg.current_speeds_kn
     assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-5, 6))
-    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(0, 29, 2))
+    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(-28, 29, 2))
     assert cfg.prop_rotation_factor == pytest.approx(1.0)
     assert cfg.report_issue.endswith("/2760")
     assert cfg.plan_path.endswith("2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md")
@@ -417,11 +417,11 @@ def test_issue_2760_pass_h_docx_has_sensitivity_and_appendix(tmp_path):
     document = Document(str(Path(manifest["docx_report"])))
     text = "\n".join(p.text for p in document.paragraphs)
 
-    assert "5.2. Rudder force over heading" in text
-    assert "5.3. Rudder yaw moment over heading" in text
-    assert "5.4. Selected-speed envelope summary" in text
-    assert "5.5. Selected-case force breakdown" in text
-    assert "5.6. Current-speed sensitivity" in text
+    assert "5.3. Rudder force over heading" in text
+    assert "5.4. Rudder yaw moment over heading" in text
+    assert "5.5. Selected-speed envelope summary" in text
+    assert "5.6. Selected-case force breakdown" in text
+    assert "5.7. Current-speed sensitivity" in text
     assert "Appendix A" in text
     assert "Whicker-Fehlner" in text
     assert "thin-plate" in text.lower() or "thin plate" in text.lower()
@@ -450,7 +450,7 @@ def test_issue_2760_pass_h_revisions(tmp_path):
     # H4: key-variables lead-in in §5.4 and §5.5
     assert html.count("Key variables for this section:") >= 2
     # H5: new §5.6 sensitivity charts + sweep extended to 5 kn
-    assert "5.6. Current-speed sensitivity (0..5 knots)" in html
+    assert "5.7. Current-speed sensitivity (0..5 knots)" in html
     assert 'id="sensitivity-current-load-chart"' in html
     assert 'id="sensitivity-rudder-load-chart"' in html
     assert max(result["metadata"]["current_speeds_kn"]) == pytest.approx(5.0)
@@ -459,6 +459,11 @@ def test_issue_2760_pass_h_revisions(tmp_path):
     assert 'id="appendix-a-rudder-model-comparison"' in html
     # Old §5.6 heading must no longer appear
     assert "5.6. Rudder model comparison" not in html
+    # Pass H-2 (rudder force vs angle chart): new §5.2 + chart id + sweep -28..+28
+    assert "5.2. Rudder force with rudder angle" in html
+    assert 'id="rudder-force-vs-angle-chart"' in html
+    assert min(result["metadata"]["rudder_angles_deg"]) == pytest.approx(-28.0)
+    assert max(result["metadata"]["rudder_angles_deg"]) == pytest.approx(28.0)
 
 
 def test_issue_2760_pass_g_schematics_have_ocimf_caption_block(tmp_path):

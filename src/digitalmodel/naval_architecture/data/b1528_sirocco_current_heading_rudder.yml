@@ -27,7 +27,7 @@ scenario:
   chart_default_current_speed_kn: 3.08
   default_speed_policy: "3.08 kn is the issue #2760 default current speed; sensitivity plots span 0..5 kn (4 kn = upper engineering bound; 5 kn = sensitivity extreme)."
   heading_offsets_deg: [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
-  rudder_angles_deg: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
+  rudder_angles_deg: [-28, -26, -24, -22, -20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
 environment:
   rho_kg_m3: 1025.0
   water_depth_m: 100.0

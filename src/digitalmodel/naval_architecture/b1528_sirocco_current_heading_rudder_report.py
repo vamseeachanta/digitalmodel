@@ -240,9 +240,9 @@ def validate_b1528_current_heading_rudder_config(
     expected_heading_angles = tuple(float(value) for value in range(-5, 6))
     if cfg.heading_offsets_deg != expected_heading_angles:
         raise ValueError("heading_offsets_deg must be -5..+5 deg in 1 deg steps")
-    expected_rudder_angles = tuple(float(value) for value in range(0, 29, 2))
+    expected_rudder_angles = tuple(float(value) for value in range(-28, 29, 2))
     if cfg.rudder_angles_deg != expected_rudder_angles:
-        raise ValueError("rudder_angles_deg must be 0..28 deg port in 2 deg steps")
+        raise ValueError("rudder_angles_deg must be -28..+28 deg in 2 deg steps (Pass H+ symmetric sweep)")
     if cfg.chart_default_current_speed_kn != 3.08:
         raise ValueError("chart default current speed must be exact 3.08 kn")
     if cfg.prop_rotation_factor != NON_ROTATING_PROPELLER_CR:
@@ -647,8 +647,20 @@ def _write_docx_report(
     def _kNm(value_kNm: float) -> str:
         return f"{value_kNm:.0f}" if abs(value_kNm) >= 1 else f"{value_kNm:.2f}"
 
-    # §5.2 Rudder force over heading
-    document.add_heading("5.2. Rudder force over heading", level=2)
+    # §5.2 Rudder force with rudder angle (NEW per user request — δ ∈ [-28°, +28°])
+    document.add_heading("5.2. Rudder force with rudder angle", level=2)
+    document.add_paragraph(
+        f"Key variables: current speed V = {default_speed:.2f} kn · heading ψ = +{default_heading:.0f}° · "
+        f"rudder sweep δ ∈ [-{default_rudder:.0f}°, +{default_rudder:.0f}°] at 2° steps. "
+        "The HTML report's §5.2 Plotly chart shows rudder-induced longitudinal X_rudder and "
+        f"transverse Y_rudder force vs rudder angle, with the default case (δ = +{default_rudder:.0f}°) "
+        "marked. Both X_rudder and Y_rudder are signed per the Whicker-Fehlner sin(α) projection: "
+        "at δ = +ψ (here +5°), α = 0 and rudder force is zero; sign reverses for δ < ψ. CSV exposes "
+        "force_x_ship_N and force_y_ship_port_N columns for every rudder angle."
+    )
+
+    # §5.3 Rudder force over heading
+    document.add_heading("5.3. Rudder force over heading", level=2)
     document.add_paragraph(
         f"Rudder-induced longitudinal X and transverse Y force across the heading sweep "
         f"ψ ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps, at the "
@@ -658,7 +670,7 @@ def _write_docx_report(
     )
 
     # §5.3 Rudder yaw moment over heading
-    document.add_heading("5.3. Rudder yaw moment over heading", level=2)
+    document.add_heading("5.4. Rudder yaw moment over heading", level=2)
     document.add_paragraph(
         f"Signed rudder-induced yaw moment N (kN·m, +bow-to-port) across the heading sweep "
         f"at the selected current speed. Interactive chart in HTML §5.3; CSV exposes "
@@ -666,7 +678,7 @@ def _write_docx_report(
     )
 
     # §5.4 Selected-speed envelope summary
-    document.add_heading("5.4. Selected-speed envelope summary", level=2)
+    document.add_heading("5.5. Selected-speed envelope summary", level=2)
     document.add_paragraph(
         f"Key variables for this section: current speed V = {default_speed:.2f} kn (default) · "
         f"heading sweep ψ ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps · "
@@ -695,7 +707,7 @@ def _write_docx_report(
             cells[0].text = label; cells[1].text = row; cells[2].text = val_str
 
     # §5.5 Selected-case force breakdown
-    document.add_heading("5.5. Selected-case force breakdown", level=2)
+    document.add_heading("5.6. Selected-case force breakdown", level=2)
     document.add_paragraph(
         f"Key variables: V = {default_speed:.2f} kn · ψ = +{default_heading:.0f}° · "
         f"δ = +{default_rudder:.0f}° · α = +{default_alpha:.0f}°. Components below are "
@@ -725,7 +737,7 @@ def _write_docx_report(
         cells[2].text = y_val; cells[3].text = n_val
 
     # §5.6 Current-speed sensitivity (0..5 knots)
-    document.add_heading("5.6. Current-speed sensitivity (0..5 knots)", level=2)
+    document.add_heading("5.7. Current-speed sensitivity (0..5 knots)", level=2)
     document.add_paragraph(
         f"Key variables: heading ψ = +{default_heading:.0f}° (fixed) · rudder "
         f"δ = +{default_rudder:.0f}° (fixed) · current speed V swept 0..5 kn. The HTML "
@@ -1997,15 +2009,19 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 {sample_rows_html}
 </ol>
 
-<h3>5.2. Rudder force over heading</h3>
+<h3>5.2. Rudder force with rudder angle</h3>
+<p><strong>Key variables for this section:</strong> current speed <code>V</code> = <strong>{default_speed:.2f} kn</strong> (default) · heading <code>ψ</code> = <strong>+{default_heading:.0f}°</strong> (fixed) · rudder sweep <code>δ</code> ∈ [-{default_rudder:.0f}°, +{default_rudder:.0f}°] at 2° steps. The chart below shows the rudder-induced <strong>longitudinal X_rudder</strong> and <strong>transverse Y_rudder</strong> force vs rudder angle (both decomposed at CoG, port-positive). Selected case (δ = +{default_rudder:.0f}°) marked with a star.</p>
+<div id=\"rudder-force-vs-angle-chart\" class=\"chart\" aria-label=\"Rudder force longitudinal and transverse vs rudder angle from -28 to +28 deg\"></div>
+
+<h3>5.3. Rudder force over heading</h3>
 <p>Shows rudder-induced <strong>longitudinal X</strong> and <strong>transverse Y</strong> in kN for the selected current speed and rudder angle. Default rudder angle: <strong>{default_rudder:.0f}° port</strong>.</p>
 <div id=\"force-components-chart\" class=\"chart\" aria-label=\"Rudder-induced ship-fixed force component chart\"></div>
 
-<h3>5.3. Rudder yaw moment over heading</h3>
+<h3>5.4. Rudder yaw moment over heading</h3>
 <p>Shows signed rudder-induced <strong>yaw moment N</strong> (kN·m, +bow-to-port) over heading offset and rudder angle for the selected current speed.</p>
 <div id=\"yaw-moment-chart\" class=\"chart\" aria-label=\"Rudder-induced yaw moment chart\"></div>
 
-<h3>5.4. Selected-speed envelope summary</h3>
+<h3>5.5. Selected-speed envelope summary</h3>
 <p><strong>Key variables for this section:</strong> current speed <code>V</code> = <strong>{default_speed:.2f} kn</strong> (default) · heading sweep <code>ψ</code> ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps · rudder sweep <code>δ</code> ∈ [0°, +{default_rudder:.0f}°] at 2° steps. Envelope is the absolute-max across the full heading × rudder grid at the selected speed.</p>
 <p>Envelope values update with the current-speed selector and use the full heading × rudder grid at that speed. The selected default is <strong>{default_speed:.2f} kn</strong>; 5 kn is the upper bound of the sensitivity range.</p>
 <table id=\"selected-speed-envelope-summary\" class=\"data-table\" aria-label=\"Selected speed envelope summary\">
@@ -2019,7 +2035,7 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 </table>
 <p class=\"svg-muted\" style=\"margin-top:4px; font-size:11px\">Initial values are at the default current speed ({default_speed:.2f} kn); the interactive HTML updates the row above when the speed selector changes.</p>
 
-<h3>5.5. Selected-case force breakdown</h3>
+<h3>5.6. Selected-case force breakdown</h3>
 <p><strong>Key variables for this section:</strong> current speed <code>V</code> = <strong>{default_speed:.2f} kn</strong> (default; user-selectable via dropdown above) · heading <code>ψ</code> = <strong>+{default_heading:.0f}°</strong> · rudder <code>δ</code> = <strong>+{default_rudder:.0f}°</strong> · effective rudder inflow <code>α</code> = δ − ψ = <strong>+{default_alpha:.0f}°</strong>. Static rows below are at the default case; JS updates them when the user changes the speed or rudder selector.</p>
 <p>Updates with current speed and rudder angle. Values shown at the heading with maximum absolute total yaw moment for the selected trace, so individual X/Y/N component paths can be reviewed together.</p>
 <table class=\"data-table\" aria-label=\"Selected-case OCIMF current rudder component force breakdown\">
@@ -2032,7 +2048,7 @@ Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3]
 </table>
 <p id=\"breakdown-case-label\" class=\"note-panel\">{breakdown_default_label}</p>
 
-<h3>5.6. Current-speed sensitivity (0..5 knots)</h3>
+<h3>5.7. Current-speed sensitivity (0..5 knots)</h3>
 <p><strong>Key variables for this section:</strong> heading <code>ψ</code> = <strong>+{default_heading:.0f}°</strong> (fixed) · rudder <code>δ</code> = <strong>+{default_rudder:.0f}°</strong> (fixed) · current speed <code>V</code> sweep <strong>0..5 kn</strong>. The plots below show how the current load and rudder load scale with current speed at the default heading/rudder; the selected default case (V = {default_speed:.2f} kn) is marked on each plot.</p>
 <div id=\"sensitivity-current-load-chart\" class=\"chart\" aria-label=\"Current load sensitivity to current speed (longitudinal Xc and transverse Yc vs V)\"></div>
 <div id=\"sensitivity-rudder-load-chart\" class=\"chart\" aria-label=\"Rudder load sensitivity to current speed (longitudinal X_rudder and transverse Y_rudder vs V)\"></div>
@@ -2225,6 +2241,41 @@ function updateSelectedCaseBreakdown() {{
   updateHeadingRudderSchematic(selected);
   updateText('breakdown-case-label', `Selected breakdown case: V=${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring = ${{fmtMoment(-selected.total_moment_n_yaw_bow_port_kN_m)}} kN·m.`);
 }}
+function updateRudderForceVsAngleChart() {{
+  // Pass H-2: rudder X_rudder and Y_rudder vs rudder angle δ from -28° to +28°
+  // at fixed default heading ψ=+5° and selected current speed.
+  const speed = selectedSpeed();
+  const defaultHeading = 5.0;
+  const defaultRudder = 28.0;
+  const rows = ROWS
+    .filter(row => same(row.current_speed_kn, speed) && same(row.heading_offset_deg, defaultHeading))
+    .sort((a, b) => a.rudder_angle_deg - b.rudder_angle_deg);
+  const x = rows.map(row => row.rudder_angle_deg);
+  const xr = rows.map(row => row.force_x_ship_N / 1000);
+  const yr = rows.map(row => row.force_y_ship_port_N / 1000);
+  const selectedRow = rows.find(row => same(row.rudder_angle_deg, defaultRudder));
+  const traces = [
+    {{x, y: xr, name: 'X_rudder longitudinal (kN)', mode: 'lines+markers', line: {{color: '#155e95', width: 2.5}}, hovertemplate: 'δ=%{{x}}°<br>X_rudder=%{{y:.0f}} kN<extra></extra>'}},
+    {{x, y: yr, name: 'Y_rudder transverse (kN, port)', mode: 'lines+markers', line: {{color: '#c2410c', width: 2.5}}, hovertemplate: 'δ=%{{x}}°<br>Y_rudder=%{{y:.0f}} kN<extra></extra>'}}
+  ];
+  if (selectedRow) {{
+    traces.push({{
+      x: [defaultRudder, defaultRudder],
+      y: [selectedRow.force_x_ship_N / 1000, selectedRow.force_y_ship_port_N / 1000],
+      name: `Selected δ = +${{defaultRudder}}°`,
+      mode: 'markers',
+      marker: {{color: '#7c3aed', size: 14, symbol: 'star'}},
+      hovertemplate: 'Selected δ=%{{x}}°<br>%{{y:.0f}} kN<extra></extra>'
+    }});
+  }}
+  Plotly.newPlot('rudder-force-vs-angle-chart', traces, {{
+    title: `Rudder force vs rudder angle (Whicker-Fehlner [3]) · ψ=+${{defaultHeading}}°, V=${{speed}} kn`,
+    xaxis: {{title: 'Rudder angle δ (deg)', dtick: 4, gridcolor: '#e5eaf1', zeroline: true}},
+    yaxis: {{title: 'Rudder force component (kN)', gridcolor: '#e5eaf1', zeroline: true}},
+    height: STANDARD_CHART_HEIGHT, margin: {{l: 82, r: 30, t: 66, b: 64}},
+    legend: {{orientation: 'h', y: -0.22}}, template: 'plotly_white', hovermode: 'x unified'
+  }}, CHART_CONFIG);
+}}
 function updateCurrentTransverseForceChart() {{
   // H2: Transverse current force Yc vs heading sweep at selected speed and default rudder.
   const speed = selectedSpeed();
@@ -2387,7 +2438,7 @@ function updateRudderModelComparison() {{
     template: 'plotly_white'
   }}, CHART_CONFIG);
 }}
-function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateCurrentTransverseForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateYawSideBySideChart(); updateSelectedCaseBreakdown(); updateSensitivityCurrentLoadChart(); updateSensitivityRudderLoadChart(); updateRudderModelComparison(); }}
+function updateCharts() {{ updateSelectedSpeedEnvelope(); updateRudderForceVsAngleChart(); updateForceChart(); updateYawChart(); updateCurrentTransverseForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateYawSideBySideChart(); updateSelectedCaseBreakdown(); updateSensitivityCurrentLoadChart(); updateSensitivityRudderLoadChart(); updateRudderModelComparison(); }}
 document.getElementById('current-speed-select').addEventListener('change', updateCharts);
 document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }});
 updateCharts();
