@@ -1518,23 +1518,23 @@ function updateSelectedSpeedEnvelope() {{
   updateText('selected-speed-case', extra);
   updateText('selected-speed-value', `${{speed}} kn · ${{speedRows.length}} rows`);
   updateText('selected-speed-max-y-case', caseLabel(maxY));
-  updateText('selected-speed-max-y-value', `${{(maxY.force_y_ship_port_N/1000).toFixed(3)}} kN`);
+  updateText('selected-speed-max-y-value', `${{fmtKn(maxY.force_y_ship_port_N)}} kN`);
   updateText('selected-speed-max-n-case', caseLabel(maxN));
-  updateText('selected-speed-max-n-value', `${{maxN.moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m`);
+  updateText('selected-speed-max-n-value', `${{fmtMoment(maxN.moment_n_yaw_bow_port_kN_m)}} kN-m`);
   updateText('selected-speed-max-h-case', caseLabel(maxH));
-  updateText('selected-speed-max-h-value', `${{(maxH.force_x_ship_N/1000).toFixed(3)}} kN`);
+  updateText('selected-speed-max-h-value', `${{fmtKn(maxH.force_x_ship_N)}} kN`);
 }}
 function updateForceChart() {{
   const speed = selectedSpeed();
   const rudder = selectedRudder();
   const rows = ROWS.filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, rudder)).sort(byHeading);
   const x = rows.map(row => row.heading_offset_deg);
-  const hover = rows.map(row => `alpha=${{row.effective_rudder_inflow_angle_deg}} deg<br>X_local=${{(row.force_x_local_downstream_N/1000).toFixed(3)}} kN<br>Y_local=${{(row.force_y_local_port_of_current_N/1000).toFixed(3)}} kN<br>N_ship=${{row.moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m`);
+  const hover = rows.map(row => `α=${{row.effective_rudder_inflow_angle_deg}}°<br>X_local=${{fmtKn(row.force_x_local_downstream_N)}} kN<br>Y_local=${{fmtKn(row.force_y_local_port_of_current_N)}} kN<br>N=${{fmtMoment(row.moment_n_yaw_bow_port_kN_m)}} kN·m`);
   const traces = [
-    {{x, y: rows.map(row => row.force_x_ship_N/1000), name:'X_ship (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>X_ship=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
-    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Y_ship port (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Y_ship=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
+    {{x, y: rows.map(row => row.force_x_ship_N/1000), name:'Longitudinal X (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Longitudinal X=%{{y:.0f}} kN<br>%{{customdata}}<extra></extra>'}},
+    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Transverse Y (kN, port)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Transverse Y=%{{y:.0f}} kN<br>%{{customdata}}<extra></extra>'}}
   ];
-  Plotly.newPlot('force-components-chart', traces, {{title:`Rudder-induced ship-fixed force component (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder-induced ship-fixed force component (kN)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+  Plotly.newPlot('force-components-chart', traces, {{title:`Rudder-induced longitudinal X and transverse Y force (kN) · V=${{speed}} kn · δ=${{rudder}}°`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder force component (kN)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
 }}
 function updateYawChart() {{
   const speed = selectedSpeed();
@@ -1547,8 +1547,8 @@ function updateYawChart() {{
   }}));
   const rudder = selectedRudder();
   const rows = ROWS.filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, rudder)).sort(byHeading);
-  const trace = {{x: rows.map(row => row.heading_offset_deg), y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder N (kN-m)', mode:'lines+markers', hovertemplate:'heading=%{{x}} deg<br>Rudder N=%{{y:.3f}} kN-m<extra></extra>'}};
-  Plotly.newPlot('yaw-moment-chart', [trace], {{title:`Rudder-induced N_ship yaw moment (kN-m) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder N yaw moment (kN-m)', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:40,t:66,b:64}}, template:'plotly_white'}}, CHART_CONFIG);
+  const trace = {{x: rows.map(row => row.heading_offset_deg), y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder yaw moment N (kN·m, +bow-to-port)', mode:'lines+markers', hovertemplate:'ψ=%{{x}}°<br>Yaw moment N=%{{y:.0f}} kN·m<extra></extra>'}};
+  Plotly.newPlot('yaw-moment-chart', [trace], {{title:`Rudder-induced yaw moment N about CoG (kN·m) · V=${{speed}} kn · δ=${{rudder}}°`, xaxis:{{title:'Heading offset ψ (deg)', gridcolor:'#e5eaf1'}}, yaxis:{{title:'Yaw moment N about CoG (kN·m, +bow-to-port)', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:40,t:66,b:64}}, template:'plotly_white'}}, CHART_CONFIG);
 }}
 function selectedTraceRows() {{
   const speed = selectedSpeed();
@@ -1560,29 +1560,37 @@ function updateComponentForceChart() {{
   const rudder = selectedRudder();
   const rows = selectedTraceRows();
   const x = rows.map(row => row.heading_offset_deg);
-  const hover = rows.map(row => `Xc=${{(row.ocimf_current_force_x_ship_N/1000).toFixed(3)}} kN<br>Yc=${{(row.ocimf_current_force_y_ship_port_N/1000).toFixed(3)}} kN<br>Xr=${{(row.force_x_ship_N/1000).toFixed(3)}} kN<br>Yr=${{(row.force_y_ship_port_N/1000).toFixed(3)}} kN<br>Xt=${{(row.total_force_x_ship_N/1000).toFixed(3)}} kN<br>Yt=${{(row.total_force_y_ship_port_N/1000).toFixed(3)}} kN`);
+  const hover = rows.map(row => `Xc=${{fmtKn(row.ocimf_current_force_x_ship_N)}} kN<br>Yc=${{fmtKn(row.ocimf_current_force_y_ship_port_N)}} kN<br>Xr=${{fmtKn(row.force_x_ship_N)}} kN<br>Yr=${{fmtKn(row.force_y_ship_port_N)}} kN<br>Xt=${{fmtKn(row.total_force_x_ship_N)}} kN<br>Yt=${{fmtKn(row.total_force_y_ship_port_N)}} kN`);
   const traces = [
-    {{x, y: rows.map(row => row.ocimf_current_force_y_ship_port_N/1000), name:'OCIMF current component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>OCIMF current component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
-    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Rudder component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Rudder component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
-    {{x, y: rows.map(row => row.total_force_y_ship_port_N/1000), name:'Total component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Total component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
+    {{x, y: rows.map(row => row.ocimf_current_force_y_ship_port_N/1000), name:'Current (OCIMF)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Current Y=%{{y:.0f}} kN<br>%{{customdata}}<extra></extra>'}},
+    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Rudder (Whicker-Fehlner)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Rudder Y=%{{y:.0f}} kN<br>%{{customdata}}<extra></extra>'}},
+    {{x, y: rows.map(row => row.total_force_y_ship_port_N/1000), name:'Total (current + rudder)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Total Y=%{{y:.0f}} kN<br>%{{customdata}}<extra></extra>'}}
   ];
-  Plotly.newPlot('ocimf-rudder-component-force-chart', traces, {{title:`OCIMF current vs rudder vs total Y force (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Y_ship force (kN)', rangemode:'tozero', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+  Plotly.newPlot('ocimf-rudder-component-force-chart', traces, {{title:`Transverse force Y (kN, port) — current vs rudder vs total · V=${{speed}} kn · δ=${{rudder}}°`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Transverse force Y (kN, port)', rangemode:'tozero', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
 }}
 function updateComponentYawChart() {{
   const speed = selectedSpeed();
   const rudder = selectedRudder();
   const rows = selectedTraceRows();
   const x = rows.map(row => row.heading_offset_deg);
-  const hover = rows.map(row => `Nc=${{row.ocimf_current_moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m<br>Nr=${{row.moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m<br>Nt=${{row.total_moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m`);
+  const hover = rows.map(row => `Nc=${{fmtMoment(row.ocimf_current_moment_n_yaw_bow_port_kN_m)}} kN·m<br>Nr=${{fmtMoment(row.moment_n_yaw_bow_port_kN_m)}} kN·m<br>Nt=${{fmtMoment(row.total_moment_n_yaw_bow_port_kN_m)}} kN·m`);
   const traces = [
-    {{x, y: rows.map(row => row.ocimf_current_moment_n_yaw_bow_port_kN_m), name:'OCIMF current N (kN-m)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>OCIMF current yaw=%{{y:.3f}} kN-m<br>%{{customdata}}<extra></extra>'}},
-    {{x, y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder N (kN-m)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Rudder yaw=%{{y:.3f}} kN-m<br>%{{customdata}}<extra></extra>'}},
-    {{x, y: rows.map(row => row.total_moment_n_yaw_bow_port_kN_m), name:'Total N (kN-m)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Total yaw=%{{y:.3f}} kN-m<br>%{{customdata}}<extra></extra>'}}
+    {{x, y: rows.map(row => row.ocimf_current_moment_n_yaw_bow_port_kN_m), name:'Current (OCIMF direct)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Current N=%{{y:.0f}} kN·m<br>%{{customdata}}<extra></extra>'}},
+    {{x, y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Rudder N=%{{y:.0f}} kN·m<br>%{{customdata}}<extra></extra>'}},
+    {{x, y: rows.map(row => row.total_moment_n_yaw_bow_port_kN_m), name:'Total (current + rudder)', mode:'lines+markers', customdata:hover, hovertemplate:'ψ=%{{x}}°<br>Total N=%{{y:.0f}} kN·m<br>%{{customdata}}<extra></extra>'}}
   ];
-  Plotly.newPlot('ocimf-rudder-component-yaw-chart', traces, {{title:`OCIMF current vs rudder vs total yaw moment about COG (kN-m) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Yaw moment about COG (kN-m)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:82,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+  Plotly.newPlot('ocimf-rudder-component-yaw-chart', traces, {{title:`Yaw moment N about CoG (kN·m, +bow-to-port) — current vs rudder vs total · V=${{speed}} kn · δ=${{rudder}}°`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Yaw moment N about CoG (kN·m, +bow-to-port)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:82,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
 }}
-function fmtKn(value) {{ return `${{(value/1000).toFixed(3)}}`; }}
-function fmtMoment(value) {{ return `${{value.toFixed(3)}}`; }}
+function fmtKn(value) {{
+  // Pass D: round kN display to 0 decimals when |val|>=1, 2 decimals otherwise
+  const kn = value / 1000;
+  return Math.abs(kn) >= 1 ? kn.toFixed(0) : kn.toFixed(2);
+}}
+function fmtMoment(value) {{
+  // Pass D: round kN·m display to 0 decimals when |val|>=1, 2 decimals otherwise
+  return Math.abs(value) >= 1 ? value.toFixed(0) : value.toFixed(2);
+}}
+function fmtAngle(value) {{ return value.toFixed(1); }}
 function setSvgRotation(id, angleDeg, cx, cy) {{ document.getElementById(id).setAttribute('transform', `rotate(${{angleDeg}} ${{cx}} ${{cy}})`); }}
 function updateHeadingRudderSchematic(row) {{
   const psi = row.heading_offset_deg;
@@ -1614,7 +1622,7 @@ function updateSelectedCaseBreakdown() {{
   updateText('breakdown-total-y', fmtKn(selected.total_force_y_ship_port_N));
   updateText('breakdown-total-n', fmtMoment(selected.total_moment_n_yaw_bow_port_kN_m));
   updateHeadingRudderSchematic(selected);
-  updateText('breakdown-case-label', `Selected breakdown case: current ${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring context = ${{(-selected.total_moment_n_yaw_bow_port_kN_m).toFixed(3)}} kN-m.`);
+  updateText('breakdown-case-label', `Selected breakdown case: V=${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring = ${{fmtMoment(-selected.total_moment_n_yaw_bow_port_kN_m)}} kN·m.`);
 }}
 function updateRudderModelComparison() {{
   // Default-case static table values (rendered into the table cells)

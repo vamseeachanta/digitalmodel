@@ -450,6 +450,52 @@ def test_issue_2760_pass_c_simple_plate_fields_in_row_dict():
     assert default_row["force_y_ship_port_N"] > 0
 
 
+def test_issue_2760_pass_d_decimal_rounding_in_display_values(tmp_path):
+    """Pass D contract: kN and kN·m display values are rounded to 0 decimals
+    when |val| ≥ 1, and to 2 decimals otherwise (per plan §130 and user
+    request for freshman-grad-readable presentation).
+
+    Tests the JS formatters for breakdown/envelope/hover (HTML literal
+    .toFixed(0) where the value is in kN/kN·m, not the underlying numeric
+    JSON which retains full precision).
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    # The JS chart hover and breakdown formatters should round kN/kN·m
+    # display to 0 decimals (canonical short form). Reject lingering
+    # 3-decimal display patterns in hovertemplates and fmt helpers.
+    assert "toFixed(3)} kN" not in html, (
+        "Pass D requires kN hover values rounded to 0 decimals, not 3"
+    )
+    # The fmtKn/fmtMoment helpers should round large values (|val|>=1) to 0.
+    # Allow nested .toFixed(2) usage for the small-value branch and for the
+    # rudder-model comparison normal force (which is in N not kN).
+    assert "function fmtKn" in html
+    assert ".toFixed(0)" in html, "Pass D needs at least one .toFixed(0) display rounder"
+
+
+def test_issue_2760_pass_d_force_labels_use_english_terms(tmp_path):
+    """Pass D contract: HTML uses English force labels
+    "longitudinal" / "transverse" / "yaw moment" alongside the symbolic
+    X/Y/N — not just bare X_ship/Y_ship code identifiers.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8").lower()
+    md = Path(manifest["markdown_report"]).read_text(encoding="utf-8").lower()
+
+    # Both HTML and MD must say "longitudinal" / "transverse" / "yaw moment"
+    # at least once in the body content (already done in Pass A, sentinel here).
+    for doc, name in ((html, "HTML"), (md, "MD")):
+        assert "longitudinal" in doc, f"{name} missing 'longitudinal' label"
+        assert "transverse" in doc, f"{name} missing 'transverse' label"
+        assert "yaw moment" in doc, f"{name} missing 'yaw moment' label"
+    # The chart axis title must use English not code identifier
+    assert "transverse y" in html or "transverse force" in html
+
+
 def test_issue_2760_pass_c_html_has_side_by_side_rudder_comparison(tmp_path):
     """Pass C contract: HTML §5 contains a Model A vs Model B side-by-side
     comparison table at the default case AND a chart comparing both
