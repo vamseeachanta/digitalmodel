@@ -1,0 +1,43 @@
+{
+  "citations": [
+    {
+      "code_id": "OCIMF-MEG4",
+      "publisher": "Oil Companies International Marine Forum",
+      "revision": "4th edition, 2018",
+      "section": "Annex A current coefficient figures A9/A10/A11",
+      "wiki_path": "wikis/marine-engineering/wiki/standards/ocimf-meg4.md",
+      "note": "Generic/reference tanker-current coefficient basis for #2760; not SIROCCO-specific."
+    },
+    {
+      "code_id": "B1528-SIROCCO-RUDDER-YAW-INPUTS",
+      "publisher": "ACMA project source pack",
+      "revision": "2026-05-01",
+      "section": "Rudder force and yaw-moment workbook inputs",
+      "wiki_path": "wikis/acma-projects/wiki/concepts/b1528-sirocco-rudder-yaw-moment-inputs.md",
+      "note": "Project-specific B1528 rudder geometry and normal-force constant used for screening calculation."
+    }
+  ],
+  "ocimf_basis_selection": {
+    "selection_rule": "max_available_wd_over_t_for_loaded_tanker_current",
+    "wd_over_t": 8.196721311475411,
+    "water_depth_m": 100.0,
+    "draft_m": 12.2,
+    "selected_wd_over_t_bucket": ">6",
+    "selected_figures": [
+      "A9",
+      "A10",
+      "A11"
+    ],
+    "selected_curve_family": "loaded_tanker_current",
+    "rejected_alternatives": [
+      "A5-A8 shallower loaded-tanker Cxc buckets",
+      "A12-A14 ballast 40%T tanker curves"
+    ],
+    "limitation": "B1528 SIROCCO is not an OCIMF tanker-class vessel; loaded-tanker curves are used off-class as a generic/reference screening basis only."
+  },
+  "license_boundary": "pointer-only-no-coefficient-corpus",
+  "source_artifacts": {
+    "ocimf_workbook": "licensed-off-repo-ocimf-workbook",
+    "provenance_readme": "docs/data/OCIMF_CORPUS_README.md"
+  }
+}

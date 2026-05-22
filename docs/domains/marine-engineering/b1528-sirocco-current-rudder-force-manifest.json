@@ -1,0 +1,11 @@
+{
+  "csv": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_results.csv",
+  "json": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_results.json",
+  "provenance": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_provenance.json",
+  "citation_sidecar": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_citations.json",
+  "markdown_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.md",
+  "docx_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.docx",
+  "html_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.html",
+  "pdf_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.pdf",
+  "manifest": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_manifest.json"
+}
