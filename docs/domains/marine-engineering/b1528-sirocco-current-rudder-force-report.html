@@ -39,22 +39,37 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 .rudder-line { stroke:#c2410c; stroke-width:4; marker-end:url(#arrow-orange); }
 .force-line { stroke:#15803d; stroke-width:3; marker-end:url(#arrow-green); }
 .ship-hull { fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }
-.ship-hull-transparent { fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }
+.ship-hull-transparent { fill:#b87060; fill-opacity:0.85; stroke:#1a2a4a; stroke-width:0.75; }
 .rudder-blade { fill:#fed7aa; stroke:#c2410c; stroke-width:2; }
-.rudder-blade-transparent { fill-opacity:0.45; fill:#fed7aa; stroke:#c2410c; stroke-width:2; }
+.rudder-blade-transparent { fill:#1a2a4a; fill-opacity:0.85; stroke:#1a2a4a; stroke-width:0.75; }
+/* OCIMF Annex A schematic style — hairline navy arrows, symbol-only labels.
+   Per OCIMF MEG3/MEG4 Annex A "Figure 1 / Sign Convention" canonical style:
+   solid terracotta hull, hairline 0.75pt stroke, 1.5pt force arrows with
+   small slim arrowheads, symbols-only on figure, English mapping in caption. */
+.ocimf-arrow { stroke:#1a2a4a; stroke-width:1.5; fill:none; }
+.ocimf-arrow-current { stroke:#1a2a4a; stroke-width:1.5; fill:none; }
+.ocimf-arrow-force { stroke:#1a2a4a; stroke-width:1.5; fill:none; }
+.ocimf-arrow-rudder { stroke:#1a2a4a; stroke-width:1.5; fill:none; }
+.ocimf-arrow-yaw { stroke:#1a2a4a; stroke-width:1.5; fill:none; }
+/* Legacy bold-arrow classes retained — used by §3 interactive schematic */
 .schematic-bold-arrow-blue { stroke:#0b6bcb; stroke-width:5; fill:none; }
 .schematic-bold-arrow-orange { stroke:#c2410c; stroke-width:5; fill:none; }
 .schematic-bold-arrow-green { stroke:#15803d; stroke-width:5; fill:none; }
 .schematic-bold-arrow-purple { stroke:#7c3aed; stroke-width:5; fill:none; }
-.lever-arm { stroke:#607085; stroke-width:2; stroke-dasharray:6 3; fill:none; }
-.svg-label { font:600 13px Aptos, Segoe UI, sans-serif; fill:#172033; }
+.lever-arm { stroke:#1a2a4a; stroke-width:0.75; stroke-dasharray:4 3; fill:none; }
+.svg-label { font:600 12px 'Times New Roman', serif; fill:#1a2a4a; }
+.svg-label-ocimf { font:600 11px 'Times New Roman', serif; fill:#1a2a4a; }
+.svg-label-symbol { font:italic 600 12px 'Times New Roman', serif; fill:#1a2a4a; }
 .svg-label-blue { font:700 13px Aptos, Segoe UI, sans-serif; fill:#0b6bcb; }
 .svg-label-orange { font:700 13px Aptos, Segoe UI, sans-serif; fill:#c2410c; }
 .svg-label-green { font:700 13px Aptos, Segoe UI, sans-serif; fill:#15803d; }
 .svg-label-purple { font:700 13px Aptos, Segoe UI, sans-serif; fill:#7c3aed; }
-.svg-muted { font:12px Aptos, Segoe UI, sans-serif; fill:#607085; }
-.svg-default-annot { font:700 12px Aptos, Segoe UI, sans-serif; fill:#172033; }
-.per-section-schematic { width:100%; max-width:340px; min-height:420px; border:1px solid var(--line); border-radius:8px; background:#fbfdff; display:block; margin:12px auto; }
+.svg-muted { font:11px 'Times New Roman', serif; fill:#1a2a4a; }
+.svg-default-annot { font:700 12px 'Times New Roman', serif; fill:#1a2a4a; }
+.per-section-schematic { width:100%; max-width:380px; min-height:420px; border:1px solid var(--line); border-radius:4px; background:#ffffff; display:block; margin:12px auto; }
+.schematic-caption { font:11px Aptos, Segoe UI, sans-serif; color:#1a2a4a; background:#f8fafc; border:1px solid var(--line); border-radius:4px; padding:10px 14px; margin:6px auto 18px; max-width:680px; }
+.schematic-caption strong { color:#1a2a4a; }
+.schematic-caption code { font-family:'Times New Roman', serif; font-style:italic; }
 @media print { @page { size:A4 landscape; margin:12mm; } body { background:white; } .report-shell { width:100%; padding:0; } .report-page { border:0; padding:0; } .print-section,.chart-section { break-inside:avoid; page-break-inside:avoid; } .chart-section { break-after:page; page-break-after:always; } .chart { break-inside:avoid; height:300px; margin-bottom:18px; } .schematic-grid { grid-template-columns:1fr 1fr; } }
 </style>
 </head>
@@ -86,20 +101,26 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 <p>Values used by the calculation are sourced from the packaged B1528 SIROCCO YAML input pack.</p>
 <table class="data-table" aria-label="Design data for B1528 SIROCCO current-heading rudder calculation">
 <tbody>
-<tr><th>LBP</th><td>225.500 m</td></tr>
-<tr><th>Beam</th><td>32.260 m</td></tr>
-<tr><th>Draft</th><td>12.200 m</td></tr>
-<tr><th>Current frontal projected area</th><td>393.572 m²</td></tr>
-<tr><th>Current lateral projected area</th><td>2751.100 m²</td></tr>
-<tr><th>Yaw lever</th><td>135.300 m</td></tr>
-<tr><th>Rudder area</th><td>44.939563 m²</td></tr>
-<tr><th>Rudder span</th><td>9.000 m</td></tr>
-<tr><th>Ship speed over ground</th><td>0.000 kn</td></tr>
-<tr><th>Water density</th><td>1025.0 kg/m³</td></tr>
-<tr><th>Barrass/workbook β</th><td>600.0</td></tr>
-<tr><th>Propeller rotation factor Cr</th><td>1.0</td></tr>
-<tr><th>Current speed sweep</th><td>0, 1, 2, 3, 3.08, 4 kn + chart-default 3.08 kn</td></tr>
-<tr><th>Heading/rudder grid</th><td>-5..5 deg heading, 1 deg step × 0..28 deg rudder, 2 deg step</td></tr>
+<tr><th>LBP (length between perpendiculars)</th><td>225.5 m</td></tr>
+<tr><th>Beam</th><td>32.26 m</td></tr>
+<tr><th>Draft</th><td>12.20 m</td></tr>
+<tr><th>Water depth</th><td>100.0 m</td></tr>
+<tr><th>Water depth / Draft (WD/T)</th><td>8.20</td></tr>
+<tr><th>Centre of gravity (longitudinal datum)</th><td>midship</td></tr>
+<tr><th>Centre of gravity (vertical, above keel)</th><td>6.1 m</td></tr>
+<tr><th>Yaw lever arm (rudder force to CoG)</th><td>135.30 m</td></tr>
+<tr><th>Rudder area A_R</th><td>44.94 m²</td></tr>
+<tr><th>Rudder span</th><td>9.00 m</td></tr>
+<tr><th>Water density ρ</th><td>1025.0 kg/m³</td></tr>
+<tr><th>Whicker-Fehlner constant β <em>(see [3] in References)</em></th><td>600.0</td></tr>
+<tr><th>Propeller rotation factor Cr</th><td>1.0 (rpm = 0)</td></tr>
+<tr><th>Current speed (default)</th><td>3.08 kn</td></tr>
+<tr><th>Current heading ψ (default)</th><td>+5° (port positive)</td></tr>
+<tr><th>Rudder angle δ (default)</th><td>+28° (port positive)</td></tr>
+<tr><th>Current speed sweep range</th><td>0..4 kn (plotted bound, not the design value)</td></tr>
+<tr><th>Heading sweep</th><td>-5° .. +5° in 1° steps</td></tr>
+<tr><th>Rudder sweep</th><td>0° .. +28° port in 2° steps</td></tr>
+<tr><th>Input source</th><td>Project Document — B1528 SIROCCO vessel particulars source-pack ([P1] in References)</td></tr>
 </tbody>
 </table>
 </section>
@@ -174,42 +195,40 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 <h3>4.1. Force calculation</h3>
 <p>Dynamic pressure <code>q = 0.5 × ρ × V²</code>; frontal area <code>A_f = beam × draft</code>; lateral area <code>A_l = LBP × draft</code>. Force components: <strong>longitudinal Xc = q × A_f × Cxc</strong>; <strong>transverse Yc = q × A_l × Cyc</strong>.</p>
 <div class="schematic-card">
-<svg id="schematic-current-loading" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Current loading schematic — transparent ship with current arrow at default heading +5 deg port">
+<svg id="schematic-current-loading" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Figure 1 — Current loading per OCIMF MEG4 Annex A sign convention, B1528 SIROCCO at default case">
 <defs>
-<marker id="arrow-blue-curl" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#0b6bcb" /></marker>
-<marker id="arrow-green-curl" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#15803d" /></marker>
+<marker id="arrow-cl" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,5 L5,2.5 z" fill="#1a2a4a" /></marker>
 </defs>
-<!-- Title above ship -->
-<text x="200" y="22" text-anchor="middle" class="svg-default-annot">§4 Current loading — default case ψ=+5°, V=3.08 kn</text>
-<!-- Compass: +X up (forward), +Y left (port) -->
-<text x="200" y="42" text-anchor="middle" class="svg-muted">(top-down view; bow ↑, port ←)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1="200" y1="58" x2="200" y2="460" class="axis-line" />
-<line x1="75" y1="250" x2="325" y2="250" class="axis-line" />
-<text x="208" y="68" class="svg-label">+X (longitudinal)</text>
-<text x="82" y="244" class="svg-label">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges per OCIMF convention (NOT arc on hull) -->
+<text x="200" y="24" text-anchor="middle" class="svg-label-symbol">180°</text>
+<text x="380" y="253" text-anchor="middle" class="svg-label-symbol">90°</text>
+<text x="20" y="253" text-anchor="middle" class="svg-label-symbol">270°</text>
+<text x="200" y="485" text-anchor="middle" class="svg-label-symbol">0°</text>
+<!-- Solid muted-terracotta ship silhouette (OCIMF house style) -->
 <path class="ship-hull-transparent" d="M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z" />
-<!-- Centerline -->
-<line x1="200" y1="75" x2="200" y2="420" stroke="#172033" stroke-width="1" stroke-dasharray="3 4" />
-<!-- CoG marker -->
-<circle cx="200" cy="250" r="5" fill="#172033" />
-<text x="208" y="258" class="svg-label">CoG</text>
-<!-- Current arrow: ψ = +5° off bow, port positive (current comes from forward, slightly to starboard side of bow) -->
-<line x1="235" y1="-10" x2="207" y2="75" class="schematic-bold-arrow-blue" marker-end="url(#arrow-blue-curl)" />
-<text x="248" y="30" class="svg-label-blue">Current V=3.08 kn</text>
-<text x="248" y="46" class="svg-label-blue">ψ = +5° (port)</text>
-<!-- Longitudinal force Xc — small (Cxc≈−0.0324) pointing aft (downward in this view) at hull frontal CoP -->
-<line x1="200" y1="110" x2="200" y2="185" class="schematic-bold-arrow-green" marker-end="url(#arrow-green-curl)" />
-<text x="208" y="155" class="svg-label-green">Xc (longitudinal,</text>
-<text x="208" y="170" class="svg-label-green">≈ aft per Cxc&lt;0)</text>
-<!-- Transverse force Yc — large (Cyc≈+0.0341) pointing port (leftward) at hull lateral CoP -->
-<line x1="200" y1="230" x2="110" y2="230" class="schematic-bold-arrow-green" marker-end="url(#arrow-green-curl)" />
-<text x="50" y="222" class="svg-label-green">Yc (transverse,</text>
-<text x="50" y="237" class="svg-label-green">port per Cyc&gt;0)</text>
-<!-- Sample-value annotation -->
-<text x="200" y="485" text-anchor="middle" class="svg-muted">Cxc≈−0.0324 · Cyc≈+0.0341 at table_angle 175°</text>
+<!-- Hairline ship-fixed axes through CoG (X = centerline, Y = perpendicular) -->
+<line x1="200" y1="56" x2="200" y2="460" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
+<line x1="60" y1="250" x2="340" y2="250" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
+<!-- CoG marker (small filled dot) -->
+<circle cx="200" cy="250" r="2.5" fill="#1a2a4a" />
+<!-- Force/moment symbols at CoG cluster, OCIMF symbol-only style -->
+<!-- +F_X longitudinal pointing toward bow (aft of CoG since Cxc<0; small arrow) -->
+<line x1="200" y1="250" x2="200" y2="205" class="ocimf-arrow" marker-end="url(#arrow-cl)" />
+<text x="206" y="218" class="svg-label-symbol">+F_X</text>
+<!-- +F_Y transverse pointing port (left) — larger since Cyc>0 dominates -->
+<line x1="200" y1="250" x2="125" y2="250" class="ocimf-arrow" marker-end="url(#arrow-cl)" />
+<text x="118" y="244" class="svg-label-symbol">+F_Y</text>
+<!-- ψ current-attack inset (separate cluster per OCIMF convention) -->
+<line x1="230" y1="6" x2="210" y2="66" class="ocimf-arrow" marker-end="url(#arrow-cl)" />
+<text x="238" y="20" class="svg-label-symbol">ψ</text>
+<!-- Inline scale-bar style L_OA / B dimension hint (small, OCIMF style) -->
+<text x="200" y="248" text-anchor="middle" class="svg-label-symbol">CoG</text>
 </svg>
+<div class="schematic-caption">
+<strong>Figure 1 — Sign Convention &amp; Current Loading.</strong> Top-down plan view, B1528 SIROCCO at default case (ψ=+5°, V=3.08 kn).
+<code>+F_X</code> = longitudinal current force on hull (component of <code>q·A_f·Cxc</code> along ship centreline; sign per OCIMF MEG4 [1] Annex A Fig. A9, Cxc≈−0.0324 at table angle 175°).
+<code>+F_Y</code> = transverse current force on hull (<code>q·A_l·Cyc</code> across ship; positive port; OCIMF MEG4 [1] Annex A Fig. A10, Cyc≈+0.0341).
+Cardinal labels at frame edges (0° stern / 180° bow / 90° starboard / 270° port) define heading convention per OCIMF Annex A §A.1. ψ inset shows the current angle-of-attack relative to bow. CoG at midship; vertical CoG 6.1 m above keel.
 </div>
 <p><strong>Sample calculation at default values:</strong></p>
 <ul class="calc-list">
@@ -230,42 +249,40 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 </ul>
 <p>These two methods rest on different assumptions and <strong>may differ</strong>. Chart 4 below shows both as an overlay with an explicit non-equality caption.</p>
 <div class="schematic-card">
-<svg id="schematic-current-moment" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Current moment about CoG — transverse force at center of pressure, lever arm to CoG, yaw direction">
+<svg id="schematic-current-moment" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Figure 2 — Current yaw moment about CoG, OCIMF Annex A sign convention with center-of-pressure lever arm">
 <defs>
-<marker id="arrow-green-curm" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#15803d" /></marker>
-<marker id="arrow-purple-curm" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#7c3aed" /></marker>
+<marker id="arrow-cm" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,5 L5,2.5 z" fill="#1a2a4a" /></marker>
 </defs>
-<text x="200" y="22" text-anchor="middle" class="svg-default-annot">§4.2 Current yaw moment about CoG</text>
-<text x="200" y="42" text-anchor="middle" class="svg-muted">(method A: OCIMF Cxyc direct  ·  method B: Yc × lever arm)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1="200" y1="58" x2="200" y2="460" class="axis-line" />
-<line x1="75" y1="250" x2="325" y2="250" class="axis-line" />
-<text x="208" y="68" class="svg-label">+X (longitudinal)</text>
-<text x="82" y="244" class="svg-label">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges -->
+<text x="200" y="24" text-anchor="middle" class="svg-label-symbol">180°</text>
+<text x="380" y="253" text-anchor="middle" class="svg-label-symbol">90°</text>
+<text x="20" y="253" text-anchor="middle" class="svg-label-symbol">270°</text>
+<text x="200" y="485" text-anchor="middle" class="svg-label-symbol">0°</text>
+<!-- Solid muted-terracotta ship silhouette -->
 <path class="ship-hull-transparent" d="M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z" />
-<line x1="200" y1="75" x2="200" y2="420" stroke="#172033" stroke-width="1" stroke-dasharray="3 4" />
+<!-- Hairline ship-fixed axes through CoG -->
+<line x1="200" y1="56" x2="200" y2="460" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
+<line x1="60" y1="250" x2="340" y2="250" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
 <!-- CoG marker -->
-<circle cx="200" cy="250" r="5" fill="#172033" />
-<text x="208" y="258" class="svg-label">CoG</text>
-<!-- Center of pressure (CoP) for current — slightly forward of CoG for tanker at near-head current per OCIMF convention -->
-<circle cx="200" cy="185" r="4" fill="#7c3aed" />
-<text x="208" y="183" class="svg-label-purple">CoP (current)</text>
-<!-- Lever arm from CoP to CoG (dashed) -->
+<circle cx="200" cy="250" r="2.5" fill="#1a2a4a" />
+<text x="205" y="246" class="svg-label-symbol">CoG</text>
+<!-- Center of pressure marker (forward of CoG per OCIMF tanker convention) -->
+<circle cx="200" cy="185" r="2" fill="#1a2a4a" />
+<text x="205" y="183" class="svg-label-symbol">CoP</text>
+<!-- Lever arm from CoP to CoG (dashed hairline) -->
 <line x1="200" y1="189" x2="200" y2="246" class="lever-arm" />
-<text x="154" y="222" class="svg-label-purple">lever arm</text>
-<!-- Transverse force Yc at CoP — pointing port -->
-<line x1="200" y1="185" x2="115" y2="185" class="schematic-bold-arrow-green" marker-end="url(#arrow-green-curm)" />
-<text x="50" y="178" class="svg-label-green">Yc (transverse</text>
-<text x="50" y="192" class="svg-label-green">at CoP)</text>
-<!-- Yaw moment arc at CoG (counter-clockwise = +N bow-to-port in this top-down +X-up view) -->
-<path d="M 240 250 A 40 40 0 1 0 200 290" class="schematic-bold-arrow-purple" marker-end="url(#arrow-purple-curm)" />
-<text x="258" y="295" class="svg-label-purple">+N (yaw,</text>
-<text x="258" y="310" class="svg-label-purple">bow→port)</text>
-<!-- Annotation: method comparison -->
-<text x="200" y="475" text-anchor="middle" class="svg-muted">Method A: N = q·A_l·LBP·Cxyc(175°)</text>
-<text x="200" y="492" text-anchor="middle" class="svg-muted">Method B: N = Yc × lever_arm (different assumptions; may differ)</text>
+<text x="165" y="222" class="svg-label-symbol">arm</text>
+<!-- F_Y transverse force at CoP, symbols-only -->
+<line x1="200" y1="185" x2="140" y2="185" class="ocimf-arrow" marker-end="url(#arrow-cm)" />
+<text x="132" y="178" class="svg-label-symbol">+F_Y</text>
+<!-- +M_XY yaw moment curved arrow at CoG (OCIMF canonical symbol) -->
+<path d="M 224 250 A 24 24 0 0 0 200 274" class="ocimf-arrow" marker-end="url(#arrow-cm)" />
+<text x="232" y="278" class="svg-label-symbol">+M_XY</text>
 </svg>
+<div class="schematic-caption">
+<strong>Figure 2 — Yaw Moment about CoG.</strong> Two estimation methods for current yaw moment, shown side by side as a sanity check (NOT an equality test).
+<strong>Method A (default):</strong> <code>M_XY,A = q·A_l·LBP·Cxyc(table_angle)</code> per OCIMF MEG4 [1] Annex A Fig. A11 (loaded-tanker WD/T&gt;6 family).
+<strong>Method B (comparison):</strong> <code>M_XY,B = F_Y × CoP_arm</code> where CoP_arm ≈ 0.3·LBP is an approximate center-of-pressure lever arm for loaded-tanker near-head current (OCIMF MEG4 [1] Annex A guidance, typical range 0.2–0.4·LBP). Methods rest on different assumptions and may differ — see §4.2.1 chart.
 </div>
 
 <h4>4.2.1. Side-by-side yaw moment chart — Method A vs Method B</h4>
@@ -315,59 +332,58 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 </ul>
 <p><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect stall-region behaviour.</p>
 <div class="schematic-card">
-<svg id="schematic-rudder-loading" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Rudder loading schematic — transparent ship with rudder at default 28 deg port and force decomposition at rudder pivot">
+<svg id="schematic-rudder-loading" class="per-section-schematic" viewBox="0 0 400 500" role="img" aria-label="Figure 3 — Rudder loading, OCIMF Annex A sign convention with rudder at default 28 deg port">
 <defs>
-<marker id="arrow-blue-rl" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#0b6bcb" /></marker>
-<marker id="arrow-orange-rl" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#c2410c" /></marker>
-<marker id="arrow-green-rl" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,8 L11,4 z" fill="#15803d" /></marker>
+<marker id="arrow-rl" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,5 L5,2.5 z" fill="#1a2a4a" /></marker>
 </defs>
-<text x="200" y="22" text-anchor="middle" class="svg-default-annot">§5 Rudder loading — default δ=+28° port, ψ=+5°, α=+23°</text>
-<text x="200" y="42" text-anchor="middle" class="svg-muted">(top-down view; bow ↑, port ←)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1="200" y1="58" x2="200" y2="460" class="axis-line" />
-<line x1="75" y1="250" x2="325" y2="250" class="axis-line" />
-<text x="208" y="68" class="svg-label">+X (longitudinal)</text>
-<text x="82" y="244" class="svg-label">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges -->
+<text x="200" y="24" text-anchor="middle" class="svg-label-symbol">180°</text>
+<text x="380" y="253" text-anchor="middle" class="svg-label-symbol">90°</text>
+<text x="20" y="253" text-anchor="middle" class="svg-label-symbol">270°</text>
+<text x="200" y="485" text-anchor="middle" class="svg-label-symbol">0°</text>
+<!-- Solid muted-terracotta ship silhouette -->
 <path class="ship-hull-transparent" d="M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z" />
-<line x1="200" y1="75" x2="200" y2="420" stroke="#172033" stroke-width="1" stroke-dasharray="3 4" />
+<!-- Hairline ship-fixed axes through CoG -->
+<line x1="200" y1="56" x2="200" y2="460" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
+<line x1="60" y1="250" x2="340" y2="250" stroke="#1a2a4a" stroke-width="0.5" stroke-dasharray="3 3" />
 <!-- CoG marker -->
-<circle cx="200" cy="250" r="5" fill="#172033" />
-<text x="208" y="258" class="svg-label">CoG</text>
-<!-- Rudder pivot at stern (bottom of hull) -->
-<circle cx="200" cy="420" r="3.5" fill="#c2410c" />
-<!-- Rudder blade rotated δ=+28° port (counter-clockwise in this +X-up view, blade extends down-left from pivot) -->
-<rect class="rudder-blade-transparent" x="193" y="420" width="14" height="42" rx="3" transform="rotate(-28 200 420)" />
-<text x="230" y="445" class="svg-label-orange">δ = +28° (port)</text>
-<!-- Current arrow approaching from forward at ψ=+5° -->
-<line x1="235" y1="-10" x2="207" y2="75" class="schematic-bold-arrow-blue" marker-end="url(#arrow-blue-rl)" />
-<text x="248" y="34" class="svg-label-blue">Current V=3.08 kn</text>
-<text x="248" y="50" class="svg-label-blue">ψ = +5°</text>
-<!-- Normal force F at rudder, perpendicular to blade (blade is rotated -28°, so normal is at +62° from +X axis, pointing port and slightly aft) -->
-<line x1="200" y1="420" x2="118" y2="385" class="schematic-bold-arrow-orange" marker-end="url(#arrow-orange-rl)" />
-<text x="60" y="376" class="svg-label-orange">F (normal to blade,</text>
-<text x="60" y="390" class="svg-label-orange">≈ port and aft)</text>
-<!-- Decomposition: X_rudder (longitudinal, aft) and Y_rudder (transverse, port) at rudder pivot -->
-<line x1="200" y1="420" x2="160" y2="420" class="schematic-bold-arrow-green" marker-end="url(#arrow-green-rl)" />
-<text x="105" y="412" class="svg-label-green">Y_rudder</text>
-<line x1="200" y1="420" x2="200" y2="450" class="schematic-bold-arrow-green" marker-end="url(#arrow-green-rl)" />
-<text x="208" y="445" class="svg-label-green">X_rudder</text>
-<!-- α annotation: effective inflow angle at rudder -->
-<text x="200" y="475" text-anchor="middle" class="svg-muted">α = δ - ψ = 28° - 5° = +23° (effective rudder inflow)</text>
-<text x="200" y="492" text-anchor="middle" class="svg-muted">F via Model A (Whicker-Fehlner) and Model B (thin-plate) — see §5</text>
+<circle cx="200" cy="250" r="2.5" fill="#1a2a4a" />
+<text x="205" y="246" class="svg-label-symbol">CoG</text>
+<!-- Rudder pivot at stern (small dark mark) -->
+<circle cx="200" cy="420" r="2" fill="#1a2a4a" />
+<!-- Rudder blade deflected δ=+28° port (rotated counter-clockwise in this +X-up view) -->
+<rect class="rudder-blade-transparent" x="196" y="420" width="8" height="34" rx="1.5" transform="rotate(-28 200 420)" />
+<text x="210" y="446" class="svg-label-symbol">δ</text>
+<!-- ψ current-attack inset (separate cluster per OCIMF convention) -->
+<line x1="230" y1="6" x2="210" y2="66" class="ocimf-arrow" marker-end="url(#arrow-rl)" />
+<text x="238" y="20" class="svg-label-symbol">ψ</text>
+<!-- F normal-force at rudder (perpendicular to blade, hairline) -->
+<line x1="200" y1="420" x2="148" y2="398" class="ocimf-arrow" marker-end="url(#arrow-rl)" />
+<text x="114" y="393" class="svg-label-symbol">F</text>
+<!-- Decomposition arrows from rudder pivot to ship-fixed X/Y components, hairline -->
+<line x1="200" y1="420" x2="170" y2="420" class="ocimf-arrow" marker-end="url(#arrow-rl)" />
+<text x="152" y="414" class="svg-label-symbol">+F_Y</text>
+<line x1="200" y1="420" x2="200" y2="445" class="ocimf-arrow" marker-end="url(#arrow-rl)" />
+<text x="205" y="442" class="svg-label-symbol">+F_X</text>
+<!-- α effective inflow inset (small, top-right) -->
+<text x="320" y="24" class="svg-label-symbol">α</text>
 </svg>
+<div class="schematic-caption">
+<strong>Figure 3 — Rudder Loading.</strong> Top-down view with rudder at default deflection δ=+28° port, current at ψ=+5° off the bow. Effective rudder inflow angle <code>α = δ - ψ = +23°</code>.
+<code>F</code> = rudder normal force (perpendicular to blade); decomposed at rudder pivot into <code>+F_X</code> (longitudinal, along centreline) and <code>+F_Y</code> (transverse, port).
+Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3], <code>F = β·A_R·V²·Cr·sin(α)</code>) and <strong>Model B</strong> (Faltinsen [2] §6.5, <code>F = 0.5·ρ·A_R·V²·2π·sin(α)</code> with stall cap). Comparison in §5.6.
 </div>
 
 <h3>5.1. Sample calculation at default values (Model A)</h3>
 <p>Representative hand-check point: <strong>issue #2760 default 3.08 kn, heading +5 deg, rudder +28 deg, Cr=1.0</strong>.</p>
 <ol class="calc-list">
-<li><code>V = 3.08 kn × 0.51444 = 1.58448 m/s</code>; issue default speed.</li>
-<li><code>α = δ - ψ = 28.0 deg - 5.0 deg = 23.0 deg</code>.</li>
-<li><code>F = 600.0 × 44.939563 × 1.58448² × 1.0 = 67694.127 N</code>.</li>
-<li><code>Fn = F × sin(alpha) = 26450.202 N</code>.</li>
-<li><code>X_ship = 8173.562 N</code>, <code>Y_ship = 25155.637 N</code>, <code>N_ship = 3403.557744 kN-m</code>.</li>
-<li><code>q = 0.5 × rho × V²</code>; current coefficients use report-specific OCIMF loaded-tanker workbook interpolation tied to the approved provenance route.</li>
-<li><code>X_current = -16548.971 N</code>, <code>Y_current = 120548.359 N</code>, <code>N_current = 6724.854215 kN-m</code>; totals are component sums at COG.</li>
+<li>Speed conversion: <code>V = 3.08 kn × 0.51444 = 1.5845 m/s</code></li>
+<li>Effective rudder inflow angle: <code>α = δ - ψ = 28° - 5° = 23°</code></li>
+<li>Whicker-Fehlner base force (Model A): <code>F = β × A_R × V² × Cr = 600 × 44.94 × (1.5845)² × 1.0 ≈ 68 kN</code></li>
+<li>Rudder normal force: <code>Fn = F × sin(α) ≈ 26 kN</code></li>
+<li>Rudder load resolved to ship-fixed axes at CoG: <strong>longitudinal X_rudder</strong> ≈ <code>8 kN</code>, <strong>transverse Y_rudder</strong> ≈ <code>25 kN</code> (+port), <strong>yaw moment N_rudder</strong> ≈ <code>3404 kN·m</code> (+bow-to-port)</li>
+<li>Current load (OCIMF MEG4 [1] Annex A Fig. A9/A10/A11 interpolation at table angle 175°): <strong>X_current</strong> ≈ <code>-17 kN</code> (longitudinal), <strong>Y_current</strong> ≈ <code>121 kN</code> (+port), <strong>N_current</strong> ≈ <code>6725 kN·m</code> (+bow-to-port)</li>
+<li>Combined at CoG (sum of current + rudder components): <strong>X_total</strong> ≈ <code>-8 kN</code>, <strong>Y_total</strong> ≈ <code>146 kN</code>, <strong>N_total</strong> ≈ <code>10128 kN·m</code> — these sums are reported for engineering review only; not a validated whole-vessel force balance</li>
 </ol>
 
 <h3>5.2. Rudder force over heading</h3>
@@ -383,34 +399,35 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 <table id="selected-speed-envelope-summary" class="data-table" aria-label="Selected speed envelope summary">
 <thead><tr><th>Metric</th><th>Envelope case</th><th>Value</th></tr></thead>
 <tbody>
-<tr><td>Selected speed</td><td id="selected-speed-case">—</td><td id="selected-speed-value">—</td></tr>
-<tr><td>Max |Y| at selected speed</td><td id="selected-speed-max-y-case">—</td><td id="selected-speed-max-y-value">—</td></tr>
-<tr><td>Max |N| at selected speed</td><td id="selected-speed-max-n-case">—</td><td id="selected-speed-max-n-value">—</td></tr>
-<tr><td>Max |X| at selected speed</td><td id="selected-speed-max-h-case">—</td><td id="selected-speed-max-h-value">—</td></tr>
+<tr><td>Selected speed</td><td id="selected-speed-case">engineering sweep plane</td><td id="selected-speed-value">3.08 kn · 165 rows</td></tr>
+<tr><td>Max |Y| at selected speed</td><td id="selected-speed-max-y-case">ψ=-5° · δ=28°</td><td id="selected-speed-max-y-value">29 kN</td></tr>
+<tr><td>Max |N| at selected speed</td><td id="selected-speed-max-n-case">ψ=-5° · δ=28°</td><td id="selected-speed-max-n-value">3931 kN·m</td></tr>
+<tr><td>Max |X| at selected speed</td><td id="selected-speed-max-h-case">ψ=-5° · δ=28°</td><td id="selected-speed-max-h-value">23 kN</td></tr>
 </tbody>
 </table>
+<p class="svg-muted" style="margin-top:4px; font-size:11px">Initial values are at the default current speed (3.08 kn); the interactive HTML updates the row above when the speed selector changes.</p>
 
 <h3>5.5. Selected-case force breakdown</h3>
 <p>Updates with current speed and rudder angle. Values shown at the heading with maximum absolute total yaw moment for the selected trace, so individual X/Y/N component paths can be reviewed together.</p>
 <table class="data-table" aria-label="Selected-case OCIMF current rudder component force breakdown">
 <thead><tr><th>Component</th><th>X (kN, longitudinal)</th><th>Y (kN, transverse port)</th><th>N (kN·m, yaw bow-to-port)</th></tr></thead>
 <tbody>
-<tr><td>OCIMF current</td><td id="breakdown-current-x">—</td><td id="breakdown-current-y">—</td><td id="breakdown-current-n">—</td></tr>
-<tr><td>Rudder induced</td><td id="breakdown-rudder-x">—</td><td id="breakdown-rudder-y">—</td><td id="breakdown-rudder-n">—</td></tr>
-<tr><td>Total / mooring reaction opposite</td><td id="breakdown-total-x">—</td><td id="breakdown-total-y">—</td><td id="breakdown-total-n">—</td></tr>
+<tr><td>Current (OCIMF MEG4 [1])</td><td id="breakdown-current-x">-17</td><td id="breakdown-current-y">121</td><td id="breakdown-current-n">6725</td></tr>
+<tr><td>Rudder (Whicker-Fehlner [3])</td><td id="breakdown-rudder-x">8</td><td id="breakdown-rudder-y">25</td><td id="breakdown-rudder-n">3404</td></tr>
+<tr><td>Total (current + rudder) / mooring reaction = negated</td><td id="breakdown-total-x">-8</td><td id="breakdown-total-y">146</td><td id="breakdown-total-n">10128</td></tr>
 </tbody>
 </table>
-<p id="breakdown-case-label" class="note-panel">—</p>
+<p id="breakdown-case-label" class="note-panel">Default case: V=3.08 kn · ψ=5° · δ=28° · total yaw reaction for mooring = -10128 kN·m.</p>
 
 <h3>5.6. Rudder model comparison — Model A (Whicker-Fehlner) vs Model B (thin-plate)</h3>
 <p>Side-by-side comparison of the two screening rudder models at the default case (V=3.08 kn, ψ=+5°, δ=+28°, α=+23°). The chart below sweeps rudder angle 0..+28° at fixed ψ=+5° and the selected current speed, comparing Model A's <code>force_y_ship_port_N</code> and Model B's <code>simple_plate_force_y_ship_port_N</code>.</p>
 <table id="rudder-model-comparison-table" class="data-table" aria-label="Side-by-side rudder model A vs model B at default case">
-<thead><tr><th>Quantity</th><th>Model A (Whicker-Fehlner)</th><th>Model B (thin-plate, Faltinsen 1990 §6.5)</th></tr></thead>
+<thead><tr><th>Quantity</th><th>Model A — Whicker-Fehlner [3]</th><th>Model B — thin-plate (Faltinsen [2] §6.5)</th></tr></thead>
 <tbody>
-<tr><td>Normal force F (N)</td><td id="rudder-comp-a-normal">—</td><td id="rudder-comp-b-normal">—</td></tr>
-<tr><td>Longitudinal X_rudder (kN)</td><td id="rudder-comp-a-x">—</td><td id="rudder-comp-b-x">—</td></tr>
-<tr><td>Transverse Y_rudder (kN, port)</td><td id="rudder-comp-a-y">—</td><td id="rudder-comp-b-y">—</td></tr>
-<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id="rudder-comp-a-n">—</td><td id="rudder-comp-b-n">—</td></tr>
+<tr><td>Normal force F (N)</td><td id="rudder-comp-a-normal">26450</td><td id="rudder-comp-b-normal">141955</td></tr>
+<tr><td>Longitudinal X_rudder (kN)</td><td id="rudder-comp-a-x">8</td><td id="rudder-comp-b-x">44</td></tr>
+<tr><td>Transverse Y_rudder (kN, port)</td><td id="rudder-comp-a-y">25</td><td id="rudder-comp-b-y">135</td></tr>
+<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id="rudder-comp-a-n">3404</td><td id="rudder-comp-b-n">18267</td></tr>
 </tbody>
 </table>
 <p class="note-panel"><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect each model's simplifying assumptions and the stall cap in Model B.</p>
@@ -439,10 +456,12 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
 <h2>Method &amp; Provenance</h2>
 <pre class="method-block">V=kn*0.51444; F=beta*A_R*V^2*Cr; alpha=delta-psi; X_local=F*sin(alpha)^2; Y_local=F*sin(alpha)*cos(alpha); X_ship=X_local*cos(psi)-Y_local*sin(psi); Y_ship=X_local*sin(psi)+Y_local*cos(psi); N=Y_ship*yaw_lever</pre>
 <ul>
-<li>Heading/rudder effective-angle convention: α = rudder_angle_deg − heading_offset_deg.</li>
+<li>Heading/rudder effective-angle convention: α = δ − ψ.</li>
 <li>Local-to-ship transform rotates local current-frame X/Y loads into ship-fixed CoG axes.</li>
-<li>Current review equations: q=0.5·ρ·V²; Cxc, Cyc, Cxyc interpolated from OCIMF loaded-tanker A9/A10/A11 workbook curves via the approved off-repo source route; Xc=q·A_f·Cxc; Yc=q·A_l·Cyc; Nc=q·A_l·LBP·Cxyc.</li>
-<li>Scope note: hull current loads are first-cut generic/reference OCIMF tanker-current comparison loads; this is not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
+<li>Current review equations: q=0.5·ρ·V²; Cxc, Cyc, Cxyc interpolated from OCIMF MEG4 (2018) [1] Annex A figures A9/A10/A11, loaded-tanker WD/T&gt;6 family; Xc=q·A_f·Cxc; Yc=q·A_l·Cyc; Nc=q·A_l·LBP·Cxyc.</li>
+<li>Rudder Model A (default) per Whicker &amp; Fehlner [3]: F = β·A_R·V²·Cr·sin(α).</li>
+<li>Rudder Model B (comparison) per Faltinsen [2] §6.5: F = 0.5·ρ·A_R·V²·Cn(α) with Cn(α) ≈ 2π·sin(α) and stall cap at ±28°.</li>
+<li>Scope note: hull current loads are screening estimates using OCIMF tanker-class coefficients; not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
 </ul>
 <pre class="method-block">{
   "row_count": 990,
@@ -458,6 +477,21 @@ select { min-width:190px; padding:8px 10px; border:1px solid var(--line); border
   "max_abs_total_yaw_signed_moment_kN_m": 17082.83346121411,
   "max_abs_total_yaw_case": "current 4 kn, heading 5 deg, rudder 28 deg"
 }</pre>
+</section>
+
+<section id="references-section" class="print-section">
+<h2>References</h2>
+<ol style="padding-left:24px; line-height:1.6">
+<li>OCIMF (2018). <em>Mooring Equipment Guidelines</em>, 4th edition (MEG4). Witherby Publishing Group, Livingston, UK. ISBN 978-1-85609-771-0. Annex A — Wind and Current Coefficients for VLCC; figures A9 (Cxc longitudinal), A10 (Cyc transverse), A11 (Cxyc yaw moment); loaded-tanker family, water-depth-to-draft regime applied per §A.1 conventions.</li>
+<li>Faltinsen, O. M. (1990). <em>Sea Loads on Ships and Offshore Structures</em>. Cambridge University Press, Cambridge Ocean Technology Series. §6.5 — Rudder forces (thin-plate small-angle approximation Cn(α) ≈ 2π·sin(α)).</li>
+<li>Whicker, L. F. and Fehlner, L. F. (1958). <em>Free-stream characteristics of a family of low-aspect-ratio, all-movable control surfaces for application to ship design</em>. David Taylor Model Basin Report 933. (Basis for the β·A_R·V²·Cr·sin(α) rudder normal-force formulation used as Model A.)</li>
+</ol>
+<h3>Project Documents</h3>
+<ol style="padding-left:24px; line-height:1.6">
+<li><strong>[P1]</strong> B1528 SIROCCO — Vessel Geometry and Rudder Particulars (<a href="https://github.com/vamseeachanta/workspace-hub/issues/2569">workspace-hub issue #2569</a> source-pack). Project-internal vessel particulars, rudder dimensions, and Whicker-Fehlner β/Cr inputs. (Proprietary; available on request.)</li>
+<li><strong>[P2]</strong> digitalmodel (open-source). Report generator: <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py">b1528_sirocco_current_heading_rudder_report.py</a>. Function <code>run_b1528_current_heading_rudder_report</code> interpolates Annex A figures from the OCIMF MEG4 workbook held off-repo at the licensed publisher path; calculation-time fail-closed if the workbook or citation route cannot be resolved.</li>
+<li><strong>[P3]</strong> Approved revision plan: <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/plans/2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md">workspace-hub issue #2760 plan</a> (dated 2026-05-20).</li>
+</ol>
 </section>
 </main></div>
 <script>

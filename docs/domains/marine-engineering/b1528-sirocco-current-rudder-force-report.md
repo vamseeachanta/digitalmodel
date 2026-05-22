@@ -58,7 +58,7 @@ All forces and moments are reported in **ship-fixed axes at the centre of gravit
 
 ## 4. Load Due to Current
 
-The current load on the hull is estimated using **generic-reference OCIMF MEG3/MEG4 loaded-tanker current coefficients** interpolated from the licensed off-repo workbook. These curves are a tanker-class basis — they are not specific to SIROCCO and are used here as a screening estimate only.
+The current load on the hull is estimated using loaded-tanker current coefficients from **OCIMF MEG4 (2018) [1], Annex A** (figures A9/A10/A11). These curves are a tanker-class basis — they are not vessel-specific to SIROCCO and are used here as a screening estimate only.
 
 Three coefficients drive the load:
 
@@ -139,7 +139,7 @@ Two screening rudder models are presented side by side (Pass C wires Model B num
 - When rudder_angle_deg equals heading_offset_deg, alpha is zero and this rudder-induced component is zero; that is not total hull current load.
 - This report excludes: hull current force at oblique headings beyond the generic basis range, mooring-line stiffness, tug loads, bank effects, current-profile variation, propeller race, IMO/class compliance conclusions.
 
-Original limitations from the YAML input pack:
+Original limitations from the project input pack:
 
 - rudder-induced moored-current loads plus generic/reference OCIMF tanker-current review loads are reported for comparison
 - hull-current terms use report-specific coefficients resolved through the approved off-repo workbook route, not ship-specific SIROCCO current-coefficient curves or certified coefficients
@@ -151,12 +151,23 @@ Original limitations from the YAML input pack:
 
 ---
 
-## Traceability
+## References
 
-- GitHub issue: [workspace-hub #2760](https://github.com/vamseeachanta/workspace-hub/issues/2760)
-- Approved plan: [issue #2760 plan](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/plans/2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md)
-- Source pack: [workspace-hub #2569](https://github.com/vamseeachanta/workspace-hub/issues/2569)
-- Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml)
-- Report generator: [b1528_sirocco_current_heading_rudder_report.py](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py)
+[1] OCIMF (2018). *Mooring Equipment Guidelines*, 4th edition (MEG4). Witherby Publishing Group, Livingston, UK. ISBN 978-1-85609-771-0. Annex A — Wind and Current Coefficients for VLCC; figures A9 (Cxc), A10 (Cyc), A11 (Cxyc); loaded-tanker family, water-depth-to-draft regime per §A.1 conventions.
+
+[2] Faltinsen, O. M. (1990). *Sea Loads on Ships and Offshore Structures*. Cambridge University Press, Cambridge Ocean Technology Series. §6.5 — Rudder forces (thin-plate small-angle approximation `Cn(α) ≈ 2π·sin(α)`).
+
+[3] Whicker, L. F. and Fehlner, L. F. (1958). *Free-stream characteristics of a family of low-aspect-ratio, all-movable control surfaces for application to ship design*. David Taylor Model Basin Report 933. (Basis for the `β·A_R·V²·Cr·sin(α)` rudder normal-force formulation used here as Model A.)
+
+### Project Documents
+
+[P1] B1528 SIROCCO — Vessel Geometry and Rudder Particulars ([workspace-hub #2569](https://github.com/vamseeachanta/workspace-hub/issues/2569) source-pack). Project-internal vessel particulars, rudder dimensions, and Whicker-Fehlner β/Cr inputs. (Proprietary; available on request.)
+
+[P2] digitalmodel (open-source). Report generator: [b1528_sirocco_current_heading_rudder_report.py](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py). Function `run_b1528_current_heading_rudder_report` interpolates Annex A figures from the OCIMF MEG4 workbook held off-repo at the licensed publisher path; calculation-time fail-closed if the workbook or citation route cannot be resolved.
+
+[P3] Approved revision plan: [workspace-hub #2760 plan](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/plans/2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md) (dated 2026-05-20).
+
+[P4] Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml).
+
 - Sweep coverage: 990 rows (990 engineering + 0 chart-default).
-- Source pack notes the report basis is **not ship-specific SIROCCO current-coefficient curves**.
+- GitHub issue: [workspace-hub #2760](https://github.com/vamseeachanta/workspace-hub/issues/2760).

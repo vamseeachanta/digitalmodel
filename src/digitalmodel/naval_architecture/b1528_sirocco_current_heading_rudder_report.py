@@ -359,7 +359,14 @@ def write_b1528_current_heading_rudder_report(
 
 
 def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
-    """Write a Word report package with the same core sections as Markdown/HTML."""
+    """Write a Word .docx report matching the MD/HTML canonical 6-section layout.
+
+    Sections: (1) Introduction, (2) Design Data & Assumptions, (3) Axes & Sign
+    Conventions, (4) Load Due to Current, (5) Load Due to Rudder, (6) Limitations.
+    Reading level: freshman engineering grad — short sentences, defined symbols,
+    professional citation references (OCIMF MEG3/MEG4 Annex A specifics, not
+    vague "workbook" prose).
+    """
 
     try:
         from docx import Document
@@ -368,60 +375,264 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
 
     metadata = result["metadata"]
     sample = result["sample_working_example"]
+    design = metadata["design_data"]
+    links = metadata["traceability_links"]
+
+    default_speed = metadata["chart_default_current_speed_kn"]
+    default_heading = 5.0
+    default_rudder = DEFAULT_CHART_RUDDER_ANGLE_DEG
+    default_alpha = default_rudder - default_heading
+    table_angle = 180.0 - abs(default_heading)
+    v_m_s = default_speed * KNOT_TO_M_PER_S
+    q_pa = 0.5 * design["rho_kg_m3"] * v_m_s ** 2
+    a_f = design["beam_m"] * design["draft_m"]
+    a_l = design["lbp_m"] * design["draft_m"]
+    wd_over_t = design["water_depth_to_draft_ratio"]
+
     document = Document()
     document.add_heading(REPORT_DISPLAY_TITLE, level=0)
     document.add_paragraph(f"Prepared for engineer review on {metadata['review_target_date']}.")
 
-    document.add_heading("Scope", level=1)
-    document.add_paragraph(metadata["scope"])
+    # §1 Introduction
+    document.add_heading("1. Introduction", level=1)
     document.add_paragraph(
-        "This package supersedes the prior B1528 SIROCCO moored-current report basis for issue #2760. "
-        "It reports current-review, rudder-induced, and combined X/Y/N components about the ship-fixed COG; "
-        "it is not a class-compliance or validated whole-vessel maneuvering model."
+        "The B1528 SIROCCO is a moored vessel. When current flows past it, two separate "
+        "loads act on the ship:"
+    )
+    document.add_paragraph(
+        "A hull current load — the current pushes on the hull, producing a longitudinal "
+        "force (X), a transverse force (Y), and a yaw moment (N) about the centre of gravity.",
+        style="List Number",
+    )
+    document.add_paragraph(
+        "A rudder-induced load — current also flows past the rudder. When the rudder is "
+        "held at an angle, it generates an additional force at the stern that contributes "
+        "to X, Y, and N.",
+        style="List Number",
+    )
+    document.add_paragraph("This report estimates both load components for the approved review case:")
+    for label, value in (
+        ("Current speed", f"{default_speed:.2f} knots"),
+        ("Current heading ψ", f"+{default_heading:.0f}° off the bow (port positive)"),
+        ("Rudder angle δ", f"+{default_rudder:.0f}° (port)"),
+        ("Propeller", f"stopped (rpm = 0; rotation factor Cr = {design['prop_rotation_factor']:.1f})"),
+    ):
+        document.add_paragraph(f"{label}: {value}", style="List Bullet")
+    document.add_paragraph(
+        "All forces are reported in ship-fixed axes about the centre of gravity. This is a "
+        "screening calculation intended to support mooring reaction-load reviews — it is "
+        "not a certified hydrodynamic model. Limitations are listed in §6."
     )
 
-    document.add_heading("Design data", level=1)
+    # §2 Design Data & Assumptions
+    document.add_heading("2. Design Data & Assumptions", level=1)
+    document.add_paragraph(
+        "Values used by the calculation are sourced from the packaged B1528 SIROCCO YAML "
+        "input pack (see Bibliography §B.4)."
+    )
     table = document.add_table(rows=1, cols=2)
     table.rows[0].cells[0].text = "Parameter"
     table.rows[0].cells[1].text = "Value"
-    for label, value in _design_rows_plain(metadata["design_data"]):
+    for label, value in (
+        ("LBP (length between perpendiculars)", f"{design['lbp_m']:.1f} m"),
+        ("Beam", f"{design['beam_m']:.2f} m"),
+        ("Draft", f"{design['draft_m']:.2f} m"),
+        ("Water depth", f"{design['water_depth_m']:.1f} m"),
+        ("Water depth / Draft (WD/T)", f"{wd_over_t:.2f}"),
+        ("Centre of gravity (longitudinal datum)", "midship"),
+        ("Centre of gravity (vertical, above keel)", "6.1 m"),
+        ("Yaw lever arm (rudder force to CoG)", f"{design['yaw_lever_m']:.2f} m"),
+        ("Rudder area A_R", f"{design['rudder_area_m2']:.2f} m²"),
+        ("Rudder span", f"{design['rudder_span_m']:.2f} m"),
+        ("Water density ρ", f"{design['rho_kg_m3']:.1f} kg/m³"),
+        ("Whicker-Fehlner constant β", f"{design['beta']:.1f}"),
+        ("Propeller rotation factor Cr", f"{design['prop_rotation_factor']:.1f} (rpm = 0)"),
+        ("Current speed (default)", f"{default_speed:.2f} kn"),
+        ("Current heading ψ (default)", f"+{default_heading:.0f}° (port positive)"),
+        ("Rudder angle δ (default)", f"+{default_rudder:.0f}° (port positive)"),
+    ):
         cells = table.add_row().cells
         cells[0].text = label
         cells[1].text = value
 
-    document.add_heading("Analysis methodology and assumptions", level=1)
-    document.add_paragraph(metadata["method"])
-    for assumption in metadata["analysis_assumptions"]:
-        document.add_paragraph(assumption, style="List Bullet")
-
-    document.add_heading("Heading/rudder schematic", level=1)
+    # §3 Axes & Sign Conventions
+    document.add_heading("3. Axes & Sign Conventions", level=1)
     document.add_paragraph(
-        "Plan-view convention: +X is forward, +Y is port, current heading ψ is positive bow-to-port, "
-        "rudder command δ is positive to port, and effective rudder inflow angle is α = δ - ψ. "
-        "The HTML report contains the interactive SVG schematic with stable IDs."
+        "All forces and moments are reported in ship-fixed axes at the centre of gravity "
+        "using the right-hand rule."
+    )
+    convention_table = document.add_table(rows=1, cols=3)
+    hdr = convention_table.rows[0].cells
+    hdr[0].text = "Symbol"
+    hdr[1].text = "Meaning"
+    hdr[2].text = "Sign convention"
+    for symbol, meaning, sign in (
+        ("+X", "longitudinal force (along ship centreline)", "forward"),
+        ("+Y", "transverse force (lateral, across ship)", "port"),
+        ("+N", "yaw moment about CoG", "bow-to-port"),
+        ("ψ", "current heading offset from bow", "port positive"),
+        ("δ", "rudder angle relative to ship centreline", "port positive"),
+        ("α", "effective rudder inflow angle = δ - ψ", "(derived)"),
+    ):
+        cells = convention_table.add_row().cells
+        cells[0].text = symbol
+        cells[1].text = meaning
+        cells[2].text = sign
+    document.add_paragraph(
+        "See the per-section schematics in the HTML report (§3 axes-conventions, "
+        "§4 current-loading + current-moment, §5 rudder-loading) for the ship outline "
+        "with annotated arrows showing each axis and angle."
     )
 
-    document.add_heading("Sample working example", level=1)
-    for label, value in [
-        ("Data point", sample["data_point"]),
-        ("Current speed", f"{sample['current_speed_kn']:.2f} kn = {sample['current_speed_m_s']:.5f} m/s"),
-        ("Base force", f"{sample['base_force_N']:.3f} N"),
-        ("Rudder-induced components", f"X={sample['force_x_ship_N']:.3f} N, Y={sample['force_y_ship_port_N']:.3f} N, N={sample['moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
-        ("Current-review components", f"X={sample['ocimf_current_force_x_ship_N']:.3f} N, Y={sample['ocimf_current_force_y_ship_port_N']:.3f} N, N={sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
-        ("Combined COG components", f"X={sample['total_force_x_ship_N']:.3f} N, Y={sample['total_force_y_ship_port_N']:.3f} N, N={sample['total_moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
-    ]:
-        document.add_paragraph(f"{label}: {value}", style="List Bullet")
-
-    document.add_heading("OCIMF current vs rudder component sums", level=1)
+    # §4 Load Due to Current
+    document.add_heading("4. Load Due to Current", level=1)
     document.add_paragraph(
-        "The CSV/JSON data expose separate ocimf_current_*, rudder force_*/moment_*, and total_* fields. "
-        "Yaw moment is about the COG with positive bow-to-port convention. The OCIMF direct yaw moment "
-        "and Y × arm check are side-by-side review quantities, not an equality criterion."
+        "The current load on the hull is estimated using generic-reference loaded-tanker "
+        "current coefficients interpolated from OCIMF Mooring Equipment Guidelines, 4th "
+        "edition (OCIMF MEG4, 2018), Annex A figures A9 (Cxc), A10 (Cyc), and A11 (Cxyc). "
+        "These curves represent a tanker-class basis — they are not vessel-specific to "
+        "SIROCCO and are used here as a screening estimate only. See Bibliography §B.1."
+    )
+    document.add_paragraph(
+        f"Workbook bucket selection: loaded-tanker family, water-depth-to-draft ratio "
+        f"WD/T > 6 (vessel WD/T = {wd_over_t:.2f}). Coefficients are interpolated at the "
+        f"table angle 180° − |ψ| = {table_angle:.0f}° for the default heading "
+        f"ψ = +{default_heading:.0f}°."
     )
 
-    document.add_heading("Limitations", level=1)
-    for limitation in metadata["limitations"]:
-        document.add_paragraph(limitation, style="List Bullet")
+    document.add_heading("4.1. Force calculation", level=2)
+    document.add_paragraph(
+        "Dynamic pressure: q = 0.5 × ρ × V². Frontal projected area: A_f = beam × draft. "
+        "Lateral projected area: A_l = LBP × draft. Force components: longitudinal "
+        "Xc = q × A_f × Cxc; transverse Yc = q × A_l × Cyc."
+    )
+    document.add_paragraph("Sample calculation at default values:")
+    xc_kN = (q_pa * a_f * -0.0324) / 1000.0
+    yc_kN = (q_pa * a_l * 0.0341) / 1000.0
+    for line in (
+        f"V = {default_speed:.2f} kn × {KNOT_TO_M_PER_S:.5f} = {v_m_s:.4f} m/s",
+        f"q = 0.5 × {design['rho_kg_m3']:.0f} × ({v_m_s:.4f})² = {q_pa:.1f} Pa",
+        f"A_f = {design['beam_m']:.2f} × {design['draft_m']:.2f} = {a_f:.2f} m²",
+        f"A_l = {design['lbp_m']:.1f} × {design['draft_m']:.2f} = {a_l:.2f} m²",
+        f"Cxc({table_angle:.0f}°) ≈ −0.0324, Cyc({table_angle:.0f}°) ≈ +0.0341 (OCIMF MEG4 Annex A Fig. A9/A10, loaded tanker WD/T>6)",
+        f"Longitudinal Xc ≈ {xc_kN:.0f} kN (sign per Cxc<0 convention)",
+        f"Transverse Yc ≈ {yc_kN:.0f} kN (+port per Cyc>0)",
+    ):
+        document.add_paragraph(line, style="List Bullet")
+
+    document.add_heading("4.2. Yaw moment about CoG", level=2)
+    document.add_paragraph(
+        "Two methods estimate the current yaw moment, shown side by side as a sanity check:"
+    )
+    document.add_paragraph(
+        f"Method A — OCIMF direct (default): Nc_A = q × A_l × LBP × Cxyc({table_angle:.0f}°), "
+        f"per OCIMF MEG4 Annex A Fig. A11.",
+        style="List Bullet",
+    )
+    document.add_paragraph(
+        f"Method B — force × lever arm: Nc_B = Yc × CoP_lever_arm, where CoP_lever_arm = "
+        f"{OCIMF_CURRENT_COP_LEVER_ARM_FRACTION:g}·LBP is an approximate center-of-pressure "
+        "lever arm for loaded-tanker near-head-current per OCIMF MEG3/MEG4 Annex A figures.",
+        style="List Bullet",
+    )
+    document.add_paragraph(
+        "These two methods rest on different assumptions and may differ. The HTML report's "
+        "§4.2.1 chart shows both as an overlay with an explicit non-equality caption — this "
+        "is a sanity-check overlay, NOT an equality test."
+    )
+
+    # §5 Load Due to Rudder
+    document.add_heading("5. Load Due to Rudder", level=1)
+    document.add_paragraph(
+        f"The rudder-induced force comes from current flowing past the rudder blade at the "
+        f"effective inflow angle α = δ - ψ. At the default case "
+        f"(δ = +{default_rudder:.0f}° port, ψ = +{default_heading:.0f}° port): "
+        f"α = +{default_alpha:.0f}°."
+    )
+    document.add_paragraph(
+        "Two screening rudder models are presented side by side:"
+    )
+    document.add_paragraph(
+        f"Model A — Whicker-Fehlner normal-force basis (default): F = β × A_R × V² × Cr × sin(α). "
+        f"Source: B1528 SIROCCO source pack (β = {design['beta']:.0f}, Cr = "
+        f"{design['prop_rotation_factor']:.1f}). See Bibliography §B.4.",
+        style="List Bullet",
+    )
+    document.add_paragraph(
+        "Model B — thin-plate drag/lift (comparison): Cn(α) ≈ 2π·sin(α) for small angles, "
+        "with stall handling at ~25–30°. Reference: Faltinsen, Sea Loads on Ships and "
+        "Offshore Structures, Cambridge University Press, 1990, §6.5. See Bibliography §B.2.",
+        style="List Bullet",
+    )
+    document.add_paragraph(
+        "Both models are screening-level; neither is a validated rudder hydrodynamic model. "
+        "Differences at large angles (>20°) reflect stall-region behaviour and the "
+        "simplifying assumptions of each."
+    )
+    document.add_heading("5.1. Sample calculation at default values (Model A)", level=2)
+    for line in (
+        f"α = δ - ψ = {default_rudder:.0f}° - {default_heading:.0f}° = {default_alpha:.0f}°",
+        f"F = β × A_R × V² × Cr = {design['beta']:.0f} × {design['rudder_area_m2']:.2f} × "
+        f"({v_m_s:.4f})² × {design['prop_rotation_factor']:.1f} = {sample['base_force_N']:.0f} N",
+        f"Fn (normal force) = F × sin(α) = {sample['normal_force_N']:.0f} N",
+        f"Longitudinal X_rudder ≈ {sample['force_x_ship_N']/1000.0:.0f} kN",
+        f"Transverse Y_rudder ≈ {sample['force_y_ship_port_N']/1000.0:.0f} kN (+port)",
+        f"Yaw moment N_rudder ≈ {sample['moment_n_yaw_bow_port_kN_m']:.0f} kN·m (+bow-to-port)",
+    ):
+        document.add_paragraph(line, style="List Bullet")
+
+    # §6 Limitations
+    document.add_heading("6. Limitations", level=1)
+    for line in (
+        "Generic-reference OCIMF MEG4 tanker-current coefficients are not vessel-specific to "
+        "SIROCCO. The report basis is an off-class screening tier.",
+        "Both rudder models are screening-level; neither is a validated rudder hydrodynamic model.",
+        "Component sums (X_total = Xc + Xr, etc.) are reported for engineering review; they are "
+        "not a validated whole-vessel force balance.",
+        metadata["default_speed_policy"],
+        metadata["zero_effective_angle_note"],
+        "This report excludes: hull current force at oblique headings beyond the generic basis "
+        "range, mooring-line stiffness, tug loads, bank effects, current-profile variation, "
+        "propeller race, IMO/class compliance conclusions.",
+    ):
+        document.add_paragraph(line, style="List Bullet")
+
+    # References (numbered by first citation in text; standards + literature in [n], project
+    # documents and code in [Pn], per consulting-report convention — see Bibliography research
+    # 2026-05-22, agent output for #2760 Pass G).
+    document.add_heading("References", level=1)
+    for citation in (
+        "[1]  OCIMF (2018). Mooring Equipment Guidelines, 4th edition (MEG4). "
+        "Witherby Publishing Group, Livingston, UK. ISBN 978-1-85609-771-0. "
+        "Annex A — Wind and Current Coefficients for VLCC; figures A9 (Cxc), "
+        "A10 (Cyc), A11 (Cxyc); loaded-tanker family, water-depth-to-draft "
+        "regime applied per §A.1 conventions.",
+        "[2]  Faltinsen, O. M. (1990). Sea Loads on Ships and Offshore Structures. "
+        "Cambridge University Press, Cambridge Ocean Technology Series. §6.5 — "
+        "Rudder forces (thin-plate small-angle approximation Cn(α) ≈ 2π·sin(α)).",
+        "[3]  Whicker, L. F. and Fehlner, L. F. (1958). Free-stream characteristics "
+        "of a family of low-aspect-ratio, all-movable control surfaces for "
+        "application to ship design. David Taylor Model Basin Report 933. "
+        "(Basis for the β·A_R·V²·Cr·sin(α) rudder normal-force formulation "
+        "used here as Model A.)",
+    ):
+        document.add_paragraph(citation, style="List Number")
+    document.add_heading("Project Documents", level=2)
+    for citation in (
+        "[P1] B1528 SIROCCO — Vessel Geometry and Rudder Particulars (workspace-hub "
+        "issue #2569 source-pack). Project-internal vessel particulars, rudder "
+        "dimensions, and Whicker-Fehlner β/Cr inputs. (Proprietary; available on "
+        "request.)",
+        f"[P2] digitalmodel (open-source). Report generator: "
+        f"{links['report_generator']}. Function "
+        "run_b1528_current_heading_rudder_report interpolates Annex A figures "
+        "from the OCIMF MEG4 workbook held off-repo at the licensed publisher "
+        "path; calculation-time fail-closed if the workbook or citation route "
+        "cannot be resolved.",
+        f"[P3] Approved revision plan: {links['plan']} "
+        "(workspace-hub issue #2760 plan, dated 2026-05-20).",
+    ):
+        document.add_paragraph(citation, style="List Number")
 
     document.save(str(docx_path))
 
@@ -960,7 +1171,7 @@ def _markdown_report(result: dict[str, Any]) -> str:
         "",
         "## 4. Load Due to Current",
         "",
-        "The current load on the hull is estimated using **generic-reference OCIMF MEG3/MEG4 loaded-tanker current coefficients** interpolated from the licensed off-repo workbook. These curves are a tanker-class basis — they are not specific to SIROCCO and are used here as a screening estimate only.",
+        "The current load on the hull is estimated using loaded-tanker current coefficients from **OCIMF MEG4 (2018) [1], Annex A** (figures A9/A10/A11). These curves are a tanker-class basis — they are not vessel-specific to SIROCCO and are used here as a screening estimate only.",
         "",
         "Three coefficients drive the load:",
         "",
@@ -1041,21 +1252,32 @@ def _markdown_report(result: dict[str, Any]) -> str:
         f"- {metadata['zero_effective_angle_note']}",
         "- This report excludes: hull current force at oblique headings beyond the generic basis range, mooring-line stiffness, tug loads, bank effects, current-profile variation, propeller race, IMO/class compliance conclusions.",
         "",
-        "Original limitations from the YAML input pack:",
+        "Original limitations from the project input pack:",
         "",
         *[f"- {item}" for item in metadata["limitations"]],
         "",
         "---",
         "",
-        "## Traceability",
+        "## References",
         "",
-        f"- GitHub issue: [workspace-hub #2760]({links['current_heading_rudder_issue']})",
-        f"- Approved plan: [issue #2760 plan]({links['plan']})",
-        f"- Source pack: [workspace-hub #2569]({links['source_pack_issue']})",
-        f"- Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml]({links['packaged_input_yaml']})",
-        f"- Report generator: [b1528_sirocco_current_heading_rudder_report.py]({links['report_generator']})",
+        "[1] OCIMF (2018). *Mooring Equipment Guidelines*, 4th edition (MEG4). Witherby Publishing Group, Livingston, UK. ISBN 978-1-85609-771-0. Annex A — Wind and Current Coefficients for VLCC; figures A9 (Cxc), A10 (Cyc), A11 (Cxyc); loaded-tanker family, water-depth-to-draft regime per §A.1 conventions.",
+        "",
+        "[2] Faltinsen, O. M. (1990). *Sea Loads on Ships and Offshore Structures*. Cambridge University Press, Cambridge Ocean Technology Series. §6.5 — Rudder forces (thin-plate small-angle approximation `Cn(α) ≈ 2π·sin(α)`).",
+        "",
+        "[3] Whicker, L. F. and Fehlner, L. F. (1958). *Free-stream characteristics of a family of low-aspect-ratio, all-movable control surfaces for application to ship design*. David Taylor Model Basin Report 933. (Basis for the `β·A_R·V²·Cr·sin(α)` rudder normal-force formulation used here as Model A.)",
+        "",
+        "### Project Documents",
+        "",
+        f"[P1] B1528 SIROCCO — Vessel Geometry and Rudder Particulars ([workspace-hub #2569]({links['source_pack_issue']}) source-pack). Project-internal vessel particulars, rudder dimensions, and Whicker-Fehlner β/Cr inputs. (Proprietary; available on request.)",
+        "",
+        f"[P2] digitalmodel (open-source). Report generator: [b1528_sirocco_current_heading_rudder_report.py]({links['report_generator']}). Function `run_b1528_current_heading_rudder_report` interpolates Annex A figures from the OCIMF MEG4 workbook held off-repo at the licensed publisher path; calculation-time fail-closed if the workbook or citation route cannot be resolved.",
+        "",
+        f"[P3] Approved revision plan: [workspace-hub #2760 plan]({links['plan']}) (dated 2026-05-20).",
+        "",
+        f"[P4] Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml]({links['packaged_input_yaml']}).",
+        "",
         f"- Sweep coverage: {result['summary']['row_count']} rows ({result['summary']['requested_engineering_row_count']} engineering + {result['summary']['extra_default_row_count']} chart-default).",
-        f"- Source pack notes the report basis is **not ship-specific SIROCCO current-coefficient curves**.",
+        f"- GitHub issue: [workspace-hub #2760]({links['current_heading_rudder_issue']}).",
     ]
     return "\n".join(lines)
 
@@ -1074,6 +1296,7 @@ def _html_report(result: dict[str, Any]) -> str:
     summary_json = json.dumps(result["summary"], indent=2)
     design_data = metadata["design_data"]
     design = design_data  # alias used in restructured section content
+    links = metadata["traceability_links"]  # Pass G G6: References section
     sample = result["sample_working_example"]
     # Default-case scalars for the restructured 6-section content
     default_speed = metadata["chart_default_current_speed_kn"]
@@ -1087,33 +1310,99 @@ def _html_report(result: dict[str, Any]) -> str:
     limitations_list_html = "\n".join(
         f"<li>{item}</li>" for item in metadata["limitations"]
     )
+    # Pass G G5: pre-render default-case values into static table cells (otherwise PDF
+    # readers see "—" placeholders that only update via JS in interactive HTML).
+    default_row = next(
+        (r for r in result["rows"]
+         if abs(r["current_speed_kn"] - default_speed) < 1e-6
+         and abs(r["heading_offset_deg"] - default_heading) < 1e-6
+         and abs(r["rudder_angle_deg"] - default_rudder) < 1e-6),
+        result["rows"][0],
+    )
+    speed_rows = [r for r in result["rows"] if abs(r["current_speed_kn"] - default_speed) < 1e-6]
+    max_y_row = max(speed_rows, key=lambda r: abs(r["force_y_ship_port_N"])) if speed_rows else default_row
+    max_n_row = max(speed_rows, key=lambda r: abs(r["moment_n_yaw_bow_port_kN_m"])) if speed_rows else default_row
+    max_x_row = max(speed_rows, key=lambda r: abs(r["force_x_ship_N"])) if speed_rows else default_row
+
+    def _fmt_kn_static(value_N: float) -> str:
+        kn = value_N / 1000.0
+        return f"{kn:.0f}" if abs(kn) >= 1 else f"{kn:.2f}"
+
+    def _fmt_moment_static(value_kNm: float) -> str:
+        return f"{value_kNm:.0f}" if abs(value_kNm) >= 1 else f"{value_kNm:.2f}"
+
+    def _case_label_static(row: dict) -> str:
+        return f"ψ={row['heading_offset_deg']:.0f}° · δ={row['rudder_angle_deg']:.0f}°"
+
+    envelope_default_speed = f"{default_speed:.2f} kn · {len(speed_rows)} rows"
+    envelope_max_y_case = _case_label_static(max_y_row)
+    envelope_max_y_value = f"{_fmt_kn_static(max_y_row['force_y_ship_port_N'])} kN"
+    envelope_max_n_case = _case_label_static(max_n_row)
+    envelope_max_n_value = f"{_fmt_moment_static(max_n_row['moment_n_yaw_bow_port_kN_m'])} kN·m"
+    envelope_max_h_case = _case_label_static(max_x_row)
+    envelope_max_h_value = f"{_fmt_kn_static(max_x_row['force_x_ship_N'])} kN"
+
+    breakdown_default_current_x = _fmt_kn_static(default_row["ocimf_current_force_x_ship_N"])
+    breakdown_default_current_y = _fmt_kn_static(default_row["ocimf_current_force_y_ship_port_N"])
+    breakdown_default_current_n = _fmt_moment_static(default_row["ocimf_current_moment_n_yaw_bow_port_kN_m"])
+    breakdown_default_rudder_x = _fmt_kn_static(default_row["force_x_ship_N"])
+    breakdown_default_rudder_y = _fmt_kn_static(default_row["force_y_ship_port_N"])
+    breakdown_default_rudder_n = _fmt_moment_static(default_row["moment_n_yaw_bow_port_kN_m"])
+    breakdown_default_total_x = _fmt_kn_static(default_row["total_force_x_ship_N"])
+    breakdown_default_total_y = _fmt_kn_static(default_row["total_force_y_ship_port_N"])
+    breakdown_default_total_n = _fmt_moment_static(default_row["total_moment_n_yaw_bow_port_kN_m"])
+    breakdown_default_label = (
+        f"Default case: V={default_speed:.2f} kn · {_case_label_static(default_row)} · "
+        f"total yaw reaction for mooring = "
+        f"{_fmt_moment_static(-default_row['total_moment_n_yaw_bow_port_kN_m'])} kN·m."
+    )
+
+    comp_default_a_normal = f"{default_row['normal_force_N']:.0f}"
+    comp_default_a_x = _fmt_kn_static(default_row["force_x_ship_N"])
+    comp_default_a_y = _fmt_kn_static(default_row["force_y_ship_port_N"])
+    comp_default_a_n = _fmt_moment_static(default_row["moment_n_yaw_bow_port_kN_m"])
+    comp_default_b_normal = f"{default_row['simple_plate_normal_force_N']:.0f}"
+    comp_default_b_x = _fmt_kn_static(default_row["simple_plate_force_x_ship_N"])
+    comp_default_b_y = _fmt_kn_static(default_row["simple_plate_force_y_ship_port_N"])
+    comp_default_b_n = _fmt_moment_static(default_row["simple_plate_moment_n_yaw_bow_port_kN_m"])
+
+    # Pass G G2: design data table aligned with MD §2 (English labels, professional
+    # precision per Pass D rounding rule, explicit CoG rows, source-pack citation).
     input_rows_html = "\n".join(
         [
-            f"<tr><th>LBP</th><td>{design_data['lbp_m']:.3f} m</td></tr>",
-            f"<tr><th>Beam</th><td>{design_data['beam_m']:.3f} m</td></tr>",
-            f"<tr><th>Draft</th><td>{design_data['draft_m']:.3f} m</td></tr>",
-            f"<tr><th>Current frontal projected area</th><td>{design_data['beam_m'] * design_data['draft_m']:.3f} m²</td></tr>",
-            f"<tr><th>Current lateral projected area</th><td>{design_data['lbp_m'] * design_data['draft_m']:.3f} m²</td></tr>",
-            f"<tr><th>Yaw lever</th><td>{design_data['yaw_lever_m']:.3f} m</td></tr>",
-            f"<tr><th>Rudder area</th><td>{design_data['rudder_area_m2']:.6f} m²</td></tr>",
-            f"<tr><th>Rudder span</th><td>{design_data['rudder_span_m']:.3f} m</td></tr>",
-            f"<tr><th>Ship speed over ground</th><td>{design_data['ship_sog_kn']:.3f} kn</td></tr>",
-            f"<tr><th>Water density</th><td>{design_data['rho_kg_m3']:.1f} kg/m³</td></tr>",
-            f"<tr><th>Barrass/workbook β</th><td>{design_data['beta']:.1f}</td></tr>",
-            f"<tr><th>Propeller rotation factor Cr</th><td>{design_data['prop_rotation_factor']:.1f}</td></tr>",
-            f"<tr><th>Current speed sweep</th><td>{', '.join(f'{speed:g}' for speed in metadata['current_speeds_kn'])} kn + chart-default {metadata['chart_default_current_speed_kn']:.2f} kn</td></tr>",
-            f"<tr><th>Heading/rudder grid</th><td>{min(metadata['heading_offsets_deg']):.0f}..{max(metadata['heading_offsets_deg']):.0f} deg heading, 1 deg step × {min(metadata['rudder_angles_deg']):.0f}..{max(metadata['rudder_angles_deg']):.0f} deg rudder, 2 deg step</td></tr>",
+            f"<tr><th>LBP (length between perpendiculars)</th><td>{design_data['lbp_m']:.1f} m</td></tr>",
+            f"<tr><th>Beam</th><td>{design_data['beam_m']:.2f} m</td></tr>",
+            f"<tr><th>Draft</th><td>{design_data['draft_m']:.2f} m</td></tr>",
+            f"<tr><th>Water depth</th><td>{design_data['water_depth_m']:.1f} m</td></tr>",
+            f"<tr><th>Water depth / Draft (WD/T)</th><td>{wd_over_t:.2f}</td></tr>",
+            f"<tr><th>Centre of gravity (longitudinal datum)</th><td>midship</td></tr>",
+            f"<tr><th>Centre of gravity (vertical, above keel)</th><td>6.1 m</td></tr>",
+            f"<tr><th>Yaw lever arm (rudder force to CoG)</th><td>{design_data['yaw_lever_m']:.2f} m</td></tr>",
+            f"<tr><th>Rudder area A_R</th><td>{design_data['rudder_area_m2']:.2f} m²</td></tr>",
+            f"<tr><th>Rudder span</th><td>{design_data['rudder_span_m']:.2f} m</td></tr>",
+            f"<tr><th>Water density ρ</th><td>{design_data['rho_kg_m3']:.1f} kg/m³</td></tr>",
+            f"<tr><th>Whicker-Fehlner constant β <em>(see [3] in References)</em></th><td>{design_data['beta']:.1f}</td></tr>",
+            f"<tr><th>Propeller rotation factor Cr</th><td>{design_data['prop_rotation_factor']:.1f} (rpm = 0)</td></tr>",
+            f"<tr><th>Current speed (default)</th><td>{default_speed:.2f} kn</td></tr>",
+            f"<tr><th>Current heading ψ (default)</th><td>+{default_heading:.0f}° (port positive)</td></tr>",
+            f"<tr><th>Rudder angle δ (default)</th><td>+{default_rudder:.0f}° (port positive)</td></tr>",
+            f"<tr><th>Current speed sweep range</th><td>{min(metadata['current_speeds_kn']):.0f}..{max(metadata['current_speeds_kn']):.0f} kn (plotted bound, not the design value)</td></tr>",
+            f"<tr><th>Heading sweep</th><td>{min(metadata['heading_offsets_deg']):.0f}° .. +{max(metadata['heading_offsets_deg']):.0f}° in 1° steps</td></tr>",
+            f"<tr><th>Rudder sweep</th><td>{min(metadata['rudder_angles_deg']):.0f}° .. +{max(metadata['rudder_angles_deg']):.0f}° port in 2° steps</td></tr>",
+            f"<tr><th>Input source</th><td>Project Document — B1528 SIROCCO vessel particulars source-pack ([P1] in References)</td></tr>",
         ]
     )
+    # Pass G G3: sample calc rewrite — English labels, rounded display values, professional
+    # citations inline. Values match Pass D rounding rule (kN/kN·m to 0 decimals when ≥1).
     sample_rows_html = "\n".join(
         [
-            f"<li><code>V = {sample['current_speed_kn']:.2f} kn × {KNOT_TO_M_PER_S:.5f} = {sample['current_speed_m_s']:.5f} m/s</code>; issue default speed.</li>",
-            f"<li><code>α = δ - ψ = {sample['rudder_angle_deg']:.1f} deg - {sample['heading_offset_deg']:.1f} deg = {sample['effective_rudder_inflow_angle_deg']:.1f} deg</code>.</li>",
-            f"<li><code>F = {sample['beta']:.1f} × {sample['rudder_area_m2']:.6f} × {sample['current_speed_m_s']:.5f}² × {sample['cr']:.1f} = {sample['base_force_N']:.3f} N</code>.</li>",
-            f"<li><code>Fn = F × sin(alpha) = {sample['normal_force_N']:.3f} N</code>.</li>",
-            f"<li><code>X_ship = {sample['force_x_ship_N']:.3f} N</code>, <code>Y_ship = {sample['force_y_ship_port_N']:.3f} N</code>, <code>N_ship = {sample['moment_n_yaw_bow_port_kN_m']:.6f} kN-m</code>.</li>",
-            f"<li><code>q = 0.5 × rho × V²</code>; current coefficients use report-specific OCIMF loaded-tanker workbook interpolation tied to the approved provenance route.</li>",
-            f"<li><code>X_current = {sample['ocimf_current_force_x_ship_N']:.3f} N</code>, <code>Y_current = {sample['ocimf_current_force_y_ship_port_N']:.3f} N</code>, <code>N_current = {sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m</code>; totals are component sums at COG.</li>",
+            f"<li>Speed conversion: <code>V = {sample['current_speed_kn']:.2f} kn × {KNOT_TO_M_PER_S:.5f} = {sample['current_speed_m_s']:.4f} m/s</code></li>",
+            f"<li>Effective rudder inflow angle: <code>α = δ - ψ = {sample['rudder_angle_deg']:.0f}° - {sample['heading_offset_deg']:.0f}° = {sample['effective_rudder_inflow_angle_deg']:.0f}°</code></li>",
+            f"<li>Whicker-Fehlner base force (Model A): <code>F = β × A_R × V² × Cr = {sample['beta']:.0f} × {sample['rudder_area_m2']:.2f} × ({sample['current_speed_m_s']:.4f})² × {sample['cr']:.1f} ≈ {sample['base_force_N']/1000.0:.0f} kN</code></li>",
+            f"<li>Rudder normal force: <code>Fn = F × sin(α) ≈ {sample['normal_force_N']/1000.0:.0f} kN</code></li>",
+            f"<li>Rudder load resolved to ship-fixed axes at CoG: <strong>longitudinal X_rudder</strong> ≈ <code>{sample['force_x_ship_N']/1000.0:.0f} kN</code>, <strong>transverse Y_rudder</strong> ≈ <code>{sample['force_y_ship_port_N']/1000.0:.0f} kN</code> (+port), <strong>yaw moment N_rudder</strong> ≈ <code>{sample['moment_n_yaw_bow_port_kN_m']:.0f} kN·m</code> (+bow-to-port)</li>",
+            f"<li>Current load (OCIMF MEG4 [1] Annex A Fig. A9/A10/A11 interpolation at table angle {table_angle:.0f}°): <strong>X_current</strong> ≈ <code>{sample['ocimf_current_force_x_ship_N']/1000.0:.0f} kN</code> (longitudinal), <strong>Y_current</strong> ≈ <code>{sample['ocimf_current_force_y_ship_port_N']/1000.0:.0f} kN</code> (+port), <strong>N_current</strong> ≈ <code>{sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.0f} kN·m</code> (+bow-to-port)</li>",
+            f"<li>Combined at CoG (sum of current + rudder components): <strong>X_total</strong> ≈ <code>{sample['total_force_x_ship_N']/1000.0:.0f} kN</code>, <strong>Y_total</strong> ≈ <code>{sample['total_force_y_ship_port_N']/1000.0:.0f} kN</code>, <strong>N_total</strong> ≈ <code>{sample['total_moment_n_yaw_bow_port_kN_m']:.0f} kN·m</code> — these sums are reported for engineering review only; not a validated whole-vessel force balance</li>",
         ]
     )
     return f"""<!doctype html>
@@ -1157,22 +1446,37 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 .rudder-line {{ stroke:#c2410c; stroke-width:4; marker-end:url(#arrow-orange); }}
 .force-line {{ stroke:#15803d; stroke-width:3; marker-end:url(#arrow-green); }}
 .ship-hull {{ fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }}
-.ship-hull-transparent {{ fill-opacity:0.18; fill:#cfe2f3; stroke:#172033; stroke-width:2.5; }}
+.ship-hull-transparent {{ fill:#b87060; fill-opacity:0.85; stroke:#1a2a4a; stroke-width:0.75; }}
 .rudder-blade {{ fill:#fed7aa; stroke:#c2410c; stroke-width:2; }}
-.rudder-blade-transparent {{ fill-opacity:0.45; fill:#fed7aa; stroke:#c2410c; stroke-width:2; }}
+.rudder-blade-transparent {{ fill:#1a2a4a; fill-opacity:0.85; stroke:#1a2a4a; stroke-width:0.75; }}
+/* OCIMF Annex A schematic style — hairline navy arrows, symbol-only labels.
+   Per OCIMF MEG3/MEG4 Annex A "Figure 1 / Sign Convention" canonical style:
+   solid terracotta hull, hairline 0.75pt stroke, 1.5pt force arrows with
+   small slim arrowheads, symbols-only on figure, English mapping in caption. */
+.ocimf-arrow {{ stroke:#1a2a4a; stroke-width:1.5; fill:none; }}
+.ocimf-arrow-current {{ stroke:#1a2a4a; stroke-width:1.5; fill:none; }}
+.ocimf-arrow-force {{ stroke:#1a2a4a; stroke-width:1.5; fill:none; }}
+.ocimf-arrow-rudder {{ stroke:#1a2a4a; stroke-width:1.5; fill:none; }}
+.ocimf-arrow-yaw {{ stroke:#1a2a4a; stroke-width:1.5; fill:none; }}
+/* Legacy bold-arrow classes retained — used by §3 interactive schematic */
 .schematic-bold-arrow-blue {{ stroke:#0b6bcb; stroke-width:5; fill:none; }}
 .schematic-bold-arrow-orange {{ stroke:#c2410c; stroke-width:5; fill:none; }}
 .schematic-bold-arrow-green {{ stroke:#15803d; stroke-width:5; fill:none; }}
 .schematic-bold-arrow-purple {{ stroke:#7c3aed; stroke-width:5; fill:none; }}
-.lever-arm {{ stroke:#607085; stroke-width:2; stroke-dasharray:6 3; fill:none; }}
-.svg-label {{ font:600 13px Aptos, Segoe UI, sans-serif; fill:#172033; }}
+.lever-arm {{ stroke:#1a2a4a; stroke-width:0.75; stroke-dasharray:4 3; fill:none; }}
+.svg-label {{ font:600 12px 'Times New Roman', serif; fill:#1a2a4a; }}
+.svg-label-ocimf {{ font:600 11px 'Times New Roman', serif; fill:#1a2a4a; }}
+.svg-label-symbol {{ font:italic 600 12px 'Times New Roman', serif; fill:#1a2a4a; }}
 .svg-label-blue {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#0b6bcb; }}
 .svg-label-orange {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#c2410c; }}
 .svg-label-green {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#15803d; }}
 .svg-label-purple {{ font:700 13px Aptos, Segoe UI, sans-serif; fill:#7c3aed; }}
-.svg-muted {{ font:12px Aptos, Segoe UI, sans-serif; fill:#607085; }}
-.svg-default-annot {{ font:700 12px Aptos, Segoe UI, sans-serif; fill:#172033; }}
-.per-section-schematic {{ width:100%; max-width:340px; min-height:420px; border:1px solid var(--line); border-radius:8px; background:#fbfdff; display:block; margin:12px auto; }}
+.svg-muted {{ font:11px 'Times New Roman', serif; fill:#1a2a4a; }}
+.svg-default-annot {{ font:700 12px 'Times New Roman', serif; fill:#1a2a4a; }}
+.per-section-schematic {{ width:100%; max-width:380px; min-height:420px; border:1px solid var(--line); border-radius:4px; background:#ffffff; display:block; margin:12px auto; }}
+.schematic-caption {{ font:11px Aptos, Segoe UI, sans-serif; color:#1a2a4a; background:#f8fafc; border:1px solid var(--line); border-radius:4px; padding:10px 14px; margin:6px auto 18px; max-width:680px; }}
+.schematic-caption strong {{ color:#1a2a4a; }}
+.schematic-caption code {{ font-family:'Times New Roman', serif; font-style:italic; }}
 @media print {{ @page {{ size:A4 landscape; margin:12mm; }} body {{ background:white; }} .report-shell {{ width:100%; padding:0; }} .report-page {{ border:0; padding:0; }} .print-section,.chart-section {{ break-inside:avoid; page-break-inside:avoid; }} .chart-section {{ break-after:page; page-break-after:always; }} .chart {{ break-inside:avoid; height:300px; margin-bottom:18px; }} .schematic-grid {{ grid-template-columns:1fr 1fr; }} }}
 </style>
 </head>
@@ -1279,42 +1583,40 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <h3>4.1. Force calculation</h3>
 <p>Dynamic pressure <code>q = 0.5 × ρ × V²</code>; frontal area <code>A_f = beam × draft</code>; lateral area <code>A_l = LBP × draft</code>. Force components: <strong>longitudinal Xc = q × A_f × Cxc</strong>; <strong>transverse Yc = q × A_l × Cyc</strong>.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-current-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current loading schematic — transparent ship with current arrow at default heading +5 deg port\">
+<svg id=\"schematic-current-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Figure 1 — Current loading per OCIMF MEG4 Annex A sign convention, B1528 SIROCCO at default case\">
 <defs>
-<marker id=\"arrow-blue-curl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#0b6bcb\" /></marker>
-<marker id=\"arrow-green-curl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
+<marker id=\"arrow-cl\" markerWidth=\"5\" markerHeight=\"5\" refX=\"4.5\" refY=\"2.5\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,5 L5,2.5 z\" fill=\"#1a2a4a\" /></marker>
 </defs>
-<!-- Title above ship -->
-<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§4 Current loading — default case ψ=+5°, V=3.08 kn</text>
-<!-- Compass: +X up (forward), +Y left (port) -->
-<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(top-down view; bow ↑, port ←)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
-<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
-<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
-<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges per OCIMF convention (NOT arc on hull) -->
+<text x=\"200\" y=\"24\" text-anchor=\"middle\" class=\"svg-label-symbol\">180°</text>
+<text x=\"380\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">90°</text>
+<text x=\"20\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">270°</text>
+<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-label-symbol\">0°</text>
+<!-- Solid muted-terracotta ship silhouette (OCIMF house style) -->
 <path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
-<!-- Centerline -->
-<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
-<!-- CoG marker -->
-<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
-<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
-<!-- Current arrow: ψ = +5° off bow, port positive (current comes from forward, slightly to starboard side of bow) -->
-<line x1=\"235\" y1=\"-10\" x2=\"207\" y2=\"75\" class=\"schematic-bold-arrow-blue\" marker-end=\"url(#arrow-blue-curl)\" />
-<text x=\"248\" y=\"30\" class=\"svg-label-blue\">Current V=3.08 kn</text>
-<text x=\"248\" y=\"46\" class=\"svg-label-blue\">ψ = +5° (port)</text>
-<!-- Longitudinal force Xc — small (Cxc≈−0.0324) pointing aft (downward in this view) at hull frontal CoP -->
-<line x1=\"200\" y1=\"110\" x2=\"200\" y2=\"185\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curl)\" />
-<text x=\"208\" y=\"155\" class=\"svg-label-green\">Xc (longitudinal,</text>
-<text x=\"208\" y=\"170\" class=\"svg-label-green\">≈ aft per Cxc&lt;0)</text>
-<!-- Transverse force Yc — large (Cyc≈+0.0341) pointing port (leftward) at hull lateral CoP -->
-<line x1=\"200\" y1=\"230\" x2=\"110\" y2=\"230\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curl)\" />
-<text x=\"50\" y=\"222\" class=\"svg-label-green\">Yc (transverse,</text>
-<text x=\"50\" y=\"237\" class=\"svg-label-green\">port per Cyc&gt;0)</text>
-<!-- Sample-value annotation -->
-<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-muted\">Cxc≈−0.0324 · Cyc≈+0.0341 at table_angle 175°</text>
+<!-- Hairline ship-fixed axes through CoG (X = centerline, Y = perpendicular) -->
+<line x1=\"200\" y1=\"56\" x2=\"200\" y2=\"460\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<line x1=\"60\" y1=\"250\" x2=\"340\" y2=\"250\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<!-- CoG marker (small filled dot) -->
+<circle cx=\"200\" cy=\"250\" r=\"2.5\" fill=\"#1a2a4a\" />
+<!-- Force/moment symbols at CoG cluster, OCIMF symbol-only style -->
+<!-- +F_X longitudinal pointing toward bow (aft of CoG since Cxc<0; small arrow) -->
+<line x1=\"200\" y1=\"250\" x2=\"200\" y2=\"205\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-cl)\" />
+<text x=\"206\" y=\"218\" class=\"svg-label-symbol\">+F_X</text>
+<!-- +F_Y transverse pointing port (left) — larger since Cyc>0 dominates -->
+<line x1=\"200\" y1=\"250\" x2=\"125\" y2=\"250\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-cl)\" />
+<text x=\"118\" y=\"244\" class=\"svg-label-symbol\">+F_Y</text>
+<!-- ψ current-attack inset (separate cluster per OCIMF convention) -->
+<line x1=\"230\" y1=\"6\" x2=\"210\" y2=\"66\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-cl)\" />
+<text x=\"238\" y=\"20\" class=\"svg-label-symbol\">ψ</text>
+<!-- Inline scale-bar style L_OA / B dimension hint (small, OCIMF style) -->
+<text x=\"200\" y=\"248\" text-anchor=\"middle\" class=\"svg-label-symbol\">CoG</text>
 </svg>
+<div class=\"schematic-caption\">
+<strong>Figure 1 — Sign Convention &amp; Current Loading.</strong> Top-down plan view, B1528 SIROCCO at default case (ψ=+{default_heading:.0f}°, V={default_speed:.2f} kn).
+<code>+F_X</code> = longitudinal current force on hull (component of <code>q·A_f·Cxc</code> along ship centreline; sign per OCIMF MEG4 [1] Annex A Fig. A9, Cxc≈−0.0324 at table angle {table_angle:.0f}°).
+<code>+F_Y</code> = transverse current force on hull (<code>q·A_l·Cyc</code> across ship; positive port; OCIMF MEG4 [1] Annex A Fig. A10, Cyc≈+0.0341).
+Cardinal labels at frame edges (0° stern / 180° bow / 90° starboard / 270° port) define heading convention per OCIMF Annex A §A.1. ψ inset shows the current angle-of-attack relative to bow. CoG at midship; vertical CoG 6.1 m above keel.
 </div>
 <p><strong>Sample calculation at default values:</strong></p>
 <ul class=\"calc-list\">
@@ -1335,42 +1637,40 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </ul>
 <p>These two methods rest on different assumptions and <strong>may differ</strong>. Chart 4 below shows both as an overlay with an explicit non-equality caption.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-current-moment\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Current moment about CoG — transverse force at center of pressure, lever arm to CoG, yaw direction\">
+<svg id=\"schematic-current-moment\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Figure 2 — Current yaw moment about CoG, OCIMF Annex A sign convention with center-of-pressure lever arm\">
 <defs>
-<marker id=\"arrow-green-curm\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
-<marker id=\"arrow-purple-curm\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#7c3aed\" /></marker>
+<marker id=\"arrow-cm\" markerWidth=\"5\" markerHeight=\"5\" refX=\"4.5\" refY=\"2.5\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,5 L5,2.5 z\" fill=\"#1a2a4a\" /></marker>
 </defs>
-<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§4.2 Current yaw moment about CoG</text>
-<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(method A: OCIMF Cxyc direct  ·  method B: Yc × lever arm)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
-<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
-<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
-<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges -->
+<text x=\"200\" y=\"24\" text-anchor=\"middle\" class=\"svg-label-symbol\">180°</text>
+<text x=\"380\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">90°</text>
+<text x=\"20\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">270°</text>
+<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-label-symbol\">0°</text>
+<!-- Solid muted-terracotta ship silhouette -->
 <path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
-<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
+<!-- Hairline ship-fixed axes through CoG -->
+<line x1=\"200\" y1=\"56\" x2=\"200\" y2=\"460\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<line x1=\"60\" y1=\"250\" x2=\"340\" y2=\"250\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
 <!-- CoG marker -->
-<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
-<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
-<!-- Center of pressure (CoP) for current — slightly forward of CoG for tanker at near-head current per OCIMF convention -->
-<circle cx=\"200\" cy=\"185\" r=\"4\" fill=\"#7c3aed\" />
-<text x=\"208\" y=\"183\" class=\"svg-label-purple\">CoP (current)</text>
-<!-- Lever arm from CoP to CoG (dashed) -->
+<circle cx=\"200\" cy=\"250\" r=\"2.5\" fill=\"#1a2a4a\" />
+<text x=\"205\" y=\"246\" class=\"svg-label-symbol\">CoG</text>
+<!-- Center of pressure marker (forward of CoG per OCIMF tanker convention) -->
+<circle cx=\"200\" cy=\"185\" r=\"2\" fill=\"#1a2a4a\" />
+<text x=\"205\" y=\"183\" class=\"svg-label-symbol\">CoP</text>
+<!-- Lever arm from CoP to CoG (dashed hairline) -->
 <line x1=\"200\" y1=\"189\" x2=\"200\" y2=\"246\" class=\"lever-arm\" />
-<text x=\"154\" y=\"222\" class=\"svg-label-purple\">lever arm</text>
-<!-- Transverse force Yc at CoP — pointing port -->
-<line x1=\"200\" y1=\"185\" x2=\"115\" y2=\"185\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-curm)\" />
-<text x=\"50\" y=\"178\" class=\"svg-label-green\">Yc (transverse</text>
-<text x=\"50\" y=\"192\" class=\"svg-label-green\">at CoP)</text>
-<!-- Yaw moment arc at CoG (counter-clockwise = +N bow-to-port in this top-down +X-up view) -->
-<path d=\"M 240 250 A 40 40 0 1 0 200 290\" class=\"schematic-bold-arrow-purple\" marker-end=\"url(#arrow-purple-curm)\" />
-<text x=\"258\" y=\"295\" class=\"svg-label-purple\">+N (yaw,</text>
-<text x=\"258\" y=\"310\" class=\"svg-label-purple\">bow→port)</text>
-<!-- Annotation: method comparison -->
-<text x=\"200\" y=\"475\" text-anchor=\"middle\" class=\"svg-muted\">Method A: N = q·A_l·LBP·Cxyc(175°)</text>
-<text x=\"200\" y=\"492\" text-anchor=\"middle\" class=\"svg-muted\">Method B: N = Yc × lever_arm (different assumptions; may differ)</text>
+<text x=\"165\" y=\"222\" class=\"svg-label-symbol\">arm</text>
+<!-- F_Y transverse force at CoP, symbols-only -->
+<line x1=\"200\" y1=\"185\" x2=\"140\" y2=\"185\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-cm)\" />
+<text x=\"132\" y=\"178\" class=\"svg-label-symbol\">+F_Y</text>
+<!-- +M_XY yaw moment curved arrow at CoG (OCIMF canonical symbol) -->
+<path d=\"M 224 250 A 24 24 0 0 0 200 274\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-cm)\" />
+<text x=\"232\" y=\"278\" class=\"svg-label-symbol\">+M_XY</text>
 </svg>
+<div class=\"schematic-caption\">
+<strong>Figure 2 — Yaw Moment about CoG.</strong> Two estimation methods for current yaw moment, shown side by side as a sanity check (NOT an equality test).
+<strong>Method A (default):</strong> <code>M_XY,A = q·A_l·LBP·Cxyc(table_angle)</code> per OCIMF MEG4 [1] Annex A Fig. A11 (loaded-tanker WD/T&gt;6 family).
+<strong>Method B (comparison):</strong> <code>M_XY,B = F_Y × CoP_arm</code> where CoP_arm ≈ {OCIMF_CURRENT_COP_LEVER_ARM_FRACTION:g}·LBP is an approximate center-of-pressure lever arm for loaded-tanker near-head current (OCIMF MEG4 [1] Annex A guidance, typical range 0.2–0.4·LBP). Methods rest on different assumptions and may differ — see §4.2.1 chart.
 </div>
 
 <h4>4.2.1. Side-by-side yaw moment chart — Method A vs Method B</h4>
@@ -1401,47 +1701,46 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </ul>
 <p><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect stall-region behaviour.</p>
 <div class=\"schematic-card\">
-<svg id=\"schematic-rudder-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Rudder loading schematic — transparent ship with rudder at default 28 deg port and force decomposition at rudder pivot\">
+<svg id=\"schematic-rudder-loading\" class=\"per-section-schematic\" viewBox=\"0 0 400 500\" role=\"img\" aria-label=\"Figure 3 — Rudder loading, OCIMF Annex A sign convention with rudder at default 28 deg port\">
 <defs>
-<marker id=\"arrow-blue-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#0b6bcb\" /></marker>
-<marker id=\"arrow-orange-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#c2410c\" /></marker>
-<marker id=\"arrow-green-rl\" markerWidth=\"12\" markerHeight=\"12\" refX=\"10\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,8 L11,4 z\" fill=\"#15803d\" /></marker>
+<marker id=\"arrow-rl\" markerWidth=\"5\" markerHeight=\"5\" refX=\"4.5\" refY=\"2.5\" orient=\"auto\" markerUnits=\"strokeWidth\"><path d=\"M0,0 L0,5 L5,2.5 z\" fill=\"#1a2a4a\" /></marker>
 </defs>
-<text x=\"200\" y=\"22\" text-anchor=\"middle\" class=\"svg-default-annot\">§5 Rudder loading — default δ=+28° port, ψ=+5°, α=+23°</text>
-<text x=\"200\" y=\"42\" text-anchor=\"middle\" class=\"svg-muted\">(top-down view; bow ↑, port ←)</text>
-<!-- Ship-fixed dashed axes through CoG -->
-<line x1=\"200\" y1=\"58\" x2=\"200\" y2=\"460\" class=\"axis-line\" />
-<line x1=\"75\" y1=\"250\" x2=\"325\" y2=\"250\" class=\"axis-line\" />
-<text x=\"208\" y=\"68\" class=\"svg-label\">+X (longitudinal)</text>
-<text x=\"82\" y=\"244\" class=\"svg-label\">+Y (transverse, port)</text>
-<!-- Transparent vertical ship hull -->
+<!-- Cardinal heading labels at frame edges -->
+<text x=\"200\" y=\"24\" text-anchor=\"middle\" class=\"svg-label-symbol\">180°</text>
+<text x=\"380\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">90°</text>
+<text x=\"20\" y=\"253\" text-anchor=\"middle\" class=\"svg-label-symbol\">270°</text>
+<text x=\"200\" y=\"485\" text-anchor=\"middle\" class=\"svg-label-symbol\">0°</text>
+<!-- Solid muted-terracotta ship silhouette -->
 <path class=\"ship-hull-transparent\" d=\"M200 70 C232 95 250 140 250 220 C250 305 235 380 200 425 C165 380 150 305 150 220 C150 140 168 95 200 70 Z\" />
-<line x1=\"200\" y1=\"75\" x2=\"200\" y2=\"420\" stroke=\"#172033\" stroke-width=\"1\" stroke-dasharray=\"3 4\" />
+<!-- Hairline ship-fixed axes through CoG -->
+<line x1=\"200\" y1=\"56\" x2=\"200\" y2=\"460\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
+<line x1=\"60\" y1=\"250\" x2=\"340\" y2=\"250\" stroke=\"#1a2a4a\" stroke-width=\"0.5\" stroke-dasharray=\"3 3\" />
 <!-- CoG marker -->
-<circle cx=\"200\" cy=\"250\" r=\"5\" fill=\"#172033\" />
-<text x=\"208\" y=\"258\" class=\"svg-label\">CoG</text>
-<!-- Rudder pivot at stern (bottom of hull) -->
-<circle cx=\"200\" cy=\"420\" r=\"3.5\" fill=\"#c2410c\" />
-<!-- Rudder blade rotated δ=+28° port (counter-clockwise in this +X-up view, blade extends down-left from pivot) -->
-<rect class=\"rudder-blade-transparent\" x=\"193\" y=\"420\" width=\"14\" height=\"42\" rx=\"3\" transform=\"rotate(-28 200 420)\" />
-<text x=\"230\" y=\"445\" class=\"svg-label-orange\">δ = +28° (port)</text>
-<!-- Current arrow approaching from forward at ψ=+5° -->
-<line x1=\"235\" y1=\"-10\" x2=\"207\" y2=\"75\" class=\"schematic-bold-arrow-blue\" marker-end=\"url(#arrow-blue-rl)\" />
-<text x=\"248\" y=\"34\" class=\"svg-label-blue\">Current V=3.08 kn</text>
-<text x=\"248\" y=\"50\" class=\"svg-label-blue\">ψ = +5°</text>
-<!-- Normal force F at rudder, perpendicular to blade (blade is rotated -28°, so normal is at +62° from +X axis, pointing port and slightly aft) -->
-<line x1=\"200\" y1=\"420\" x2=\"118\" y2=\"385\" class=\"schematic-bold-arrow-orange\" marker-end=\"url(#arrow-orange-rl)\" />
-<text x=\"60\" y=\"376\" class=\"svg-label-orange\">F (normal to blade,</text>
-<text x=\"60\" y=\"390\" class=\"svg-label-orange\">≈ port and aft)</text>
-<!-- Decomposition: X_rudder (longitudinal, aft) and Y_rudder (transverse, port) at rudder pivot -->
-<line x1=\"200\" y1=\"420\" x2=\"160\" y2=\"420\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-rl)\" />
-<text x=\"105\" y=\"412\" class=\"svg-label-green\">Y_rudder</text>
-<line x1=\"200\" y1=\"420\" x2=\"200\" y2=\"450\" class=\"schematic-bold-arrow-green\" marker-end=\"url(#arrow-green-rl)\" />
-<text x=\"208\" y=\"445\" class=\"svg-label-green\">X_rudder</text>
-<!-- α annotation: effective inflow angle at rudder -->
-<text x=\"200\" y=\"475\" text-anchor=\"middle\" class=\"svg-muted\">α = δ - ψ = 28° - 5° = +23° (effective rudder inflow)</text>
-<text x=\"200\" y=\"492\" text-anchor=\"middle\" class=\"svg-muted\">F via Model A (Whicker-Fehlner) and Model B (thin-plate) — see §5</text>
+<circle cx=\"200\" cy=\"250\" r=\"2.5\" fill=\"#1a2a4a\" />
+<text x=\"205\" y=\"246\" class=\"svg-label-symbol\">CoG</text>
+<!-- Rudder pivot at stern (small dark mark) -->
+<circle cx=\"200\" cy=\"420\" r=\"2\" fill=\"#1a2a4a\" />
+<!-- Rudder blade deflected δ=+28° port (rotated counter-clockwise in this +X-up view) -->
+<rect class=\"rudder-blade-transparent\" x=\"196\" y=\"420\" width=\"8\" height=\"34\" rx=\"1.5\" transform=\"rotate(-28 200 420)\" />
+<text x=\"210\" y=\"446\" class=\"svg-label-symbol\">δ</text>
+<!-- ψ current-attack inset (separate cluster per OCIMF convention) -->
+<line x1=\"230\" y1=\"6\" x2=\"210\" y2=\"66\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-rl)\" />
+<text x=\"238\" y=\"20\" class=\"svg-label-symbol\">ψ</text>
+<!-- F normal-force at rudder (perpendicular to blade, hairline) -->
+<line x1=\"200\" y1=\"420\" x2=\"148\" y2=\"398\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-rl)\" />
+<text x=\"114\" y=\"393\" class=\"svg-label-symbol\">F</text>
+<!-- Decomposition arrows from rudder pivot to ship-fixed X/Y components, hairline -->
+<line x1=\"200\" y1=\"420\" x2=\"170\" y2=\"420\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-rl)\" />
+<text x=\"152\" y=\"414\" class=\"svg-label-symbol\">+F_Y</text>
+<line x1=\"200\" y1=\"420\" x2=\"200\" y2=\"445\" class=\"ocimf-arrow\" marker-end=\"url(#arrow-rl)\" />
+<text x=\"205\" y=\"442\" class=\"svg-label-symbol\">+F_X</text>
+<!-- α effective inflow inset (small, top-right) -->
+<text x=\"320\" y=\"24\" class=\"svg-label-symbol\">α</text>
 </svg>
+<div class=\"schematic-caption\">
+<strong>Figure 3 — Rudder Loading.</strong> Top-down view with rudder at default deflection δ=+{default_rudder:.0f}° port, current at ψ=+{default_heading:.0f}° off the bow. Effective rudder inflow angle <code>α = δ - ψ = +{default_alpha:.0f}°</code>.
+<code>F</code> = rudder normal force (perpendicular to blade); decomposed at rudder pivot into <code>+F_X</code> (longitudinal, along centreline) and <code>+F_Y</code> (transverse, port).
+Two models compute <code>F</code>: <strong>Model A</strong> (Whicker-Fehlner [3], <code>F = β·A_R·V²·Cr·sin(α)</code>) and <strong>Model B</strong> (Faltinsen [2] §6.5, <code>F = 0.5·ρ·A_R·V²·2π·sin(α)</code> with stall cap). Comparison in §5.6.
 </div>
 
 <h3>5.1. Sample calculation at default values (Model A)</h3>
@@ -1463,34 +1762,35 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <table id=\"selected-speed-envelope-summary\" class=\"data-table\" aria-label=\"Selected speed envelope summary\">
 <thead><tr><th>Metric</th><th>Envelope case</th><th>Value</th></tr></thead>
 <tbody>
-<tr><td>Selected speed</td><td id=\"selected-speed-case\">—</td><td id=\"selected-speed-value\">—</td></tr>
-<tr><td>Max |Y| at selected speed</td><td id=\"selected-speed-max-y-case\">—</td><td id=\"selected-speed-max-y-value\">—</td></tr>
-<tr><td>Max |N| at selected speed</td><td id=\"selected-speed-max-n-case\">—</td><td id=\"selected-speed-max-n-value\">—</td></tr>
-<tr><td>Max |X| at selected speed</td><td id=\"selected-speed-max-h-case\">—</td><td id=\"selected-speed-max-h-value\">—</td></tr>
+<tr><td>Selected speed</td><td id=\"selected-speed-case\">engineering sweep plane</td><td id=\"selected-speed-value\">{envelope_default_speed}</td></tr>
+<tr><td>Max |Y| at selected speed</td><td id=\"selected-speed-max-y-case\">{envelope_max_y_case}</td><td id=\"selected-speed-max-y-value\">{envelope_max_y_value}</td></tr>
+<tr><td>Max |N| at selected speed</td><td id=\"selected-speed-max-n-case\">{envelope_max_n_case}</td><td id=\"selected-speed-max-n-value\">{envelope_max_n_value}</td></tr>
+<tr><td>Max |X| at selected speed</td><td id=\"selected-speed-max-h-case\">{envelope_max_h_case}</td><td id=\"selected-speed-max-h-value\">{envelope_max_h_value}</td></tr>
 </tbody>
 </table>
+<p class=\"svg-muted\" style=\"margin-top:4px; font-size:11px\">Initial values are at the default current speed ({default_speed:.2f} kn); the interactive HTML updates the row above when the speed selector changes.</p>
 
 <h3>5.5. Selected-case force breakdown</h3>
 <p>Updates with current speed and rudder angle. Values shown at the heading with maximum absolute total yaw moment for the selected trace, so individual X/Y/N component paths can be reviewed together.</p>
 <table class=\"data-table\" aria-label=\"Selected-case OCIMF current rudder component force breakdown\">
 <thead><tr><th>Component</th><th>X (kN, longitudinal)</th><th>Y (kN, transverse port)</th><th>N (kN·m, yaw bow-to-port)</th></tr></thead>
 <tbody>
-<tr><td>OCIMF current</td><td id=\"breakdown-current-x\">—</td><td id=\"breakdown-current-y\">—</td><td id=\"breakdown-current-n\">—</td></tr>
-<tr><td>Rudder induced</td><td id=\"breakdown-rudder-x\">—</td><td id=\"breakdown-rudder-y\">—</td><td id=\"breakdown-rudder-n\">—</td></tr>
-<tr><td>Total / mooring reaction opposite</td><td id=\"breakdown-total-x\">—</td><td id=\"breakdown-total-y\">—</td><td id=\"breakdown-total-n\">—</td></tr>
+<tr><td>Current (OCIMF MEG4 [1])</td><td id=\"breakdown-current-x\">{breakdown_default_current_x}</td><td id=\"breakdown-current-y\">{breakdown_default_current_y}</td><td id=\"breakdown-current-n\">{breakdown_default_current_n}</td></tr>
+<tr><td>Rudder (Whicker-Fehlner [3])</td><td id=\"breakdown-rudder-x\">{breakdown_default_rudder_x}</td><td id=\"breakdown-rudder-y\">{breakdown_default_rudder_y}</td><td id=\"breakdown-rudder-n\">{breakdown_default_rudder_n}</td></tr>
+<tr><td>Total (current + rudder) / mooring reaction = negated</td><td id=\"breakdown-total-x\">{breakdown_default_total_x}</td><td id=\"breakdown-total-y\">{breakdown_default_total_y}</td><td id=\"breakdown-total-n\">{breakdown_default_total_n}</td></tr>
 </tbody>
 </table>
-<p id=\"breakdown-case-label\" class=\"note-panel\">—</p>
+<p id=\"breakdown-case-label\" class=\"note-panel\">{breakdown_default_label}</p>
 
 <h3>5.6. Rudder model comparison — Model A (Whicker-Fehlner) vs Model B (thin-plate)</h3>
 <p>Side-by-side comparison of the two screening rudder models at the default case (V={default_speed:.2f} kn, ψ=+{default_heading:.0f}°, δ=+{default_rudder:.0f}°, α=+{default_alpha:.0f}°). The chart below sweeps rudder angle 0..+28° at fixed ψ=+{default_heading:.0f}° and the selected current speed, comparing Model A's <code>force_y_ship_port_N</code> and Model B's <code>simple_plate_force_y_ship_port_N</code>.</p>
 <table id=\"rudder-model-comparison-table\" class=\"data-table\" aria-label=\"Side-by-side rudder model A vs model B at default case\">
-<thead><tr><th>Quantity</th><th>Model A (Whicker-Fehlner)</th><th>Model B (thin-plate, Faltinsen 1990 §6.5)</th></tr></thead>
+<thead><tr><th>Quantity</th><th>Model A — Whicker-Fehlner [3]</th><th>Model B — thin-plate (Faltinsen [2] §6.5)</th></tr></thead>
 <tbody>
-<tr><td>Normal force F (N)</td><td id=\"rudder-comp-a-normal\">—</td><td id=\"rudder-comp-b-normal\">—</td></tr>
-<tr><td>Longitudinal X_rudder (kN)</td><td id=\"rudder-comp-a-x\">—</td><td id=\"rudder-comp-b-x\">—</td></tr>
-<tr><td>Transverse Y_rudder (kN, port)</td><td id=\"rudder-comp-a-y\">—</td><td id=\"rudder-comp-b-y\">—</td></tr>
-<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id=\"rudder-comp-a-n\">—</td><td id=\"rudder-comp-b-n\">—</td></tr>
+<tr><td>Normal force F (N)</td><td id=\"rudder-comp-a-normal\">{comp_default_a_normal}</td><td id=\"rudder-comp-b-normal\">{comp_default_b_normal}</td></tr>
+<tr><td>Longitudinal X_rudder (kN)</td><td id=\"rudder-comp-a-x\">{comp_default_a_x}</td><td id=\"rudder-comp-b-x\">{comp_default_b_x}</td></tr>
+<tr><td>Transverse Y_rudder (kN, port)</td><td id=\"rudder-comp-a-y\">{comp_default_a_y}</td><td id=\"rudder-comp-b-y\">{comp_default_b_y}</td></tr>
+<tr><td>Yaw moment N_rudder (kN·m, +bow-to-port)</td><td id=\"rudder-comp-a-n\">{comp_default_a_n}</td><td id=\"rudder-comp-b-n\">{comp_default_b_n}</td></tr>
 </tbody>
 </table>
 <p class=\"note-panel\"><strong>Both models are screening-level</strong>; neither is a validated rudder hydrodynamic model. Differences at large angles (&gt;20°) reflect each model's simplifying assumptions and the stall cap in Model B.</p>
@@ -1513,12 +1813,29 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 <h2>Method &amp; Provenance</h2>
 <pre class=\"method-block\">{metadata['method']}</pre>
 <ul>
-<li>Heading/rudder effective-angle convention: α = rudder_angle_deg − heading_offset_deg.</li>
+<li>Heading/rudder effective-angle convention: α = δ − ψ.</li>
 <li>Local-to-ship transform rotates local current-frame X/Y loads into ship-fixed CoG axes.</li>
-<li>Current review equations: q=0.5·ρ·V²; Cxc, Cyc, Cxyc interpolated from OCIMF loaded-tanker A9/A10/A11 workbook curves via the approved off-repo source route; Xc=q·A_f·Cxc; Yc=q·A_l·Cyc; Nc=q·A_l·LBP·Cxyc.</li>
-<li>Scope note: hull current loads are first-cut generic/reference OCIMF tanker-current comparison loads; this is not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
+<li>Current review equations: q=0.5·ρ·V²; Cxc, Cyc, Cxyc interpolated from OCIMF MEG4 (2018) [1] Annex A figures A9/A10/A11, loaded-tanker WD/T&gt;6 family; Xc=q·A_f·Cxc; Yc=q·A_l·Cyc; Nc=q·A_l·LBP·Cxyc.</li>
+<li>Rudder Model A (default) per Whicker &amp; Fehlner [3]: F = β·A_R·V²·Cr·sin(α).</li>
+<li>Rudder Model B (comparison) per Faltinsen [2] §6.5: F = 0.5·ρ·A_R·V²·Cn(α) with Cn(α) ≈ 2π·sin(α) and stall cap at ±28°.</li>
+<li>Scope note: hull current loads are screening estimates using OCIMF tanker-class coefficients; not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
 </ul>
 <pre class=\"method-block\">{summary_json}</pre>
+</section>
+
+<section id=\"references-section\" class=\"print-section\">
+<h2>References</h2>
+<ol style=\"padding-left:24px; line-height:1.6\">
+<li>OCIMF (2018). <em>Mooring Equipment Guidelines</em>, 4th edition (MEG4). Witherby Publishing Group, Livingston, UK. ISBN 978-1-85609-771-0. Annex A — Wind and Current Coefficients for VLCC; figures A9 (Cxc longitudinal), A10 (Cyc transverse), A11 (Cxyc yaw moment); loaded-tanker family, water-depth-to-draft regime applied per §A.1 conventions.</li>
+<li>Faltinsen, O. M. (1990). <em>Sea Loads on Ships and Offshore Structures</em>. Cambridge University Press, Cambridge Ocean Technology Series. §6.5 — Rudder forces (thin-plate small-angle approximation Cn(α) ≈ 2π·sin(α)).</li>
+<li>Whicker, L. F. and Fehlner, L. F. (1958). <em>Free-stream characteristics of a family of low-aspect-ratio, all-movable control surfaces for application to ship design</em>. David Taylor Model Basin Report 933. (Basis for the β·A_R·V²·Cr·sin(α) rudder normal-force formulation used as Model A.)</li>
+</ol>
+<h3>Project Documents</h3>
+<ol style=\"padding-left:24px; line-height:1.6\">
+<li><strong>[P1]</strong> B1528 SIROCCO — Vessel Geometry and Rudder Particulars (<a href=\"https://github.com/vamseeachanta/workspace-hub/issues/2569\">workspace-hub issue #2569</a> source-pack). Project-internal vessel particulars, rudder dimensions, and Whicker-Fehlner β/Cr inputs. (Proprietary; available on request.)</li>
+<li><strong>[P2]</strong> digitalmodel (open-source). Report generator: <a href=\"{links['report_generator']}\">b1528_sirocco_current_heading_rudder_report.py</a>. Function <code>run_b1528_current_heading_rudder_report</code> interpolates Annex A figures from the OCIMF MEG4 workbook held off-repo at the licensed publisher path; calculation-time fail-closed if the workbook or citation route cannot be resolved.</li>
+<li><strong>[P3]</strong> Approved revision plan: <a href=\"{links['plan']}\">workspace-hub issue #2760 plan</a> (dated 2026-05-20).</li>
+</ol>
 </section>
 </main></div>
 <script>

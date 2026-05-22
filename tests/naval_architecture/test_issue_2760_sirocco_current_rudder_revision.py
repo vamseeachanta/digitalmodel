@@ -241,19 +241,30 @@ def test_issue_2760_docx_output_opens_and_contains_required_sections(tmp_path):
     assert docx_path.exists()
 
     document = Document(str(docx_path))
-    text = "\n".join(paragraph.text for paragraph in document.paragraphs).lower()
+    text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+    text_lower = text.lower()
 
-    assert "b1528 sirocco current/rudder force review" in text
-    assert "scope" in text
-    assert "design data" in text
-    assert "analysis methodology and assumptions" in text
-    assert "heading/rudder schematic" in text
-    assert "sample working example" in text
-    assert "ocimf current vs rudder component sums" in text
-    assert "limitations" in text
-    assert "heatmap" not in text
-    assert "resultant" not in text
-    assert "total horizontal force" not in text
+    # Pass G canonical 6-section layout (DOCX matches MD/HTML contract)
+    assert "1. Introduction" in text
+    assert "2. Design Data" in text
+    assert "3. Axes" in text and "Sign Conventions" in text
+    assert "4. Load Due to Current" in text
+    assert "5. Load Due to Rudder" in text
+    assert "6. Limitations" in text
+    # Pass G professional citation: OCIMF MEG4 + Annex A figure references
+    assert "ocimf meg" in text_lower
+    assert "annex a" in text_lower
+    # Freshman-grad English labels (rejects pre-Pass-A code-identifier text)
+    assert "longitudinal" in text_lower
+    assert "transverse" in text_lower
+    # Removed sections (sentinel reject)
+    assert "heatmap" not in text_lower
+    assert "resultant" not in text_lower
+    assert "total horizontal force" not in text_lower
+    # Pre-Pass-A headings must not appear (proves Pass G actually ran)
+    assert "Scope" not in text  # superseded by "1. Introduction"
+    assert "Analysis methodology and assumptions" not in text  # superseded by §3
+    assert "Heading/rudder schematic" not in text  # superseded by per-section schematic references
 
 
 def test_issue_2760_canonical_section_layout_in_markdown(tmp_path):
@@ -326,15 +337,19 @@ def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
 
 
 def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
-    """Pass B contract: per-section schematic SVGs (current-loading,
+    """Pass B/G contract: per-section schematic SVGs (current-loading,
     current-moment, rudder-loading) must contain real ship+arrow markup,
     not just placeholder text. Each must:
-    - declare a transparent or near-transparent ship hull (fill-opacity<=0.3
-      or fill="none" plus a visible stroke)
-    - contain at least one bold arrow (stroke-width>=4) with a marker-end
-      arrowhead reference
-    - include a CoG marker (circle or text "CoG")
+    - declare a ship hull element (transparent OR OCIMF-style muted fill;
+      ship-hull-transparent class is reused for both styles)
+    - contain at least one arrow with marker-end (OCIMF-style hairline 1.5pt
+      via ocimf-arrow class, OR legacy bold 5pt via schematic-bold-arrow-*)
+    - include a CoG marker (circle or text)
     - bake in default-value annotations (PDF/DOCX-safe; no JS dependency)
+
+    Pass G updated the visual contract from "bold colored arrows + adjacent
+    labels" to OCIMF Annex A style (hairline navy arrows, symbols-only labels,
+    English mapping in caption block below figure). Test relaxed accordingly.
     """
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
@@ -352,25 +367,44 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         assert "[Pass B will fill" not in svg, (
             f"{sid} still contains Pass A placeholder text — Pass B did not replace it"
         )
-        # Transparent ship hull check: fill-opacity<=0.3 or fill="none" with visible stroke
-        has_transparent_hull = (
-            re.search(r'fill-opacity\s*[:=]\s*"?0?\.\d+', svg) is not None
-            or re.search(r'fill\s*=\s*"none"', svg) is not None
-            or 'class="ship-hull-transparent"' in svg
-        )
-        assert has_transparent_hull, f"{sid} missing transparent-fill ship hull"
-        # Bold arrow with marker-end (inline stroke-width≥4 OR schematic-bold-arrow-* class
-        # OR Pass B's per-section bold-arrow color variants)
-        has_bold_arrow = (
-            re.search(r'stroke-width\s*[:=]\s*"?[4-9]\d?', svg) is not None
+        # Ship hull element present (style — transparent vs. OCIMF muted — is a
+        # presentation choice; the class name was retained across Pass B→G).
+        assert 'class="ship-hull-transparent"' in svg, f"{sid} missing ship hull element"
+        # At least one arrow with marker-end. Pass G OCIMF-style is hairline 1.5pt
+        # via ocimf-arrow class; Pass B legacy bold via schematic-bold-arrow-*.
+        has_arrow = (
+            "ocimf-arrow" in svg
             or "schematic-bold-arrow-" in svg
+            or re.search(r'stroke-width\s*[:=]\s*"?[1-9]', svg) is not None
         )
-        assert has_bold_arrow, f"{sid} has no bold (stroke-width>=4) arrow"
+        assert has_arrow, f"{sid} has no arrow element"
         assert "marker-end" in svg, f"{sid} has no marker-end arrowhead reference"
-        # CoG marker
+        # CoG marker (text or implicit via circle + label)
         assert ("CoG" in svg or "COG" in svg or "C.G." in svg or "centre of gravity" in svg.lower()), (
             f"{sid} missing CoG marker label"
         )
+
+
+def test_issue_2760_pass_g_schematics_have_ocimf_caption_block(tmp_path):
+    """Pass G contract: each per-section schematic SVG is followed by a
+    caption block (.schematic-caption div) carrying the full English
+    mapping for the on-figure symbols, per OCIMF Annex A style. This
+    declutters the figure and matches OCIMF MEG3/MEG4 house style where
+    figures carry symbols only and captions explain.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    # At least 3 schematic-caption blocks (one per per-section schematic)
+    assert html.count('class="schematic-caption"') >= 3, (
+        "Pass G expects at least 3 OCIMF-style caption blocks under the per-section schematics"
+    )
+    # Captions cite OCIMF MEG4 [1] (numeric reference) and explain symbols
+    html_low = html.lower()
+    assert "ocimf meg4" in html_low and "annex a" in html_low, (
+        "Pass G captions must cite OCIMF MEG4 Annex A explicitly per professional citation style"
+    )
 
 
 def test_issue_2760_pass_c_simple_plate_rudder_helper_exists_and_is_sane():
@@ -564,7 +598,9 @@ def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
     # Pass A restructure: rudder default is stated in §5.2 chart caption.
     # Canonical form pinned (no OR-disjunction; per feedback_silent_verdict_flip_defect_class).
     assert "default rudder angle: <strong>28° port</strong>" in html.lower()
-    assert "ocimf loaded-tanker a9/a10/a11 workbook curves" in html
+    # Pass G G6: citation upgraded from "ocimf loaded-tanker a9/a10/a11 workbook curves"
+    # to professional form "OCIMF MEG4 (2018) [1] Annex A figures A9/A10/A11"
+    assert "ocimf meg4 (2018) [1] annex a figures a9/a10/a11" in html
     assert "1.05*abs(cos" not in html
     assert "cm=0.55*sin" not in html
     assert "duplicate trace" not in html
