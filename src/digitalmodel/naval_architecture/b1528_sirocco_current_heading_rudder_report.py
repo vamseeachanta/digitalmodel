@@ -522,6 +522,14 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
 
     document.add_heading("4.2. Yaw moment about CoG", level=2)
     document.add_paragraph(
+        f"Transverse current force Yc input — the HTML report's §4.2 leads with a Plotly "
+        f"chart showing Yc across the heading sweep ψ ∈ [-{abs(default_heading):.0f}°, "
+        f"+{default_heading:.0f}°] at 1° steps for the selected current speed (default "
+        f"{default_speed:.2f} kn). Yc is the input that drives Method B's "
+        "force × lever-arm yaw moment; data is also exposed in the generated CSV "
+        "(ocimf_current_force_y_ship_port_N column)."
+    )
+    document.add_paragraph(
         "Two methods estimate the current yaw moment, shown side by side as a sanity check:"
     )
     document.add_paragraph(
@@ -581,6 +589,131 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
     ):
         document.add_paragraph(line, style="List Bullet")
 
+    # Pass H DOCX parity: locate default-case row + envelope rows + simple-plate row
+    # for §5.2-§5.6 + Appendix A tables (mirrors the HTML pre-render so DOCX/PDF
+    # readers see actual values, not "—" placeholders).
+    default_row = next(
+        (r for r in result["rows"]
+         if abs(r["current_speed_kn"] - default_speed) < 1e-6
+         and abs(r["heading_offset_deg"] - default_heading) < 1e-6
+         and abs(r["rudder_angle_deg"] - default_rudder) < 1e-6),
+        result["rows"][0],
+    )
+    default_speed_rows = [r for r in result["rows"] if abs(r["current_speed_kn"] - default_speed) < 1e-6]
+    sensitivity_rows = [r for r in result["rows"]
+                        if abs(r["heading_offset_deg"] - default_heading) < 1e-6
+                        and abs(r["rudder_angle_deg"] - default_rudder) < 1e-6]
+
+    def _kn(value_N: float) -> str:
+        kn = value_N / 1000.0
+        return f"{kn:.0f}" if abs(kn) >= 1 else f"{kn:.2f}"
+
+    def _kNm(value_kNm: float) -> str:
+        return f"{value_kNm:.0f}" if abs(value_kNm) >= 1 else f"{value_kNm:.2f}"
+
+    # §5.2 Rudder force over heading
+    document.add_heading("5.2. Rudder force over heading", level=2)
+    document.add_paragraph(
+        f"Rudder-induced longitudinal X and transverse Y force across the heading sweep "
+        f"ψ ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps, at the "
+        f"default rudder δ = +{default_rudder:.0f}° port and selected current speed "
+        f"V = {default_speed:.2f} kn. Interactive chart in HTML §5.2; CSV exposes "
+        "force_x_ship_N and force_y_ship_port_N columns for every row in the sweep."
+    )
+
+    # §5.3 Rudder yaw moment over heading
+    document.add_heading("5.3. Rudder yaw moment over heading", level=2)
+    document.add_paragraph(
+        f"Signed rudder-induced yaw moment N (kN·m, +bow-to-port) across the heading sweep "
+        f"at the selected current speed. Interactive chart in HTML §5.3; CSV exposes "
+        "moment_n_yaw_bow_port_kN_m column."
+    )
+
+    # §5.4 Selected-speed envelope summary
+    document.add_heading("5.4. Selected-speed envelope summary", level=2)
+    document.add_paragraph(
+        f"Key variables for this section: current speed V = {default_speed:.2f} kn (default) · "
+        f"heading sweep ψ ∈ [-{abs(default_heading):.0f}°, +{default_heading:.0f}°] at 1° steps · "
+        f"rudder sweep δ ∈ [0°, +{default_rudder:.0f}°] at 2° steps. Envelope is the "
+        "absolute-max across the full heading × rudder grid at the selected speed."
+    )
+    if default_speed_rows:
+        max_y = max(default_speed_rows, key=lambda r: abs(r["force_y_ship_port_N"]))
+        max_n = max(default_speed_rows, key=lambda r: abs(r["moment_n_yaw_bow_port_kN_m"]))
+        max_x = max(default_speed_rows, key=lambda r: abs(r["force_x_ship_N"]))
+        env_table = document.add_table(rows=1, cols=3)
+        hdr = env_table.rows[0].cells
+        hdr[0].text = "Metric"; hdr[1].text = "Envelope case"; hdr[2].text = "Value"
+        for label, row, val_str in (
+            (f"Max |Y| at V = {default_speed:.2f} kn",
+             f"ψ={max_y['heading_offset_deg']:.0f}° · δ={max_y['rudder_angle_deg']:.0f}°",
+             f"{_kn(max_y['force_y_ship_port_N'])} kN"),
+            (f"Max |N| at V = {default_speed:.2f} kn",
+             f"ψ={max_n['heading_offset_deg']:.0f}° · δ={max_n['rudder_angle_deg']:.0f}°",
+             f"{_kNm(max_n['moment_n_yaw_bow_port_kN_m'])} kN·m"),
+            (f"Max |X| at V = {default_speed:.2f} kn",
+             f"ψ={max_x['heading_offset_deg']:.0f}° · δ={max_x['rudder_angle_deg']:.0f}°",
+             f"{_kn(max_x['force_x_ship_N'])} kN"),
+        ):
+            cells = env_table.add_row().cells
+            cells[0].text = label; cells[1].text = row; cells[2].text = val_str
+
+    # §5.5 Selected-case force breakdown
+    document.add_heading("5.5. Selected-case force breakdown", level=2)
+    document.add_paragraph(
+        f"Key variables: V = {default_speed:.2f} kn · ψ = +{default_heading:.0f}° · "
+        f"δ = +{default_rudder:.0f}° · α = +{default_alpha:.0f}°. Components below are "
+        "at the default case (HTML/JS updates these when the user changes the speed or "
+        "rudder selector)."
+    )
+    bd_table = document.add_table(rows=1, cols=4)
+    hdr = bd_table.rows[0].cells
+    hdr[0].text = "Component"; hdr[1].text = "X (kN, long.)"
+    hdr[2].text = "Y (kN, port)"; hdr[3].text = "N (kN·m, +bow-port)"
+    for label, x_val, y_val, n_val in (
+        ("Current (OCIMF MEG4 [1])",
+         _kn(default_row["ocimf_current_force_x_ship_N"]),
+         _kn(default_row["ocimf_current_force_y_ship_port_N"]),
+         _kNm(default_row["ocimf_current_moment_n_yaw_bow_port_kN_m"])),
+        ("Rudder (Whicker-Fehlner [3])",
+         _kn(default_row["force_x_ship_N"]),
+         _kn(default_row["force_y_ship_port_N"]),
+         _kNm(default_row["moment_n_yaw_bow_port_kN_m"])),
+        ("Total (current + rudder)",
+         _kn(default_row["total_force_x_ship_N"]),
+         _kn(default_row["total_force_y_ship_port_N"]),
+         _kNm(default_row["total_moment_n_yaw_bow_port_kN_m"])),
+    ):
+        cells = bd_table.add_row().cells
+        cells[0].text = label; cells[1].text = x_val
+        cells[2].text = y_val; cells[3].text = n_val
+
+    # §5.6 Current-speed sensitivity (0..5 knots)
+    document.add_heading("5.6. Current-speed sensitivity (0..5 knots)", level=2)
+    document.add_paragraph(
+        f"Key variables: heading ψ = +{default_heading:.0f}° (fixed) · rudder "
+        f"δ = +{default_rudder:.0f}° (fixed) · current speed V swept 0..5 kn. The HTML "
+        "report renders two interactive Plotly charts; the static table below summarises "
+        f"the same values at each speed. Selected case marker at V = {default_speed:.2f} kn."
+    )
+    sens_table = document.add_table(rows=1, cols=5)
+    hdr = sens_table.rows[0].cells
+    hdr[0].text = "V (kn)"; hdr[1].text = "Xc (kN, long.)"
+    hdr[2].text = "Yc (kN, port)"; hdr[3].text = "X_rudder (kN)"
+    hdr[4].text = "Y_rudder (kN, port)"
+    for r in sorted(sensitivity_rows, key=lambda x: x["current_speed_kn"]):
+        cells = sens_table.add_row().cells
+        cells[0].text = f"{r['current_speed_kn']:.2f}"
+        cells[1].text = _kn(r["ocimf_current_force_x_ship_N"])
+        cells[2].text = _kn(r["ocimf_current_force_y_ship_port_N"])
+        cells[3].text = _kn(r["force_x_ship_N"])
+        cells[4].text = _kn(r["force_y_ship_port_N"])
+    document.add_paragraph(
+        "Both current and rudder loads scale as V² (quadratic in current speed) per the "
+        "underlying physics: current load uses q = 0.5·ρ·V²; rudder load uses "
+        "F = β·A_R·V²·Cr·sin(α)."
+    )
+
     # §6 Limitations
     document.add_heading("6. Limitations", level=1)
     for line in (
@@ -596,6 +729,40 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         "propeller race, IMO/class compliance conclusions.",
     ):
         document.add_paragraph(line, style="List Bullet")
+
+    # Appendix A — Rudder model comparison (Pass H: relocated from old §5.6)
+    document.add_heading("Appendix A — Rudder model comparison (Whicker-Fehlner vs thin-plate)", level=1)
+    document.add_paragraph(
+        f"Side-by-side comparison of the two screening rudder models at the default case "
+        f"(V = {default_speed:.2f} kn, ψ = +{default_heading:.0f}°, δ = +{default_rudder:.0f}°, "
+        f"α = +{default_alpha:.0f}°). The HTML report's Appendix A also includes an "
+        f"interactive Plotly chart sweeping rudder angle 0..+{default_rudder:.0f}° at fixed "
+        f"ψ = +{default_heading:.0f}°, comparing Model A's force_y_ship_port_N and "
+        "Model B's simple_plate_force_y_ship_port_N. Both models are screening-level; "
+        "neither is a validated rudder hydrodynamic model. Differences at large angles "
+        "(>20°) reflect each model's simplifying assumptions and the stall cap in Model B."
+    )
+    appendix_table = document.add_table(rows=1, cols=3)
+    hdr = appendix_table.rows[0].cells
+    hdr[0].text = "Quantity"
+    hdr[1].text = "Model A — Whicker-Fehlner [3]"
+    hdr[2].text = "Model B — thin-plate (Faltinsen [2] §6.5)"
+    for label, a_val, b_val in (
+        ("Normal force F (N)",
+         f"{default_row['normal_force_N']:.0f}",
+         f"{default_row['simple_plate_normal_force_N']:.0f}"),
+        ("Longitudinal X_rudder (kN)",
+         _kn(default_row["force_x_ship_N"]),
+         _kn(default_row["simple_plate_force_x_ship_N"])),
+        ("Transverse Y_rudder (kN, port)",
+         _kn(default_row["force_y_ship_port_N"]),
+         _kn(default_row["simple_plate_force_y_ship_port_N"])),
+        ("Yaw moment N_rudder (kN·m, +bow-to-port)",
+         _kNm(default_row["moment_n_yaw_bow_port_kN_m"]),
+         _kNm(default_row["simple_plate_moment_n_yaw_bow_port_kN_m"])),
+    ):
+        cells = appendix_table.add_row().cells
+        cells[0].text = label; cells[1].text = a_val; cells[2].text = b_val
 
     # References (numbered by first citation in text; standards + literature in [n], project
     # documents and code in [Pn], per consulting-report convention — see Bibliography research

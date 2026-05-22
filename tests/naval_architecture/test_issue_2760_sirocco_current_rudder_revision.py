@@ -385,6 +385,30 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         )
 
 
+def test_issue_2760_pass_h_docx_has_sensitivity_and_appendix(tmp_path):
+    """Pass H DOCX parity: the Word artifact must carry the same Pass H
+    additions as HTML/PDF (was stripped at §5.1 / §6 only).
+    Sections added: §4.2 Yc description, §5.2-§5.6 with §5.6 sensitivity,
+    Appendix A rudder model comparison.
+    """
+    from docx import Document
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    document = Document(str(Path(manifest["docx_report"])))
+    text = "\n".join(p.text for p in document.paragraphs)
+
+    assert "5.2. Rudder force over heading" in text
+    assert "5.3. Rudder yaw moment over heading" in text
+    assert "5.4. Selected-speed envelope summary" in text
+    assert "5.5. Selected-case force breakdown" in text
+    assert "5.6. Current-speed sensitivity" in text
+    assert "Appendix A" in text
+    assert "Whicker-Fehlner" in text
+    assert "thin-plate" in text.lower() or "thin plate" in text.lower()
+    # Key-variable lead-in (H4 parity)
+    assert "Key variables" in text or "Default case" in text
+
+
 def test_issue_2760_pass_h_revisions(tmp_path):
     """Pass H contract: §4.2 transverse current force chart, §5.1 renamed to
     Whicker-Fehlner - Model A, §5.4/§5.5 lead-in key variables, §5.6
