@@ -253,22 +253,36 @@ def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenanc
     assert 'Selected-speed envelope summary' in html
     assert 'id="force-components-chart"' in html
     assert 'id="yaw-moment-heatmap"' not in html
-    assert 'id="heading-rudder-schematic"' in html
-    assert 'id="ship-current-rudder-svg"' in html
+    # Pass A restructure: axes/sign-convention schematic ID is now `schematic-axes-conventions`
+    # (superseded `heading-rudder-schematic` + `ship-current-rudder-svg`); per-section schematic
+    # anchors (current-loading, current-moment, rudder-loading) live in §4-§5.
+    assert 'id="schematic-axes-conventions"' in html
+    assert 'id="schematic-current-loading"' in html
+    assert 'id="schematic-current-moment"' in html
+    assert 'id="schematic-rudder-loading"' in html
     assert 'id="schematic-current-heading-line"' in html
     assert 'id="schematic-rudder-line"' in html
-    # HTML uses the canonical all-Unicode form `α = δ - ψ`; reject ASCII regression.
+    # HTML uses the canonical all-Unicode form `α = δ - ψ` (ASCII hyphen, per preserved
+    # sample-calc list). Reject ASCII-spelled-out `alpha` form regression.
     assert "α = δ - ψ" in html
     assert "alpha = δ - ψ" not in html
-    assert "positive bow-to-port" in html.lower()
+    assert "bow-to-port" in html.lower()
 
-    assert "heading/rudder schematic" in report.lower()
-    assert "heading/rudder effective-angle convention" in report.lower()
-    assert "local-to-ship transform" in report.lower()
-    assert "3.08 kn is the issue #2760 default current speed" in report
-    assert "hull-current" in report.lower()
+    # Pass A canonical 6-section layout (Introduction / Design Data / Axes / Load due to current
+    # / Load due to rudder / Limitations); MD reads at freshman-engineering-grad level.
+    assert "## 1. Introduction" in report
+    assert "## 2. Design Data & Assumptions" in report
+    assert "## 3. Axes & Sign Conventions" in report
+    assert "## 4. Load Due to Current" in report
+    assert "## 5. Load Due to Rudder" in report
+    assert "## 6. Limitations" in report
+    assert "longitudinal" in report.lower()
+    assert "transverse" in report.lower()
+    assert "yaw moment" in report.lower()
+    assert "screening calculation" in report.lower()
+    assert "3.08" in report  # default speed retained
     assert "placeholder heading functions" not in report.lower()
-    assert "not ship-specific sirocco current-coefficient curves" in report.lower()
+    assert "not vessel-specific to sirocco" in report.lower() or "not ship-specific sirocco" in report.lower()
 
     assert parsed["metadata"]["chart_default_current_speed_kn"] == pytest.approx(3.08)
     assert parsed["metadata"]["chart_default_extra_speed_included"] is False

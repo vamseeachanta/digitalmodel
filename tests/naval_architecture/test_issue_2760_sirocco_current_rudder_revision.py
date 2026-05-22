@@ -256,6 +256,75 @@ def test_issue_2760_docx_output_opens_and_contains_required_sections(tmp_path):
     assert "total horizontal force" not in text
 
 
+def test_issue_2760_canonical_section_layout_in_markdown(tmp_path):
+    """Pass A contract: MD must follow the 6-section canonical layout from
+    issue thread comment 4492317819 and approved plan §3.1.
+
+    Sections appear in order: Introduction, Design Data & Assumptions,
+    Axes & Sign Conventions, Load Due to Current, Load Due to Rudder, Limitations.
+    Each major calculation section has its own schematic block (Pass B fills SVG).
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    md = Path(manifest["markdown_report"]).read_text(encoding="utf-8")
+
+    expected_headings_in_order = [
+        "## 1. Introduction",
+        "## 2. Design Data & Assumptions",
+        "## 3. Axes & Sign Conventions",
+        "## 4. Load Due to Current",
+        "## 5. Load Due to Rudder",
+        "## 6. Limitations",
+    ]
+    positions = [md.find(h) for h in expected_headings_in_order]
+    for heading, pos in zip(expected_headings_in_order, positions):
+        assert pos >= 0, f"Missing canonical section heading: {heading!r}"
+    assert positions == sorted(positions), (
+        f"Section headings out of order: {list(zip(expected_headings_in_order, positions))}"
+    )
+
+
+def test_issue_2760_canonical_section_layout_in_html(tmp_path):
+    """Pass A contract: HTML must follow the same 6-section canonical layout."""
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    expected_headings_in_order = [
+        ">1. Introduction<",
+        ">2. Design Data &amp; Assumptions<",
+        ">3. Axes &amp; Sign Conventions<",
+        ">4. Load Due to Current<",
+        ">5. Load Due to Rudder<",
+        ">6. Limitations<",
+    ]
+    positions = [html.find(h) for h in expected_headings_in_order]
+    for heading, pos in zip(expected_headings_in_order, positions):
+        assert pos >= 0, f"Missing canonical HTML section heading: {heading!r}"
+    assert positions == sorted(positions), (
+        f"HTML headings out of order: {list(zip(expected_headings_in_order, positions))}"
+    )
+
+
+def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
+    """Pass A→B handoff contract: each major calculation section has its own
+    schematic placeholder/anchor. Pass B will fill the SVG content; Pass A
+    only needs the anchor structure to exist so the SVGs have a home.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+
+    required_schematic_ids = [
+        "schematic-axes-conventions",
+        "schematic-current-loading",
+        "schematic-current-moment",
+        "schematic-rudder-loading",
+    ]
+    for sid in required_schematic_ids:
+        assert f'id="{sid}"' in html, f"Missing per-section schematic anchor: {sid}"
+
+
 def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
@@ -276,7 +345,9 @@ def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
     assert "horizontal force" not in html
     assert "resultant" not in html
     assert "default rudder angle is neutral" not in html
-    assert "default rudder angle is <strong>28" in html
+    # Pass A restructure: rudder default is stated in §5.2 chart caption.
+    # Canonical form pinned (no OR-disjunction; per feedback_silent_verdict_flip_defect_class).
+    assert "default rudder angle: <strong>28° port</strong>" in html.lower()
     assert "ocimf loaded-tanker a9/a10/a11 workbook curves" in html
     assert "1.05*abs(cos" not in html
     assert "cm=0.55*sin" not in html
