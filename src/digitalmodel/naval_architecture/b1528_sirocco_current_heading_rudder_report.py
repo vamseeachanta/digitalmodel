@@ -493,6 +493,19 @@ def _load_ocimf_workbook_basis_for_path(
     }
 
 
+OCIMF_CURRENT_COP_LEVER_ARM_FRACTION = 0.3
+"""Approximate current center-of-pressure lever arm as a fraction of LBP.
+
+OCIMF MEG3/MEG4 Annex A figures imply a CoP forward of midship at
+near-head-current headings; typical loaded-tanker range is 0.2..0.4 LBP.
+0.3 is a screening-level mid-range value used only for the §4.2
+side-by-side "force × lever arm" yaw moment estimate that compares
+against OCIMF's direct Cxyc-based yaw moment. This is NOT an equality
+test — the two methods rest on different assumptions per approved
+plan §126.
+"""
+
+
 SIMPLE_PLATE_STALL_ANGLE_DEG = 28.0
 """Stall cap for the thin-plate rudder model.
 
@@ -616,6 +629,11 @@ def _row(
     current_x_N = dynamic_pressure_Pa * frontal_area_current_m2 * ocimf_cx
     current_y_N = dynamic_pressure_Pa * lateral_area_current_m2 * ocimf_cy
     current_n_Nm = dynamic_pressure_Pa * lateral_area_current_m2 * cfg.lbp_m * ocimf_cm
+    # Method B (Y_current × lever_arm) yaw moment for §4.2 side-by-side
+    # comparison against OCIMF direct Method A (Cxyc-based). NOT an equality
+    # test — methods rest on different assumptions per plan §126.
+    current_cop_lever_arm_m = OCIMF_CURRENT_COP_LEVER_ARM_FRACTION * cfg.lbp_m
+    current_y_times_lever_arm_n_Nm = current_y_N * current_cop_lever_arm_m
     # Model B (simple thin-plate, Faltinsen 1990 §6.5) — independent reference
     # for side-by-side comparison only; does NOT contribute to total_* sums
     # (Whicker-Fehlner Model A remains the default rudder force basis per plan §128).
@@ -663,6 +681,10 @@ def _row(
         "ocimf_current_force_y_ship_port_N": current_y_N,
         "ocimf_current_moment_n_yaw_bow_port_Nm": current_n_Nm,
         "ocimf_current_moment_n_yaw_bow_port_kN_m": current_n_Nm / 1000.0,
+        # Pass E: Method B (Y×lever_arm) yaw moment for §4.2 side-by-side
+        "current_cop_lever_arm_m": current_cop_lever_arm_m,
+        "current_y_times_lever_arm_moment_n_yaw_bow_port_Nm": current_y_times_lever_arm_n_Nm,
+        "current_y_times_lever_arm_moment_n_yaw_bow_port_kN_m": current_y_times_lever_arm_n_Nm / 1000.0,
         "base_force_N": base_force_N,
         "normal_force_N": normal_force_N,
         "force_x_local_downstream_N": x_local_N,
@@ -1351,6 +1373,10 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
 </svg>
 </div>
 
+<h4>4.2.1. Side-by-side yaw moment chart — Method A vs Method B</h4>
+<p>The chart below overlays both methods across the current-heading sweep at the default rudder angle. Method A uses the OCIMF direct yaw moment coefficient Cxyc; Method B multiplies the OCIMF transverse force Yc by an approximate center-of-pressure lever arm (~{OCIMF_CURRENT_COP_LEVER_ARM_FRACTION:g}·LBP). <strong>These methods rest on different assumptions and may differ — this overlay is a sanity check, NOT an equality test.</strong></p>
+<div id=\"yaw-side-by-side-chart\" class=\"chart\" aria-label=\"Yaw moment side-by-side — Method A OCIMF direct vs Method B Y times lever arm\"></div>
+
 <h3>4.3. Interactive: current vs rudder vs total side-by-side</h3>
 <p>Use the controls below to switch current speed and rudder angle and see how the OCIMF current component, the rudder component, and their sum combine.</p>
 <div class=\"controls\">
@@ -1624,6 +1650,30 @@ function updateSelectedCaseBreakdown() {{
   updateHeadingRudderSchematic(selected);
   updateText('breakdown-case-label', `Selected breakdown case: V=${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring = ${{fmtMoment(-selected.total_moment_n_yaw_bow_port_kN_m)}} kN·m.`);
 }}
+function updateYawSideBySideChart() {{
+  // Pass E: Method A (OCIMF direct Cxyc) vs Method B (Y_current × lever_arm)
+  // across heading sweep, at default rudder angle for stability.
+  const speed = selectedSpeed();
+  const defaultRudder = 28.0;
+  const sweepRows = ROWS
+    .filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, defaultRudder))
+    .sort(byHeading);
+  const x = sweepRows.map(row => row.heading_offset_deg);
+  const traces = [
+    {{x, y: sweepRows.map(row => row.ocimf_current_moment_n_yaw_bow_port_kN_m), name: 'Method A: OCIMF direct Cxyc', mode: 'lines+markers', line: {{color: '#155e95'}}, hovertemplate: 'ψ=%{{x}}°<br>Method A N=%{{y:.0f}} kN·m<extra></extra>'}},
+    {{x, y: sweepRows.map(row => row.current_y_times_lever_arm_moment_n_yaw_bow_port_kN_m), name: 'Method B: Y_current × ~0.3·LBP lever arm', mode: 'lines+markers', line: {{color: '#7c3aed', dash: 'dash'}}, hovertemplate: 'ψ=%{{x}}°<br>Method B N=%{{y:.0f}} kN·m<extra></extra>'}}
+  ];
+  Plotly.newPlot('yaw-side-by-side-chart', traces, {{
+    title: `Current yaw moment about CoG — Method A vs Method B (not equality-based) · V=${{speed}} kn · δ=${{defaultRudder}}°`,
+    xaxis: {{title: 'Heading offset ψ (deg)', zeroline: true, gridcolor: '#e5eaf1'}},
+    yaxis: {{title: 'Current yaw moment N about CoG (kN·m, +bow-to-port)', zeroline: true, gridcolor: '#e5eaf1'}},
+    height: STANDARD_CHART_HEIGHT,
+    margin: {{l: 82, r: 30, t: 66, b: 64}},
+    legend: {{orientation: 'h', y: -0.22}},
+    hovermode: 'x unified',
+    template: 'plotly_white'
+  }}, CHART_CONFIG);
+}}
 function updateRudderModelComparison() {{
   // Default-case static table values (rendered into the table cells)
   const speed = selectedSpeed();
@@ -1666,7 +1716,7 @@ function updateRudderModelComparison() {{
     template: 'plotly_white'
   }}, CHART_CONFIG);
 }}
-function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); updateRudderModelComparison(); }}
+function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateYawSideBySideChart(); updateSelectedCaseBreakdown(); updateRudderModelComparison(); }}
 document.getElementById('current-speed-select').addEventListener('change', updateCharts);
 document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }});
 updateCharts();

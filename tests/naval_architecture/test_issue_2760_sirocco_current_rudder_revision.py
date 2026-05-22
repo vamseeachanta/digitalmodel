@@ -450,6 +450,36 @@ def test_issue_2760_pass_c_simple_plate_fields_in_row_dict():
     assert default_row["force_y_ship_port_N"] > 0
 
 
+def test_issue_2760_pass_e_yaw_side_by_side_chart_and_field(tmp_path):
+    """Pass E contract: §4.2 includes a side-by-side yaw chart comparing
+    OCIMF direct yaw moment (Method A: Nc = q·A_l·LBP·Cxyc) with
+    Y_current × lever_arm (Method B). Per plan §126, this is a sanity
+    check, NOT an equality test — caption must state that explicitly.
+
+    A new row field `current_y_times_lever_arm_moment_n_yaw_bow_port_kN_m`
+    carries Method B's value for the chart.
+    """
+    result = run_b1528_current_heading_rudder_report()
+    row = result["rows"][0]
+    assert "current_y_times_lever_arm_moment_n_yaw_bow_port_kN_m" in row, (
+        "Pass E requires Method B (Y×arm) yaw moment field in row dict"
+    )
+
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+    assert 'id="yaw-side-by-side-chart"' in html, "Pass E chart missing"
+    assert "method a" in html.lower() and "method b" in html.lower(), (
+        "Pass E caption must label Methods A and B"
+    )
+    # Plan §126: not an equality test — caption must state methods may differ
+    html_low = html.lower()
+    assert ("may differ" in html_low or "different assumptions" in html_low or
+            "not an equality" in html_low or "not equality-based" in html_low), (
+        "Pass E caption must explicitly state methods rest on different "
+        "assumptions / not equality-based per plan §126"
+    )
+
+
 def test_issue_2760_pass_d_decimal_rounding_in_display_values(tmp_path):
     """Pass D contract: kN and kN·m display values are rounded to 0 decimals
     when |val| ≥ 1, and to 2 decimals otherwise (per plan §130 and user
