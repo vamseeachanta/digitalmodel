@@ -385,6 +385,26 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         )
 
 
+def test_issue_2760_pass_h_docx_embeds_schematic_pictures(tmp_path):
+    """Pass H "add pictures" contract: the DOCX embeds at least 4 inline
+    pictures (one per OCIMF schematic — axes/sign, current loading,
+    current moment, rudder loading) captured via Playwright element
+    screenshots. Degrades gracefully (0 pictures) if Playwright missing.
+    """
+    from docx import Document
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+    doc = Document(str(Path(manifest["docx_report"])))
+    # When Playwright is available, expect 4 schematic pictures
+    try:
+        import playwright  # noqa: F401
+        assert len(doc.inline_shapes) >= 4, (
+            f"Expected ≥4 embedded schematic pictures, got {len(doc.inline_shapes)}"
+        )
+    except ImportError:
+        pass  # Playwright unavailable; DOCX correctly degrades to text-only
+
+
 def test_issue_2760_pass_h_docx_has_sensitivity_and_appendix(tmp_path):
     """Pass H DOCX parity: the Word artifact must carry the same Pass H
     additions as HTML/PDF (was stripped at §5.1 / §6 only).

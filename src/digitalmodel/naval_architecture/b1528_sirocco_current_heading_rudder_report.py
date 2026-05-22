@@ -340,8 +340,12 @@ def write_b1528_current_heading_rudder_report(
     provenance_path.write_text(json.dumps(_provenance(result), indent=2) + "\n", encoding="utf-8")
     citation_path.write_text(json.dumps(_citation_sidecar(result), indent=2) + "\n", encoding="utf-8")
     md_path.write_text(_markdown_report(result) + "\n", encoding="utf-8")
-    _write_docx_report(result, docx_path)
+    # Pass H follow-up "add pictures": write HTML first so we can screenshot SVG
+    # schematics via Playwright, then embed PNGs in DOCX. PDF is rendered last and
+    # also benefits from the screenshot pass (Chrome rasterises the SVGs at print time).
     html_path.write_text(_html_report(result), encoding="utf-8")
+    schematic_pngs = _capture_schematic_pngs(html_path, out / "schematic-pngs")
+    _write_docx_report(result, docx_path, schematic_pngs=schematic_pngs)
     _write_pdf_from_html(html_path, pdf_path)
     manifest = {
         "csv": str(csv_path),
@@ -358,7 +362,11 @@ def write_b1528_current_heading_rudder_report(
     return manifest
 
 
-def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
+def _write_docx_report(
+    result: dict[str, Any],
+    docx_path: Path,
+    schematic_pngs: dict[str, Path] | None = None,
+) -> None:
     """Write a Word .docx report matching the MD/HTML canonical 6-section layout.
 
     Sections: (1) Introduction, (2) Design Data & Assumptions, (3) Axes & Sign
@@ -370,8 +378,20 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
 
     try:
         from docx import Document
+        from docx.shared import Inches
     except ImportError as exc:  # pragma: no cover - dependency availability is environment-specific
         raise RuntimeError("python-docx is required to render the B1528 SIROCCO Word report") from exc
+
+    schematic_pngs = schematic_pngs or {}
+
+    def _add_schematic_picture(schematic_id: str, caption: str) -> None:
+        """Embed a schematic PNG with caption if Playwright capture succeeded."""
+        png_path = schematic_pngs.get(schematic_id)
+        if png_path and Path(png_path).exists():
+            document.add_picture(str(png_path), width=Inches(5.5))
+            cap_p = document.add_paragraph()
+            cap_run = cap_p.add_run(caption)
+            cap_run.italic = True
 
     metadata = result["metadata"]
     sample = result["sample_working_example"]
@@ -479,9 +499,13 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         cells[1].text = meaning
         cells[2].text = sign
     document.add_paragraph(
-        "See the per-section schematics in the HTML report (§3 axes-conventions, "
-        "§4 current-loading + current-moment, §5 rudder-loading) for the ship outline "
-        "with annotated arrows showing each axis and angle."
+        "See the per-section schematics below (§3 axes-conventions, §4 current-loading "
+        "+ current-moment, §5 rudder-loading) for the ship outline with annotated arrows "
+        "showing each axis and angle."
+    )
+    _add_schematic_picture(
+        "schematic-axes-conventions",
+        "Figure 0 — Axes & Sign Conventions (per OCIMF MEG4 [1] Annex A §A.1).",
     )
 
     # §4 Load Due to Current
@@ -519,6 +543,10 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         f"Transverse Yc ≈ {yc_kN:.0f} kN (+port per Cyc>0)",
     ):
         document.add_paragraph(line, style="List Bullet")
+    _add_schematic_picture(
+        "schematic-current-loading",
+        "Figure 1 — Current loading at default case (OCIMF MEG4 [1] Annex A sign convention).",
+    )
 
     document.add_heading("4.2. Yaw moment about CoG", level=2)
     document.add_paragraph(
@@ -548,6 +576,10 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         "§4.2.1 chart shows both as an overlay with an explicit non-equality caption — this "
         "is a sanity-check overlay, NOT an equality test."
     )
+    _add_schematic_picture(
+        "schematic-current-moment",
+        "Figure 2 — Current yaw moment about CoG: CoP, lever arm, and +M_XY direction.",
+    )
 
     # §5 Load Due to Rudder
     document.add_heading("5. Load Due to Rudder", level=1)
@@ -556,6 +588,10 @@ def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
         f"effective inflow angle α = δ - ψ. At the default case "
         f"(δ = +{default_rudder:.0f}° port, ψ = +{default_heading:.0f}° port): "
         f"α = +{default_alpha:.0f}°."
+    )
+    _add_schematic_picture(
+        "schematic-rudder-loading",
+        "Figure 3 — Rudder loading at default deflection δ=+28° port; normal force F decomposed into +F_X and +F_Y at the rudder pivot.",
     )
     document.add_paragraph(
         "Two screening rudder models are presented side by side:"
@@ -819,6 +855,45 @@ def _write_pdf_from_html(html_path: Path, pdf_path: Path) -> None:
         page.emulate_media(media="print")
         page.pdf(path=str(pdf_path), format="A4", landscape=True, print_background=True)
         browser.close()
+
+
+SCHEMATIC_IDS = (
+    "schematic-axes-conventions",
+    "schematic-current-loading",
+    "schematic-current-moment",
+    "schematic-rudder-loading",
+)
+
+
+def _capture_schematic_pngs(html_path: Path, png_dir: Path) -> dict[str, Path]:
+    """Capture each per-section schematic SVG as a PNG via Playwright element screenshot.
+
+    Returns a dict of {schematic_id: png_path}. Pass H DOCX embedding consumer.
+    Returns empty dict if Playwright is unavailable (DOCX writer degrades gracefully).
+    """
+
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:  # pragma: no cover - degrade gracefully
+        return {}
+
+    png_dir.mkdir(parents=True, exist_ok=True)
+    captured: dict[str, Path] = {}
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page(viewport={"width": 1200, "height": 1000}, device_scale_factor=2)
+        page.goto(html_path.resolve().as_uri(), wait_until="networkidle")
+        for schematic_id in SCHEMATIC_IDS:
+            try:
+                element = page.locator(f"#{schematic_id}")
+                element.wait_for(state="visible", timeout=5000)
+                png_path = png_dir / f"{schematic_id}.png"
+                element.screenshot(path=str(png_path), omit_background=False)
+                captured[schematic_id] = png_path
+            except Exception:  # pragma: no cover - screenshot failures shouldn't break report gen
+                continue
+        browser.close()
+    return captured
 
 
 def _load_ocimf_workbook_basis() -> dict[str, list[tuple[float, float]]]:
