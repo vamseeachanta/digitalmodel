@@ -8,6 +8,7 @@ from .layers.well_layer import WellLayer
 from . import io
 from . import integrations
 from . import layers
+from . import imagery
 
 __all__ = [
     "CoordinatePoint",
@@ -27,4 +28,5 @@ __all__ = [
     "io",
     "integrations",
     "layers",
+    "imagery",
 ]
