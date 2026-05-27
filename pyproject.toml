@@ -70,6 +70,7 @@ dependencies = [
     "pandas>=2.0.0,<3.0.0",
     "passlib[bcrypt]==1.7.4",
     "pillow==10.1.0", # Image processing
+    "imageio>=2.25.0,<3.0.0", # GIF/MP4 frame writing for imagery timelapses
     "pint>=0.25.3,<1.0.0",
     "plotly==5.17.0",
     "poetry",
@@ -143,6 +144,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+gis-imagery = [
+    # Optional Earth Engine support for the gis.imagery timelapse pipeline.
+    # Not required: the pipeline falls back to public Planetary Computer STAC.
+    "earthengine-api>=0.1.370,<1.0.0",
+    "planetary-computer>=0.5.0,<2.0.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio==0.21.1",
@@ -210,6 +217,7 @@ gmsh-meshing = "digitalmodel.solvers.gmsh_meshing.cli:main"
 workflow-automation = "digitalmodel.workflows.workflow_automation.cli:main"
 bemrosetta = "digitalmodel.hydrodynamics.bemrosetta.cli:main"
 dynacard = "digitalmodel.marine_ops.artificial_lift.dynacard.cli:main"
+imagery-timelapse = "digitalmodel.gis.imagery.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
