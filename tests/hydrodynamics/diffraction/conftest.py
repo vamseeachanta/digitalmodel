@@ -192,6 +192,138 @@ def mock_rao_set() -> RAOSet:
     return _make_rao_set()
 
 
+# ---------------------------------------------------------------------------
+# Dense PASS fixture (#611 / #625 Phase-1)
+# ---------------------------------------------------------------------------
+# The sparse fixture above (N_FREQ=10, N_HEAD=5, 0..180 headings) intentionally
+# yields a WARNING verdict. The dense fixture below satisfies every validator
+# coverage/physical check so it yields a clean PASS:
+#   - >=20 frequencies spanning <=0.1 .. >=1.5 rad/s (uniform spacing)
+#   - >=8 headings with full 360-degree coverage (range >= 350)
+#   - RAO magnitudes well within translation (<5) / rotation (<20) limits and
+#     resonance amp limits (3 m/m translation, 15 deg/m rotation)
+#   - symmetric 6x6 added-mass / damping matrices with non-negative diagonals
+N_FREQ_DENSE = 24
+N_HEAD_DENSE = 13
+FREQUENCIES_DENSE = np.linspace(0.05, 2.5, N_FREQ_DENSE)
+HEADINGS_DENSE = np.linspace(0.0, 360.0, N_HEAD_DENSE)
+
+
+def _make_dense_freq_data() -> FrequencyData:
+    return FrequencyData(
+        values=FREQUENCIES_DENSE.copy(),
+        periods=2.0 * np.pi / FREQUENCIES_DENSE,
+        count=N_FREQ_DENSE,
+        min_freq=float(FREQUENCIES_DENSE[0]),
+        max_freq=float(FREQUENCIES_DENSE[-1]),
+    )
+
+
+def _make_dense_heading_data() -> HeadingData:
+    return HeadingData(
+        values=HEADINGS_DENSE.copy(),
+        count=N_HEAD_DENSE,
+        min_heading=float(HEADINGS_DENSE[0]),
+        max_heading=float(HEADINGS_DENSE[-1]),
+    )
+
+
+def _make_dense_rao_component(dof: DOF) -> RAOComponent:
+    # Constant, modest magnitudes: 1.0 m/m translation, 2.0 deg/m rotation.
+    if dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+        magnitude = np.full((N_FREQ_DENSE, N_HEAD_DENSE), 1.0)
+    else:
+        magnitude = np.full((N_FREQ_DENSE, N_HEAD_DENSE), 2.0)
+    return RAOComponent(
+        dof=dof,
+        magnitude=magnitude,
+        phase=np.zeros((N_FREQ_DENSE, N_HEAD_DENSE)),
+        frequencies=_make_dense_freq_data(),
+        headings=_make_dense_heading_data(),
+        unit="",
+    )
+
+
+def _make_dense_matrix_set(matrix_type: str) -> AddedMassSet | DampingSet:
+    matrices = []
+    for i in range(N_FREQ_DENSE):
+        # Symmetric (diagonal), positive-definite -> non-negative diagonals.
+        matrices.append(
+            HydrodynamicMatrix(
+                matrix=np.eye(6) * 500.0,
+                frequency=float(FREQUENCIES_DENSE[i]),
+                matrix_type=matrix_type,
+                units={"linear": "kg", "angular": "kg.m^2"},
+            )
+        )
+    cls = AddedMassSet if matrix_type == "added_mass" else DampingSet
+    return cls(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        matrices=matrices,
+        frequencies=_make_dense_freq_data(),
+        created_date=datetime.now().isoformat(),
+    )
+
+
+@pytest.fixture
+def dense_diffraction_results() -> DiffractionResults:
+    """Dense, physically-clean DiffractionResults that validates to PASS.
+
+    24 frequencies, 13 headings (full 360-degree coverage), modest RAO
+    magnitudes, and symmetric 6x6 matrices with non-negative diagonals.
+    """
+    now = datetime.now().isoformat()
+    rao_set = RAOSet(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        surge=_make_dense_rao_component(DOF.SURGE),
+        sway=_make_dense_rao_component(DOF.SWAY),
+        heave=_make_dense_rao_component(DOF.HEAVE),
+        roll=_make_dense_rao_component(DOF.ROLL),
+        pitch=_make_dense_rao_component(DOF.PITCH),
+        yaw=_make_dense_rao_component(DOF.YAW),
+        created_date=now,
+        source_file="dense_model.sim",
+    )
+    return DiffractionResults(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        raos=rao_set,
+        added_mass=_make_dense_matrix_set("added_mass"),
+        damping=_make_dense_matrix_set("damping"),
+        created_date=now,
+        source_files=["dense_model.sim"],
+    )
+
+
+@pytest.fixture
+def fail_diffraction_results(
+    dense_diffraction_results: DiffractionResults,
+) -> DiffractionResults:
+    """Dense results with a negative added-mass diagonal -> FAIL verdict.
+
+    NOTE: this depends on the current substring classifier in
+    ``OutputValidator._determine_overall_status`` (output_validator.py:364),
+    which escalates any issue containing the word ``"negative"`` to FAIL. If
+    that classifier is hardened in a later issue, this fixture may need updating.
+    """
+    results = dense_diffraction_results
+    bad = np.eye(6) * 500.0
+    bad[2, 2] = -10.0  # negative heave added-mass diagonal
+    first = results.added_mass.matrices[0]
+    results.added_mass.matrices[0] = HydrodynamicMatrix(
+        matrix=bad,
+        frequency=first.frequency,
+        matrix_type="added_mass",
+        units={"linear": "kg", "angular": "kg.m^2"},
+    )
+    return results
+
+
 @pytest.fixture
 def mock_diffraction_results() -> DiffractionResults:
     """Synthetic DiffractionResults with 10 frequencies, 5 headings."""

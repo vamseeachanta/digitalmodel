@@ -521,3 +521,74 @@ class TestRunAqwaConvenience:
             spec, output_dir=tmp_path, dry_run=True, timeout_seconds=300,
         )
         assert result.status == AQWARunStatus.DRY_RUN
+
+
+# ---------------------------------------------------------------------------
+# #611 AQWARunResult contract + #625 validation contract (Phase-1a)
+# ---------------------------------------------------------------------------
+
+class TestAQWARunResultContract611:
+    """New #611/#625 fields on AQWARunResult: defaults and presence."""
+
+    def test_new_contract_fields_present(self):
+        field_names = {f.name for f in dataclass_fields(AQWARunResult)}
+        expected = {
+            "data_file", "xlsx_path", "report_path",
+            "validation_report_path", "validation_verdict", "validation_issues",
+            "validation_report", "diffraction_results",
+        }
+        assert expected.issubset(field_names)
+        # AQWA keeps its solver-specific files...
+        assert {"lis_file", "ah1_file", "log_file"}.issubset(field_names)
+        # ...and must NOT add a generic owr_path (AQWA produces no .owr).
+        assert "owr_path" not in field_names
+
+    def test_contract_defaults(self):
+        result = AQWARunResult(status=AQWARunStatus.PENDING)
+        assert result.data_file is None
+        assert result.xlsx_path is None      # D2: present but None this phase
+        assert result.report_path is None    # D2
+        assert result.validation_report_path is None
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues == []
+        assert result.validation_report is None
+        assert result.diffraction_results is None
+        # Backward-compat: solver-specific fields still default None.
+        assert result.lis_file is None
+        assert result.ah1_file is None
+        assert result.log_file is None
+
+
+class TestAQWARunConfigValidationToggles:
+    """#625 validation toggles on AQWARunConfig."""
+
+    def test_defaults(self):
+        config = AQWARunConfig()
+        assert config.validate_outputs is True
+        assert config.validation_strict is False
+
+    def test_overrides(self):
+        config = AQWARunConfig(validate_outputs=False, validation_strict=True)
+        assert config.validate_outputs is False
+        assert config.validation_strict is True
+
+
+class TestAQWASkippedWiring:
+    """Dry-run / no-executable fallback produce SKIPPED verdict + reason."""
+
+    def test_dry_run_skipped(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        result = run_aqwa(spec, output_dir=tmp_path, dry_run=True)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues
+        assert "dry-run" in result.validation_issues[0].lower()
+
+    def test_no_executable_fallback_skipped(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=False)
+        with patch.object(AQWARunner, "_detect_executable", return_value=None):
+            result = AQWARunner(config).run(spec)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues

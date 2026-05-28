@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +104,17 @@ class AQWARunConfig(BaseModel):
         default=True,
         description="Pass /nowind flag for headless (no GUI window) mode.",
     )
+    validate_outputs: bool = Field(
+        default=True,
+        description="Run output validation on produced DiffractionResults.",
+    )
+    validation_strict: bool = Field(
+        default=False,
+        description=(
+            "Treat a FAIL/ERROR validation verdict as a run failure "
+            "(status FAILED, return code -2) even if the solver succeeded."
+        ),
+    )
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -128,7 +140,15 @@ class AQWARunConfig(BaseModel):
 
 @dataclass
 class AQWARunResult:
-    """Result of an AQWA runner execution."""
+    """Result of an AQWA runner execution.
+
+    Output / validation contract (#611 / #625): mirrors OrcaWave ``RunResult``
+    but keeps AQWA-specific ``lis_file`` / ``ah1_file`` and does *not* add a
+    generic ``owr_path`` (AQWA produces no ``.owr``). ``xlsx_path`` /
+    ``report_path`` are reserved for a later phase and stay ``None`` (D2).
+    ``validation_verdict`` uses canonical strings and is never aliased to
+    ``WARN`` in stored values (D3).
+    """
 
     status: AQWARunStatus
     input_file: Path | None = None
@@ -143,6 +163,16 @@ class AQWARunResult:
     duration_seconds: float | None = None
     error_message: str | None = None
     spec_name: str | None = None
+    # --- #611 output contract (no owr_path: AQWA produces no .owr) ---
+    data_file: Path | None = None
+    xlsx_path: Path | None = None
+    report_path: Path | None = None
+    # --- #625 validation contract ---
+    validation_report_path: Path | None = None
+    validation_verdict: str = "SKIPPED"
+    validation_issues: list[str] = field(default_factory=list)
+    validation_report: dict[str, Any] | None = None
+    diffraction_results: DiffractionResults | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +247,9 @@ class AQWARunner:
             if exe is None:
                 self._result.status = AQWARunStatus.DRY_RUN
                 self._result.duration_seconds = 0.0
+                self._mark_validation_skipped(
+                    "No AQWA executable found; no diffraction results produced"
+                )
                 return self._result
 
         result = self.execute()
@@ -281,12 +314,18 @@ class AQWARunner:
         if self._config.dry_run:
             self._result.status = AQWARunStatus.DRY_RUN
             self._result.duration_seconds = time.monotonic() - start
+            self._mark_validation_skipped(
+                "No diffraction results produced in dry-run mode"
+            )
             return self._result
 
         exe = self._detect_executable()
         if exe is None:
             self._result.status = AQWARunStatus.DRY_RUN
             self._result.duration_seconds = time.monotonic() - start
+            self._mark_validation_skipped(
+                "No AQWA executable found; no diffraction results produced"
+            )
             return self._result
 
         self._result.status = AQWARunStatus.RUNNING
@@ -325,8 +364,23 @@ class AQWARunner:
         else:
             self._result.status = AQWARunStatus.FAILED
             self._result.error_message = aqwa_error
+            self._mark_validation_skipped(
+                "Solver failed; no diffraction results to validate"
+            )
 
         return self._result
+
+    def _mark_validation_skipped(self, reason: str) -> None:
+        """Record a SKIPPED validation verdict with an explanatory reason.
+
+        Keeps the canonical ``SKIPPED`` verdict (default) and stores the reason
+        on the result. AQWA runtime extraction (`.LIS`/`.AH1` -> DiffractionResults)
+        and validation invocation land in the #625 increment.
+        """
+        if self._result is None:
+            return
+        self._result.validation_verdict = "SKIPPED"
+        self._result.validation_issues = [reason]
 
     # ----- internal methods -----
 
