@@ -40,3 +40,22 @@ Bing/Google Maps satellite (only with attention to their terms of service). Labe
 
 - Per-frame acquisition date in the frame label (already have year; add month/day).
 - A `--latest-source` CLI flag wiring #3.
+
+## 5. Use case: real-estate purchase due-diligence (multi-radius development timelapse)
+
+Beyond a single property, the pipeline can support **real-estate acquisition due-diligence
+videos**: a timelapse of *area development over time* around a candidate site at
+**selectable radii — e.g. 2-mile, 5-mile, 10-mile rings** — to show how the surrounding
+market/trade area has built out (new construction, road/retail growth, density change).
+
+**Requirements:**
+- Generalize the current two fixed scales (`property` 0.20 mi, `neighborhood` 1.50 mi) to an
+  **arbitrary, configurable list of radii** in the manifest (e.g. `radii_miles: [2, 5, 10]`),
+  rendering one labelled timelapse per radius.
+- **Radii must be compliant with real-estate analysis guidelines** — i.e. selectable to
+  match the conventions the analysis follows (appraisal / market-study / site-selection
+  trade-area rings, commonly 1 / 3 / 5 mi, and drive-time variants). Don't hard-code; let
+  the manifest pick guideline-aligned values, and record the chosen radii + basis in the
+  output report for defensibility.
+- Larger radii need a tiled mosaic (multiple NAIP quarter-quads per frame) rather than a
+  single item — extends the #2 tile-stitch path to mosaic across tile boundaries.
