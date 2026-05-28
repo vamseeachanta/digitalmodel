@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +123,17 @@ class RunConfig(BaseModel):
         gt=0,
         description="Number of threads for OrcFxAPI diffraction calculation.",
     )
+    validate_outputs: bool = Field(
+        default=True,
+        description="Run output validation on produced DiffractionResults.",
+    )
+    validation_strict: bool = Field(
+        default=False,
+        description=(
+            "Treat a FAIL/ERROR validation verdict as a run failure "
+            "(status FAILED, return code -2) even if the solver succeeded."
+        ),
+    )
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -147,7 +159,17 @@ class RunConfig(BaseModel):
 
 @dataclass
 class RunResult:
-    """Result of an OrcaWave runner execution."""
+    """Result of an OrcaWave runner execution.
+
+    Output contract (#611): explicit result paths replace the previous
+    ``log_file = .owr`` overload. ``owr_path`` / ``data_file`` populate for real
+    when OrcaWave produces them; ``xlsx_path`` / ``report_path`` are reserved for
+    a later exporter/report phase and remain ``None`` here (locked decision D2).
+
+    Validation contract (#625): ``validation_verdict`` defaults to ``"SKIPPED"``
+    and uses canonical strings ``PASS``/``WARNING``/``FAIL``/``ERROR``/``SKIPPED``
+    (never aliased to ``WARN`` in stored values, per locked decision D3).
+    """
 
     status: RunStatus
     input_file: Path | None = None
@@ -161,6 +183,20 @@ class RunResult:
     duration_seconds: float | None = None
     error_message: str | None = None
     spec_name: str | None = None
+    # --- #611 output contract ---
+    owr_path: Path | None = None
+    data_file: Path | None = None
+    xlsx_path: Path | None = None
+    report_path: Path | None = None
+    # --- #625 validation contract ---
+    validation_report_path: Path | None = None
+    validation_verdict: str = "SKIPPED"
+    validation_issues: list[str] = field(default_factory=list)
+    validation_report: dict[str, Any] | None = None
+    diffraction_results: DiffractionResults | None = None
+    # --- solver metadata ---
+    orcf_api_version: str | None = None
+    thread_count: int | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +274,10 @@ class OrcaWaveRunner:
             if not has_api and not has_exe:
                 self._result.status = RunStatus.DRY_RUN
                 self._result.duration_seconds = 0.0
+                self._mark_validation_skipped(
+                    "No OrcaWave executable or OrcFxAPI available; "
+                    "no diffraction results produced"
+                )
                 return self._result
 
         result = self.execute()
@@ -306,6 +346,9 @@ class OrcaWaveRunner:
         if self._config.dry_run:
             self._result.status = RunStatus.DRY_RUN
             self._result.duration_seconds = time.monotonic() - start
+            self._mark_validation_skipped(
+                "No diffraction results produced in dry-run mode"
+            )
             return self._result
 
         # Try OrcFxAPI Python binding first
@@ -317,6 +360,9 @@ class OrcaWaveRunner:
         if exe is None:
             self._result.status = RunStatus.DRY_RUN
             self._result.duration_seconds = time.monotonic() - start
+            self._mark_validation_skipped(
+                "No OrcaWave executable found; no diffraction results produced"
+            )
             return self._result
 
         self._result.status = RunStatus.RUNNING
@@ -339,6 +385,9 @@ class OrcaWaveRunner:
         else:
             self._result.status = RunStatus.FAILED
             self._result.error_message = stderr or f"Exit code {return_code}"
+            self._mark_validation_skipped(
+                "Solver failed; no diffraction results to validate"
+            )
 
         # Capture log
         self._result.log_file = self._capture_log(self._result.output_dir)
@@ -394,7 +443,11 @@ class OrcaWaveRunner:
                 f"OrcFxAPI: Calculated {len(diffraction.frequencies)} "
                 f"frequencies x {len(diffraction.headings)} headings"
             )
-            self._result.log_file = results_file
+            # #611: expose real result paths instead of overloading log_file.
+            # log_file stays None here (no subprocess log on the API path).
+            self._result.owr_path = results_file
+            self._result.data_file = data_file
+            self._result.thread_count = self._config.thread_count
 
         except Exception as e:
             elapsed = time.monotonic() - start
@@ -403,8 +456,23 @@ class OrcaWaveRunner:
             self._result.duration_seconds = elapsed
             self._result.error_message = str(e)
             self._result.stderr = str(e)
+            self._mark_validation_skipped(
+                "OrcFxAPI calculation failed; no diffraction results to validate"
+            )
 
         return self._result
+
+    def _mark_validation_skipped(self, reason: str) -> None:
+        """Record a SKIPPED validation verdict with an explanatory reason.
+
+        Keeps the canonical ``SKIPPED`` verdict (default) and stores the reason
+        on the result so downstream consumers know why no validation ran. The
+        runtime extraction + validation wiring lands in the #625 increment.
+        """
+        if self._result is None:
+            return
+        self._result.validation_verdict = "SKIPPED"
+        self._result.validation_issues = [reason]
 
     # ----- internal methods -----
 

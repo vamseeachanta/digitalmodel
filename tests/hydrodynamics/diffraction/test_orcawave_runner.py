@@ -486,3 +486,106 @@ class TestRunOrcawaveConvenience:
             spec, output_dir=tmp_path, dry_run=True, timeout_seconds=300
         )
         assert result.status == RunStatus.DRY_RUN
+
+
+# ---------------------------------------------------------------------------
+# #611 RunResult contract + #625 validation contract (Phase-1a)
+# ---------------------------------------------------------------------------
+
+class TestRunResultContract611:
+    """New #611/#625 fields on RunResult: defaults and presence."""
+
+    def test_new_contract_fields_present(self):
+        field_names = {f.name for f in dataclass_fields(RunResult)}
+        expected = {
+            "owr_path", "data_file", "xlsx_path", "report_path",
+            "validation_report_path", "validation_verdict", "validation_issues",
+            "validation_report", "diffraction_results", "orcf_api_version",
+            "thread_count",
+        }
+        assert expected.issubset(field_names)
+
+    def test_contract_defaults(self):
+        result = RunResult(status=RunStatus.PENDING)
+        assert result.owr_path is None
+        assert result.data_file is None
+        # D2: xlsx/report path fields exist but stay None this phase.
+        assert result.xlsx_path is None
+        assert result.report_path is None
+        assert result.validation_report_path is None
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues == []
+        assert result.validation_report is None
+        assert result.diffraction_results is None
+        assert result.orcf_api_version is None
+        assert result.thread_count is None
+
+
+class TestRunConfigValidationToggles:
+    """#625 validation toggles on RunConfig."""
+
+    def test_defaults(self):
+        config = RunConfig()
+        assert config.validate_outputs is True
+        assert config.validation_strict is False
+
+    def test_overrides(self):
+        config = RunConfig(validate_outputs=False, validation_strict=True)
+        assert config.validate_outputs is False
+        assert config.validation_strict is True
+
+
+class TestSkippedWiring:
+    """Dry-run / no-executable fallback produce SKIPPED verdict + reason."""
+
+    def test_dry_run_skipped(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        result = run_orcawave(spec, output_dir=tmp_path, dry_run=True)
+        assert result.status == RunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues  # carries a reason
+        assert "dry-run" in result.validation_issues[0].lower()
+
+    def test_no_executable_fallback_skipped(self, ship_raos_spec_path, tmp_path):
+        # No OrcFxAPI here and no executable -> run() falls back to DRY_RUN.
+        spec = _load_spec(ship_raos_spec_path)
+        config = RunConfig(output_dir=tmp_path, dry_run=False, use_api=False)
+        with patch.object(OrcaWaveRunner, "_detect_executable", return_value=None):
+            result = OrcaWaveRunner(config).run(spec)
+        assert result.status == RunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues
+
+
+class TestLogFileNoLongerOverloaded:
+    """#611: the .owr -> log_file overload is removed on the API success path."""
+
+    def test_api_success_sets_owr_path_not_log_file(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = RunConfig(output_dir=tmp_path, use_api=True, thread_count=2)
+        runner = OrcaWaveRunner(config)
+        runner.prepare(spec)
+
+        # Build a fake OrcFxAPI.Diffraction object.
+        fake_diff = MagicMock()
+        fake_diff.frequencies = [0.1, 0.2, 0.3]
+        fake_diff.headings = [0.0, 90.0, 180.0]
+        fake_module = MagicMock()
+        fake_module.Diffraction.return_value = fake_diff
+
+        with patch.object(OrcaWaveRunner, "_check_api_available", return_value=True), \
+                patch.dict("sys.modules", {"OrcFxAPI": fake_module}):
+            result = runner.execute()
+
+        assert result.status == RunStatus.COMPLETED
+        # The .owr lands in owr_path, NOT log_file (the old overload).
+        assert result.owr_path is not None
+        assert result.owr_path.suffix == ".owr"
+        assert result.data_file is not None
+        assert result.data_file.name.endswith("_data.dat")
+        assert result.log_file is None
+        assert result.thread_count == 2
+        # Validation runtime wiring is deferred to #625; verdict stays SKIPPED.
+        assert result.validation_verdict == "SKIPPED"
