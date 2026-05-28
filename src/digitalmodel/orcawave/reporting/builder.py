@@ -65,6 +65,14 @@ class OrcaWaveReportBuilder:
             raise ImportError(
                 "OrcFxAPI is required to generate OrcaWave reports."
             ) from exc
+        # The solver subpackage imports successfully even when OrcFxAPI is
+        # absent, deliberately binding the name to ``None`` (see
+        # diffraction/solver/__init__.py). Guard against that so callers get a
+        # clean ImportError instead of an ``AttributeError`` on ``None``.
+        if OrcFxAPI is None:
+            raise ImportError(
+                "OrcFxAPI is required to generate OrcaWave reports."
+            )
         diff = OrcFxAPI.Diffraction(str(self.owr_path))
         return diff
 

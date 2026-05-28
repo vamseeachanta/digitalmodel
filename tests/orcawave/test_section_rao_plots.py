@@ -81,9 +81,13 @@ class TestRAOPlotsWithPlotly:
         """Heading filter selects only specified headings."""
         result = build_rao_plots(mock_diff_single_body, heading_filter_config)
         assert isinstance(result, str)
-        # Should contain 0° and 180° traces but not 90°
-        assert "0°" in result
-        assert "180°" in result
+        # Heading labels become Plotly trace names. fig.to_html() serializes the
+        # figure to JSON with ensure_ascii=True, so the degree sign (U+00B0) is
+        # emitted as the escape sequence "°" rather than a literal "°".
+        # Should contain 0° and 180° traces but not 90°.
+        assert '"0\\u00b0"' in result
+        assert '"180\\u00b0"' in result
+        assert '"90\\u00b0"' not in result
 
     def test_include_phase_adds_phase_traces(self, mock_diff_single_body, phase_config):
         result = build_rao_plots(mock_diff_single_body, phase_config)
