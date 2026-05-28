@@ -1,0 +1,52 @@
+# Minimal arbitrary-mesh acceptance spec for issue #610.
+#
+# Drives the full DigitalModel -> OrcaWave chain from a repo-managed mesh+spec
+# pair. The mesh (unit_box.gdf) is a 5-panel WAMIT GDF unit box that lives next
+# to this file so the fixture is self-contained. Kept deliberately small
+# (3 frequencies x 3 headings) so the licensed run on licensed-win-1 is fast.
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "Acceptance610_UnitBox"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1025.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  remove_irregular_frequencies: false
+  qtf_calculation: false
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+
+metadata:
+  project: "issue_610_acceptance"
+  author: "thread-a"
+  description: "Arbitrary unit-box mesh acceptance fixture for the licensed OrcaWave E2E test"
+  tags: [test, acceptance, "issue-610"]
