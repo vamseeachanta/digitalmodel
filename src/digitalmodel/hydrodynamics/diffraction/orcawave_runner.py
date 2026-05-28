@@ -43,15 +43,34 @@ import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from pydantic import BaseModel, Field, field_validator
 
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    hz_to_rad_per_s,
+    radians_to_degrees,
+    rad_per_s_to_period_s,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
-from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    AddedMassSet,
+    DampingSet,
+    DiffractionResults,
+    DOF,
+    FrequencyData,
+    HeadingData,
+    HydrodynamicMatrix,
+    HydrostaticResults,
+    RAOComponent,
+    RAOSet,
+)
+from digitalmodel.hydrodynamics.diffraction.validation_runner import run_validation
 
 
 # ---------------------------------------------------------------------------
@@ -241,6 +260,9 @@ class OrcaWaveRunner:
         self._config = config or RunConfig()
         self._backend = OrcaWaveBackend()
         self._result: RunResult | None = None
+        # Retained from the spec during prepare() so the post-Calculate()
+        # adapter can stamp DiffractionResults sub-schemas with water_depth.
+        self._water_depth: float = 0.0
 
     @property
     def result(self) -> RunResult | None:
@@ -303,6 +325,9 @@ class OrcaWaveRunner:
 
         spec_name = self._derive_spec_name(spec)
         spec_dir = Path(spec_path).parent if spec_path else None
+
+        # Retain water depth from the spec for the post-Calculate() adapter.
+        self._water_depth = self._spec_water_depth(spec)
 
         self._result = RunResult(
             status=RunStatus.PREPARING,
@@ -448,6 +473,17 @@ class OrcaWaveRunner:
             self._result.owr_path = results_file
             self._result.data_file = data_file
             self._result.thread_count = self._config.thread_count
+            self._result.orcf_api_version = self._detect_api_version(OrcFxAPI)
+
+            # #625: build DiffractionResults from the live object (with a
+            # mandatory .owr LoadResults() fallback) and validate.
+            results = self._diffraction_to_results(
+                diffraction,
+                owr_path=results_file,
+                data_file=data_file,
+            )
+            self._result.diffraction_results = results
+            self._run_validation(results, output_dir)
 
         except Exception as e:
             elapsed = time.monotonic() - start
@@ -461,6 +497,270 @@ class OrcaWaveRunner:
             )
 
         return self._result
+
+    # ----- #625 validation wiring -----
+
+    def _run_validation(
+        self, results: DiffractionResults | None, output_dir: Path
+    ) -> None:
+        """Validate *results* via the shared helper and attach the outcome.
+
+        Honors ``RunConfig.validate_outputs`` (disabled -> SKIPPED) and applies
+        strict-mode enforcement when ``RunConfig.validation_strict`` is set.
+        """
+        if self._result is None:
+            return
+
+        stem = (self._result.input_file.stem if self._result.input_file else "orcawave")
+        outcome = run_validation(
+            results,
+            output_dir,
+            stem,
+            enabled=self._config.validate_outputs,
+            skip_reason=(
+                None
+                if self._config.validate_outputs
+                else "Validation disabled via RunConfig.validate_outputs"
+            ),
+        )
+        self._result.validation_verdict = outcome.verdict
+        self._result.validation_report = outcome.report
+        self._result.validation_report_path = outcome.report_path
+        if outcome.issues:
+            self._result.validation_issues = outcome.issues
+        elif outcome.reason:
+            self._result.validation_issues = [outcome.reason]
+
+        self._apply_strict_mode(outcome.verdict)
+
+    def _apply_strict_mode(self, verdict: str) -> None:
+        """In strict mode, escalate a FAIL/ERROR verdict to a run failure.
+
+        Only fires when the solver otherwise succeeded (status COMPLETED).
+        WARNING stays non-fatal. Return code becomes ``-2`` to distinguish a
+        validation-driven failure from a solver failure (``-1``).
+        """
+        if self._result is None or not self._config.validation_strict:
+            return
+        if self._result.status != RunStatus.COMPLETED:
+            return
+        if verdict in ("FAIL", "ERROR"):
+            self._result.status = RunStatus.FAILED
+            self._result.return_code = -2
+            self._result.error_message = (
+                f"Strict validation failed: verdict {verdict}"
+            )
+
+    @staticmethod
+    def _detect_api_version(orcfxapi_module: Any) -> str | None:
+        """Best-effort read of the OrcFxAPI version string, if exposed."""
+        for attr in ("DLLVersion", "ModuleVersion", "__version__"):
+            value = getattr(orcfxapi_module, attr, None)
+            if value is None:
+                continue
+            try:
+                return str(value() if callable(value) else value)
+            except Exception:  # noqa: BLE001 - version probe must never raise
+                continue
+        return None
+
+    def _diffraction_to_results(
+        self,
+        diffraction: Any,
+        owr_path: Path,
+        data_file: Path,
+    ) -> DiffractionResults:
+        """Build a :class:`DiffractionResults` from a live OrcFxAPI object.
+
+        Load-bearing assumption (unverified on this license-free host; tracked
+        on ``licensed-win-1`` / #610): result attributes are populated after
+        ``Calculate()`` without ``LoadResults()``. If the live attributes are
+        empty or raise, this method falls back to ``d.LoadResults(.owr)`` and
+        re-reads — acceptable because OrcFxAPI is already present on the success
+        path.
+
+        Attribute conventions mirror ``solver/report_extractors.py``:
+        ``frequencies`` are Hz (descending), ``addedMass`` / ``damping`` are
+        ``(nfreq, 6, 6)``, ``displacementRAOs`` are ``(nheading, nfreq, 6)``
+        complex (rad/m for rotations).
+        """
+        try:
+            self._read_live_attrs(diffraction)
+        except (AttributeError, IndexError, TypeError, ValueError):
+            # Live attributes missing/empty: reload from the just-saved .owr.
+            diffraction.LoadResults(str(Path(owr_path).resolve()))
+
+        return self._build_results_from_object(
+            diffraction, source_files=[str(owr_path), str(data_file)]
+        )
+
+    @staticmethod
+    def _read_live_attrs(diffraction: Any) -> None:
+        """Probe the load-bearing result attributes, raising if unavailable.
+
+        Raises one of (AttributeError/IndexError/TypeError/ValueError) when an
+        attribute is missing or empty, which triggers the .owr fallback.
+        """
+        freqs = np.asarray(diffraction.frequencies, dtype=float)
+        np.asarray(diffraction.headings, dtype=float)
+        am = np.asarray(diffraction.addedMass, dtype=float)
+        np.asarray(diffraction.damping, dtype=float)
+        np.asarray(diffraction.displacementRAOs)
+        if freqs.size == 0 or am.size == 0:
+            raise ValueError("Live OrcFxAPI result arrays are empty")
+
+    def _build_results_from_object(
+        self, diffraction: Any, source_files: list[str]
+    ) -> DiffractionResults:
+        """Translate populated OrcFxAPI result arrays into DiffractionResults."""
+        vessel_name = self._result.spec_name or "OrcaWave_Vessel"
+        water_depth = float(self._water_depth)
+        created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Frequencies (Hz, descending) -> rad/s ascending.
+        freq_hz = np.asarray(diffraction.frequencies, dtype=float)
+        freq_rad_s = np.asarray(hz_to_rad_per_s(freq_hz), dtype=float)
+        sort_idx = np.argsort(freq_rad_s)
+        freq_rad_s = freq_rad_s[sort_idx]
+        headings = np.asarray(diffraction.headings, dtype=float)
+
+        n_freq = freq_rad_s.size
+        n_head = headings.size
+
+        freq_data = FrequencyData(
+            values=freq_rad_s.copy(),
+            periods=np.asarray(rad_per_s_to_period_s(freq_rad_s), dtype=float),
+            count=n_freq,
+            min_freq=float(np.min(freq_rad_s)),
+            max_freq=float(np.max(freq_rad_s)),
+        )
+        head_data = HeadingData(
+            values=headings.copy(),
+            count=n_head,
+            min_heading=float(np.min(headings)) if n_head else 0.0,
+            max_heading=float(np.max(headings)) if n_head else 0.0,
+        )
+
+        # Displacement RAOs: (nheading, nfreq, 6) complex -> (nfreq, nheading, 6)
+        raw_raos = np.asarray(diffraction.displacementRAOs)
+        raw_raos = np.transpose(raw_raos, (1, 0, 2))[sort_idx, :, :]
+        rotation_dofs = {DOF.ROLL, DOF.PITCH, DOF.YAW}
+
+        rao_components: dict[str, RAOComponent] = {}
+        for i, dof in enumerate(DOF):
+            mag = np.abs(raw_raos[:, :, i])
+            phase = np.angle(raw_raos[:, :, i], deg=True)
+            if dof in rotation_dofs:
+                # OrcFxAPI rotation RAOs are rad/m; schema expects deg/m.
+                mag = np.asarray(radians_to_degrees(mag), dtype=float)
+            rao_components[dof.name.lower()] = RAOComponent(
+                dof=dof,
+                magnitude=np.ascontiguousarray(mag, dtype=float),
+                phase=np.ascontiguousarray(phase, dtype=float),
+                frequencies=freq_data,
+                headings=head_data,
+                unit="",
+            )
+
+        rao_set = RAOSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            created_date=created,
+            source_file=source_files[0] if source_files else None,
+            **rao_components,
+        )
+
+        # Added mass / damping: (nfreq, 6, 6).
+        added_mass_raw = np.asarray(diffraction.addedMass, dtype=float)[sort_idx]
+        damping_raw = np.asarray(diffraction.damping, dtype=float)[sort_idx]
+        am_units = {"linear": "kg", "angular": "kg.m^2"}
+        dp_units = {"linear": "N.s/m", "angular": "N.m.s/rad"}
+
+        added_mass_set = AddedMassSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            matrices=[
+                HydrodynamicMatrix(
+                    matrix=np.ascontiguousarray(added_mass_raw[i], dtype=float),
+                    frequency=float(freq_rad_s[i]),
+                    matrix_type="added_mass",
+                    units=am_units,
+                )
+                for i in range(n_freq)
+            ],
+            frequencies=freq_data,
+            created_date=created,
+            source_file=source_files[0] if source_files else None,
+        )
+        damping_set = DampingSet(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            matrices=[
+                HydrodynamicMatrix(
+                    matrix=np.ascontiguousarray(damping_raw[i], dtype=float),
+                    frequency=float(freq_rad_s[i]),
+                    matrix_type="damping",
+                    units=dp_units,
+                )
+                for i in range(n_freq)
+            ],
+            frequencies=freq_data,
+            created_date=created,
+            source_file=source_files[0] if source_files else None,
+        )
+
+        hydrostatics = self._extract_hydrostatics(diffraction, vessel_name)
+
+        return DiffractionResults(
+            vessel_name=vessel_name,
+            analysis_tool="OrcaWave",
+            water_depth=water_depth,
+            raos=rao_set,
+            added_mass=added_mass_set,
+            damping=damping_set,
+            hydrostatics=hydrostatics,
+            created_date=created,
+            source_files=source_files,
+            notes="Built from OrcFxAPI.Diffraction object (#625)",
+            phase_convention="orcina_lag",
+            unit_system="SI",
+        )
+
+    @staticmethod
+    def _extract_hydrostatics(
+        diffraction: Any, vessel_name: str
+    ) -> HydrostaticResults | None:
+        """Best-effort hydrostatics extraction; None if unavailable."""
+        try:
+            hs = diffraction.hydrostaticResults[0]
+            restoring = np.asarray(hs["restoringMatrix"], dtype=float)
+            return HydrostaticResults(
+                vessel_name=vessel_name,
+                displacement_volume=float(hs["volume"]),
+                mass=float(hs["mass"]),
+                centre_of_gravity=list(np.asarray(hs["centreOfMass"], dtype=float)),
+                centre_of_buoyancy=list(
+                    np.asarray(hs["centreOfBuoyancy"], dtype=float)
+                ),
+                waterplane_area=float(hs["Awp"]),
+                stiffness_matrix=restoring,
+            )
+        except Exception:  # noqa: BLE001 - hydrostatics are optional
+            return None
+
+    @staticmethod
+    def _spec_water_depth(spec: DiffractionSpec) -> float:
+        """Resolve a numeric water depth from the spec (0.0 for 'infinite')."""
+        try:
+            wd = spec.environment.water_depth
+        except AttributeError:
+            return 0.0
+        if isinstance(wd, (int, float)):
+            return float(wd)
+        return 0.0  # "infinite" -> sentinel 0.0
 
     def _mark_validation_skipped(self, reason: str) -> None:
         """Record a SKIPPED validation verdict with an explanatory reason.

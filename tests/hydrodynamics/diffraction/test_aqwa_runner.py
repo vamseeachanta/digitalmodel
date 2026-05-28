@@ -592,3 +592,124 @@ class TestAQWASkippedWiring:
         assert result.status == AQWARunStatus.DRY_RUN
         assert result.validation_verdict == "SKIPPED"
         assert result.validation_issues
+
+
+# ---------------------------------------------------------------------------
+# #625: AQWA extraction (.LIS/.AH1) + runtime validation wiring
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch as _patch  # noqa: E402
+
+from digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor import (  # noqa: E402
+    AQWAExtractionResult,
+)
+
+
+def _run_solver_success(runner):
+    """Drive execute() through a mocked successful AQWA solver invocation."""
+    mock_proc = MagicMock()
+    mock_proc.returncode = 0
+    mock_proc.stdout = "AQWA completed"
+    mock_proc.stderr = ""
+    with patch.object(runner, "_detect_executable", return_value=Path("aqwa.exe")), \
+            patch("subprocess.run", return_value=mock_proc):
+        return runner.execute()
+
+
+def _patch_extract(result):
+    """Patch AQWAResultExtractor.extract to return *result*."""
+    return _patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor."
+        "AQWAResultExtractor.extract",
+        return_value=result,
+    )
+
+
+class TestAQWAExtractionAndValidation:
+    """AQWA obtains DiffractionResults via the extractor, then validates."""
+
+    def test_success_validates_pass(
+        self, ship_raos_spec_path, tmp_path, dense_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(output_dir=tmp_path, executable_path=Path("aqwa.exe"))
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=dense_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.status == AQWARunStatus.COMPLETED
+        assert result.validation_verdict == "PASS"
+        assert result.diffraction_results is dense_diffraction_results
+        assert result.validation_report_path is not None
+        assert result.validation_report_path.exists()
+
+    def test_extraction_failure_skips_validation(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(output_dir=tmp_path, executable_path=Path("aqwa.exe"))
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=False, error_message="No .LIS file found"
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        # Solver succeeded but no results -> SKIPPED, never PASS.
+        assert result.status == AQWARunStatus.COMPLETED
+        assert result.validation_verdict == "SKIPPED"
+        assert result.diffraction_results is None
+
+
+class TestAQWAStrictMode:
+    """Strict-mode escalation mirrors OrcaWave."""
+
+    def test_strict_fail_marks_run_failed(
+        self, ship_raos_spec_path, tmp_path, fail_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(
+                output_dir=tmp_path,
+                executable_path=Path("aqwa.exe"),
+                validation_strict=True,
+            )
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=fail_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == AQWARunStatus.FAILED
+        assert result.return_code == -2
+
+    def test_non_strict_fail_stays_completed(
+        self, ship_raos_spec_path, tmp_path, fail_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(
+                output_dir=tmp_path,
+                executable_path=Path("aqwa.exe"),
+                validation_strict=False,
+            )
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=fail_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == AQWARunStatus.COMPLETED

@@ -34,6 +34,51 @@ from digitalmodel.hydrodynamics.diffraction.comparison_framework import compare_
 from digitalmodel.hydrodynamics.diffraction.batch_processor import process_batch_from_config_file
 
 
+def _display_verdict(verdict: str) -> str:
+    """Map an internal verdict to its CLI display string.
+
+    Per locked decision D3, the canonical ``WARNING`` is displayed as ``WARN``
+    at the CLI boundary only; the stored/persisted value remains ``WARNING``.
+    """
+    return "WARN" if verdict == "WARNING" else verdict
+
+
+def _echo_validation_block(result) -> None:
+    """Print the structured output paths + validation verdict for a run.
+
+    Shared by ``run-orcawave`` and ``run-aqwa``. Prints OWR/Data/XLSX/Report/
+    Validation paths (only those that apply to the given result) plus the
+    verdict, displaying ``WARN`` for an internal ``WARNING``.
+    """
+    owr = getattr(result, "owr_path", None)
+    if owr is not None:
+        click.echo(f"  OWR        : {owr}")
+    if result.data_file is not None:
+        click.echo(f"  Data file  : {result.data_file}")
+    click.echo(f"  XLSX       : {result.xlsx_path or '(deferred)'}")
+    click.echo(f"  Report     : {result.report_path or '(none)'}")
+    verdict = result.validation_verdict
+    color = {
+        "PASS": "green",
+        "WARNING": "yellow",
+        "FAIL": "red",
+        "ERROR": "red",
+        "SKIPPED": "white",
+    }.get(verdict, "white")
+    click.echo(
+        "  Validation : "
+        + click.style(_display_verdict(verdict), fg=color)
+    )
+    if result.validation_report_path is not None:
+        click.echo(f"  Valid. rpt : {result.validation_report_path}")
+    if result.validation_issues:
+        for issue in result.validation_issues[:5]:
+            click.echo(f"      - {issue}")
+        extra = len(result.validation_issues) - 5
+        if extra > 0:
+            click.echo(f"      ... and {extra} more")
+
+
 @click.group()
 @click.version_option(version="3.0.0", prog_name="diffraction")
 def cli():
@@ -538,7 +583,29 @@ def validate_spec(spec_path):
     default=True,
     help="Generate modular section files alongside (default: --modular)",
 )
-def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
+@click.option(
+    "--validate/--no-validate",
+    default=True,
+    help="Validate diffraction results after a successful run (default: --validate)",
+)
+@click.option(
+    "--strict-validation/--no-strict-validation",
+    default=False,
+    help=(
+        "Treat a FAIL/ERROR validation verdict as a run failure "
+        "(default: --no-strict-validation)"
+    ),
+)
+def run_orcawave_cmd(
+    spec_path,
+    output,
+    dry_run,
+    timeout,
+    executable,
+    modular,
+    validate,
+    strict_validation,
+):
     """Run an OrcaWave diffraction analysis from a DiffractionSpec YAML.
 
     SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
@@ -561,6 +628,8 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
     click.echo(f"Timeout    : {timeout}s")
     click.echo(f"Executable : {executable or 'auto-detect'}")
     click.echo(f"Modular    : {modular}")
+    click.echo(f"Validate   : {validate}")
+    click.echo(f"Strict     : {strict_validation}")
     click.echo()
 
     try:
@@ -575,6 +644,8 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
             dry_run=dry_run,
             timeout_seconds=timeout,
             generate_modular=modular,
+            validate_outputs=validate,
+            validation_strict=strict_validation,
         )
         runner = OrcaWaveRunner(config)
         result = runner.run(spec, spec_path=Path(spec_path))
@@ -588,6 +659,7 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
             click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
         if result.duration_seconds is not None:
             click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
+        _echo_validation_block(result)
         if result.error_message:
             click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
 
@@ -634,7 +706,29 @@ def run_orcawave_cmd(spec_path, output, dry_run, timeout, executable, modular):
     default=True,
     help="Pass /nowind flag for headless mode (default: --nowind)",
 )
-def run_aqwa_cmd(spec_path, output, dry_run, timeout, executable, nowind):
+@click.option(
+    "--validate/--no-validate",
+    default=True,
+    help="Validate diffraction results after a successful run (default: --validate)",
+)
+@click.option(
+    "--strict-validation/--no-strict-validation",
+    default=False,
+    help=(
+        "Treat a FAIL/ERROR validation verdict as a run failure "
+        "(default: --no-strict-validation)"
+    ),
+)
+def run_aqwa_cmd(
+    spec_path,
+    output,
+    dry_run,
+    timeout,
+    executable,
+    nowind,
+    validate,
+    strict_validation,
+):
     """Run an AQWA diffraction analysis from a DiffractionSpec YAML.
 
     SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
@@ -657,6 +751,8 @@ def run_aqwa_cmd(spec_path, output, dry_run, timeout, executable, nowind):
     click.echo(f"Timeout    : {timeout}s")
     click.echo(f"Executable : {executable or 'auto-detect'}")
     click.echo(f"Nowind     : {nowind}")
+    click.echo(f"Validate   : {validate}")
+    click.echo(f"Strict     : {strict_validation}")
     click.echo()
 
     try:
@@ -671,6 +767,8 @@ def run_aqwa_cmd(spec_path, output, dry_run, timeout, executable, nowind):
             dry_run=dry_run,
             timeout_seconds=timeout,
             nowind=nowind,
+            validate_outputs=validate,
+            validation_strict=strict_validation,
         )
         runner = AQWARunner(config)
         result = runner.run(spec, spec_path=Path(spec_path))
@@ -683,8 +781,13 @@ def run_aqwa_cmd(spec_path, output, dry_run, timeout, executable, nowind):
             click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
         if result.lis_file:
             click.echo(f"  LIS file   : {result.lis_file}")
+        if result.ah1_file:
+            click.echo(f"  AH1 file   : {result.ah1_file}")
+        if result.log_file:
+            click.echo(f"  Log        : {result.log_file}")
         if result.duration_seconds is not None:
             click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
+        _echo_validation_block(result)
         if result.error_message:
             click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
 

@@ -16,6 +16,7 @@ from dataclasses import fields as dataclass_fields
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
@@ -35,6 +36,80 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
 def _load_spec(path: Path) -> DiffractionSpec:
     """Load a DiffractionSpec from a YAML fixture file."""
     return DiffractionSpec.from_yaml(path)
+
+
+def _make_fake_diffraction(
+    n_freq: int = 24,
+    n_head: int = 13,
+    populate_live: bool = True,
+    diagonal_value: float = 500.0,
+    negative_heave: bool = False,
+):
+    """Build a stand-in for a live ``OrcFxAPI.Diffraction`` object.
+
+    Mirrors the attribute conventions consumed by the adapter
+    (``frequencies`` in Hz descending; ``addedMass``/``damping`` shaped
+    ``(nfreq, 6, 6)``; ``displacementRAOs`` shaped ``(nheading, nfreq, 6)``).
+
+    Args:
+        populate_live: When False the live result arrays are empty, forcing the
+            adapter's ``LoadResults(.owr)`` fallback. ``load_results_payload``
+            on the returned object is what ``LoadResults`` will install.
+        diagonal_value: Diagonal magnitude for the symmetric AM/damping matrices.
+        negative_heave: Inject a negative heave added-mass diagonal -> FAIL.
+    """
+    obj = MagicMock()
+
+    # Frequencies in Hz, descending (matches OrcFxAPI). 0.05..2.5 rad/s span.
+    freq_rad = np.linspace(0.05, 2.5, n_freq)
+    freq_hz = (freq_rad / (2.0 * np.pi))[::-1]  # descending Hz
+    headings = np.linspace(0.0, 360.0, n_head)
+
+    am = np.stack([np.eye(6) * diagonal_value for _ in range(n_freq)])
+    dp = np.stack([np.eye(6) * diagonal_value for _ in range(n_freq)])
+    if negative_heave:
+        am[0, 2, 2] = -10.0  # negative heave added-mass diagonal
+
+    # Displacement RAOs (nheading, nfreq, 6) complex; modest magnitudes.
+    # Rotation DOFs (cols 3-5) are in rad/m and get converted to deg/m by the
+    # adapter, so keep them small (0.05 rad ~ 2.9 deg/m, well under 15 deg/m).
+    raos = np.zeros((n_head, n_freq, 6), dtype=complex)
+    raos[:, :, 0:3] = 1.0 + 0.0j   # translation m/m
+    raos[:, :, 3:6] = 0.05 + 0.0j  # rotation rad/m
+
+    payload = {
+        "frequencies": freq_hz,
+        "headings": headings,
+        "addedMass": am,
+        "damping": dp,
+        "displacementRAOs": raos,
+    }
+
+    def _install(d, data):
+        d.frequencies = data["frequencies"]
+        d.headings = data["headings"]
+        d.addedMass = data["addedMass"]
+        d.damping = data["damping"]
+        d.displacementRAOs = data["displacementRAOs"]
+
+    if populate_live:
+        _install(obj, payload)
+    else:
+        # Empty live arrays -> adapter probe raises -> LoadResults fallback.
+        obj.frequencies = []
+        obj.headings = []
+        obj.addedMass = []
+        obj.damping = []
+        obj.displacementRAOs = []
+
+        def _load_results(_path, _data=payload):
+            _install(obj, _data)
+
+        obj.LoadResults.side_effect = _load_results
+
+    # No hydrostatics by default (optional sub-schema).
+    obj.hydrostaticResults = []
+    return obj
 
 
 # ---------------------------------------------------------------------------
@@ -564,14 +639,16 @@ class TestLogFileNoLongerOverloaded:
         self, ship_raos_spec_path, tmp_path
     ):
         spec = _load_spec(ship_raos_spec_path)
-        config = RunConfig(output_dir=tmp_path, use_api=True, thread_count=2)
+        config = RunConfig(
+            output_dir=tmp_path,
+            use_api=True,
+            thread_count=2,
+            validate_outputs=False,  # isolate the #611 path-contract assertions
+        )
         runner = OrcaWaveRunner(config)
         runner.prepare(spec)
 
-        # Build a fake OrcFxAPI.Diffraction object.
-        fake_diff = MagicMock()
-        fake_diff.frequencies = [0.1, 0.2, 0.3]
-        fake_diff.headings = [0.0, 90.0, 180.0]
+        fake_diff = _make_fake_diffraction()
         fake_module = MagicMock()
         fake_module.Diffraction.return_value = fake_diff
 
@@ -587,5 +664,111 @@ class TestLogFileNoLongerOverloaded:
         assert result.data_file.name.endswith("_data.dat")
         assert result.log_file is None
         assert result.thread_count == 2
-        # Validation runtime wiring is deferred to #625; verdict stays SKIPPED.
+        # validate_outputs=False -> verdict stays SKIPPED.
         assert result.validation_verdict == "SKIPPED"
+
+
+# ---------------------------------------------------------------------------
+# #625: OrcaWave adapter + runtime validation wiring
+# ---------------------------------------------------------------------------
+
+
+def _run_api(runner, fake_diff):
+    """Execute the runner with a fake OrcFxAPI module installed."""
+    fake_module = MagicMock()
+    fake_module.Diffraction.return_value = fake_diff
+    with patch.object(OrcaWaveRunner, "_check_api_available", return_value=True), \
+            patch.dict("sys.modules", {"OrcFxAPI": fake_module}):
+        return runner.execute()
+
+
+class TestOrcaWaveAdapterSuccess:
+    """Mocked-OrcFxAPI success builds valid DiffractionResults + PASS."""
+
+    def test_adapter_builds_valid_results_and_passes(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        result = _run_api(runner, _make_fake_diffraction())
+
+        assert result.status == RunStatus.COMPLETED
+        assert result.validation_verdict == "PASS"
+        dr = result.diffraction_results
+        assert dr is not None
+        # Mandatory sub-schema metadata.
+        assert dr.raos.analysis_tool == "OrcaWave"
+        assert dr.added_mass.analysis_tool == "OrcaWave"
+        assert dr.damping.analysis_tool == "OrcaWave"
+        assert dr.raos.vessel_name == result.spec_name
+        for s in (dr.raos, dr.added_mass, dr.damping):
+            assert s.created_date
+            assert s.water_depth is not None
+        # 6x6 matrices with units.
+        for m in dr.added_mass.matrices:
+            assert m.matrix.shape == (6, 6)
+            assert m.units
+        # Validation report file written.
+        assert result.validation_report_path is not None
+        assert result.validation_report_path.exists()
+
+    def test_water_depth_retained_from_spec(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        result = _run_api(runner, _make_fake_diffraction())
+        expected = float(spec.environment.water_depth) \
+            if isinstance(spec.environment.water_depth, (int, float)) else 0.0
+        assert result.diffraction_results.water_depth == expected
+
+
+class TestOrcaWaveLoadResultsFallback:
+    """Empty live attrs -> mandatory d.LoadResults(.owr) fallback fires."""
+
+    def test_fallback_invoked_and_builds_results(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        fake_diff = _make_fake_diffraction(populate_live=False)
+        result = _run_api(runner, fake_diff)
+
+        # LoadResults was called with the saved .owr path.
+        fake_diff.LoadResults.assert_called_once()
+        called_arg = fake_diff.LoadResults.call_args[0][0]
+        assert called_arg.endswith(".owr")
+        assert result.status == RunStatus.COMPLETED
+        assert result.validation_verdict == "PASS"
+        assert result.diffraction_results is not None
+
+
+class TestOrcaWaveStrictMode:
+    """Strict-mode escalation of FAIL verdicts."""
+
+    def test_strict_fail_marks_run_failed(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(
+            RunConfig(output_dir=tmp_path, use_api=True, validation_strict=True)
+        )
+        runner.prepare(spec)
+        result = _run_api(runner, _make_fake_diffraction(negative_heave=True))
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == RunStatus.FAILED
+        assert result.return_code == -2
+
+    def test_non_strict_fail_stays_completed(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(
+            RunConfig(output_dir=tmp_path, use_api=True, validation_strict=False)
+        )
+        runner.prepare(spec)
+        result = _run_api(runner, _make_fake_diffraction(negative_heave=True))
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == RunStatus.COMPLETED
+        assert result.return_code == 0

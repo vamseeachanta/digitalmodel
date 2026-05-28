@@ -325,3 +325,70 @@ class TestAQWABatchRunnerConvenience:
         )
         assert isinstance(report, AQWABatchReport)
         assert report.total_jobs == 1
+
+
+# ---------------------------------------------------------------------------
+# #625: AQWA batch validation delegates to the shared helper (no double-validation)
+# ---------------------------------------------------------------------------
+
+from unittest.mock import MagicMock, patch  # noqa: E402
+
+from digitalmodel.hydrodynamics.diffraction.aqwa_batch_runner import (  # noqa: E402
+    AQWABatchConfig,
+    AQWABatchJobConfig,
+    AQWABatchRunner,
+)
+from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (  # noqa: E402
+    AQWARunResult,
+    AQWARunStatus,
+)
+
+
+class TestAQWABatchValidationDedup:
+    def test_reuses_run_level_report(
+        self, ship_raos_spec_path, tmp_path, dense_diffraction_results
+    ):
+        cfg = AQWABatchConfig(
+            jobs=[AQWABatchJobConfig(spec_path=ship_raos_spec_path)],
+            base_output_dir=tmp_path,
+        )
+        runner = AQWABatchRunner(cfg)
+        prior = {"overall_status": "PASS"}
+        run_result = AQWARunResult(
+            status=AQWARunStatus.COMPLETED, validation_report=prior
+        )
+
+        with patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_batch_runner."
+            "run_validation"
+        ) as mock_run_validation:
+            report = runner._validate_results(
+                dense_diffraction_results, tmp_path, run_result
+            )
+
+        assert report is prior
+        mock_run_validation.assert_not_called()
+
+    def test_delegates_to_shared_helper_when_no_prior(
+        self, ship_raos_spec_path, tmp_path, dense_diffraction_results
+    ):
+        cfg = AQWABatchConfig(
+            jobs=[AQWABatchJobConfig(spec_path=ship_raos_spec_path)],
+            base_output_dir=tmp_path,
+        )
+        runner = AQWABatchRunner(cfg)
+        run_result = AQWARunResult(status=AQWARunStatus.COMPLETED)
+
+        with patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_batch_runner."
+            "run_validation"
+        ) as mock_run_validation:
+            mock_run_validation.return_value = MagicMock(
+                report={"overall_status": "PASS"}
+            )
+            report = runner._validate_results(
+                dense_diffraction_results, tmp_path, run_result
+            )
+
+        mock_run_validation.assert_called_once()
+        assert report == {"overall_status": "PASS"}

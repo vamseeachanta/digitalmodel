@@ -43,6 +43,7 @@ from pydantic import BaseModel, Field, field_validator
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction.validation_runner import run_validation
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +220,9 @@ class AQWARunner:
         self._config = config or AQWARunConfig()
         self._backend = AQWABackend()
         self._result: AQWARunResult | None = None
+        # Retained from the spec during prepare() so the .LIS/.AH1 extractor can
+        # stamp DiffractionResults sub-schemas with water_depth.
+        self._water_depth: float = 0.0
 
     @property
     def result(self) -> AQWARunResult | None:
@@ -275,6 +279,9 @@ class AQWARunner:
 
         spec_name = self._derive_spec_name(spec)
         spec_dir = Path(spec_path).parent if spec_path else None
+
+        # Retain water depth from the spec for the .LIS/.AH1 extractor.
+        self._water_depth = self._spec_water_depth(spec)
 
         self._result = AQWARunResult(
             status=AQWARunStatus.PREPARING,
@@ -361,6 +368,8 @@ class AQWARunner:
 
         if aqwa_error is None:
             self._result.status = AQWARunStatus.COMPLETED
+            # #625: extract DiffractionResults from .LIS/.AH1 and validate.
+            self._extract_and_validate(self._result.output_dir)
         else:
             self._result.status = AQWARunStatus.FAILED
             self._result.error_message = aqwa_error
@@ -369,6 +378,101 @@ class AQWARunner:
             )
 
         return self._result
+
+    # ----- #625 extraction + validation wiring -----
+
+    def _extract_and_validate(self, output_dir: Path) -> None:
+        """Bridge .LIS/.AH1 -> DiffractionResults, then validate.
+
+        AQWA never uses OrcFxAPI: results come from ``AQWAResultExtractor``,
+        which parses the captured ``.LIS`` (and ``.AH1`` when present) and
+        delegates to ``AQWAConverter``. If extraction fails the verdict is
+        SKIPPED (never PASS). Strict-mode enforcement mirrors OrcaWave.
+        """
+        if self._result is None:
+            return
+
+        # Imported lazily to avoid a circular import (aqwa_result_extractor
+        # imports from this module).
+        from digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor import (
+            AQWAResultExtractor,
+        )
+
+        extractor = AQWAResultExtractor(
+            vessel_name=self._result.spec_name,
+            water_depth=self._water_depth,
+        )
+        extraction = extractor.extract(self._result)
+
+        if not extraction.success or extraction.results is None:
+            self._mark_validation_skipped(
+                "AQWA result extraction failed; no diffraction results to "
+                f"validate ({extraction.error_message or 'unknown error'})"
+            )
+            return
+
+        self._result.diffraction_results = extraction.results
+        self._run_validation(extraction.results, output_dir)
+
+    def _run_validation(
+        self, results: DiffractionResults | None, output_dir: Path
+    ) -> None:
+        """Validate *results* via the shared helper and attach the outcome."""
+        if self._result is None:
+            return
+
+        stem = (
+            self._result.input_file.stem if self._result.input_file else "aqwa"
+        )
+        outcome = run_validation(
+            results,
+            output_dir,
+            stem,
+            enabled=self._config.validate_outputs,
+            skip_reason=(
+                None
+                if self._config.validate_outputs
+                else "Validation disabled via AQWARunConfig.validate_outputs"
+            ),
+        )
+        self._result.validation_verdict = outcome.verdict
+        self._result.validation_report = outcome.report
+        self._result.validation_report_path = outcome.report_path
+        if outcome.issues:
+            self._result.validation_issues = outcome.issues
+        elif outcome.reason:
+            self._result.validation_issues = [outcome.reason]
+
+        self._apply_strict_mode(outcome.verdict)
+
+    def _apply_strict_mode(self, verdict: str) -> None:
+        """In strict mode, escalate a FAIL/ERROR verdict to a run failure.
+
+        Only fires when the solver otherwise succeeded (status COMPLETED).
+        WARNING stays non-fatal. Return code becomes ``-2`` to distinguish a
+        validation-driven failure from a solver failure.
+        """
+        if self._result is None or not self._config.validation_strict:
+            return
+        if self._result.status != AQWARunStatus.COMPLETED:
+            return
+        if verdict in ("FAIL", "ERROR"):
+            self._result.status = AQWARunStatus.FAILED
+            self._result.return_code = -2
+            self._result.error_message = (
+                f"Strict validation failed: verdict {verdict}"
+            )
+
+    @staticmethod
+    def _spec_water_depth(spec: DiffractionSpec) -> float:
+        """Resolve a numeric water depth from the spec (0.0 for 'infinite')."""
+        try:
+            wd = spec.environment.water_depth
+        except AttributeError:
+            return 0.0
+        if isinstance(wd, (int, float)):
+            return float(wd)
+        return 0.0  # "infinite" -> sentinel 0.0
 
     def _mark_validation_skipped(self, reason: str) -> None:
         """Record a SKIPPED validation verdict with an explanatory reason.
@@ -419,7 +523,7 @@ class AQWARunner:
         self,
         spec: DiffractionSpec,
         output_dir: Path,
-        spec_dir: Optional[Path] = None,
+        spec_dir: Path | None = None,
     ) -> Path:
         """Generate AQWA .dat input file using AQWABackend.generate_single().
 
