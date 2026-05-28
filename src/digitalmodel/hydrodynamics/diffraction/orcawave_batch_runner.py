@@ -36,10 +36,10 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
     RunStatus,
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
-from digitalmodel.hydrodynamics.diffraction.output_validator import OutputValidator
 from digitalmodel.hydrodynamics.diffraction.polars_exporter import PolarsExporter
 from digitalmodel.hydrodynamics.diffraction.rao_plotter import RAOPlotter
 from digitalmodel.hydrodynamics.diffraction.result_extractor import ResultExtractor
+from digitalmodel.hydrodynamics.diffraction.validation_runner import run_validation
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +260,9 @@ class OrcaWaveBatchRunner:
         output_dir: Path,
     ) -> None:
         if job.validate:
-            result.validation_report = self._validate_results(diff_results, output_dir)
+            result.validation_report = self._validate_results(
+                diff_results, output_dir, result.run_result
+            )
         if job.generate_plots:
             result.plot_files = self._generate_plots(diff_results, output_dir)
         if job.export_formats:
@@ -269,13 +271,26 @@ class OrcaWaveBatchRunner:
             )
 
     def _validate_results(
-        self, results: DiffractionResults, output_dir: Path
-    ) -> dict[str, Any]:
-        validator = OutputValidator(results)
-        report = validator.run_all_validations()
-        report_path = output_dir / "validation_report.json"
-        validator.export_report(report_path)
-        return report
+        self,
+        results: DiffractionResults,
+        output_dir: Path,
+        run_result: RunResult | None = None,
+    ) -> dict[str, Any] | None:
+        """Validate via the shared helper, reusing run-level results if present.
+
+        Avoids double-validation: when the runner already validated this job
+        (``run_result.validation_report`` populated), that report is reused
+        verbatim rather than re-running :class:`OutputValidator`.
+        """
+        if (
+            run_result is not None
+            and run_result.validation_report is not None
+        ):
+            return run_result.validation_report
+
+        stem = "validation_report"
+        outcome = run_validation(results, output_dir, stem)
+        return outcome.report
 
     def _generate_plots(
         self, results: DiffractionResults, output_dir: Path

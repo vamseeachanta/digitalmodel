@@ -496,3 +496,62 @@ class TestBenchmarkSectionsRendering:
         assert pos_input < pos_consensus
         assert pos_consensus < pos_dof
         assert pos_dof < pos_raw
+
+
+# ---------------------------------------------------------------------------
+# #625: validation sanity-check section
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch as _patch  # noqa: E402
+
+
+class TestValidationSanitySection:
+    """generate_diffraction_report renders a sanity section from a supplied
+    validation report, and never re-runs validation."""
+
+    def _data(self):
+        return DiffractionReportData(
+            vessel_name="sanity_test",
+            frequencies_rad_s=[0.5, 1.0, 1.5],
+            periods_s=[12.57, 6.28, 4.19],
+        )
+
+    def test_renders_verdict_and_issue_summary(self, tmp_path):
+        validation_report = {
+            "overall_status": "WARNING",
+            "vessel_name": "sanity_test",
+            "physical_validity": {
+                "raos": ["Surge: Maximum RAO magnitude 6.0 exceeds typical range"],
+                "added_mass": [],
+            },
+            "frequency_coverage": {
+                "discretization": ["Only 3 frequencies - may be insufficient"],
+            },
+        }
+        out = tmp_path / "sanity.html"
+        result = generate_diffraction_report(
+            self._data(), out, validation_report=validation_report
+        )
+        html = result.read_text(encoding="utf-8")
+
+        assert "Validation Sanity Check" in html
+        assert "WARNING" in html
+        assert "Surge: Maximum RAO magnitude" in html or "physical_validity" in html
+
+    def test_no_section_when_no_report(self, tmp_path):
+        out = tmp_path / "no_sanity.html"
+        result = generate_diffraction_report(self._data(), out)
+        html = result.read_text(encoding="utf-8")
+        assert "Validation Sanity Check" not in html
+
+    def test_does_not_revalidate(self, tmp_path):
+        """Report rendering must NOT instantiate OutputValidator (no rerun)."""
+        validation_report = {"overall_status": "PASS"}
+        out = tmp_path / "no_revalidate.html"
+        with _patch(
+            "digitalmodel.hydrodynamics.diffraction.output_validator.OutputValidator"
+        ) as mock_validator:
+            generate_diffraction_report(
+                self._data(), out, validation_report=validation_report
+            )
+        mock_validator.assert_not_called()

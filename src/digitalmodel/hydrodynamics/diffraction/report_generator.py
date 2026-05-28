@@ -82,11 +82,80 @@ from digitalmodel.hydrodynamics.diffraction.report_builders import (
 # ---------------------------------------------------------------------------
 
 
+def _build_validation_sanity_html(validation_report: dict[str, Any]) -> str:
+    """Render a sanity-check section from a pre-computed validation report.
+
+    Consumes an existing validation report dict (as produced by
+    ``OutputValidator`` / ``validation_runner``). This function NEVER re-runs
+    validation — it only renders what it is given, so report generation stays
+    side-effect free (#625).
+
+    The expected shape is the ``OutputValidator`` report: a flat
+    ``overall_status`` string plus category dicts whose values are
+    ``list[str]`` issues (or nested category -> ``list[str]``).
+    """
+    verdict = str(validation_report.get("overall_status", "UNKNOWN"))
+    badge_colors = {
+        "PASS": "#27ae60",
+        "WARNING": "#f39c12",
+        "FAIL": "#c0392b",
+        "ERROR": "#c0392b",
+        "SKIPPED": "#7f8c8d",
+    }
+    badge_color = badge_colors.get(verdict, "#7f8c8d")
+
+    # Flatten issues by category for a compact summary table.
+    rows: list[str] = []
+    total = 0
+    for category, value in validation_report.items():
+        if category in ("overall_status", "vessel_name", "analysis_tool",
+                        "validation_date"):
+            continue
+        flat: list[str] = []
+        if isinstance(value, list):
+            flat = [str(v) for v in value]
+        elif isinstance(value, dict):
+            for sub, sub_issues in value.items():
+                if isinstance(sub_issues, list):
+                    flat.extend(f"{sub}: {v}" for v in sub_issues)
+        if not flat:
+            continue
+        total += len(flat)
+        sample = "<br>".join(flat[:3])
+        if len(flat) > 3:
+            sample += f"<br><em>... and {len(flat) - 3} more</em>"
+        rows.append(
+            f"<tr><td>{category}</td><td>{len(flat)}</td><td>{sample}</td></tr>"
+        )
+
+    if rows:
+        issue_table = (
+            "<table><thead><tr><th>Category</th><th>Count</th>"
+            "<th>Representative issues</th></tr></thead><tbody>"
+            + "".join(rows)
+            + "</tbody></table>"
+        )
+    else:
+        issue_table = "<p>No validation issues recorded.</p>"
+
+    return (
+        '<div class="section" id="validation-sanity">'
+        "<h2>Validation Sanity Check</h2>"
+        '<p>Overall verdict: '
+        f'<span style="display:inline-block;padding:3px 12px;border-radius:4px;'
+        f'color:#fff;font-weight:700;background:{badge_color}">{verdict}</span> '
+        f"&nbsp;({total} issue(s))</p>"
+        f"{issue_table}"
+        "</div>"
+    )
+
+
 def generate_diffraction_report(
     report_data: DiffractionReportData,
     output_path: Path,
     include_plotlyjs: str = "cdn",
     mode: str = "full",
+    validation_report: Optional[dict[str, Any]] = None,
 ) -> Path:
     """Generate a self-contained HTML diffraction report.
 
@@ -99,6 +168,10 @@ def generate_diffraction_report(
         output_path: Path for the output HTML file.
         include_plotlyjs: 'cdn' for CDN link, True for inline JS.
         mode: 'full' for all sections, 'compact' for executive summary only.
+        validation_report: Optional pre-computed validation report dict. When
+            provided, a sanity-check section is rendered near the executive
+            summary. This NEVER re-runs validation (no ``OutputValidator`` is
+            instantiated here).
 
     Returns:
         Path to the generated HTML file.
@@ -121,6 +194,11 @@ def generate_diffraction_report(
 
     # S2: Executive Summary (always shown)
     sections.append(_build_executive_summary_html(report_data))
+
+    # S2b: Validation sanity check (only when a report is supplied; rendered,
+    # never recomputed — see #625).
+    if validation_report is not None:
+        sections.append(_build_validation_sanity_html(validation_report))
 
     if not compact:
         # S3: Hull Description & Mesh Quality
@@ -371,6 +449,7 @@ def generate_report_from_owr(
     owr_path: Path,
     output_path: Optional[Path] = None,
     include_plotlyjs: str = "cdn",
+    validation_report: Optional[dict[str, Any]] = None,
 ) -> Path:
     """One-shot: extract data from .owr and generate HTML report.
 
@@ -378,6 +457,9 @@ def generate_report_from_owr(
         owr_path: Path to OrcaWave results file.
         output_path: Path for HTML output. Defaults to same dir as owr.
         include_plotlyjs: 'cdn' or True for inline.
+        validation_report: Optional pre-computed validation report dict, passed
+            through to ``generate_diffraction_report`` for the sanity-check
+            section. Validation is NOT re-run here.
 
     Returns:
         Path to generated HTML report.
@@ -387,7 +469,12 @@ def generate_report_from_owr(
         output_path = owr_path.parent / f"{owr_path.stem}_diffraction_report.html"
 
     data = extract_report_data_from_owr(owr_path)
-    return generate_diffraction_report(data, output_path, include_plotlyjs)
+    return generate_diffraction_report(
+        data,
+        output_path,
+        include_plotlyjs,
+        validation_report=validation_report,
+    )
 
 
 __all__ = [
