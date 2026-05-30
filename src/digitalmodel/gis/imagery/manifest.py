@@ -8,7 +8,7 @@ the manifest file), so the same code runs for any address set in any workspace.
 
 The schema mirrors the original ``addresses.yaml``/``addresses.json`` files
 developed for workspace-hub issue #2538 (see
-``ace-examples/gis-timelapse-2538`` for a worked example).
+``examples/gis/imagery-timelapse-2538`` for a worked example).
 """
 
 from __future__ import annotations

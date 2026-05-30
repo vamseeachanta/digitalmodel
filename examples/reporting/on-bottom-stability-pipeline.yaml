@@ -1,0 +1,113 @@
+metadata:
+  title: "On-Bottom Stability — DNV-RP-F109"
+  doc_id: "CALC-OBS-001"
+  revision: "A"
+  date: "2026-03-14"
+  author: "ACE Engineering"
+  status: draft
+inputs:
+  - name: "Pipe outer diameter"
+    symbol: "D"
+    value: 0.5
+    unit: "m"
+  - name: "Submerged weight"
+    symbol: "W_s"
+    value: 2.0
+    unit: "kN/m"
+    source: "Submerged weight calculation"
+  - name: "Current velocity"
+    symbol: "U"
+    value: 1.0
+    unit: "m/s"
+    source: "Metocean study"
+  - name: "Wave particle acceleration"
+    symbol: "a"
+    value: 0.5
+    unit: "m/s^2"
+    source: "Metocean study"
+  - name: "Water density"
+    symbol: "\\rho_{sw}"
+    value: 1025.0
+    unit: "kg/m^3"
+  - name: "Drag coefficient"
+    symbol: "C_D"
+    value: 0.7
+    unit: "-"
+    source: "DNV-RP-F109 Table 3-2"
+  - name: "Lift coefficient"
+    symbol: "C_L"
+    value: 0.9
+    unit: "-"
+    source: "DNV-RP-F109 Table 3-2"
+  - name: "Inertia coefficient"
+    symbol: "C_M"
+    value: 3.29
+    unit: "-"
+    source: "DNV-RP-F109 Table 3-2"
+  - name: "Friction coefficient"
+    symbol: "\\mu"
+    value: 0.6
+    unit: "-"
+    source: "Sand seabed — DNV-RP-F109 Table 4-1"
+  - name: "Safety factor"
+    symbol: "\\gamma"
+    value: 1.1
+    unit: "-"
+    source: "DNV-RP-F109 Sec 4.2"
+methodology:
+  description: "On-bottom stability of subsea pipeline using simplified method per DNV-RP-F109"
+  standard: "DNV-RP-F109"
+  equations:
+    - id: eq1
+      name: "Drag force"
+      latex: "F_D = \\frac{1}{2} \\rho C_D D U^2"
+      description: "Hydrodynamic drag force per unit length"
+    - id: eq2
+      name: "Lift force"
+      latex: "F_L = \\frac{1}{2} \\rho C_L D U^2"
+      description: "Hydrodynamic lift force per unit length"
+    - id: eq3
+      name: "Inertia force"
+      latex: "F_I = \\rho C_M \\frac{\\pi}{4} D^2 a"
+      description: "Hydrodynamic inertia force per unit length"
+    - id: eq4
+      name: "Lateral stability"
+      latex: "\\gamma F_H \\leq \\mu (W_s - F_L)"
+      description: "Pipeline stable when factored horizontal load does not exceed frictional resistance"
+    - id: eq5
+      name: "Vertical stability"
+      latex: "W_s \\geq \\gamma F_L"
+      description: "Pipeline stable when submerged weight exceeds factored lift"
+outputs:
+  - name: "Drag force"
+    symbol: "F_D"
+    value: 179.375
+    unit: "N/m"
+    notes: "0.5 * 1025 * 0.7 * 0.5 * 1.0^2"
+  - name: "Lift force"
+    symbol: "F_L"
+    value: 230.625
+    unit: "N/m"
+    notes: "0.5 * 1025 * 0.9 * 0.5 * 1.0^2"
+  - name: "Inertia force"
+    symbol: "F_I"
+    value: 331.56
+    unit: "N/m"
+    notes: "1025 * 3.29 * pi/4 * 0.5^2 * 0.5"
+  - name: "Lateral utilization"
+    symbol: "\\eta_{lat}"
+    value: 0.5392
+    unit: "-"
+    notes: "< 1.0 — PASS. Computed via check_lateral_stability"
+  - name: "Vertical utilization"
+    symbol: "\\eta_{vert}"
+    value: 0.275
+    unit: "-"
+    notes: "< 1.0 — PASS. gamma * F_L / W_s = 1.1 * 0.5 / 2.0"
+assumptions:
+  - "Steady-state current (no wave-current interaction correction)"
+  - "Pipe on flat seabed, no embedment"
+  - "Sand seabed — friction coefficient 0.6"
+  - "No concrete coating weight included in this example"
+references:
+  - "DNV-RP-F109, On-Bottom Stability Design of Submarine Pipelines, October 2010"

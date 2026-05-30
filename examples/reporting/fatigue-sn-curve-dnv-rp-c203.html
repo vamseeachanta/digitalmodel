@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S-N Curve Fatigue Assessment — DNV-RP-C203 (2011) — CALC-FAT-002</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-FAT-002</div>
+    <h1 class="report-title">S-N Curve Fatigue Assessment — DNV-RP-C203 (2011)</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>0</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-15</div>
+      <div class="meta-chip"><strong>Author</strong>workspace-hub/digitalmodel</div>
+      <div class="meta-chip"><strong>Standard</strong>DNV-RP-C203 (2011) Fatigue Design of Offshore Steel Structures</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+
+
+
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>S-N curve class</strong></td>
+        <td class="katex-inline">$class$</td>
+        <td>D</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, butt weld detail</td>
+      </tr>
+      <tr>
+        <td><strong>Slope m1 (N ≤ 10⁷)</strong></td>
+        <td class="katex-inline">$m_1$</td>
+        <td>3.0</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, Class D, in air</td>
+      </tr>
+      <tr>
+        <td><strong>Intercept log(a1) (N ≤ 10⁷)</strong></td>
+        <td class="katex-inline">$loga_1$</td>
+        <td>12.164</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, Class D, in air</td>
+      </tr>
+      <tr>
+        <td><strong>Slope m2 (N &gt; 10⁷)</strong></td>
+        <td class="katex-inline">$m_2$</td>
+        <td>5.0</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, Class D, in air</td>
+      </tr>
+      <tr>
+        <td><strong>Intercept log(a2) (N &gt; 10⁷)</strong></td>
+        <td class="katex-inline">$loga_2$</td>
+        <td>15.606</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, Class D, in air</td>
+      </tr>
+      <tr>
+        <td><strong>Fatigue limit at 10⁷ cycles</strong></td>
+        <td class="katex-inline">$sigma_fl$</td>
+        <td>52.63</td>
+        <td>MPa</td>
+        <td>DNV-RP-C203 Table 2-1, Class D</td>
+      </tr>
+      <tr>
+        <td><strong>Thickness exponent</strong></td>
+        <td class="katex-inline">$k$</td>
+        <td>0.2</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1, Class D</td>
+      </tr>
+      <tr>
+        <td><strong>Design fatigue factor</strong></td>
+        <td class="katex-inline">$DFF$</td>
+        <td>3.0</td>
+        <td>-</td>
+        <td>DNV-RP-C203 §2.1, critical structural detail</td>
+      </tr>
+      <tr>
+        <td><strong>Reference thickness</strong></td>
+        <td class="katex-inline">$t_ref$</td>
+        <td>25</td>
+        <td>mm</td>
+        <td>DNV-RP-C203 §2.4</td>
+      </tr>
+      <tr>
+        <td><strong>Actual thickness</strong></td>
+        <td class="katex-inline">$t$</td>
+        <td>25</td>
+        <td>mm</td>
+        <td>Equal to reference — no thickness correction</td>
+      </tr>
+      <tr>
+        <td><strong>Stress range</strong></td>
+        <td class="katex-inline">$delta_sigma$</td>
+        <td>80</td>
+        <td>MPa</td>
+        <td>Example constant amplitude loading</td>
+      </tr>
+      <tr>
+        <td><strong>Number of applied cycles</strong></td>
+        <td class="katex-inline">$n$</td>
+        <td>5000000</td>
+        <td>cycles</td>
+        <td>Design life loading (5 × 10⁶ cycles)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>Fatigue damage assessment using S-N curves per DNV-RP-C203. Determines allowable cycles N from the bi-linear S-N curve for a given stress range, then computes Miner&#x27;s rule damage accumulation. The assessment includes thickness correction for plate thicknesses exceeding the reference.</p>
+  <p><strong>Standard:</strong> DNV-RP-C203 (2011) Fatigue Design of Offshore Steel Structures</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq1: S-N curve (basic)</div>
+    <div class="katex-display">$$\log N = \log a - m \cdot \log \Delta\sigma$$</div>
+    <div class="equation-desc">Bi-linear S-N relationship (§2.2)</div>
+    <span class="eq-number">(eq1)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq2: Thickness correction</div>
+    <div class="katex-display">$$\Delta\sigma_{corr} = \Delta\sigma \cdot \left(\frac{t}{t_{ref}}\right)^k$$</div>
+    <div class="equation-desc">Thickness correction factor (§2.4)</div>
+    <span class="eq-number">(eq2)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq3: Miner&#x27;s damage</div>
+    <div class="katex-display">$$D = \sum \frac{n_i}{N_i}$$</div>
+    <div class="equation-desc">Palmgren-Miner linear damage accumulation (§2.5)</div>
+    <span class="eq-number">(eq3)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq4: Fatigue criterion</div>
+    <div class="katex-display">$$D \cdot DFF \leq 1.0$$</div>
+    <div class="equation-desc">Factored damage must not exceed unity</div>
+    <span class="eq-number">(eq4)</span>
+    
+  </div>
+</div>
+
+
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Thickness correction factor</strong></td>
+        <td class="katex-inline">$f_thick$</td>
+        <td>1.0</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Corrected stress range</strong></td>
+        <td class="katex-inline">$delta_sigma_corr$</td>
+        <td>80.0</td>
+        <td>MPa</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>S-N curve region</strong></td>
+        <td class="katex-inline">$region$</td>
+        <td>N ≤ 10⁷ (m=3.0)</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Allowable cycles</strong></td>
+        <td class="katex-inline">$N$</td>
+        <td>2849247</td>
+        <td>cycles</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Unfactored damage</strong></td>
+        <td class="katex-inline">$D$</td>
+        <td>1.755</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Factored damage</strong></td>
+        <td class="katex-inline">$D_factored$</td>
+        <td>5.265</td>
+        <td>-</td>
+        <td>—</td>
+        <td>≤ 1.0</td>
+      </tr>
+      <tr>
+        <td><strong>Allowable stress range for n=5×10⁶</strong></td>
+        <td class="katex-inline">$delta_sigma_allow$</td>
+        <td>46.0</td>
+        <td>MPa</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="card">
+  <h2>Data Tables</h2>
+  <h3>DNV-RP-C203 Table 2-1: S-N Curves in Air (extracted)</h3>
+  <table>
+    <thead><tr><th>S-N Curve (-)</th><th>m1 (-)</th><th>log(a1) (-)</th><th>log(a2) (-)</th><th>Fatigue Limit (MPa)</th><th>k (-)</th></tr></thead>
+    <tbody>
+      <tr><td>B1</td><td>4.0</td><td>15.117</td><td>17.146</td><td>106.97</td><td>0</td></tr>
+      <tr><td>B2</td><td>4.0</td><td>14.885</td><td>16.856</td><td>93.59</td><td>0</td></tr>
+      <tr><td>C</td><td>3.0</td><td>12.592</td><td>16.32</td><td>73.1</td><td>0.15</td></tr>
+      <tr><td>C1</td><td>3.0</td><td>12.449</td><td>16.081</td><td>65.5</td><td>0.15</td></tr>
+      <tr><td>C2</td><td>3.0</td><td>12.301</td><td>15.835</td><td>58.48</td><td>0.15</td></tr>
+      <tr><td>D</td><td>3.0</td><td>12.164</td><td>15.606</td><td>52.63</td><td>0.2</td></tr>
+      <tr><td>E</td><td>3.0</td><td>12.01</td><td>15.35</td><td>46.78</td><td>0.2</td></tr>
+      <tr><td>F</td><td>3.0</td><td>11.855</td><td>15.091</td><td>41.52</td><td>0.25</td></tr>
+      <tr><td>F1</td><td>3.0</td><td>11.699</td><td>14.832</td><td>36.84</td><td>0.25</td></tr>
+      <tr><td>F3</td><td>3.0</td><td>11.546</td><td>14.576</td><td>32.75</td><td>0.25</td></tr>
+      <tr><td>G</td><td>3.0</td><td>11.398</td><td>14.33</td><td>29.24</td><td>0.25</td></tr>
+      <tr><td>W1</td><td>3.0</td><td>11.261</td><td>14.101</td><td>26.32</td><td>0.25</td></tr>
+      <tr><td>W2</td><td>3.0</td><td>11.107</td><td>13.845</td><td>23.39</td><td>0.25</td></tr>
+      <tr><td>W3</td><td>3.0</td><td>10.97</td><td>13.617</td><td>21.05</td><td>0.25</td></tr>
+      <tr><td>T</td><td>3.0</td><td>12.164</td><td>15.606</td><td>52.63</td><td>0.25</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Constant amplitude loading (single stress range bin)</li>
+    <li>S-N curve Class D (butt weld, in air)</li>
+    <li>No mean stress correction</li>
+    <li>Plate thickness equal to reference (25 mm) — no thickness penalty</li>
+    <li>DFF = 3.0 for critical structural detail (safety class high)</li>
+    <li>No stress concentration factor (SCF = 1.0, nominal stress approach)</li>
+    <li>No environmental reduction (in-air curve; use Table 2-2 for seawater with CP)</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>DNV-RP-C203 (2011) Fatigue Design of Offshore Steel Structures</li>
+    <li>DNV-RP-C203 Table 2-1: S-N curves in air</li>
+    <li>DNV-RP-C203 Table 2-2: S-N curves in seawater with cathodic protection</li>
+    <li>DNV-RP-C203 §2.2: S-N curve formulation</li>
+    <li>DNV-RP-C203 §2.4: Thickness correction</li>
+    <li>DNV-RP-C203 §2.5: Miner&#x27;s damage summation</li>
+    </ol>
+  </details>
+</div>
+
+
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-FAT-002 Rev 0
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+
+</body>
+</html>
