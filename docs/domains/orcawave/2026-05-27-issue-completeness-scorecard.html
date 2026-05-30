@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrcaWave Issue Completeness Scorecard — 2026-05-27</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2129; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2a3540; --accent:#4f9cf9; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1120px;margin:0 auto;padding:32px 24px 80px}
+  h1{font-size:26px;margin:0 0 4px}
+  h2{font-size:19px;margin:38px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:15px;margin:24px 0 6px;color:var(--accent)}
+  .sub{color:var(--muted);margin:0 0 4px}
+  code{background:#0b0f14;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px;color:#cdd9e5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  table{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:13.5px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;background:var(--panel)}
+  tr:hover td{background:#161d25}
+  .score{font-weight:700;white-space:nowrap;text-align:center}
+  .bar{position:relative;height:8px;border-radius:5px;background:#0b0f14;overflow:hidden;min-width:90px}
+  .bar > i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;display:block}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-weight:600}
+  .done{color:var(--good)} .part{color:var(--warn)} .miss{color:var(--bad)}
+  .b-done{background:var(--good)} .b-part{background:var(--warn)} .b-bad{background:var(--bad)} .b-mid{background:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:14px 0}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-size:13px;margin:10px 0 22px}
+  .note{background:#1d1607;border:1px solid #6b5114;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13.5px}
+  .legend{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+  ul.gap{margin:6px 0 0;padding-left:18px}
+  ul.gap li{margin:3px 0;font-size:13.5px}
+  .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>OrcaWave Issue Completeness Scorecard</h1>
+<p class="sub">Repository <code>vamseeachanta/digitalmodel</code> · branch <code>main</code> @ <code>998abd24</code></p>
+<div class="meta">
+  <span><strong>Generated:</strong> 2026-05-27</span>
+  <span><strong>Scope:</strong> 17 open + 5 closed OrcaWave issues</span>
+  <span><strong>Method:</strong> adversarial, per-acceptance-criterion audit with <code>file:line</code> evidence</span>
+</div>
+
+<div class="card">
+  <strong>How to read this.</strong> Each score is the share of an issue's acceptance criteria <em>already implemented</em>
+  in the codebase — not a quality grade. Criteria were marked
+  <span class="done">DONE</span> / <span class="part">PARTIAL</span> / <span class="miss">MISSING</span>
+  against actual source, with no credit for stubs, aspirational docs, or self-reported checkboxes. Audits ran adversarially
+  (defect-hunting, not charitable reading).
+</div>
+
+<!-- ============ CORE CLUSTER ============ -->
+<h2>Tier 1 — Core spec→run pipeline (open epic #605–#614, +#500/#501)</h2>
+<p class="sub">Filed 2026-05-15 (#605–#614) and 2026-04-10 (#500/#501). Coherent, well-specified roadmap — largely unbuilt. Cluster average ≈ 19%.</p>
+
+<table>
+  <thead><tr><th>Issue</th><th>Title</th><th style="width:110px">Score</th><th style="width:140px"></th><th>Biggest remaining gap</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/500">#500</a></td>
+      <td>mesh pre-flight validation + auto-copy</td>
+      <td class="score">55%</td><td><div class="bar"><i class="b-mid" style="width:55%"></i></div></td>
+      <td>Runner auto-copy is done &amp; tested; the headline <code>SpecConverter</code> existence-validation is absent — missing meshes only <em>warn</em>.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/609">#609</a></td>
+      <td>normalize auxiliary mesh handling</td>
+      <td class="score">30%</td><td><div class="bar"><i class="b-part" style="width:30%"></i></div></td>
+      <td><code>BodySpec.control_surface</code> silently ignored by backend + runner (only vessel-level read); aux paths untested.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/610">#610</a></td>
+      <td>licensed E2E acceptance test (arbitrary mesh)</td>
+      <td class="score">25%</td><td><div class="bar"><i class="b-part" style="width:25%"></i></div></td>
+      <td>Only the #468 known-<code>.yml</code> path exists; no arbitrary mesh→generated-inputs test; pytest wrappers lack Linux <code>skipif</code>.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/605">#605</a></td>
+      <td>self-contained solver packages</td>
+      <td class="score">20%</td><td><div class="bar"><i class="b-part" style="width:20%"></i></div></td>
+      <td><code>convert-spec</code> emits YAML with dangling basenames; copies nothing, no pre-write existence gate.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/608">#608</a></td>
+      <td>mesh quality gates before solve</td>
+      <td class="score">20%</td><td><div class="bar"><i class="b-part" style="width:20%"></i></div></td>
+      <td><code>GeometryQualityChecker</code> exists &amp; unit-tested but wired into no validate/preflight/solve gate.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/611">#611</a></td>
+      <td>result export / postprocess contract</td>
+      <td class="score">20%</td><td><div class="bar"><i class="b-part" style="width:20%"></i></div></td>
+      <td><code>RunResult</code> has no <code>owr_path</code>/<code>xlsx_path</code>; <code>.owr</code> still smuggled through <code>log_file</code>; data-file path discarded.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/613">#613</a></td>
+      <td>environment / license doctor</td>
+      <td class="score">15%</td><td><div class="bar"><i class="b-bad" style="width:15%"></i></div></td>
+      <td>Detection primitives exist in runner (~80% of logic) but no <code>orcawave-doctor</code> command, no PASS/WARN/FAIL, no tests.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/612">#612</a></td>
+      <td>batch mesh convergence / grid sensitivity</td>
+      <td class="score">15%</td><td><div class="bar"><i class="b-bad" style="width:15%"></i></div></td>
+      <td>Generic batch + solver-vs-solver benchmark exist; no YAML convergence study, no mesh-refinement/grid-sensitivity metrics.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/606">#606</a></td>
+      <td>integrate MeshPipeline into convert/run</td>
+      <td class="score">10%</td><td><div class="bar"><i class="b-bad" style="width:10%"></i></div></td>
+      <td>Zero call sites of <code>MeshPipeline.prepare_for_solver</code> in convert/run/cli paths.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/607">#607</a></td>
+      <td>given-mesh CLI workflow</td>
+      <td class="score">10%</td><td><div class="bar"><i class="b-bad" style="width:10%"></i></div></td>
+      <td><code>mesh-to-spec</code> builder module + CLI command do not exist at all.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/501">#501</a></td>
+      <td>QTF config + field points + irreg-freq method</td>
+      <td class="score">5%</td><td><div class="bar"><i class="b-bad" style="width:5%"></i></div></td>
+      <td>None of <code>QTFOptions</code>/<code>FieldPointSpec</code>/<code>IrregularFrequencyMethod</code> exist; crossing angles hardcoded 0–180.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/614">#614</a></td>
+      <td>docs for canonical spec-to-run workflow</td>
+      <td class="score">5%</td><td><div class="bar"><i class="b-bad" style="width:5%"></i></div></td>
+      <td>README documents a <code>modules/</code> tree + orchestrator commands that no longer exist; broken QUICK_START link; zero real CLI names.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ TIER 2 OLDER ============ -->
+<h2>Tier 2 — Broader OrcaWave-adjacent issues (open)</h2>
+
+<table>
+  <thead><tr><th>Issue</th><th>Title</th><th style="width:110px">Score</th><th style="width:140px"></th><th>Key adversarial finding</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/282">#282</a></td>
+      <td>WRK-130 standardized reporting</td>
+      <td class="score">80%</td><td><div class="bar"><i class="b-done" style="width:80%"></i></div></td>
+      <td>Full report framework real &amp; tested; missing the <code>hull_id</code>-keyed API signature + hull-catalog auto-integration.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/136">#136</a></td>
+      <td>WRK-043 parametric hull RAO</td>
+      <td class="score">75%</td><td><div class="bar"><i class="b-done" style="width:75%"></i></div></td>
+      <td>Every <code>[x]</code> claim backed by real tested code; batch diffraction + RAO extraction <strong>honestly DEFERRED</strong> on solver runtime.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/62">#62</a></td>
+      <td>engg debt | OrcaWave (umbrella)</td>
+      <td class="score">~70%</td><td><div class="bar"><i class="b-done" style="width:70%"></i></div></td>
+      <td>Ecosystem/basic/postprocess/AQWA done; analytical-ship-RAO + WLNG FST diffraction are the soft spots.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/141">#141</a></td>
+      <td>WRK-099 3-way Unit Box benchmark</td>
+      <td class="score">50%</td><td><div class="bar"><i class="b-part" style="width:50%"></i></div></td>
+      <td><strong>⚠ Synthetic.</strong> Artifacts + pipeline real, but the three "solver" datasets are seed/bias stand-ins — not a real AQWA/OrcaWave/BEMRosetta run. "All <code>[x]</code>" is honest only under its own "(synthetic)" caveat.</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/503">#503</a></td>
+      <td>Ingest Orcina help → LLM format</td>
+      <td class="score">45%</td><td><div class="bar"><i class="b-part" style="width:45%"></i></div></td>
+      <td>Real ingestion script + in-repo reference markdown, but ace-drive storage location, llm-wiki retrieval skill, and agent-skill wiring all absent.</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Cross-cutting blocker.</strong> #141 and #136 share one real constraint: no AQWA/OrcaWave/BEMRosetta executables in this
+  environment. Their "RAO database" and "3-way benchmark" therefore validate <em>plumbing</em>, not physics. #141's green
+  checkboxes are circular — "FULL consensus" among three near-identical <em>fabricated</em> datasets proves nothing about solver
+  agreement. #136 is more honest, explicitly deferring the runtime-dependent items.
+</div>
+
+<!-- ============ CLOSED VERIFICATION ============ -->
+<h2>Closed-issue reopen check</h2>
+<p class="sub">The semantic-equivalence + smoke-test cluster that the open epic leans on as "completed" foundations. <strong>Verdict: no reopen warranted.</strong></p>
+
+<table>
+  <thead><tr><th>Issue</th><th>Title</th><th>Verdict</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/468">#468</a></td><td>smoke L01 <code>.yml</code>→<code>.owr</code>→<code>.xlsx</code></td>
+      <td class="done">CONFIRMED-COMPLETE</td><td><code>tests/solver/smoke_test.py</code> L01 + <code>run_orcawave_api.py</code> chain</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/516">#516</a></td><td>semantic-equivalence gaps (parent)</td>
+      <td class="done">CONFIRMED-COMPLETE</td><td>Deliverables landed via children #521/#524/#525</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/521">#521</a></td><td>taxonomy + regression tests</td>
+      <td class="done">CONFIRMED-COMPLETE</td><td>7-category <code>SEMANTIC_TAXONOMY</code> in <code>benchmark_input_comparison.py:19</code></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/524">#524</a></td><td>value-level roundtrip tests</td>
+      <td class="done">CONFIRMED-COMPLETE</td><td>16 passing tests in <code>test_orcawave_semantic_roundtrip.py</code></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/525">#525</a></td><td>remove silent parser defaults</td>
+      <td class="done">CONFIRMED-COMPLETE</td><td>All 3 defaults now <code>raise</code> (<code>reverse_parsers.py:456,500,541</code>)</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ EVIDENCE APPENDIX ============ -->
+<h2>Evidence appendix — recurring structural findings</h2>
+
+<h3>Capable libraries exist but are unwired</h3>
+<table>
+  <thead><tr><th>Component</th><th>State</th><th>Consumed by convert/validate/run?</th></tr></thead>
+  <tbody>
+    <tr><td><code>MeshPipeline.prepare_for_solver</code> (<code>mesh_pipeline.py:190</code>)</td><td>Implemented + unit-tested</td><td class="miss">No — zero call sites (#606)</td></tr>
+    <tr><td><code>GeometryQualityChecker</code> (<code>geometry_quality.py</code>)</td><td>PASS/WARN/FAIL engine + JSON export</td><td class="miss">No — re-exported only, never invoked (#608)</td></tr>
+    <tr><td>OrcFxAPI / <code>ORCAWAVE_PATH</code> detection (<code>orcawave_runner.py:349,411</code>)</td><td>Working dry-run fallback + exe detection</td><td class="part">Internal only — not surfaced as a doctor command (#613)</td></tr>
+  </tbody>
+</table>
+
+<h3>Schema / contract defects</h3>
+<ul class="gap">
+  <li><strong>#609:</strong> backend <code>orcawave_backend.py:261</code> and runner <code>orcawave_runner.py:503</code> read only <code>vessel.control_surface</code>; <code>BodySpec.control_surface</code> (<code>input_schemas.py:644</code>) is silently dropped for multi-body specs.</li>
+  <li><strong>#611:</strong> <code>RunResult</code> (<code>orcawave_runner.py:148</code>) overloads <code>log_file = results_file</code> for the <code>.owr</code> (<code>:397</code>); the written <code>_data.dat</code> path is computed then discarded.</li>
+  <li><strong>#501:</strong> <code>_build_headings_section</code> hardcodes <code>QTFMinCrossingAngle=0</code>/<code>QTFMaxCrossingAngle=180</code> (<code>orcawave_backend.py:515-516</code>).</li>
+  <li><strong>#614:</strong> <code>docs/domains/orcawave/README.md</code> references a non-existent <code>src/digitalmodel/modules/</code> tree and a broken <code>QUICK_START.md</code> link.</li>
+</ul>
+
+<p class="legend">
+  Bars: <span class="pill b-done">&ge;70%</span> <span class="pill b-mid">~55%</span>
+  <span class="pill b-part">20–50%</span> <span class="pill b-bad">&lt;20%</span>.
+  Scores reflect implementation coverage of acceptance criteria as of the commit above; re-audit after any landing PR.
+</p>
+
+</div>
+</body>
+</html>
