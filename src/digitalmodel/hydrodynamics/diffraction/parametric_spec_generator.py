@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -132,30 +132,60 @@ class SpecGeneratorConfig(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def estimate_mass(profile: HullProfile, rho: float = RHO_SEAWATER) -> float:
-    """Estimate vessel mass from hull profile.
+def _dimensions_from_profile(profile: HullProfile) -> Any:
+    """Build resolver dimensions lazily to avoid import cycles."""
+    from digitalmodel.hydrodynamics.diffraction.resolver import (
+        PrincipalDimensions,
+    )
+
+    # Preserve the original estimators' falsy-guard semantics: a non-positive
+    # displacement/block_coefficient meant "unknown -> use the Cb formula".
+    # PrincipalDimensions enforces gt=0 on both, so map non-positive -> None
+    # rather than letting a 0.0 profile raise ValidationError (back-compat).
+    return PrincipalDimensions(
+        length_bp=profile.length_bp,
+        beam=profile.beam,
+        draft=profile.draft,
+        displacement_t=(
+            profile.displacement
+            if profile.displacement and profile.displacement > 0
+            else None
+        ),
+        block_coefficient=(
+            profile.block_coefficient
+            if profile.block_coefficient and profile.block_coefficient > 0
+            else None
+        ),
+    )
+
+
+def estimate_mass_from_dimensions(
+    dims: Any, rho: float = RHO_SEAWATER
+) -> float:
+    """Estimate vessel mass from principal dimensions.
 
     Uses displacement in tonnes if available on the profile; otherwise
     falls back to Cb * L * B * T * rho.  When block_coefficient is also
     missing, a default Cb of 0.65 (typical full-form vessel) is used.
 
     Args:
-        profile: Hull profile with principal dimensions.
+        dims: Principal dimensions with length, beam, draft, and optional
+            displacement/block coefficient.
         rho: Water density in kg/m^3.
 
     Returns:
         Estimated mass in kg.
     """
-    if profile.displacement is not None and profile.displacement > 0:
-        return profile.displacement * 1000.0  # tonnes -> kg
+    if dims.displacement_t is not None and dims.displacement_t > 0:
+        return dims.displacement_t * 1000.0  # tonnes -> kg
 
-    cb = profile.block_coefficient if profile.block_coefficient else 0.65
-    volume = cb * profile.length_bp * profile.beam * profile.draft
+    cb = dims.block_coefficient if dims.block_coefficient else 0.65
+    volume = cb * dims.length * dims.beam * dims.draft
     return volume * rho
 
 
-def estimate_cog(profile: HullProfile) -> list[float]:
-    """Estimate centre of gravity from hull dimensions.
+def estimate_cog_from_dimensions(dims: Any) -> list[float]:
+    """Estimate centre of gravity from principal dimensions.
 
     Simple approximation: x at midships (L/2), y on centreline,
     z at half-draft below waterline.
@@ -164,14 +194,14 @@ def estimate_cog(profile: HullProfile) -> list[float]:
         [x, y, z] in metres (marine convention: z=0 at waterline).
     """
     return [
-        profile.length_bp / 2.0,
+        dims.length / 2.0,
         0.0,
-        -profile.draft / 2.0,
+        -dims.draft / 2.0,
     ]
 
 
-def estimate_radii_of_gyration(profile: HullProfile) -> list[float]:
-    """Estimate radii of gyration from hull dimensions.
+def estimate_radii_of_gyration_from_dimensions(dims: Any) -> list[float]:
+    """Estimate radii of gyration from principal dimensions.
 
     Uses standard naval architecture empirical coefficients:
     - Kxx ~ 0.34 * B  (roll)
@@ -182,10 +212,27 @@ def estimate_radii_of_gyration(profile: HullProfile) -> list[float]:
         [kxx, kyy, kzz] in metres.
     """
     return [
-        KXX_COEFF * profile.beam,
-        KYY_COEFF * profile.length_bp,
-        KZZ_COEFF * profile.length_bp,
+        KXX_COEFF * dims.beam,
+        KYY_COEFF * dims.length,
+        KZZ_COEFF * dims.length,
     ]
+
+
+def estimate_mass(profile: HullProfile, rho: float = RHO_SEAWATER) -> float:
+    """Estimate vessel mass from hull profile."""
+    return estimate_mass_from_dimensions(_dimensions_from_profile(profile), rho)
+
+
+def estimate_cog(profile: HullProfile) -> list[float]:
+    """Estimate centre of gravity from hull profile."""
+    return estimate_cog_from_dimensions(_dimensions_from_profile(profile))
+
+
+def estimate_radii_of_gyration(profile: HullProfile) -> list[float]:
+    """Estimate radii of gyration from hull profile."""
+    return estimate_radii_of_gyration_from_dimensions(
+        _dimensions_from_profile(profile)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -416,6 +463,9 @@ def generate_batch_diffraction_specs(
 
 __all__ = [
     "SpecGeneratorConfig",
+    "estimate_mass_from_dimensions",
+    "estimate_cog_from_dimensions",
+    "estimate_radii_of_gyration_from_dimensions",
     "estimate_mass",
     "estimate_cog",
     "estimate_radii_of_gyration",

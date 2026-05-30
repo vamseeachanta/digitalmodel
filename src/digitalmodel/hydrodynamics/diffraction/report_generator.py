@@ -16,8 +16,9 @@ Version: 2.0.0 (post-split)
 
 from __future__ import annotations
 
+import html
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 # --- Re-exports from report_data_models ---
 from digitalmodel.hydrodynamics.diffraction.report_data_models import (
@@ -75,6 +76,11 @@ from digitalmodel.hydrodynamics.diffraction.report_builders import (
     _build_toc_html,
     _get_hull_type_note,
 )
+
+if TYPE_CHECKING:
+    from digitalmodel.hydrodynamics.diffraction.assumption_ledger import (
+        AssumptionLedger,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -150,12 +156,47 @@ def _build_validation_sanity_html(validation_report: dict[str, Any]) -> str:
     )
 
 
+def _build_assumptions_html(ledger: "AssumptionLedger") -> str:
+    """Render the non-user-supplied assumption ledger."""
+    if not ledger:
+        body = "<p>No assumed values — all inputs were user-supplied.</p>"
+    else:
+        rows = []
+        for record in ledger.rows():
+            value = html.escape(str(record.value))
+            reference = html.escape(str(record.reference or ""))
+            rows.append(
+                "<tr>"
+                f"<td>{html.escape(record.field)}</td>"
+                f"<td>{value}</td>"
+                f"<td>{html.escape(record.source.value)}</td>"
+                f"<td>{html.escape(record.basis)}</td>"
+                f"<td>{reference}</td>"
+                f"<td>{html.escape(record.confidence.value)}</td>"
+                "</tr>"
+            )
+        body = (
+            "<table><thead><tr><th>Field</th><th>Value</th>"
+            "<th>Source</th><th>Basis</th><th>Reference</th>"
+            "<th>Confidence</th></tr></thead><tbody>"
+            + "".join(rows)
+            + "</tbody></table>"
+        )
+    return (
+        '<div class="section" id="assumptions">'
+        "<h2>Assumptions</h2>"
+        f"{body}"
+        "</div>"
+    )
+
+
 def generate_diffraction_report(
     report_data: DiffractionReportData,
     output_path: Path,
     include_plotlyjs: str = "cdn",
     mode: str = "full",
     validation_report: Optional[dict[str, Any]] = None,
+    assumption_ledger: Optional["AssumptionLedger"] = None,
 ) -> Path:
     """Generate a self-contained HTML diffraction report.
 
@@ -172,6 +213,8 @@ def generate_diffraction_report(
             provided, a sanity-check section is rendered near the executive
             summary. This NEVER re-runs validation (no ``OutputValidator`` is
             instantiated here).
+        assumption_ledger: Optional assumption provenance ledger. When
+            provided, an Assumptions section is rendered.
 
     Returns:
         Path to the generated HTML file.
@@ -199,6 +242,9 @@ def generate_diffraction_report(
     # never recomputed — see #625).
     if validation_report is not None:
         sections.append(_build_validation_sanity_html(validation_report))
+
+    if assumption_ledger is not None:
+        sections.append(_build_assumptions_html(assumption_ledger))
 
     if not compact:
         # S3: Hull Description & Mesh Quality

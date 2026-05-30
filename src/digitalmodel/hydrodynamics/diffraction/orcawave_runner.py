@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -71,6 +71,11 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     RAOSet,
 )
 from digitalmodel.hydrodynamics.diffraction.validation_runner import run_validation
+
+if TYPE_CHECKING:
+    from digitalmodel.hydrodynamics.diffraction.assumption_ledger import (
+        AssumptionLedger,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -216,6 +221,7 @@ class RunResult:
     # --- solver metadata ---
     orcf_api_version: str | None = None
     thread_count: int | None = None
+    assumption_ledger: "AssumptionLedger | None" = None
 
 
 # ---------------------------------------------------------------------------
@@ -272,7 +278,10 @@ class OrcaWaveRunner:
     # ----- public API -----
 
     def run(
-        self, spec: DiffractionSpec, spec_path: Path | str | None = None
+        self,
+        spec: DiffractionSpec,
+        spec_path: Path | str | None = None,
+        assumption_ledger: "AssumptionLedger | None" = None,
     ) -> RunResult:
         """Execute the full pipeline: prepare + execute.
 
@@ -285,8 +294,14 @@ class OrcaWaveRunner:
             spec: Canonical diffraction specification.
             spec_path: Path to the source YAML file (for resolving relative
                        mesh paths). Optional.
+            assumption_ledger: Optional provenance ledger (e.g. from
+                ``resolver.resolve``) to carry onto the result so it reaches
+                report generation. Attached to every return path.
         """
         self.prepare(spec, spec_path=spec_path)
+        # Attach after prepare() (which builds self._result) so the ledger
+        # rides both the dry-run early return and the execute() result.
+        self._result.assumption_ledger = assumption_ledger
 
         if not self._config.dry_run:
             # Check API or executable availability before executing
@@ -981,6 +996,7 @@ def run_orcawave(
     dry_run: bool = False,
     timeout_seconds: int = 7200,
     spec_path: Path | str | None = None,
+    assumption_ledger: "AssumptionLedger | None" = None,
 ) -> RunResult:
     """Run an OrcaWave diffraction analysis from a DiffractionSpec.
 
@@ -993,6 +1009,8 @@ def run_orcawave(
         timeout_seconds: Maximum solver execution time.
         spec_path: Path to the source YAML file (for resolving relative
                    mesh paths). Optional.
+        assumption_ledger: Optional provenance ledger (e.g. from
+            ``resolver.resolve``) carried onto the result for reporting.
 
     Returns:
         RunResult with status, paths, and logs.
@@ -1003,4 +1021,6 @@ def run_orcawave(
         timeout_seconds=timeout_seconds,
     )
     runner = OrcaWaveRunner(config)
-    return runner.run(spec, spec_path=spec_path)
+    return runner.run(
+        spec, spec_path=spec_path, assumption_ledger=assumption_ledger
+    )
