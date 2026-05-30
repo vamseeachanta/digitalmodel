@@ -1,0 +1,80 @@
+metadata:
+  title: "Scour Assessment — DNV-RP-F107"
+  doc_id: "CALC-GEO-003"
+  revision: "A"
+  date: "2026-03-14"
+  author: "ACE Engineering"
+  status: draft
+inputs:
+  - name: "Pipeline outer diameter"
+    symbol: "D"
+    value: 0.5
+    unit: "m"
+  - name: "Steady current velocity"
+    symbol: "U_c"
+    value: 0.8
+    unit: "m/s"
+    source: "Metocean study"
+  - name: "Wave orbital velocity"
+    symbol: "U_w"
+    value: 0.3
+    unit: "m/s"
+    source: "Metocean study"
+  - name: "Sediment median grain size"
+    symbol: "d_{50}"
+    value: 0.3
+    unit: "mm"
+    source: "Geotechnical survey"
+  - name: "Burial ratio"
+    symbol: "e/D"
+    value: 0.0
+    unit: "-"
+  - name: "Wave period"
+    symbol: "T"
+    value: 8.0
+    unit: "s"
+methodology:
+  description: "Pipeline scour depth prediction per DNV-RP-F107 Section 5"
+  standard: "DNV-RP-F107"
+  equations:
+    - id: eq1
+      name: "Keulegan-Carpenter number"
+      latex: "KC = \\frac{U_w T}{D}"
+      description: "Ratio of wave orbital excursion to pipeline diameter"
+    - id: eq2
+      name: "Current-wave ratio"
+      latex: "\\theta_{cw} = \\frac{U_c}{U_c + U_w}"
+      description: "Relative importance of current vs waves"
+    - id: eq3
+      name: "Scour depth"
+      latex: "S = \\frac{S}{D} \\cdot D \\cdot (1 - e/D)"
+      description: "Equilibrium scour depth with burial reduction"
+outputs:
+  - name: "Keulegan-Carpenter number"
+    symbol: "KC"
+    value: 4.8
+    unit: "-"
+    notes: "KC = 0.3 * 8.0 / 0.5"
+  - name: "Current-wave ratio"
+    symbol: "theta_cw"
+    value: 0.727
+    unit: "-"
+    notes: "Current-dominated regime (>0.5)"
+  - name: "Equilibrium scour depth"
+    symbol: "S"
+    value: 0.3
+    unit: "m"
+    notes: "Computed via digitalmodel.geotechnical.scour.pipeline_scour_depth"
+  - name: "Scour-to-diameter ratio"
+    symbol: "S/D"
+    value: 0.6
+    unit: "-"
+assumptions:
+  - "Sandy seabed, non-cohesive sediment"
+  - "Steady-state (equilibrium) scour — time development not modelled"
+  - "No scour protection installed"
+  - "Flat seabed, no proximity effects from adjacent pipelines"
+  - "Wave period of 8 s used for KC calculation"
+references:
+  - "DNV-RP-F107, Risk Assessment of Pipeline Protection, 2019"
+  - "Sumer & Fredsoe, The Mechanics of Scour in the Marine Environment, 2002"

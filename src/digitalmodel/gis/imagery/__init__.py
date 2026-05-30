@@ -10,7 +10,7 @@ Pipeline stages:
     2. :func:`~digitalmodel.gis.imagery.stac_client.probe_imagery_access` -- probe source coverage.
     3. :func:`~digitalmodel.gis.imagery.renderer.render_all` -- render artifacts.
 
-See ``ace-examples/gis-timelapse-2538`` for a worked example (workspace-hub #2538).
+See ``examples/gis/imagery-timelapse-2538`` for a worked example (workspace-hub #2538).
 """
 
 from __future__ import annotations

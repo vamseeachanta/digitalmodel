@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "created_for_issue": 2538,
+  "coordinate_crs": "EPSG:4326",
+  "cache_root": "/mnt/local-analysis/ace2-gis-timelapse/cache",
+  "output_root": "/mnt/local-analysis/ace2-gis-timelapse/outputs",
+  "log_root": "/mnt/local-analysis/ace2-gis-timelapse/logs",
+  "defaults": {
+    "property_radius_miles": 0.20,
+    "neighborhood_radius_miles": 1.50,
+    "requested_outputs": ["feasibility_matrix", "aoi_geojson", "contact_sheet", "gif", "mp4"],
+    "sources_to_evaluate": ["google_earth_pro_manual", "naip", "landsat", "sentinel2"]
+  },
+  "addresses": [
+    {
+      "label": "11511 Piping Rock Dr",
+      "slug": "11511-piping-rock",
+      "address": "11511 Piping Rock Dr., Houston, TX 77077",
+      "latitude": 29.7397219,
+      "longitude": -95.5971637,
+      "geocode_source": "issue_body_nominatim",
+      "property_radius_miles": 0.20,
+      "neighborhood_radius_miles": 1.50,
+      "requested_outputs": ["feasibility_matrix", "aoi_geojson", "contact_sheet", "gif", "mp4"],
+      "notes": "Primary address from GitHub issue #2538; prove workflow here before adding more addresses."
+    }
+  ]
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steel Catenary Riser Touchdown Zone Fatigue Assessment — CALC-002</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-002</div>
+    <h1 class="report-title">Steel Catenary Riser Touchdown Zone Fatigue Assessment</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>1</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-13</div>
+      <div class="meta-chip"><strong>Author</strong>Vamsee Achanta</div>
+        <div class="meta-chip"><strong>Project</strong>Generic SCR Fatigue</div>
+      <div class="meta-chip"><strong>Standard</strong>DNV-RP-C203 (2021)</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>S-N Curve Class</strong></td>
+        <td class="katex-inline">$C$</td>
+        <td>DNV E</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1</td>
+      </tr>
+      <tr>
+        <td><strong>Stress Concentration Factor</strong></td>
+        <td class="katex-inline">$SCF$</td>
+        <td>1.2</td>
+        <td>-</td>
+        <td>FEA hot-spot stress extraction</td>
+      </tr>
+      <tr>
+        <td><strong>Design Fatigue Factor</strong></td>
+        <td class="katex-inline">$DFF$</td>
+        <td>10.0</td>
+        <td>-</td>
+        <td>DNV-OS-F201 — safety-critical, no inspection</td>
+      </tr>
+      <tr>
+        <td><strong>Design Life</strong></td>
+        <td class="katex-inline">$T_d$</td>
+        <td>25</td>
+        <td>years</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Water Depth</strong></td>
+        <td class="katex-inline">$d$</td>
+        <td>1500</td>
+        <td>m</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Riser OD</strong></td>
+        <td class="katex-inline">$OD$</td>
+        <td>273.1</td>
+        <td>mm</td>
+        <td>10.75 inch nominal</td>
+      </tr>
+      <tr>
+        <td><strong>Wall Thickness</strong></td>
+        <td class="katex-inline">$t$</td>
+        <td>25.4</td>
+        <td>mm</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>Fatigue assessment of the SCR touchdown zone (TDZ) using
+Palmgren-Miner linear damage accumulation. Stress time histories
+are extracted from global riser analysis at the critical TDZ
+location. Rainflow cycle counting is applied to obtain stress
+range histograms. The S-N curve class E is used per DNV-RP-C203
+for welded tubular joints in seawater with cathodic protection.
+A DFF of 10 is applied for safety-critical locations with no
+planned inspection access.</p>
+  <p><strong>Standard:</strong> DNV-RP-C203 (2021)</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation 1: S-N Curve</div>
+    <div class="katex-display">$$\log N = \log \bar{a} - m \log \Delta\sigma$$</div>
+    <div class="equation-desc">Standard S-N relationship for fatigue life.</div>
+    <span class="eq-number">(1)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 2: Palmgren-Miner Damage</div>
+    <div class="katex-display">$$D = \sum_{i=1}^{k} \frac{n_i}{N_i}$$</div>
+    <div class="equation-desc">Cumulative fatigue damage.</div>
+    <span class="eq-number">(2)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 3: Factored Damage</div>
+    <div class="katex-display">$$D_{factored} = D \times DFF$$</div>
+    <div class="equation-desc">Damage multiplied by design fatigue factor.</div>
+    <span class="eq-number">(3)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 4: Calculated Life</div>
+    <div class="katex-display">$$T_{calc} = \frac{T_d}{D}$$</div>
+    <div class="equation-desc">Unfactored fatigue life in years.</div>
+    <span class="eq-number">(4)</span>
+    
+  </div>
+</div>
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Total Unfactored Damage</strong></td>
+        <td class="katex-inline">$D$</td>
+        <td>0.032</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Factored Damage</strong></td>
+        <td class="katex-inline">$D_{factored}$</td>
+        <td>0.32</td>
+        <td>-</td>
+        <td><span class="badge badge-pass">PASS</span></td>
+        <td>≤ 1.0</td>
+      </tr>
+      <tr>
+        <td><strong>Calculated Fatigue Life</strong></td>
+        <td class="katex-inline">$T_{calc}$</td>
+        <td>781.3</td>
+        <td>years</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Minimum Required Life</strong></td>
+        <td class="katex-inline">$T_{req}$</td>
+        <td>250.0</td>
+        <td>years</td>
+        <td><span class="badge badge-pass">PASS</span></td>
+        <td>≤ 250.0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Charts</h2>
+  <div class="chart-container">
+    <div class="chart-title">S-N Curve (DNV E — Seawater + CP)</div>
+    <canvas id="chart-sn_curve" height="300"></canvas>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">Damage Contribution by Sea State</div>
+    <canvas id="chart-damage_by_seastate" height="300"></canvas>
+  </div>
+</div>
+
+
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Linear damage accumulation (Palmgren-Miner) is valid</li>
+    <li>TDZ location is the critical fatigue hot-spot</li>
+    <li>Stress time histories from 3-hour sea states are representative</li>
+    <li>Soil-pipe interaction modelled with non-linear springs</li>
+    <li>No planned inspection access to TDZ</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>DNV-RP-C203 (2021) — Fatigue Design of Offshore Steel Structures</li>
+    <li>DNV-OS-F201 (2021) — Dynamic Risers</li>
+    <li>API RP 2RD — Design of Risers for Floating Production Systems</li>
+    </ol>
+  </details>
+</div>
+
+<div class="card">
+  <h2>Change Log</h2>
+  <table>
+    <thead><tr><th>Rev</th><th>Date</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2026-03-13</td><td>Initial calculation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-002 Rev 1
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+new Chart(document.getElementById("chart-sn_curve"), {"type":"scatter","data":{"datasets":[{"label":"DNV E Curve","data":[{"x": 10, "y": "6.31e8"}, {"x": 20, "y": "7.89e7"}, {"x": 50, "y": "5.05e6"}, {"x": 100, "y": "6.31e5"}, {"x": 200, "y": "7.89e4"}, {"x": 500, "y": "5.05e3"}],"borderColor":"#0f766e","backgroundColor":"#0f766e80","showLine":true,"pointRadius":4}]},"options":{"responsive":true,"scales":{"x":{"type":"logarithmic","title":{"display":true,"text":"Stress Range"}},"y":{"type":"logarithmic","title":{"display":true,"text":"Cycles to Failure"}}}}});
+new Chart(document.getElementById("chart-damage_by_seastate"), {"type":"bar","data":{"labels":[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],"datasets":[{"label":"Damage","data":[0.001, 0.003, 0.008, 0.025, 0.065, 0.12, 0.21, 0.32, 0.18, 0.068],"backgroundColor":"#8a5a2bcc","borderColor":"#8a5a2b","borderWidth":1}]},"options":{"responsive":true,"scales":{"x":{"title":{"display":true,"text":"Significant Wave Height"}},"y":{"title":{"display":true,"text":"Damage Fraction"}}}}}});
+});
+</script>
+</body>
+</html>

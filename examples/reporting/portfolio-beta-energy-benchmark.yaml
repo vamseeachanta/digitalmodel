@@ -1,0 +1,55 @@
+metadata:
+  title: "Portfolio Beta vs Energy Benchmark"
+  doc_id: "CALC-FIN-001"
+  revision: "A"
+  date: "2026-03-14"
+  author: "ACE Engineering"
+  status: draft
+inputs:
+  - name: "Asset returns"
+    symbol: "r_i"
+    value: "[0.01, -0.02, 0.03, -0.01, 0.02]"
+    unit: "fraction"
+  - name: "Benchmark returns (XLE)"
+    symbol: "r_b"
+    value: "[0.01, -0.02, 0.03, -0.01, 0.02]"
+    unit: "fraction"
+methodology:
+  description: "Portfolio beta via OLS regression — measures systematic risk relative to benchmark"
+  standard: "CAPM / Modern Portfolio Theory"
+  equations:
+    - id: eq1
+      name: "Beta"
+      latex: "\\beta = \\frac{Cov(r_i, r_b)}{Var(r_b)}"
+      description: "Slope of regression of asset returns on benchmark returns"
+    - id: eq2
+      name: "Jensen's Alpha"
+      latex: "\\alpha = \\bar{r_i} - \\beta \\bar{r_b}"
+      description: "Excess return not explained by benchmark"
+    - id: eq3
+      name: "R-squared"
+      latex: "R^2 = 1 - \\frac{SS_{res}}{SS_{tot}}"
+      description: "Proportion of variance explained by benchmark"
+outputs:
+  - name: "Beta"
+    symbol: "\\beta"
+    value: 1.0
+    unit: "dimensionless"
+    notes: "Perfect correlation case"
+  - name: "Alpha"
+    symbol: "\\alpha"
+    value: 0.0
+    unit: "fraction"
+  - name: "R-squared"
+    symbol: "R^2"
+    value: 1.0
+    unit: "dimensionless"
+    pass_fail: pass
+    limit: 0.5
+assumptions:
+  - "Linear relationship between asset and benchmark returns"
+  - "Returns are normally distributed"
+  - "No transaction costs or taxes"
+references:
+  - "Sharpe, W.F. (1964) Capital Asset Prices — A Theory of Market Equilibrium"
+  - "Bodie, Kane, Marcus — Investments, Chapter 9"

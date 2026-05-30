@@ -1,0 +1,450 @@
+metadata:
+  title: "Parachute Drag Force — Single and Dual Chute Assessment"
+  doc_id: "CALC-WRK-1362"
+  revision: 1
+  date: "2026-03-22"
+  author: "Vamsee Achanta"
+  status: draft
+  project: "GT1R R35 Parachute Frame — WRK-5082"
+  change_log:
+    - rev: 1
+      date: "2026-03-22"
+      description: "Initial calculation — single and dual chute drag at 200/250 MPH"
+
+scope:
+  objective: |
+    Determine parachute drag forces for all applicable load cases (single and dual
+    chute configurations) per Stroud Safety sizing charts for a 3,600 lb GT1R R35.
+    Identify the governing load case for frame design.
+  inclusions:
+    - "Single chute drag at 200 and 250 MPH"
+    - "Dual chute drag at 250 MPH"
+    - "Stroud sizing chart logic (single vs dual threshold)"
+    - "Aerodynamic lift and tire traction sensitivity at deployment speeds"
+  exclusions:
+    - "Frame structural analysis (WRK-1363/1364)"
+    - "Connection and member checks (WRK-1367)"
+    - "Wet pavement traction (μ = 0.5) — dry only assessed here"
+  limitations:
+    - "Dual chute diameter 10 ft is conservative estimate pending Stroud catalog confirmation"
+    - "Cl = 0.35 is estimated — no CFD or wind tunnel data for GT1R package"
+  validity_range: "Vehicle weight 2,800–4,000 lbs; deployment speed 150–320 MPH"
+
+design_basis:
+  codes:
+    - "NHRA Rule Book — dual chutes mandatory above 200 MPH (quarter-mile)"
+    - "Stroud Safety Parachute Sizing Chart (2024 catalog)"
+  design_life: "N/A — single-event deployment loading"
+  safety_class: "High — driver safety system"
+  environment: "Sea-level atmosphere, ρ = 0.002378 slug/ft³"
+
+inputs:
+  - name: "Vehicle Weight"
+    symbol: "W"
+    value: 3600
+    unit: "lbs"
+    source: "GT1R R35 race weight (WRK-5082)"
+  - name: "Deployment Speed — Case 1"
+    symbol: "V_1"
+    value: 200
+    unit: "MPH"
+    source: "NHRA single/dual threshold"
+  - name: "Deployment Speed — Cases 2 & 3"
+    symbol: "V_2"
+    value: 250
+    unit: "MPH"
+    source: "Design maximum trap speed"
+  - name: "Single Chute Diameter"
+    symbol: "d_s"
+    value: 12
+    unit: "ft"
+    source: "Stroud 430 Std. 32 (TBC)"
+  - name: "Dual Chute Diameter (each)"
+    symbol: "d_d"
+    value: 10
+    unit: "ft"
+    source: "Conservative estimate pending Stroud data"
+    notes: "Likely 10–12 ft range per Stroud catalog"
+  - name: "Drag Coefficient"
+    symbol: "C_d"
+    value: 1.4
+    unit: "-"
+    source: "Hemispherical canopy — Stroud typical range 1.2–1.6"
+  - name: "Opening Shock Factor"
+    symbol: "C_x"
+    value: 1.5
+    unit: "-"
+    source: "Mid-range snatch load factor (1.2–1.8)"
+  - name: "Air Density (sea level)"
+    symbol: "\\rho"
+    value: 0.002378
+    unit: "slug/ft³"
+    source: "ISA standard atmosphere"
+  - name: "R35 Lift Coefficient"
+    symbol: "C_L"
+    value: 0.35
+    unit: "-"
+    source: "Estimated — no CFD/wind tunnel data for GT1R"
+    notes: "GT1R package includes splitter and wing; net Cl may differ"
+  - name: "R35 Frontal Area"
+    symbol: "A_f"
+    value: 25.0
+    unit: "ft²"
+    source: "Estimated from R35 body dimensions"
+  - name: "Tire Friction Coefficient (dry)"
+    symbol: "\\mu"
+    value: 0.8
+    unit: "-"
+    source: "Drag radial on prepped surface"
+
+methodology:
+  description: |
+    Parachute drag force is calculated using the standard aerodynamic drag equation
+    augmented with an opening shock factor (Cx) to capture the transient snatch load
+    at deployment. Three load cases are assessed per the WRK-1362 specification:
+
+    - **Case 1**: Single chute at 200 MPH (NHRA threshold)
+    - **Case 2**: Single chute at 250 MPH (design maximum)
+    - **Case 3**: Dual chutes at 250 MPH (Stroud recommendation for 3,600 lbs)
+
+    The governing case (maximum drag force) drives the frame design load.
+
+    A sensitivity analysis assesses aerodynamic lift and tire traction capacity at
+    deployment speeds to determine whether the tires can resist the chute drag
+    through friction or whether the frame mounts carry the full load in tension.
+
+    Stroud Safety sizing charts determine the single vs. dual chute threshold
+    (200 MPH per NHRA rules) and recommend specific chute models by vehicle
+    weight and speed.
+  standard: "NHRA Safety Rules; Stroud Safety Parachute Sizing Chart (2024)"
+  equations:
+    - id: 1
+      name: "Parachute Drag Force"
+      latex: "F = \\frac{1}{2} \\rho V^2 C_d A C_x"
+      description: "Drag force including opening shock factor for transient snatch load."
+      variables:
+        - symbol: "F"
+          description: "Drag force at deployment"
+          unit: "lbs"
+        - symbol: "\\rho"
+          description: "Air density"
+          unit: "slug/ft³"
+        - symbol: "V"
+          description: "Vehicle speed at deployment"
+          unit: "ft/s"
+        - symbol: "C_d"
+          description: "Parachute drag coefficient"
+          unit: "-"
+        - symbol: "A"
+          description: "Projected canopy area = π(d/2)²"
+          unit: "ft²"
+        - symbol: "C_x"
+          description: "Opening shock factor"
+          unit: "-"
+    - id: 2
+      name: "Dual Chute Total Drag"
+      latex: "F_{dual} = F_1 + F_2 = \\frac{1}{2} \\rho V^2 C_x \\left( C_{d1} A_1 + C_{d2} A_2 \\right)"
+      description: "Sum of drag from two independently parameterized chutes."
+      variables:
+        - symbol: "F_{dual}"
+          description: "Total drag from both chutes"
+          unit: "lbs"
+        - symbol: "F_1, F_2"
+          description: "Individual chute drag forces"
+          unit: "lbs"
+    - id: 3
+      name: "Aerodynamic Lift"
+      latex: "F_{lift} = \\frac{1}{2} \\rho V^2 C_L A_f"
+      description: "Body lift force reducing effective tire normal load."
+      variables:
+        - symbol: "F_{lift}"
+          description: "Aerodynamic lift on vehicle body"
+          unit: "lbs"
+        - symbol: "C_L"
+          description: "Vehicle lift coefficient"
+          unit: "-"
+        - symbol: "A_f"
+          description: "Vehicle frontal area"
+          unit: "ft²"
+    - id: 4
+      name: "Effective Tire Normal Force"
+      latex: "N_{eff} = W - F_{lift} + F_{downforce}"
+      description: "Net vertical load on tires at deployment speed."
+      variables:
+        - symbol: "N_{eff}"
+          description: "Effective normal force on tires"
+          unit: "lbs"
+        - symbol: "W"
+          description: "Vehicle weight"
+          unit: "lbs"
+        - symbol: "F_{downforce}"
+          description: "Aerodynamic downforce (0 for baseline)"
+          unit: "lbs"
+    - id: 5
+      name: "Available Friction"
+      latex: "F_{friction} = \\mu \\times N_{eff}"
+      description: "Maximum longitudinal force tires can resist through friction."
+      variables:
+        - symbol: "\\mu"
+          description: "Tire–surface friction coefficient"
+          unit: "-"
+    - id: 6
+      name: "Speed Conversion"
+      latex: "V_{fps} = V_{mph} \\times \\frac{5280}{3600}"
+      description: "Miles per hour to feet per second."
+
+calculations:
+  - step: 1
+    description: "Convert deployment speeds to ft/s"
+    detail: "V₁ = 200 × 5280/3600 = 293.33 fps; V₂ = 250 × 5280/3600 = 366.67 fps"
+  - step: 2
+    description: "Compute canopy projected areas"
+    detail: "A_single = π(6)² = 113.10 ft²; A_dual_each = π(5)² = 78.54 ft²"
+  - step: 3
+    description: "Dynamic pressure at each speed"
+    detail: "q₁ = 0.5 × 0.002378 × 293.33² = 102.27 psf; q₂ = 0.5 × 0.002378 × 366.67² = 159.79 psf"
+  - step: 4
+    description: "Case 1 — single chute at 200 MPH"
+    detail: "F = 102.27 × 1.4 × 113.10 × 1.5 = 24,289 lbs"
+    code_clause: "Eq. 1"
+  - step: 5
+    description: "Case 2 — single chute at 250 MPH"
+    detail: "F = 159.79 × 1.4 × 113.10 × 1.5 = 37,952 lbs"
+    code_clause: "Eq. 1"
+  - step: 6
+    description: "Case 3 — dual chutes at 250 MPH"
+    detail: "F_each = 159.79 × 1.4 × 78.54 × 1.5 = 26,356 lbs; F_total = 2 × 26,356 = 52,712 lbs"
+    code_clause: "Eq. 2"
+  - step: 7
+    description: "Identify governing case"
+    detail: "Case 3 (dual @ 250 MPH) = 52,712 lbs governs"
+  - step: 8
+    description: "Aerodynamic lift at deployment speeds"
+    detail: "F_lift(200) = 102.27 × 0.35 × 25.0 = 895 lbs; F_lift(250) = 159.79 × 0.35 × 25.0 = 1,398 lbs"
+    code_clause: "Eq. 3"
+  - step: 9
+    description: "Tire traction capacity"
+    detail: "N_eff(200) = 3600 − 895 = 2,705 lbs → friction = 0.8 × 2705 = 2,164 lbs; N_eff(250) = 3600 − 1398 = 2,202 lbs → friction = 0.8 × 2202 = 1,762 lbs"
+    code_clause: "Eq. 4, 5"
+  - step: 10
+    description: "Drag vs. friction assessment"
+    detail: "All cases: F_drag >> F_friction. Frame mounts carry full chute load as tension/shear. Tires cannot resist deployment loads through friction alone."
+
+outputs:
+  - name: "Case 1 — Single Chute Drag (200 MPH)"
+    symbol: "F_1"
+    value: 24289
+    unit: "lbs"
+    notes: "Single 430 Std. 32, 12 ft diameter"
+  - name: "Case 2 — Single Chute Drag (250 MPH)"
+    symbol: "F_2"
+    value: 37952
+    unit: "lbs"
+    notes: "Single 430 Std. 32, 12 ft diameter"
+  - name: "Case 3 — Dual Chute Drag (250 MPH)"
+    symbol: "F_3"
+    value: 52712
+    unit: "lbs"
+    notes: "Two 10 ft chutes (430-28/430-30 Pro-Mod)"
+  - name: "Governing Load Case"
+    symbol: "F_{gov}"
+    value: 52712
+    unit: "lbs"
+    pass_fail: pass
+    notes: "Case 3 — dual chutes at 250 MPH"
+  - name: "Governing Deceleration"
+    symbol: "a_{gov}"
+    value: 14.6
+    unit: "g"
+    notes: "F_gov / W = 52,712 / 3,600"
+  - name: "Aero Lift at 200 MPH"
+    symbol: "F_{lift,200}"
+    value: 895
+    unit: "lbs"
+    notes: "24.9% of vehicle weight"
+  - name: "Aero Lift at 250 MPH"
+    symbol: "F_{lift,250}"
+    value: 1398
+    unit: "lbs"
+    notes: "38.8% of vehicle weight"
+  - name: "Tire Friction Capacity (200 MPH)"
+    symbol: "F_{\\mu,200}"
+    value: 2164
+    unit: "lbs"
+    pass_fail: fail
+    limit: 24289
+    notes: "Friction << drag — frame carries full load"
+  - name: "Tire Friction Capacity (250 MPH)"
+    symbol: "F_{\\mu,250}"
+    value: 1762
+    unit: "lbs"
+    pass_fail: fail
+    limit: 52712
+    notes: "Friction << drag — frame carries full load"
+  - name: "Liftoff Risk"
+    symbol: "-"
+    value: "No"
+    unit: "-"
+    pass_fail: pass
+    notes: "N_eff > 0 at both speeds (no tire liftoff)"
+  - name: "Stroud Recommendation (200 MPH)"
+    symbol: "-"
+    value: "Single — 430 Std. 32"
+    unit: "-"
+    source: "Stroud sizing chart"
+  - name: "Stroud Recommendation (250 MPH)"
+    symbol: "-"
+    value: "Dual — 430-28 / 430-30 Pro-Mod"
+    unit: "-"
+    source: "Stroud sizing chart"
+
+sensitivity:
+  - parameter: "Cd range (±20%)"
+    range: "1.12 – 1.68"
+    result: "Governing force: 42,170 – 63,254 lbs (linear with Cd)"
+  - parameter: "Dual chute diameter"
+    range: "10 – 12 ft each"
+    result: "Dual force at 250 MPH: 52,712 – 75,905 lbs"
+  - parameter: "Lift coefficient Cl"
+    range: "0.20 – 0.50"
+    result: "Effective normal at 250: 2,801 – 1,602 lbs; no liftoff in range"
+
+assumptions:
+  - "Linear aerodynamic drag model valid at deployment speeds (no compressibility)"
+  - "Opening shock factor Cx = 1.5 captures peak transient snatch load"
+  - "Both dual chutes deploy simultaneously with equal drag"
+  - "Sea-level air density (ρ = 0.002378 slug/ft³) — conservative for elevated tracks"
+  - "Vehicle body lift coefficient Cl = 0.35 estimated; no GT1R-specific aero data"
+  - "Zero aerodynamic downforce in baseline (splitter/wing contribution TBD)"
+  - "Tire friction coefficient μ = 0.8 for drag radials on prepped surface"
+  - "Frame attachment points are rigid relative to parachute deployment timescale"
+
+references:
+  - "NHRA Safety Rules — parachute requirements by speed class"
+  - "Stroud Safety Parachute Sizing Chart (2024 catalog)"
+  - "Hoerner, S.F. — Fluid-Dynamic Drag (1965), Chapter 14: Parachutes"
+  - "WRK-5082 — Parachute frame force calculation master work item"
+  - "digitalmodel/src/digitalmodel/structural/parachute/parachute_drag.py"
+  - "digitalmodel/src/digitalmodel/structural/parachute/chute_assessment.py"
+  - "digitalmodel/src/digitalmodel/structural/parachute/stroud_sizing.py"
+
+validation:
+  method: "Unit tests with hand-calculation cross-validation"
+  test_file: "tests/structural/parachute/test_chute_assessment.py"
+  test_count: 51
+  test_categories:
+    - "Unit conversion (MPH ↔ FPS)"
+    - "Chute area geometry"
+    - "Single chute drag (200/250 MPH)"
+    - "Dual chute drag summation"
+    - "Cd sensitivity"
+    - "ChatGPT cross-validation (SI/Imperial)"
+    - "Aero lift (V² scaling)"
+    - "Tire traction (normal force, liftoff flag)"
+    - "Load case orchestration (3 cases)"
+    - "Governing case identification (1% tolerance)"
+    - "YAML export format"
+    - "Stroud sizing chart lookup"
+  benchmark_source: "Hand calculations verified against ChatGPT independent solution"
+
+conclusions:
+  adequacy: |
+    All three load cases have been calculated. The governing case is dual chutes at
+    250 MPH producing 52,712 lbs of drag force (14.6 g deceleration). Frame design
+    must accommodate this load at the parachute mount points.
+  governing_check: "Case 3 — Dual chutes at 250 MPH: 52,712 lbs"
+  recommendations:
+    - "Confirm dual chute diameter with Stroud catalog (430-28 or 430-30 Pro-Mod)"
+    - "Obtain GT1R-specific Cl from CFD or coast-down testing"
+    - "Consider wet pavement traction case (μ = 0.5) for completeness"
+    - "Feed governing load (52,712 lbs) to WRK-1363 (2D frame analysis) and WRK-1364 (3D FEM)"
+  compliance_statement: "Stroud sizing and NHRA dual-chute threshold requirements satisfied"
+
+charts:
+  - id: "drag_vs_speed"
+    title: "Parachute Drag Force vs. Deployment Speed"
+    type: line
+    x_label: "Deployment Speed"
+    y_label: "Drag Force"
+    x_unit: "MPH"
+    y_unit: "lbs"
+    datasets:
+      - label: "Single Chute (12 ft)"
+        data: [[150, 13662], [175, 18591], [200, 24289], [225, 30755], [250, 37952]]
+        color: "#0f766e"
+      - label: "Dual Chute (2×10 ft)"
+        data: [[150, 18969], [175, 25819], [200, 33727], [225, 42693], [250, 52712]]
+        color: "#b91c1c"
+  - id: "drag_vs_friction"
+    title: "Chute Drag vs. Tire Friction Capacity"
+    type: bar
+    x_label: "Load Case"
+    y_label: "Force"
+    x_unit: "-"
+    y_unit: "lbs"
+    datasets:
+      - label: "Drag Force"
+        data: [[1, 24289], [2, 37952], [3, 52712]]
+        color: "#b91c1c"
+      - label: "Tire Friction"
+        data: [[1, 2164], [2, 1762], [3, 1762]]
+        color: "#0f766e"
+
+data_tables:
+  - id: "load_case_summary"
+    title: "Load Case Summary"
+    columns:
+      - name: "Case"
+        unit: "-"
+      - name: "Speed"
+        unit: "MPH"
+      - name: "Config"
+        unit: "-"
+      - name: "Chute Diameter"
+        unit: "ft"
+      - name: "Drag Force"
+        unit: "lbs"
+      - name: "Drag Force"
+        unit: "N"
+      - name: "Deceleration"
+        unit: "g"
+      - name: "Governing"
+        unit: "-"
+    rows:
+      - [1, 200, "Single", 12, 24289, 108045, 6.7, "No"]
+      - [2, 250, "Single", 12, 37952, 168830, 10.5, "No"]
+      - [3, 250, "Dual (2×10)", 10, 52712, 234492, 14.6, "Yes"]
+  - id: "traction_assessment"
+    title: "Tire Traction Assessment at Deployment Speeds"
+    columns:
+      - name: "Speed"
+        unit: "MPH"
+      - name: "Aero Lift"
+        unit: "lbs"
+      - name: "Effective Normal"
+        unit: "lbs"
+      - name: "Friction Capacity"
+        unit: "lbs"
+      - name: "Drag Force (governing)"
+        unit: "lbs"
+      - name: "Drag/Friction Ratio"
+        unit: "-"
+      - name: "Liftoff Risk"
+        unit: "-"
+    rows:
+      - [200, 895, 2705, 2164, 24289, 11.2, "No"]
+      - [250, 1398, 2202, 1762, 52712, 29.9, "No"]
+  - id: "stroud_recommendation"
+    title: "Stroud Sizing Chart — GT1R R35 (3,600 lbs)"
+    columns:
+      - name: "Speed"
+        unit: "MPH"
+      - name: "Config"
+        unit: "-"
+      - name: "Stroud Model"
+        unit: "-"
+      - name: "NHRA Requirement"
+        unit: "-"
+    rows:
+      - [200, "Single", "430 Std. 32", "Single permitted ≤ 200 MPH"]
+      - [250, "Dual", "430-28 / 430-30 Pro-Mod", "Dual mandatory > 200 MPH"]

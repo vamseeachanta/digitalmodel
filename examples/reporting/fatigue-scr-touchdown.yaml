@@ -1,0 +1,140 @@
+metadata:
+  title: "Steel Catenary Riser Touchdown Zone Fatigue Assessment"
+  doc_id: "CALC-002"
+  revision: 1
+  date: "2026-03-13"
+  author: "Vamsee Achanta"
+  status: draft
+  project: "Generic SCR Fatigue"
+  change_log:
+    - rev: 1
+      date: "2026-03-13"
+      description: "Initial calculation"
+
+inputs:
+  - name: "S-N Curve Class"
+    symbol: "C"
+    value: "DNV E"
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1"
+    notes: "Seawater with cathodic protection — welded connection"
+  - name: "Stress Concentration Factor"
+    symbol: "SCF"
+    value: 1.2
+    unit: "-"
+    source: "FEA hot-spot stress extraction"
+  - name: "Design Fatigue Factor"
+    symbol: "DFF"
+    value: 10.0
+    unit: "-"
+    source: "DNV-OS-F201 — safety-critical, no inspection"
+  - name: "Design Life"
+    symbol: "T_d"
+    value: 25
+    unit: "years"
+  - name: "Water Depth"
+    symbol: "d"
+    value: 1500
+    unit: "m"
+  - name: "Riser OD"
+    symbol: "OD"
+    value: 273.1
+    unit: "mm"
+    source: "10.75 inch nominal"
+  - name: "Wall Thickness"
+    symbol: "t"
+    value: 25.4
+    unit: "mm"
+
+methodology:
+  description: |
+    Fatigue assessment of the SCR touchdown zone (TDZ) using
+    Palmgren-Miner linear damage accumulation. Stress time histories
+    are extracted from global riser analysis at the critical TDZ
+    location. Rainflow cycle counting is applied to obtain stress
+    range histograms. The S-N curve class E is used per DNV-RP-C203
+    for welded tubular joints in seawater with cathodic protection.
+    A DFF of 10 is applied for safety-critical locations with no
+    planned inspection access.
+  standard: "DNV-RP-C203 (2021)"
+  equations:
+    - id: 1
+      name: "S-N Curve"
+      latex: "\\log N = \\log \\bar{a} - m \\log \\Delta\\sigma"
+      description: "Standard S-N relationship for fatigue life."
+    - id: 2
+      name: "Palmgren-Miner Damage"
+      latex: "D = \\sum_{i=1}^{k} \\frac{n_i}{N_i}"
+      description: "Cumulative fatigue damage."
+    - id: 3
+      name: "Factored Damage"
+      latex: "D_{factored} = D \\times DFF"
+      description: "Damage multiplied by design fatigue factor."
+    - id: 4
+      name: "Calculated Life"
+      latex: "T_{calc} = \\frac{T_d}{D}"
+      description: "Unfactored fatigue life in years."
+
+outputs:
+  - name: "Total Unfactored Damage"
+    symbol: "D"
+    value: 0.032
+    unit: "-"
+  - name: "Factored Damage"
+    symbol: "D_{factored}"
+    value: 0.32
+    unit: "-"
+    pass_fail: "pass"
+    limit: 1.0
+    notes: "D * DFF = 0.032 * 10.0"
+  - name: "Calculated Fatigue Life"
+    symbol: "T_{calc}"
+    value: 781.3
+    unit: "years"
+  - name: "Minimum Required Life"
+    symbol: "T_{req}"
+    value: 250.0
+    unit: "years"
+    pass_fail: "pass"
+    limit: 250.0
+
+assumptions:
+  - "Linear damage accumulation (Palmgren-Miner) is valid"
+  - "TDZ location is the critical fatigue hot-spot"
+  - "Stress time histories from 3-hour sea states are representative"
+  - "Soil-pipe interaction modelled with non-linear springs"
+  - "No planned inspection access to TDZ"
+
+references:
+  - "DNV-RP-C203 (2021) — Fatigue Design of Offshore Steel Structures"
+  - "DNV-OS-F201 (2021) — Dynamic Risers"
+  - "API RP 2RD — Design of Risers for Floating Production Systems"
+
+charts:
+  - id: "sn_curve"
+    title: "S-N Curve (DNV E — Seawater + CP)"
+    type: log_log
+    x_label: "Stress Range"
+    y_label: "Cycles to Failure"
+    x_unit: "MPa"
+    y_unit: "cycles"
+    x_scale: log
+    y_scale: log
+    datasets:
+      - label: "DNV E Curve"
+        data: [[10, 6.31e8], [20, 7.89e7], [50, 5.05e6], [100, 6.31e5],
+               [200, 7.89e4], [500, 5.05e3]]
+        color: "#0f766e"
+  - id: "damage_by_seastate"
+    title: "Damage Contribution by Sea State"
+    type: bar
+    x_label: "Significant Wave Height"
+    y_label: "Damage Fraction"
+    x_unit: "m"
+    y_unit: "-"
+    datasets:
+      - label: "Damage"
+        data: [[1.0, 0.001], [2.0, 0.003], [3.0, 0.008], [4.0, 0.025],
+               [5.0, 0.065], [6.0, 0.12], [7.0, 0.21], [8.0, 0.32],
+               [9.0, 0.18], [10.0, 0.068]]
+        color: "#8a5a2b"
