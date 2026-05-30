@@ -117,6 +117,36 @@ class TestMassEstimation:
         expected = 0.85 * 100.0 * 20.0 * 5.0 * 1000.0
         assert mass == pytest.approx(expected)
 
+    def test_mass_non_positive_displacement_falls_through_to_cb(self):
+        """Back-compat: displacement<=0 means 'unknown' -> use the Cb formula.
+
+        The HullProfile->PrincipalDimensions wrapper enforces gt=0, so a 0.0
+        displacement must be treated as absent (not raise ValidationError),
+        preserving the original estimate_mass falsy-guard semantics.
+        """
+        profile = _make_barge_profile(
+            length=100.0, beam=20.0, draft=5.0, cb=0.85, displacement=0.0
+        )
+        expected = 0.85 * 100.0 * 20.0 * 5.0 * 1025.0
+        mass = estimate_mass(profile)
+        assert mass == pytest.approx(expected)
+
+    def test_mass_non_positive_block_coefficient_uses_default_cb(self):
+        """Back-compat: a non-positive Cb means 'unknown' -> default Cb=0.65.
+
+        A negative block_coefficient is truthy, so the wrapper must guard on
+        > 0 (not mere truthiness) to avoid raising on PrincipalDimensions(gt=0).
+        """
+        profile = _make_barge_profile(
+            length=100.0, beam=20.0, draft=5.0, cb=0.85, displacement=None
+        )
+        profile_bad_cb = profile.model_copy(
+            update={"block_coefficient": -0.5, "displacement": None}
+        )
+        expected = 0.65 * 100.0 * 20.0 * 5.0 * 1025.0
+        mass = estimate_mass(profile_bad_cb)
+        assert mass == pytest.approx(expected)
+
 
 class TestCoGEstimation:
     """Tests for estimate_cog function."""

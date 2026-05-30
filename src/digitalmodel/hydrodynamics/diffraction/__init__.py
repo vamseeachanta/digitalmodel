@@ -14,6 +14,15 @@ This module provides:
 - AQWA vs OrcaWave comparison framework
 - Geometry quality validation
 - Test utilities for converter validation
+
+Inverse resolver example:
+    from digitalmodel.hydrodynamics.diffraction import (
+        Outcome, ResolverInputs, resolve,
+    )
+    spec, ledger = resolve(
+        Outcome.SHIP_RAOS,
+        ResolverInputs(mesh_file="hull.gdf", water_depth=1200.0),
+    )
 """
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
@@ -176,6 +185,20 @@ except ImportError:
     GmshMeshSpec = None
     MeshExportResult = None
     GMSH_AVAILABLE = False
+
+from digitalmodel.hydrodynamics.diffraction.assumption_ledger import (
+    AssumptionLedger,
+    AssumptionRecord,
+    AssumptionSource,
+    Confidence,
+)
+from digitalmodel.hydrodynamics.diffraction.resolver import (
+    Outcome,
+    PrincipalDimensions,
+    ResolverConfig,
+    ResolverInputs,
+    resolve,
+)
 # Test utilities (optional - for testing without OrcFxAPI)
 try:
     from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
@@ -306,6 +329,17 @@ __all__ = [
     'GmshMeshSpec',
     'MeshExportResult',
     'GMSH_AVAILABLE',
+
+    # Inverse resolver + assumption ledger
+    'AssumptionLedger',
+    'AssumptionRecord',
+    'AssumptionSource',
+    'Confidence',
+    'Outcome',
+    'PrincipalDimensions',
+    'ResolverConfig',
+    'ResolverInputs',
+    'resolve',
 ]
 
 __version__ = "3.0.0"

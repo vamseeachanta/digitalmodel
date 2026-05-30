@@ -545,6 +545,105 @@ def validate_spec(spec_path):
         sys.exit(1)
 
 
+@cli.command("resolve")
+@click.option(
+    "--outcome",
+    type=click.Choice(
+        ["ship_raos", "added_mass_damping", "qtf"], case_sensitive=False
+    ),
+    required=True,
+    help="Target outcome to resolve.",
+)
+@click.option("--mesh", "mesh_file", type=click.Path(), required=True)
+@click.option("--water-depth", required=True, help="Water depth or 'infinite'.")
+@click.option("--out", "out_path", type=click.Path(), required=True)
+@click.option("--loa", type=float, default=None)
+@click.option("--beam", type=float, default=None)
+@click.option("--draft", type=float, default=None)
+@click.option("--displacement", type=float, default=None)
+@click.option("--hull-id", type=str, default=None)
+@click.option(
+    "--inertia-mode",
+    type=click.Choice(["free_floating", "explicit"], case_sensitive=False),
+    default="free_floating",
+    show_default=True,
+)
+def resolve_cmd(
+    outcome,
+    mesh_file,
+    water_depth,
+    out_path,
+    loa,
+    beam,
+    draft,
+    displacement,
+    hull_id,
+    inertia_mode,
+):
+    """Resolve sparse inputs into a complete DiffractionSpec YAML."""
+    from digitalmodel.hydrodynamics.diffraction.resolver import (
+        PrincipalDimensions,
+        ResolverInputs,
+        resolve,
+    )
+
+    dimensions = None
+    supplied_dims = [loa is not None, beam is not None, draft is not None]
+    if any(supplied_dims):
+        if not all(supplied_dims):
+            click.echo(
+                click.style(
+                    "[ERROR] --loa, --beam, and --draft must be supplied together",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            sys.exit(1)
+        dimensions = PrincipalDimensions(
+            loa=loa,
+            beam=beam,
+            draft=draft,
+            displacement_t=displacement,
+        )
+
+    try:
+        wd: float | str
+        if water_depth.lower() in ("infinite", "inf", "deep"):
+            wd = water_depth
+        else:
+            # Inside try so a malformed value yields the formatted [ERROR]
+            # exit-1 path rather than an uncaught ValueError traceback.
+            wd = float(water_depth)
+        spec, ledger = resolve(
+            outcome,
+            ResolverInputs(
+                dimensions=dimensions,
+                mesh_file=mesh_file,
+                water_depth=wd,
+                hull_id=hull_id,
+                inertia_mode=inertia_mode,
+            ),
+        )
+        out = Path(out_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        spec.to_yaml(out)
+        click.echo(click.style("[OK] Resolved diffraction spec.", fg="green"))
+        click.echo(f"Spec: {out}")
+        click.echo("Assumptions:")
+        if not ledger:
+            click.echo("  No assumed values — all inputs were user-supplied.")
+        else:
+            for record in ledger.rows():
+                click.echo(
+                    "  - "
+                    f"{record.field}: {record.value} "
+                    f"[{record.source.value}, {record.confidence.value}]"
+                )
+    except Exception as e:
+        click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
+        sys.exit(1)
+
+
 # ---------------------------------------------------------------------------
 # WRK-029: OrcaWave runner command
 # ---------------------------------------------------------------------------
