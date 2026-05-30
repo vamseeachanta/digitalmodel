@@ -28,17 +28,14 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     VesselSpec,
     WaveHeadingSpec,
 )
-from digitalmodel.hydrodynamics.diffraction.parametric_spec_generator import (
-    GRAVITY,
-    RHO_SEAWATER,
-    estimate_cog_from_dimensions,
-    estimate_mass_from_dimensions,
-    estimate_radii_of_gyration_from_dimensions,
-)
-from digitalmodel.hydrodynamics.hull_library.lookup import (
-    HullLookup,
-    HullLookupTarget,
-)
+# Physical constants are mirrored locally and the estimators + HullLookup are
+# imported lazily inside the functions that use them. Importing
+# parametric_spec_generator or hull_library at MODULE load pulls in
+# hull_library.mesh_generator -> bemrosetta -> diffraction.__init__ -> this
+# resolver (which the diffraction package eagerly imports), closing a circular
+# import. Keeping these edges lazy breaks the cycle without changing behaviour.
+RHO_SEAWATER = 1025.0  # kg/m^3
+GRAVITY = 9.80665  # m/s^2
 
 
 class Outcome(str, Enum):
@@ -360,6 +357,11 @@ def _resolve_inertia(
     hull_lookup: Any,
     ledger: AssumptionLedger,
 ) -> None:
+    from digitalmodel.hydrodynamics.diffraction.parametric_spec_generator import (
+        estimate_cog_from_dimensions,
+        estimate_radii_of_gyration_from_dimensions,
+    )
+
     vessel = _nested(data, "vessel")
     inertia = _nested(vessel, "inertia")
     inertia.setdefault("mode", inputs.inertia_mode)
@@ -476,6 +478,11 @@ def _lookup_values(
 ) -> dict[str, Any] | None:
     if dims is None:
         return None
+    from digitalmodel.hydrodynamics.hull_library.lookup import (
+        HullLookup,
+        HullLookupTarget,
+    )
+
     lookup = hull_lookup or HullLookup()
     match = lookup.get_hull_form(
         HullLookupTarget(
@@ -527,6 +534,10 @@ def _mass_from_sources(
         )
     if dims is None:
         raise ValueError("dimensions are required to estimate mass")
+    from digitalmodel.hydrodynamics.diffraction.parametric_spec_generator import (
+        estimate_mass_from_dimensions,
+    )
+
     return (
         estimate_mass_from_dimensions(dims, config.water_density),
         AssumptionSource.ESTIMATED_FROM_DATA,

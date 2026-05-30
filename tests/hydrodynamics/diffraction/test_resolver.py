@@ -271,6 +271,30 @@ def test_inertia_mode_free_floating_vs_explicit(tmp_path: Path) -> None:
     )
 
 
+def test_no_circular_import_when_hull_library_imported_first() -> None:
+    """Guard against the resolver re-introducing a circular import.
+
+    The diffraction package eagerly imports ``resolver``; if ``resolver``
+    imported ``parametric_spec_generator`` / ``hull_library`` at module load,
+    the chain hull_library.mesh_generator -> bemrosetta -> diffraction.__init__
+    -> resolver -> parametric_spec_generator -> hull_library.mesh_generator
+    (half-initialised) raises ImportError. Those edges are lazy; this checks it
+    in a fresh interpreter (same-process import caching would mask the cycle).
+    """
+    import subprocess
+    import sys
+
+    code = (
+        "import digitalmodel.hydrodynamics.hull_library.mesh_generator\n"
+        "import digitalmodel.hydrodynamics.diffraction\n"
+        "from digitalmodel.hydrodynamics.diffraction import resolve, Outcome\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_explicit_inertia_tensor_origin_is_centre_of_mass(tmp_path: Path) -> None:
     mesh = _write_box_mesh(tmp_path / "box.gdf")
     spec, _ = resolve(
