@@ -30,6 +30,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import re
 import sqlite3
 import subprocess
 from datetime import datetime, timezone
@@ -43,6 +44,21 @@ except ImportError as exc:  # pragma: no cover — real dep required.
 
 
 DEMO_ID = "demo_01"
+
+# A run_id becomes a directory name under the Store (<base_dir>/parametric/demo_01/<run_id>/),
+# so it must be a single safe path segment. This is a defense-in-depth guard (D1): the CLI also
+# validates, but the Store must never be written outside its tree regardless of the caller.
+_RUN_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def _validate_run_id(run_id: str) -> str:
+    """Reject a run_id that is not a single safe path segment (D1, path-traversal guard)."""
+    if not isinstance(run_id, str) or run_id in ("", ".", "..") or not _RUN_ID_RE.match(run_id):
+        raise ValueError(
+            f"invalid run_id {run_id!r}: must match [A-Za-z0-9._-]+ and may not be "
+            "'', '.', or '..' (it becomes a directory name in the Results Store)."
+        )
+    return run_id
 
 # Status keys, kept local so the module is importable without the demo module.
 _STATUS_PASS = "PASS"
@@ -391,6 +407,8 @@ def write_run(
 
     Returns the per-run directory (``<base_dir>/parametric/demo_01/<run_id>/``).
     """
+    # D1 defense-in-depth: never let a caller write the Store outside its own tree.
+    _validate_run_id(run_id)
     base_dir = Path(base_dir)
     run_dir = _store_root(base_dir) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)

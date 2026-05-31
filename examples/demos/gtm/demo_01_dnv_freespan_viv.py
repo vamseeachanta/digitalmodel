@@ -35,6 +35,7 @@ import argparse
 import json
 import logging
 import math
+import re
 import sys
 import time
 import warnings
@@ -133,6 +134,29 @@ FROZEN_RESULT_KEYS = frozenset({
 
 # Default run identifier for the committed Baseline Run (the reference seed for the Store).
 BASELINE_RUN_ID = "baseline"
+
+# Allowed run_id character set. A run_id becomes a filesystem directory name under the Store
+# (<base_dir>/parametric/demo_01/<run_id>/) and the per-run report dir, so it must be a single
+# safe path segment: no separators, no "." / ".." traversal, no empty string (D1, path-traversal).
+_RUN_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def validate_run_id(run_id: str) -> str:
+    """Validate a run_id is a single safe path segment; return it unchanged if valid.
+
+    Rejects empty string, ".", "..", and anything containing a character outside
+    ``[A-Za-z0-9._-]`` (e.g. "/" or "\\" path separators). Raises ValueError with a clean
+    message on rejection. "baseline" and ordinary names like "acme_q2" are accepted.
+    """
+    if not isinstance(run_id, str) or run_id in ("", ".", "..") or not _RUN_ID_RE.match(run_id):
+        raise ValueError(
+            f"invalid --run-id {run_id!r}: must match [A-Za-z0-9._-]+ and may not be "
+            "'', '.', or '..' (it becomes a directory name in the Results Store)."
+        )
+    return run_id
+
+# Demo identifier — the per-run report/store partition name (matches results_store.DEMO_ID).
+DEMO_ID = "demo_01"
 
 # Status labels
 STATUS_PASS = "PASS"
@@ -1117,8 +1141,15 @@ def build_report(
     summary_df: pd.DataFrame,
     results: List[Dict],
     total_cases: int,
+    output_path: Optional[Path] = None,
 ) -> str:
-    """Build the branded HTML report."""
+    """Build the branded HTML report.
+
+    ``output_path`` defaults (inside the signature) to the legacy Baseline location so the
+    Baseline call stays byte-identical; a named Run passes a per-run path (BD per-run report).
+    """
+    if output_path is None:
+        output_path = OUTPUT_DIR / "demo_01_freespan_report.html"
     report = GTMReportBuilder(
         title="DNV Freespan / VIV Screening Analysis",
         subtitle=f"~{total_cases} parametric cases across 3 pipe sizes and rigid jumpers",
@@ -1223,7 +1254,7 @@ def build_report(
     ])
 
     # Build and save
-    output_path = OUTPUT_DIR / "demo_01_freespan_report.html"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     html = report.build(output_path)
     print(f"  Report saved to: {output_path}")
     return html
@@ -1313,12 +1344,194 @@ def parse_args() -> argparse.Namespace:
         help="Path to a Sweep Config yaml (defaults to the committed "
              "inputs/demo_01_freespan.yml Baseline).",
     )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=BASELINE_RUN_ID,
+        help="Run identifier for the Results Store + per-run report dir "
+             f"(default '{BASELINE_RUN_ID}', the Baseline Run). A named run writes its report "
+             "to output/parametric/demo_01/<run_id>/report.html and seeds <run_id> in the Store.",
+    )
     return parser.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Results Store subcommands: `lookup` + `rebuild-db` (BD-1..BD-3, N2)
+#
+# These are dispatched by an argv-sniff at the TOP of main() / __main__ so they NEVER touch
+# the existing sweep parser — the no-arg / --from-cache / --force / --input sweep path stays
+# provably byte-identical. Each subcommand builds its OWN ArgumentParser over sys.argv[2:].
+# ---------------------------------------------------------------------------
+
+# Columns shown by `lookup`, in a clean operator-facing order.
+_LOOKUP_DISPLAY_COLS = [
+    "case_id", "pipe_type", "nominal_size", "span_m", "v_current_ms",
+    "e_over_d", "f_n_hz", "v_r", "a_over_d", "status", "max_allowable_span_m",
+]
+
+
+def lookup_main(argv: List[str]) -> int:
+    """`lookup` subcommand: read-only filtered SELECT over the Results Store cache (BD-2/BD-3).
+
+    Returns a process exit code (0 = ok, non-zero = error such as a missing db).
+    """
+    import sqlite3
+
+    import results_store as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_01_dnv_freespan_viv.py lookup",
+        description="Look up cases in the demo_01 Results Store (read-only SQLite cache).",
+    )
+    parser.add_argument("--run-id", type=str, default=BASELINE_RUN_ID,
+                        help=f"Run to query (default '{BASELINE_RUN_ID}').")
+    parser.add_argument("--size", type=str, default=None,
+                        help='Nominal size filter, INCLUDING the "in" suffix (e.g. "12in").')
+    parser.add_argument("--current", type=float, default=None,
+                        help="Current velocity filter in m/s (e.g. 0.6).")
+    parser.add_argument("--gap", type=str, default=None,
+                        help='Gap ratio e/D filter; finite (e.g. "1.0") or "inf" for mid-water.')
+    parser.add_argument("--span", type=int, default=None, help="Span length filter in metres.")
+    parser.add_argument("--status", type=str, default=None,
+                        help="Status filter (PASS / INLINE_ONLY / FAIL_CF / FAIL_LOCKIN).")
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    # D1: validate run_id before using it (clean error + non-zero exit, no traceback).
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        return 2
+
+    db_path = rs._db_path(args.base_dir)
+    if not db_path.exists():
+        # BD-3: do NOT create the db; clear, actionable message; non-zero exit.
+        print(
+            f"No results.db at {db_path} — run a sweep first "
+            f"(e.g. `... --run-id {BASELINE_RUN_ID}`) or `... rebuild-db`."
+        )
+        return 1
+
+    # BD-3: open strictly read-only via a file: URI so a query never mutates/creates the cache.
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Distinct message for an unknown run_id vs. a zero-row filter result.
+        known_runs = [r[0] for r in conn.execute("SELECT run_id FROM runs ORDER BY run_id")]
+        if args.run_id not in known_runs:
+            available = ", ".join(known_runs) if known_runs else "(none)"
+            print(f"run_id '{args.run_id}' not found; available: {available}")
+            return 1
+
+        # BD-2: build a parameterized WHERE, canonicalizing each filter to the STORED form.
+        where = ["run_id = ?"]
+        params: List[Any] = [args.run_id]
+        if args.size is not None:
+            where.append("nominal_size = ?")
+            params.append(str(args.size))
+        if args.current is not None:
+            where.append("v_current_ms = ?")
+            params.append(float(args.current))
+        if args.gap is not None:
+            where.append("e_over_d = ?")
+            # D2: a bad --gap value (not a number or 'inf') gets a clean message + non-zero
+            # exit, not a raw ValueError traceback.
+            try:
+                gap_token = rs._e_over_d_token(args.gap)  # "1.0"/"inf" canonical TEXT token
+            except ValueError:
+                print(f"invalid --gap value: {args.gap} (expected a number or 'inf')")
+                return 2
+            params.append(gap_token)
+        if args.span is not None:
+            where.append("span_m = ?")
+            params.append(int(args.span))
+        if args.status is not None:
+            where.append("status = ?")
+            params.append(str(args.status))
+
+        cols = ", ".join(_LOOKUP_DISPLAY_COLS)
+        sql = (
+            f"SELECT {cols} FROM cases WHERE {' AND '.join(where)} "
+            "ORDER BY pipe_type, nominal_size, span_m, v_current_ms, e_over_d"
+        )
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        print("0 cases match the given filters.")
+        return 0
+
+    # Clean fixed-width table.
+    widths = [len(c) for c in _LOOKUP_DISPLAY_COLS]
+    str_rows = [[("" if v is None else str(v)) for v in row] for row in rows]
+    for r in str_rows:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    header = "  ".join(c.ljust(widths[i]) for i, c in enumerate(_LOOKUP_DISPLAY_COLS))
+    print(header)
+    print("  ".join("-" * widths[i] for i in range(len(_LOOKUP_DISPLAY_COLS))))
+    for r in str_rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(r)))
+    print(f"\n{len(rows)} case(s) matched.")
+    return 0
+
+
+def rebuild_main(argv: List[str]) -> int:
+    """`rebuild-db` subcommand: regenerate the SQLite cache + index.csv from the text source (N2)."""
+    import sqlite3
+
+    import results_store as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_01_dnv_freespan_viv.py rebuild-db",
+        description="Rebuild the demo_01 Results Store SQLite cache + index.csv from "
+                    "the per-run cases.csv / manifest.json text source of truth.",
+    )
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    db_path = rs.rebuild_db(args.base_dir)
+    print(f"Results Store rebuilt: {db_path}")
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        n_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+        n_cases = conn.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        per_run = conn.execute(
+            "SELECT run_id, COUNT(*) FROM cases GROUP BY run_id ORDER BY run_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    print(f"  runs: {n_runs}   cases: {n_cases}")
+    for run_id, n in per_run:
+        print(f"    {run_id}: {n} cases")
+    return 0
 
 
 def main() -> None:
     """Run the full demo pipeline."""
     args = parse_args()
+
+    # D1: validate run_id BEFORE any run dir / report path is built from it (path-traversal /
+    # empty / collision guard). Clean error + non-zero exit, never a raw traceback.
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(2)
+
+    # D4: --from-cache regenerates the Baseline report only; a named --run-id produces no
+    # Results Store row in the cache branch (sweep_config is None). Warn, don't change behavior.
+    if args.from_cache and args.run_id != BASELINE_RUN_ID:
+        warnings.warn(
+            f"--from-cache regenerates the baseline report only; --run-id '{args.run_id}' "
+            "will not produce a Results Store row (run without --from-cache to compute a "
+            "named run).",
+            stacklevel=2,
+        )
+
     start_time = time.time()
 
     print("=" * 60)
@@ -1425,7 +1638,16 @@ def main() -> None:
 
     # 5. Build HTML report
     print("\n[5/7] Building HTML report...")
-    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, results, total_cases)
+    # Baseline Run keeps the legacy output path (byte-identical); a named Run writes a per-run
+    # report under output/parametric/demo_01/<run_id>/report.html.
+    if args.run_id == BASELINE_RUN_ID:
+        report_path: Optional[Path] = None  # build_report defaults to the legacy Baseline path
+    else:
+        report_path = OUTPUT_DIR / "parametric" / DEMO_ID / args.run_id / "report.html"
+    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, results, total_cases,
+                 output_path=report_path)
+    if report_path is not None:
+        print(f"  Per-run report written to: {report_path}")
 
     # 6. Save JSON results
     print("\n[6/7] Saving JSON results...")
@@ -1447,7 +1669,7 @@ def main() -> None:
         from results_store import write_run
 
         run_dir = write_run(
-            run_id=BASELINE_RUN_ID,
+            run_id=args.run_id,
             resolved_config=sweep_config,
             df=df,
             summary_df=summary_df,
@@ -1467,4 +1689,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # Argv-sniff dispatch (BD-1): the `lookup` / `rebuild-db` subcommands are handled by their
+    # OWN parsers over sys.argv[2:] and NEVER reach the sweep parser, so the no-arg / --from-cache
+    # / --force / --input sweep path is provably untouched and byte-identical.
+    if len(sys.argv) > 1 and sys.argv[1] == "lookup":
+        sys.exit(lookup_main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "rebuild-db":
+        sys.exit(rebuild_main(sys.argv[2:]))
+    else:
+        main()
