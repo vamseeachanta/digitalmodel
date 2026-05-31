@@ -37,6 +37,7 @@ import logging
 import math
 import sys
 import time
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -80,6 +81,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 RESULTS_DIR = SCRIPT_DIR / "results"
+INPUTS_DIR = SCRIPT_DIR / "inputs"
+
+# Committed default Sweep Config — the Baseline Run (reproduces today's exact 680-case
+# matrix). Loaded only inside the recompute branch so --from-cache works without it (NBC-1).
+DEFAULT_SWEEP_CONFIG_PATH = INPUTS_DIR / "demo_01_freespan.yml"
 
 # Physical constants
 SEAWATER_DENSITY = 1025.0       # kg/m3
@@ -141,16 +147,47 @@ STATUS_NUMERIC = {
 # Data loaders
 # ---------------------------------------------------------------------------
 
-def load_pipe_catalog() -> Tuple[Dict, List[Dict]]:
-    """Load pipeline catalog from JSON. Returns (full_data, pipes_list)."""
-    with open(DATA_DIR / "pipelines.json", "r") as f:
+def _resolve_catalog_path(config_dir: Path, catalog_ref: str) -> Path:
+    """Resolve a Sweep Config catalog reference to a concrete file path (FIX 2).
+
+    An absolute ``catalog_ref`` is used as-is. A relative one is resolved against the yaml
+    file's own directory (``config_dir``) so an ``--input`` yaml's catalogs take effect.
+    The committed Baseline yaml (in inputs/) references ``data/pipelines.json`` while the
+    catalog actually lives under ``SCRIPT_DIR/data`` (== DATA_DIR, a sibling of inputs/);
+    if the yaml-relative path does not resolve to an existing file we fall back to
+    ``DATA_DIR/<basename>`` so the Baseline run stays byte-identical.
+    """
+    ref = Path(catalog_ref)
+    candidate = ref if ref.is_absolute() else (config_dir / ref)
+    candidate = candidate.resolve()
+    if candidate.is_file():
+        return candidate
+    fallback = DATA_DIR / ref.name
+    return fallback.resolve()
+
+
+def load_pipe_catalog(path: Optional[Path] = None) -> Tuple[Dict, List[Dict]]:
+    """Load pipeline catalog from JSON. Returns (full_data, pipes_list).
+
+    ``path`` is the resolved catalog file; when omitted it defaults to today's
+    ``DATA_DIR/pipelines.json`` so the Baseline is unchanged.
+    """
+    if path is None:
+        path = DATA_DIR / "pipelines.json"
+    with open(path, "r") as f:
         data = json.load(f)
     return data, data["pipes"]
 
 
-def load_jumper_catalog() -> Tuple[Dict, Dict]:
-    """Load jumper catalog from JSON. Returns (full_data, common_properties)."""
-    with open(DATA_DIR / "rigid_jumpers.json", "r") as f:
+def load_jumper_catalog(path: Optional[Path] = None) -> Tuple[Dict, Dict]:
+    """Load jumper catalog from JSON. Returns (full_data, common_properties).
+
+    ``path`` is the resolved catalog file; when omitted it defaults to today's
+    ``DATA_DIR/rigid_jumpers.json`` so the Baseline is unchanged.
+    """
+    if path is None:
+        path = DATA_DIR / "rigid_jumpers.json"
+    with open(path, "r") as f:
         data = json.load(f)
     return data, data["common_properties"]
 
@@ -352,11 +389,16 @@ def calc_max_allowable_span(
     e_over_d: float = 1.0,
     content_density: float = CONTENT_DENSITY,
     coating_thickness_m: float = 0.003,
+    c_n: float = C_N_DEFAULT,
 ) -> float:
     """Find max span length before cross-flow VIV onset.
 
     Iteratively solves: V_R(L) = V_R_onset_CF for span length L.
     Uses bisection on span length from 1 m to 500 m.
+
+    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
+    ``boundary_condition`` label). For the Baseline it equals C_N_PINNED == C_N_DEFAULT,
+    so behaviour is byte-identical to the pre-yaml run.
 
     Returns max allowable span in metres.
     """
@@ -375,6 +417,7 @@ def calc_max_allowable_span(
             od_m, wt_m, l_mid,
             content_density=content_density,
             coating_thickness_m=coating_thickness_m,
+            c_n=c_n,
         )
         v_r = calc_reduced_velocity(v_current, f_n, od_m)
 
@@ -400,15 +443,20 @@ def run_single_case(
     e_over_d: float,
     content_density: float = CONTENT_DENSITY,
     coating_thickness_m: float = 0.003,
+    c_n: float = C_N_DEFAULT,
 ) -> Dict[str, Any]:
     """Run freespan VIV screening for a single parametric case.
 
-    Returns a dict with all inputs and computed results.
+    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
+    ``boundary_condition`` label; for the Baseline it equals C_N_PINNED == C_N_DEFAULT, so
+    behaviour is byte-identical to the pre-yaml run). Returns a dict with all inputs and
+    computed results.
     """
     f_n = calc_natural_frequency(
         od_m, wt_m, span_m,
         content_density=content_density,
         coating_thickness_m=coating_thickness_m,
+        c_n=c_n,
     )
     v_r = calc_reduced_velocity(v_current, f_n, od_m)
     status, a_over_d = screen_viv(v_r, e_over_d)
@@ -417,6 +465,7 @@ def run_single_case(
         e_over_d=e_over_d,
         content_density=content_density,
         coating_thickness_m=coating_thickness_m,
+        c_n=c_n,
     )
 
     # Effective mass for reference
@@ -447,81 +496,152 @@ def run_single_case(
 # Parametric sweep
 # ---------------------------------------------------------------------------
 
+def _select_wt(pipe: Dict, wt_selection: str) -> Dict:
+    """Resolve a wt_selection LABEL to a wall-thickness entry.
+
+    Baseline uses "thinnest" (worst case for VIV) — identical to the pre-yaml run.
+    """
+    if wt_selection == "thinnest":
+        return get_thinnest_wt(pipe)
+    if wt_selection == "thickest":
+        return get_thickest_wt(pipe)
+    raise ValueError(
+        f"wt_selection {wt_selection!r} not supported by run_parametric_sweep "
+        "(expected 'thinnest' or 'thickest'; 'explicit' is a Phase-2 follow-up)."
+    )
+
+
+def _config_diverges_from_chart_defaults(config: "ResolvedSweepConfig") -> bool:
+    """True if any promoted axis is multi-valued OR differs from the module default (FIX 3).
+
+    Phase-1 charts/summary/metadata reflect the module defaults (CONTENT_DENSITY, thinnest
+    WT, pinned c_n). If either sub-sweep promotes content_density, boundary_condition, or
+    wt_selection to a multi-valued axis OR to a single non-default value, the charts/summary
+    no longer reflect the config — main() warns. The Baseline (all three length-1 at the
+    module defaults) does NOT diverge, so no warning fires and stdout stays identical.
+    """
+    for sub in (config.pipelines, config.jumpers):
+        if list(sub.content_density_kg_m3) != [CONTENT_DENSITY]:
+            return True
+        if list(sub.boundary_condition_labels) != ["pinned"]:
+            return True
+        if list(sub.wt_selection) != ["thinnest"]:
+            return True
+    return False
+
+
 def run_parametric_sweep(
     pipe_catalog: List[Dict],
     jumper_props: Dict,
+    config: "ResolvedSweepConfig",
 ) -> Tuple[List[Dict], pd.DataFrame]:
     """Run full parametric sweep across pipelines and jumpers.
 
+    The sweep axes come from the resolved Sweep Config (``config``), iterated as a
+    cross-product. The nesting order preserves today's EXACT emission order (BD-4):
+    the pipelines sub-sweep runs entirely before the jumpers sub-sweep, and within each
+    sub-sweep the order is ``size -> span -> current -> gap``. The three promoted axes
+    (content_density, boundary_condition coefficient, wt_selection) are iterated in the
+    OUTERMOST positions; being length-1 in the Baseline they add zero iterations and do
+    not perturb the PL-/JM- case numbering.
+
     Returns (results_list, results_dataframe).
     """
+    # Phase-1: only cases[] is config-driven; charts/summary/metadata reflect module-default
+    # constants (CONTENT_DENSITY, thinnest WT, pinned c_n). Full config-threading is a
+    # Phase-2 follow-up (see docs/adr/0002). main() emits a runtime warning when the resolved
+    # config diverges from those defaults so the chart/summary mismatch is not silent.
     results: List[Dict[str, Any]] = []
     case_id = 0
 
+    pl = config.pipelines
+    jm = config.jumpers
+
     # --- Pipeline cases ---
-    total_pipeline = len(PIPELINE_SIZES) * len(PIPELINE_SPAN_LENGTHS_M) * len(CURRENT_VELOCITIES_MS) * len(PIPELINE_GAP_RATIOS)
+    # Promoted axes (content_density / boundary-condition c_n / wt_selection) multiply in
+    # as the outermost factors; length-1 in the Baseline => total == today's 480.
+    total_pipeline = (
+        len(pl.content_density_kg_m3) * len(pl.c_n_values) * len(pl.wt_selection)
+        * len(pl.sizes) * len(pl.span_lengths_m)
+        * len(pl.current_velocities_ms) * len(pl.gap_ratios)
+    )
     print(f"  Pipeline cases: {total_pipeline}")
 
-    for size_name in PIPELINE_SIZES:
-        pipe = get_pipe_by_size(pipe_catalog, size_name)
-        if pipe is None:
-            logger.warning("Pipe size %s not found in catalog, skipping", size_name)
-            continue
+    for content_density in pl.content_density_kg_m3:
+        for c_n in pl.c_n_values:
+            for wt_sel in pl.wt_selection:
+                for size_name in pl.sizes:
+                    pipe = get_pipe_by_size(pipe_catalog, size_name)
+                    if pipe is None:
+                        logger.warning("Pipe size %s not found in catalog, skipping", size_name)
+                        continue
 
-        od_m = pipe["od_m"]
-        # Use thinnest WT for worst-case VIV screening (lowest stiffness)
-        wt_entry = get_thinnest_wt(pipe)
-        wt_m = wt_entry["wt_m"]
-        coating_t = pipe["anti_corrosion_coating"]["thickness_m"]
+                    od_m = pipe["od_m"]
+                    # Worst-case WT per the resolved wt_selection (Baseline: thinnest).
+                    wt_entry = _select_wt(pipe, wt_sel)
+                    wt_m = wt_entry["wt_m"]
+                    coating_t = pipe["anti_corrosion_coating"]["thickness_m"]
 
-        for span_m in PIPELINE_SPAN_LENGTHS_M:
-            for v_curr in CURRENT_VELOCITIES_MS:
-                for e_d in PIPELINE_GAP_RATIOS:
-                    case_id += 1
-                    result = run_single_case(
-                        pipe_type="pipeline",
-                        nominal_size=size_name,
-                        od_m=od_m,
-                        wt_m=wt_m,
-                        span_m=span_m,
-                        v_current=v_curr,
-                        e_over_d=e_d,
-                        content_density=CONTENT_DENSITY,
-                        coating_thickness_m=coating_t,
-                    )
-                    result["case_id"] = f"PL-{case_id:04d}"
-                    result["schedule"] = wt_entry["schedule_approx"]
-                    results.append(result)
+                    for span_m in pl.span_lengths_m:
+                        for v_curr in pl.current_velocities_ms:
+                            for e_d in pl.gap_ratios:
+                                case_id += 1
+                                result = run_single_case(
+                                    pipe_type="pipeline",
+                                    nominal_size=size_name,
+                                    od_m=od_m,
+                                    wt_m=wt_m,
+                                    span_m=span_m,
+                                    v_current=v_curr,
+                                    e_over_d=e_d,
+                                    content_density=content_density,
+                                    coating_thickness_m=coating_t,
+                                    c_n=c_n,
+                                )
+                                result["case_id"] = f"PL-{case_id:04d}"
+                                result["schedule"] = wt_entry["schedule_approx"]
+                                results.append(result)
 
     pipeline_count = case_id
     print(f"    Completed {pipeline_count} pipeline cases")
 
     # --- Jumper cases ---
-    total_jumper = len(JUMPER_SPAN_LENGTHS_M) * len(CURRENT_VELOCITIES_MS) * len(JUMPER_GAP_RATIOS)
+    # The rigid jumper is single-bodied (common_properties); the `sizes` axis is length-1
+    # and selects the same body each time. Promoted axes again outermost / length-1.
+    total_jumper = (
+        len(jm.content_density_kg_m3) * len(jm.c_n_values) * len(jm.wt_selection)
+        * len(jm.sizes) * len(jm.span_lengths_m)
+        * len(jm.current_velocities_ms) * len(jm.gap_ratios)
+    )
     print(f"  Jumper cases: {total_jumper}")
 
     od_m_j = jumper_props["od_m"]
     wt_m_j = jumper_props["wt_m"]
     coating_t_j = jumper_props["anti_corrosion_coating"]["thickness_m"]
 
-    for span_m in JUMPER_SPAN_LENGTHS_M:
-        for v_curr in CURRENT_VELOCITIES_MS:
-            for e_d in JUMPER_GAP_RATIOS:
-                case_id += 1
-                result = run_single_case(
-                    pipe_type="jumper",
-                    nominal_size="8in-jumper",
-                    od_m=od_m_j,
-                    wt_m=wt_m_j,
-                    span_m=span_m,
-                    v_current=v_curr,
-                    e_over_d=e_d,
-                    content_density=CONTENT_DENSITY,
-                    coating_thickness_m=coating_t_j,
-                )
-                result["case_id"] = f"JM-{case_id - pipeline_count:04d}"
-                result["schedule"] = "Sch 120 (jumper)"
-                results.append(result)
+    for content_density in jm.content_density_kg_m3:
+        for c_n in jm.c_n_values:
+            for _wt_sel in jm.wt_selection:
+                for _size_name in jm.sizes:
+                    for span_m in jm.span_lengths_m:
+                        for v_curr in jm.current_velocities_ms:
+                            for e_d in jm.gap_ratios:
+                                case_id += 1
+                                result = run_single_case(
+                                    pipe_type="jumper",
+                                    nominal_size="8in-jumper",
+                                    od_m=od_m_j,
+                                    wt_m=wt_m_j,
+                                    span_m=span_m,
+                                    v_current=v_curr,
+                                    e_over_d=e_d,
+                                    content_density=content_density,
+                                    coating_thickness_m=coating_t_j,
+                                    c_n=c_n,
+                                )
+                                result["case_id"] = f"JM-{case_id - pipeline_count:04d}"
+                                result["schedule"] = "Sch 120 (jumper)"
+                                results.append(result)
 
     jumper_count = case_id - pipeline_count
     print(f"    Completed {jumper_count} jumper cases")
@@ -1156,6 +1276,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Force recalculation even if cached results exist.",
     )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=None,
+        help="Path to a Sweep Config yaml (defaults to the committed "
+             "inputs/demo_01_freespan.yml Baseline).",
+    )
     return parser.parse_args()
 
 
@@ -1169,12 +1296,36 @@ def main() -> None:
     print("  DNV-RP-F105 Simplified Methodology")
     print("=" * 60)
 
+    # Decide cache-vs-recompute up front (no printed output here, so order is unchanged).
+    # The Sweep Config is loaded ONLY in the recompute branch so --from-cache works
+    # without the yaml (NBC-1). When recomputing, the resolved catalog paths from the
+    # config drive catalog loading (FIX 2); the cache branch keeps today's defaults.
+    results_path = RESULTS_DIR / "demo_01_freespan_results.json"
+    use_cache = args.from_cache and results_path.exists() and not args.force
+
+    sweep_config = None
+    pipe_catalog_path: Optional[Path] = None
+    jumper_catalog_path: Optional[Path] = None
+    if not use_cache:
+        from sweep_config import load_sweep_config
+
+        config_path = args.input or DEFAULT_SWEEP_CONFIG_PATH
+        sweep_config = load_sweep_config(config_path)
+        # Resolve relative catalog paths RELATIVE TO THE YAML FILE'S OWN DIRECTORY (not cwd),
+        # so an --input yaml's catalogs take effect. The committed Baseline yaml lives in
+        # inputs/ but references data/pipelines.json (which sits under SCRIPT_DIR/data, a
+        # sibling of inputs/, == today's DATA_DIR). To keep the Baseline byte-identical, fall
+        # back to DATA_DIR/<basename> when the yaml-relative path does not resolve to a file.
+        config_dir = Path(config_path).resolve().parent
+        pipe_catalog_path = _resolve_catalog_path(config_dir, sweep_config.pipelines_catalog)
+        jumper_catalog_path = _resolve_catalog_path(config_dir, sweep_config.jumpers_catalog)
+
     # 1. Load input data
     print("\n[1/7] Loading input data...")
-    pipe_data, pipe_catalog = load_pipe_catalog()
+    pipe_data, pipe_catalog = load_pipe_catalog(pipe_catalog_path)
     print(f"  Loaded {len(pipe_catalog)} pipe sizes from pipelines.json")
 
-    jumper_data, jumper_props = load_jumper_catalog()
+    jumper_data, jumper_props = load_jumper_catalog(jumper_catalog_path)
     print(f"  Loaded jumper catalog: {jumper_props['nominal_size']} "
           f"(OD={jumper_props['od_mm']}mm, WT={jumper_props['wt_mm']}mm)")
 
@@ -1188,9 +1339,6 @@ def main() -> None:
             print(f"  {size}: OD={pipe['od_mm']}mm, WT={wt['wt_mm']}mm ({wt['schedule_approx']})")
 
     # 2. Run or load parametric sweep
-    results_path = RESULTS_DIR / "demo_01_freespan_results.json"
-    use_cache = args.from_cache and results_path.exists() and not args.force
-
     if use_cache:
         print("\n[2/7] Loading cached results...")
         results, df = load_cached_results(results_path)
@@ -1198,7 +1346,19 @@ def main() -> None:
         print(f"  Loaded {total_cases} cached cases from {results_path.name}")
     else:
         print("\n[2/7] Running parametric sweep...")
-        results, df = run_parametric_sweep(pipe_catalog, jumper_props)
+        print(f"  Loaded sweep config: {config_path.name}")
+        # Phase-1 honesty (FIX 3): only cases[] is config-driven. If the config promotes any
+        # of content_density / boundary_condition / wt_selection beyond the chart defaults,
+        # the charts/summary/metadata still reflect baseline defaults — warn so it is not
+        # silent. The Baseline does NOT diverge, so this never fires for it (stdout identical).
+        if _config_diverges_from_chart_defaults(sweep_config):
+            warnings.warn(
+                "Sweep config promotes content_density / boundary_condition / wt_selection "
+                "beyond the chart defaults; charts/summary reflect baseline defaults — only "
+                "the cases table reflects this config (Phase-1; see docs/adr/0002).",
+                stacklevel=2,
+            )
+        results, df = run_parametric_sweep(pipe_catalog, jumper_props, sweep_config)
         total_cases = len(results)
         print(f"  Total cases: {total_cases}")
 
