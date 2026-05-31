@@ -1,0 +1,38 @@
+# ABOUTME: demo_02 Sweep Config — Baseline Run encoding today's exact 72-case matrix.
+# ABOUTME: Axes are LISTS; the engine computes the cross-product size -> code -> pressure.
+#
+# Phase-1 scope: this yaml drives ONLY the sweep loop. The locked physical constants
+# remain module constants for now; the charts, save_results_json, and the summary table
+# still read them as globals. Migrating those into a constants: block is a Phase-2 follow-up.
+#
+# Baseline-defining values (BD-*):
+#   BD-1: the 72 live cases keep their EXACT 14-key schema and values, byte-for-byte.
+#   BD-3: codes are the SPACED DISPLAY strings ("DNV-ST-F101" / "API RP 1111" / "PD 8010-2"),
+#         NOT the hyphenated DesignCode .value forms ("API-RP-1111" / "PD-8010-2"). The loader
+#         maps each display string to the DesignCode via the demo's CODE_NAMES inverse map;
+#         it never calls DesignCode(<display string>).
+#
+# Cross-product nesting (must match the frozen golden order):
+#   size (outer) -> code (mid) -> pressure (inner)  => 6 x 3 x 4 = 72 cases.
+
+meta:
+  demo_id: demo_02
+  code_ref: "DNV-ST-F101 (2021) / API RP 1111 (2015) / PD 8010-2 (2015)"
+
+sweep:
+  # The 6 pipe sizes, identified by the PIPE_SIZES "name" label the demo loop uses.
+  sizes: ['6"', '8"', '10"', '12"', '16"', '20"']
+  # BD-3: SPACED display strings (not enum .value hyphen forms).
+  codes: ["DNV-ST-F101", "API RP 1111", "PD 8010-2"]
+  internal_pressures_mpa: [10, 15, 20, 25]   # ints
+
+# Locked scalars — frozen at today's Baseline values.
+constants:
+  water_depth_m: 500.0
+  grade: X65
+  smys_pa: 448000000.0
+  smts_pa: 531000000.0
+  corrosion_allowance_m: 0.001
+  safety_class: MEDIUM
+  find_min_bounds_m: [0.003, 0.060]
+  find_min_tol_m: 0.0001

@@ -189,6 +189,60 @@ PHASE_DISPLAY_NAMES = [
     "Shutdown",
 ]
 
+# Baseline-defining result schema (BD-1): every per-case record — both the live (PASS)
+# path and the normalized failure path — emits EXACTLY these 14 keys, in this order.
+FROZEN_RESULT_KEYS = (
+    "pipe_size",
+    "od_mm",
+    "od_m",
+    "wt_mm",
+    "wt_m",
+    "grade",
+    "code",
+    "internal_pressure_mpa",
+    "external_pressure_mpa",
+    "water_depth_m",
+    "is_safe",
+    "governing_check",
+    "max_utilisation",
+    "checks",
+)
+
+# Path to the committed Baseline Sweep Config (loaded lazily in the recompute path only).
+INPUTS_DIR = SCRIPT_DIR / "inputs"
+BASELINE_CONFIG_PATH = INPUTS_DIR / "demo_02_wall_thickness.yml"
+
+
+def _normalize_failure_record(
+    ps: Dict[str, Any],
+    code_name: str,
+    pi_mpa: int,
+    pe_pa: float,
+    governing: Any = None,
+) -> Dict[str, Any]:
+    """Build a normalized failure record with the SAME 14 FROZEN keys (BD-1).
+
+    The legacy dead path emitted a partial dict with ``"N/A"`` sentinels; this normalizes
+    it to the uniform schema, using ``None`` (null) where a value is unavailable. ``code``
+    keeps emitting the SPACED display string. This path produces 0 of the 72 Baseline cases.
+    """
+    return {
+        "pipe_size": ps["name"],
+        "od_mm": ps["od_mm"],
+        "od_m": ps["od_m"],
+        "wt_mm": None,
+        "wt_m": None,
+        "grade": GRADE,
+        "code": code_name,
+        "internal_pressure_mpa": pi_mpa,
+        "external_pressure_mpa": round(pe_pa / 1e6, 3),
+        "water_depth_m": WATER_DEPTH,
+        "is_safe": None,
+        "governing_check": governing,
+        "max_utilisation": None,
+        "checks": None,
+    }
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -289,6 +343,59 @@ def find_min_wall_thickness(
             governing = result.get("governing_check", "N/A")
 
     return hi, governing
+
+
+# ---------------------------------------------------------------------------
+# Phase-1 constants guard (D1/D2): loud-refuse on edited-but-unwired constants
+# ---------------------------------------------------------------------------
+
+def _assert_constants_match_phase1(config: Any) -> None:
+    """Refuse loudly if the yaml ``constants:`` block diverges from the module constants.
+
+    Phase-1 drives only the sweep AXES (sizes/codes/pressures). The ``constants:`` block is
+    resolved by the loader but NOT yet consumed by the analysis (Phase-2 follow-up); the
+    charts/summary/analyzer still read the module globals. A client editing a constant would
+    otherwise get silently-identical results. Each resolved scalar is compared to its module
+    constant and ANY difference raises ``SweepConfigError`` naming the field.
+
+    The find_min bounds/tol module values are the ``find_min_wall_thickness`` signature
+    defaults (wt_min, wt_max, tol) so this guard tracks them without a second source of truth.
+    """
+    try:
+        from sweep_config_demo02 import SweepConfigError
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm.sweep_config_demo02 import SweepConfigError
+
+    # find_min signature defaults are the module values for bounds/tol.
+    fm_defaults = find_min_wall_thickness.__defaults__  # (wt_min, wt_max, tol)
+    module_wt_min, module_wt_max, module_tol = fm_defaults
+
+    _phase2 = (
+        "Phase-1 drives only the sweep AXES (sizes/codes/pressures); this constant is "
+        "not yet wired into the analysis (Phase-2)."
+    )
+
+    def _check(field: str, config_value: Any, module_value: Any) -> None:
+        if config_value != module_value:
+            raise SweepConfigError(
+                f"constants.{field}={config_value!r} differs from the module constant "
+                f"{module_value!r}. {_phase2} Revert it to {module_value!r} or wait for Phase-2."
+            )
+
+    _check("water_depth_m", config.water_depth_m, WATER_DEPTH)
+    _check("smys_pa", config.smys_pa, SMYS)
+    _check("smts_pa", config.smts_pa, SMTS)
+    _check("corrosion_allowance_m", config.corrosion_allowance_m, CORROSION_ALLOWANCE)
+    _check("grade", config.grade, GRADE)
+    _check("find_min_bounds_m", config.find_min_bounds_m, (module_wt_min, module_wt_max))
+    _check("find_min_tol_m", config.find_min_tol_m, module_tol)
+
+    # safety_class is an enum identity check (the module hard-codes SafetyClass.MEDIUM).
+    if config.safety_class is not SafetyClass.MEDIUM:
+        raise SweepConfigError(
+            f"constants.safety_class={config.safety_class_label!r} differs from the module "
+            f"constant SafetyClass.MEDIUM. {_phase2} Revert it to 'MEDIUM' or wait for Phase-2."
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -966,27 +1073,67 @@ def select_analysis_wt(ps: Dict, pipe_catalog: list) -> float:
     return ps["od_m"] * 0.05  # fallback
 
 
-def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
-    """Run the full parametric sweep across all cases."""
+def _resolve_sweep_axes(config: Optional[Any]) -> Tuple[List[Dict], List[Any], List[str], List[int]]:
+    """Resolve (pipe_size_dicts, design_codes, code_display_names, pressures) for the sweep.
+
+    When *config* is a ``ResolvedDemo02Config`` its axes drive the sweep; otherwise the
+    module constants are used (legacy default). In BOTH cases the per-case ``code`` field
+    is emitted as the SPACED display string via the demo's ``CODE_NAMES`` map.
+    """
+    if config is None:
+        # Legacy default: module constants. Codes -> display names via CODE_NAMES.
+        size_dicts = list(PIPE_SIZES)
+        design_codes = list(CODES)
+        display_names = [CODE_NAMES[c] for c in design_codes]
+        pressures = list(INTERNAL_PRESSURES_MPA)
+        return size_dicts, design_codes, display_names, pressures
+
+    # Config-driven: map size labels to the PIPE_SIZES dicts (preserve config order).
+    by_name = {ps["name"]: ps for ps in PIPE_SIZES}
+    size_dicts = []
+    for name in config.sizes:
+        if name not in by_name:
+            raise ValueError(
+                f"sweep config size {name!r} not in PIPE_SIZES "
+                f"(known: {sorted(by_name)})"
+            )
+        size_dicts.append(by_name[name])
+    design_codes = list(config.design_codes)
+    display_names = list(config.codes)  # SPACED display strings, 1:1 with design_codes
+    pressures = list(config.internal_pressures_mpa)
+    return size_dicts, design_codes, display_names, pressures
+
+
+def run_parametric_sweep(
+    pipe_catalog: list,
+    config: Optional[Any] = None,
+) -> Tuple[List[Dict], pd.DataFrame]:
+    """Run the full parametric sweep across all cases.
+
+    Iterates the cross-product preserving today's nesting: size (outer) -> code (mid) ->
+    pressure (inner), so the 72-case order matches the frozen golden exactly. When *config*
+    (a ``ResolvedDemo02Config``) is supplied its axes drive the loop; otherwise the module
+    constants are used.
+    """
     pe = external_pressure_pa()
-    total_cases = len(PIPE_SIZES) * len(CODES) * len(INTERNAL_PRESSURES_MPA)
+    size_dicts, design_codes, display_names, pressures = _resolve_sweep_axes(config)
+    total_cases = len(size_dicts) * len(design_codes) * len(pressures)
 
     print(f"\n{'='*60}")
     print(f"  PARAMETRIC WALL THICKNESS SWEEP")
-    print(f"  {total_cases} cases: {len(PIPE_SIZES)} pipes × {len(CODES)} codes × {len(INTERNAL_PRESSURES_MPA)} pressures")
+    print(f"  {total_cases} cases: {len(size_dicts)} pipes × {len(design_codes)} codes × {len(pressures)} pressures")
     print(f"{'='*60}\n")
 
     all_results = []
     case_num = 0
 
-    for ps in PIPE_SIZES:
+    for ps in size_dicts:
         # Use mid-range WT for more interesting results
         wt_m = select_analysis_wt(ps, pipe_catalog)
 
-        for code in CODES:
-            for pi_mpa in INTERNAL_PRESSURES_MPA:
+        for code, code_name in zip(design_codes, display_names):
+            for pi_mpa in pressures:
                 case_num += 1
-                code_name = CODE_NAMES[code]
                 pi_pa = pi_mpa * 1e6
 
                 print(f"  Case {case_num:3d}/{total_cases} | {ps['name']:>4s} X65 WT={wt_m*1000:.1f}mm | {code_name:<14s} | {pi_mpa} MPa...",
@@ -1015,27 +1162,24 @@ def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
                         status = "PASS" if result["is_safe"] else "FAIL"
                         print(f" util={result['max_utilisation']:.3f} [{status}]")
                     else:
-                        all_results.append({
-                            "pipe_size": ps["name"],
-                            "od_mm": ps["od_mm"],
-                            "code": code_name,
-                            "internal_pressure_mpa": pi_mpa,
-                            "is_safe": "N/A",
-                            "governing_check": "N/A",
-                            "max_utilisation": "N/A",
-                        })
+                        # Normalized failure record — SAME 14 FROZEN keys, nulls for N/A (BD-1).
+                        all_results.append(
+                            _normalize_failure_record(ps, code_name, pi_mpa, pe)
+                        )
                         print(" [N/A]")
                 except Exception as exc:
                     print(f" [ERROR: {exc}]")
-                    all_results.append({
-                        "pipe_size": ps["name"],
-                        "od_mm": ps["od_mm"],
-                        "code": code_name,
-                        "internal_pressure_mpa": pi_mpa,
-                        "is_safe": "N/A",
-                        "governing_check": str(exc),
-                        "max_utilisation": "N/A",
-                    })
+                    all_results.append(
+                        _normalize_failure_record(ps, code_name, pi_mpa, pe, governing=str(exc))
+                    )
+
+    # BD-1 drift guard: every case must carry exactly the 14 FROZEN keys before serialization.
+    for rec in all_results:
+        if set(rec.keys()) != set(FROZEN_RESULT_KEYS):
+            raise AssertionError(
+                "result record key set drift (BD-1): "
+                f"{sorted(rec.keys())} != {sorted(FROZEN_RESULT_KEYS)}"
+            )
 
     df = pd.DataFrame(all_results)
     print(f"\n  ✓ Sweep complete: {len(all_results)} results collected")
@@ -1280,8 +1424,25 @@ def main():
         _load_engineering_modules()
         _init_code_constants()
 
+        # Load the committed Baseline Sweep Config LAZILY here (recompute path only) so
+        # --from-cache works without it. The loader reuses the just-built CODE_NAMES inverse
+        # map + SafetyClass enum to avoid a second engineering import.
+        try:
+            from sweep_config_demo02 import load_demo02_config
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.sweep_config_demo02 import load_demo02_config
+        code_name_map = {display: code for code, display in CODE_NAMES.items()}
+        config = load_demo02_config(
+            BASELINE_CONFIG_PATH,
+            code_name_map=code_name_map,
+            safety_class_enum=SafetyClass,
+        )
+        # D1/D2: Phase-1 consumes only the sweep axes. Refuse loudly if a client edited a
+        # constant that is not yet wired into the analysis, instead of silently ignoring it.
+        _assert_constants_match_phase1(config)
+
         print("\n[2/7] Running parametric sweep...")
-        all_results, results_df = run_parametric_sweep(pipe_catalog)
+        all_results, results_df = run_parametric_sweep(pipe_catalog, config=config)
         total_cases = len(all_results)
         cached_lifecycle = None
         cached_min_wt = None
@@ -1326,12 +1487,26 @@ def main():
         print("\n[6/7] Saving JSON results...")
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
+        # D3: metadata must report the axes ACTUALLY swept, not the module constants. Derive
+        # them from the produced results in first-seen order, so a subset config reports the
+        # subset (for the baseline run these equal PIPE_SIZES / CODE_NAME_STRINGS).
+        def _distinct_first_seen(records: List[Dict[str, Any]], key: str) -> list:
+            seen: Dict[Any, None] = {}
+            for rec in records:
+                value = rec.get(key)
+                if value not in seen:
+                    seen[value] = None
+            return list(seen)
+
+        swept_pipe_sizes = _distinct_first_seen(all_results, "pipe_size")
+        swept_codes = _distinct_first_seen(all_results, "code")
+
         json_output = {
             "metadata": {
                 "demo": "GTM Demo 2: Wall Thickness Multi-Code Comparison",
                 "total_cases": total_cases,
-                "pipe_sizes": [ps["name"] for ps in PIPE_SIZES],
-                "codes": CODE_NAME_STRINGS,
+                "pipe_sizes": swept_pipe_sizes,
+                "codes": swept_codes,
                 "internal_pressures_mpa": INTERNAL_PRESSURES_MPA,
                 "water_depth_m": WATER_DEPTH,
                 "grade": GRADE,
