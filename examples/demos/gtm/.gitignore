@@ -1,2 +1,23 @@
 *.pyc
 __pycache__/
+
+# Results Store (ADR-0003): the SQLite cache is a rebuildable derived artifact — never tracked.
+# Path-anchored so it does NOT swallow the tracked golden JSON (results/demo_01_freespan_results.json).
+results/parametric/**/*.db
+results/parametric/**/*.db-wal
+results/parametric/**/*.db-shm
+
+# index.csv is a DERIVED view (like the .db): write_run upserts it for live use, rebuild_db
+# regenerates it from every per-run manifest.json. It accumulates client run rows, so it is
+# NEVER tracked (it would leak client rows into a baseline commit). The per-run cases.csv +
+# manifest.json under baseline/ remain the tracked source of truth.
+results/parametric/demo_01/index.csv
+
+# Transient client run dirs under the Store are not tracked...
+results/parametric/demo_01/*/
+# ...but KEEP the committed Baseline reference run (its cases.csv + manifest.json are source of truth).
+!results/parametric/demo_01/baseline/
+# Re-ignore any SQLite that lands inside the baseline dir (the db lives one level up anyway).
+results/parametric/demo_01/baseline/*.db
+results/parametric/demo_01/baseline/*.db-wal
+results/parametric/demo_01/baseline/*.db-shm

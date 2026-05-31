@@ -1,0 +1,43 @@
+# ABOUTME: demo_01 Sweep Config — Baseline Run encoding today's exact 680-case matrix.
+# ABOUTME: Axes are per-sub-sweep LISTS; the engine computes the cross-product (ADR-0004).
+#
+# Phase-1 scope (ADR-0002): this yaml drives ONLY the sweep loop. The locked physical
+# constants and screening thresholds remain module constants for now; the charts,
+# save_results_json, and main()'s verify loop still read them as globals. Migrating those
+# into a constants:/thresholds: block is an explicit Phase-2 follow-up.
+#
+# Baseline-defining values (BD-*):
+#   BD-2: span_lengths_m items are bare INTEGERS (not floats) — preserved through to output.
+#   BD-3: the jumper mid-water gap is `.inf` exactly (YAML float infinity), NOT bare `inf`.
+#   BD-5: boundary_condition is an engineering LABEL ("pinned"); the loader maps it to the
+#         coefficient (pinned -> C_N_PINNED == 3.5596) imported from the demo module — the
+#         coefficient is never hardcoded here.
+
+meta:
+  demo_id: demo_01
+  code_ref: "DNV-RP-F105 (2017)"
+
+catalogs:
+  pipelines: data/pipelines.json
+  jumpers: data/rigid_jumpers.json
+
+sweeps:
+  pipelines:
+    sizes: ["8in", "12in", "16in"]
+    span_lengths_m: [10, 20, 30, 40, 50, 60, 70, 80]      # BD-2: integers
+    current_velocities_ms: [0.2, 0.4, 0.6, 0.8, 1.0]
+    gap_ratios: [0.5, 1.0, 2.0, 5.0]
+    content_density_kg_m3: [800.0]        # length-1 = frozen at today's value
+    boundary_condition: ["pinned"]        # BD-5: LABEL, not a coefficient
+    wt_selection: ["thinnest"]
+  jumpers:
+    # The rigid jumper is single-bodied (data/rigid_jumpers.json -> common_properties);
+    # the loop reads that body regardless of size. This length-1 list keeps the axis
+    # surface uniform with the pipelines sub-sweep and adds zero extra iterations.
+    sizes: ["8in"]
+    span_lengths_m: [5, 10, 15, 20, 25, 30, 35, 40]       # BD-2: integers
+    current_velocities_ms: [0.2, 0.4, 0.6, 0.8, 1.0]
+    gap_ratios: [0.5, 1.0, 2.0, 5.0, .inf]                # BD-3: .inf -> float('inf') (mid-water)
+    content_density_kg_m3: [800.0]
+    boundary_condition: ["pinned"]
+    wt_selection: ["thinnest"]

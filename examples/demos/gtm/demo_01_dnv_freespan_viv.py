@@ -35,8 +35,10 @@ import argparse
 import json
 import logging
 import math
+import re
 import sys
 import time
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -80,6 +82,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 RESULTS_DIR = SCRIPT_DIR / "results"
+INPUTS_DIR = SCRIPT_DIR / "inputs"
+
+# Committed default Sweep Config — the Baseline Run (reproduces today's exact 680-case
+# matrix). Loaded only inside the recompute branch so --from-cache works without it (NBC-1).
+DEFAULT_SWEEP_CONFIG_PATH = INPUTS_DIR / "demo_01_freespan.yml"
 
 # Physical constants
 SEAWATER_DENSITY = 1025.0       # kg/m3
@@ -116,6 +123,41 @@ PIPELINE_GAP_RATIOS = [0.5, 1.0, 2.0, 5.0]
 JUMPER_SPAN_LENGTHS_M = [5, 10, 15, 20, 25, 30, 35, 40]
 JUMPER_GAP_RATIOS = [0.5, 1.0, 2.0, 5.0, float("inf")]  # inf = mid-water
 
+# The exact 15 keys every JSON result case must carry (frozen golden contract, ADR-0002).
+# The Results Store enriches the DataFrame with extra columns but MUST NOT mutate these dicts;
+# a guard in main() asserts this set before save_results_json so a mutation regression fails loudly.
+FROZEN_RESULT_KEYS = frozenset({
+    "pipe_type", "nominal_size", "od_m", "wt_m", "span_m", "v_current_ms",
+    "e_over_d", "f_n_hz", "v_r", "a_over_d", "status", "max_allowable_span_m",
+    "m_eff_kg_per_m", "case_id", "schedule",
+})
+
+# Default run identifier for the committed Baseline Run (the reference seed for the Store).
+BASELINE_RUN_ID = "baseline"
+
+# Allowed run_id character set. A run_id becomes a filesystem directory name under the Store
+# (<base_dir>/parametric/demo_01/<run_id>/) and the per-run report dir, so it must be a single
+# safe path segment: no separators, no "." / ".." traversal, no empty string (D1, path-traversal).
+_RUN_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def validate_run_id(run_id: str) -> str:
+    """Validate a run_id is a single safe path segment; return it unchanged if valid.
+
+    Rejects empty string, ".", "..", and anything containing a character outside
+    ``[A-Za-z0-9._-]`` (e.g. "/" or "\\" path separators). Raises ValueError with a clean
+    message on rejection. "baseline" and ordinary names like "acme_q2" are accepted.
+    """
+    if not isinstance(run_id, str) or run_id in ("", ".", "..") or not _RUN_ID_RE.match(run_id):
+        raise ValueError(
+            f"invalid --run-id {run_id!r}: must match [A-Za-z0-9._-]+ and may not be "
+            "'', '.', or '..' (it becomes a directory name in the Results Store)."
+        )
+    return run_id
+
+# Demo identifier — the per-run report/store partition name (matches results_store.DEMO_ID).
+DEMO_ID = "demo_01"
+
 # Status labels
 STATUS_PASS = "PASS"
 STATUS_INLINE_ONLY = "INLINE_ONLY"
@@ -141,16 +183,47 @@ STATUS_NUMERIC = {
 # Data loaders
 # ---------------------------------------------------------------------------
 
-def load_pipe_catalog() -> Tuple[Dict, List[Dict]]:
-    """Load pipeline catalog from JSON. Returns (full_data, pipes_list)."""
-    with open(DATA_DIR / "pipelines.json", "r") as f:
+def _resolve_catalog_path(config_dir: Path, catalog_ref: str) -> Path:
+    """Resolve a Sweep Config catalog reference to a concrete file path (FIX 2).
+
+    An absolute ``catalog_ref`` is used as-is. A relative one is resolved against the yaml
+    file's own directory (``config_dir``) so an ``--input`` yaml's catalogs take effect.
+    The committed Baseline yaml (in inputs/) references ``data/pipelines.json`` while the
+    catalog actually lives under ``SCRIPT_DIR/data`` (== DATA_DIR, a sibling of inputs/);
+    if the yaml-relative path does not resolve to an existing file we fall back to
+    ``DATA_DIR/<basename>`` so the Baseline run stays byte-identical.
+    """
+    ref = Path(catalog_ref)
+    candidate = ref if ref.is_absolute() else (config_dir / ref)
+    candidate = candidate.resolve()
+    if candidate.is_file():
+        return candidate
+    fallback = DATA_DIR / ref.name
+    return fallback.resolve()
+
+
+def load_pipe_catalog(path: Optional[Path] = None) -> Tuple[Dict, List[Dict]]:
+    """Load pipeline catalog from JSON. Returns (full_data, pipes_list).
+
+    ``path`` is the resolved catalog file; when omitted it defaults to today's
+    ``DATA_DIR/pipelines.json`` so the Baseline is unchanged.
+    """
+    if path is None:
+        path = DATA_DIR / "pipelines.json"
+    with open(path, "r") as f:
         data = json.load(f)
     return data, data["pipes"]
 
 
-def load_jumper_catalog() -> Tuple[Dict, Dict]:
-    """Load jumper catalog from JSON. Returns (full_data, common_properties)."""
-    with open(DATA_DIR / "rigid_jumpers.json", "r") as f:
+def load_jumper_catalog(path: Optional[Path] = None) -> Tuple[Dict, Dict]:
+    """Load jumper catalog from JSON. Returns (full_data, common_properties).
+
+    ``path`` is the resolved catalog file; when omitted it defaults to today's
+    ``DATA_DIR/rigid_jumpers.json`` so the Baseline is unchanged.
+    """
+    if path is None:
+        path = DATA_DIR / "rigid_jumpers.json"
+    with open(path, "r") as f:
         data = json.load(f)
     return data, data["common_properties"]
 
@@ -352,11 +425,16 @@ def calc_max_allowable_span(
     e_over_d: float = 1.0,
     content_density: float = CONTENT_DENSITY,
     coating_thickness_m: float = 0.003,
+    c_n: float = C_N_DEFAULT,
 ) -> float:
     """Find max span length before cross-flow VIV onset.
 
     Iteratively solves: V_R(L) = V_R_onset_CF for span length L.
     Uses bisection on span length from 1 m to 500 m.
+
+    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
+    ``boundary_condition`` label). For the Baseline it equals C_N_PINNED == C_N_DEFAULT,
+    so behaviour is byte-identical to the pre-yaml run.
 
     Returns max allowable span in metres.
     """
@@ -375,6 +453,7 @@ def calc_max_allowable_span(
             od_m, wt_m, l_mid,
             content_density=content_density,
             coating_thickness_m=coating_thickness_m,
+            c_n=c_n,
         )
         v_r = calc_reduced_velocity(v_current, f_n, od_m)
 
@@ -400,15 +479,20 @@ def run_single_case(
     e_over_d: float,
     content_density: float = CONTENT_DENSITY,
     coating_thickness_m: float = 0.003,
+    c_n: float = C_N_DEFAULT,
 ) -> Dict[str, Any]:
     """Run freespan VIV screening for a single parametric case.
 
-    Returns a dict with all inputs and computed results.
+    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
+    ``boundary_condition`` label; for the Baseline it equals C_N_PINNED == C_N_DEFAULT, so
+    behaviour is byte-identical to the pre-yaml run). Returns a dict with all inputs and
+    computed results.
     """
     f_n = calc_natural_frequency(
         od_m, wt_m, span_m,
         content_density=content_density,
         coating_thickness_m=coating_thickness_m,
+        c_n=c_n,
     )
     v_r = calc_reduced_velocity(v_current, f_n, od_m)
     status, a_over_d = screen_viv(v_r, e_over_d)
@@ -417,6 +501,7 @@ def run_single_case(
         e_over_d=e_over_d,
         content_density=content_density,
         coating_thickness_m=coating_thickness_m,
+        c_n=c_n,
     )
 
     # Effective mass for reference
@@ -447,86 +532,175 @@ def run_single_case(
 # Parametric sweep
 # ---------------------------------------------------------------------------
 
+def _select_wt(pipe: Dict, wt_selection: str) -> Dict:
+    """Resolve a wt_selection LABEL to a wall-thickness entry.
+
+    Baseline uses "thinnest" (worst case for VIV) — identical to the pre-yaml run.
+    """
+    if wt_selection == "thinnest":
+        return get_thinnest_wt(pipe)
+    if wt_selection == "thickest":
+        return get_thickest_wt(pipe)
+    raise ValueError(
+        f"wt_selection {wt_selection!r} not supported by run_parametric_sweep "
+        "(expected 'thinnest' or 'thickest'; 'explicit' is a Phase-2 follow-up)."
+    )
+
+
+def _config_diverges_from_chart_defaults(config: "ResolvedSweepConfig") -> bool:
+    """True if any promoted axis is multi-valued OR differs from the module default (FIX 3).
+
+    Phase-1 charts/summary/metadata reflect the module defaults (CONTENT_DENSITY, thinnest
+    WT, pinned c_n). If either sub-sweep promotes content_density, boundary_condition, or
+    wt_selection to a multi-valued axis OR to a single non-default value, the charts/summary
+    no longer reflect the config — main() warns. The Baseline (all three length-1 at the
+    module defaults) does NOT diverge, so no warning fires and stdout stays identical.
+    """
+    for sub in (config.pipelines, config.jumpers):
+        if list(sub.content_density_kg_m3) != [CONTENT_DENSITY]:
+            return True
+        if list(sub.boundary_condition_labels) != ["pinned"]:
+            return True
+        if list(sub.wt_selection) != ["thinnest"]:
+            return True
+    return False
+
+
 def run_parametric_sweep(
     pipe_catalog: List[Dict],
     jumper_props: Dict,
+    config: "ResolvedSweepConfig",
 ) -> Tuple[List[Dict], pd.DataFrame]:
     """Run full parametric sweep across pipelines and jumpers.
 
+    The sweep axes come from the resolved Sweep Config (``config``), iterated as a
+    cross-product. The nesting order preserves today's EXACT emission order (BD-4):
+    the pipelines sub-sweep runs entirely before the jumpers sub-sweep, and within each
+    sub-sweep the order is ``size -> span -> current -> gap``. The three promoted axes
+    (content_density, boundary_condition coefficient, wt_selection) are iterated in the
+    OUTERMOST positions; being length-1 in the Baseline they add zero iterations and do
+    not perturb the PL-/JM- case numbering.
+
     Returns (results_list, results_dataframe).
     """
+    # Phase-1: only cases[] is config-driven; charts/summary/metadata reflect module-default
+    # constants (CONTENT_DENSITY, thinnest WT, pinned c_n). Full config-threading is a
+    # Phase-2 follow-up (see docs/adr/0002). main() emits a runtime warning when the resolved
+    # config diverges from those defaults so the chart/summary mismatch is not silent.
     results: List[Dict[str, Any]] = []
+    # Parallel lists collected in lock-step with `results` (one entry per appended case).
+    # They enrich the DataFrame ONLY (not the JSON results dicts), promoting the three
+    # outer axes (content density, boundary-condition LABEL, wt_selection) to df columns
+    # for the Results Store. The JSON cases[] must stay 15-key (asserted before save).
+    enrich_content_density: List[float] = []
+    enrich_boundary_condition: List[str] = []
+    enrich_wt_selection: List[str] = []
     case_id = 0
 
+    pl = config.pipelines
+    jm = config.jumpers
+
     # --- Pipeline cases ---
-    total_pipeline = len(PIPELINE_SIZES) * len(PIPELINE_SPAN_LENGTHS_M) * len(CURRENT_VELOCITIES_MS) * len(PIPELINE_GAP_RATIOS)
+    # Promoted axes (content_density / boundary-condition c_n / wt_selection) multiply in
+    # as the outermost factors; length-1 in the Baseline => total == today's 480.
+    total_pipeline = (
+        len(pl.content_density_kg_m3) * len(pl.c_n_values) * len(pl.wt_selection)
+        * len(pl.sizes) * len(pl.span_lengths_m)
+        * len(pl.current_velocities_ms) * len(pl.gap_ratios)
+    )
     print(f"  Pipeline cases: {total_pipeline}")
 
-    for size_name in PIPELINE_SIZES:
-        pipe = get_pipe_by_size(pipe_catalog, size_name)
-        if pipe is None:
-            logger.warning("Pipe size %s not found in catalog, skipping", size_name)
-            continue
+    for content_density in pl.content_density_kg_m3:
+        for c_n, bc_label in zip(pl.c_n_values, pl.boundary_condition_labels):
+            for wt_sel in pl.wt_selection:
+                for size_name in pl.sizes:
+                    pipe = get_pipe_by_size(pipe_catalog, size_name)
+                    if pipe is None:
+                        logger.warning("Pipe size %s not found in catalog, skipping", size_name)
+                        continue
 
-        od_m = pipe["od_m"]
-        # Use thinnest WT for worst-case VIV screening (lowest stiffness)
-        wt_entry = get_thinnest_wt(pipe)
-        wt_m = wt_entry["wt_m"]
-        coating_t = pipe["anti_corrosion_coating"]["thickness_m"]
+                    od_m = pipe["od_m"]
+                    # Worst-case WT per the resolved wt_selection (Baseline: thinnest).
+                    wt_entry = _select_wt(pipe, wt_sel)
+                    wt_m = wt_entry["wt_m"]
+                    coating_t = pipe["anti_corrosion_coating"]["thickness_m"]
 
-        for span_m in PIPELINE_SPAN_LENGTHS_M:
-            for v_curr in CURRENT_VELOCITIES_MS:
-                for e_d in PIPELINE_GAP_RATIOS:
-                    case_id += 1
-                    result = run_single_case(
-                        pipe_type="pipeline",
-                        nominal_size=size_name,
-                        od_m=od_m,
-                        wt_m=wt_m,
-                        span_m=span_m,
-                        v_current=v_curr,
-                        e_over_d=e_d,
-                        content_density=CONTENT_DENSITY,
-                        coating_thickness_m=coating_t,
-                    )
-                    result["case_id"] = f"PL-{case_id:04d}"
-                    result["schedule"] = wt_entry["schedule_approx"]
-                    results.append(result)
+                    for span_m in pl.span_lengths_m:
+                        for v_curr in pl.current_velocities_ms:
+                            for e_d in pl.gap_ratios:
+                                case_id += 1
+                                result = run_single_case(
+                                    pipe_type="pipeline",
+                                    nominal_size=size_name,
+                                    od_m=od_m,
+                                    wt_m=wt_m,
+                                    span_m=span_m,
+                                    v_current=v_curr,
+                                    e_over_d=e_d,
+                                    content_density=content_density,
+                                    coating_thickness_m=coating_t,
+                                    c_n=c_n,
+                                )
+                                result["case_id"] = f"PL-{case_id:04d}"
+                                result["schedule"] = wt_entry["schedule_approx"]
+                                results.append(result)
+                                enrich_content_density.append(float(content_density))
+                                enrich_boundary_condition.append(bc_label)
+                                enrich_wt_selection.append(wt_sel)
 
     pipeline_count = case_id
     print(f"    Completed {pipeline_count} pipeline cases")
 
     # --- Jumper cases ---
-    total_jumper = len(JUMPER_SPAN_LENGTHS_M) * len(CURRENT_VELOCITIES_MS) * len(JUMPER_GAP_RATIOS)
+    # The rigid jumper is single-bodied (common_properties); the `sizes` axis is length-1
+    # and selects the same body each time. Promoted axes again outermost / length-1.
+    total_jumper = (
+        len(jm.content_density_kg_m3) * len(jm.c_n_values) * len(jm.wt_selection)
+        * len(jm.sizes) * len(jm.span_lengths_m)
+        * len(jm.current_velocities_ms) * len(jm.gap_ratios)
+    )
     print(f"  Jumper cases: {total_jumper}")
 
     od_m_j = jumper_props["od_m"]
     wt_m_j = jumper_props["wt_m"]
     coating_t_j = jumper_props["anti_corrosion_coating"]["thickness_m"]
 
-    for span_m in JUMPER_SPAN_LENGTHS_M:
-        for v_curr in CURRENT_VELOCITIES_MS:
-            for e_d in JUMPER_GAP_RATIOS:
-                case_id += 1
-                result = run_single_case(
-                    pipe_type="jumper",
-                    nominal_size="8in-jumper",
-                    od_m=od_m_j,
-                    wt_m=wt_m_j,
-                    span_m=span_m,
-                    v_current=v_curr,
-                    e_over_d=e_d,
-                    content_density=CONTENT_DENSITY,
-                    coating_thickness_m=coating_t_j,
-                )
-                result["case_id"] = f"JM-{case_id - pipeline_count:04d}"
-                result["schedule"] = "Sch 120 (jumper)"
-                results.append(result)
+    for content_density in jm.content_density_kg_m3:
+        for c_n, bc_label in zip(jm.c_n_values, jm.boundary_condition_labels):
+            for _wt_sel in jm.wt_selection:
+                for _size_name in jm.sizes:
+                    for span_m in jm.span_lengths_m:
+                        for v_curr in jm.current_velocities_ms:
+                            for e_d in jm.gap_ratios:
+                                case_id += 1
+                                result = run_single_case(
+                                    pipe_type="jumper",
+                                    nominal_size="8in-jumper",
+                                    od_m=od_m_j,
+                                    wt_m=wt_m_j,
+                                    span_m=span_m,
+                                    v_current=v_curr,
+                                    e_over_d=e_d,
+                                    content_density=content_density,
+                                    coating_thickness_m=coating_t_j,
+                                    c_n=c_n,
+                                )
+                                result["case_id"] = f"JM-{case_id - pipeline_count:04d}"
+                                result["schedule"] = "Sch 120 (jumper)"
+                                results.append(result)
+                                enrich_content_density.append(float(content_density))
+                                enrich_boundary_condition.append(bc_label)
+                                enrich_wt_selection.append(_wt_sel)
 
     jumper_count = case_id - pipeline_count
     print(f"    Completed {jumper_count} jumper cases")
 
     df = pd.DataFrame(results)
+    # Enrich the DataFrame ONLY (the JSON results dicts stay 15-key). These three promoted
+    # axes are collected in lock-step with `results` above, so they align row-for-row.
+    df["content_density_kg_m3"] = enrich_content_density
+    df["boundary_condition"] = enrich_boundary_condition
+    df["wt_selection"] = enrich_wt_selection
     return results, df
 
 
@@ -967,8 +1141,15 @@ def build_report(
     summary_df: pd.DataFrame,
     results: List[Dict],
     total_cases: int,
+    output_path: Optional[Path] = None,
 ) -> str:
-    """Build the branded HTML report."""
+    """Build the branded HTML report.
+
+    ``output_path`` defaults (inside the signature) to the legacy Baseline location so the
+    Baseline call stays byte-identical; a named Run passes a per-run path (BD per-run report).
+    """
+    if output_path is None:
+        output_path = OUTPUT_DIR / "demo_01_freespan_report.html"
     report = GTMReportBuilder(
         title="DNV Freespan / VIV Screening Analysis",
         subtitle=f"~{total_cases} parametric cases across 3 pipe sizes and rigid jumpers",
@@ -1073,7 +1254,7 @@ def build_report(
     ])
 
     # Build and save
-    output_path = OUTPUT_DIR / "demo_01_freespan_report.html"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     html = report.build(output_path)
     print(f"  Report saved to: {output_path}")
     return html
@@ -1156,12 +1337,201 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Force recalculation even if cached results exist.",
     )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=None,
+        help="Path to a Sweep Config yaml (defaults to the committed "
+             "inputs/demo_01_freespan.yml Baseline).",
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=BASELINE_RUN_ID,
+        help="Run identifier for the Results Store + per-run report dir "
+             f"(default '{BASELINE_RUN_ID}', the Baseline Run). A named run writes its report "
+             "to output/parametric/demo_01/<run_id>/report.html and seeds <run_id> in the Store.",
+    )
     return parser.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Results Store subcommands: `lookup` + `rebuild-db` (BD-1..BD-3, N2)
+#
+# These are dispatched by an argv-sniff at the TOP of main() / __main__ so they NEVER touch
+# the existing sweep parser — the no-arg / --from-cache / --force / --input sweep path stays
+# provably byte-identical. Each subcommand builds its OWN ArgumentParser over sys.argv[2:].
+# ---------------------------------------------------------------------------
+
+# Columns shown by `lookup`, in a clean operator-facing order.
+_LOOKUP_DISPLAY_COLS = [
+    "case_id", "pipe_type", "nominal_size", "span_m", "v_current_ms",
+    "e_over_d", "f_n_hz", "v_r", "a_over_d", "status", "max_allowable_span_m",
+]
+
+
+def lookup_main(argv: List[str]) -> int:
+    """`lookup` subcommand: read-only filtered SELECT over the Results Store cache (BD-2/BD-3).
+
+    Returns a process exit code (0 = ok, non-zero = error such as a missing db).
+    """
+    import sqlite3
+
+    import results_store as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_01_dnv_freespan_viv.py lookup",
+        description="Look up cases in the demo_01 Results Store (read-only SQLite cache).",
+    )
+    parser.add_argument("--run-id", type=str, default=BASELINE_RUN_ID,
+                        help=f"Run to query (default '{BASELINE_RUN_ID}').")
+    parser.add_argument("--size", type=str, default=None,
+                        help='Nominal size filter, INCLUDING the "in" suffix (e.g. "12in").')
+    parser.add_argument("--current", type=float, default=None,
+                        help="Current velocity filter in m/s (e.g. 0.6).")
+    parser.add_argument("--gap", type=str, default=None,
+                        help='Gap ratio e/D filter; finite (e.g. "1.0") or "inf" for mid-water.')
+    parser.add_argument("--span", type=int, default=None, help="Span length filter in metres.")
+    parser.add_argument("--status", type=str, default=None,
+                        help="Status filter (PASS / INLINE_ONLY / FAIL_CF / FAIL_LOCKIN).")
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    # D1: validate run_id before using it (clean error + non-zero exit, no traceback).
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        return 2
+
+    db_path = rs._db_path(args.base_dir)
+    if not db_path.exists():
+        # BD-3: do NOT create the db; clear, actionable message; non-zero exit.
+        print(
+            f"No results.db at {db_path} — run a sweep first "
+            f"(e.g. `... --run-id {BASELINE_RUN_ID}`) or `... rebuild-db`."
+        )
+        return 1
+
+    # BD-3: open strictly read-only via a file: URI so a query never mutates/creates the cache.
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Distinct message for an unknown run_id vs. a zero-row filter result.
+        known_runs = [r[0] for r in conn.execute("SELECT run_id FROM runs ORDER BY run_id")]
+        if args.run_id not in known_runs:
+            available = ", ".join(known_runs) if known_runs else "(none)"
+            print(f"run_id '{args.run_id}' not found; available: {available}")
+            return 1
+
+        # BD-2: build a parameterized WHERE, canonicalizing each filter to the STORED form.
+        where = ["run_id = ?"]
+        params: List[Any] = [args.run_id]
+        if args.size is not None:
+            where.append("nominal_size = ?")
+            params.append(str(args.size))
+        if args.current is not None:
+            where.append("v_current_ms = ?")
+            params.append(float(args.current))
+        if args.gap is not None:
+            where.append("e_over_d = ?")
+            # D2: a bad --gap value (not a number or 'inf') gets a clean message + non-zero
+            # exit, not a raw ValueError traceback.
+            try:
+                gap_token = rs._e_over_d_token(args.gap)  # "1.0"/"inf" canonical TEXT token
+            except ValueError:
+                print(f"invalid --gap value: {args.gap} (expected a number or 'inf')")
+                return 2
+            params.append(gap_token)
+        if args.span is not None:
+            where.append("span_m = ?")
+            params.append(int(args.span))
+        if args.status is not None:
+            where.append("status = ?")
+            params.append(str(args.status))
+
+        cols = ", ".join(_LOOKUP_DISPLAY_COLS)
+        sql = (
+            f"SELECT {cols} FROM cases WHERE {' AND '.join(where)} "
+            "ORDER BY pipe_type, nominal_size, span_m, v_current_ms, e_over_d"
+        )
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        print("0 cases match the given filters.")
+        return 0
+
+    # Clean fixed-width table.
+    widths = [len(c) for c in _LOOKUP_DISPLAY_COLS]
+    str_rows = [[("" if v is None else str(v)) for v in row] for row in rows]
+    for r in str_rows:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    header = "  ".join(c.ljust(widths[i]) for i, c in enumerate(_LOOKUP_DISPLAY_COLS))
+    print(header)
+    print("  ".join("-" * widths[i] for i in range(len(_LOOKUP_DISPLAY_COLS))))
+    for r in str_rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(r)))
+    print(f"\n{len(rows)} case(s) matched.")
+    return 0
+
+
+def rebuild_main(argv: List[str]) -> int:
+    """`rebuild-db` subcommand: regenerate the SQLite cache + index.csv from the text source (N2)."""
+    import sqlite3
+
+    import results_store as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_01_dnv_freespan_viv.py rebuild-db",
+        description="Rebuild the demo_01 Results Store SQLite cache + index.csv from "
+                    "the per-run cases.csv / manifest.json text source of truth.",
+    )
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    db_path = rs.rebuild_db(args.base_dir)
+    print(f"Results Store rebuilt: {db_path}")
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        n_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+        n_cases = conn.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        per_run = conn.execute(
+            "SELECT run_id, COUNT(*) FROM cases GROUP BY run_id ORDER BY run_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    print(f"  runs: {n_runs}   cases: {n_cases}")
+    for run_id, n in per_run:
+        print(f"    {run_id}: {n} cases")
+    return 0
 
 
 def main() -> None:
     """Run the full demo pipeline."""
     args = parse_args()
+
+    # D1: validate run_id BEFORE any run dir / report path is built from it (path-traversal /
+    # empty / collision guard). Clean error + non-zero exit, never a raw traceback.
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(2)
+
+    # D4: --from-cache regenerates the Baseline report only; a named --run-id produces no
+    # Results Store row in the cache branch (sweep_config is None). Warn, don't change behavior.
+    if args.from_cache and args.run_id != BASELINE_RUN_ID:
+        warnings.warn(
+            f"--from-cache regenerates the baseline report only; --run-id '{args.run_id}' "
+            "will not produce a Results Store row (run without --from-cache to compute a "
+            "named run).",
+            stacklevel=2,
+        )
+
     start_time = time.time()
 
     print("=" * 60)
@@ -1169,12 +1539,36 @@ def main() -> None:
     print("  DNV-RP-F105 Simplified Methodology")
     print("=" * 60)
 
+    # Decide cache-vs-recompute up front (no printed output here, so order is unchanged).
+    # The Sweep Config is loaded ONLY in the recompute branch so --from-cache works
+    # without the yaml (NBC-1). When recomputing, the resolved catalog paths from the
+    # config drive catalog loading (FIX 2); the cache branch keeps today's defaults.
+    results_path = RESULTS_DIR / "demo_01_freespan_results.json"
+    use_cache = args.from_cache and results_path.exists() and not args.force
+
+    sweep_config = None
+    pipe_catalog_path: Optional[Path] = None
+    jumper_catalog_path: Optional[Path] = None
+    if not use_cache:
+        from sweep_config import load_sweep_config
+
+        config_path = args.input or DEFAULT_SWEEP_CONFIG_PATH
+        sweep_config = load_sweep_config(config_path)
+        # Resolve relative catalog paths RELATIVE TO THE YAML FILE'S OWN DIRECTORY (not cwd),
+        # so an --input yaml's catalogs take effect. The committed Baseline yaml lives in
+        # inputs/ but references data/pipelines.json (which sits under SCRIPT_DIR/data, a
+        # sibling of inputs/, == today's DATA_DIR). To keep the Baseline byte-identical, fall
+        # back to DATA_DIR/<basename> when the yaml-relative path does not resolve to a file.
+        config_dir = Path(config_path).resolve().parent
+        pipe_catalog_path = _resolve_catalog_path(config_dir, sweep_config.pipelines_catalog)
+        jumper_catalog_path = _resolve_catalog_path(config_dir, sweep_config.jumpers_catalog)
+
     # 1. Load input data
     print("\n[1/7] Loading input data...")
-    pipe_data, pipe_catalog = load_pipe_catalog()
+    pipe_data, pipe_catalog = load_pipe_catalog(pipe_catalog_path)
     print(f"  Loaded {len(pipe_catalog)} pipe sizes from pipelines.json")
 
-    jumper_data, jumper_props = load_jumper_catalog()
+    jumper_data, jumper_props = load_jumper_catalog(jumper_catalog_path)
     print(f"  Loaded jumper catalog: {jumper_props['nominal_size']} "
           f"(OD={jumper_props['od_mm']}mm, WT={jumper_props['wt_mm']}mm)")
 
@@ -1188,9 +1582,6 @@ def main() -> None:
             print(f"  {size}: OD={pipe['od_mm']}mm, WT={wt['wt_mm']}mm ({wt['schedule_approx']})")
 
     # 2. Run or load parametric sweep
-    results_path = RESULTS_DIR / "demo_01_freespan_results.json"
-    use_cache = args.from_cache and results_path.exists() and not args.force
-
     if use_cache:
         print("\n[2/7] Loading cached results...")
         results, df = load_cached_results(results_path)
@@ -1198,7 +1589,19 @@ def main() -> None:
         print(f"  Loaded {total_cases} cached cases from {results_path.name}")
     else:
         print("\n[2/7] Running parametric sweep...")
-        results, df = run_parametric_sweep(pipe_catalog, jumper_props)
+        print(f"  Loaded sweep config: {config_path.name}")
+        # Phase-1 honesty (FIX 3): only cases[] is config-driven. If the config promotes any
+        # of content_density / boundary_condition / wt_selection beyond the chart defaults,
+        # the charts/summary/metadata still reflect baseline defaults — warn so it is not
+        # silent. The Baseline does NOT diverge, so this never fires for it (stdout identical).
+        if _config_diverges_from_chart_defaults(sweep_config):
+            warnings.warn(
+                "Sweep config promotes content_density / boundary_condition / wt_selection "
+                "beyond the chart defaults; charts/summary reflect baseline defaults — only "
+                "the cases table reflects this config (Phase-1; see docs/adr/0002).",
+                stacklevel=2,
+            )
+        results, df = run_parametric_sweep(pipe_catalog, jumper_props, sweep_config)
         total_cases = len(results)
         print(f"  Total cases: {total_cases}")
 
@@ -1235,12 +1638,44 @@ def main() -> None:
 
     # 5. Build HTML report
     print("\n[5/7] Building HTML report...")
-    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, results, total_cases)
+    # Baseline Run keeps the legacy output path (byte-identical); a named Run writes a per-run
+    # report under output/parametric/demo_01/<run_id>/report.html.
+    if args.run_id == BASELINE_RUN_ID:
+        report_path: Optional[Path] = None  # build_report defaults to the legacy Baseline path
+    else:
+        report_path = OUTPUT_DIR / "parametric" / DEMO_ID / args.run_id / "report.html"
+    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, results, total_cases,
+                 output_path=report_path)
+    if report_path is not None:
+        print(f"  Per-run report written to: {report_path}")
 
     # 6. Save JSON results
     print("\n[6/7] Saving JSON results...")
+    # GUARD: the JSON cases[] must stay exactly the 15 frozen keys. If df-enrichment (or any
+    # future change) ever mutated a result dict, fail loudly here rather than silently break
+    # the golden byte-identity.
+    if results:
+        actual_keys = set(results[0].keys())
+        assert actual_keys == set(FROZEN_RESULT_KEYS), (
+            "JSON result keys drifted from the 15 frozen keys "
+            f"(expected {sorted(FROZEN_RESULT_KEYS)}, got {sorted(actual_keys)})"
+        )
     saved_path = save_results_json(results, summary_df, total_cases)
     print(f"  Results saved to: {saved_path}")
+
+    # 6b. Results Store (SQLite + per-run CSV/manifest). RECOMPUTE branch only — the
+    # --from-cache branch has no resolved config (sweep_config is None) to snapshot.
+    if sweep_config is not None:
+        from results_store import write_run
+
+        run_dir = write_run(
+            run_id=args.run_id,
+            resolved_config=sweep_config,
+            df=df,
+            summary_df=summary_df,
+            base_dir=RESULTS_DIR,
+        )
+        print(f"  Results Store updated: {run_dir}")
 
     # 7. Done
     elapsed = time.time() - start_time
@@ -1254,4 +1689,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # Argv-sniff dispatch (BD-1): the `lookup` / `rebuild-db` subcommands are handled by their
+    # OWN parsers over sys.argv[2:] and NEVER reach the sweep parser, so the no-arg / --from-cache
+    # / --force / --input sweep path is provably untouched and byte-identical.
+    if len(sys.argv) > 1 and sys.argv[1] == "lookup":
+        sys.exit(lookup_main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "rebuild-db":
+        sys.exit(rebuild_main(sys.argv[2:]))
+    else:
+        main()
