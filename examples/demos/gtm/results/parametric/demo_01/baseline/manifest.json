@@ -1,0 +1,105 @@
+{
+  "run_id": "baseline",
+  "demo_id": "demo_01",
+  "utc": "2026-05-31T03:32:53.956057+00:00",
+  "git_sha": "74cd2d4f485e2c9a74b3dedd6193d401695a56dc",
+  "code_ref": "DNV-RP-F105 (2017)",
+  "raw_source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo01/examples/demos/gtm/inputs/demo_01_freespan.yml",
+  "total_cases": 680,
+  "summary_counts": {
+    "PASS": 68,
+    "INLINE_ONLY": 89,
+    "FAIL_CF": 444,
+    "FAIL_LOCKIN": 79
+  },
+  "resolved_config": {
+    "demo_id": "demo_01",
+    "code_ref": "DNV-RP-F105 (2017)",
+    "pipelines_catalog": "data/pipelines.json",
+    "jumpers_catalog": "data/rigid_jumpers.json",
+    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo01/examples/demos/gtm/inputs/demo_01_freespan.yml",
+    "pipelines": {
+      "sizes": [
+        "8in",
+        "12in",
+        "16in"
+      ],
+      "span_lengths_m": [
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80
+      ],
+      "current_velocities_ms": [
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "gap_ratios": [
+        "0.5",
+        "1.0",
+        "2.0",
+        "5.0"
+      ],
+      "content_density_kg_m3": [
+        800.0
+      ],
+      "c_n_values": [
+        3.5596
+      ],
+      "boundary_condition_labels": [
+        "pinned"
+      ],
+      "wt_selection": [
+        "thinnest"
+      ]
+    },
+    "jumpers": {
+      "sizes": [
+        "8in"
+      ],
+      "span_lengths_m": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "current_velocities_ms": [
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "gap_ratios": [
+        "0.5",
+        "1.0",
+        "2.0",
+        "5.0",
+        "inf"
+      ],
+      "content_density_kg_m3": [
+        800.0
+      ],
+      "c_n_values": [
+        3.5596
+      ],
+      "boundary_condition_labels": [
+        "pinned"
+      ],
+      "wt_selection": [
+        "thinnest"
+      ]
+    }
+  }
+}

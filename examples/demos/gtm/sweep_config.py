@@ -265,16 +265,27 @@ def _resolve_sub_sweep(raw: dict, *, sub_sweep_name: str) -> ResolvedSubSweep:
                 f"{sub_sweep_name}.span_lengths_m item {s!r} is not an int (BD-2)."
             )
 
+    boundary_condition_labels = list(raw["boundary_condition"])
+    c_n_values = _resolve_boundary_conditions(
+        boundary_condition_labels, sub_sweep_name=sub_sweep_name
+    )
+    # c_n_values is derived 1:1 from boundary_condition_labels (one coefficient per label).
+    # The demo iterates `zip(c_n_values, boundary_condition_labels)`; a length divergence would
+    # make zip() silently under-run while the printed total (computed from len(c_n_values))
+    # over-reports. Assert parity so that divergence is caught here, not silently dropped (D4).
+    assert len(c_n_values) == len(boundary_condition_labels), (
+        f"{sub_sweep_name}: c_n_values ({len(c_n_values)}) must be 1:1 with "
+        f"boundary_condition_labels ({len(boundary_condition_labels)})"
+    )
+
     return ResolvedSubSweep(
         sizes=list(raw["sizes"]),
         span_lengths_m=spans,
         current_velocities_ms=[float(v) for v in raw["current_velocities_ms"]],
         gap_ratios=_resolve_gap_ratios(raw["gap_ratios"], sub_sweep_name=sub_sweep_name),
         content_density_kg_m3=[float(d) for d in raw["content_density_kg_m3"]],
-        c_n_values=_resolve_boundary_conditions(
-            raw["boundary_condition"], sub_sweep_name=sub_sweep_name
-        ),
-        boundary_condition_labels=list(raw["boundary_condition"]),
+        c_n_values=c_n_values,
+        boundary_condition_labels=boundary_condition_labels,
         wt_selection=list(raw["wt_selection"]),
     )
 

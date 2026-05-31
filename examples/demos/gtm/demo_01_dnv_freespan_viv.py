@@ -122,6 +122,18 @@ PIPELINE_GAP_RATIOS = [0.5, 1.0, 2.0, 5.0]
 JUMPER_SPAN_LENGTHS_M = [5, 10, 15, 20, 25, 30, 35, 40]
 JUMPER_GAP_RATIOS = [0.5, 1.0, 2.0, 5.0, float("inf")]  # inf = mid-water
 
+# The exact 15 keys every JSON result case must carry (frozen golden contract, ADR-0002).
+# The Results Store enriches the DataFrame with extra columns but MUST NOT mutate these dicts;
+# a guard in main() asserts this set before save_results_json so a mutation regression fails loudly.
+FROZEN_RESULT_KEYS = frozenset({
+    "pipe_type", "nominal_size", "od_m", "wt_m", "span_m", "v_current_ms",
+    "e_over_d", "f_n_hz", "v_r", "a_over_d", "status", "max_allowable_span_m",
+    "m_eff_kg_per_m", "case_id", "schedule",
+})
+
+# Default run identifier for the committed Baseline Run (the reference seed for the Store).
+BASELINE_RUN_ID = "baseline"
+
 # Status labels
 STATUS_PASS = "PASS"
 STATUS_INLINE_ONLY = "INLINE_ONLY"
@@ -552,6 +564,13 @@ def run_parametric_sweep(
     # Phase-2 follow-up (see docs/adr/0002). main() emits a runtime warning when the resolved
     # config diverges from those defaults so the chart/summary mismatch is not silent.
     results: List[Dict[str, Any]] = []
+    # Parallel lists collected in lock-step with `results` (one entry per appended case).
+    # They enrich the DataFrame ONLY (not the JSON results dicts), promoting the three
+    # outer axes (content density, boundary-condition LABEL, wt_selection) to df columns
+    # for the Results Store. The JSON cases[] must stay 15-key (asserted before save).
+    enrich_content_density: List[float] = []
+    enrich_boundary_condition: List[str] = []
+    enrich_wt_selection: List[str] = []
     case_id = 0
 
     pl = config.pipelines
@@ -568,7 +587,7 @@ def run_parametric_sweep(
     print(f"  Pipeline cases: {total_pipeline}")
 
     for content_density in pl.content_density_kg_m3:
-        for c_n in pl.c_n_values:
+        for c_n, bc_label in zip(pl.c_n_values, pl.boundary_condition_labels):
             for wt_sel in pl.wt_selection:
                 for size_name in pl.sizes:
                     pipe = get_pipe_by_size(pipe_catalog, size_name)
@@ -601,6 +620,9 @@ def run_parametric_sweep(
                                 result["case_id"] = f"PL-{case_id:04d}"
                                 result["schedule"] = wt_entry["schedule_approx"]
                                 results.append(result)
+                                enrich_content_density.append(float(content_density))
+                                enrich_boundary_condition.append(bc_label)
+                                enrich_wt_selection.append(wt_sel)
 
     pipeline_count = case_id
     print(f"    Completed {pipeline_count} pipeline cases")
@@ -620,7 +642,7 @@ def run_parametric_sweep(
     coating_t_j = jumper_props["anti_corrosion_coating"]["thickness_m"]
 
     for content_density in jm.content_density_kg_m3:
-        for c_n in jm.c_n_values:
+        for c_n, bc_label in zip(jm.c_n_values, jm.boundary_condition_labels):
             for _wt_sel in jm.wt_selection:
                 for _size_name in jm.sizes:
                     for span_m in jm.span_lengths_m:
@@ -642,11 +664,19 @@ def run_parametric_sweep(
                                 result["case_id"] = f"JM-{case_id - pipeline_count:04d}"
                                 result["schedule"] = "Sch 120 (jumper)"
                                 results.append(result)
+                                enrich_content_density.append(float(content_density))
+                                enrich_boundary_condition.append(bc_label)
+                                enrich_wt_selection.append(_wt_sel)
 
     jumper_count = case_id - pipeline_count
     print(f"    Completed {jumper_count} jumper cases")
 
     df = pd.DataFrame(results)
+    # Enrich the DataFrame ONLY (the JSON results dicts stay 15-key). These three promoted
+    # axes are collected in lock-step with `results` above, so they align row-for-row.
+    df["content_density_kg_m3"] = enrich_content_density
+    df["boundary_condition"] = enrich_boundary_condition
+    df["wt_selection"] = enrich_wt_selection
     return results, df
 
 
@@ -1399,8 +1429,31 @@ def main() -> None:
 
     # 6. Save JSON results
     print("\n[6/7] Saving JSON results...")
+    # GUARD: the JSON cases[] must stay exactly the 15 frozen keys. If df-enrichment (or any
+    # future change) ever mutated a result dict, fail loudly here rather than silently break
+    # the golden byte-identity.
+    if results:
+        actual_keys = set(results[0].keys())
+        assert actual_keys == set(FROZEN_RESULT_KEYS), (
+            "JSON result keys drifted from the 15 frozen keys "
+            f"(expected {sorted(FROZEN_RESULT_KEYS)}, got {sorted(actual_keys)})"
+        )
     saved_path = save_results_json(results, summary_df, total_cases)
     print(f"  Results saved to: {saved_path}")
+
+    # 6b. Results Store (SQLite + per-run CSV/manifest). RECOMPUTE branch only — the
+    # --from-cache branch has no resolved config (sweep_config is None) to snapshot.
+    if sweep_config is not None:
+        from results_store import write_run
+
+        run_dir = write_run(
+            run_id=BASELINE_RUN_ID,
+            resolved_config=sweep_config,
+            df=df,
+            summary_df=summary_df,
+            base_dir=RESULTS_DIR,
+        )
+        print(f"  Results Store updated: {run_dir}")
 
     # 7. Done
     elapsed = time.time() - start_time
