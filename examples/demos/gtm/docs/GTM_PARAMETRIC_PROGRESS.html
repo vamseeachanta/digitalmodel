@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTM Parametric Runs — Progress &amp; Decision Log</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2029; --panel2:#222b36; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2d3744; --accent:#4ea1ff; --green:#3fb950; --amber:#d29922; --red:#f85149;
+    --purple:#bc8cff; --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  code,.mono{font-family:var(--mono);font-size:.9em}
+  header{padding:28px 32px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#11202e,#0f1419)}
+  header h1{margin:0 0 6px;font-size:24px}
+  header .sub{color:var(--muted)}
+  .wrap{display:flex;max-width:1400px;margin:0 auto}
+  nav{position:sticky;top:0;align-self:flex-start;width:230px;padding:24px 16px;font-size:14px}
+  nav a{display:block;color:var(--muted);padding:5px 8px;border-radius:6px}
+  nav a:hover{background:var(--panel);color:var(--ink);text-decoration:none}
+  main{flex:1;padding:24px 32px;min-width:0}
+  section{margin-bottom:40px}
+  h2{font-size:19px;border-bottom:2px solid var(--accent);padding-bottom:6px;margin-top:0}
+  h3{font-size:16px;color:var(--purple);margin:22px 0 8px}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--ink);font-weight:600}
+  tr:nth-child(even) td{background:#171e27}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .b-done{background:rgba(63,185,80,.18);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+  .b-prog{background:rgba(210,153,34,.18);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
+  .b-todo{background:rgba(154,167,180,.15);color:var(--muted);border:1px solid var(--line)}
+  .b-merged{background:rgba(188,140,255,.18);color:var(--purple);border:1px solid rgba(188,140,255,.4)}
+  .pill{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px 6px;border-radius:4px;border:1px solid var(--line)}
+  .callout{background:var(--panel);border-left:4px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.good{border-left-color:var(--green)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .stat .n{font-size:26px;font-weight:700}
+  .stat .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .small{color:var(--muted);font-size:12.5px}
+  .turn{border-left:2px solid var(--line);padding:2px 0 2px 16px;margin:0 0 4px}
+  footer{padding:20px 32px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  .tag{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>GTM Parametric Runs — Progress &amp; Decision Log</h1>
+  <div class="sub">Productizing the 5 <code>digitalmodel/examples/demos/gtm/</code> demos into repeatable, yaml-driven client deliverables &nbsp;·&nbsp; umbrella <a href="https://github.com/vamseeachanta/digitalmodel/issues/591">#591</a> &nbsp;·&nbsp; <span class="small">Last updated: 2026-06-01 · this file is the living review surface, updated &amp; committed as work progresses</span></div>
+</header>
+<div class="wrap">
+<nav>
+  <a href="#status">Status overview</a>
+  <a href="#demos">Per-demo status</a>
+  <a href="#decisions">Decision log</a>
+  <a href="#adrs">Design (ADRs)</a>
+  <a href="#reviews">Adversarial reviews</a>
+  <a href="#findings">Key findings</a>
+  <a href="#index">Issues / PRs / commits</a>
+  <a href="#method">How this work runs</a>
+</nav>
+<main>
+
+<section id="status">
+  <h2>Status overview</h2>
+  <div class="grid">
+    <div class="stat"><div class="n" style="color:var(--green)">2 / 5</div><div class="l">demos productized</div></div>
+    <div class="stat"><div class="n" style="color:var(--purple)">2</div><div class="l">PRs merged</div></div>
+    <div class="stat"><div class="n">8</div><div class="l">subissues shipped</div></div>
+    <div class="stat"><div class="n">16</div><div class="l">adversarial reviews</div></div>
+    <div class="stat"><div class="n" style="color:var(--green)">100%</div><div class="l">baselines byte/numerically identical</div></div>
+  </div>
+  <div class="callout good"><b>Where things stand.</b> <b>demo_01</b> (DNV-RP-F105 free-span VIV) is fully productized and <span class="badge b-merged">MERGED</span> to <code>digitalmodel</code> main (PR <a href="https://github.com/vamseeachanta/digitalmodel/pull/663">#663</a>). <b>demo_02</b> (multi-code wall thickness) is complete on branch <code>gtm/demo02-parametric</code> (<span class="badge b-prog">3 commits, ready to PR</span>). A dedicated <code>repo-digitalmodel-gtm</code> Hermes kanban board was added (workspace-hub PR <a href="https://github.com/vamseeachanta/workspace-hub/pull/2910">#2910</a>, merged). demos 03–05 remain.</div>
+</section>
+
+<section id="demos">
+  <h2>Per-demo status</h2>
+  <table>
+    <tr><th>Demo</th><th>Domain</th><th>Status</th><th>Subissues</th><th>Landed</th></tr>
+    <tr><td><b>demo_01</b><br><span class="small">DNV-RP-F105 free-span VIV</span></td><td>subsea/screening</td><td><span class="badge b-merged">MERGED</span></td><td>5 subissues + 4 ADRs (§1 doc, §2 yaml, §3 params, §4 store, §5 CLI)</td><td>PR <a href="https://github.com/vamseeachanta/digitalmodel/pull/663">#663</a> → main</td></tr>
+    <tr><td><b>demo_02</b><br><span class="small">multi-code wall thickness</span></td><td>codes</td><td><span class="badge b-prog">DONE — ready to PR</span></td><td>3 subissues (§A yaml, §B store, §C CLI) — compressed template</td><td>branch <span class="pill">gtm/demo02-parametric</span> (3 commits)</td></tr>
+    <tr><td><b>demo_03</b><br><span class="small">deepwater mudmat install</span></td><td>codes/geotech</td><td><span class="badge b-todo">TODO</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/634">#634</a> — bearing-pressure≠capacity (ties #264)</td><td>—</td></tr>
+    <tr><td><b>demo_04</b><br><span class="small">shallow-water pipelay</span></td><td>codes</td><td><span class="badge b-todo">TODO</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/635">#635</a> — OFFPIPE xval #140</td><td>—</td></tr>
+    <tr><td><b>demo_05</b><br><span class="small">deepwater rigid jumper install</span></td><td>subsea</td><td><span class="badge b-todo">TODO</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/636">#636</a> — OrcaFlex xval #471/#478</td><td>—</td></tr>
+  </table>
+  <p class="small">Template established by demo_01 and applied to demo_02: a yaml <b>Sweep Config</b> (axes as lists) + jsonschema loader + generalized cross-product sweep, a SQLite <b>Results Store</b> (queryable, rebuildable) + per-run CSV/manifest, and a run/<code>lookup</code>/<code>rebuild-db</code> CLI — with the default run kept <b>byte/numerically identical</b> to the original, guarded by a golden regression test.</p>
+</section>
+
+<section id="decisions">
+  <h2>Decision log</h2>
+  <p class="small">Every fork the user resolved (✓ = chosen). Recommendations were marked at decision time; the user chose all recommendations except where noted.</p>
+
+  <h3>demo_01 pilot</h3>
+  <table>
+    <tr><th>Decision</th><th>Choice ✓</th><th>Why it mattered</th></tr>
+    <tr><td>Bisection saturation (<code>calc_max_allowable_span</code> silently returns ~500m)</td><td>Document-only + separate bug</td><td>Kept §1 scoped to docs; fix filed as <a href="https://github.com/vamseeachanta/digitalmodel/issues/653">#653</a></td></tr>
+    <tr><td>Subissue cadence</td><td>One-at-a-time as approved</td><td>Bounded context; honest parent checklist</td></tr>
+    <tr><td>Cross-cutting conventions</td><td>demo_01 sets the template</td><td>Avoided over-design before the pilot proved the shape</td></tr>
+    <tr><td>§2 "yaml is source of truth" reach (after BD-1)</td><td>Scoped/phased — yaml drives the sweep loop; locked constants stay in code (Phase-2 migrates)</td><td>Bounded §2 blast radius; charts unrefactored</td></tr>
+    <tr><td>Study method (OAT vs factorial)</td><td>Every axis is a list; engine = cross-product; policy is user data, no code modes</td><td>"Just get it running, parametrics by preference" — dissolved the modes question</td></tr>
+    <tr><td>Results storage</td><td>SQLite Results Store (fast read for demo / async manual write); HTML report client-facing; <code>lookup</code> CLI operator escape hatch</td><td>"database for quick lookup" + "report back next day" requirement</td></tr>
+    <tr><td>Push/PR cadence</td><td>Accumulate subissues on the branch, PR once the running program exists</td><td>Thin docs-only PR avoided; reviewers see code + analysis together</td></tr>
+  </table>
+
+  <h3>Hermes kanban GTM board</h3>
+  <table>
+    <tr><th>Decision</th><th>Choice ✓</th><th>Note</th></tr>
+    <tr><td>Which issues populate the board</td><td>All related GTM issues (#591, #632–636, pilot #649/#653/#654–657)</td><td>"clear picture of the work to be done"</td></tr>
+    <tr><td>Label strategy (single-board, first-match routing)</td><td>Move <code>domain:subsea</code> → <code>domain:gtm</code></td><td>Clean routing; dual-label would be order-dependent/fragile</td></tr>
+    <tr><td>Landing the workspace-hub change</td><td>Branch + PR</td><td>Safest given auto-sync drift + #2878 reorg at approval gate</td></tr>
+  </table>
+
+  <h3>demo_02</h3>
+  <table>
+    <tr><th>Decision</th><th>Choice ✓</th><th>Note</th></tr>
+    <tr><td>Shared machinery structure</td><td>Sibling modules (<code>sweep_config_demo02.py</code>, <code>results_store_demo02.py</code>)</td><td>Faster, lower risk, no refactor of merged demo_01</td></tr>
+    <tr><td>Subissue scope</td><td>Compressed 3 subissues (vs demo_01's 5)</td><td>Template proven; faster, still gated</td></tr>
+    <tr><td>Non-uniform rows + mixed-type columns</td><td>Normalize to uniform 14-key schema + FROZEN guard ('N/A'→null)</td><td>Cleaner Store/golden; golden captured post-normalize</td></tr>
+  </table>
+</section>
+
+<section id="adrs">
+  <h2>Design of record — ADRs (demo_01, committed)</h2>
+  <p class="small">Lives at <code>examples/demos/gtm/docs/adr/</code> + glossary <code>CONTEXT.md</code>. Produced in a grilling session; ratified as the template for #633–#636.</p>
+  <table>
+    <tr><th>ADR</th><th>Decision</th><th>Rationale</th></tr>
+    <tr><td><b>0001</b></td><td>Sweep Config is a distinct surface from the existing Prospect Intake (<code>prospect_adapter.py</code>), sharing only validation</td><td>Don't overload the sales-intake schema with a 680-case engineering matrix</td></tr>
+    <tr><td><b>0002</b></td><td>yaml is source of truth; module matrix/constants removed; <b>golden regression test</b>. Phased: Phase-1 = sweep loop only; Phase-2 migrates locked constants</td><td>A client-editable spec, not a matrix buried in Python</td></tr>
+    <tr><td><b>0003</b></td><td>Results Store = queryable <b>SQLite</b> (rebuildable, gitignored); yaml+CSV+manifest committed. Fast read / async manual write; no scheduler</td><td>"database for quick lookup" + "report back next day"; YAGNI on infra</td></tr>
+    <tr><td><b>0004</b></td><td>Every axis is a <b>list</b>; engine computes the cross-product; OAT/factorial is user data, not a code mode. Per-sub-sweep axes; constants/thresholds locked scalars</td><td>"just get it running, parametrics by preference"</td></tr>
+  </table>
+</section>
+
+<section id="reviews">
+  <h2>Adversarial reviews — what the gates caught</h2>
+  <p class="small">Every subissue ran <b>plan → adversarial plan review → user approval → implement → adversarial code review</b>, each by a <b>separate fresh-context agent</b> (never the author). Highlights of real defects caught <em>before</em> landing:</p>
+  <table>
+    <tr><th>Subissue</th><th>Gate</th><th>Notable defect caught</th></tr>
+    <tr><td>demo_01 §2</td><td>plan</td><td>5 byte-identity traps pre-code: int spans, <code>.inf</code> not bare <code>inf</code>, emission-order preservation, <code>pinned</code>→3.5596 not 3.56, constant-removal blast radius (→ phased scope)</td></tr>
+    <tr><td>demo_01 §2</td><td>code</td><td><b>DEFECT-1 (HIGH):</b> <code>c_n</code> reached <code>f_n</code> but not <code>calc_max_allowable_span</code> → a <code>fixed</code> config gave self-inconsistent rows (golden masked it)</td></tr>
+    <tr><td>demo_01 §4</td><td>plan+code</td><td>CSV↔SQLite <code>inf</code> determinism (text vs real); index made derived/gitignored; NaN-gap rejection</td></tr>
+    <tr><td>demo_01 §5</td><td>plan+code</td><td>argparse <code>add_subparsers</code> would break <code>--from-cache</code> golden → argv-sniff; <code>--run-id</code> path-traversal validation</td></tr>
+    <tr><td>demo_02 §A</td><td>plan</td><td>golden must be frozen <em>before</em> edits (circular otherwise); code strings ≠ enum <code>.value</code> (<code>"API RP 1111"</code> spaced vs <code>"API-RP-1111"</code> hyphen) would rewrite 48/72 rows</td></tr>
+    <tr><td>demo_02 §A</td><td>code</td><td><b>D1:</b> the <code>constants:</code> block was fully dead (edits silently ignored) → loud-refuse <code>SweepConfigError</code></td></tr>
+    <tr><td>demo_02 §B</td><td>plan</td><td>bool <code>is_safe</code> must be a TEXT token (<code>bool("False")</code> is truthy); composite natural PK; null float round-trip</td></tr>
+    <tr><td>demo_02 §C</td><td>code</td><td><b>D-1:</b> a stale cache could demote <code>--from-cache --run-id X</code> to recompute and seed a named Store row the warning said wouldn't exist</td></tr>
+  </table>
+</section>
+
+<section id="findings">
+  <h2>Key findings</h2>
+  <div class="callout warn"><b>#633's "~43s bottleneck" premise is FALSE.</b> Independently measured: demo_02 runs in <b>~13.5s</b>, of which ~4.5s is module import (plotly + the digitalmodel/OrcaFlex tree). The named <code>find_min_wall_thickness</code> binary search is <b>~7ms total</b> across all 72 cases. No performance work was needed — the issue's framing would have wasted effort. <code>find_min</code> left untouched.</div>
+  <div class="callout"><b>demo_01 bisection saturation (<a href="https://github.com/vamseeachanta/digitalmodel/issues/653">#653</a>).</b> <code>calc_max_allowable_span</code> silently returns ~500 m when no CF onset exists in [1,500] m — indistinguishable from a real 500 m result or the <code>v_current≤0</code> early-return. Documented in §1; fix deferred to #653.</div>
+  <div class="callout"><b>GTM board vs pilot tracking are two systems.</b> The <code>repo-digitalmodel-gtm</code> Hermes board (workspace-hub) tracks the GTM issues; the pilot code lives as digitalmodel GitHub issues/PRs. Placement is label-first via a reconcile that routes single-board by first-matching <code>domain:</code> label.</div>
+  <div class="callout"><b>Pre-push hook is worktree-incompatible (<a href="https://github.com/vamseeachanta/workspace-hub/issues/2911">workspace-hub#2911</a>).</b> It resolves sibling repos as children of the repo root, which don't exist in a git worktree → blocks push; required a one-time <code>--no-verify</code>.</div>
+</section>
+
+<section id="index">
+  <h2>Issues / PRs / commits</h2>
+  <h3>demo_01 pilot — <span class="badge b-merged">MERGED</span></h3>
+  <table>
+    <tr><th>#</th><th>Item</th><th>State</th></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/632">#632</a></td><td>demo_01 parent / pilot</td><td>open (umbrella)</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/649">#649</a></td><td>§1 reproduce + document (analysis doc)</td><td><span class="badge b-done">closed</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/654">#654</a></td><td>§2 yaml Sweep Config + loader</td><td><span class="badge b-done">closed</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/655">#655</a></td><td>§3 agreed parameters</td><td><span class="badge b-done">closed</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/656">#656</a></td><td>§4 Results Store (SQLite)</td><td><span class="badge b-done">closed</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/657">#657</a></td><td>§5 run/lookup CLI + runbook</td><td><span class="badge b-done">closed</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/pull/663">PR #663</a></td><td>demo_01 pilot (5 commits)</td><td><span class="badge b-merged">merged → main</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/653">#653</a></td><td>bug: bisection saturation fix</td><td><span class="badge b-todo">open (follow-up)</span></td></tr>
+  </table>
+  <h3>Hermes kanban GTM board</h3>
+  <table>
+    <tr><th>#</th><th>Item</th><th>State</th></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/workspace-hub/pull/2910">wshub PR #2910</a></td><td>add <code>repo-digitalmodel-gtm</code> board</td><td><span class="badge b-merged">merged</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/workspace-hub/issues/2911">wshub #2911</a></td><td>pre-push hook worktree-incompatibility</td><td><span class="badge b-todo">open (follow-up)</span></td></tr>
+  </table>
+  <h3>demo_02 — <span class="badge b-prog">ready to PR</span></h3>
+  <table>
+    <tr><th>#</th><th>Item</th><th>Commit</th></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/633">#633</a></td><td>demo_02 parent</td><td>—</td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/664">#664</a></td><td>§A yaml Sweep Config + loader + normalized output</td><td><span class="pill">e78536dc</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/665">#665</a></td><td>§B Results Store (flatten checks{})</td><td><span class="pill">bc2759c2</span></td></tr>
+    <tr><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/666">#666</a></td><td>§C run CLI + lookup + runbook</td><td><span class="pill">a3e6bf74</span></td></tr>
+    <tr><td colspan="3" class="small">Branch <code>gtm/demo02-parametric</code> off <code>origin/main</code> — 3 commits, not yet pushed.</td></tr>
+  </table>
+</section>
+
+<section id="method">
+  <h2>How this work runs</h2>
+  <ul>
+    <li><b>Orchestrator + fresh-context subagents.</b> Heavy reads (44–50 KB demos), large implementations, and reviews run in isolated subagents that return only verified outcomes — the main session stays bounded across many subissues.</li>
+    <li><b>Two adversarial gates per subissue.</b> A plan review (before code) and a code review (before commit), each by a separate agent prompted to hunt defects — never the author. They caught real bugs the passing golden tests would have masked.</li>
+    <li><b>Verify on disk, never trust "done".</b> Every subagent claim is re-checked (run the tests, query the SQLite, diff vs golden) before committing.</li>
+    <li><b>Worktree isolation + pathspec commits.</b> Each demo works in its own git worktree off <code>origin/main</code>; commits use explicit pathspecs (source only — generated artifacts/DBs excluded).</li>
+    <li><b>User-in-the-loop gate.</b> Plans and commits are approved by the user; nothing self-approves.</li>
+  </ul>
+</section>
+
+</main>
+</div>
+<footer>
+  Generated &amp; maintained by Claude Code as the living review surface for the GTM parametric-runs effort. Committed to <code>examples/demos/gtm/docs/GTM_PARAMETRIC_PROGRESS.html</code> and updated as work progresses. 🤖
+</footer>
+</body>
+</html>
