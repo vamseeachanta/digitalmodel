@@ -103,10 +103,62 @@ _CONSTANTS_SCHEMA = {
     },
 }
 
+_PHYSICAL_CONSTANTS_SCHEMA = {
+    "type": "object",
+    "required": [
+        "seawater_density_kg_m3",
+        "gravity_m_s2",
+        "steel_density_kg_m3",
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "seawater_density_kg_m3": {"type": "number"},
+        "gravity_m_s2": {"type": "number"},
+        "steel_density_kg_m3": {"type": "number"},
+    },
+}
+
+_REPORT_SCHEMA = {
+    "type": "object",
+    "required": ["design_pressure_mpa"],
+    "additionalProperties": False,
+    "properties": {
+        "design_pressure_mpa": {"type": "integer"},
+    },
+}
+
+_CATALOGS_SCHEMA = {
+    "type": "object",
+    "required": ["pipelines", "design_codes"],
+    "additionalProperties": False,
+    "properties": {
+        "pipelines": {"type": "string"},
+        "design_codes": {"type": "string"},
+    },
+}
+
+_ARTIFACTS_SCHEMA = {
+    "type": "object",
+    "required": ["results_root", "output_root"],
+    "additionalProperties": False,
+    "properties": {
+        "results_root": {"type": "string"},
+        "output_root": {"type": "string"},
+    },
+}
+
 DEMO02_CONFIG_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["meta", "sweep", "constants"],
+    "required": [
+        "meta",
+        "sweep",
+        "constants",
+        "physical_constants",
+        "report",
+        "catalogs",
+        "artifacts",
+    ],
     "properties": {
         "meta": {
             "type": "object",
@@ -118,6 +170,10 @@ DEMO02_CONFIG_SCHEMA = {
         },
         "sweep": _SWEEP_SCHEMA,
         "constants": _CONSTANTS_SCHEMA,
+        "physical_constants": _PHYSICAL_CONSTANTS_SCHEMA,
+        "report": _REPORT_SCHEMA,
+        "catalogs": _CATALOGS_SCHEMA,
+        "artifacts": _ARTIFACTS_SCHEMA,
     },
 }
 
@@ -154,6 +210,19 @@ class ResolvedDemo02Config:
     safety_class_label: str
     find_min_bounds_m: Tuple[float, float]
     find_min_tol_m: float
+    # Physical constants (hydrostatic + steel weight).
+    seawater_density_kg_m3: float
+    gravity_m_s2: float
+    steel_density_kg_m3: float
+    # Report scalars (fixed design pressure used by charts/summary, in MPa and Pa).
+    design_pressure_mpa: int
+    design_pressure_pa: float
+    # Catalog file locations — resolved to ABSOLUTE paths (relative to the yaml dir).
+    pipelines_path: Path
+    design_codes_path: Path
+    # Artifact roots — resolved to ABSOLUTE paths (relative to the yaml dir).
+    results_root: Path
+    output_root: Path
     source_path: Path
 
 
@@ -236,6 +305,63 @@ def _resolve_codes(
     return display_strings, design_codes
 
 
+@dataclass(frozen=True)
+class ResolvedDemo02Paths:
+    """The catalog + artifact paths only, resolved ABSOLUTE relative to the yaml dir.
+
+    Lightweight sibling of ``ResolvedDemo02Config`` that needs NO engineering stack — so
+    the demo can resolve where to read catalogs / write artifacts even on the engineering-
+    free ``--from-cache`` path. Validated against the same schema as the full loader.
+    """
+
+    pipelines_path: Path
+    design_codes_path: Path
+    results_root: Path
+    output_root: Path
+    source_path: Path
+
+
+def load_demo02_paths(path: str | Path) -> ResolvedDemo02Paths:
+    """Parse + validate the yaml and resolve ONLY the catalog/artifact paths.
+
+    No engineering imports — usable on the ``--from-cache`` path. Paths are resolved
+    relative to the yaml file's directory. Raises ``SweepConfigError`` on parse/schema
+    failure exactly like ``load_demo02_config``.
+    """
+    path = Path(path)
+    if not path.exists():
+        raise SweepConfigError(f"sweep config not found: {path}")
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh)
+    except yaml.YAMLError as exc:
+        raise SweepConfigError(f"malformed YAML in {path}: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise SweepConfigError(
+            f"sweep config {path} must be a YAML mapping at top level, "
+            f"got {type(raw).__name__}"
+        )
+    try:
+        jsonschema.validate(
+            instance=raw, schema=_load_schema(), cls=jsonschema.Draft7Validator
+        )
+    except jsonschema.ValidationError as exc:
+        raise SweepConfigError(
+            f"schema validation failed for {path}: {exc.message}"
+        ) from exc
+
+    base = path.resolve().parent
+    catalogs = raw["catalogs"]
+    artifacts = raw["artifacts"]
+    return ResolvedDemo02Paths(
+        pipelines_path=(base / catalogs["pipelines"]).resolve(),
+        design_codes_path=(base / catalogs["design_codes"]).resolve(),
+        results_root=(base / artifacts["results_root"]).resolve(),
+        output_root=(base / artifacts["output_root"]).resolve(),
+        source_path=path,
+    )
+
+
 def load_demo02_config(
     path: str | Path,
     *,
@@ -285,6 +411,24 @@ def load_demo02_config(
     meta = raw["meta"]
     sweep = raw["sweep"]
     constants = raw["constants"]
+    physical = raw["physical_constants"]
+    report = raw["report"]
+    catalogs = raw["catalogs"]
+    artifacts = raw["artifacts"]
+
+    # design_pressure_mpa is schema-int; assert at runtime so a loosened schema can't regress it.
+    design_pressure_mpa = report["design_pressure_mpa"]
+    if not isinstance(design_pressure_mpa, int) or isinstance(design_pressure_mpa, bool):
+        raise SweepConfigError(
+            f"report.design_pressure_mpa {design_pressure_mpa!r} is not an int."
+        )
+
+    # Catalog + artifact paths are resolved RELATIVE TO THE YAML FILE'S DIRECTORY.
+    base = path.resolve().parent
+    pipelines_path = (base / catalogs["pipelines"]).resolve()
+    design_codes_path = (base / catalogs["design_codes"]).resolve()
+    results_root = (base / artifacts["results_root"]).resolve()
+    output_root = (base / artifacts["output_root"]).resolve()
 
     # Pressures: schema enforced integer items; assert the runtime type so it cannot
     # silently regress if the schema is ever loosened.
@@ -332,6 +476,15 @@ def load_demo02_config(
         safety_class_label=str(constants["safety_class"]),
         find_min_bounds_m=(float(bounds[0]), float(bounds[1])),
         find_min_tol_m=float(constants["find_min_tol_m"]),
+        seawater_density_kg_m3=float(physical["seawater_density_kg_m3"]),
+        gravity_m_s2=float(physical["gravity_m_s2"]),
+        steel_density_kg_m3=float(physical["steel_density_kg_m3"]),
+        design_pressure_mpa=int(design_pressure_mpa),
+        design_pressure_pa=float(design_pressure_mpa) * 1e6,
+        pipelines_path=pipelines_path,
+        design_codes_path=design_codes_path,
+        results_root=results_root,
+        output_root=output_root,
         source_path=path,
     )
 
@@ -339,6 +492,8 @@ def load_demo02_config(
 __all__ = [
     "SweepConfigError",
     "ResolvedDemo02Config",
+    "ResolvedDemo02Paths",
     "DEMO02_CONFIG_SCHEMA",
     "load_demo02_config",
+    "load_demo02_paths",
 ]
