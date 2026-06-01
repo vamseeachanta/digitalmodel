@@ -51,7 +51,7 @@
 <body>
 <header>
   <h1>GTM Parametric Runs — Progress &amp; Decision Log</h1>
-  <div class="sub">Productizing the 5 <code>digitalmodel/examples/demos/gtm/</code> demos into repeatable, yaml-driven client deliverables &nbsp;·&nbsp; umbrella <a href="https://github.com/vamseeachanta/digitalmodel/issues/591">#591</a> &nbsp;·&nbsp; <span class="small">Last updated: 2026-06-01 · this file is the living review surface, updated &amp; committed as work progresses</span></div>
+  <div class="sub">Productizing the 5 <code>digitalmodel/examples/demos/gtm/</code> demos into repeatable, yaml-driven client deliverables &nbsp;·&nbsp; umbrella <a href="https://github.com/vamseeachanta/digitalmodel/issues/591">#591</a> &nbsp;·&nbsp; <span class="small">Last updated: 2026-06-01 (post-Codex orchestration review) · this file is the living review surface, updated &amp; committed as work progresses</span></div>
 </header>
 <div class="wrap">
 <nav>
@@ -61,6 +61,7 @@
   <a href="#adrs">Design (ADRs)</a>
   <a href="#reviews">Adversarial reviews</a>
   <a href="#findings">Key findings</a>
+  <a href="#codexreview">Codex orchestration review</a>
   <a href="#index">Issues / PRs / commits</a>
   <a href="#method">How this work runs</a>
 </nav>
@@ -75,7 +76,7 @@
     <div class="stat"><div class="n">16</div><div class="l">adversarial reviews</div></div>
     <div class="stat"><div class="n" style="color:var(--green)">100%</div><div class="l">baselines byte/numerically identical</div></div>
   </div>
-  <div class="callout good"><b>Where things stand.</b> <b>demo_01</b> (DNV-RP-F105 free-span VIV) is fully productized and <span class="badge b-merged">MERGED</span> to <code>digitalmodel</code> main (PR <a href="https://github.com/vamseeachanta/digitalmodel/pull/663">#663</a>). <b>demo_02</b> (multi-code wall thickness) is complete on branch <code>gtm/demo02-parametric</code> (<span class="badge b-prog">3 commits, ready to PR</span>). A dedicated <code>repo-digitalmodel-gtm</code> Hermes kanban board was added (workspace-hub PR <a href="https://github.com/vamseeachanta/workspace-hub/pull/2910">#2910</a>, merged). demos 03–05 remain.</div>
+  <div class="callout good"><b>Where things stand.</b> <b>demo_01</b> (DNV-RP-F105 free-span VIV) is fully productized and <span class="badge b-merged">MERGED</span> to <code>digitalmodel</code> main (PR <a href="https://github.com/vamseeachanta/digitalmodel/pull/663">#663</a>). <b>demo_02</b> (multi-code wall thickness) is complete on branch <code>gtm/demo02-parametric</code> (<span class="badge b-prog">3 commits, ready to PR</span>). A dedicated <code>repo-digitalmodel-gtm</code> Hermes kanban board was added (workspace-hub PR <a href="https://github.com/vamseeachanta/workspace-hub/pull/2910">#2910</a>, merged) — but a later content-remap <b>emptied it</b> (see Codex review #2; fix pending). <b>Now in progress:</b> demo_02 <a href="https://github.com/vamseeachanta/digitalmodel/issues/667">§D</a> full config-externalization (all config → yaml). demos 03–05 remain.</div>
 </section>
 
 <section id="demos">
@@ -158,6 +159,23 @@
   <div class="callout"><b>demo_01 bisection saturation (<a href="https://github.com/vamseeachanta/digitalmodel/issues/653">#653</a>).</b> <code>calc_max_allowable_span</code> silently returns ~500 m when no CF onset exists in [1,500] m — indistinguishable from a real 500 m result or the <code>v_current≤0</code> early-return. Documented in §1; fix deferred to #653.</div>
   <div class="callout"><b>GTM board vs pilot tracking are two systems.</b> The <code>repo-digitalmodel-gtm</code> Hermes board (workspace-hub) tracks the GTM issues; the pilot code lives as digitalmodel GitHub issues/PRs. Placement is label-first via a reconcile that routes single-board by first-matching <code>domain:</code> label.</div>
   <div class="callout"><b>Pre-push hook is worktree-incompatible (<a href="https://github.com/vamseeachanta/workspace-hub/issues/2911">workspace-hub#2911</a>).</b> It resolves sibling repos as children of the repo root, which don't exist in a git worktree → blocks push; required a one-time <code>--no-verify</code>.</div>
+</section>
+
+<section id="codexreview">
+  <h2>Codex orchestration review <span class="small">(2026-06-01, parallel Codex agent)</span></h2>
+  <p class="small">User directives this turn: <b>(1)</b> all config → reviewable yaml, never hardcoded ("industry not 1–2 companies"); <b>(2)</b> review the board/task-list/delegation-plan with Codex; <b>(3)</b> delegate to Codex as much as possible. A parallel <code>codex exec</code> agent reviewed the orchestration; 7 ranked findings:</p>
+  <table>
+    <tr><th>#</th><th>Sev</th><th>Finding</th><th>Action</th></tr>
+    <tr><td>1</td><td><span class="badge b-prog">High</span></td><td>Phase-1 still embeds editable config in code (constants, densities, thresholds, code factors, catalog paths)</td><td>Externalize ALL config to per-demo yaml + wire it → demo_02 <a href="https://github.com/vamseeachanta/digitalmodel/issues/667">§D #667</a></td></tr>
+    <tr><td>2</td><td><span class="badge b-prog">High</span> ✓verified</td><td><b>GTM board emptied</b> — content-remap re-dispersed the 12 issues by engineering domain (#633→codes, #632/#649→subsea-pipelines, #634-636→subsea-installation); board YAML now <code>cards: []</code></td><td>Fix: <code>program:gtm-parametric</code> overlay label honored before <code>domain:*</code> (follow-up)</td></tr>
+    <tr><td>3</td><td><span class="badge b-prog">High</span></td><td>demos 03–05 have domain cross-validation risk (bearing-pressure≠capacity, OFFPIPE, OrcaFlex) — compressed 3-template insufficient</td><td>Expand to a 4–5 part template adding a cross-validation gate</td></tr>
+    <tr><td>4</td><td>Med</td><td>Codex-heavy delegation weakens the separate-reviewer gate unless reviewer identity is explicit</td><td>Routing: author=Codex, review=Claude (non-author), orchestrator=Claude verifies on disk</td></tr>
+    <tr><td>5</td><td>Med</td><td>Data/catalog/output paths only partly externalized</td><td>Add <code>catalogs:</code>/<code>artifacts:</code> yaml blocks (in §D)</td></tr>
+    <tr><td>6</td><td>Med</td><td>ADR-0002/0004 ("locked constants stay in code") are now policy debt</td><td>ADR-0005: per-demo yaml is the complete config source of truth (in §D)</td></tr>
+    <tr><td>7</td><td>Low</td><td>Board shouldn't model members/data-locations</td><td>Board = work-state only; deliverable config in yaml</td></tr>
+  </table>
+  <div class="callout"><b>Decisions (user, 2026-06-01):</b> per-demo yaml only (no shared config library); Claude decides sequencing + uses parallel agents (Codex for heavy work); delegation routing = Codex authors / Claude reviews+verifies, <b>route by strength, work as a team</b>.</div>
+  <div class="callout good"><b>Sequencing decided:</b> (1) demo_02 <b>§D full config-externalization</b> (Codex authors, Claude reviews+verifies) → (2) push demo_02 PR → (3) demos 03–05 industry-grade with the expanded template → (4) board fix + demo_01 retrofit + bug #653 as follow-ups.</div>
 </section>
 
 <section id="index">
