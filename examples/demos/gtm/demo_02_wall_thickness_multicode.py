@@ -116,6 +116,13 @@ except ImportError:
         print("        Ensure PYTHONPATH includes 'examples/demos/gtm' directory.")
         sys.exit(1)
 
+# Results Store (additive): persists a queryable SQLite + CSV/manifest artifact set
+# alongside the legacy JSON/HTML. sqlite3 stdlib only; never alters existing outputs.
+try:
+    from results_store_demo02 import write_run as _store_write_run
+except ImportError:  # pragma: no cover — packaged import path fallback.
+    from examples.demos.gtm.results_store_demo02 import write_run as _store_write_run
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -132,6 +139,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 RESULTS_DIR = SCRIPT_DIR / "results"
+
+# Canonical run_id for the committed Baseline reference run in the Results Store.
+BASELINE_RUN_ID = "baseline"
 
 SEAWATER_DENSITY = 1025.0  # kg/m³
 GRAVITY = 9.80665  # m/s²
@@ -1375,6 +1385,12 @@ def main():
         action="store_true",
         help="Force re-run even if cached results exist",
     )
+    parser.add_argument(
+        "--results-dir",
+        default=None,
+        help="Override the results directory (legacy JSON + Results Store). "
+        "Defaults to the demo's results/ dir.",
+    )
     args = parser.parse_args()
 
     start_time = time.time()
@@ -1383,7 +1399,8 @@ def main():
     print("  GTM Demo 2: Pipeline Wall Thickness — Multi-Code Comparison")
     print("=" * 60)
 
-    results_path = RESULTS_DIR / "demo_02_wall_thickness_results.json"
+    results_dir = Path(args.results_dir) if args.results_dir else RESULTS_DIR
+    results_path = results_dir / "demo_02_wall_thickness_results.json"
 
     # 1. Load data files
     print("\n[1/7] Loading input data...")
@@ -1448,6 +1465,15 @@ def main():
         cached_min_wt = None
         cached_weight_penalty = None
         cached_summary = None
+
+        # Results Store (additive): persist the Baseline run alongside the legacy
+        # JSON/HTML. RECOMPUTE branch only (config is not None); never on --from-cache.
+        _store_write_run(
+            run_id=BASELINE_RUN_ID,
+            config=config,
+            results=all_results,
+            base_dir=results_dir,
+        )
     elif not CODES:
         # Fast regen uses string-coded cache data, but downstream chart builders still
         # expect the code-name constants to be initialised.
@@ -1485,7 +1511,7 @@ def main():
     # 6. Save JSON results
     if not args.from_cache or args.force:
         print("\n[6/7] Saving JSON results...")
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        results_dir.mkdir(parents=True, exist_ok=True)
 
         # D3: metadata must report the axes ACTUALLY swept, not the module constants. Derive
         # them from the produced results in first-seen order, so a subset config reports the
@@ -1533,7 +1559,7 @@ def main():
     print(f"{'='*60}")
     print(f"  Total cases analysed:  {total_cases}")
     print(f"  HTML report:           output/demo_02_wall_thickness_report.html")
-    print(f"  JSON results:          results/demo_02_wall_thickness_results.json")
+    print(f"  JSON results:          {results_path}")
     print(f"  Time elapsed:          {elapsed:.1f} seconds")
     print(f"{'='*60}")
 
