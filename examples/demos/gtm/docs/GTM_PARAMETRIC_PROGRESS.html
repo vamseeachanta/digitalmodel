@@ -51,7 +51,7 @@
 <body>
 <header>
   <h1>GTM Parametric Runs — Progress &amp; Decision Log</h1>
-  <div class="sub">Productizing the 5 <code>digitalmodel/examples/demos/gtm/</code> demos into repeatable, yaml-driven client deliverables &nbsp;·&nbsp; umbrella <a href="https://github.com/vamseeachanta/digitalmodel/issues/591">#591</a> &nbsp;·&nbsp; <span class="small">Last updated: 2026-06-01 (post-Codex orchestration review) · this file is the living review surface, updated &amp; committed as work progresses</span></div>
+  <div class="sub">Productizing the 5 <code>digitalmodel/examples/demos/gtm/</code> demos into repeatable, yaml-driven client deliverables &nbsp;·&nbsp; umbrella <a href="https://github.com/vamseeachanta/digitalmodel/issues/591">#591</a> &nbsp;·&nbsp; <span class="small">Last updated: 2026-06-01 (board reviewed + zoom-out; §D Codex-authoring in progress) · this file is the living review surface, updated &amp; committed as work progresses</span></div>
 </header>
 <div class="wrap">
 <nav>
@@ -62,6 +62,8 @@
   <a href="#reviews">Adversarial reviews</a>
   <a href="#findings">Key findings</a>
   <a href="#codexreview">Codex orchestration review</a>
+  <a href="#board">Board &amp; parallel agents</a>
+  <a href="#zoomout">Zoom-out: feature improvements</a>
   <a href="#index">Issues / PRs / commits</a>
   <a href="#method">How this work runs</a>
 </nav>
@@ -176,6 +178,36 @@
   </table>
   <div class="callout"><b>Decisions (user, 2026-06-01):</b> per-demo yaml only (no shared config library); Claude decides sequencing + uses parallel agents (Codex for heavy work); delegation routing = Codex authors / Claude reviews+verifies, <b>route by strength, work as a team</b>.</div>
   <div class="callout good"><b>Sequencing decided:</b> (1) demo_02 <b>§D full config-externalization</b> (Codex authors, Claude reviews+verifies) → (2) push demo_02 PR → (3) demos 03–05 industry-grade with the expanded template → (4) board fix + demo_01 retrofit + bug #653 as follow-ups.</div>
+</section>
+
+<section id="board">
+  <h2>Board &amp; parallel-agent assessment <span class="small">(Hermes kanban dashboard reviewed 2026-06-01)</span></h2>
+  <p class="small">Reviewed the GTM board live on the Hermes dashboard (<code>localhost:9119/kanban</code>) + via CLI. Finding:</p>
+  <table>
+    <tr><th>Aspect</th><th>State</th></tr>
+    <tr><td>GTM board cards (live db)</td><td>12 — <b>all Blocked / unassigned</b> (Triage/Todo/Scheduled/Ready/In-Progress all empty)</td></tr>
+    <tr><td>Canonical YAML</td><td><code>cards: []</code> — emptied by the content-remap; <b>next reconcile-from-YAML wipes the live 12</b></td></tr>
+    <tr><td>Orchestration</td><td>Manual · 0 active sessions · no dispatcher daemon</td></tr>
+    <tr><td>Agent profiles</td><td>only <code>default</code> — no multi-agent pool</td></tr>
+  </table>
+  <div class="callout warn"><b>Can we assign work agents for parallel work? Not as-is.</b> Kanban-driven dispatch needs (a) cards on one cohesive board persisted in the canonical YAML, (b) Blocked→Ready + profile-assigned, (c) multiple profiles, (d) a running dispatcher off Manual — <b>none in place</b>, and it sits inside the live #2878 reorg governance.</div>
+  <div class="callout good"><b>Recommended parallelism (already proven):</b> the GTM work is <b>sequential within a demo</b> (golden-gated slices) but <b>parallel across demos</b>. So run <b>one Codex author per demo (03/04/05) concurrently, Claude verifies each</b> — direct delegation, not the kanban swarm. Separately fix board <em>visibility</em> with a <code>program:gtm-parametric</code> overlay (tracking, not execution).</div>
+</section>
+
+<section id="zoomout">
+  <h2>Zoom-out — overall GTM feature improvements</h2>
+  <p class="small">Stepping back from the per-subissue grind: the GTM <em>feature</em> = "turn one-off engineering demos into yaml-driven, config-externalized, queryable, <b>trustworthy</b> client deliverables." Highest-leverage improvements:</p>
+  <table>
+    <tr><th>#</th><th>Improvement</th><th>Why (feature level)</th></tr>
+    <tr><td><b>1</b> ⭐</td><td><b>Shared <code>gtm_parametric</code> engine, not sibling clones</b> (one Sweep/Store/CLI core + thin per-demo adapters)</td><td>~700–900 dup lines/demo today; 03–05 would triple it. Highest-leverage call <em>before</em> 03–05. Distinct from "config per-demo yaml" (config location) — this is <b>code</b> sharing.</td></tr>
+    <tr><td>2</td><td>One operator entrypoint (<code>gtm run --demo demo_02 --input client.yml</code>)</td><td>Industry operators want one tool, not 5 scripts</td></tr>
+    <tr><td>3</td><td>Reusable config catalog (example <code>materials/codes/sites</code> yaml clients pick from)</td><td>Lowers the "edit yaml" barrier for non-experts</td></tr>
+    <tr><td>4</td><td>Cross-demo Results Store + one dashboard per engagement</td><td>"Show me everything we ran for Client X" — not per-demo silos</td></tr>
+    <tr><td>5</td><td>Cross-validation as a first-class gate for 03–05 (OFFPIPE/OrcaFlex xval)</td><td>The deliverable's value is <em>trustable numbers</em>; bake xval in</td></tr>
+    <tr><td>6</td><td>Package as an installable <code>gtm</code> subpackage (tests/docs/example configs)</td><td>A product, not an <code>examples/demos/</code> folder</td></tr>
+    <tr><td>7</td><td><code>program:gtm-parametric</code> board overlay</td><td>Make the whole effort one trackable thing (board currently empty)</td></tr>
+  </table>
+  <div class="callout"><b>Headline:</b> #1 (shared engine) is the decision point before demos 03–05 — your "per-demo yaml" choice governs <em>config location</em>; <em>code</em> sharing is still open. <span class="small">Awaiting user steer: pivot 03–05 to a shared engine, keep cloning, or fold #1+#5 into the 03–05 plan.</span></div>
 </section>
 
 <section id="index">
