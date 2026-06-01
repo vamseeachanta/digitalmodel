@@ -34,6 +34,7 @@ import logging
 import math
 import sys
 import time
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -142,6 +143,25 @@ RESULTS_DIR = SCRIPT_DIR / "results"
 
 # Canonical run_id for the committed Baseline reference run in the Results Store.
 BASELINE_RUN_ID = "baseline"
+
+# Demo identifier — the per-run report/store partition name (matches results_store_demo02.DEMO_ID).
+DEMO_ID = "demo_02"
+
+
+def validate_run_id(run_id: str) -> str:
+    """Validate a run_id is a single safe path segment; return it unchanged if valid.
+
+    A run_id becomes a filesystem directory name under the Results Store
+    (<base_dir>/parametric/demo_02/<run_id>/) and the per-run report dir, so it must be a
+    single safe path segment: no separators, no "." / ".." traversal, no empty string
+    (path-traversal guard). Delegates to the store's regex so both stay in lock-step. Raises
+    ValueError with a clean message on rejection.
+    """
+    try:
+        import results_store_demo02 as _rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as _rs
+    return _rs._validate_run_id(run_id)
 
 SEAWATER_DENSITY = 1025.0  # kg/m³
 GRAVITY = 9.80665  # m/s²
@@ -1242,8 +1262,13 @@ def build_report(
     all_results: List[Dict],
     penalty_info: Dict,
     total_cases: int,
+    output_path: Optional[Path] = None,
 ) -> str:
-    """Build the branded HTML report."""
+    """Build the branded HTML report.
+
+    ``output_path`` defaults (inside the body) to the legacy Baseline location so the
+    Baseline call stays byte-identical; a named Run passes a per-run path (per-run report).
+    """
     print("\n[Report] Building HTML report...")
 
     report = GTMReportBuilder(
@@ -1359,11 +1384,187 @@ def build_report(
     ])
 
     # Build and save
-    output_path = OUTPUT_DIR / "demo_02_wall_thickness_report.html"
+    if output_path is None:
+        output_path = OUTPUT_DIR / "demo_02_wall_thickness_report.html"
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     html = report.build(output_path)
 
     print(f"  ✓ Report saved to: {output_path}")
     return html
+
+
+# ---------------------------------------------------------------------------
+# Results Store subcommands: `lookup` + `rebuild-db`
+#
+# These are dispatched by an argv-sniff in __main__ so they NEVER touch the existing sweep
+# parser — the no-arg / --from-cache / --force / --results-dir / --run-id sweep path stays
+# byte-identical. Each subcommand builds its OWN ArgumentParser over sys.argv[2:].
+# ---------------------------------------------------------------------------
+
+# Columns shown by `lookup`, in a clean operator-facing order.
+_LOOKUP_DISPLAY_COLS = [
+    "pipe_size",
+    "code",
+    "internal_pressure_mpa",
+    "wt_mm",
+    "is_safe",
+    "governing_check",
+    "max_utilisation",
+    "check_pressure_containment",
+    "check_collapse",
+    "check_propagation_buckling",
+    "check_combined_loading",
+]
+
+
+def lookup_main(argv: List[str]) -> int:
+    """`lookup` subcommand: read-only filtered SELECT over the demo_02 Results Store cache.
+
+    Returns a process exit code (0 = ok, non-zero = error such as a missing db).
+    """
+    import sqlite3
+
+    try:
+        import results_store_demo02 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_02_wall_thickness_multicode.py lookup",
+        description="Look up cases in the demo_02 Results Store (read-only SQLite cache).",
+    )
+    parser.add_argument("--run-id", type=str, default=BASELINE_RUN_ID,
+                        help=f"Run to query (default '{BASELINE_RUN_ID}').")
+    parser.add_argument("--pipe-size", type=str, default=None,
+                        help='Pipe size filter, INCLUDING the literal \'"\' (e.g. \'12"\').')
+    parser.add_argument("--code", type=str, default=None,
+                        help='Design code filter — the SPACED display string '
+                             f'(one of: {", ".join(CODE_NAME_STRINGS)}).')
+    parser.add_argument("--pressure", type=int, default=None,
+                        help="Internal pressure filter in MPa (e.g. 20).")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--safe", action="store_true",
+                       help="Only cases that PASSED (is_safe = 'True').")
+    group.add_argument("--unsafe", action="store_true",
+                       help="Only cases that FAILED (is_safe = 'False').")
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    # Validate run_id before using it (clean error + non-zero exit, no traceback).
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        return 2
+
+    # M-2: validate --code against the 3 known display strings.
+    if args.code is not None and args.code not in CODE_NAME_STRINGS:
+        print(f"unknown code; valid: {CODE_NAME_STRINGS}")
+        return 2
+
+    db_path = rs._db_path(args.base_dir)
+    if not db_path.exists():
+        # Do NOT create the db; clear, actionable message; non-zero exit.
+        print(
+            f"No results.db at {db_path} — run a sweep first "
+            f"(e.g. `... --run-id {BASELINE_RUN_ID}`) or `... rebuild-db`."
+        )
+        return 1
+
+    # Open strictly read-only via a file: URI so a query never mutates/creates the cache.
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Distinct message for an unknown run_id vs. a zero-row filter result.
+        known_runs = [r[0] for r in conn.execute("SELECT run_id FROM runs ORDER BY run_id")]
+        if args.run_id not in known_runs:
+            available = ", ".join(known_runs) if known_runs else "(none)"
+            print(f"run_id '{args.run_id}' not found; available: {available}")
+            return 1
+
+        # Build a parameterized WHERE. Each filter binds the value verbatim (parameter
+        # binding makes the literal '"' in pipe_size and the spaced code string safe).
+        where = ["run_id = ?"]
+        params: List[Any] = [args.run_id]
+        if args.pipe_size is not None:
+            where.append("pipe_size = ?")
+            params.append(str(args.pipe_size))
+        if args.code is not None:
+            where.append("code = ?")
+            params.append(str(args.code))
+        if args.pressure is not None:
+            where.append("internal_pressure_mpa = ?")
+            params.append(int(args.pressure))
+        if args.safe:
+            # M-1: literal TEXT token, NOT bool/int.
+            where.append("is_safe = ?")
+            params.append("True")
+        elif args.unsafe:
+            where.append("is_safe = ?")
+            params.append("False")
+
+        cols = ", ".join(_LOOKUP_DISPLAY_COLS)
+        sql = (
+            f"SELECT {cols} FROM cases WHERE {' AND '.join(where)} "
+            "ORDER BY pipe_size, code, internal_pressure_mpa"
+        )
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        print("0 cases match.")
+        return 0
+
+    # Clean fixed-width table.
+    widths = [len(c) for c in _LOOKUP_DISPLAY_COLS]
+    str_rows = [[("" if v is None else str(v)) for v in row] for row in rows]
+    for r in str_rows:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    header = "  ".join(c.ljust(widths[i]) for i, c in enumerate(_LOOKUP_DISPLAY_COLS))
+    print(header)
+    print("  ".join("-" * widths[i] for i in range(len(_LOOKUP_DISPLAY_COLS))))
+    for r in str_rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(r)))
+    print(f"\n{len(rows)} case(s) matched.")
+    return 0
+
+
+def rebuild_main(argv: List[str]) -> int:
+    """`rebuild-db` subcommand: regenerate the SQLite cache + index.csv from the text source."""
+    import sqlite3
+
+    try:
+        import results_store_demo02 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_02_wall_thickness_multicode.py rebuild-db",
+        description="Rebuild the demo_02 Results Store SQLite cache + index.csv from "
+                    "the per-run cases.csv / manifest.json text source of truth.",
+    )
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    db_path = rs.rebuild_db(args.base_dir)
+    print(f"Results Store rebuilt: {db_path}")
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        n_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+        n_cases = conn.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        per_run = conn.execute(
+            "SELECT run_id, COUNT(*) FROM cases GROUP BY run_id ORDER BY run_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    print(f"  runs: {n_runs}   cases: {n_cases}")
+    for run_id, n in per_run:
+        print(f"    {run_id}: {n} cases")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -1391,7 +1592,34 @@ def main():
         help="Override the results directory (legacy JSON + Results Store). "
         "Defaults to the demo's results/ dir.",
     )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=BASELINE_RUN_ID,
+        help="Run identifier for the Results Store + per-run report dir "
+        f"(default '{BASELINE_RUN_ID}', the Baseline Run). A named run writes its report "
+        "to output/parametric/demo_02/<run_id>/report.html and seeds <run_id> in the Store.",
+    )
     args = parser.parse_args()
+
+    # Validate run_id BEFORE any run dir / report path is built from it (path-traversal /
+    # empty / collision guard). Clean error + non-zero exit, never a raw traceback.
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(2)
+
+    # --from-cache regenerates the Baseline report only (cached data is always the baseline
+    # 72 cases). A named --run-id under --from-cache would write a mislabeled report, so warn
+    # AND force the report path back to the legacy Baseline location below.
+    if args.from_cache and args.run_id != BASELINE_RUN_ID:
+        warnings.warn(
+            f"--from-cache regenerates the baseline report only; --run-id '{args.run_id}' "
+            "will not produce a named Results Store row (run without --from-cache to compute "
+            "a named run). The report is written to the baseline path.",
+            stacklevel=2,
+        )
 
     start_time = time.time()
 
@@ -1466,10 +1694,12 @@ def main():
         cached_weight_penalty = None
         cached_summary = None
 
-        # Results Store (additive): persist the Baseline run alongside the legacy
-        # JSON/HTML. RECOMPUTE branch only (config is not None); never on --from-cache.
+        # Results Store (additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only (config is not None). D-1: if --from-cache demoted to
+        # recompute (stale cache), force the BASELINE run_id so we never seed a named row
+        # the --from-cache warning said wouldn't exist.
         _store_write_run(
-            run_id=BASELINE_RUN_ID,
+            run_id=(BASELINE_RUN_ID if args.from_cache else args.run_id),
             config=config,
             results=all_results,
             base_dir=results_dir,
@@ -1506,7 +1736,17 @@ def main():
 
     # 5. Build HTML report
     print("\n[5/7] Building HTML report...")
-    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, penalty_info, total_cases)
+    # Baseline Run keeps the legacy output path (byte-identical); a named Run writes a per-run
+    # report under output/parametric/demo_02/<run_id>/report.html. Under --from-cache the data
+    # is always the baseline 72, so a named run is forced back to the baseline path (N-6).
+    if args.run_id == BASELINE_RUN_ID or args.from_cache:
+        report_path: Optional[Path] = None  # build_report defaults to the legacy Baseline path
+    else:
+        report_path = OUTPUT_DIR / "parametric" / DEMO_ID / args.run_id / "report.html"
+    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, penalty_info,
+                 total_cases, output_path=report_path)
+    if report_path is not None:
+        print(f"  Per-run report written to: {report_path}")
 
     # 6. Save JSON results
     if not args.from_cache or args.force:
@@ -1565,4 +1805,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Argv-sniff dispatch: the `lookup` / `rebuild-db` subcommands are handled by their OWN
+    # parsers over sys.argv[2:] and NEVER reach the sweep parser, so the no-arg / --from-cache
+    # / --force / --results-dir / --run-id sweep path is untouched and byte-identical.
+    if len(sys.argv) > 1 and sys.argv[1] == "lookup":
+        sys.exit(lookup_main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "rebuild-db":
+        sys.exit(rebuild_main(sys.argv[2:]))
+    else:
+        main()
