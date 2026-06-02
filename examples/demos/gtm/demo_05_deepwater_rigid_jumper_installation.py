@@ -1612,6 +1612,24 @@ def main():
         # Build summary after sweep
         summary_df = build_summary_table(all_results, config=config)
 
+        # Results Store (§2, additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only. Mirrors demo_04 — a recompute seeds the committed BASELINE
+        # run partition (cases.csv + manifest.json are the text source of truth; results.db
+        # + index.csv are derived/gitignored). Additive: it does NOT touch the JSON/HTML the
+        # §1 golden pins, so the default sweep stays byte-identical.
+        try:
+            from results_store_demo05 import write_run as _store_write_run
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.results_store_demo05 import (
+                write_run as _store_write_run,
+            )
+        _store_write_run(
+            run_id="baseline",
+            config=config,
+            results=all_results,
+            base_dir=paths.results_root,
+        )
+
     total_cases = len(all_results)
 
     # [3/7] Build charts
