@@ -89,6 +89,10 @@ INPUTS_DIR = SCRIPT_DIR / "inputs"
 # The committed Baseline Sweep Config — the COMPLETE source of truth (ADR-0002/0005).
 BASELINE_CONFIG_PATH = INPUTS_DIR / "demo_04_pipelay.yml"
 
+# Canonical run_id for the committed Baseline reference run in the Results Store
+# (mirrors demo_03; matches results_store_demo04.DEMO_ID partition).
+BASELINE_RUN_ID = "baseline"
+
 # ---------------------------------------------------------------------------
 # Module-default constants (legacy fallback when config is None — byte-identical
 # to the committed baseline yaml values). The yaml is the LIVE source of truth on
@@ -1834,6 +1838,23 @@ def main():
         print("\n[2/7] Running parametric sweep...")
         all_results, results_df = run_parametric_sweep(vessels, pipes, config=config)
         total_cases = len(all_results)
+
+        # Results Store (additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only (config is not None). Mirrors demo_03 — the run_id is the
+        # committed BASELINE_RUN_ID so a default sweep seeds exactly the baseline reference
+        # row. This is additive: it does NOT touch the JSON/HTML the golden pins.
+        try:
+            from results_store_demo04 import write_run as _store_write_run
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.results_store_demo04 import (
+                write_run as _store_write_run,
+            )
+        _store_write_run(
+            run_id=BASELINE_RUN_ID,
+            config=config,
+            results=all_results,
+            base_dir=results_root,
+        )
 
     # ── Step 3: Build charts ───────────────────────────────────────────────
     print("\n[3/7] Building charts...")
