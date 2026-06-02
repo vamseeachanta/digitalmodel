@@ -15,6 +15,7 @@ results/parametric/**/*.db-shm
 results/parametric/demo_01/index.csv
 results/parametric/demo_02/index.csv
 results/parametric/demo_03/index.csv
+results/parametric/demo_04/index.csv
 results/parametric/demo_05/index.csv
 
 # --- demo_01 ---
@@ -47,6 +48,17 @@ results/parametric/demo_03/*/
 results/parametric/demo_03/baseline/*.db
 results/parametric/demo_03/baseline/*.db-wal
 results/parametric/demo_03/baseline/*.db-shm
+
+# --- demo_04 ---
+# The SQLite cache (+ WAL/SHM sidecars) is covered by the path-anchored globs above.
+# Transient client run dirs under the Store are not tracked...
+results/parametric/demo_04/*/
+# ...but KEEP the committed Baseline reference run (its cases.csv + manifest.json are source of truth).
+!results/parametric/demo_04/baseline/
+# Re-ignore any SQLite that lands inside the baseline dir (the db lives one level up anyway).
+results/parametric/demo_04/baseline/*.db
+results/parametric/demo_04/baseline/*.db-wal
+results/parametric/demo_04/baseline/*.db-shm
 
 # --- demo_05 ---
 # The SQLite cache (+ WAL/SHM sidecars) is covered by the path-anchored globs above.

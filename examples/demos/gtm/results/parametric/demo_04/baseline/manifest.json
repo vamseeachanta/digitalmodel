@@ -1,0 +1,69 @@
+{
+  "demo_id": "demo_04",
+  "git_sha": "b1804592fb8dff7576eb0420b75f827a9810a254",
+  "input_ref": "examples/demos/gtm/inputs/demo_04_pipelay.yml",
+  "n_error": 0,
+  "n_go": 50,
+  "n_marginal": 5,
+  "n_nogo": 5,
+  "resolved_config": {
+    "code_ref": "DNV-ST-F101 (2021) / API RP 1111 (2015) / DNV-OS-F101 (2013)",
+    "demo_id": "demo_04",
+    "go_threshold": 0.85,
+    "grade": "X65",
+    "gravity_m_s2": 9.80665,
+    "nogo_utilisation": 1.0,
+    "output_root": "examples/demos/gtm/output",
+    "pipe_sizes": [
+      [
+        "8in",
+        8.18
+      ],
+      [
+        "12in",
+        9.53
+      ],
+      [
+        "16in",
+        9.53
+      ],
+      [
+        "20in",
+        9.53
+      ],
+      [
+        "24in",
+        9.53
+      ]
+    ],
+    "pipelines_path": "examples/demos/gtm/data/pipelines.json",
+    "results_root": "examples/demos/gtm/results",
+    "sagbend_stress_basis": "combined",
+    "seawater_density_kg_m3": 1025.0,
+    "smts_pa": 531000000.0,
+    "smys_pa": 448000000.0,
+    "source_path": "examples/demos/gtm/inputs/demo_04_pipelay.yml",
+    "steel_density_kg_m3": 7850.0,
+    "stress_limit_factor": 0.72,
+    "tension_margin": 1.1,
+    "util_color_amber_below": 0.9,
+    "util_color_green_below": 0.7,
+    "vessels": [
+      "PLV-001",
+      "PLV-002"
+    ],
+    "vessels_path": "examples/demos/gtm/data/pipelay_vessels.json",
+    "water_depths": [
+      7,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "youngs_modulus_pa": 207000000000.0
+  },
+  "run_id": "baseline",
+  "total_cases": 60,
+  "utc": "2026-06-02T11:25:00.592828+00:00"
+}

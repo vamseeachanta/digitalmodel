@@ -41,6 +41,7 @@ import logging
 import math
 import sys
 import time
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -84,6 +85,39 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 RESULTS_DIR = SCRIPT_DIR / "results"
+INPUTS_DIR = SCRIPT_DIR / "inputs"
+
+# The committed Baseline Sweep Config — the COMPLETE source of truth (ADR-0002/0005).
+BASELINE_CONFIG_PATH = INPUTS_DIR / "demo_04_pipelay.yml"
+
+# Canonical run_id for the committed Baseline reference run in the Results Store
+# (mirrors demo_03; matches results_store_demo04.DEMO_ID partition).
+BASELINE_RUN_ID = "baseline"
+
+# Demo identifier — the per-run report/store partition name (matches results_store_demo04.DEMO_ID).
+DEMO_ID = "demo_04"
+
+
+def validate_run_id(run_id: str) -> str:
+    """Validate a run_id is a single safe path segment; return it unchanged if valid.
+
+    A run_id becomes a filesystem directory name under the Results Store
+    (<base_dir>/parametric/demo_04/<run_id>/) and the per-run report dir, so it must be a
+    single safe path segment: no separators, no "." / ".." traversal, no empty string
+    (path-traversal guard). Delegates to the store's regex so both stay in lock-step. Raises
+    ValueError with a clean message on rejection.
+    """
+    try:
+        import results_store_demo04 as _rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo04 as _rs
+    return _rs._validate_run_id(run_id)
+
+# ---------------------------------------------------------------------------
+# Module-default constants (legacy fallback when config is None — byte-identical
+# to the committed baseline yaml values). The yaml is the LIVE source of truth on
+# the compute path; these module globals are only the config=None fallback.
+# ---------------------------------------------------------------------------
 
 # Physical constants
 SEAWATER_DENSITY = 1025.0       # kg/m3
@@ -95,12 +129,21 @@ SMTS_X65 = 531e6                # Pa — API 5L X65
 
 # DNV-ST-F101 installation stress limit
 STRESS_LIMIT_FACTOR = 0.72      # σ_allow = 0.72 × SMYS
+TENSION_MARGIN = 1.10           # operational margin above absolute minimum tension
+GO_THRESHOLD = 0.85             # max_util >= this (and all pass) => MARGINAL
+NOGO_UTILISATION = 1.0          # max_util > this (or any check fails) => NO_GO
+SAGBEND_STRESS_BASIS = "combined"  # 'combined' (default) | 'bending_only' (diagnostic)
+
+# Display-only utilisation-colour thresholds (SEPARATE from the go/no-go logic bands).
+UTIL_COLOR_GREEN_BELOW = 0.70
+UTIL_COLOR_AMBER_BELOW = 0.90
 
 # Parameter matrix
 WATER_DEPTHS = [7, 10, 15, 20, 25, 30]  # metres — shallow water focus
 
 # Pipe sizes to analyse: nominal_size -> target wall thickness (mm)
-# Using standard/minimum WT for installation screening (worst-case bending stress)
+# Using standard/minimum WT for installation screening (worst-case bending stress).
+# WT is ON the compute path (drives A_steel/axial and OD/WT/bending) — externalized to the yaml.
 PIPE_SELECTION = {
     "8in":  8.18,   # Sch 40
     "12in": 9.53,   # Sch 40
@@ -108,6 +151,15 @@ PIPE_SELECTION = {
     "20in": 9.53,   # Sch 20
     "24in": 9.53,   # Sch 20
 }
+
+
+# ---------------------------------------------------------------------------
+# Config accessors — resolve a scalar from the config, else the module default.
+# ---------------------------------------------------------------------------
+
+def _cfg(config: Optional[Any], attr: str, default: Any) -> Any:
+    """Return ``config.attr`` when *config* is supplied, else the module default."""
+    return getattr(config, attr) if config is not None else default
 
 # Display labels
 PIPE_DISPLAY = {
@@ -123,11 +175,17 @@ PIPE_DISPLAY = {
 # Helpers
 # ---------------------------------------------------------------------------
 
-def utilisation_color(util: float) -> str:
-    """Return hex color for utilisation: green / amber / red."""
-    if util < 0.70:
+def utilisation_color(util: float, config: Optional[Any] = None) -> str:
+    """Return hex color for utilisation: green / amber / red.
+
+    These DISPLAY thresholds are deliberately SEPARATE from the go/no-go LOGIC bands
+    (``go_threshold`` / ``nogo_utilisation``) — they must not be coupled (reviewer finding).
+    """
+    green_below = _cfg(config, "util_color_green_below", UTIL_COLOR_GREEN_BELOW)
+    amber_below = _cfg(config, "util_color_amber_below", UTIL_COLOR_AMBER_BELOW)
+    if util < green_below:
         return COLORS["success"]   # green
-    elif util <= 0.90:
+    elif util <= amber_below:
         return COLORS["warning"]   # amber
     else:
         return COLORS["danger"]    # red
@@ -148,27 +206,36 @@ def pipe_label(nominal_size: str) -> str:
 # Data loaders
 # ---------------------------------------------------------------------------
 
-def load_vessels() -> List[Dict[str, Any]]:
-    """Load vessel data from pipelay_vessels.json."""
-    path = DATA_DIR / "pipelay_vessels.json"
+def load_vessels(config: Optional[Any] = None) -> List[Dict[str, Any]]:
+    """Load vessel data from the pipelay_vessels catalog.
+
+    When *config* is supplied the catalog path comes from it; otherwise the module default.
+    """
+    path = config.vessels_path if config is not None else DATA_DIR / "pipelay_vessels.json"
     with open(path, "r") as f:
         data = json.load(f)
     return data["vessels"]
 
 
-def load_pipes() -> List[Dict[str, Any]]:
-    """Load pipeline data from pipelines.json and select target wall thicknesses."""
-    path = DATA_DIR / "pipelines.json"
+def load_pipes(config: Optional[Any] = None) -> List[Dict[str, Any]]:
+    """Load pipeline data from the pipelines catalog and select target wall thicknesses.
+
+    The pipe selection map (nominal_size -> target WT mm) is ON the compute path — WT drives
+    A_steel/axial and OD/WT/bending. When *config* is supplied both the catalog path and the
+    selection map come from it; otherwise the module defaults.
+    """
+    path = config.pipelines_path if config is not None else DATA_DIR / "pipelines.json"
+    pipe_selection = config.pipe_selection if config is not None else PIPE_SELECTION
     with open(path, "r") as f:
         data = json.load(f)
 
     selected = []
     for pipe in data["pipes"]:
         nom = pipe["nominal_size"]
-        if nom not in PIPE_SELECTION:
+        if nom not in pipe_selection:
             continue
 
-        target_wt_mm = PIPE_SELECTION[nom]
+        target_wt_mm = pipe_selection[nom]
 
         # Find the wall thickness entry closest to target
         best_wt = None
@@ -223,17 +290,42 @@ def extract_vessel_params(vessel: Dict) -> Dict[str, Any]:
     }
 
 
+def vessel_band_specs(vessels: List[Dict]) -> List[Dict[str, Any]]:
+    """Derive per-vessel display specs (stinger angle band + tensioner capacity) from the
+    catalog, so the chart bands / capacity lines / methodology text are SINGLE-SOURCED from the
+    vessel data rather than duplicated literals (reviewer finding).
+
+    Returns one dict per vessel: {id, name, angle_min_deg, angle_max_deg, tensioner_capacity_te}.
+    """
+    specs = []
+    for v in vessels:
+        vp = extract_vessel_params(v)
+        specs.append({
+            "id": vp["id"],
+            "name": vp["name"],
+            "angle_min_deg": vp["stinger_angle_min_deg"],
+            "angle_max_deg": vp["stinger_angle_max_deg"],
+            "tensioner_capacity_te": vp["tensioner_capacity_te"],
+        })
+    return specs
+
+
 # ---------------------------------------------------------------------------
 # S-lay Catenary Mechanics (self-contained)
 # ---------------------------------------------------------------------------
 
-def calc_submerged_weight(pipe: Dict) -> float:
+def calc_submerged_weight(pipe: Dict, config: Optional[Any] = None) -> float:
     """Return submerged weight per unit length in kN/m.
 
     Uses the pre-calculated value from the pipe catalog (N/m) and converts to kN/m.
     If the catalogued value is near zero or negative (near-neutral buoyancy for
     small uncoated pipes), fall back to a first-principles calculation.
+
+    When *config* is supplied the seawater density + gravity come from it; otherwise defaults.
     """
+    seawater_density = _cfg(config, "seawater_density_kg_m3", SEAWATER_DENSITY)
+    gravity = _cfg(config, "gravity_m_s2", GRAVITY)
+
     w_sub_n = pipe["submerged_weight_n_per_m"]
 
     if w_sub_n > 1.0:
@@ -248,9 +340,9 @@ def calc_submerged_weight(pipe: Dict) -> float:
     a_displaced = math.pi / 4.0 * od_coat**2
 
     mass_per_m = pipe["mass_total_kg_per_m"]
-    buoyancy_per_m = SEAWATER_DENSITY * a_displaced
+    buoyancy_per_m = seawater_density * a_displaced
 
-    w_sub = (mass_per_m - buoyancy_per_m) * GRAVITY  # N/m
+    w_sub = (mass_per_m - buoyancy_per_m) * gravity  # N/m
     return max(w_sub / 1000.0, 0.01)  # kN/m, floor at 0.01 to avoid division issues
 
 
@@ -332,16 +424,22 @@ def calc_sagbend_stress(
     od_m: float,
     wt_m: float,
     a_steel_m2: float,
+    config: Optional[Any] = None,
 ) -> Dict[str, float]:
-    """Calculate sagbend bending stress near the TDP.
+    """Calculate sagbend stress near the TDP.
 
     The sagbend has the tightest curvature in the catenary span (at the TDP).
     Curvature kappa = w_sub / H, so R_sag = H / w_sub = a.
 
-    For installation screening, the sagbend check is primarily a bending strain
-    check per DNV-ST-F101 Sec 5.  The axial tension at the TDP actually stabilises
-    the pipe against buckling and is beneficial — it is NOT added to the bending
-    stress for the sagbend utilisation.  Tension is checked separately (Check 2).
+    Stress basis (the §4 fix — ``criteria.sagbend_stress_basis``, default ``combined``):
+
+      - ``combined`` (DEFAULT, user-approved): the report has always CLAIMED a combined
+        bending + axial stress (sigma = E*OD/(2R) + H/A_steel, DNV-ST-F101 Sec 5), but the
+        legacy code computed BENDING ONLY and silently dropped the axial term. Now
+        sigma_combined = sigma_bending + sigma_axial and utilisation = sigma_combined /
+        (stress_limit_factor * SMYS). sigma_combined_mpa equals the SUM.
+      - ``bending_only``: the legacy diagnostic path — utilisation = sigma_bending / allowable,
+        sigma_combined_mpa == sigma_bending_mpa (axial reported but not added).
 
     Returns
     -------
@@ -349,12 +447,17 @@ def calc_sagbend_stress(
         R_sag_m           : radius of curvature at sagbend (m)
         kappa_sag         : curvature (1/m)
         sigma_bending_mpa : bending stress at sagbend (MPa)
-        sigma_axial_mpa   : axial stress from horizontal tension (MPa) — reported, not added
-        utilisation       : sigma_bending / (0.72 * SMYS)
+        sigma_axial_mpa   : axial stress from horizontal tension (MPa)
+        sigma_combined_mpa: bending + axial (combined basis) or == bending (bending_only basis)
+        stress_basis      : the active basis ('combined' | 'bending_only')
+        utilisation       : sigma_basis / (stress_limit_factor * SMYS)
         status            : PASS / FAIL
     """
-    E = STEEL_YOUNGS_MODULUS
-    allowable = STRESS_LIMIT_FACTOR * SMYS_X65  # Pa
+    E = _cfg(config, "youngs_modulus_pa", STEEL_YOUNGS_MODULUS)
+    smys = _cfg(config, "smys_pa", SMYS_X65)
+    slf = _cfg(config, "stress_limit_factor", STRESS_LIMIT_FACTOR)
+    basis = _cfg(config, "sagbend_stress_basis", SAGBEND_STRESS_BASIS)
+    allowable = slf * smys  # Pa
 
     # Curvature at TDP
     w_sub_n = w_sub * 1000.0  # kN/m -> N/m
@@ -367,6 +470,7 @@ def calc_sagbend_stress(
             "sigma_bending_mpa": float("inf"),
             "sigma_axial_mpa": 0.0,
             "sigma_combined_mpa": float("inf"),
+            "stress_basis": basis,
             "utilisation": 999.0,
             "status": "FAIL",
         }
@@ -377,18 +481,27 @@ def calc_sagbend_stress(
     # Bending stress: sigma = E * OD / (2 * R)
     sigma_bending = E * od_m / (2.0 * R_sag) if R_sag > 0 else float("inf")
 
-    # Axial stress from horizontal tension at TDP (reported for reference)
+    # Axial stress from horizontal tension at TDP
     sigma_axial = H_n / a_steel_m2 if a_steel_m2 > 0 else 0.0
 
-    # Sagbend utilisation based on bending stress only
-    utilisation = sigma_bending / allowable if allowable > 0 else 999.0
+    # The §4 fix: combined basis adds axial to bending (matching the report's stated method);
+    # bending_only is the legacy diagnostic path (axial reported but not added).
+    if basis == "bending_only":
+        sigma_for_util = sigma_bending
+        sigma_combined = sigma_bending
+    else:  # 'combined' (default, user-approved)
+        sigma_combined = sigma_bending + sigma_axial
+        sigma_for_util = sigma_combined
+
+    utilisation = sigma_for_util / allowable if allowable > 0 else 999.0
 
     return {
         "R_sag_m": round(R_sag, 1),
         "kappa_sag": round(kappa_sag, 8),
         "sigma_bending_mpa": round(sigma_bending / 1e6, 1),
         "sigma_axial_mpa": round(sigma_axial / 1e6, 1),
-        "sigma_combined_mpa": round(sigma_bending / 1e6, 1),
+        "sigma_combined_mpa": round(sigma_combined / 1e6, 1),
+        "stress_basis": basis,
         "utilisation": round(utilisation, 4),
         "status": "PASS" if utilisation <= 1.0 else "FAIL",
     }
@@ -398,6 +511,7 @@ def calc_overbend_stress(
     stinger_length_m: float,
     theta_dep_rad: float,
     od_m: float,
+    config: Optional[Any] = None,
 ) -> Dict[str, float]:
     """Calculate overbend bending stress at the stinger.
 
@@ -415,8 +529,10 @@ def calc_overbend_stress(
         utilisation        : sigma_overbend / (0.72 * SMYS)
         status             : PASS / FAIL
     """
-    E = STEEL_YOUNGS_MODULUS
-    allowable = STRESS_LIMIT_FACTOR * SMYS_X65  # Pa
+    E = _cfg(config, "youngs_modulus_pa", STEEL_YOUNGS_MODULUS)
+    smys = _cfg(config, "smys_pa", SMYS_X65)
+    slf = _cfg(config, "stress_limit_factor", STRESS_LIMIT_FACTOR)
+    allowable = slf * smys  # Pa
 
     sin_theta = math.sin(theta_dep_rad) if theta_dep_rad > 0 else 0.0
 
@@ -448,6 +564,7 @@ def find_required_tension(
     pipe: Dict,
     depth: float,
     vessel_params: Dict,
+    config: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Find the minimum horizontal tension H that satisfies all installation checks.
 
@@ -473,10 +590,14 @@ def find_required_tension(
     od_m = pipe["od_m"]
     wt_m = pipe["wt_m"]
     a_steel = pipe["a_steel_m2"]
-    w_sub = calc_submerged_weight(pipe)  # kN/m
+    w_sub = calc_submerged_weight(pipe, config=config)  # kN/m
 
-    E = STEEL_YOUNGS_MODULUS
-    allowable_stress = STRESS_LIMIT_FACTOR * SMYS_X65  # Pa
+    E = _cfg(config, "youngs_modulus_pa", STEEL_YOUNGS_MODULUS)
+    smys = _cfg(config, "smys_pa", SMYS_X65)
+    slf = _cfg(config, "stress_limit_factor", STRESS_LIMIT_FACTOR)
+    gravity = _cfg(config, "gravity_m_s2", GRAVITY)
+    tension_margin = _cfg(config, "tension_margin", TENSION_MARGIN)
+    allowable_stress = slf * smys  # Pa
 
     stinger_length = vessel_params["stinger_length_m"]
     angle_min_deg = vessel_params["stinger_angle_min_deg"]
@@ -499,15 +620,14 @@ def find_required_tension(
     a_min = 1.0 / kappa_max  # minimum sagbend radius (m)
 
     if a_min <= 0:
-        return _build_infeasible_result(pipe, depth, vessel_params, w_sub, "SAGBEND_INFEASIBLE")
+        return _build_infeasible_result(pipe, depth, vessel_params, w_sub, "SAGBEND_INFEASIBLE", config=config)
 
     H_min_sagbend = a_min * w_sub  # kN (since a = H_kN / w_sub_kN)
 
-    # Apply 10% operational margin above absolute minimum tension.
+    # Apply the operational margin above absolute minimum tension (criteria.tension_margin).
     # In practice, contractors always apply a margin for dynamic effects,
     # lay rate variations, and operational contingency.
-    TENSION_MARGIN = 1.10
-    H_target = H_min_sagbend * TENSION_MARGIN
+    H_target = H_min_sagbend * tension_margin
 
     # --- Step 2: Check departure angle at H_target ---
     cat = calc_catenary(H_target, w_sub, depth)
@@ -593,15 +713,8 @@ def find_required_tension(
 
     # --- Check 2: Top tension ---
     T_top_kn = cat_final["T_top"]
-    T_top_te = T_top_kn / (GRAVITY * 1000.0 / 1000.0)  # kN -> te
-    # T_top_kn / (9.80665) gives te (since 1 te = 9.80665 kN)
-    T_top_te = T_top_kn / GRAVITY  # kN / (kN/te) but GRAVITY is m/s2
-    # Correct: T_top_te = T_top_kN * 1000 / (g * 1000) = T_top_kN / g
-    # 1 tonne-force = 1000 kg * 9.80665 m/s2 = 9806.65 N = 9.80665 kN
-    T_top_te = T_top_kn / GRAVITY  # kN / (m/s2) is wrong dimensionally
-
-    # Let's be precise: T_top in kN. 1 te (force) = 1000 * 9.80665 N = 9.80665 kN
-    T_top_te = T_top_kn / 9.80665
+    # 1 tonne-force = 1000 kg * g (m/s2) = g kN, so T_top_te = T_top_kN / g.
+    T_top_te = T_top_kn / gravity
 
     tension_util = T_top_te / tensioner_cap_te if tensioner_cap_te > 0 else 999.0
     tension_check = {
@@ -613,10 +726,10 @@ def find_required_tension(
     }
 
     # --- Check 3: Sagbend stress ---
-    sagbend = calc_sagbend_stress(H_chosen, w_sub, od_m, wt_m, a_steel)
+    sagbend = calc_sagbend_stress(H_chosen, w_sub, od_m, wt_m, a_steel, config=config)
 
     # --- Check 4: Overbend stress ---
-    overbend = calc_overbend_stress(stinger_length, theta_final_rad, od_m)
+    overbend = calc_overbend_stress(stinger_length, theta_final_rad, od_m, config=config)
 
     # --- Check 5: Vessel capability (pipe diameter + water depth range) ---
     od_in = pipe["od_mm"] / 25.4
@@ -667,8 +780,12 @@ def _build_infeasible_result(
     vessel_params: Dict,
     w_sub: float,
     reason: str,
+    config: Any = None,
 ) -> Dict[str, Any]:
     """Build a result dict for an infeasible case."""
+    # Emit the active sagbend basis even on the infeasible path so checks_flat
+    # carries sagbend_stress_basis consistently with the normal path.
+    basis = _cfg(config, "sagbend_stress_basis", SAGBEND_STRESS_BASIS)
     return {
         "H_chosen_kn": 0.0,
         "H_min_sagbend_kn": 0.0,
@@ -684,7 +801,8 @@ def _build_infeasible_result(
                             "tensioner_capacity_te": vessel_params["tensioner_capacity_te"],
                             "utilisation": 999.0},
             "sagbend": {"status": "FAIL", "utilisation": 999.0, "sigma_combined_mpa": 0,
-                        "sigma_bending_mpa": 0, "sigma_axial_mpa": 0, "R_sag_m": 0, "kappa_sag": 0},
+                        "sigma_bending_mpa": 0, "sigma_axial_mpa": 0, "R_sag_m": 0, "kappa_sag": 0,
+                        "stress_basis": basis},
             "overbend": {"status": "FAIL", "utilisation": 999.0, "sigma_overbend_mpa": 0,
                          "R_overbend_m": 0},
             "vessel_capability": {"status": "FAIL", "diameter_ok": False, "depth_ok": False,
@@ -709,13 +827,17 @@ def run_single_case(
     vessel: Dict,
     pipe: Dict,
     depth: float,
+    config: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Run all installation checks for a single vessel/pipe/depth combination.
 
     Returns a flat dict with overall go/no-go plus per-check results.
     """
+    go_threshold = _cfg(config, "go_threshold", GO_THRESHOLD)
+    nogo_utilisation = _cfg(config, "nogo_utilisation", NOGO_UTILISATION)
+
     vessel_params = extract_vessel_params(vessel)
-    result = find_required_tension(pipe, depth, vessel_params)
+    result = find_required_tension(pipe, depth, vessel_params, config=config)
 
     checks = result["checks"]
     utils = result["utilisations"]
@@ -739,9 +861,9 @@ def run_single_case(
     else:
         max_util = max(utils.values())
         governing = max(utils, key=utils.get)
-        if max_util > 1.0:
+        if max_util > nogo_utilisation:
             overall = "NO_GO"
-        elif max_util >= 0.85:
+        elif max_util >= go_threshold:
             overall = "MARGINAL"
         else:
             overall = "GO"
@@ -776,23 +898,45 @@ def run_single_case(
 def run_parametric_sweep(
     vessels: List[Dict],
     pipes: List[Dict],
+    config: Optional[Any] = None,
 ) -> Tuple[List[Dict], pd.DataFrame]:
-    """Run the full parametric sweep across all combinations."""
-    total = len(vessels) * len(pipes) * len(WATER_DEPTHS)
+    """Run the full parametric sweep across all combinations.
+
+    The axes come from *config* when supplied (vessels resolved by id in config order, pipes as
+    loaded by ``load_pipes`` from the config selection, depths from ``config.water_depths``);
+    otherwise the module default depth list and the catalog order are used.
+    """
+    depths_axis = list(config.water_depths) if config is not None else WATER_DEPTHS
+
+    # Resolve the vessels in config order (by id). The loop is config-driven: a config vessel
+    # subset/reorder threads straight through.
+    if config is not None:
+        by_id = {v["id"]: v for v in vessels}
+        missing = [vid for vid in config.vessels if vid not in by_id]
+        if missing:
+            raise ValueError(
+                f"config vessels {missing} not found in the vessels catalog "
+                f"(available ids: {sorted(by_id)})."
+            )
+        sweep_vessels = [by_id[vid] for vid in config.vessels]
+    else:
+        sweep_vessels = vessels
+
+    total = len(sweep_vessels) * len(pipes) * len(depths_axis)
 
     print(f"\n{'='*60}")
     print(f"  PARAMETRIC S-LAY INSTALLATION SCREENING")
-    print(f"  {total} cases: {len(vessels)} vessels x {len(pipes)} pipes"
-          f" x {len(WATER_DEPTHS)} depths")
+    print(f"  {total} cases: {len(sweep_vessels)} vessels x {len(pipes)} pipes"
+          f" x {len(depths_axis)} depths")
     print(f"{'='*60}\n")
 
     all_results: List[Dict] = []
     case_num = 0
 
-    for vessel in vessels:
+    for vessel in sweep_vessels:
         vp = extract_vessel_params(vessel)
         for pipe in pipes:
-            for depth in WATER_DEPTHS:
+            for depth in depths_axis:
                 case_num += 1
                 pl = pipe_label(pipe["nominal_size"])
                 print(
@@ -802,7 +946,7 @@ def run_parametric_sweep(
                 )
 
                 try:
-                    result = run_single_case(vessel, pipe, depth)
+                    result = run_single_case(vessel, pipe, depth, config=config)
                     all_results.append(result)
                     status_tag = result["overall_status"]
                     util = result["max_utilisation"]
@@ -865,7 +1009,7 @@ def run_parametric_sweep(
 # Chart 1: Go/No-Go Matrix (HERO)
 # ---------------------------------------------------------------------------
 
-def build_chart_1_go_nogo_matrix(results_df: pd.DataFrame) -> go.Figure:
+def build_chart_1_go_nogo_matrix(results_df: pd.DataFrame, config: Optional[Any] = None) -> go.Figure:
     """Go/No-Go heatmap — side-by-side for two vessels.
 
     X: water depth, Y: pipe size
@@ -965,7 +1109,7 @@ def build_chart_1_go_nogo_matrix(results_df: pd.DataFrame) -> go.Figure:
 # Chart 2: Sagbend Stress Utilisation Heatmap
 # ---------------------------------------------------------------------------
 
-def build_chart_2_sagbend_heatmap(results_df: pd.DataFrame) -> go.Figure:
+def build_chart_2_sagbend_heatmap(results_df: pd.DataFrame, config: Optional[Any] = None) -> go.Figure:
     """Sagbend utilisation heatmap — side-by-side per vessel."""
     print("\n[Chart 2] Building Sagbend Stress Utilisation Heatmap...")
 
@@ -1052,14 +1196,25 @@ def build_chart_2_sagbend_heatmap(results_df: pd.DataFrame) -> go.Figure:
 # Chart 3: Required Top Tension vs Water Depth
 # ---------------------------------------------------------------------------
 
-def build_chart_3_tension_vs_depth(results_df: pd.DataFrame) -> go.Figure:
+def build_chart_3_tension_vs_depth(
+    results_df: pd.DataFrame,
+    vessels: Optional[List[Dict]] = None,
+    config: Optional[Any] = None,
+) -> go.Figure:
     """Required top tension vs water depth — lines per pipe size,
     with vessel capacity reference lines.
+
+    The capacity reference lines are DERIVED from the vessel catalog (single-sourced), not
+    duplicated literals.
     """
     print("\n[Chart 3] Building Required Tension vs Water Depth...")
 
     pipe_sizes = sorted(results_df["pipe_size"].unique(), key=lambda s: float(s.replace("in", "")))
     depths = sorted(results_df["water_depth_m"].unique())
+
+    # Resolve the per-vessel tensioner capacities from the catalog (single-source). Fall back
+    # to the result-frame's own values when no catalog is supplied.
+    specs = vessel_band_specs(vessels) if vessels else []
 
     fig = go.Figure()
     color_idx = 0
@@ -1119,23 +1274,18 @@ def build_chart_3_tension_vs_depth(results_df: pd.DataFrame) -> go.Figure:
         )
         color_idx += 1
 
-    # Vessel capacity reference lines
-    fig.add_hline(
-        y=600,
-        line_dash="dot",
-        line_color=COLORS["secondary"],
-        line_width=2,
-        annotation_text="Large PLV capacity (600 te)",
-        annotation_position="top right",
-    )
-    fig.add_hline(
-        y=250,
-        line_dash="dot",
-        line_color=COLORS["danger"],
-        line_width=2,
-        annotation_text="Barge capacity (250 te)",
-        annotation_position="bottom right",
-    )
+    # Vessel capacity reference lines — DERIVED from the catalog (single-source).
+    _line_colors = [COLORS["secondary"], COLORS["danger"]]
+    _positions = ["top right", "bottom right"]
+    for i, spec in enumerate(specs):
+        fig.add_hline(
+            y=spec["tensioner_capacity_te"],
+            line_dash="dot",
+            line_color=_line_colors[i % len(_line_colors)],
+            line_width=2,
+            annotation_text=f"{spec['name']} capacity ({spec['tensioner_capacity_te']:g} te)",
+            annotation_position=_positions[i % len(_positions)],
+        )
 
     fig.update_layout(
         title=dict(
@@ -1157,9 +1307,16 @@ def build_chart_3_tension_vs_depth(results_df: pd.DataFrame) -> go.Figure:
 # Chart 4: Stinger Departure Angle vs Water Depth
 # ---------------------------------------------------------------------------
 
-def build_chart_4_departure_angle(results_df: pd.DataFrame) -> go.Figure:
+def build_chart_4_departure_angle(
+    results_df: pd.DataFrame,
+    vessels: Optional[List[Dict]] = None,
+    config: Optional[Any] = None,
+) -> go.Figure:
     """Stinger departure angle vs water depth — lines per pipe size,
     with shaded bands for each vessel's stinger range.
+
+    The shaded stinger-range bands are DERIVED from the vessel catalog (single-sourced), not
+    duplicated literals.
     """
     print("\n[Chart 4] Building Stinger Departure Angle vs Water Depth...")
 
@@ -1168,36 +1325,25 @@ def build_chart_4_departure_angle(results_df: pd.DataFrame) -> go.Figure:
 
     fig = go.Figure()
 
-    # Shaded bands for vessel stinger ranges
+    # Shaded bands for vessel stinger ranges — DERIVED from the catalog (single-source).
     x_band = [min(depths) - 1, max(depths) + 1]
-
-    # Large PLV range: 2° to 8°
-    fig.add_trace(
-        go.Scatter(
-            x=x_band + x_band[::-1],
-            y=[2.0, 2.0, 8.0, 8.0],
-            fill="toself",
-            fillcolor="rgba(44, 82, 130, 0.12)",
-            line=dict(color="rgba(0,0,0,0)"),
-            name="Large PLV range (2-8 deg)",
-            showlegend=True,
-            hoverinfo="skip",
+    specs = vessel_band_specs(vessels) if vessels else []
+    _band_fills = ["rgba(44, 82, 130, 0.12)", "rgba(237, 137, 54, 0.12)"]
+    for i, spec in enumerate(specs):
+        lo = spec["angle_min_deg"]
+        hi = spec["angle_max_deg"]
+        fig.add_trace(
+            go.Scatter(
+                x=x_band + x_band[::-1],
+                y=[lo, lo, hi, hi],
+                fill="toself",
+                fillcolor=_band_fills[i % len(_band_fills)],
+                line=dict(color="rgba(0,0,0,0)"),
+                name=f"{spec['name']} range ({lo:g}-{hi:g} deg)",
+                showlegend=True,
+                hoverinfo="skip",
+            )
         )
-    )
-
-    # Barge range: 3° to 12°
-    fig.add_trace(
-        go.Scatter(
-            x=x_band + x_band[::-1],
-            y=[3.0, 3.0, 12.0, 12.0],
-            fill="toself",
-            fillcolor="rgba(237, 137, 54, 0.12)",
-            line=dict(color="rgba(0,0,0,0)"),
-            name="Barge range (3-12 deg)",
-            showlegend=True,
-            hoverinfo="skip",
-        )
-    )
 
     # Plot lines for Large PLV
     plv_df = results_df[results_df["vessel_name"].str.contains("Large")]
@@ -1248,7 +1394,7 @@ def build_chart_4_departure_angle(results_df: pd.DataFrame) -> go.Figure:
 # Chart 5: Vessel Head-to-Head — Max Pipe Size at Each Depth
 # ---------------------------------------------------------------------------
 
-def build_chart_5_vessel_comparison(results_df: pd.DataFrame) -> go.Figure:
+def build_chart_5_vessel_comparison(results_df: pd.DataFrame, config: Optional[Any] = None) -> go.Figure:
     """Grouped bar chart: max pipe size installable per depth per vessel."""
     print("\n[Chart 5] Building Vessel Head-to-Head Comparison...")
 
@@ -1311,7 +1457,7 @@ def build_chart_5_vessel_comparison(results_df: pd.DataFrame) -> go.Figure:
 # Summary table
 # ---------------------------------------------------------------------------
 
-def build_summary_table(results_df: pd.DataFrame) -> pd.DataFrame:
+def build_summary_table(results_df: pd.DataFrame, config: Optional[Any] = None) -> pd.DataFrame:
     """Build summary table for all cases."""
     rows = []
     for _, row in results_df.iterrows():
@@ -1347,9 +1493,43 @@ def build_report(
     summary_df: pd.DataFrame,
     all_results: List[Dict],
     total_cases: int,
+    vessels: Optional[List[Dict]] = None,
+    config: Optional[Any] = None,
+    output_path: Optional[Path] = None,
 ) -> str:
-    """Build the branded HTML report."""
+    """Build the branded HTML report.
+
+    The methodology + assumptions prose is reconciled to state the ACTIVE config truthfully:
+    the stinger-range and tensioner-capacity text is SINGLE-SOURCED from the vessel catalog, and
+    the sagbend stress basis prose reflects ``criteria.sagbend_stress_basis`` (no contradiction
+    between the stated method and the computed utilisation).
+    """
     print("\n[Report] Building HTML report...")
+
+    # Resolve the active config scalars (else module defaults) for the prose.
+    slf = _cfg(config, "stress_limit_factor", STRESS_LIMIT_FACTOR)
+    go_threshold = _cfg(config, "go_threshold", GO_THRESHOLD)
+    nogo = _cfg(config, "nogo_utilisation", NOGO_UTILISATION)
+    basis = _cfg(config, "sagbend_stress_basis", SAGBEND_STRESS_BASIS)
+    grade = _cfg(config, "grade", "X65")
+    smys_pa = _cfg(config, "smys_pa", SMYS_X65)
+    youngs_pa = _cfg(config, "youngs_modulus_pa", STEEL_YOUNGS_MODULUS)
+    seawater = _cfg(config, "seawater_density_kg_m3", SEAWATER_DENSITY)
+    smys_mpa = smys_pa / 1e6
+    youngs_gpa = youngs_pa / 1e9
+
+    # Single-source the stinger-range + tensioner-capacity text from the vessel catalog.
+    specs = vessel_band_specs(vessels) if vessels else []
+    if specs:
+        stinger_text = "; ".join(
+            f"{s['name']}: {s['angle_min_deg']:g}&deg;-{s['angle_max_deg']:g}&deg;" for s in specs
+        )
+        capacity_text = " or ".join(
+            f"{s['tensioner_capacity_te']:g} te" for s in specs
+        )
+    else:
+        stinger_text = "the vessel's adjustable range"
+        capacity_text = "the vessel tensioner capacity"
 
     report = GTMReportBuilder(
         title="Shallow Water Pipeline Installation Analysis",
@@ -1363,7 +1543,26 @@ def build_report(
         ],
     )
 
-    methodology_html = """
+    # The §4 fix: state the ACTIVE sagbend stress basis truthfully (no contradiction with code).
+    if basis == "bending_only":
+        sagbend_prose = (
+            f"At the TDP, curvature &kappa; = w<sub>sub</sub> / H gives the tightest bend "
+            f"radius. <strong>Diagnostic basis (bending only):</strong> the sagbend "
+            f"utilisation uses bending stress alone, &sigma;<sub>bend</sub> = E &times; OD / "
+            f"(2R); the axial stress H / A<sub>steel</sub> is reported but NOT added. Must "
+            f"satisfy &sigma; &le; {slf:g} &times; SMYS per DNV-ST-F101 installation allowable."
+        )
+    else:
+        sagbend_prose = (
+            f"At the TDP, curvature &kappa; = w<sub>sub</sub> / H gives the tightest bend "
+            f"radius. <strong>Combined bending + axial stress</strong> (active basis): "
+            f"&sigma; = E &times; OD / (2R) + H / A<sub>steel</sub>. The bending and axial "
+            f"components are summed, and the utilisation is &sigma;<sub>combined</sub> / "
+            f"({slf:g} &times; SMYS). Must satisfy &sigma; &le; {slf:g} &times; SMYS per "
+            f"DNV-ST-F101 installation allowable."
+        )
+
+    methodology_html = f"""
     <p>This analysis screens shallow water S-lay pipeline installations across a parametric
     matrix of vessels, pipe sizes, and water depths. Each case solves the catenary mechanics
     to find the minimum horizontal tension and evaluates five installation checks per
@@ -1382,20 +1581,18 @@ def build_report(
 
     <h3>Check 1: Stinger Departure Angle</h3>
     <p>The required departure angle at the stinger tip must fall within the vessel's
-    adjustable range. Large PLV: 2&deg;-8&deg;, Barge: 3&deg;-12&deg;.</p>
+    adjustable range. {stinger_text}.</p>
 
     <h3>Check 2: Top Tension</h3>
     <p>Tension at stinger departure: T<sub>top</sub> = H &times; cosh(x<sub>dep</sub>/a).
-    Must not exceed vessel tensioner capacity (600 te or 250 te).</p>
+    Must not exceed vessel tensioner capacity ({capacity_text}).</p>
 
     <h3>Check 3: Sagbend Stress (Critical for Shallow Water)</h3>
-    <p>At the TDP, curvature &kappa; = w<sub>sub</sub> / H gives the tightest bend radius.
-    Combined bending + axial stress: &sigma; = E &times; OD / (2R) + H / A<sub>steel</sub>.
-    Must satisfy &sigma; &le; 0.72 &times; SMYS per DNV-ST-F101 installation allowable.</p>
+    <p>{sagbend_prose}</p>
 
     <h3>Check 4: Overbend Stress</h3>
     <p>Pipe bending over the stinger: R<sub>ob</sub> = L<sub>stinger</sub> / sin(&theta;<sub>dep</sub>).
-    Overbend stress must also satisfy the 0.72 &times; SMYS limit.</p>
+    Overbend stress must also satisfy the {slf:g} &times; SMYS limit.</p>
 
     <h3>Check 5: Vessel Capability</h3>
     <p>Pipe diameter must be within vessel's handling range and water depth within
@@ -1403,9 +1600,9 @@ def build_report(
 
     <h3>Go/No-Go Criteria</h3>
     <ul>
-        <li><strong>GO:</strong> All checks pass AND max utilisation &lt; 0.85</li>
-        <li><strong>MARGINAL:</strong> All checks pass AND max utilisation in [0.85, 1.00]</li>
-        <li><strong>NO-GO:</strong> Any check fails (utilisation &gt; 1.00)</li>
+        <li><strong>GO:</strong> All checks pass AND max utilisation &lt; {go_threshold:g}</li>
+        <li><strong>MARGINAL:</strong> All checks pass AND max utilisation in [{go_threshold:g}, {nogo:g}]</li>
+        <li><strong>NO-GO:</strong> Any check fails (utilisation &gt; {nogo:g})</li>
     </ul>
     """
     report.add_methodology(methodology_html)
@@ -1421,7 +1618,10 @@ def build_report(
         "sagbend_heatmap",
         fig2,
         title="Chart 2: Sagbend Stress Utilisation Heatmap",
-        subtitle="Sagbend utilisation as percentage of 0.72 x SMYS (X65 = 448 MPa). Green = low, red = critical.",
+        subtitle=(
+            f"Sagbend utilisation as percentage of {slf:g} x SMYS "
+            f"({grade} = {smys_mpa:g} MPa). Green = low, red = critical."
+        ),
     )
 
     report.add_chart(
@@ -1456,21 +1656,38 @@ def build_report(
         analysis_type="the pipeline installation screening"
     )
 
+    # The §4 fix: the sagbend-basis assumption now states the ACTIVE basis truthfully, matching
+    # the computed utilisation (no contradiction with the methodology or the code).
+    if basis == "bending_only":
+        sagbend_assumption = (
+            "Sagbend utilisation uses bending stress ONLY (diagnostic basis); the axial stress "
+            "H / A_steel is reported but not added"
+        )
+    else:
+        sagbend_assumption = (
+            "Sagbend utilisation uses the COMBINED additive stress (bending + axial), "
+            "sigma = E*OD/(2R) + H/A_steel, per DNV-ST-F101 Sec 5"
+        )
+
     report.add_assumptions([
-        "All pipes are X65 grade (SMYS = 448 MPa, E = 207 GPa)",
+        f"All pipes are {grade} grade (SMYS = {smys_mpa:g} MPa, E = {youngs_gpa:g} GPa)",
         "Catenary solution assumes no current loading on the suspended span",
         "Sagbend and overbend stresses use simplified elastic beam theory",
-        "Combined stress is conservative additive (bending + axial) per DNV-ST-F101 Sec 5",
+        sagbend_assumption,
         "Stinger radius approximated as R_ob = L_stinger / sin(theta_dep)",
         "No dynamic amplification applied — quasi-static installation assumed",
         "Pipe submerged weight includes anti-corrosion coating and CWC where applicable",
         "Seabed assumed flat at each water depth — no slope corrections",
-        "Seawater density = 1025 kg/m3 throughout water column",
-        "Installation stress limit factor = 0.72 per DNV-ST-F101 (2021)",
+        f"Seawater density = {seawater:g} kg/m3 throughout water column",
+        f"Installation stress limit factor = {slf:g} per DNV-ST-F101 (2021)",
     ])
 
-    output_path = OUTPUT_DIR / "demo_04_shallow_pipelay_report.html"
-    html = report.build(output_path)
+    out_path = output_path if output_path is not None else OUTPUT_DIR / "demo_04_shallow_pipelay_report.html"
+    # A named-run path adds a fresh <run_id>/ dir; create the parent here. exist_ok keeps the
+    # legacy/baseline call a no-op (byte-identical behaviour — main() pre-creates OUTPUT_DIR).
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    html = report.build(out_path)
+    output_path = out_path
 
     print(f"  Report saved to: {output_path}")
     return html
@@ -1527,6 +1744,175 @@ def deserialise_results(json_data: Dict) -> Tuple[List[Dict], pd.DataFrame]:
 
 
 # ---------------------------------------------------------------------------
+# Results Store subcommands: `lookup` + `rebuild-db`
+#
+# Dispatched by an argv-sniff in __main__ so they NEVER touch the existing sweep parser — the
+# no-arg / --from-cache / --force / --results-dir / --run-id / --config sweep path stays
+# byte-identical. Each subcommand builds its OWN ArgumentParser over sys.argv[2:].
+# ---------------------------------------------------------------------------
+
+# Valid overall_status tokens (matches the store's GO/MARGINAL/NO_GO/ERROR taxonomy).
+_VALID_STATUSES = ("GO", "MARGINAL", "NO_GO", "ERROR")
+
+# Columns shown by `lookup`, in a clean operator-facing order. demo_04 has no hyphen-prefixed
+# columns (the per-check utilisations are flat top-level `*_util` columns), but every identifier
+# is still quoted via rs._q() so the idiom stays consistent with the demo_03 store.
+_LOOKUP_DISPLAY_COLS = [
+    "vessel_id",
+    "pipe_size",
+    "water_depth_m",
+    "overall_status",
+    "governing_check",
+    "max_utilisation",
+    "sagbend_util",
+    "overbend_util",
+    "tension_util",
+]
+
+
+def lookup_main(argv: List[str]) -> int:
+    """`lookup` subcommand: read-only filtered SELECT over the demo_04 Results Store cache.
+
+    Returns a process exit code (0 = ok, non-zero = error such as a missing db).
+    """
+    import sqlite3
+
+    try:
+        import results_store_demo04 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo04 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_04_shallow_water_pipelay.py lookup",
+        description="Look up cases in the demo_04 Results Store (read-only SQLite cache).",
+    )
+    parser.add_argument("--run-id", type=str, default=BASELINE_RUN_ID,
+                        help=f"Run to query (default '{BASELINE_RUN_ID}').")
+    parser.add_argument("--vessel-id", type=str, default=None,
+                        help="Vessel SHORT id filter (e.g. PLV-001 / PLV-002).")
+    parser.add_argument("--pipe-size", type=str, default=None,
+                        help="Pipe nominal size filter (e.g. 8in / 12in / 16in / 20in / 24in).")
+    parser.add_argument("--water-depth", type=int, default=None,
+                        help="Water depth filter in metres, INTEGER (e.g. 30).")
+    parser.add_argument("--status", type=str, default=None,
+                        help=f"Overall status filter (one of: {', '.join(_VALID_STATUSES)}).")
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    # Validate run_id before using it (clean error + non-zero exit, no traceback).
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        return 2
+
+    # Validate --status against the known taxonomy (clear, non-zero, no query attempted).
+    if args.status is not None and args.status not in _VALID_STATUSES:
+        print(f"unknown status; valid: {', '.join(_VALID_STATUSES)}")
+        return 2
+
+    db_path = rs._db_path(args.base_dir)
+    if not db_path.exists():
+        # Do NOT create the db; clear, actionable message; non-zero exit.
+        print(
+            f"No results.db at {db_path} — run a sweep first "
+            f"(e.g. `... --run-id {BASELINE_RUN_ID}`) or `... rebuild-db`."
+        )
+        return 1
+
+    # Open strictly read-only via a file: URI so a query never mutates/creates the cache.
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Distinct message for an unknown run_id vs. a zero-row filter result.
+        known_runs = [r[0] for r in conn.execute("SELECT run_id FROM runs ORDER BY run_id")]
+        if args.run_id not in known_runs:
+            available = ", ".join(known_runs) if known_runs else "(none)"
+            print(f"run_id '{args.run_id}' not found; available: {available}")
+            return 1
+
+        # Build a parameterized WHERE — each filter binds its value (?) and is added only
+        # when provided. --water-depth binds int (the column's INTEGER type, BD-3).
+        where = ["run_id = ?"]
+        params: List[Any] = [args.run_id]
+        if args.vessel_id is not None:
+            where.append("vessel_id = ?")
+            params.append(str(args.vessel_id))
+        if args.pipe_size is not None:
+            where.append("pipe_size = ?")
+            params.append(str(args.pipe_size))
+        if args.water_depth is not None:
+            where.append("water_depth_m = ?")
+            params.append(int(args.water_depth))
+        if args.status is not None:
+            where.append("overall_status = ?")
+            params.append(str(args.status))
+
+        # Quote EVERY display column via rs._q() (consistent with the demo_03 store idiom).
+        cols = ", ".join(rs._q(c) for c in _LOOKUP_DISPLAY_COLS)
+        sql = (
+            f"SELECT {cols} FROM cases WHERE {' AND '.join(where)} "
+            "ORDER BY vessel_id, pipe_size, water_depth_m"
+        )
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        print("0 cases match.")
+        return 0
+
+    # Clean fixed-width table.
+    widths = [len(c) for c in _LOOKUP_DISPLAY_COLS]
+    str_rows = [[("" if v is None else str(v)) for v in row] for row in rows]
+    for r in str_rows:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    header = "  ".join(c.ljust(widths[i]) for i, c in enumerate(_LOOKUP_DISPLAY_COLS))
+    print(header)
+    print("  ".join("-" * widths[i] for i in range(len(_LOOKUP_DISPLAY_COLS))))
+    for r in str_rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(r)))
+    print(f"\n{len(rows)} case(s) matched.")
+    return 0
+
+
+def rebuild_main(argv: List[str]) -> int:
+    """`rebuild-db` subcommand: regenerate the SQLite cache + index.csv from the text source."""
+    import sqlite3
+
+    try:
+        import results_store_demo04 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo04 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_04_shallow_water_pipelay.py rebuild-db",
+        description="Rebuild the demo_04 Results Store SQLite cache + index.csv from "
+                    "the per-run cases.csv / manifest.json text source of truth.",
+    )
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    db_path = rs.rebuild_db(args.base_dir)
+    print(f"Results Store rebuilt: {db_path}")
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        n_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+        n_cases = conn.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        per_run = conn.execute(
+            "SELECT run_id, COUNT(*) FROM cases GROUP BY run_id ORDER BY run_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    print(f"  runs: {n_runs}   cases: {n_cases}")
+    for run_id, n in per_run:
+        print(f"    {run_id}: {n} cases")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1545,7 +1931,91 @@ def main():
         action="store_true",
         help="Force re-run even if cached results exist",
     )
+    parser.add_argument(
+        "--results-dir",
+        default=None,
+        help="Override the results directory (legacy JSON + Results Store base). Defaults to "
+        "the demo's results/ dir (or the yaml's results_root).",
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=None,
+        help="Run identifier for the Results Store + per-run report dir "
+        f"(default the Baseline Run '{BASELINE_RUN_ID}'). A named run writes its report to "
+        "output/parametric/demo_04/<run_id>/report.html and seeds <run_id> in the Store.",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=BASELINE_CONFIG_PATH,
+        help="Path to the Sweep Config yaml driving the run (axes, material grade, constants, "
+        "criteria, catalogs, artifact paths). Defaults to the committed baseline "
+        f"({BASELINE_CONFIG_PATH.name}); point it at your own yaml to run a client config "
+        "without editing the baseline.",
+    )
     args = parser.parse_args()
+
+    # Validate the config path up front (clear error, never a raw traceback later).
+    config_path = Path(args.config)
+    if not config_path.exists():
+        print(f"[ERROR] --config path does not exist: {config_path}")
+        sys.exit(2)
+
+    # Validate run_id BEFORE any run dir / report path is built from it (path-traversal /
+    # empty / separator guard). Clean error + non-zero exit, never a raw traceback. None means
+    # "default" (resolves to BASELINE_RUN_ID at write/report time), so only validate a value.
+    if args.run_id is not None:
+        try:
+            validate_run_id(args.run_id)
+        except ValueError as exc:
+            print(f"[ERROR] {exc}")
+            sys.exit(2)
+
+    # Validate the FULL config once, up front — a schema-invalid (but existing) config must
+    # surface a clean error here, not a misleading default-fallback warning followed by a raw
+    # SweepConfigError traceback from the recompute reload.
+    try:
+        from sweep_config_demo04 import (
+            SweepConfigError,
+            load_demo04_config,
+            load_demo04_paths,
+        )
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm.sweep_config_demo04 import (
+            SweepConfigError,
+            load_demo04_config,
+            load_demo04_paths,
+        )
+    try:
+        config = load_demo04_config(config_path)
+    except SweepConfigError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(2)
+
+    # --from-cache rebuilds the report/charts from a REAL config. The cache on disk was produced
+    # by SOME config; the only config we can prove matches it is the committed BASELINE (whose
+    # values == the module globals). Refuse --from-cache with a non-default --config.
+    is_default_config = config_path.resolve() == Path(BASELINE_CONFIG_PATH).resolve()
+    if args.from_cache and not args.force and not is_default_config:
+        print(
+            "[ERROR] --from-cache is only supported with the committed baseline config. "
+            "A non-default --config cannot be proven to match the cached results "
+            f"({config_path}); re-run without --from-cache to recompute from your config, "
+            "or drop --config to reload the baseline cache."
+        )
+        sys.exit(2)
+
+    # --from-cache regenerates the Baseline report only (cached data is always the baseline
+    # 60 cases). A named --run-id under --from-cache would write a mislabeled report, so warn
+    # AND force the report path back to the legacy Baseline location below (mirror demo_03).
+    if args.from_cache and args.run_id is not None and args.run_id != BASELINE_RUN_ID:
+        warnings.warn(
+            f"--from-cache regenerates the baseline report only; --run-id '{args.run_id}' "
+            "will not produce a named Results Store row (run without --from-cache to compute "
+            "a named run). The report is written to the baseline path.",
+            stacklevel=2,
+        )
 
     start_time = time.time()
 
@@ -1553,14 +2023,35 @@ def main():
     print("  GTM Demo 4: Shallow Water Pipeline Installation Analysis")
     print("=" * 60)
 
-    results_path = RESULTS_DIR / "demo_04_shallow_pipelay_results.json"
+    # Resolve catalog + artifact PATHS from the config yaml (engineering-free). On any load
+    # failure fall back to the committed module dirs so the demo still runs.
+    results_root = RESULTS_DIR
+    output_root = OUTPUT_DIR
+    try:
+        paths = load_demo04_paths(config_path)
+        results_root = paths.results_root
+        output_root = paths.output_root
+    except Exception as exc:  # noqa: BLE001 — committed-baseline fallback is intentional.
+        logger.warning(
+            "Could not resolve paths from %s (%s); using committed defaults.",
+            config_path, exc,
+        )
+
+    # The CLI --results-dir always wins (legacy JSON + Results Store base).
+    if args.results_dir:
+        results_root = Path(args.results_dir)
+
+    results_path = results_root / "demo_04_shallow_pipelay_results.json"
 
     # ── Step 1: Load data ──────────────────────────────────────────────────
     print("\n[1/7] Loading input data...")
-    vessels = load_vessels()
-    pipes = load_pipes()
-    print(f"  Loaded {len(vessels)} vessels from pipelay_vessels.json")
-    print(f"  Loaded {len(pipes)} pipe sizes from pipelines.json")
+    vessels = load_vessels(config=config)
+    pipes = load_pipes(config=config)
+    print(f"  Loaded {len(vessels)} vessels from {config.vessels_path.name}")
+    print(f"  Loaded {len(pipes)} pipe sizes from {config.pipelines_path.name}")
+    print(f"  Material grade {config.grade}: SMYS={config.smys_pa/1e6:g} MPa, "
+          f"SMTS={config.smts_pa/1e6:g} MPa")
+    print(f"  Sagbend stress basis: {config.sagbend_stress_basis}")
     for p in pipes:
         pl = pipe_label(p["nominal_size"])
         print(f"    {pl}: OD={p['od_mm']}mm, WT={p['wt_mm']}mm ({p['schedule']}), "
@@ -1576,30 +2067,61 @@ def main():
         print(f"  Loaded {total_cases} cached results from {results_path.name}")
     else:
         print("\n[2/7] Running parametric sweep...")
-        all_results, results_df = run_parametric_sweep(vessels, pipes)
+        all_results, results_df = run_parametric_sweep(vessels, pipes, config=config)
         total_cases = len(all_results)
+
+        # Results Store (additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only (config is not None). Mirrors demo_03 — a default sweep seeds
+        # the committed BASELINE_RUN_ID; a named --run-id seeds that partition. If --from-cache
+        # demoted to recompute (stale/missing cache), force BASELINE so we never seed a named
+        # row the --from-cache contract said wouldn't exist. Additive: it does NOT touch the
+        # JSON/HTML the golden pins.
+        try:
+            from results_store_demo04 import write_run as _store_write_run
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.results_store_demo04 import (
+                write_run as _store_write_run,
+            )
+        _store_write_run(
+            run_id=(BASELINE_RUN_ID if args.from_cache else (args.run_id or BASELINE_RUN_ID)),
+            config=config,
+            results=all_results,
+            base_dir=results_root,
+        )
 
     # ── Step 3: Build charts ───────────────────────────────────────────────
     print("\n[3/7] Building charts...")
-    fig1 = build_chart_1_go_nogo_matrix(results_df)
-    fig2 = build_chart_2_sagbend_heatmap(results_df)
-    fig3 = build_chart_3_tension_vs_depth(results_df)
-    fig4 = build_chart_4_departure_angle(results_df)
-    fig5 = build_chart_5_vessel_comparison(results_df)
+    fig1 = build_chart_1_go_nogo_matrix(results_df, config=config)
+    fig2 = build_chart_2_sagbend_heatmap(results_df, config=config)
+    fig3 = build_chart_3_tension_vs_depth(results_df, vessels=vessels, config=config)
+    fig4 = build_chart_4_departure_angle(results_df, vessels=vessels, config=config)
+    fig5 = build_chart_5_vessel_comparison(results_df, config=config)
 
     # ── Step 4: Build summary table ────────────────────────────────────────
     print("\n[4/7] Building summary table...")
-    summary_df = build_summary_table(results_df)
+    summary_df = build_summary_table(results_df, config=config)
 
     # ── Step 5: Build HTML report ──────────────────────────────────────────
     print("\n[5/7] Building HTML report...")
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, total_cases)
+    output_root.mkdir(parents=True, exist_ok=True)
+    # Baseline Run keeps the legacy output path (byte-identical); a named Run writes a per-run
+    # report under output/parametric/demo_04/<run_id>/report.html. Under --from-cache the data
+    # is always the baseline 60, so a named run is forced back to the baseline path.
+    if args.run_id is None or args.run_id == BASELINE_RUN_ID or args.from_cache:
+        report_path = output_root / "demo_04_shallow_pipelay_report.html"
+    else:
+        report_path = output_root / "parametric" / DEMO_ID / args.run_id / "report.html"
+    build_report(
+        fig1, fig2, fig3, fig4, fig5, summary_df, all_results, total_cases,
+        vessels=vessels, config=config, output_path=report_path,
+    )
+    if args.run_id is not None and args.run_id != BASELINE_RUN_ID and not args.from_cache:
+        print(f"  Per-run report written to: {report_path}")
 
     # ── Step 6: Save JSON results ──────────────────────────────────────────
     if not args.from_cache or args.force:
         print("\n[6/7] Saving JSON results...")
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        results_root.mkdir(parents=True, exist_ok=True)
 
         json_output = {
             "metadata": {
@@ -1607,14 +2129,20 @@ def main():
                 "total_cases": total_cases,
                 "vessels": [v["name"] for v in vessels],
                 "pipe_sizes": [p["nominal_size"] for p in pipes],
-                "water_depths_m": WATER_DEPTHS,
+                "water_depths_m": list(config.water_depths),
+                "material_grade": config.grade,
+                "sagbend_stress_basis": config.sagbend_stress_basis,
                 "constants": {
-                    "seawater_density_kg_m3": SEAWATER_DENSITY,
-                    "gravity_m_s2": GRAVITY,
-                    "steel_density_kg_m3": STEEL_DENSITY,
-                    "youngs_modulus_pa": STEEL_YOUNGS_MODULUS,
-                    "smys_x65_pa": SMYS_X65,
-                    "stress_limit_factor": STRESS_LIMIT_FACTOR,
+                    "seawater_density_kg_m3": config.seawater_density_kg_m3,
+                    "gravity_m_s2": config.gravity_m_s2,
+                    "steel_density_kg_m3": config.steel_density_kg_m3,
+                    "youngs_modulus_pa": config.youngs_modulus_pa,
+                    "smys_pa": config.smys_pa,
+                    "smts_pa": config.smts_pa,
+                    "stress_limit_factor": config.stress_limit_factor,
+                    "tension_margin": config.tension_margin,
+                    "go_threshold": config.go_threshold,
+                    "nogo_utilisation": config.nogo_utilisation,
                 },
             },
             "summary": summary_df.to_dict(orient="records"),
@@ -1639,4 +2167,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Argv-sniff dispatch: the `lookup` / `rebuild-db` subcommands are handled by their OWN
+    # parsers over sys.argv[2:] and NEVER reach the sweep parser, so the no-arg / --from-cache
+    # / --force / --results-dir / --run-id / --config sweep path is untouched and byte-identical.
+    if len(sys.argv) > 1 and sys.argv[1] == "lookup":
+        sys.exit(lookup_main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "rebuild-db":
+        sys.exit(rebuild_main(sys.argv[2:]))
+    else:
+        main()
