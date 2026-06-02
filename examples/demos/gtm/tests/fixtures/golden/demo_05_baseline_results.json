@@ -169,7 +169,7 @@
       "Governing Phase": "In-air Bending"
     }
   ],
-  "results": [
+  "cases": [
     {
       "vessel": "Large CSV",
       "vessel_id": "CSV-001",
