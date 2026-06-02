@@ -34,6 +34,7 @@ import logging
 import math
 import sys
 import time
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -116,6 +117,13 @@ except ImportError:
         print("        Ensure PYTHONPATH includes 'examples/demos/gtm' directory.")
         sys.exit(1)
 
+# Results Store (additive): persists a queryable SQLite + CSV/manifest artifact set
+# alongside the legacy JSON/HTML. sqlite3 stdlib only; never alters existing outputs.
+try:
+    from results_store_demo02 import write_run as _store_write_run
+except ImportError:  # pragma: no cover — packaged import path fallback.
+    from examples.demos.gtm.results_store_demo02 import write_run as _store_write_run
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -132,6 +140,28 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 RESULTS_DIR = SCRIPT_DIR / "results"
+
+# Canonical run_id for the committed Baseline reference run in the Results Store.
+BASELINE_RUN_ID = "baseline"
+
+# Demo identifier — the per-run report/store partition name (matches results_store_demo02.DEMO_ID).
+DEMO_ID = "demo_02"
+
+
+def validate_run_id(run_id: str) -> str:
+    """Validate a run_id is a single safe path segment; return it unchanged if valid.
+
+    A run_id becomes a filesystem directory name under the Results Store
+    (<base_dir>/parametric/demo_02/<run_id>/) and the per-run report dir, so it must be a
+    single safe path segment: no separators, no "." / ".." traversal, no empty string
+    (path-traversal guard). Delegates to the store's regex so both stay in lock-step. Raises
+    ValueError with a clean message on rejection.
+    """
+    try:
+        import results_store_demo02 as _rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as _rs
+    return _rs._validate_run_id(run_id)
 
 SEAWATER_DENSITY = 1025.0  # kg/m³
 GRAVITY = 9.80665  # m/s²
@@ -189,12 +219,83 @@ PHASE_DISPLAY_NAMES = [
     "Shutdown",
 ]
 
+# Baseline-defining result schema (BD-1): every per-case record — both the live (PASS)
+# path and the normalized failure path — emits EXACTLY these 14 keys, in this order.
+FROZEN_RESULT_KEYS = (
+    "pipe_size",
+    "od_mm",
+    "od_m",
+    "wt_mm",
+    "wt_m",
+    "grade",
+    "code",
+    "internal_pressure_mpa",
+    "external_pressure_mpa",
+    "water_depth_m",
+    "is_safe",
+    "governing_check",
+    "max_utilisation",
+    "checks",
+)
+
+# Path to the committed Baseline Sweep Config (loaded lazily in the recompute path only).
+INPUTS_DIR = SCRIPT_DIR / "inputs"
+BASELINE_CONFIG_PATH = INPUTS_DIR / "demo_02_wall_thickness.yml"
+
+
+def _normalize_failure_record(
+    ps: Dict[str, Any],
+    code_name: str,
+    pi_mpa: int,
+    pe_pa: float,
+    governing: Any = None,
+    config: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Build a normalized failure record with the SAME 14 FROZEN keys (BD-1).
+
+    The legacy dead path emitted a partial dict with ``"N/A"`` sentinels; this normalizes
+    it to the uniform schema, using ``None`` (null) where a value is unavailable. ``code``
+    keeps emitting the SPACED display string. This path produces 0 of the 72 Baseline cases.
+
+    When *config* is supplied the grade + water depth come from it; otherwise the module
+    constants are used (legacy default).
+    """
+    grade = config.grade if config is not None else GRADE
+    water_depth = config.water_depth_m if config is not None else WATER_DEPTH
+    return {
+        "pipe_size": ps["name"],
+        "od_mm": ps["od_mm"],
+        "od_m": ps["od_m"],
+        "wt_mm": None,
+        "wt_m": None,
+        "grade": grade,
+        "code": code_name,
+        "internal_pressure_mpa": pi_mpa,
+        "external_pressure_mpa": round(pe_pa / 1e6, 3),
+        "water_depth_m": water_depth,
+        "is_safe": None,
+        "governing_check": governing,
+        "max_utilisation": None,
+        "checks": None,
+    }
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def external_pressure_pa(depth: float = WATER_DEPTH) -> float:
-    """Hydrostatic pressure at given depth."""
+def external_pressure_pa(depth: Optional[float] = None, config: Optional[Any] = None) -> float:
+    """Hydrostatic pressure at given depth.
+
+    When *config* (a ``ResolvedDemo02Config``) is supplied the water depth + seawater
+    density + gravity come from it; otherwise the module constants are used (legacy
+    default — byte-identical to today). An explicit *depth* always overrides the depth.
+    """
+    if config is not None:
+        if depth is None:
+            depth = config.water_depth_m
+        return config.seawater_density_kg_m3 * config.gravity_m_s2 * depth
+    if depth is None:
+        depth = WATER_DEPTH
     return SEAWATER_DENSITY * GRAVITY * depth
 
 
@@ -217,23 +318,54 @@ def utilisation_color(util: float) -> str:
         return COLORS["danger"]    # red
 
 
+def config_pipe_sizes(config: Optional[Any] = None) -> List[Dict]:
+    """Return the ordered PIPE_SIZES geometry dicts for the sweep.
+
+    The OD geometry table (PIPE_SIZES) is a static reference catalog; *config* selects
+    WHICH sizes (and their order) participate, by the ``name`` label. When *config* is
+    None all module PIPE_SIZES are used in module order (legacy default).
+    """
+    if config is None:
+        return list(PIPE_SIZES)
+    by_name = {ps["name"]: ps for ps in PIPE_SIZES}
+    selected: List[Dict] = []
+    for name in config.sizes:
+        if name not in by_name:
+            raise ValueError(
+                f"config size {name!r} not in PIPE_SIZES (known: {sorted(by_name)})"
+            )
+        selected.append(by_name[name])
+    return selected
+
+
 def run_single_analysis(
     od_m: float,
     wt_m: float,
     pi_pa: float,
     pe_pa: float,
     code: DesignCode,
+    config: Optional[Any] = None,
 ) -> Optional[Dict[str, Any]]:
-    """Run wall thickness analysis for a single case. Returns result dict or None."""
+    """Run wall thickness analysis for a single case. Returns result dict or None.
+
+    When *config* (a ``ResolvedDemo02Config``) is supplied, the material grade/SMYS/SMTS,
+    corrosion allowance, and safety class come from the resolved config; otherwise the
+    module constants are used (legacy default — byte-identical to today).
+    """
+    corrosion = config.corrosion_allowance_m if config is not None else CORROSION_ALLOWANCE
+    grade = config.grade if config is not None else GRADE
+    smys = config.smys_pa if config is not None else SMYS
+    smts = config.smts_pa if config is not None else SMTS
+    safety_class = config.safety_class if config is not None else SafetyClass.MEDIUM
     try:
         geom = PipeGeometry(
             outer_diameter=od_m,
             wall_thickness=wt_m,
-            corrosion_allowance=CORROSION_ALLOWANCE,
+            corrosion_allowance=corrosion,
         )
-        mat = PipeMaterial(grade=GRADE, smys=SMYS, smts=SMTS)
+        mat = PipeMaterial(grade=grade, smys=smys, smts=smts)
         loads = DesignLoads(internal_pressure=pi_pa, external_pressure=pe_pa)
-        factors = DesignFactors(safety_class=SafetyClass.MEDIUM)
+        factors = DesignFactors(safety_class=safety_class)
         analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, code)
         result = analyzer.perform_analysis()
         return {
@@ -256,20 +388,29 @@ def find_min_wall_thickness(
     wt_min: float = 0.003,
     wt_max: float = 0.060,
     tol: float = 0.0001,
+    config: Optional[Any] = None,
 ) -> Tuple[float, Optional[str]]:
     """Binary search for minimum WT that satisfies all checks (util <= 1.0).
-    
+
     Returns (min_wt_m, governing_check).
+
+    When *config* (a ``ResolvedDemo02Config``) is supplied its ``find_min_bounds_m`` /
+    ``find_min_tol_m`` override the signature defaults and the material/constants are
+    threaded into ``run_single_analysis``; otherwise the signature defaults + module
+    constants are used (legacy default — byte-identical to today).
     """
+    if config is not None:
+        wt_min, wt_max = config.find_min_bounds_m
+        tol = config.find_min_tol_m
     lo, hi = wt_min, wt_max
 
     # Check if even max WT fails
-    result_max = run_single_analysis(od_m, hi, pi_pa, pe_pa, code)
+    result_max = run_single_analysis(od_m, hi, pi_pa, pe_pa, code, config=config)
     if result_max is None or not result_max["is_safe"]:
         return hi, result_max.get("governing_check") if result_max else "N/A"
 
     # Check if min WT already passes
-    result_min = run_single_analysis(od_m, lo, pi_pa, pe_pa, code)
+    result_min = run_single_analysis(od_m, lo, pi_pa, pe_pa, code, config=config)
     if result_min is not None and result_min["is_safe"]:
         return lo, result_min.get("governing_check")
 
@@ -279,7 +420,7 @@ def find_min_wall_thickness(
         mid = (lo + hi) / 2
         if hi - lo < tol:
             break
-        result = run_single_analysis(od_m, mid, pi_pa, pe_pa, code)
+        result = run_single_analysis(od_m, mid, pi_pa, pe_pa, code, config=config)
         if result is None or not result["is_safe"]:
             lo = mid
             if result:
@@ -298,13 +439,19 @@ def find_min_wall_thickness(
 def build_chart_1_lifecycle(
     pipe_catalog: Optional[list] = None,
     cached_lifecycle: Optional[Dict] = None,
+    config: Optional[Any] = None,
 ) -> Tuple[go.Figure, Dict]:
     """Build lifecycle utilisation grouped bar chart with pipe size dropdown.
 
     Returns (figure, lifecycle_data) so intermediate results can be cached.
     When *cached_lifecycle* is provided, skip engineering calculations.
+    When *config* is supplied its sizes/codes/material/depth/design pressure/safety
+    class drive the calculation; otherwise the module constants are used (legacy).
     """
     print("\n[Chart 1] Building Lifecycle Utilisation chart...")
+
+    sizes = config_pipe_sizes(config)
+    code_names_list = config.codes if config is not None else CODE_NAME_STRINGS
 
     if cached_lifecycle is not None:
         # Reconstruct all_pipe_data from cache
@@ -315,12 +462,22 @@ def build_chart_1_lifecycle(
                 "phases": PHASE_DISPLAY_NAMES,
             }
     else:
-        pe = external_pressure_pa()
-        design_pressure = 20e6  # Fixed for lifecycle phases
+        pe = external_pressure_pa(config=config)
+        design_pressure = (config.design_pressure_pa if config is not None else 20e6)  # Fixed for lifecycle phases
+        grade = config.grade if config is not None else GRADE
+        smys = config.smys_pa if config is not None else SMYS
+        smts = config.smts_pa if config is not None else SMTS
+        corrosion = config.corrosion_allowance_m if config is not None else CORROSION_ALLOWANCE
+        water_depth = config.water_depth_m if config is not None else WATER_DEPTH
+        safety_class = config.safety_class if config is not None else SafetyClass.MEDIUM
+        codes = config.design_codes if config is not None else CODES
+        code_display = (
+            dict(zip(config.design_codes, config.codes)) if config is not None else CODE_NAMES
+        )
 
         # Pre-compute data for all pipe sizes
         all_pipe_data = {}
-        for ps in PIPE_SIZES:
+        for ps in sizes:
             od_m = ps["od_m"]
             pipe_name = ps["name"]
 
@@ -330,27 +487,27 @@ def build_chart_1_lifecycle(
             pipe_def = PipeDefinition(
                 outer_diameter=od_m,
                 wall_thickness=wt_m,
-                grade=GRADE,
-                smys=SMYS,
-                smts=SMTS,
-                corrosion_allowance=CORROSION_ALLOWANCE,
+                grade=grade,
+                smys=smys,
+                smts=smts,
+                corrosion_allowance=corrosion,
             )
 
             phases = create_standard_phases(
-                water_depth=WATER_DEPTH,
+                water_depth=water_depth,
                 design_pressure=design_pressure,
             )
 
             # Run phase analysis for each code
             phase_data = {}  # {code_name: {phase_name: max_util}}
-            for code in CODES:
-                code_name = CODE_NAMES[code]
+            for code in codes:
+                code_name = code_display[code]
                 try:
                     runner = PhaseAnalysisRunner(
                         pipe=pipe_def,
                         phases=phases,
                         codes=[code],
-                        safety_class=SafetyClass.MEDIUM,
+                        safety_class=safety_class,
                     )
                     comparison = runner.run()
                     summary = comparison.summary_dataframe()
@@ -379,18 +536,17 @@ def build_chart_1_lifecycle(
     # Get phase names from first pipe
     first_pipe = list(all_pipe_data.values())[0]
     phase_names = first_pipe["phases"]
-    code_names_list = CODE_NAME_STRINGS
     code_colors = {
-        code_names_list[0]: CHART_PALETTE[0],
-        code_names_list[1]: CHART_PALETTE[1],
-        code_names_list[2]: CHART_PALETTE[2],
+        cn: CHART_PALETTE[idx % len(CHART_PALETTE)]
+        for idx, cn in enumerate(code_names_list)
     }
 
     # Add traces for ALL pipe sizes (hide non-default ones)
     traces_per_pipe = len(code_names_list)
-    default_pipe = PIPE_SIZES[2]["name"]  # default to 10"
+    default_idx = min(2, len(sizes) - 1)  # default to 10" (index 2) for the baseline 6-size sweep
+    default_pipe = sizes[default_idx]["name"]
 
-    for ps in PIPE_SIZES:
+    for ps in sizes:
         pipe_name = ps["name"]
         pipe_data = all_pipe_data.get(pipe_name, {})
         pd_data = pipe_data.get("phase_data", {})
@@ -424,16 +580,16 @@ def build_chart_1_lifecycle(
 
     # Build dropdown buttons
     buttons = []
-    for i, ps in enumerate(PIPE_SIZES):
+    for i, ps in enumerate(sizes):
         pipe_name = ps["name"]
         visibility = []
-        for j, ps2 in enumerate(PIPE_SIZES):
+        for j, ps2 in enumerate(sizes):
             for _ in code_names_list:
                 visibility.append(ps2["name"] == pipe_name)
 
         # Update showlegend too
         showlegend = []
-        for j, ps2 in enumerate(PIPE_SIZES):
+        for j, ps2 in enumerate(sizes):
             for _ in code_names_list:
                 showlegend.append(ps2["name"] == pipe_name)
 
@@ -464,7 +620,7 @@ def build_chart_1_lifecycle(
                 yanchor="top",
                 buttons=buttons,
                 showactive=True,
-                active=2,  # default to 10"
+                active=default_idx,  # default to 10" (index 2) for the baseline 6-size sweep
             ),
         ],
         annotations=[
@@ -488,42 +644,50 @@ def build_chart_1_lifecycle(
 
 def build_chart_2_min_wt(
     cached_min_wt: Optional[Dict] = None,
+    config: Optional[Any] = None,
 ) -> Tuple[go.Figure, Dict]:
     """Build min WT vs pipe size line chart.
 
     Returns (figure, min_wt_data) so intermediate results can be cached.
     When *cached_min_wt* is provided, skip engineering calculations.
+    When *config* is supplied its sizes/codes/design pressure drive the calculation.
     """
     print("\n[Chart 2] Building Min Wall Thickness vs Pipe Size...")
 
-    od_values = [ps["od_mm"] for ps in PIPE_SIZES]
+    sizes = config_pipe_sizes(config)
+    code_names_list_cfg = config.codes if config is not None else CODE_NAME_STRINGS
+    od_values = [ps["od_mm"] for ps in sizes]
 
     if cached_min_wt is not None:
         # Reconstruct code_results from cache  {pipe_name: {code: wt_mm}}
         code_results = {}
-        for code_name in CODE_NAME_STRINGS:
+        for code_name in code_names_list_cfg:
             wt_values = []
-            for ps in PIPE_SIZES:
+            for ps in sizes:
                 wt_mm = cached_min_wt.get(ps["name"], {}).get(code_name, 0.0)
                 wt_values.append(wt_mm)
             code_results[code_name] = wt_values
     else:
-        pe = external_pressure_pa()
-        pi = 20e6  # Fixed 20 MPa
+        pe = external_pressure_pa(config=config)
+        pi = config.design_pressure_pa if config is not None else 20e6  # Fixed design pressure
+        codes = config.design_codes if config is not None else CODES
+        code_display = (
+            dict(zip(config.design_codes, config.codes)) if config is not None else CODE_NAMES
+        )
 
         code_results = {}
-        for code_idx, code in enumerate(CODES):
-            code_name = CODE_NAMES[code]
+        for code_idx, code in enumerate(codes):
+            code_name = code_display[code]
             wt_values = []
-            for ps in PIPE_SIZES:
-                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
+            for ps in sizes:
+                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code, config=config)
                 wt_values.append(min_wt * 1000)  # Convert to mm
                 print(f"  {ps['name']} | {code_name}: min WT = {min_wt*1000:.2f} mm")
             code_results[code_name] = wt_values
 
     # Build serialisable min_wt data for caching  {pipe_name: {code: wt_mm}}
     min_wt_data: Dict[str, Dict[str, float]] = {}
-    for i, ps in enumerate(PIPE_SIZES):
+    for i, ps in enumerate(sizes):
         pipe_wts = {}
         for code_name, wt_list in code_results.items():
             pipe_wts[code_name] = round(wt_list[i], 2)
@@ -581,15 +745,21 @@ def build_chart_2_min_wt(
 def build_chart_3_heatmap(
     pipe_catalog: Optional[list] = None,
     cached_results: Optional[List[Dict]] = None,
+    config: Optional[Any] = None,
 ) -> go.Figure:
     """Build 3 side-by-side utilisation heatmaps (one per code).
 
     When *cached_results* (the parametric sweep list) is provided, extract
     utilisation values from the sweep instead of re-running analyses.
+    When *config* is supplied its sizes/codes/pressures drive the grid.
     """
     print("\n[Chart 3] Building Utilisation Heatmaps...")
 
-    pipe_labels = [ps["name"] for ps in PIPE_SIZES]
+    sizes = config_pipe_sizes(config)
+    code_names_list = config.codes if config is not None else CODE_NAME_STRINGS
+    pressures = config.internal_pressures_mpa if config is not None else INTERNAL_PRESSURES_MPA
+    design_codes = config.design_codes if config is not None else CODES
+    pipe_labels = [ps["name"] for ps in sizes]
 
     # Custom colorscale: green -> amber -> red
     colorscale = [
@@ -601,9 +771,9 @@ def build_chart_3_heatmap(
         [1.0, "#e53e3e"],
     ]
 
-    code_names_list = CODE_NAME_STRINGS
+    n_codes = len(code_names_list)
     fig = make_subplots(
-        rows=1, cols=3,
+        rows=1, cols=n_codes,
         subplot_titles=code_names_list,
         horizontal_spacing=0.08,
     )
@@ -619,10 +789,10 @@ def build_chart_3_heatmap(
         z_matrix = []
         hover_text = []
 
-        for pi_mpa in INTERNAL_PRESSURES_MPA:
+        for pi_mpa in pressures:
             row_z = []
             row_hover = []
-            for ps in PIPE_SIZES:
+            for ps in sizes:
                 if cached_results is not None:
                     r = _cache_lookup.get((ps["name"], code_name, pi_mpa))
                     if r and r.get("max_utilisation") not in (None, "N/A"):
@@ -636,9 +806,10 @@ def build_chart_3_heatmap(
                 else:
                     wt_m = select_analysis_wt(ps, pipe_catalog)
                     wt_mm = wt_m * 1000
-                    pe = external_pressure_pa()
+                    pe = external_pressure_pa(config=config)
                     result = run_single_analysis(
-                        ps["od_m"], wt_m, pi_mpa * 1e6, pe, CODES[col_idx - 1],
+                        ps["od_m"], wt_m, pi_mpa * 1e6, pe, design_codes[col_idx - 1],
+                        config=config,
                     )
                     if result:
                         util = result["max_utilisation"]
@@ -661,15 +832,15 @@ def build_chart_3_heatmap(
         fig.add_trace(
             go.Heatmap(
                 x=pipe_labels,
-                y=[f"{p} MPa" for p in INTERNAL_PRESSURES_MPA],
+                y=[f"{p} MPa" for p in pressures],
                 z=z_matrix,
                 text=hover_text,
                 hoverinfo="text",
                 colorscale=colorscale,
                 zmin=0,
                 zmax=2.0,
-                showscale=(col_idx == 3),
-                colorbar=dict(title="Utilisation") if col_idx == 3 else None,
+                showscale=(col_idx == n_codes),
+                colorbar=dict(title="Utilisation") if col_idx == n_codes else None,
             ),
             row=1, col=col_idx,
         )
@@ -683,7 +854,7 @@ def build_chart_3_heatmap(
         width=1100,
     )
 
-    for col_idx in range(1, 4):
+    for col_idx in range(1, n_codes + 1):
         fig.update_xaxes(title_text="Pipe Size", row=1, col=col_idx)
     fig.update_yaxes(title_text="Internal Pressure", row=1, col=1)
 
@@ -698,16 +869,20 @@ def build_chart_3_heatmap(
 def build_chart_4_weight_penalty(
     cached_weight_penalty: Optional[Dict] = None,
     cached_min_wt: Optional[Dict] = None,
+    config: Optional[Any] = None,
 ) -> Tuple[go.Figure, Dict]:
     """Build dual-axis weight penalty bar chart.
 
     When *cached_weight_penalty* is provided, use pre-computed values.
     When *cached_min_wt* is provided (but not weight_penalty), derive from
     min WT data without running engineering calculations.
+    When *config* is supplied its sizes/codes/design pressure/steel density drive it.
     """
     print("\n[Chart 4] Building Weight Penalty chart...")
 
-    pipe_labels = [ps["name"] for ps in PIPE_SIZES]
+    sizes = config_pipe_sizes(config)
+    steel_density = config.steel_density_kg_m3 if config is not None else STEEL_DENSITY
+    pipe_labels = [ps["name"] for ps in sizes]
     extra_kg_m = []
     extra_pct = []
     most_conservative_codes = []
@@ -715,7 +890,7 @@ def build_chart_4_weight_penalty(
 
     if cached_weight_penalty is not None:
         # Use pre-computed weight penalty data
-        for ps in PIPE_SIZES:
+        for ps in sizes:
             pname = ps["name"]
             wp = cached_weight_penalty.get(pname, {})
             extra_kg_m.append(wp.get("delta_kg_m", 0.0))
@@ -724,7 +899,7 @@ def build_chart_4_weight_penalty(
             least_conservative_codes.append(wp.get("least_conservative", "N/A"))
     elif cached_min_wt is not None:
         # Derive from cached min WT values
-        for ps in PIPE_SIZES:
+        for ps in sizes:
             pname = ps["name"]
             wt_by_code = cached_min_wt.get(pname, {})
             # Convert mm -> m
@@ -742,19 +917,23 @@ def build_chart_4_weight_penalty(
             od = ps["od_m"]
             a_thick = math.pi / 4 * (od**2 - (od - 2 * max_wt)**2)
             a_thin = math.pi / 4 * (od**2 - (od - 2 * min_wt_val)**2)
-            delta_mass = (a_thick - a_thin) * STEEL_DENSITY
+            delta_mass = (a_thick - a_thin) * steel_density
             pct = (delta_wt / min_wt_val * 100) if min_wt_val > 0 else 0
             extra_kg_m.append(delta_mass)
             extra_pct.append(pct)
     else:
-        pe = external_pressure_pa()
-        pi = 20e6
+        pe = external_pressure_pa(config=config)
+        pi = config.design_pressure_pa if config is not None else 20e6
+        codes = config.design_codes if config is not None else CODES
+        code_display = (
+            dict(zip(config.design_codes, config.codes)) if config is not None else CODE_NAMES
+        )
 
-        for ps in PIPE_SIZES:
+        for ps in sizes:
             wt_by_code = {}
-            for code in CODES:
-                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code)
-                wt_by_code[CODE_NAMES[code]] = min_wt
+            for code in codes:
+                min_wt, _ = find_min_wall_thickness(ps["od_m"], pi, pe, code, config=config)
+                wt_by_code[code_display[code]] = min_wt
 
             wt_values = list(wt_by_code.values())
             max_wt = max(wt_values)
@@ -772,7 +951,7 @@ def build_chart_4_weight_penalty(
             od = ps["od_m"]
             a_thick = math.pi / 4 * (od**2 - (od - 2 * max_wt)**2)
             a_thin = math.pi / 4 * (od**2 - (od - 2 * min_wt)**2)
-            delta_mass = (a_thick - a_thin) * STEEL_DENSITY  # kg/m
+            delta_mass = (a_thick - a_thin) * steel_density  # kg/m
 
             pct = (delta_wt / min_wt * 100) if min_wt > 0 else 0
 
@@ -781,8 +960,8 @@ def build_chart_4_weight_penalty(
 
             print(f"  {ps['name']}: ΔWT={delta_wt*1000:.2f}mm, Δmass={delta_mass:.1f} kg/m, {pct:.1f}%")
 
-    # Find typical annotation data (use 12" pipe)
-    idx_12 = 3  # 12" is index 3
+    # Find typical annotation data (use 12" pipe — index 3 in the baseline 6-size sweep)
+    idx_12 = min(3, len(sizes) - 1)
     pipeline_length_km = 50
     extra_tonnes = extra_kg_m[idx_12] * pipeline_length_km * 1000 / 1000  # tonnes
 
@@ -851,7 +1030,7 @@ def build_chart_4_weight_penalty(
 
     # Build serialisable weight penalty data for caching
     weight_penalty_data: Dict[str, Dict] = {}
-    for i, ps in enumerate(PIPE_SIZES):
+    for i, ps in enumerate(sizes):
         weight_penalty_data[ps["name"]] = {
             "delta_kg_m": round(extra_kg_m[i], 2),
             "delta_pct": round(extra_pct[i], 1),
@@ -963,37 +1142,84 @@ def select_analysis_wt(ps: Dict, pipe_catalog: list) -> float:
                 return wts[len(wts) // 2]  # median WT
             elif wts:
                 return wts[-1]  # use thickest if few options
-    return ps["od_m"] * 0.05  # fallback
+    # No catalog entry matched this size. The pipelines catalog is now client-editable
+    # (ADR-0005), so silently fabricating a WT would hide a misconfigured catalog. Fail loud.
+    raise ValueError(
+        f"no catalog wall thickness for size {ps['name']} (OD {ps['od_mm']}mm) "
+        "in the configured pipelines catalog"
+    )
 
 
-def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
-    """Run the full parametric sweep across all cases."""
-    pe = external_pressure_pa()
-    total_cases = len(PIPE_SIZES) * len(CODES) * len(INTERNAL_PRESSURES_MPA)
+def _resolve_sweep_axes(config: Optional[Any]) -> Tuple[List[Dict], List[Any], List[str], List[int]]:
+    """Resolve (pipe_size_dicts, design_codes, code_display_names, pressures) for the sweep.
+
+    When *config* is a ``ResolvedDemo02Config`` its axes drive the sweep; otherwise the
+    module constants are used (legacy default). In BOTH cases the per-case ``code`` field
+    is emitted as the SPACED display string via the demo's ``CODE_NAMES`` map.
+    """
+    if config is None:
+        # Legacy default: module constants. Codes -> display names via CODE_NAMES.
+        size_dicts = list(PIPE_SIZES)
+        design_codes = list(CODES)
+        display_names = [CODE_NAMES[c] for c in design_codes]
+        pressures = list(INTERNAL_PRESSURES_MPA)
+        return size_dicts, design_codes, display_names, pressures
+
+    # Config-driven: map size labels to the PIPE_SIZES dicts (preserve config order).
+    by_name = {ps["name"]: ps for ps in PIPE_SIZES}
+    size_dicts = []
+    for name in config.sizes:
+        if name not in by_name:
+            raise ValueError(
+                f"sweep config size {name!r} not in PIPE_SIZES "
+                f"(known: {sorted(by_name)})"
+            )
+        size_dicts.append(by_name[name])
+    design_codes = list(config.design_codes)
+    display_names = list(config.codes)  # SPACED display strings, 1:1 with design_codes
+    pressures = list(config.internal_pressures_mpa)
+    return size_dicts, design_codes, display_names, pressures
+
+
+def run_parametric_sweep(
+    pipe_catalog: list,
+    config: Optional[Any] = None,
+) -> Tuple[List[Dict], pd.DataFrame]:
+    """Run the full parametric sweep across all cases.
+
+    Iterates the cross-product preserving today's nesting: size (outer) -> code (mid) ->
+    pressure (inner), so the 72-case order matches the frozen golden exactly. When *config*
+    (a ``ResolvedDemo02Config``) is supplied its axes drive the loop; otherwise the module
+    constants are used.
+    """
+    pe = external_pressure_pa(config=config)
+    grade = config.grade if config is not None else GRADE
+    water_depth = config.water_depth_m if config is not None else WATER_DEPTH
+    size_dicts, design_codes, display_names, pressures = _resolve_sweep_axes(config)
+    total_cases = len(size_dicts) * len(design_codes) * len(pressures)
 
     print(f"\n{'='*60}")
     print(f"  PARAMETRIC WALL THICKNESS SWEEP")
-    print(f"  {total_cases} cases: {len(PIPE_SIZES)} pipes × {len(CODES)} codes × {len(INTERNAL_PRESSURES_MPA)} pressures")
+    print(f"  {total_cases} cases: {len(size_dicts)} pipes × {len(design_codes)} codes × {len(pressures)} pressures")
     print(f"{'='*60}\n")
 
     all_results = []
     case_num = 0
 
-    for ps in PIPE_SIZES:
+    for ps in size_dicts:
         # Use mid-range WT for more interesting results
         wt_m = select_analysis_wt(ps, pipe_catalog)
 
-        for code in CODES:
-            for pi_mpa in INTERNAL_PRESSURES_MPA:
+        for code, code_name in zip(design_codes, display_names):
+            for pi_mpa in pressures:
                 case_num += 1
-                code_name = CODE_NAMES[code]
                 pi_pa = pi_mpa * 1e6
 
                 print(f"  Case {case_num:3d}/{total_cases} | {ps['name']:>4s} X65 WT={wt_m*1000:.1f}mm | {code_name:<14s} | {pi_mpa} MPa...",
                       end="")
 
                 try:
-                    result = run_single_analysis(ps["od_m"], wt_m, pi_pa, pe, code)
+                    result = run_single_analysis(ps["od_m"], wt_m, pi_pa, pe, code, config=config)
                     if result:
                         record = {
                             "pipe_size": ps["name"],
@@ -1001,11 +1227,11 @@ def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
                             "od_m": ps["od_m"],
                             "wt_mm": round(wt_m * 1000, 2),
                             "wt_m": wt_m,
-                            "grade": GRADE,
+                            "grade": grade,
                             "code": code_name,
                             "internal_pressure_mpa": pi_mpa,
                             "external_pressure_mpa": round(pe / 1e6, 3),
-                            "water_depth_m": WATER_DEPTH,
+                            "water_depth_m": water_depth,
                             "is_safe": result["is_safe"],
                             "governing_check": result["governing_check"],
                             "max_utilisation": round(result["max_utilisation"], 4),
@@ -1015,27 +1241,24 @@ def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
                         status = "PASS" if result["is_safe"] else "FAIL"
                         print(f" util={result['max_utilisation']:.3f} [{status}]")
                     else:
-                        all_results.append({
-                            "pipe_size": ps["name"],
-                            "od_mm": ps["od_mm"],
-                            "code": code_name,
-                            "internal_pressure_mpa": pi_mpa,
-                            "is_safe": "N/A",
-                            "governing_check": "N/A",
-                            "max_utilisation": "N/A",
-                        })
+                        # Normalized failure record — SAME 14 FROZEN keys, nulls for N/A (BD-1).
+                        all_results.append(
+                            _normalize_failure_record(ps, code_name, pi_mpa, pe, config=config)
+                        )
                         print(" [N/A]")
                 except Exception as exc:
                     print(f" [ERROR: {exc}]")
-                    all_results.append({
-                        "pipe_size": ps["name"],
-                        "od_mm": ps["od_mm"],
-                        "code": code_name,
-                        "internal_pressure_mpa": pi_mpa,
-                        "is_safe": "N/A",
-                        "governing_check": str(exc),
-                        "max_utilisation": "N/A",
-                    })
+                    all_results.append(
+                        _normalize_failure_record(ps, code_name, pi_mpa, pe, governing=str(exc), config=config)
+                    )
+
+    # BD-1 drift guard: every case must carry exactly the 14 FROZEN keys before serialization.
+    for rec in all_results:
+        if set(rec.keys()) != set(FROZEN_RESULT_KEYS):
+            raise AssertionError(
+                "result record key set drift (BD-1): "
+                f"{sorted(rec.keys())} != {sorted(FROZEN_RESULT_KEYS)}"
+            )
 
     df = pd.DataFrame(all_results)
     print(f"\n  ✓ Sweep complete: {len(all_results)} results collected")
@@ -1046,26 +1269,35 @@ def run_parametric_sweep(pipe_catalog: list) -> Tuple[List[Dict], pd.DataFrame]:
 # Summary table
 # ---------------------------------------------------------------------------
 
-def build_summary_table(cached_summary: Optional[List[Dict]] = None) -> pd.DataFrame:
+def build_summary_table(
+    cached_summary: Optional[List[Dict]] = None,
+    config: Optional[Any] = None,
+) -> pd.DataFrame:
     """Build summary: pipe size x code -> min WT, governing check.
 
     When *cached_summary* is provided (list of row dicts from JSON), rebuild
     the DataFrame directly without running engineering calculations.
+    When *config* is supplied its sizes/codes/design pressure drive the table.
     """
     if cached_summary is not None:
         return pd.DataFrame(cached_summary)
 
-    pe = external_pressure_pa()
-    pi = 20e6
+    pe = external_pressure_pa(config=config)
+    pi = config.design_pressure_pa if config is not None else 20e6
+    sizes = config_pipe_sizes(config)
+    codes = config.design_codes if config is not None else CODES
+    code_display = (
+        dict(zip(config.design_codes, config.codes)) if config is not None else CODE_NAMES
+    )
 
     rows = []
-    for ps in PIPE_SIZES:
-        for code in CODES:
-            min_wt, gov = find_min_wall_thickness(ps["od_m"], pi, pe, code)
+    for ps in sizes:
+        for code in codes:
+            min_wt, gov = find_min_wall_thickness(ps["od_m"], pi, pe, code, config=config)
             rows.append({
                 "Pipe Size": ps["name"],
                 "OD (mm)": ps["od_mm"],
-                "Code": CODE_NAMES[code],
+                "Code": code_display[code],
                 "Min WT (mm)": round(min_wt * 1000, 2),
                 "Governing Check": (gov or "N/A").replace("_", " ").title(),
                 "Status": "PASS" if min_wt < ps["od_m"] / 2 * 0.9 else "MARGINAL",
@@ -1088,13 +1320,57 @@ def build_report(
     all_results: List[Dict],
     penalty_info: Dict,
     total_cases: int,
+    output_path: Optional[Path] = None,
+    config: Optional[Any] = None,
 ) -> str:
-    """Build the branded HTML report."""
+    """Build the branded HTML report.
+
+    ``output_path`` defaults (inside the body) to the legacy Baseline location so the
+    Baseline call stays byte-identical; a named Run passes a per-run path (per-run report).
+
+    ``config`` (a ``ResolvedDemo02Config``) drives the report NARRATIVE so a client edit is
+    reflected in the prose. When ``config is None`` the current Baseline literals are used
+    as the fallback, keeping the Baseline call byte-identical.
+    """
     print("\n[Report] Building HTML report...")
+
+    # Narrative values: config-driven when a config is supplied, else today's Baseline
+    # literals (so the `config is None` path renders byte-identical to the legacy report).
+    if config is not None:
+        n_sizes = len(config.sizes)
+        n_codes = len(config.codes)
+        n_pressures = len(config.internal_pressures_mpa)
+        rpt_grade = config.grade
+        rpt_smys_mpa = config.smys_pa / 1e6
+        rpt_smts_mpa = config.smts_pa / 1e6
+        rpt_water_depth = config.water_depth_m
+        rpt_pressures_list = ", ".join(str(p) for p in config.internal_pressures_mpa)
+        rpt_corrosion_mm = config.corrosion_allowance_m * 1000
+        rpt_design_pressure = config.design_pressure_mpa
+    else:
+        n_sizes, n_codes, n_pressures = 6, 3, 4
+        rpt_grade = "X65"
+        rpt_smys_mpa = 448.0
+        rpt_smts_mpa = 531.0
+        rpt_water_depth = 500.0
+        rpt_pressures_list = "10, 15, 20, 25"
+        rpt_corrosion_mm = 1.0
+        rpt_design_pressure = 20
+
+    # Render scalars with the legacy literal formatting so the Baseline path is byte-identical:
+    # water depth as "500m" (no decimal), SMYS/SMTS/corrosion as integers when whole.
+    def _fmt_num(value: float) -> str:
+        return str(int(value)) if float(value).is_integer() else str(value)
+
+    water_depth_str = _fmt_num(rpt_water_depth)
+    smys_str = _fmt_num(rpt_smys_mpa)
+    smts_str = _fmt_num(rpt_smts_mpa)
+    corrosion_str = _fmt_num(rpt_corrosion_mm)
+    design_pressure_str = _fmt_num(rpt_design_pressure)
 
     report = GTMReportBuilder(
         title="Pipeline Wall Thickness — Multi-Code Comparison",
-        subtitle=f"{total_cases} parametric cases across 6 pipe sizes, 3 design codes, and 4 operating pressures",
+        subtitle=f"{total_cases} parametric cases across {n_sizes} pipe sizes, {n_codes} design codes, and {n_pressures} operating pressures",
         demo_id="demo_02",
         case_count=total_cases,
         code_refs=[
@@ -1131,13 +1407,20 @@ def build_report(
     
     <h3>Common Parameters</h3>
     <ul>
-        <li>Grade: API 5L X65 (SMYS = 448 MPa, SMTS = 531 MPa)</li>
-        <li>Water depth: 500 m (external pressure ≈ 5.02 MPa)</li>
-        <li>Internal pressures: 10, 15, 20, 25 MPa</li>
-        <li>Corrosion allowance: 1 mm</li>
+        <li>Grade: API 5L {rpt_grade} (SMYS = {smys_str} MPa, SMTS = {smts_str} MPa)</li>
+        <li>Water depth: {water_depth_str} m (external pressure ≈ 5.02 MPa)</li>
+        <li>Internal pressures: {rpt_pressures_list} MPa</li>
+        <li>Corrosion allowance: {corrosion_str} mm</li>
         <li>Safety Class: Medium (DNV), standard factors (API, PD 8010-2)</li>
     </ul>
-    """
+    """.format(
+        rpt_grade=rpt_grade,
+        smys_str=smys_str,
+        smts_str=smts_str,
+        water_depth_str=water_depth_str,
+        rpt_pressures_list=rpt_pressures_list,
+        corrosion_str=corrosion_str,
+    )
     report.add_methodology(methodology_html)
 
     # Charts
@@ -1152,7 +1435,7 @@ def build_report(
         "min_wt_vs_pipe_size",
         fig2,
         title="Chart 2: Minimum Required Wall Thickness vs Pipe Size",
-        subtitle="At 20 MPa internal pressure, 500m water depth, X65 grade. Shaded band shows code penalty.",
+        subtitle=f"At {design_pressure_str} MPa internal pressure, {water_depth_str}m water depth, {rpt_grade} grade. Shaded band shows code penalty.",
     )
 
     report.add_chart(
@@ -1166,7 +1449,7 @@ def build_report(
         "weight_penalty",
         fig4,
         title="Chart 4: Steel Weight Penalty — Code Conservatism Cost",
-        subtitle="Difference in required WT between most and least conservative code, at 20 MPa.",
+        subtitle=f"Difference in required WT between most and least conservative code, at {design_pressure_str} MPa.",
     )
 
     report.add_chart(
@@ -1180,7 +1463,7 @@ def build_report(
     report.add_table(
         "Summary: Minimum Wall Thickness by Pipe Size and Code",
         summary_df,
-        subtitle="At 20 MPa internal pressure, 500m water depth, X65 grade, Safety Class Medium",
+        subtitle=f"At {design_pressure_str} MPa internal pressure, {water_depth_str}m water depth, {rpt_grade} grade, Safety Class Medium",
         status_col="Status",
     )
 
@@ -1191,8 +1474,8 @@ def build_report(
 
     # Assumptions
     report.add_assumptions([
-        "All analyses use API 5L X65 grade (SMYS = 448 MPa, SMTS = 531 MPa)",
-        "Water depth fixed at 500 m for all cases (P_ext ≈ 5.02 MPa)",
+        f"All analyses use API 5L {rpt_grade} grade (SMYS = {smys_str} MPa, SMTS = {smts_str} MPa)",
+        f"Water depth fixed at {water_depth_str} m for all cases (P_ext ≈ 5.02 MPa)",
         "Corrosion allowance = 1.0 mm internal, 0.0 mm external (intact coating assumed)",
         "Fabrication tolerance = 12.5% (DNV default for seamless pipe)",
         "Ovality = 0.5% (Dmax-Dmin)/Dnom — conservative for good-quality pipe",
@@ -1205,11 +1488,187 @@ def build_report(
     ])
 
     # Build and save
-    output_path = OUTPUT_DIR / "demo_02_wall_thickness_report.html"
+    if output_path is None:
+        output_path = OUTPUT_DIR / "demo_02_wall_thickness_report.html"
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     html = report.build(output_path)
 
     print(f"  ✓ Report saved to: {output_path}")
     return html
+
+
+# ---------------------------------------------------------------------------
+# Results Store subcommands: `lookup` + `rebuild-db`
+#
+# These are dispatched by an argv-sniff in __main__ so they NEVER touch the existing sweep
+# parser — the no-arg / --from-cache / --force / --results-dir / --run-id sweep path stays
+# byte-identical. Each subcommand builds its OWN ArgumentParser over sys.argv[2:].
+# ---------------------------------------------------------------------------
+
+# Columns shown by `lookup`, in a clean operator-facing order.
+_LOOKUP_DISPLAY_COLS = [
+    "pipe_size",
+    "code",
+    "internal_pressure_mpa",
+    "wt_mm",
+    "is_safe",
+    "governing_check",
+    "max_utilisation",
+    "check_pressure_containment",
+    "check_collapse",
+    "check_propagation_buckling",
+    "check_combined_loading",
+]
+
+
+def lookup_main(argv: List[str]) -> int:
+    """`lookup` subcommand: read-only filtered SELECT over the demo_02 Results Store cache.
+
+    Returns a process exit code (0 = ok, non-zero = error such as a missing db).
+    """
+    import sqlite3
+
+    try:
+        import results_store_demo02 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_02_wall_thickness_multicode.py lookup",
+        description="Look up cases in the demo_02 Results Store (read-only SQLite cache).",
+    )
+    parser.add_argument("--run-id", type=str, default=BASELINE_RUN_ID,
+                        help=f"Run to query (default '{BASELINE_RUN_ID}').")
+    parser.add_argument("--pipe-size", type=str, default=None,
+                        help='Pipe size filter, INCLUDING the literal \'"\' (e.g. \'12"\').')
+    parser.add_argument("--code", type=str, default=None,
+                        help='Design code filter — the SPACED display string '
+                             f'(one of: {", ".join(CODE_NAME_STRINGS)}).')
+    parser.add_argument("--pressure", type=int, default=None,
+                        help="Internal pressure filter in MPa (e.g. 20).")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--safe", action="store_true",
+                       help="Only cases that PASSED (is_safe = 'True').")
+    group.add_argument("--unsafe", action="store_true",
+                       help="Only cases that FAILED (is_safe = 'False').")
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    # Validate run_id before using it (clean error + non-zero exit, no traceback).
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        return 2
+
+    # M-2: validate --code against the 3 known display strings.
+    if args.code is not None and args.code not in CODE_NAME_STRINGS:
+        print(f"unknown code; valid: {CODE_NAME_STRINGS}")
+        return 2
+
+    db_path = rs._db_path(args.base_dir)
+    if not db_path.exists():
+        # Do NOT create the db; clear, actionable message; non-zero exit.
+        print(
+            f"No results.db at {db_path} — run a sweep first "
+            f"(e.g. `... --run-id {BASELINE_RUN_ID}`) or `... rebuild-db`."
+        )
+        return 1
+
+    # Open strictly read-only via a file: URI so a query never mutates/creates the cache.
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Distinct message for an unknown run_id vs. a zero-row filter result.
+        known_runs = [r[0] for r in conn.execute("SELECT run_id FROM runs ORDER BY run_id")]
+        if args.run_id not in known_runs:
+            available = ", ".join(known_runs) if known_runs else "(none)"
+            print(f"run_id '{args.run_id}' not found; available: {available}")
+            return 1
+
+        # Build a parameterized WHERE. Each filter binds the value verbatim (parameter
+        # binding makes the literal '"' in pipe_size and the spaced code string safe).
+        where = ["run_id = ?"]
+        params: List[Any] = [args.run_id]
+        if args.pipe_size is not None:
+            where.append("pipe_size = ?")
+            params.append(str(args.pipe_size))
+        if args.code is not None:
+            where.append("code = ?")
+            params.append(str(args.code))
+        if args.pressure is not None:
+            where.append("internal_pressure_mpa = ?")
+            params.append(int(args.pressure))
+        if args.safe:
+            # M-1: literal TEXT token, NOT bool/int.
+            where.append("is_safe = ?")
+            params.append("True")
+        elif args.unsafe:
+            where.append("is_safe = ?")
+            params.append("False")
+
+        cols = ", ".join(_LOOKUP_DISPLAY_COLS)
+        sql = (
+            f"SELECT {cols} FROM cases WHERE {' AND '.join(where)} "
+            "ORDER BY pipe_size, code, internal_pressure_mpa"
+        )
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        print("0 cases match.")
+        return 0
+
+    # Clean fixed-width table.
+    widths = [len(c) for c in _LOOKUP_DISPLAY_COLS]
+    str_rows = [[("" if v is None else str(v)) for v in row] for row in rows]
+    for r in str_rows:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    header = "  ".join(c.ljust(widths[i]) for i, c in enumerate(_LOOKUP_DISPLAY_COLS))
+    print(header)
+    print("  ".join("-" * widths[i] for i in range(len(_LOOKUP_DISPLAY_COLS))))
+    for r in str_rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(r)))
+    print(f"\n{len(rows)} case(s) matched.")
+    return 0
+
+
+def rebuild_main(argv: List[str]) -> int:
+    """`rebuild-db` subcommand: regenerate the SQLite cache + index.csv from the text source."""
+    import sqlite3
+
+    try:
+        import results_store_demo02 as rs
+    except ImportError:  # pragma: no cover — packaged import path fallback.
+        from examples.demos.gtm import results_store_demo02 as rs
+
+    parser = argparse.ArgumentParser(
+        prog="demo_02_wall_thickness_multicode.py rebuild-db",
+        description="Rebuild the demo_02 Results Store SQLite cache + index.csv from "
+                    "the per-run cases.csv / manifest.json text source of truth.",
+    )
+    parser.add_argument("--base-dir", type=Path, default=RESULTS_DIR,
+                        help="Store base dir (default the demo's results/ dir).")
+    args = parser.parse_args(argv)
+
+    db_path = rs.rebuild_db(args.base_dir)
+    print(f"Results Store rebuilt: {db_path}")
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        n_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+        n_cases = conn.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        per_run = conn.execute(
+            "SELECT run_id, COUNT(*) FROM cases GROUP BY run_id ORDER BY run_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    print(f"  runs: {n_runs}   cases: {n_cases}")
+    for run_id, n in per_run:
+        print(f"    {run_id}: {n} cases")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -1231,7 +1690,55 @@ def main():
         action="store_true",
         help="Force re-run even if cached results exist",
     )
+    parser.add_argument(
+        "--results-dir",
+        default=None,
+        help="Override the results directory (legacy JSON + Results Store). "
+        "Defaults to the demo's results/ dir.",
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=BASELINE_RUN_ID,
+        help="Run identifier for the Results Store + per-run report dir "
+        f"(default '{BASELINE_RUN_ID}', the Baseline Run). A named run writes its report "
+        "to output/parametric/demo_02/<run_id>/report.html and seeds <run_id> in the Store.",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=BASELINE_CONFIG_PATH,
+        help="Path to the Sweep Config yaml driving the run (axes, constants, catalogs, "
+        f"artifact paths). Defaults to the committed baseline ({BASELINE_CONFIG_PATH.name}); "
+        "point it at your own yaml to run a client config without editing the baseline.",
+    )
     args = parser.parse_args()
+
+    # Validate the config path up front (clear error, never a raw traceback later). Both the
+    # path resolver and the full loader read this same file.
+    config_path = Path(args.config)
+    if not config_path.exists():
+        print(f"[ERROR] --config path does not exist: {config_path}")
+        sys.exit(2)
+
+    # Validate run_id BEFORE any run dir / report path is built from it (path-traversal /
+    # empty / collision guard). Clean error + non-zero exit, never a raw traceback.
+    try:
+        validate_run_id(args.run_id)
+    except ValueError as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(2)
+
+    # --from-cache regenerates the Baseline report only (cached data is always the baseline
+    # 72 cases). A named --run-id under --from-cache would write a mislabeled report, so warn
+    # AND force the report path back to the legacy Baseline location below.
+    if args.from_cache and args.run_id != BASELINE_RUN_ID:
+        warnings.warn(
+            f"--from-cache regenerates the baseline report only; --run-id '{args.run_id}' "
+            "will not produce a named Results Store row (run without --from-cache to compute "
+            "a named run). The report is written to the baseline path.",
+            stacklevel=2,
+        )
 
     start_time = time.time()
 
@@ -1239,20 +1746,48 @@ def main():
     print("  GTM Demo 2: Pipeline Wall Thickness — Multi-Code Comparison")
     print("=" * 60)
 
-    results_path = RESULTS_DIR / "demo_02_wall_thickness_results.json"
+    # Resolve catalog + artifact PATHS from the committed Baseline yaml (engineering-free,
+    # so this also runs on the --from-cache path). On any load failure fall back to the
+    # committed module dirs so the demo still runs. The CLI --results-dir always wins.
+    pipelines_path = DATA_DIR / "pipelines.json"
+    design_codes_path = DATA_DIR / "design_codes.json"
+    yaml_results_root = RESULTS_DIR
+    yaml_output_root = OUTPUT_DIR
+    try:
+        try:
+            from sweep_config_demo02 import load_demo02_paths
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.sweep_config_demo02 import load_demo02_paths
+        paths = load_demo02_paths(config_path)
+        pipelines_path = paths.pipelines_path
+        design_codes_path = paths.design_codes_path
+        yaml_results_root = paths.results_root
+        yaml_output_root = paths.output_root
+    except Exception as exc:  # noqa: BLE001 — committed-baseline fallback is intentional.
+        logger.warning(
+            "Could not resolve paths from %s (%s); using committed defaults.",
+            config_path, exc,
+        )
+
+    results_dir = Path(args.results_dir) if args.results_dir else yaml_results_root
+    results_path = results_dir / "demo_02_wall_thickness_results.json"
 
     # 1. Load data files
     print("\n[1/7] Loading input data...")
-    with open(DATA_DIR / "pipelines.json", "r") as f:
+    with open(pipelines_path, "r") as f:
         pipe_data = json.load(f)
     pipe_catalog = pipe_data["pipes"]
     print(f"  ✓ Loaded {len(pipe_catalog)} pipe sizes from pipelines.json")
 
-    with open(DATA_DIR / "design_codes.json", "r") as f:
+    with open(design_codes_path, "r") as f:
         code_data = json.load(f)
     print(f"  ✓ Loaded {len(code_data['codes'])} design codes from design_codes.json")
 
     # ── Step 2: Run sweep or load cache ────────────────────────────────────
+    # config is the resolved Sweep Config; it is loaded only on the recompute path. In the
+    # --from-cache path it stays None and the chart builders read the cached intermediate
+    # data (never recompute), so the legacy-global fallback inside them is never exercised.
+    config = None
     use_cache = args.from_cache and results_path.exists() and not args.force
     if use_cache:
         print("\n[2/7] Loading cached results...")
@@ -1280,13 +1815,41 @@ def main():
         _load_engineering_modules()
         _init_code_constants()
 
+        # Load the committed Baseline Sweep Config LAZILY here (recompute path only) so
+        # --from-cache works without it. The loader reuses the just-built CODE_NAMES inverse
+        # map + SafetyClass enum to avoid a second engineering import.
+        try:
+            from sweep_config_demo02 import load_demo02_config
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.sweep_config_demo02 import load_demo02_config
+        code_name_map = {display: code for code, display in CODE_NAMES.items()}
+        config = load_demo02_config(
+            config_path,
+            code_name_map=code_name_map,
+            safety_class_enum=SafetyClass,
+        )
+        # All config now lives in the yaml and is wired through the analysis, charts, summary,
+        # and report (ADR-0005): editing a constant changes results live, so the Phase-1
+        # loud-refuse guard is gone.
+
         print("\n[2/7] Running parametric sweep...")
-        all_results, results_df = run_parametric_sweep(pipe_catalog)
+        all_results, results_df = run_parametric_sweep(pipe_catalog, config=config)
         total_cases = len(all_results)
         cached_lifecycle = None
         cached_min_wt = None
         cached_weight_penalty = None
         cached_summary = None
+
+        # Results Store (additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only (config is not None). D-1: if --from-cache demoted to
+        # recompute (stale cache), force the BASELINE run_id so we never seed a named row
+        # the --from-cache warning said wouldn't exist.
+        _store_write_run(
+            run_id=(BASELINE_RUN_ID if args.from_cache else args.run_id),
+            config=config,
+            results=all_results,
+            base_dir=results_dir,
+        )
     elif not CODES:
         # Fast regen uses string-coded cache data, but downstream chart builders still
         # expect the code-name constants to be initialised.
@@ -1298,46 +1861,88 @@ def main():
     fig1, lifecycle_data = build_chart_1_lifecycle(
         pipe_catalog=pipe_catalog,
         cached_lifecycle=cached_lifecycle,
+        config=config,
     )
     fig2, min_wt_data = build_chart_2_min_wt(
         cached_min_wt=cached_min_wt,
+        config=config,
     )
     fig3 = build_chart_3_heatmap(
         pipe_catalog=pipe_catalog,
         cached_results=all_results if (args.from_cache and not args.force) else None,
+        config=config,
     )
     fig4, penalty_info, weight_penalty_data = build_chart_4_weight_penalty(
         cached_weight_penalty=cached_weight_penalty,
         cached_min_wt=cached_min_wt,
+        config=config,
     )
     fig5 = build_chart_5_sunburst(all_results)
 
     # 4. Build summary table
     print("\n[4/7] Building summary table...")
-    summary_df = build_summary_table(cached_summary=cached_summary)
+    summary_df = build_summary_table(cached_summary=cached_summary, config=config)
     print(summary_df.to_string(index=False))
 
     # 5. Build HTML report
     print("\n[5/7] Building HTML report...")
-    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, penalty_info, total_cases)
+    # Baseline Run keeps the legacy output path (byte-identical); a named Run writes a per-run
+    # report under output/parametric/demo_02/<run_id>/report.html. Under --from-cache the data
+    # is always the baseline 72, so a named run is forced back to the baseline path (N-6).
+    if args.run_id == BASELINE_RUN_ID or args.from_cache:
+        report_path: Optional[Path] = None  # build_report defaults to the legacy Baseline path
+    else:
+        report_path = yaml_output_root / "parametric" / DEMO_ID / args.run_id / "report.html"
+    build_report(fig1, fig2, fig3, fig4, fig5, summary_df, all_results, penalty_info,
+                 total_cases, output_path=report_path, config=config)
+    if report_path is not None:
+        print(f"  Per-run report written to: {report_path}")
 
     # 6. Save JSON results
     if not args.from_cache or args.force:
         print("\n[6/7] Saving JSON results...")
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        results_dir.mkdir(parents=True, exist_ok=True)
+
+        # D3: metadata must report the axes ACTUALLY swept, not the module constants. Derive
+        # them from the produced results in first-seen order, so a subset config reports the
+        # subset (for the baseline run these equal PIPE_SIZES / CODE_NAME_STRINGS).
+        def _distinct_first_seen(records: List[Dict[str, Any]], key: str) -> list:
+            seen: Dict[Any, None] = {}
+            for rec in records:
+                value = rec.get(key)
+                if value not in seen:
+                    seen[value] = None
+            return list(seen)
+
+        swept_pipe_sizes = _distinct_first_seen(all_results, "pipe_size")
+        swept_codes = _distinct_first_seen(all_results, "code")
+
+        # Metadata scalars come from the resolved config on the recompute path; fall back to
+        # the module constants only when config is unavailable (e.g. --from-cache --force with
+        # a stale cache that never loaded a config). For the baseline run these are equal.
+        meta_pressures = (
+            config.internal_pressures_mpa if config is not None else INTERNAL_PRESSURES_MPA
+        )
+        meta_water_depth = config.water_depth_m if config is not None else WATER_DEPTH
+        meta_grade = config.grade if config is not None else GRADE
+        meta_smys = config.smys_pa if config is not None else SMYS
+        meta_smts = config.smts_pa if config is not None else SMTS
+        meta_corrosion = (
+            config.corrosion_allowance_m if config is not None else CORROSION_ALLOWANCE
+        )
 
         json_output = {
             "metadata": {
                 "demo": "GTM Demo 2: Wall Thickness Multi-Code Comparison",
                 "total_cases": total_cases,
-                "pipe_sizes": [ps["name"] for ps in PIPE_SIZES],
-                "codes": CODE_NAME_STRINGS,
-                "internal_pressures_mpa": INTERNAL_PRESSURES_MPA,
-                "water_depth_m": WATER_DEPTH,
-                "grade": GRADE,
-                "smys_mpa": SMYS / 1e6,
-                "smts_mpa": SMTS / 1e6,
-                "corrosion_allowance_mm": CORROSION_ALLOWANCE * 1000,
+                "pipe_sizes": swept_pipe_sizes,
+                "codes": swept_codes,
+                "internal_pressures_mpa": meta_pressures,
+                "water_depth_m": meta_water_depth,
+                "grade": meta_grade,
+                "smys_mpa": meta_smys / 1e6,
+                "smts_mpa": meta_smts / 1e6,
+                "corrosion_allowance_mm": meta_corrosion * 1000,
             },
             "summary": summary_df.to_dict(orient="records"),
             "results": all_results,
@@ -1358,10 +1963,18 @@ def main():
     print(f"{'='*60}")
     print(f"  Total cases analysed:  {total_cases}")
     print(f"  HTML report:           output/demo_02_wall_thickness_report.html")
-    print(f"  JSON results:          results/demo_02_wall_thickness_results.json")
+    print(f"  JSON results:          {results_path}")
     print(f"  Time elapsed:          {elapsed:.1f} seconds")
     print(f"{'='*60}")
 
 
 if __name__ == "__main__":
-    main()
+    # Argv-sniff dispatch: the `lookup` / `rebuild-db` subcommands are handled by their OWN
+    # parsers over sys.argv[2:] and NEVER reach the sweep parser, so the no-arg / --from-cache
+    # / --force / --results-dir / --run-id sweep path is untouched and byte-identical.
+    if len(sys.argv) > 1 and sys.argv[1] == "lookup":
+        sys.exit(lookup_main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "rebuild-db":
+        sys.exit(rebuild_main(sys.argv[2:]))
+    else:
+        main()

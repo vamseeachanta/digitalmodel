@@ -1,28 +1,40 @@
 *.pyc
 __pycache__/
 
-# Results Store (ADR-0003): the SQLite cache is a rebuildable derived artifact — never tracked.
-# Path-anchored so it does NOT swallow the tracked golden JSON (results/demo_01_freespan_results.json).
+# Results Store: the SQLite cache + WAL/SHM sidecars are rebuildable derived
+# artifacts (regenerated from per-run cases.csv + manifest.json) — never tracked.
+# Path-anchored so they do NOT swallow the tracked golden JSON fixtures.
 results/parametric/**/*.db
 results/parametric/**/*.db-wal
 results/parametric/**/*.db-shm
 
-# index.csv is a DERIVED view (like the .db): write_run upserts it for live use, rebuild_db
-# regenerates it from every per-run manifest.json. It accumulates client run rows, so it is
-# NEVER tracked (it would leak client rows into a baseline commit). The per-run cases.csv +
-# manifest.json under baseline/ remain the tracked source of truth.
+# index.csv is a DERIVED view (like the .db): write_run upserts it, rebuild_db
+# regenerates it from every per-run manifest.json. It accumulates client run rows,
+# so it is NEVER tracked. The per-run cases.csv + manifest.json under baseline/
+# remain the tracked source of truth.
 results/parametric/demo_01/index.csv
+results/parametric/demo_02/index.csv
 results/parametric/demo_03/index.csv
 
 # --- demo_01 ---
 # Transient client run dirs under the Store are not tracked...
 results/parametric/demo_01/*/
-# ...but KEEP the committed Baseline reference run (its cases.csv + manifest.json are source of truth).
+# ...but KEEP the committed Baseline reference run (cases.csv + manifest.json are source of truth).
 !results/parametric/demo_01/baseline/
 # Re-ignore any SQLite that lands inside the baseline dir (the db lives one level up anyway).
 results/parametric/demo_01/baseline/*.db
 results/parametric/demo_01/baseline/*.db-wal
 results/parametric/demo_01/baseline/*.db-shm
+
+# --- demo_02 ---
+# Transient client run dirs under the Store are not tracked...
+results/parametric/demo_02/*/
+# ...but KEEP the committed Baseline reference run (cases.csv + manifest.json are source of truth).
+!results/parametric/demo_02/baseline/
+# Re-ignore any SQLite that lands inside the baseline dir (the db lives one level up anyway).
+results/parametric/demo_02/baseline/*.db
+results/parametric/demo_02/baseline/*.db-wal
+results/parametric/demo_02/baseline/*.db-shm
 
 # --- demo_03 ---
 # The SQLite cache (+ WAL/SHM sidecars) is covered by the path-anchored globs above.
