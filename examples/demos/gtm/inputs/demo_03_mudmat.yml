@@ -5,7 +5,7 @@
 # sweep axes (vessels / depths / mudmats / Hs), the engineering constants (DAFs, wire MBL
 # safety factor, tilt limit, operating radius, reference Hs, Tp coefficient, go/no-go bands),
 # the fundamental physical constants (seawater density, gravity, steel density), the soil
-# acceptance criterion (allowable bearing PRESSURE, not a derived q_ult capacity), the catalog
+# bearing-capacity parameters (su / Nc / shape+depth factors / FS feeding q_ult), the catalog
 # locations, and the artifact paths. No compute-path config is hardcoded in the demo module.
 #
 # Baseline-defining values (BD-*):
@@ -53,16 +53,17 @@ physical_constants:
   gravity_m_s2: 9.80665
   steel_density_kg_m3: 7850.0
 
-# Soil acceptance criterion. HONEST label: this is the ALLOWABLE BEARING PRESSURE used as
-# the landing-phase utilisation denominator — NOT a derived bearing CAPACITY (q_ult). A
-# proper q_ult = su * Nc methodology is a later subissue (§4); the placeholder below records
-# the soil parameters that will feed it, but they do NOT drive the §1 baseline numbers.
+# Soil bearing capacity (§4). The landing phase derives the undrained bearing CAPACITY
+# q_ult = su * Nc * sc * dc per Brinch Hansen (undrained, phi=0) and checks the applied
+# bearing pressure (w_sub / a_base) against q_allow = q_ult / FS. sc = 1 + 0.2*(B/L) with
+# B = min(length,width), L = max(length,width); dc = 1 + 0.4*atan(D/B), D = skirt_depth_m.
+# phi=0 => no gamma'*D surcharge term (Nq=1). These parameters drive the LIVE compute.
 soil:
-  allowable_bearing_pressure_kpa: 50.0   # landing-phase utilisation denominator (today's value)
-  # Placeholder for the §4 q_ult = su * Nc methodology — NOT used in the §1 baseline compute.
-  placeholder:
-    undrained_shear_strength_su_kpa: null
-    bearing_capacity_factor_nc: null
+  undrained_shear_strength_su_kpa: 10.0   # su, soft clay
+  bearing_capacity_factor_nc: 5.14        # Nc for phi=0 (Prandtl, 2 + pi)
+  apply_shape_factor: true                # sc = 1 + 0.2*(B/L)
+  apply_depth_factor: true                # dc = 1 + 0.4*atan(D/B)
+  factor_of_safety: 2.0                   # q_allow = q_ult / FS
 
 # Catalog file locations — paths are relative to THIS yaml file's directory.
 catalogs:

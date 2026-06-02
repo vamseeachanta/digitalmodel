@@ -128,8 +128,14 @@ _PHASE_SPECS: List[tuple[str, str, List[tuple[str, str]]]] = [
         ("phase", "TEXT"),
         ("w_sub_kn", "REAL"),
         ("a_base_m2", "REAL"),
-        ("bearing_kpa", "REAL"),
-        ("bearing_limit_kpa", "REAL"),
+        ("applied_bearing_pressure_kpa", "REAL"),
+        ("q_ult_kpa", "REAL"),
+        ("q_allow_kpa", "REAL"),
+        ("su_kpa", "REAL"),
+        ("nc", "REAL"),
+        ("sc", "REAL"),
+        ("dc", "REAL"),
+        ("factor_of_safety", "REAL"),
         ("utilisation", "REAL"),
         ("status", "TEXT"),
     ]),
@@ -149,7 +155,7 @@ def _q(identifier: str) -> str:
 
 # ---------------------------------------------------------------------------
 # Explicit typed schema for the `cases` table (every column an explicit type).
-# 11 top-level + 49 phase columns = 60. All columns are NULLABLE.
+# 11 top-level + 55 phase columns = 66. All columns are NULLABLE.
 # Order is canonical for CSV + SQLite on BOTH paths. `run_id` is first (PK part).
 # ---------------------------------------------------------------------------
 _TOP_COLUMNS: List[tuple[str, str]] = [
@@ -171,7 +177,7 @@ for _slug, _disp, _suffixes in _PHASE_SPECS:
     for _suffix, _typ in _suffixes:
         _CASE_COLUMNS.append((_phase_col(_slug, _suffix), _typ))
 
-assert len(_CASE_COLUMNS) == 60, f"expected 60 case columns, got {len(_CASE_COLUMNS)}"
+assert len(_CASE_COLUMNS) == 66, f"expected 66 case columns, got {len(_CASE_COLUMNS)}"
 
 _CASE_COL_NAMES = [name for name, _ in _CASE_COLUMNS]
 _CASE_COL_TYPES = {name: typ for name, typ in _CASE_COLUMNS}
@@ -254,7 +260,8 @@ def _serialize_resolved_config(config: Any) -> Dict[str, Any]:
         "operating_radius_m", "reference_hs", "tp_coefficient",
         "go_marginal_threshold", "nogo_utilisation",
         "seawater_density_kg_m3", "gravity_m_s2", "steel_density_kg_m3",
-        "allowable_bearing_pressure_kpa", "soil_placeholder",
+        "undrained_shear_strength_su_kpa", "bearing_capacity_factor_nc",
+        "apply_shape_factor", "apply_depth_factor", "factor_of_safety",
         "vessels_path", "mudmats_path", "results_root", "output_root",
         "source_path",
     ]

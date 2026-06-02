@@ -110,13 +110,14 @@ def test_every_case_has_exactly_the_11_frozen_keys(produced_results):
 # ---------------------------------------------------------------------------
 
 
-def test_phases_flat_key_set_is_the_49_golden_keys(produced_serialised, golden_results):
+def test_phases_flat_key_set_is_the_55_golden_keys(produced_serialised, golden_results):
     """B2: phases_flat preserves the hyphen (lift-off_, in-air_, splash_zone_).
 
-    The full 49-key set must match the golden's case-0 phases_flat exactly.
+    The full 55-key set must match the golden's case-0 phases_flat exactly. (§4: the landing
+    phase now emits 13 keys (was 7), so phases_flat grew from 49 to 55.)
     """
     golden_flat_keys = list(golden_results[0]["phases_flat"].keys())
-    assert len(golden_flat_keys) == 49
+    assert len(golden_flat_keys) == 55
     for r in produced_serialised:
         assert list(r["phases_flat"].keys()) == golden_flat_keys
     # The hyphen-preserving prefixes are present (NOT under-scored).
@@ -212,7 +213,7 @@ def test_loader_depths_are_int_hs_are_float():
 
 
 def test_loader_resolves_constants_and_soil():
-    """All constants + the honest soil label resolve to today's values."""
+    """All constants + the §4 soil bearing-capacity parameters resolve to today's values."""
     config = load_demo03_config(_BASELINE_CONFIG_PATH)
     assert config.daf_liftoff == 1.10
     assert config.daf_splash == 1.30
@@ -226,8 +227,12 @@ def test_loader_resolves_constants_and_soil():
     assert config.seawater_density_kg_m3 == 1025.0
     assert config.gravity_m_s2 == 9.80665
     assert config.steel_density_kg_m3 == 7850.0
-    # HONEST label: allowable bearing PRESSURE, value 50.0 (golden holds).
-    assert config.allowable_bearing_pressure_kpa == 50.0
+    # §4: derived bearing-capacity soil parameters (q_ult = su * Nc * sc * dc, Brinch Hansen).
+    assert config.undrained_shear_strength_su_kpa == 10.0
+    assert config.bearing_capacity_factor_nc == 5.14
+    assert config.apply_shape_factor is True
+    assert config.apply_depth_factor is True
+    assert config.factor_of_safety == 2.0
 
 
 def test_loader_resolves_paths():
@@ -387,8 +392,9 @@ def _empty_report_args():
 
 def test_report_honesty_b3a_b3b_baseline(tmp_path):
     """B3a: the crane-SWL assumption describes the 40 m DERATED operating radius, NOT the
-    'maximum capacity radius (most favourable position)'. B3b: the landing criterion is an
-    'allowable bearing pressure', NOT a 'bearing capacity'."""
+    'maximum capacity radius (most favourable position)'. B3b (§4): the landing criterion is
+    now a DERIVED undrained bearing capacity q_ult = su * Nc * sc * dc, NOT a flat allowable
+    bearing pressure, and is no longer a 'planned extension'."""
     vessels, structures = _load_catalogs()
     config = load_demo03_config(_BASELINE_CONFIG_PATH)
     results = _run_from_config(config)
@@ -402,11 +408,16 @@ def test_report_honesty_b3a_b3b_baseline(tmp_path):
     assert "maximum capacity radius (most favourable position)" not in html
     assert "most favourable maximum-capacity position" in html
     assert "40 m overboard operating radius" in html
-    # B3b: "bearing capacity" as the criterion is gone; "allowable bearing pressure" is present.
-    assert "Allowable bearing pressure = 50 kPa" in html
-    assert "50 kPa soft clay bearing capacity" not in html
-    # B3b placeholder note: q_ult = su * Nc is a planned extension.
-    assert "q_ult = su * Nc" in html or "q<sub>ult</sub>" in html
+    # B3b (§4): q_ult IS now computed (no flat 50 kPa, no 'planned extension').
+    assert "Allowable bearing pressure = 50 kPa" not in html
+    assert "planned extension" not in html
+    # The derived q_ult = su * Nc * sc * dc methodology is described, with FS and the soil su.
+    assert "q<sub>ult</sub>" in html
+    assert "Brinch Hansen" in html
+    assert "su = 10 kPa soft clay" in html
+    assert "FS = 2" in html
+    # The honest caveat: surface-footing capacity, skirted/suction not modelled.
+    assert "reverse-end-bearing / suction is not modelled" in html
 
 
 def test_report_narrative_reflects_edited_config(tmp_path):
@@ -615,3 +626,50 @@ def test_cli_config_smoke(tmp_path):
     assert produced["cases"] == golden["cases"]
     assert produced["metadata"] == golden["metadata"]
     assert produced["summary"] == golden["summary"]
+
+
+# ---------------------------------------------------------------------------
+# Soil-config hardening (review finding §4):
+#  - a non-positive su/Nc/FS is a config error, rejected at load (fail-CLOSED),
+#    never masked as a PASS by the q_allow>0 / fs>0 fail-open guard in calc_landing.
+#  - the apply_shape_factor / apply_depth_factor toggles collapse sc / dc to 1.0.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("field", [
+    "factor_of_safety",
+    "undrained_shear_strength_su_kpa",
+    "bearing_capacity_factor_nc",
+])
+@pytest.mark.parametrize("bad_value", [0, -1.0])
+def test_loader_rejects_nonpositive_soil_param(tmp_path, field, bad_value):
+    """A zero/negative su, Nc or FS is rejected at load (exclusiveMinimum: 0),
+    so it can never reach calc_landing and silently rubber-stamp a PASS."""
+    import yaml as _yaml
+
+    raw = _yaml.safe_load(_BASELINE_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["soil"][field] = bad_value
+    bad = tmp_path / "bad_soil.yml"
+    bad.write_text(_yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    with pytest.raises(SweepConfigError):
+        load_demo03_config(bad)
+
+
+def test_apply_shape_factor_false_collapses_sc_to_one(tmp_path):
+    """With apply_shape_factor disabled, sc == 1.0 in every case (dc still applied)."""
+    cfg = _edited_config(tmp_path, **{"soil.apply_shape_factor": False})
+    results = demo.serialise_results(_run_from_config(cfg))
+    assert len(results) == 180
+    assert all(r["phases_flat"]["landing_sc"] == 1.0 for r in results)
+    # depth factor is independent and still > 1.0 for embedded skirts
+    assert any(r["phases_flat"]["landing_dc"] > 1.0 for r in results)
+
+
+def test_apply_depth_factor_false_collapses_dc_to_one(tmp_path):
+    """With apply_depth_factor disabled, dc == 1.0 in every case (sc still applied)."""
+    cfg = _edited_config(tmp_path, **{"soil.apply_depth_factor": False})
+    results = demo.serialise_results(_run_from_config(cfg))
+    assert len(results) == 180
+    assert all(r["phases_flat"]["landing_dc"] == 1.0 for r in results)
+    # shape factor is independent and still > 1.0 for non-square footings
+    assert any(r["phases_flat"]["landing_sc"] > 1.0 for r in results)

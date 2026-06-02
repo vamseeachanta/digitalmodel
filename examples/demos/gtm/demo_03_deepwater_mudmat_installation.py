@@ -125,7 +125,13 @@ DAF_LIFTOFF = 1.10
 DAF_SPLASH = 1.30
 
 # Safety / acceptance criteria
-BEARING_LIMIT_KPA = 50.0  # allowable bearing pressure (soft clay) — landing-phase denominator
+# Landing-phase soil bearing-capacity defaults (§4: q_ult = su * Nc * sc * dc, Brinch Hansen
+# undrained phi=0). Used only when no config is supplied (legacy default).
+SOIL_SU_KPA = 10.0  # undrained shear strength (soft clay)
+SOIL_NC = 5.14  # bearing capacity factor Nc for phi=0
+SOIL_APPLY_SHAPE_FACTOR = True  # sc = 1 + 0.2*(B/L)
+SOIL_APPLY_DEPTH_FACTOR = True  # dc = 1 + 0.4*atan(D/B)
+SOIL_FACTOR_OF_SAFETY = 2.0  # q_allow = q_ult / FS
 WIRE_MBL_SF = 0.85  # max cable tension / MBL
 TILT_LIMIT_DEG = 5.0  # max tilt during in-air transit
 
@@ -451,41 +457,68 @@ def calc_lowering(
 
 
 def calc_landing(structure: Dict, config: Optional[Any] = None) -> Dict[str, Any]:
-    """Phase 5: Landing — bearing pressure check.
+    """Phase 5: Landing — derived undrained bearing CAPACITY check (Brinch Hansen, phi=0).
 
-    Bearing pressure = W_sub / A_base
-    Check: p <= allowable bearing pressure (soft clay default, 50 kPa)
+    Undrained bearing capacity (phi=0):
+        q_ult   = su * Nc * sc * dc
+        sc      = 1 + 0.2 * (B / L)          shape factor, B=min(L,W), L=max(L,W)
+        dc      = 1 + 0.4 * atan(D / B)      depth factor, D = skirt_depth_m (radians)
+        q_allow = q_ult / FS
+    Applied bearing pressure:
+        applied = W_sub / A_base             A_base = length * width
+    Utilisation = applied / q_allow.
 
-    The denominator is the ALLOWABLE BEARING PRESSURE (an acceptance criterion), NOT a derived
-    bearing capacity q_ult. The true q_ult = su * Nc methodology is a later subissue (§4); the
-    yaml carries a placeholder for su/Nc that does not drive these baseline numbers.
+    phi=0 means there is no gamma'*D surcharge term (Nq = 1). This is a surface-footing q_ult
+    with a depth factor; a skirted/embedded mudmat's reverse-end-bearing / suction is NOT
+    modelled (screening scope). Uniform-su assumption.
 
     N2: submerged weight is RECOMPUTED (mass_air - rho*displaced_vol), not the catalog value.
-    When *config* is supplied the densities, gravity, and allowable bearing pressure come from
-    it; otherwise the module constants are used (legacy default).
+    When *config* is supplied the densities, gravity, and ALL soil parameters come from it;
+    otherwise the module constants are used (legacy default).
     """
     rho = config.seawater_density_kg_m3 if config is not None else SEAWATER_DENSITY
     gravity = config.gravity_m_s2 if config is not None else GRAVITY
-    allowable_bearing_kpa = (
-        config.allowable_bearing_pressure_kpa if config is not None else BEARING_LIMIT_KPA
-    )
+    su_kpa = config.undrained_shear_strength_su_kpa if config is not None else SOIL_SU_KPA
+    nc = config.bearing_capacity_factor_nc if config is not None else SOIL_NC
+    apply_shape = config.apply_shape_factor if config is not None else SOIL_APPLY_SHAPE_FACTOR
+    apply_depth = config.apply_depth_factor if config is not None else SOIL_APPLY_DEPTH_FACTOR
+    fs = config.factor_of_safety if config is not None else SOIL_FACTOR_OF_SAFETY
 
     mass_air_kg = structure["mass_properties"]["mass_air_kg"]
     displaced_vol = structure["mass_properties"]["displaced_volume_m3"]
     geom = structure["geometry"]
 
     w_sub_kn = (mass_air_kg - rho * displaced_vol) * gravity / 1000.0
-    a_base_m2 = geom["length_m"] * geom["width_m"]  # full bottom plate area
+    length_m = geom["length_m"]
+    width_m = geom["width_m"]
+    a_base_m2 = length_m * width_m  # full bottom plate area
 
-    bearing_kpa = w_sub_kn / a_base_m2 if a_base_m2 > 0 else 999.0
-    utilisation = bearing_kpa / allowable_bearing_kpa
+    # Foundation breadth B and length L per geometry (B = shorter side).
+    b_eff = min(length_m, width_m)
+    l_eff = max(length_m, width_m)
+    skirt_depth_m = geom["skirt_depth_m"]
+
+    sc = 1.0 + 0.2 * (b_eff / l_eff) if apply_shape and l_eff > 0 else 1.0
+    dc = 1.0 + 0.4 * math.atan(skirt_depth_m / b_eff) if apply_depth and b_eff > 0 else 1.0
+
+    q_ult_kpa = su_kpa * nc * sc * dc
+    q_allow_kpa = q_ult_kpa / fs if fs > 0 else 999.0
+
+    applied_kpa = w_sub_kn / a_base_m2 if a_base_m2 > 0 else 999.0
+    utilisation = applied_kpa / q_allow_kpa if q_allow_kpa > 0 else 999.0
 
     return {
         "phase": "Landing",
         "w_sub_kn": round(w_sub_kn, 1),
         "a_base_m2": round(a_base_m2, 1),
-        "bearing_kpa": round(bearing_kpa, 2),
-        "bearing_limit_kpa": allowable_bearing_kpa,
+        "applied_bearing_pressure_kpa": round(applied_kpa, 2),
+        "q_ult_kpa": round(q_ult_kpa, 2),
+        "q_allow_kpa": round(q_allow_kpa, 2),
+        "su_kpa": su_kpa,
+        "nc": nc,
+        "sc": round(sc, 4),
+        "dc": round(dc, 4),
+        "factor_of_safety": fs,
         "utilisation": round(utilisation, 4),
         "status": "PASS" if utilisation <= 1.0 else "FAIL",
     }
@@ -1150,9 +1183,11 @@ def build_report(
     go_marginal = config.go_marginal_threshold if config is not None else GO_MARGINAL_THRESHOLD
     nogo_util = config.nogo_utilisation if config is not None else NOGO_UTILISATION
     seawater_density = config.seawater_density_kg_m3 if config is not None else SEAWATER_DENSITY
-    allowable_bearing_kpa = (
-        config.allowable_bearing_pressure_kpa if config is not None else BEARING_LIMIT_KPA
+    soil_su_kpa = (
+        config.undrained_shear_strength_su_kpa if config is not None else SOIL_SU_KPA
     )
+    soil_nc = config.bearing_capacity_factor_nc if config is not None else SOIL_NC
+    soil_fs = config.factor_of_safety if config is not None else SOIL_FACTOR_OF_SAFETY
     # Axis cardinalities for the subtitle (derived from the produced results).
     n_vessels = len({r["vessel_name"] for r in all_results}) if all_results else 2
     n_structures = len({r["structure_name"] for r in all_results}) if all_results else 3
@@ -1176,8 +1211,8 @@ def build_report(
 
     # B3a: the crane SWL is evaluated at the DERATED operating radius (operating_radius_m m),
     # NOT the maximum-capacity (most favourable) radius — describe the actual derating.
-    # B3b: Phase 5 checks against the ALLOWABLE BEARING PRESSURE (an acceptance criterion),
-    # not a derived bearing capacity q_ult.
+    # B3b (§4): Phase 5 checks the applied bearing pressure against a DERIVED undrained bearing
+    # CAPACITY q_ult = su * Nc * sc * dc (Brinch Hansen, phi=0), divided by the FS.
     methodology_html = f"""
     <p>This analysis screens deepwater mudmat installations across a parametric matrix of
     vessels, water depths, structure sizes, and sea states. Each case evaluates five
@@ -1206,11 +1241,17 @@ def build_report(
     {wire_mbl_sf:.0%} of wire MBL. Becomes critical at extreme depths due to cable self-weight.</p>
 
     <h3>Phase 5: Landing</h3>
-    <p>Bearing pressure = W<sub>sub</sub> / A<sub>base</sub>. Checked against an allowable
-    bearing pressure of {allowable_bearing_kpa:g} kPa (soft clay). This is an acceptance
-    criterion, not a derived bearing capacity (q<sub>ult</sub> = s<sub>u</sub> &times;
-    N<sub>c</sub>); a site-specific capacity calculation is a planned extension. Rarely
-    governs for typical mudmat proportions.</p>
+    <p>Applied bearing pressure = W<sub>sub</sub> / A<sub>base</sub>, checked against a derived
+    undrained bearing capacity q<sub>ult</sub> = s<sub>u</sub> &times; N<sub>c</sub> &times;
+    s<sub>c</sub> &times; d<sub>c</sub> per Brinch Hansen (undrained, &phi; = 0), with
+    s<sub>u</sub> = {soil_su_kpa:g} kPa (soft clay), N<sub>c</sub> = {soil_nc:g}, shape factor
+    s<sub>c</sub> = 1 + 0.2&middot;(B/L) and depth factor d<sub>c</sub> = 1 + 0.4&middot;atan(D/B)
+    (B = shorter base dimension, D = skirt depth). The allowable capacity is q<sub>allow</sub>
+    = q<sub>ult</sub> / FS with FS = {soil_fs:g}, and utilisation = applied / q<sub>allow</sub>
+    (cites #264). &phi; = 0 gives no &gamma;&prime;&middot;D surcharge term (N<sub>q</sub> = 1).
+    <em>Caveat:</em> this assumes a uniform s<sub>u</sub> and is a surface-footing q<sub>ult</sub>
+    with a depth factor; a skirted/embedded mudmat's reverse-end-bearing / suction resistance is
+    not modelled (screening scope).</p>
 
     <h3>Go/No-Go Criteria</h3>
     <ul>
@@ -1277,12 +1318,13 @@ def build_report(
         "Slamming coefficient Cs = 5.0 for flat-bottom structures per DNV-RP-H103 Table 4-1",
         "Added mass coefficient Ca = 1.0, drag coefficient Cd = 2.0 for flat plate geometry",
         f"Wire rope MBL safety factor = {wire_mbl_sf} (max tension / MBL)",
-        # B3b: HONEST — allowable bearing PRESSURE (acceptance criterion), not a derived
-        # bearing capacity. The su/Nc q_ult methodology is a planned extension (placeholder in
-        # the config soil block).
-        f"Allowable bearing pressure = {allowable_bearing_kpa:g} kPa (soft clay) used as the "
-        "landing acceptance criterion; a site-specific bearing capacity (q_ult = su * Nc) is "
-        "a planned extension and is not yet computed",
+        # B3b (§4): the landing check now uses a DERIVED undrained bearing capacity q_ult.
+        f"Landing checks a derived undrained bearing capacity q_ult = su * Nc * sc * dc "
+        f"(Brinch Hansen, phi=0; su = {soil_su_kpa:g} kPa soft clay, Nc = {soil_nc:g}), "
+        f"with q_allow = q_ult / FS (FS = {soil_fs:g}); utilisation = applied / q_allow (#264)",
+        "Landing capacity assumes uniform su and is a surface-footing q_ult with a depth "
+        "factor; a skirted/embedded mudmat's reverse-end-bearing / suction is not modelled "
+        "(screening scope)",
         "Vessel heave at crane tip uses simplified single-frequency RAO peak",
         "No current loads or wind loads on structure during lowering",
         "Rigging weight excluded from hook load calculations",
@@ -1340,7 +1382,11 @@ def build_metadata(
             "steel_density_kg_m3": config.steel_density_kg_m3,
             "daf_liftoff": config.daf_liftoff,
             "daf_splash": config.daf_splash,
-            "bearing_limit_kpa": config.allowable_bearing_pressure_kpa,
+            "soil_su_kpa": config.undrained_shear_strength_su_kpa,
+            "soil_nc": config.bearing_capacity_factor_nc,
+            "soil_apply_shape_factor": config.apply_shape_factor,
+            "soil_apply_depth_factor": config.apply_depth_factor,
+            "soil_factor_of_safety": config.factor_of_safety,
             "wire_mbl_sf": config.wire_mbl_sf,
         }
     else:
@@ -1353,7 +1399,11 @@ def build_metadata(
             "steel_density_kg_m3": STEEL_DENSITY,
             "daf_liftoff": DAF_LIFTOFF,
             "daf_splash": DAF_SPLASH,
-            "bearing_limit_kpa": BEARING_LIMIT_KPA,
+            "soil_su_kpa": SOIL_SU_KPA,
+            "soil_nc": SOIL_NC,
+            "soil_apply_shape_factor": SOIL_APPLY_SHAPE_FACTOR,
+            "soil_apply_depth_factor": SOIL_APPLY_DEPTH_FACTOR,
+            "soil_factor_of_safety": SOIL_FACTOR_OF_SAFETY,
             "wire_mbl_sf": WIRE_MBL_SF,
         }
 

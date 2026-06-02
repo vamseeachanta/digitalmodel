@@ -117,19 +117,29 @@ _PHYSICAL_CONSTANTS_SCHEMA = {
     },
 }
 
-# Soil acceptance criterion. The §1 baseline uses ONLY allowable_bearing_pressure_kpa as the
-# landing-phase denominator. The placeholder records the su/Nc parameters for the §4 q_ult
-# methodology (a later subissue) but is permissive (additionalProperties allowed inside it).
+# Soil bearing-capacity parameters (§4). The landing phase now derives the undrained bearing
+# CAPACITY q_ult = su * Nc * sc * dc (Brinch Hansen, phi=0) and checks the applied bearing
+# pressure against q_allow = q_ult / FS. These parameters drive the live compute.
 _SOIL_SCHEMA = {
     "type": "object",
-    "required": ["allowable_bearing_pressure_kpa"],
+    "required": [
+        "undrained_shear_strength_su_kpa",
+        "bearing_capacity_factor_nc",
+        "apply_shape_factor",
+        "apply_depth_factor",
+        "factor_of_safety",
+    ],
     "additionalProperties": False,
     "properties": {
-        "allowable_bearing_pressure_kpa": {"type": "number"},
-        "placeholder": {
-            "type": "object",
-            # §4 placeholder — kept permissive; nulls allowed until the methodology lands.
-        },
+        # su, Nc and FS are strictly positive physical quantities: a zero or
+        # negative value is a config error, not a valid sweep point. Reject it
+        # at load time so it can never reach calc_landing and silently mask as a
+        # PASS via the q_allow>0 fail-open guard (review finding §4, LOW).
+        "undrained_shear_strength_su_kpa": {"type": "number", "exclusiveMinimum": 0},
+        "bearing_capacity_factor_nc": {"type": "number", "exclusiveMinimum": 0},
+        "apply_shape_factor": {"type": "boolean"},
+        "apply_depth_factor": {"type": "boolean"},
+        "factor_of_safety": {"type": "number", "exclusiveMinimum": 0},
     },
 }
 
@@ -220,9 +230,12 @@ class ResolvedDemo03Config:
     seawater_density_kg_m3: float
     gravity_m_s2: float
     steel_density_kg_m3: float
-    # Soil acceptance criterion (allowable bearing PRESSURE, not a derived capacity).
-    allowable_bearing_pressure_kpa: float
-    soil_placeholder: dict
+    # Soil bearing-capacity parameters (§4: q_ult = su * Nc * sc * dc, Brinch Hansen phi=0).
+    undrained_shear_strength_su_kpa: float
+    bearing_capacity_factor_nc: float
+    apply_shape_factor: bool
+    apply_depth_factor: bool
+    factor_of_safety: float
     # Catalog file locations — resolved to ABSOLUTE paths (relative to the yaml dir).
     vessels_path: Path
     mudmats_path: Path
@@ -365,8 +378,11 @@ def load_demo03_config(path: str | Path) -> ResolvedDemo03Config:
         seawater_density_kg_m3=float(physical["seawater_density_kg_m3"]),
         gravity_m_s2=float(physical["gravity_m_s2"]),
         steel_density_kg_m3=float(physical["steel_density_kg_m3"]),
-        allowable_bearing_pressure_kpa=float(soil["allowable_bearing_pressure_kpa"]),
-        soil_placeholder=dict(soil.get("placeholder", {})),
+        undrained_shear_strength_su_kpa=float(soil["undrained_shear_strength_su_kpa"]),
+        bearing_capacity_factor_nc=float(soil["bearing_capacity_factor_nc"]),
+        apply_shape_factor=bool(soil["apply_shape_factor"]),
+        apply_depth_factor=bool(soil["apply_depth_factor"]),
+        factor_of_safety=float(soil["factor_of_safety"]),
         vessels_path=vessels_path,
         mudmats_path=mudmats_path,
         results_root=results_root,

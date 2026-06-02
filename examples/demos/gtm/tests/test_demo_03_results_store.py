@@ -137,7 +137,9 @@ def _good_case(vessel_id, structure_id, depth, hs, status="GO", max_util=0.25):
             },
             "Landing": {
                 "phase": "Landing", "w_sub_kn": 445.1, "a_base_m2": 36.0,
-                "bearing_kpa": 12.36, "bearing_limit_kpa": 50.0,
+                "applied_bearing_pressure_kpa": 12.36, "q_ult_kpa": 62.91,
+                "q_allow_kpa": 31.46, "su_kpa": 10.0, "nc": 5.14, "sc": 1.2,
+                "dc": 1.02, "factor_of_safety": 2.0,
                 "utilisation": max_util, "status": "PASS",
             },
         },
@@ -181,8 +183,11 @@ class _Cfg:
     seawater_density_kg_m3 = 1025.0
     gravity_m_s2 = 9.80665
     steel_density_kg_m3 = 7850.0
-    allowable_bearing_pressure_kpa = 50.0
-    soil_placeholder: dict = {}
+    undrained_shear_strength_su_kpa = 10.0
+    bearing_capacity_factor_nc = 5.14
+    apply_shape_factor = True
+    apply_depth_factor = True
+    factor_of_safety = 2.0
     vessels_path = Path("synthetic/vessels.json")
     mudmats_path = Path("synthetic/mudmats.json")
     results_root = Path("synthetic/results")
@@ -215,15 +220,21 @@ def test_cases_has_prefixed_phase_columns(baseline_dir):
     conn = sqlite3.connect(str(db))
     try:
         cols = [r[1] for r in conn.execute("PRAGMA table_info(cases)")]
-        assert len(cols) == 60
+        assert len(cols) == 66
         # Hyphen-preserving prefixed columns are present; bare keys are NOT.
+        # §4: the landing phase emits the derived-capacity columns (applied/q_ult/q_allow/...).
         for c in (
             "lift-off_hook_load_kn", "in-air_tilt_deg", "splash_zone_f_slam_kn",
-            "lowering_depth_m", "landing_bearing_kpa",
+            "lowering_depth_m", "landing_applied_bearing_pressure_kpa",
+            "landing_q_ult_kpa", "landing_q_allow_kpa", "landing_su_kpa",
+            "landing_nc", "landing_sc", "landing_dc", "landing_factor_of_safety",
             "lift-off_status", "landing_status", "lift-off_utilisation",
             "landing_utilisation",
         ):
             assert c in cols, f"missing prefixed column {c}"
+        # The old flat-pressure landing columns are GONE (§4 renamed them).
+        for gone in ("landing_bearing_kpa", "landing_bearing_limit_kpa"):
+            assert gone not in cols, f"stale landing column {gone} should be removed"
         for bare in ("phase", "status", "utilisation", "crane_swl_kn", "w_sub_kn",
                      "depth_m"):
             assert bare not in cols, f"bare key {bare} should not be a column"
