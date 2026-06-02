@@ -87,6 +87,9 @@ RESULTS_DIR = SCRIPT_DIR / "results"
 INPUTS_DIR = SCRIPT_DIR / "inputs"
 BASELINE_CONFIG_PATH = INPUTS_DIR / "demo_03_mudmat.yml"
 
+# Canonical run_id for the committed Baseline reference run in the Results Store.
+BASELINE_RUN_ID = "baseline"
+
 SEAWATER_DENSITY = 1025.0  # kg/m3
 GRAVITY = 9.80665  # m/s2
 STEEL_DENSITY = 7850.0  # kg/m3
@@ -1526,6 +1529,23 @@ def main():
         print("\n[2/7] Running parametric sweep...")
         all_results, results_df = run_parametric_sweep(vessels, structures, config=config)
         total_cases = len(all_results)
+
+        # Results Store (additive): persist the run alongside the legacy JSON/HTML.
+        # RECOMPUTE branch only (config is not None). If --from-cache demoted to
+        # recompute (stale/missing cache), force the BASELINE run_id so we never seed
+        # a named row the --from-cache contract said wouldn't exist (mirror demo_02).
+        try:
+            from results_store_demo03 import write_run as _store_write_run
+        except ImportError:  # pragma: no cover — packaged import path fallback.
+            from examples.demos.gtm.results_store_demo03 import (
+                write_run as _store_write_run,
+            )
+        _store_write_run(
+            run_id=(BASELINE_RUN_ID if args.from_cache else (args.run_id or BASELINE_RUN_ID)),
+            config=config,
+            results=all_results,
+            base_dir=results_dir,
+        )
 
     # ── Step 3: Build charts ───────────────────────────────────────────────
     print("\n[3/7] Building charts...")

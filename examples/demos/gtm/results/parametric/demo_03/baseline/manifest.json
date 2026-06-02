@@ -1,0 +1,62 @@
+{
+  "demo_id": "demo_03",
+  "git_sha": "398d9b805f05867f399933ff9c5817409d36a439",
+  "input_ref": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/inputs/demo_03_mudmat.yml",
+  "n_error": 0,
+  "n_go": 174,
+  "n_marginal": 6,
+  "n_nogo": 0,
+  "resolved_config": {
+    "allowable_bearing_pressure_kpa": 50.0,
+    "code_ref": "DNV-RP-H103 (2011) / DNV-ST-N001 (2021) / DNV-RP-C205 (2010)",
+    "daf_liftoff": 1.1,
+    "daf_splash": 1.3,
+    "demo_id": "demo_03",
+    "depths": [
+      500,
+      1000,
+      1500,
+      2000,
+      2500,
+      3000
+    ],
+    "go_marginal_threshold": 0.85,
+    "gravity_m_s2": 9.80665,
+    "hs": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0
+    ],
+    "mudmats": [
+      "Mudmat-S-50te",
+      "Mudmat-M-100te",
+      "Mudmat-L-200te"
+    ],
+    "mudmats_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/data/mudmat_structures.json",
+    "nogo_utilisation": 1.0,
+    "operating_radius_m": 40.0,
+    "output_root": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/output",
+    "reference_hs": 2.0,
+    "results_root": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/results",
+    "seawater_density_kg_m3": 1025.0,
+    "soil_placeholder": {
+      "bearing_capacity_factor_nc": null,
+      "undrained_shear_strength_su_kpa": null
+    },
+    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/inputs/demo_03_mudmat.yml",
+    "steel_density_kg_m3": 7850.0,
+    "tilt_limit_deg": 5.0,
+    "tp_coefficient": 4.0,
+    "vessels": [
+      "Large CSV",
+      "Medium CSV"
+    ],
+    "vessels_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/data/csv_hlv_vessels.json",
+    "wire_mbl_sf": 0.85
+  },
+  "run_id": "baseline",
+  "total_cases": 180,
+  "utc": "2026-06-01T23:03:42.369937+00:00"
+}

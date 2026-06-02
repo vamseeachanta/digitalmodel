@@ -12,7 +12,9 @@ results/parametric/**/*.db-shm
 # NEVER tracked (it would leak client rows into a baseline commit). The per-run cases.csv +
 # manifest.json under baseline/ remain the tracked source of truth.
 results/parametric/demo_01/index.csv
+results/parametric/demo_03/index.csv
 
+# --- demo_01 ---
 # Transient client run dirs under the Store are not tracked...
 results/parametric/demo_01/*/
 # ...but KEEP the committed Baseline reference run (its cases.csv + manifest.json are source of truth).
@@ -21,3 +23,14 @@ results/parametric/demo_01/*/
 results/parametric/demo_01/baseline/*.db
 results/parametric/demo_01/baseline/*.db-wal
 results/parametric/demo_01/baseline/*.db-shm
+
+# --- demo_03 ---
+# The SQLite cache (+ WAL/SHM sidecars) is covered by the path-anchored globs above.
+# Transient client run dirs under the Store are not tracked...
+results/parametric/demo_03/*/
+# ...but KEEP the committed Baseline reference run (its cases.csv + manifest.json are source of truth).
+!results/parametric/demo_03/baseline/
+# Re-ignore any SQLite that lands inside the baseline dir (the db lives one level up anyway).
+results/parametric/demo_03/baseline/*.db
+results/parametric/demo_03/baseline/*.db-wal
+results/parametric/demo_03/baseline/*.db-shm
