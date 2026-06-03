@@ -1,0 +1,184 @@
+# ABOUTME: demo_05 Sweep Config — Baseline Run encoding the exact 300-case jumper-installation matrix.
+# ABOUTME: COMPLETE source of truth for ALL config (ADR-0002/0005); axes are LISTS, engine crosses them.
+#
+# Per ADR-0005, this yaml is the COMPLETE reviewable source of truth for ALL config: the
+# sweep axes (vessels / lengths / depths / Hs), the engineering constants (DAFs, hydrodynamic
+# coefficients, velocities, rigging, wire/bending allowables, tie-in tolerance, Tp coefficient,
+# go/no-go bands), the fundamental physical constants (seawater density, gravity), the NEW
+# Phase-2 lift-span and Phase-5 tie-in-span MODEL parameters (the M/W-geometry-derived span
+# models + boundary conditions that fix the two physics defects), the catalog locations, and
+# the artifact paths. No compute-path config is hardcoded in the demo module.
+#
+# Cross-product nesting (must match the frozen golden order):
+#   vessel (outer) -> jumper length -> depth -> hs (inner)  => 2 x 5 x 6 x 5 = 300 cases.
+#
+# ---------------------------------------------------------------------------
+# PHYSICS-DEFECT FIX (reviewer HIGH findings) — span models that SCALE with the jumper
+# ---------------------------------------------------------------------------
+# The pre-fix demo had two physically-wrong phases that both modelled the WHOLE jumper as a
+# single straight beam of full ``length_m``:
+#
+#   Phase 2 (in-air lift bending): M = w * length_m^2 / 8 reached sigma ~ 2120 MPa (~4.7x SMYS)
+#       at L=100 m and FAILED for L>=40 m. WRONG: a rigid jumper is lifted on a spreader bar
+#       with sling picks; the governing bending span is the longest UNSUPPORTED run between
+#       picks, a fraction of the jumper, NOT the full length.
+#
+#   Phase 5 (tie-in deflection): the full distributed current force W = w*length_m was fed into
+#       a central-point-load deflection delta = P*length_m^3/(48 EI), giving 5789 mm / util 116
+#       at L=100 m. WRONG on two counts: the point-load formula is misapplied to a distributed
+#       load, AND the whole-jumper free span is not the connector-relevant span.
+#
+# FIRST FIX (full-length-beam defect, prior revision): both spans were re-derived from the M/W
+# geometry as horizontal_span_m / (n_picks-1) and horizontal_span_m / number_of_bends. A domain
+# review then found that model NON-DISCRIMINATING: number_of_bends grows in lock-step with
+# horizontal_span_m in the catalog (4/4/6/8/10 vs 15/30/45/60/75 m), so the derived spans were
+# nearly constant (lift span pinned at 15 m for every L>=40; tie-in span pinned at 7.5 m), and
+# utilisation barely responded to jumper length (all 300 cases GO at util < 0.20). The bend-count
+# divisor was an arbitrary heuristic, not a ratified span basis.
+#
+# SECOND FIX (USER-RATIFIED, this revision): make BOTH governing spans EXPLICIT, length-scaling
+# fractions of horizontal_span_m (which grows 5x across the sweep, 15 -> 75 m), with an absolute
+# override, and a CONSERVATIVE simply-supported boundary condition by default:
+#
+#   Phase 2 lift span (longest unsupported run between spreader-bar picks):
+#       lift_span = lift_span_m   IF set (absolute override wins),
+#                 = lift_span_fraction * horizontal_span_m   otherwise.
+#       w_eff = air_n_per_m * daf_liftoff       (self-weight is the dominant lift load).
+#       M = w_eff * lift_span^2 / moment_coeff  (moment_coeff = 8 simply-supported = CONSERVATIVE
+#                                                default; 12 fixed-fixed selectable).
+#       sigma = M * (OD/2) / I ;  allow = bending_allowable * SMYS.
+#
+#   Phase 5 tie-in free span (one unsupported leg adjacent to the hub connector during landing):
+#       tiein_span = tiein_unsupported_span_m   IF set (absolute override wins),
+#                  = tiein_unsupported_span_fraction * horizontal_span_m   otherwise.
+#       w_current  = 0.5 * rho * Cd * OD * v_current^2   (lateral, weather/current-driven).
+#       w_submerged = submerged_n_per_m                  (vertical self-weight; toggled).
+#       w_resultant = w_current  by default (RATIFIED: lateral check, current-driven); or
+#                     sqrt(w_submerged^2 + w_current^2)  IF include_self_weight (conservative-magnitude).
+#       delta = w_resultant * tiein_span^4 / (deflection_coeff * E * I)
+#               (deflection_coeff = 76.8 simply-supported UDL = CONSERVATIVE default; 384
+#                fixed-fixed selectable).
+#       Check: delta <= tie_in_tolerance_mm  (connector-mating tolerance, API 17R basis).
+#
+# DISCRIMINATION (acceptance): with the ratified defaults below (current-only lateral tie-in)
+# the in-air lift bending phase governs ALL cases; it scales as span^2 (~ length^2) and drives
+# the longest jumper (L=100 m, horizontal_span 75 m) to NO_GO (lift bending util ~1.22), while
+# L<=80 m stay GO. With current-only loading the tie-in lateral deflection collapses (util ~0.14
+# at L=100 m) and never governs. (Setting include_self_weight true would instead let the tie-in
+# util^4-scaling deflection govern the longest jumpers — a deliberate conservative-magnitude
+# stance that mixes the vertical DOF into the lateral check.) The
+# weather axes (depth, Hs) drive only the splash/lowering phases, which here stay << 0.01 because
+# cable self-weight is small vs wire MBL in deepwater CSV lifts — so JUMPER LENGTH is the honest
+# dominant discriminator; depth/Hs response is genuinely weak and is reported as such.
+#
+# CONSERVATISM / JUDGMENT FLAGS (for domain re-review) — the chosen span fractions and the
+# self-weight toggle are screening-grade engineering judgment, NOT first-principles derivations:
+#   * lift_span_fraction = 0.5  -> at L=100 m a 37.5 m unsupported bay (single mid-pick lift of a
+#       75 m horizontal run). Conservative (longer unsupported span => higher stress). JUDGMENT.
+#   * tiein_unsupported_span_fraction = 0.28 -> at L=100 m a 21 m unsupported leg adjacent to the
+#       connector before the first seabed/support touchdown during stab-in. JUDGMENT.
+#   * include_self_weight = false (RATIFIED DEFAULT) -> screen on the CURRENT-DRIVEN lateral
+#       offset (~34 N/m) ALONE. The +/-50mm tie-in check is a LATERAL connector-mating tolerance,
+#       so it must be driven by the lateral current load; the vertical self-weight sag (~506 N/m)
+#       is reacted by the lowering/support rigging and is a different DOF — folding it into this
+#       lateral check was a DOF category error. Engineer-tunable: set true for a deliberate
+#       conservative-MAGNITUDE stance (folds the vertical self-weight into the resultant =>
+#       larger delta), but that mixes DOFs and is no longer the screening default.
+
+meta:
+  demo_id: demo_05
+  code_ref: "DNV-RP-H103 (2011) / DNV-ST-N001 (2021) / DNV-OS-F101 (2021) / API 17R (2015) / API 5L (2018)"
+
+sweep:
+  # The 2 vessels, identified by the catalog "name" label the demo loop uses.
+  vessels: ["Large CSV", "Medium CSV"]
+  # 5 rigid jumper lengths (m) — FLOATS (match the catalog length_m).
+  lengths_m: [20.0, 40.0, 60.0, 80.0, 100.0]
+  # 6 water depths (m) — INTEGERS (kept as int, never coerced to float).
+  depths: [500, 1000, 1500, 2000, 2500, 3000]
+  # 5 significant wave heights (m) — FLOATS.
+  hs: [1.0, 1.5, 2.0, 2.5, 3.0]
+
+# Engineering constants — frozen at today's Baseline values.
+constants:
+  daf_liftoff: 1.10              # DAF lift-off per DNV-ST-N001 / DNV-RP-H103
+  daf_splash: 1.30               # DAF splash zone
+  rigging_mass_kg: 5000.0        # rigging mass (slings, shackles, spreader bar) — 5 te
+  cs_slamming: 3.141592653589793 # Cs = pi for circular cross-section (DNV-RP-H103 Table 8-2)
+  cd_cylinder: 1.2               # drag coefficient for cylinder (DNV-RP-H103)
+  ca_cylinder: 1.0               # added-mass coefficient for cylinder
+  v_lowering: 0.5                # lowering velocity (m/s), typical heavy-lift CSV
+  v_current: 0.5                 # deepwater current velocity (m/s) for tie-in deflection
+  splash_submerged_length_m: 10.0 # partially submerged length in the splash zone (m)
+  wire_allowable_factor: 0.85    # max cable tension / wire MBL
+  bending_allowable: 0.6         # allowable fraction of SMYS for in-air bending
+  cable_unit_weight_sub_n_per_m: 50.0 # submerged weight of installation wire rope (N/m)
+  tie_in_tolerance_mm: 50.0      # connector-mating misalignment tolerance (API 17R basis)
+  reference_hs: 2.0              # m — used for heatmap and vessel-comparison charts
+  tp_coefficient: 4.0            # JONSWAP peak period: Tp = tp_coefficient * sqrt(Hs)
+  # Go/No-Go acceptance bands (max utilisation thresholds).
+  go_marginal_threshold: 0.85    # max_util >= this (and all pass) => MARGINAL
+  nogo_utilisation: 1.0          # max_util > this (or any phase fails) => NO_GO
+
+# Physical constants — frozen at today's Baseline values (now on the compute path).
+physical_constants:
+  seawater_density_kg_m3: 1025.0
+  gravity_m_s2: 9.80665
+
+# ---------------------------------------------------------------------------
+# Phase-2 in-air lift bending span model (the fix). See header for derivation.
+# ---------------------------------------------------------------------------
+# The governing lift span is an EXPLICIT, length-scaling fraction of horizontal_span_m (which
+# grows with the jumper), with an absolute override:
+#   lift_span = lift_span_m  IF lift_span_m is set (> 0)  [absolute override wins],
+#             = lift_span_fraction * horizontal_span_m  otherwise.
+# w_eff = air_n_per_m * daf_liftoff. M = w_eff * lift_span^2 / moment_coeff.
+#   moment_coeff = 8.0  -> simply-supported (pin-pin) span, CONSERVATIVE midspan M = w s^2/8.
+#   moment_coeff = 12.0 -> fixed-fixed span, M = w s^2/12 at the supports (less conservative).
+lift_span_model:
+  lift_span_fraction: 0.5        # lift_span = fraction * horizontal_span_m (scales with length).
+                                 # 0.5 -> single mid-pick: one unsupported bay = half the run.
+                                 # CONSERVATIVE screening default (JUDGMENT — flagged re-review).
+  lift_span_m: null              # absolute override (m); when set (> 0) it WINS over the fraction.
+                                 # null/0 => use the fraction. exclusiveMinimum 0 when present.
+  moment_coeff: 8.0              # simply-supported midspan basis (CONSERVATIVE). exclusiveMin 0.
+
+# ---------------------------------------------------------------------------
+# Phase-5 tie-in free-span deflection model (the fix). See header for derivation.
+# ---------------------------------------------------------------------------
+# The tie-in free span is an EXPLICIT, length-scaling fraction of horizontal_span_m, with an
+# absolute override:
+#   tiein_span = tiein_unsupported_span_m  IF set (> 0)  [absolute override wins],
+#              = tiein_unsupported_span_fraction * horizontal_span_m  otherwise.
+# w_resultant = w_current (RATIFIED DEFAULT — lateral current-driven check) else
+#   sqrt(submerged_n_per_m^2 + w_current^2) if include_self_weight (conservative-magnitude),
+#   w_current = 0.5 rho Cd OD v_current^2.
+# delta = w_resultant * tiein_span^4 / (deflection_coeff * E * I).
+#   deflection_coeff = 76.8  -> simply-supported UDL delta = 5 w s^4 / (384 EI) = w s^4/76.8
+#                               (CONSERVATIVE default — pinned ends, largest midspan deflection).
+#   deflection_coeff = 384.0 -> fixed-fixed UDL  delta = w s^4 / (384 EI)  (both ends restrained).
+# Check: delta <= tie_in_tolerance_mm (connector-mating tolerance, API 17R).
+tiein_span_model:
+  tiein_unsupported_span_fraction: 0.28  # tiein_span = fraction * horizontal_span_m (scales).
+                                 # CONSERVATIVE screening default (JUDGMENT — flagged re-review).
+  tiein_unsupported_span_m: null # absolute override (m); when set (> 0) it WINS over the fraction.
+                                 # null/0 => use the fraction. exclusiveMinimum 0 when present.
+  include_self_weight: false     # RATIFIED DEFAULT: screen on the CURRENT-DRIVEN lateral load
+                                 # alone (~34 N/m). The +/-50mm tie-in check is a LATERAL
+                                 # connector-mating tolerance, so it is driven by the lateral
+                                 # current load; the vertical self-weight sag is reacted by the
+                                 # lowering rigging and is a different DOF — including it here was
+                                 # a DOF category error. Engineer-tunable: set true for a
+                                 # deliberate conservative-MAGNITUDE stance (folds the ~506 N/m
+                                 # vertical submerged self-weight into the resultant => larger delta).
+  deflection_coeff: 76.8         # simply-supported UDL basis (CONSERVATIVE). exclusiveMinimum 0.
+
+# Catalog file locations — paths are relative to THIS yaml file's directory.
+catalogs:
+  vessels: ../data/csv_hlv_vessels.json
+  jumpers: ../data/rigid_jumpers.json
+
+# Artifact roots — paths are relative to THIS yaml file's directory.
+artifacts:
+  results_root: ../results
+  output_root: ../output
