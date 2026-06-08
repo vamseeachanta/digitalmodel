@@ -1,0 +1,267 @@
+# OrcaFlex Modular Model Generator - Model Specification
+# FrPS / SSR Free-Standing Riser - GLOBAL DYNAMIC MODEL (INPUT SCAFFOLD)
+#
+# Model Type:   Free-standing (dry-tree) riser on a Surface SSR / wellhead landing
+# Source basis: FDAS riser-buckling screening campaign
+#               (github.com/vamseeachanta/llm-wiki-fdas issues #2-#7;
+#                global-model scope = issue #2)
+# Status:       INPUT SCAFFOLD ONLY - not solved. See README.md.
+# Version:      0.1 (scaffold)
+#
+# ---------------------------------------------------------------------------
+# WHAT THIS IS
+#   A parameterized OrcaFlex model-input definition for the global dynamic
+#   analysis the FDAS screening (#3-#7) concluded it needs. The screens fail
+#   every conservative hand-check; the verdict pivots on inputs the screens
+#   cannot manufacture (restraint efficiency, demand definition, section
+#   basis). This file captures the model geometry and a parametric matrix so
+#   those inputs are settled at model build, then handed to a solver.
+#
+# WHAT THIS IS NOT
+#   This is not a run and not a result. OrcaFlex (and Flexcom / Abaqus-Aqua)
+#   is a licensed solver and is almost certainly NOT installed/licensed in
+#   this environment (cf. workspace-hub #2849, "solver-license availability").
+#   No results are produced or implied here. Hydro/RAOs are to be sourced from
+#   the digitalmodel OrcaWave/diffraction capability - placeholders below.
+#
+# TWO OPEN INPUTS THAT MUST BE SET BEFORE BUILD (see README.md):
+#   1. SECTION BASIS  - 82.51 in^2 (two-casing) vs ~97 in^2 (three-string,
+#                       7-in WT 0.50->0.75). Carried as variants in
+#                       inputs/parameters.yml -> section_basis.
+#   2. ROY DEMAND     - "5-10 ft pushdown": does it net the slip-joint stroke?
+#                       Carried as variants -> demand.setdown_definition.
+#
+# USAGE (when a licensed solver host is available):
+#   Resolve the two open inputs in inputs/parameters.yml, then generate the
+#   OrcaFlex-loadable include tree:
+#     uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#         --input spec.yml --output modular/
+#   (modular/ is intentionally NOT committed here - it is generator output.)
+#
+# UNITS: SI per OrcaFlex model library convention (te, m, kN, te/m^3).
+#   Field-unit originals from the screening basis are kept in comments.
+# ---------------------------------------------------------------------------
+
+metadata:
+  name: "frps_ssr_global_riser"
+  description: "Free-standing dry-tree riser on SSR/wellhead landing - global dynamic model input scaffold (FDAS #2)"
+  structure: riser                              # riser | pipeline | mooring | installation | vessel
+  operation: in-place                           # in-place | installation | production | drilling
+  project: "FrPS SSR Global Riser (FDAS)"
+  version: "0.1"
+  provenance:
+    screening_campaign: "llm-wiki-fdas #3-#7"
+    global_model_scope: "llm-wiki-fdas #2"
+    basis_page: "llm-wiki-fdas pages/frps-fsr-global-riser-model.md (PR #9, unmerged)"
+    status: "input-scaffold-not-solved"
+  open_inputs:                                  # MUST be resolved before build
+    - section_basis                             # 82.51 vs ~97 in^2 (see parameters.yml)
+    - demand_setdown_definition                 # Roy "5-10 ft pushdown" net-of-stroke? (see parameters.yml)
+
+# ---------------------------------------------------------------------------
+# ENVIRONMENT
+#   Base (single) case shown here for schema validity. The real load matrix
+#   (water-depth cases x metocean combos) lives in inputs/parameters.yml and
+#   is expanded per-case at generation time. Values below = placeholder
+#   defaults at the 6,000 ft (1828.8 m) datum; OVERRIDE via parameters.yml.
+# ---------------------------------------------------------------------------
+environment:
+  water:
+    depth: 1828.8                               # 6,000 ft datum (PLACEHOLDER - see water_depth_cases)
+    density: 1.025                              # te/m^3
+  seabed:
+    slope: 0
+    stiffness:
+      normal: 100                               # kN/m/m^2 (PLACEHOLDER - GoM clay TBD)
+      shear: 100
+  waves:
+    type: JONSWAP                               # storm spectrum (PLACEHOLDER - see metocean matrix)
+    height: 0.0                                 # Hs (m) - SET per load case
+    period: 0.0                                 # Tp (s) - SET per load case
+    direction: 180
+    gamma: 2.4                                  # GoM hurricane (PLACEHOLDER)
+  current:
+    speed: 0.0                                  # Loop Current ref speed (m/s) - SET per load case
+    direction: 180
+    profile:                                    # [depth_m, factor] - Loop Current shear (PLACEHOLDER)
+    - - 0
+      - 1
+    - - 300
+      - 0.3
+  wind:
+    speed: 0.0                                  # m/s - SET per load case
+    direction: 180
+
+# ---------------------------------------------------------------------------
+# SIMULATION
+#   Per analysis-type. Toggles + per-type settings live in
+#   inputs/parameters.yml -> analyses. Defaults below are the dynamic-storm
+#   placeholder; static/modal/fatigue override.
+# ---------------------------------------------------------------------------
+simulation:
+  stages:
+  - 16                                          # build-up (PLACEHOLDER)
+  - 10800                                       # 3 h storm window (PLACEHOLDER)
+  time_step: 0.1
+
+# ---------------------------------------------------------------------------
+# GENERIC OBJECTS
+#   Concentric 16 / 11.75 / 7-in strings + 810-ft bare-pipe slick section
+#   carrying the dry tree, centralizers @ ~30 ft, set-down stops, surface
+#   wellhead landing. Section properties below are PLACEHOLDERS pending the
+#   section-basis decision (parameters.yml -> section_basis) and as-built
+#   wall-thickness schedule. Line types are expressed as homogeneous-pipe
+#   approximations of the concentric stack; the equivalent EA/EI/area MUST be
+#   replaced by validated concentric section properties before build.
+# ---------------------------------------------------------------------------
+generic:
+
+  vessel_types:
+  - name: "SSR Platform"                        # Surface platform / SSR providing motions
+    properties:
+      # RAOs + hydrodynamics to be sourced from digitalmodel OrcaWave /
+      # diffraction capability for the actual hull. PLACEHOLDER vessel type:
+      # populate Draughts / DisplacementRAOs / LoadRAOs from OrcaWave output
+      # (see README "OrcaWave-sourced hydro"). Do NOT use as-is.
+      RAOResponseUnits: degrees
+      RAOWaveUnit: amplitude
+      WavesReferredToBy: frequency (Hz)
+      RAOPhaseConvention: lags
+      Symmetry: xz and yz planes
+      hydro_source: "OrcaWave (TBD) - placeholder, not populated"
+
+  vessels:
+  - name: "SSR Platform"
+    vessel_type: "SSR Platform"
+    connection: Free
+    initial_position: [0, 0, 0]
+    properties:
+      # Platform offset drives the set-down envelope (#4/#5/#7 driver).
+      # Offset cases enumerated in parameters.yml -> metocean.platform_offsets.
+      PrimaryMotion: Prescribed
+      SuperimposedMotion: RAOs + harmonics
+      offset_note: "platform offset = set-down driver; enumerated in parameters.yml"
+
+  line_types:
+  # --- Concentric strings (homogeneous-pipe approximations; SI) ---------
+  - name: "16in Outer Casing"                   # 16 in OD outer string
+    category: Homogeneous pipe
+    outer_diameter: 0.4064                       # 16.000 in
+    inner_diameter: 0.3620                        # PLACEHOLDER WT - set from as-built schedule
+    properties:
+      MaterialDensity: 7.85                       # te/m^3
+      E: 207e6                                     # kN/m^2 (steel)
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Can: 1.0
+      basis_note: "WT/area PLACEHOLDER - resolve via section_basis variant"
+
+  - name: "11.75in Intermediate Casing"          # 11-3/4 in OD intermediate string
+    category: Homogeneous pipe
+    outer_diameter: 0.29845                        # 11.750 in
+    inner_diameter: 0.2600                          # PLACEHOLDER WT
+    properties:
+      MaterialDensity: 7.85
+      E: 207e6
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Can: 1.0
+      basis_note: "WT/area PLACEHOLDER - resolve via section_basis variant"
+
+  - name: "7in Tubing"                            # 7 in OD tubing (always pre-tensioned baseline)
+    category: Homogeneous pipe
+    outer_diameter: 0.1778                          # 7.000 in
+    inner_diameter: 0.1524                            # PLACEHOLDER (WT 0.50->0.75 in is the section-basis swing)
+    properties:
+      MaterialDensity: 7.85
+      E: 207e6
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Can: 1.0
+      pretension_note: >-
+        BASELINE per FDAS #2 (Jun-4 Chuck<->Roy): 7-in tubing ALWAYS installed
+        and pre-tensioned when tree is on the SSR. Sensitivity case = no tubing
+        structural contribution (parameters.yml -> sensitivity.no_tubing).
+      basis_note: "7-in WT 0.50->0.75 in is the section_basis swing (82.51 vs ~97 in^2)"
+
+  - name: "Slick Equivalent"                      # 810-ft bare-pipe slick section carrying dry tree
+    category: Homogeneous pipe
+    outer_diameter: 0.4064                          # outer-string OD governs slick OD (PLACEHOLDER)
+    inner_diameter: 0.3620                            # PLACEHOLDER
+    properties:
+      MaterialDensity: 7.85
+      E: 207e6
+      PoissonRatio: 0.3
+      Cdn: 1.2
+      Can: 1.0
+      slick_note: >-
+        810 ft (246.888 m) bare-pipe "slick" joint carrying the dry tree.
+        Equivalent concentric EA/EI/area to be set from validated section
+        basis - THIS is where the 82.51-vs-97 in^2 decision bites hardest
+        (it sets the buckling demand the screens flagged).
+
+  lines:
+  # --- Main free-standing column ----------------------------------------
+  - name: "Riser Column"
+    line_type_refs: ["Slick Equivalent"]
+    properties:
+      IncludeTorsion: true
+      TopEnd: End A                              # top at SSR / surface wellhead landing
+      Representation: Finite element
+      # Top boundary (FDAS #2, Jun-4): axially sliding on UHMW pads (mu<0.1)
+      # but RESTRAINED AGAINST ROTATION (no articulation). Model as guided /
+      # rotation-fixed with stroke limits at the set-down stops.
+      top_boundary_note: "axially sliding (mu<0.1), rotation-fixed; stroke-limited at stops"
+      # Bottom boundary: wellhead landing - pinned/tensioned (calibrate).
+      bottom_boundary_note: "wellhead landing - pinned/tensioned; restraint stiffness TBD"
+      LineType, Length, TargetSegmentLength:
+      - - "Slick Equivalent"
+        - 246.888                                # 810 ft slick section
+        - 5
+      - - "16in Outer Casing"
+        - 1581.912                               # remainder to 6,000 ft datum (PLACEHOLDER - per water-depth case)
+        - 10
+      # Centralizer restraints @ ~30 ft (9.144 m) - represented as lateral
+      # restraint stiffness at attachment points. Stiffness is a PLACEHOLDER
+      # to be CALIBRATED (this is "the hinge" - #2/#3 restraint efficiency).
+      centralizer_note: >-
+        centralizers @ ~30 ft (9.144 m) spacing -> lateral restraint stiffness
+        placeholders in parameters.yml -> restraint.centralizer_stiffness;
+        modal restraint efficiency is the open #2/#3 question to calibrate.
+      ContentsMethod: Uniform
+      ContentsDensity: 0.0                        # SET per case (production fluid / completion brine)
+      IncludedInStatics: true
+
+  buoys_6d:
+  # --- Set-down stop / contact (6D buoy + stop kinematics) ---------------
+  - name: "Set-Down Stop"
+    buoy_type: Lumped buoy
+    connection: Free
+    initial_position: [0, 0, 0]                  # at landing datum (PLACEHOLDER)
+    mass: 0.001
+    properties:
+      # Stop engagement load path (#4/#7): set-down stop reaction + tendon
+      # tension. Contact stiffness + gap (stroke) are PLACEHOLDERS tied to the
+      # Roy-demand decision (does 5-10 ft net the slip-joint stroke?).
+      stop_note: >-
+        set-down stop / contact element. Gap (engagement stroke) and contact
+        stiffness in parameters.yml -> restraint.setdown_stop; gap definition
+        is coupled to demand.setdown_definition (the Roy open input).
+      DegreesOfFreedomInStatics: All
+
+  constraints:
+  - name: "Surface Wellhead Landing"
+    in_frame_connection: "SSR Platform"
+    constraint_type: Calculated DOFs
+    properties:
+      # Top landing: axially free (sliding), rotation-fixed (per #2). Heave/
+      # stroke DOF free between stops; lateral + rotational locked.
+      landing_note: "axial-slide free (stroke-limited), rotation-fixed per FDAS #2"
+      InFrameInitialPosition: [0, 0, 0]
+
+# ---------------------------------------------------------------------------
+# NOTE ON GENERATOR OUTPUT
+#   `modular/` (master.yml + includes/*.yml) is generator OUTPUT and is NOT
+#   committed in this scaffold. Generate it on a licensed solver host with the
+#   modular_generator command above AFTER resolving the two open inputs.
+# ---------------------------------------------------------------------------
