@@ -1,0 +1,49 @@
+{
+  "case": {
+    "codes": [
+      "DNV-ST-F101",
+      "API-RP-1111"
+    ],
+    "geometry": {
+      "corrosion_allowance": 0.003,
+      "outer_diameter": 0.3239,
+      "wall_thickness": 0.028575
+    },
+    "label": "12\" Export Line, 1500 m water depth",
+    "loads": {
+      "internal_pressure": 15000000.0
+    },
+    "material": {
+      "grade": "X65",
+      "smts": 531000000.0,
+      "smys": 448000000.0
+    },
+    "water_depth_m": 1500.0
+  },
+  "external_pressure": 15082875.0,
+  "results": [
+    {
+      "checks": {
+        "collapse": 0.029379,
+        "combined_loading": 0.000123,
+        "pressure_containment": -0.001471,
+        "propagation_buckling": 0.718566
+      },
+      "code_label": "DNV-ST-F101",
+      "governing_check": "propagation_buckling",
+      "is_safe": true,
+      "max_utilisation": 0.718566
+    },
+    {
+      "checks": {
+        "burst": -0.001346,
+        "collapse": 0.24603,
+        "propagation": 0.59501
+      },
+      "code_label": "API-RP-1111",
+      "governing_check": "propagation",
+      "is_safe": true,
+      "max_utilisation": 0.59501
+    }
+  ]
+}
