@@ -5,8 +5,7 @@ Covers the 6-level precedence chain:
   2. LLM_WIKI_PATH env var
   3. DIGITALMODEL_REPO_ROOT (legacy alias with DeprecationWarning)
   4. bounded parent walk (cap=8) for workspace-hub overlay
-  5. known local clones (Path.home() / 'workspace-hub' / 'llm-wiki',
-     /mnt/local-analysis/llm-wiki)
+  5. known local clones (Path.home() workspace clone and local-analysis clone)
   6. fail-closed with actionable message naming LLM_WIKI_PATH, the
      private repo URL, and the routing-rule pointer.
 

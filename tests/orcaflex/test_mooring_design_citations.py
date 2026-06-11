@@ -47,7 +47,7 @@ def _unset_env_var(monkeypatch):
 def _disable_known_clones_fallback(monkeypatch):
     """Disable real-filesystem known-clone fallbacks so tests in this module
     can exercise fail-closed paths deterministically without false-positive
-    resolution via /mnt/local-analysis/llm-wiki etc."""
+    resolution via developer-machine local clones."""
     from digitalmodel.citations import resolver as _resolver
     monkeypatch.setattr(_resolver, "_KNOWN_LOCAL_CLONES", ())
 

@@ -6,6 +6,7 @@ Both fixtures live under fixtures/ in this directory.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 
@@ -34,7 +35,6 @@ def test_capture_sequencing_source_sha_predates_refactor():
     fixture = json.loads(TRACE_SIG_FIXTURE.read_text())
     captured_sha = fixture["source_commit_sha"]
     repo_root = _repo_root()
-    build_script = "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py"
 
     # ancestry check: captured_sha must be in HEAD's history
     ancestor = subprocess.run(
@@ -45,17 +45,6 @@ def test_capture_sequencing_source_sha_predates_refactor():
         f"captured source_commit_sha {captured_sha} is not an ancestor of HEAD"
     )
 
-    # all refactor commits touching build_coefficient_explorer.py after captured_sha
-    # must be DESCENDANTS of captured_sha (i.e., happen later). Phrased differently:
-    # there must be NO commit touching the file that is an ancestor of captured_sha
-    # except captured_sha itself or older. Verify by checking the file's git log
-    # filtered to descendants of captured_sha.
-    log = subprocess.check_output(
-        ["git", "log", "--format=%H", f"{captured_sha}..HEAD", "--", build_script],
-        cwd=repo_root, text=True,
-    ).strip().splitlines()
-    # log contains commits that touch the file AFTER captured_sha — these are the refactor commits.
-    # That's allowed (and expected once Phase 5 lands). No assertion on count; this branch is informational.
     # The actual assertion: captured_sha must NOT itself contain refactor changes.
     # We approximate this by checking that captured_sha's commit message does not include "refactor("
     captured_msg = subprocess.check_output(
@@ -135,11 +124,16 @@ def test_no_client_identifiers_in_visualization_package_sources():
     targets = sorted([str(p) for p in pkg_dir.glob("*.py")])
     assert targets, "no visualization source files found to scan"
 
-    # Try workspace-hub legal-sanity-scan first (lives in a sibling repo); if it
-    # doesn't accept file-list arguments, fall back to pattern-driven grep.
-    workspace_hub_scan = pathlib.Path("/mnt/local-analysis/workspace-hub/scripts/legal/legal-sanity-scan.sh")
+    # Try workspace-hub legal-sanity-scan first when WORKSPACE_HUB_ROOT points
+    # at a sibling checkout; otherwise fall back to pattern-driven grep.
+    workspace_hub_root = os.environ.get("WORKSPACE_HUB_ROOT")
+    workspace_hub_scan = (
+        pathlib.Path(workspace_hub_root) / "scripts" / "legal" / "legal-sanity-scan.sh"
+        if workspace_hub_root
+        else None
+    )
     script_accepts_files = False
-    if workspace_hub_scan.is_file():
+    if workspace_hub_scan is not None and workspace_hub_scan.is_file():
         probe = subprocess.run(
             ["bash", str(workspace_hub_scan), *targets],
             capture_output=True, text=True,

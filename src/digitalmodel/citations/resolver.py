@@ -5,7 +5,7 @@ Implements the 6-level precedence chain:
   2. LLM_WIKI_PATH env var
   3. DIGITALMODEL_REPO_ROOT env var (legacy alias; DeprecationWarning)
   4. bounded parent walk from __file__ (cap=8) for workspace-hub overlay
-  5. known local-clone fallbacks (~/workspace-hub/llm-wiki, /mnt/local-analysis/llm-wiki)
+  5. known local-clone fallbacks (home workspace clone, local-analysis clone)
   6. fail-closed with actionable message
 
 Handles both layouts:
@@ -39,7 +39,7 @@ _WALK_HARD_CAP = 8
 
 # Default cross-platform local-clone search paths. Cross-platform via Path.home().
 _KNOWN_LOCAL_CLONES: tuple[Path, ...] = (
-    Path("/mnt/local-analysis/llm-wiki"),
+    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
     Path.home() / "workspace-hub" / "llm-wiki",
 )
 
