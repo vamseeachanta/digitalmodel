@@ -113,11 +113,40 @@ def test_touched_mode_outputs_single_domain(tmp_path: Path) -> None:
     assert result.stdout.strip() == "citations"
 
 
-def test_src_change_escalates_to_full_matrix(tmp_path: Path) -> None:
+def test_known_source_change_outputs_mapped_domain(tmp_path: Path) -> None:
     domains_file = tmp_path / "DOMAINS.md"
     write_domains(domains_file)
     init_repo(tmp_path)
-    source = tmp_path / "src" / "digitalmodel" / "engine.py"
+    source = tmp_path / "src" / "digitalmodel" / "citations" / "resolver.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    base = commit_all(tmp_path, "base")
+
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "citations"
+
+
+def test_unknown_source_change_escalates_to_full_matrix(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    source = tmp_path / "src" / "digitalmodel" / "unmapped_domain" / "engine.py"
     source.parent.mkdir(parents=True)
     source.write_text("VALUE = 1\n")
     base = commit_all(tmp_path, "base")
@@ -142,16 +171,266 @@ def test_src_change_escalates_to_full_matrix(tmp_path: Path) -> None:
     assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural"]
 
 
-def test_config_change_escalates_to_full_matrix(tmp_path: Path) -> None:
+def test_detector_script_change_outputs_workflows_domain(tmp_path: Path) -> None:
     domains_file = tmp_path / "DOMAINS.md"
-    write_domains(domains_file)
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | citations | `tests/citations/` | Citation registry tests. |
+            | workflows | `tests/scripts/` | Workflow script tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    detector = tmp_path / "scripts" / "ci" / "detect_touched_domains.py"
+    detector.parent.mkdir(parents=True)
+    detector.write_text("VALUE = 1\n")
+    base = commit_all(tmp_path, "base")
+
+    detector.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "workflows"
+
+
+def test_workflows_source_change_outputs_workflows_domain(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | citations | `tests/citations/` | Citation registry tests. |
+            | workflows | `tests/workflows/`, `tests/scripts/` | Workflow tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    source = tmp_path / "src" / "digitalmodel" / "workflows" / "automation" / "quality_gates.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    base = commit_all(tmp_path, "base")
+
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "workflows"
+
+
+def test_agent_dashboard_source_change_outputs_workflows_domain(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | specialized | `tests/visualization/` | Visualization tests. |
+            | workflows | `tests/test_agent_dashboard.py`, `tests/scripts/` | Workflow dashboard tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    source = tmp_path / "src" / "digitalmodel" / "visualization" / "agent_dashboard.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    base = commit_all(tmp_path, "base")
+
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "workflows"
+
+
+def test_orcaflex_citation_contract_change_outputs_citations_domain(
+    tmp_path: Path,
+) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | citations | `tests/citations/` | Citation tests. |
+            | orcaflex | `tests/orcaflex/` | OrcaFlex tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    test_file = tmp_path / "tests" / "orcaflex" / "test_mooring_design_citations.py"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("def test_old():\n    assert True\n")
+    base = commit_all(tmp_path, "base")
+
+    test_file.write_text("def test_new():\n    assert True\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "citations"
+
+
+def test_marine_visualization_regression_change_outputs_workflows_domain(
+    tmp_path: Path,
+) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | marine-engineering | `tests/marine_ops/marine_engineering/` | Marine tests. |
+            | workflows | `tests/scripts/` | Workflow tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    test_file = (
+        tmp_path
+        / "tests"
+        / "marine_ops"
+        / "marine_engineering"
+        / "visualization"
+        / "test_no_regression_traces.py"
+    )
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("def test_old():\n    assert True\n")
+    base = commit_all(tmp_path, "base")
+
+    test_file.write_text("def test_new():\n    assert True\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "workflows"
+
+
+def test_quality_gate_config_change_outputs_workflows_domain(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | citations | `tests/citations/` | Citation registry tests. |
+            | workflows | `tests/scripts/` | Workflow script tests. |
+            """
+        )
+    )
     init_repo(tmp_path)
     config = tmp_path / ".claude" / "quality-gates.yaml"
     config.parent.mkdir(parents=True)
     config.write_text("gates: {}\n")
     base = commit_all(tmp_path, "base")
 
-    config.write_text("gates:\n  tests: {}\n")
+    config.write_text("gates:\n  tests-workflows: {}\n")
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "workflows"
+
+
+def test_pytest_config_change_escalates_to_full_matrix(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    config = tmp_path / "pytest.ini"
+    config.write_text("[pytest]\n")
+    base = commit_all(tmp_path, "base")
+
+    config.write_text("[pytest]\naddopts = -q\n")
     head = commit_all(tmp_path, "head")
 
     result = run_detector(

@@ -1,21 +1,16 @@
 # ABOUTME: Comprehensive tests for workflow checkpoint management system
 # Tests checkpoint creation, restoration, listing, cleanup, and integration with git
 
-import asyncio
 import json
 import shutil
 import subprocess
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from digitalmodel.workflows.automation.workflow_checkpoints import (
-    AgentState,
-    CheckpointMetadata,
-    GitState,
     WorkflowCheckpointManager,
 )
 
@@ -186,7 +181,7 @@ class TestCheckpointCreation:
         (temp_repo / "file2.txt").write_text("content 2")
         subprocess.run(["git", "add", "."], cwd=temp_repo, check=True)
 
-        checkpoint_id = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="test_workflow",
             phase="refinement",
         )
@@ -205,7 +200,7 @@ class TestCheckpointCreation:
     async def test_create_checkpoint_incremental(self, checkpoint_manager, temp_repo):
         """Test incremental checkpoint (only changed files)."""
         # First checkpoint
-        checkpoint1_id = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="test_workflow",
             phase="phase1",
         )
@@ -222,6 +217,27 @@ class TestCheckpointCreation:
         checkpoint2 = checkpoint_manager.get_checkpoint_info(checkpoint2_id)
         # Incremental should have fewer files
         assert checkpoint2.file_count >= 0  # At least the modified file
+
+    @pytest.mark.asyncio
+    async def test_create_checkpoint_uses_unique_ids_for_same_second(
+        self,
+        checkpoint_manager,
+    ):
+        """Back-to-back checkpoints must not overwrite metadata."""
+        checkpoint1_id = await checkpoint_manager.create_checkpoint(
+            workflow_id="test_workflow",
+            phase="phase1",
+        )
+        checkpoint2_id = await checkpoint_manager.create_checkpoint(
+            workflow_id="test_workflow",
+            phase="phase2",
+        )
+
+        checkpoints = checkpoint_manager.list_checkpoints(workflow_id="test_workflow")
+
+        assert checkpoint1_id != checkpoint2_id
+        assert len(checkpoints) == 2
+        assert {checkpoint.phase for checkpoint in checkpoints} == {"phase1", "phase2"}
 
     @pytest.mark.asyncio
     async def test_create_checkpoint_disabled(self, checkpoint_manager, monkeypatch):
@@ -388,11 +404,11 @@ class TestCheckpointListing:
     @pytest.mark.asyncio
     async def test_list_checkpoints_filter_by_phase(self, checkpoint_manager):
         """Test filtering checkpoints by phase."""
-        checkpoint1 = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="workflow1",
             phase="specification",
         )
-        checkpoint2 = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="workflow1",
             phase="architecture",
         )
@@ -460,7 +476,7 @@ class TestCheckpointCleanup:
     async def test_cleanup_time_based(self, checkpoint_manager):
         """Test time-based cleanup (keep last N days)."""
         # Create old checkpoint (mock timestamp)
-        checkpoint_id = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="workflow1",
             phase="phase1",
         )
@@ -498,7 +514,7 @@ class TestCheckpointCleanup:
             )
 
         # Run cleanup
-        stats = await checkpoint_manager.cleanup_checkpoints()
+        await checkpoint_manager.cleanup_checkpoints()
 
         # Should keep only 10 most recent
         remaining = checkpoint_manager.list_checkpoints(workflow_id="workflow1")
@@ -508,7 +524,7 @@ class TestCheckpointCleanup:
     async def test_cleanup_keeps_tagged(self, checkpoint_manager):
         """Test that tagged checkpoints are kept forever."""
         # Create tagged checkpoint with old timestamp
-        checkpoint_id = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="workflow1",
             phase="phase1",
             tags=["important"],
@@ -598,7 +614,7 @@ class TestCheckpointIntegration:
         (temp_repo / "file2.txt").write_text("new file")
 
         # 4. Create second checkpoint
-        checkpoint2 = await checkpoint_manager.create_checkpoint(
+        await checkpoint_manager.create_checkpoint(
             workflow_id="workflow1",
             phase="architecture",
             description="Version 2",

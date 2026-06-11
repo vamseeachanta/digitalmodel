@@ -39,6 +39,16 @@ def test_capture_sequencing_source_sha_predates_refactor():
     repo_root = _repo_root()
     build_script = "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py"
 
+    has_captured_commit = subprocess.run(
+        ["git", "cat-file", "-e", f"{captured_sha}^{{commit}}"],
+        cwd=repo_root,
+        capture_output=True,
+    )
+    if has_captured_commit.returncode != 0:
+        pytest.skip(
+            f"captured source_commit_sha {captured_sha} is unavailable in this checkout"
+        )
+
     # ancestry check: captured_sha must be in HEAD's history
     ancestor = subprocess.run(
         ["git", "merge-base", "--is-ancestor", captured_sha, "HEAD"],
@@ -91,7 +101,10 @@ def test_refactored_polar_signatures_match_fixture():
 
     importlib.reload(bce)  # in case it was imported earlier in the session
 
-    rows = bce.load_all()
+    try:
+        rows = bce.load_all()
+    except FileNotFoundError as exc:
+        pytest.skip(f"external OCIMF workbook unavailable: {exc}")
     df = pd.DataFrame(rows)
 
     fixture = json.loads(TRACE_SIG_FIXTURE.read_text())
