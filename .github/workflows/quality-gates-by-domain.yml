@@ -55,6 +55,25 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "has_domains=$has_domains" >> "$GITHUB_OUTPUT"
 
+  ci-harness-tests:
+    name: CI harness detector tests
+    needs: detect-domains
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run detector tests
+        run: uv run --no-sources --with-editable . python -m pytest tests/scripts/test_detect_touched_domains.py -q --tb=line
+
   domain-tests:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
@@ -114,7 +133,7 @@ jobs:
 
   domain-tests-required:
     name: Domain test aggregate
-    needs: [detect-domains, domain-tests]
+    needs: [detect-domains, ci-harness-tests, domain-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -122,10 +141,16 @@ jobs:
         env:
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
           DETECT_RESULT: ${{ needs.detect-domains.result }}
+          HARNESS_RESULT: ${{ needs.ci-harness-tests.result }}
           DOMAIN_RESULT: ${{ needs.domain-tests.result }}
         run: |
           if [ "$DETECT_RESULT" != "success" ]; then
             echo "Domain detection did not succeed: $DETECT_RESULT"
+            exit 1
+          fi
+
+          if [ "$HARNESS_RESULT" != "success" ]; then
+            echo "CI harness detector tests did not succeed: $HARNESS_RESULT"
             exit 1
           fi
 

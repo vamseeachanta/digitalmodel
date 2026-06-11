@@ -1,10 +1,22 @@
+import importlib.util
 import json
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
+
+
+def load_detector_module():
+    spec = importlib.util.spec_from_file_location("detect_touched_domains", SCRIPT)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def run_detector(repo: Path, domains_file: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -245,6 +257,67 @@ def test_specific_test_override_wins_over_broad_domain_root(tmp_path: Path) -> N
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines() == ["cathodic-protection"]
+
+
+def test_all_domain_path_mappings_have_regression_coverage(tmp_path: Path) -> None:
+    detector = load_detector_module()
+    mapped_domains = sorted(
+        {domain for _path, domains in detector.DOMAIN_PATHS for domain in domains}
+    )
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        "# Test Domains\n\n"
+        "| Domain | Test roots | Purpose/deps/notes |\n"
+        "| --- | --- | --- |\n"
+        + "\n".join(
+            f"| {domain} | `tests/{domain}/` | {domain} tests. |"
+            for domain in mapped_domains
+        )
+        + "\n"
+    )
+
+    for index, (domain_path, expected_domains) in enumerate(detector.DOMAIN_PATHS):
+        repo = tmp_path / f"repo-{index}"
+        repo.mkdir()
+        init_repo(repo)
+        changed_file = repo / domain_path
+        if domain_path.endswith("/"):
+            changed_file = changed_file / "test_touched.py"
+        changed_file.parent.mkdir(parents=True)
+        changed_file.write_text("VALUE = 1\n")
+        base = commit_all(repo, "base")
+
+        changed_file.write_text("VALUE = 2\n")
+        head = commit_all(repo, "head")
+
+        result = run_detector(
+            repo,
+            domains_file,
+            "--mode",
+            "touched",
+            "--base",
+            base,
+            "--head",
+            head,
+            "--output-format",
+            "list",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.splitlines() == [
+            domain for domain in mapped_domains if domain in expected_domains
+        ]
+
+
+def test_all_mapped_domain_names_exist_in_real_domains_file() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    domain_names = {domain.name for domain in domains}
+    mapped_domain_names = {
+        domain for _path, domains_for_path in detector.DOMAIN_PATHS for domain in domains_for_path
+    }
+
+    assert mapped_domain_names <= domain_names
 
 
 def test_config_change_escalates_to_full_matrix(tmp_path: Path) -> None:
