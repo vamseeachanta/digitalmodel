@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import inspect
+from pathlib import Path
+import warnings
 
+from pydantic import ValidationError
 import pytest
 
 
@@ -76,5 +79,127 @@ def test_dnv_b401_explicit_edition_preserves_current_demand_numeric():
 def test_dnv_b401_missing_edition_warns_and_preserves_numeric():
     from digitalmodel.cathodic_protection.dnv_rp_b401 import current_demand
 
-    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021"):
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
         assert current_demand(100.0, 0.05, 0.2) == pytest.approx(1.0)
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+
+
+def _sample_anode_sizing_input():
+    from digitalmodel.cathodic_protection.anode_sizing import (
+        AnodeSizingInput,
+        AnodeType,
+    )
+
+    return AnodeSizingInput(
+        surface_area_m2=3000.0,
+        coating_breakdown_factor=0.05,
+        current_density_mA_m2=100.0,
+        design_life_years=25.0,
+        anode_type=AnodeType.STAND_OFF,
+        anode_length_m=1.0,
+        anode_radius_m=0.08,
+        anode_net_mass_kg=200.0,
+        resistivity_ohm_m=0.30,
+        anode_capacity_Ah_kg=2000.0,
+        utilization_factor=0.90,
+    )
+
+
+def test_design_cp_system_result_carries_explicit_edition_metadata():
+    from digitalmodel.cathodic_protection.anode_sizing import design_cp_system
+
+    result = design_cp_system(_sample_anode_sizing_input(), edition="2017")
+
+    assert result.edition_used == "2017"
+    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+
+
+def test_design_cp_system_missing_edition_warns_and_defaults_metadata():
+    from digitalmodel.cathodic_protection.anode_sizing import design_cp_system
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
+        result = design_cp_system(_sample_anode_sizing_input())
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_design_cp_system_explicit_edition_preserves_p1_numerics():
+    from digitalmodel.cathodic_protection.anode_sizing import design_cp_system
+
+    legacy = design_cp_system(_sample_anode_sizing_input(), edition="2017")
+    current = design_cp_system(_sample_anode_sizing_input(), edition="2021")
+
+    assert current.current_demand_A == pytest.approx(legacy.current_demand_A)
+    assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
+    assert current.number_of_anodes == legacy.number_of_anodes
+    assert current.anode_resistance_ohm == pytest.approx(legacy.anode_resistance_ohm)
+
+
+def test_design_cp_system_explicit_edition_emits_no_missing_edition_warning():
+    from digitalmodel.cathodic_protection.anode_sizing import design_cp_system
+
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        result = design_cp_system(_sample_anode_sizing_input(), edition="2017")
+
+    messages = [str(warning.message) for warning in captured]
+    assert not [
+        message
+        for message in messages
+        if "defaulting to DNV-RP-B401 2021" in message
+    ]
+    assert result.edition_used == "2017"
+
+
+def _legacy_anode_sizing_result_data(**overrides):
+    data = {
+        "current_demand_A": 15.0,
+        "total_anode_mass_kg": 1825.0,
+        "number_of_anodes": 10,
+        "anode_resistance_ohm": 0.139,
+        "anode_current_output_A": 1.8,
+        "driving_voltage_V": 0.25,
+        "anode_type": "stand_off",
+        "mass_check_ok": True,
+    }
+    data.update(overrides)
+    return data
+
+
+def test_anode_sizing_result_defaults_metadata_for_legacy_dicts():
+    from digitalmodel.cathodic_protection.anode_sizing import AnodeSizingResult
+
+    result = AnodeSizingResult(**_legacy_anode_sizing_result_data())
+
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_anode_sizing_result_treats_none_metadata_as_legacy_missing():
+    from digitalmodel.cathodic_protection.anode_sizing import AnodeSizingResult
+
+    result = AnodeSizingResult(
+        **_legacy_anode_sizing_result_data(edition_used=None, standard=None)
+    )
+
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_anode_sizing_result_rejects_invalid_metadata_with_validation_error():
+    from digitalmodel.cathodic_protection.anode_sizing import AnodeSizingResult
+
+    with pytest.raises(ValidationError, match="edition_used"):
+        AnodeSizingResult(**_legacy_anode_sizing_result_data(edition_used="2025"))
+
+
+def test_anode_sizing_result_schema_requires_metadata_fields():
+    from digitalmodel.cathodic_protection.anode_sizing import AnodeSizingResult
+
+    required = set(AnodeSizingResult.model_json_schema()["required"])
+
+    assert "edition_used" in required
+    assert "standard" in required

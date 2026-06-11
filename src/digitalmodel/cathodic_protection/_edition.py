@@ -8,6 +8,10 @@ import warnings
 
 Edition = Literal["2017", "2021"]
 DEFAULT_EDITION: Edition = "2021"
+STANDARD_BY_EDITION: dict[Edition, str] = {
+    "2017": "DNV-RP-B401 (Oct 2017)",
+    "2021": "DNV-RP-B401 (May 2021)",
+}
 
 _ALIASES: dict[str, Edition] = {
     "2017": "2017",
@@ -26,7 +30,7 @@ _ALIASES: dict[str, Edition] = {
 }
 
 
-def normalize_edition(edition: str | None) -> Edition:
+def normalize_edition(edition: str | None, *, stacklevel: int = 2) -> Edition:
     """Return the canonical DNV-RP-B401 edition token.
 
     ``None`` keeps the P1 transition additive by warning and defaulting to the
@@ -36,7 +40,7 @@ def normalize_edition(edition: str | None) -> Edition:
         warnings.warn(
             "No DNV-RP-B401 edition supplied; defaulting to DNV-RP-B401 2021.",
             UserWarning,
-            stacklevel=2,
+            stacklevel=stacklevel,
         )
         return DEFAULT_EDITION
 
@@ -48,3 +52,8 @@ def normalize_edition(edition: str | None) -> Edition:
             f"Unsupported DNV-RP-B401 edition {edition!r}. "
             "Supported editions are '2017' and '2021'."
         ) from exc
+
+
+def standard_for_edition(edition: Edition) -> str:
+    """Return the report-facing DNV-RP-B401 standard string for an edition."""
+    return STANDARD_BY_EDITION[edition]
