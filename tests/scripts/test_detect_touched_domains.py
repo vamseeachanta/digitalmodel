@@ -194,7 +194,18 @@ def test_shared_src_change_escalates_to_full_matrix(tmp_path: Path) -> None:
 
 def test_no_domain_changes_output_empty_matrix(tmp_path: Path) -> None:
     domains_file = tmp_path / "DOMAINS.md"
-    write_domains(domains_file)
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | marine-engineering | `tests/marine_ops/marine_engineering/` | Marine engineering tests. |
+            | workflows | `tests/workflows/`, `tests/scripts/` | Workflow and CI harness tests. |
+            """
+        )
+    )
     init_repo(tmp_path)
     changed_paths = (
         tmp_path / "scripts" / "ci" / "detect_touched_domains.py",
