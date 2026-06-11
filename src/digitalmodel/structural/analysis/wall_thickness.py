@@ -303,11 +303,9 @@ class WallThicknessAnalyzer:
         # Plastic collapse pressure — Eq 5.11
         p_p = f_y * alpha_fab * 2 * t2 / D
 
-        # Characteristic collapse pressure — solve cubic (Eq 5.9)
-        # (p_c - p_el)(p_c^2 - p_p^2) = p_c * p_el * p_p^2 * f_0 * D/t2
-        # Rearranged: p_c^3 - p_el*p_c^2 - p_p^2*p_c + p_el*p_p^2
-        #             - p_el*p_p^2*f_0*(D/t2)*p_c = 0
-        # Solve numerically with bisection between 0 and p_el
+        # Characteristic collapse pressure — solve cubic (Eq 5.9):
+        # (p_c - p_el)(p_c^2 - p_p^2) = p_c * p_el * p_p * f_0 * D/t2
+        # Solve numerically with bisection on (0, min(p_el, p_p)).
         p_c = self._solve_collapse_pressure(p_el, p_p, f_0, D, t2)
 
         # Design collapse resistance
@@ -358,13 +356,14 @@ class WallThicknessAnalyzer:
         def g(pc: float) -> float:
             return (pc - p_el) * (pc**2 - p_p**2) - pc * coeff
 
-        # Bracket: p_c is between 0 and max(p_el, p_p)
-        lo, hi = 0.0, max(p_el, p_p) * 1.5
-        # g(0) = -p_el * (-p_p^2) - 0 = p_el*p_p^2 > 0 typically
-        # g(hi) should be negative for well-chosen hi
-        # Ensure proper bracket
-        if g(lo) * g(hi) > 0:
-            hi = max(p_el, p_p) * 3.0
+        # Bracket: the physical (smallest positive) root always lies in
+        # (0, min(p_el, p_p)) — collapse cannot exceed either the elastic or
+        # the plastic limit. g(0) = p_el*p_p^2 > 0 and
+        # g(min(p_el, p_p)) = -min(p_el, p_p)*coeff < 0, so this bracket is
+        # always valid. The previous bracket (0, max(p_el, p_p)*1.5) converged
+        # to a spurious high root of the cubic whenever p_p > p_el (deepwater,
+        # thin t2/D), overstating collapse resistance ~5x (deckhand#227).
+        lo, hi = 0.0, min(p_el, p_p)
 
         for _ in range(max_iter):
             mid = (lo + hi) / 2
