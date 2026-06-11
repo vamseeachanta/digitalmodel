@@ -192,16 +192,26 @@ def test_shared_src_change_escalates_to_full_matrix(tmp_path: Path) -> None:
     ]
 
 
-def test_detector_harness_change_outputs_empty_matrix(tmp_path: Path) -> None:
+def test_no_domain_changes_output_empty_matrix(tmp_path: Path) -> None:
     domains_file = tmp_path / "DOMAINS.md"
     write_domains(domains_file)
     init_repo(tmp_path)
-    script = tmp_path / "scripts" / "ci" / "detect_touched_domains.py"
-    script.parent.mkdir(parents=True)
-    script.write_text("VALUE = 1\n")
+    changed_paths = (
+        tmp_path / "scripts" / "ci" / "detect_touched_domains.py",
+        tmp_path
+        / "tests"
+        / "marine_ops"
+        / "marine_engineering"
+        / "visualization"
+        / "test_no_regression_traces.py",
+    )
+    for changed_path in changed_paths:
+        changed_path.parent.mkdir(parents=True, exist_ok=True)
+        changed_path.write_text("VALUE = 1\n")
     base = commit_all(tmp_path, "base")
 
-    script.write_text("VALUE = 2\n")
+    for changed_path in changed_paths:
+        changed_path.write_text("VALUE = 2\n")
     head = commit_all(tmp_path, "head")
 
     result = run_detector(
