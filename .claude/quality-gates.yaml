@@ -28,8 +28,8 @@ gates:
     order: 1
     description: "Domain tests for citations"
     domain: "citations"
-    test_roots: ["tests/citations/"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/citations/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/citations/", "tests/orcaflex/test_mooring_design_citations.py"]
+    command: "uv run --no-sources --with-editable . python -m pytest tests/citations/ tests/orcaflex/test_mooring_design_citations.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -198,8 +198,8 @@ gates:
     order: 1
     description: "Domain tests for workflows"
     domain: "workflows"
-    test_roots: ["tests/workflows/", "tests/test_automation/", "tests/domains/", "tests/specs/", "tests/scripts/", "tests/DOMAINS.md", "tests/test_agent_dashboard.py", "tests/test_workflow_checkpoints.py", "tests/test_workflow_executor.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/workflows/", "tests/test_automation/", "tests/domains/", "tests/specs/", "tests/scripts/", "tests/DOMAINS.md", "tests/test_agent_dashboard.py", "tests/test_workflow_checkpoints.py", "tests/test_workflow_executor.py", "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py"]
+    command: "uv run --no-sources --with-editable . python -m pytest tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py -rfE -p asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

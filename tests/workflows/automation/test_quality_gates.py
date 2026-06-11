@@ -4,8 +4,7 @@ Tests each gate type: tests, coverage, quality, security, documentation.
 """
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -156,6 +155,34 @@ class TestQualityGateValidator:
         ]
 
         assert validator._check_dependencies(["tests"], results) is False
+
+    def test_check_dependencies_not_met_when_dependency_skipped_or_error(self, validator):
+        """Skipped/error dependencies should not unlock dependent gates."""
+        from digitalmodel.workflows.automation.quality_gates import GateResult
+
+        skipped_results = [
+            GateResult("tests-citations", GateStatus.SKIPPED, "Handled elsewhere"),
+        ]
+        error_results = [
+            GateResult("tests-citations", GateStatus.ERROR, "Unknown gate type"),
+        ]
+
+        assert validator._check_dependencies(["tests-citations"], skipped_results) is False
+        assert validator._check_dependencies(["tests-citations"], error_results) is False
+
+    def test_execute_domain_test_gate_is_skipped_by_aggregate_runner(self, validator):
+        """Domain test gates are owned by the domain-sharded CI workflow."""
+        result = validator._execute_gate(
+            "tests-citations",
+            {
+                "domain": "citations",
+                "command": "python -m pytest tests/citations",
+            },
+        )
+
+        assert result.gate_name == "tests-citations"
+        assert result.status == GateStatus.SKIPPED
+        assert "domain-sharded" in result.message
 
     @patch("subprocess.run")
     def test_execute_tests_gate_pass(self, mock_run, validator):

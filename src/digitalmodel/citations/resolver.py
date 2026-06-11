@@ -5,7 +5,7 @@ Implements the 6-level precedence chain:
   2. LLM_WIKI_PATH env var
   3. DIGITALMODEL_REPO_ROOT env var (legacy alias; DeprecationWarning)
   4. bounded parent walk from __file__ (cap=8) for workspace-hub overlay
-  5. known local-clone fallbacks (~/workspace-hub/llm-wiki, /mnt/local-analysis/llm-wiki)
+  5. known local-clone fallback (~/workspace-hub/llm-wiki)
   6. fail-closed with actionable message
 
 Handles both layouts:
@@ -18,6 +18,7 @@ prefix) post-2026-05-20 privacy flip per the codes-standards-data-routing rule.
 
 Per `feedback_path_parent_infinite_loop`: parent walk is hard-capped at 8 levels.
 """
+
 from __future__ import annotations
 
 import logging
@@ -38,10 +39,7 @@ ROUTING_RULE_URL = (
 _WALK_HARD_CAP = 8
 
 # Default cross-platform local-clone search paths. Cross-platform via Path.home().
-_KNOWN_LOCAL_CLONES: tuple[Path, ...] = (
-    Path("/mnt/local-analysis/llm-wiki"),
-    Path.home() / "workspace-hub" / "llm-wiki",
-)
+_KNOWN_LOCAL_CLONES: tuple[Path, ...] = (Path.home() / "workspace-hub" / "llm-wiki",)
 
 # One-shot cache so repeated calls don't multi-warn for the same condition.
 _RESOLUTION_CACHE: dict[str, bool] = {}
@@ -70,7 +68,9 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
     if override is not None:
         validated = _validate_clone(Path(override))
         if validated is not None:
-            _LOGGER.info("citation-resolver: resolved via explicit override → %s", validated)
+            _LOGGER.info(
+                "citation-resolver: resolved via explicit override → %s", validated
+            )
             return validated
         raise CitationResolutionError(
             code_id="<resolver>",
@@ -93,9 +93,13 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
             )
         validated = _validate_clone(env_path)
         if validated is not None:
-            _LOGGER.info("citation-resolver: resolved via LLM_WIKI_PATH → %s", validated)
+            _LOGGER.info(
+                "citation-resolver: resolved via LLM_WIKI_PATH → %s", validated
+            )
             return validated
-        _emit_error_log("LLM_WIKI_PATH set but path is not a valid wiki clone: %s", env_path)
+        _emit_error_log(
+            "LLM_WIKI_PATH set but path is not a valid wiki clone: %s", env_path
+        )
         raise CitationResolutionError(
             code_id="<resolver>",
             wiki_path="<base>",
@@ -179,7 +183,9 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
     )
 
 
-def resolve_wiki_path(citation_wiki_path: str, *, override: Optional[Path] = None) -> Path:
+def resolve_wiki_path(
+    citation_wiki_path: str, *, override: Optional[Path] = None
+) -> Path:
     """Resolve a citation `wiki_path` (canonical form: `wikis/<domain>/...`) to
     an absolute file path on disk, handling both layouts.
 

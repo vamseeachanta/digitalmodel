@@ -5,6 +5,7 @@ Covers AC2 (behavior of get_intact/damaged_safety_factor, check_mbl_with_safety_
 plus the user-override-wins, standalone-graceful, bounded-walk-sentinel, and
 fail-closed defenses.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -30,6 +31,7 @@ def _reset_warn_cache():
     one-shot warning is observable in test_standalone_no_repo_root_graceful_warn
     and the resolver's DeprecationWarning cache is reset per-test."""
     from digitalmodel.citations import resolver as _resolver
+
     md._REPO_ROOT_RESOLUTION_CACHE.clear()
     _resolver._RESOLUTION_CACHE.clear()
     yield
@@ -47,8 +49,9 @@ def _unset_env_var(monkeypatch):
 def _disable_known_clones_fallback(monkeypatch):
     """Disable real-filesystem known-clone fallbacks so tests in this module
     can exercise fail-closed paths deterministically without false-positive
-    resolution via /mnt/local-analysis/llm-wiki etc."""
+    resolution via developer-machine fallback clones."""
     from digitalmodel.citations import resolver as _resolver
+
     monkeypatch.setattr(_resolver, "_KNOWN_LOCAL_CLONES", ())
 
 
@@ -87,6 +90,7 @@ def test_check_mbl_with_sf_applies_sf():
     # Behavioral check: utilisation_with_sf = (max_tension * 1.67) / mbl per segment.
     for seg in ml.segments:
         from digitalmodel.orcaflex.mooring_design import MOORING_MATERIAL_LIBRARY
+
         mbl = MOORING_MATERIAL_LIBRARY[seg.material_key].mbl
         expected_with = round((3000.0 * 1.67) / mbl, 4)
         expected_no = round(3000.0 / mbl, 4)
@@ -157,6 +161,7 @@ def test_repo_root_walk_bounded_sentinel_via_delegation(tmp_path, monkeypatch):
     Bounded-walk sentinel is verified per-resolver-test at
     tests/citations/test_resolver.py::test_resolver_parent_walk_has_sentinel."""
     from digitalmodel.citations import resolver as _resolver
+
     deep = tmp_path
     for i in range(20):
         deep = deep / f"d{i}"
@@ -165,6 +170,7 @@ def test_repo_root_walk_bounded_sentinel_via_delegation(tmp_path, monkeypatch):
     fake_file.write_text("# fake")
     monkeypatch.setattr(_resolver, "__file__", str(fake_file))
     import time
+
     start = time.monotonic()
     result = md._default_repo_root()
     elapsed = time.monotonic() - start
@@ -207,7 +213,9 @@ def test_repo_root_llm_wiki_path_takes_precedence_over_legacy(monkeypatch, tmp_p
     monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
     monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(tmp_path / "garbage"))
     with warnings.catch_warnings():
-        warnings.simplefilter("error", DeprecationWarning)  # any DeprecationWarning fails the test
+        warnings.simplefilter(
+            "error", DeprecationWarning
+        )  # any DeprecationWarning fails the test
         assert md._default_repo_root() == fixture
 
 
@@ -228,10 +236,18 @@ def test_wiki_page_frontmatter_matches_template():
     knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md has drifted from
     the citation template — fail-closed at calc time would catch it but this
     test gives a clear localized signal."""
-    # Walk from this file up to workspace-hub (must find knowledge/wikis/)
+    # Walk from this file up to workspace-hub (must find the production page).
     here = Path(__file__).resolve()
     for parent in [here, *here.parents][:8]:
-        if (parent / "knowledge" / "wikis").is_dir():
+        if (
+            parent
+            / "knowledge"
+            / "wikis"
+            / "engineering"
+            / "wiki"
+            / "standards"
+            / "dnv-os-e301.md"
+        ).is_file():
             workspace_root = parent
             break
     else:

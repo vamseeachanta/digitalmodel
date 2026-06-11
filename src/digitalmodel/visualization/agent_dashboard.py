@@ -13,7 +13,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List
+from typing import Optional
 import webbrowser
 
 
@@ -347,8 +347,12 @@ class AgentDashboard:
         if self.df is None:
             self.load_data()
 
-        # Filter data
+        # Filter data. If callers omit the date range and the default rolling
+        # window has no samples, fall back to the full dataset.
+        using_default_date_range = start_date is None and end_date is None
         filtered_df = self.filter_by_date(start_date, end_date)
+        if filtered_df.empty and using_default_date_range:
+            filtered_df = self.df
 
         if filtered_df.empty:
             raise ValueError("No data in selected date range")
@@ -423,9 +427,9 @@ class AgentDashboard:
             (cost_analysis, "cost-analysis")
         ]:
             html_parts.extend([
-                f"    <div class='chart-container'>",
+                "    <div class='chart-container'>",
                 f"        <div id='{chart_id}'></div>",
-                f"    </div>",
+                "    </div>",
             ])
 
         html_parts.extend([

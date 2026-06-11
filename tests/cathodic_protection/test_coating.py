@@ -23,6 +23,19 @@ def test_fbe_breakdown_factors_25yr():
     assert result.mean_factor == pytest.approx(0.0575, abs=0.001)
 
 
+def test_coating_breakdown_result_carries_b401_citation():
+    """Standards-derived coating constants include citation metadata."""
+    result = coating_breakdown_factors(
+        coating_type=CoatingCategory.FBE,
+        design_life_years=25.0,
+    )
+
+    assert result.citation is not None
+    assert result.citation.code_id == "dnv-rp-b401"
+    assert result.citation.publisher == "DNV"
+    assert result.citation.section.startswith("§10.7")
+
+
 def test_3lpe_coating_low_degradation():
     """3-layer PE has lower degradation than FBE: a=0.01, b=0.002/yr."""
     result = coating_breakdown_factors(

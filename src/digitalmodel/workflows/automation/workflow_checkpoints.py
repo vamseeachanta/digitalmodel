@@ -1,7 +1,6 @@
 # ABOUTME: Workflow checkpoint management system for capturing and restoring workflow state
 # Provides automatic checkpointing before SPARC phases with git, memory, and file snapshots
 
-import asyncio
 import gzip
 import json
 import os
@@ -152,6 +151,19 @@ class WorkflowCheckpointManager:
                 "on_session_end": True,
             },
         }
+
+    def _current_timestamp(self) -> str:
+        """Return a filesystem-safe timestamp precise enough for rapid checkpoints."""
+        return datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+
+    def _parse_timestamp(self, timestamp: str) -> datetime:
+        """Parse current and legacy checkpoint timestamp formats."""
+        for timestamp_format in ("%Y%m%d_%H%M%S_%f", "%Y%m%d_%H%M%S"):
+            try:
+                return datetime.strptime(timestamp, timestamp_format)
+            except ValueError:
+                continue
+        raise ValueError(f"Unsupported checkpoint timestamp: {timestamp}")
 
     def _get_git_state(self) -> GitState:
         """Capture current git state."""
@@ -385,7 +397,7 @@ class WorkflowCheckpointManager:
             logger.info("Checkpoints disabled via environment variable")
             return ""
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = self._current_timestamp()
         checkpoint_id = f"{workflow_id}_{phase}_{timestamp}"
 
         logger.info(f"Creating checkpoint: {checkpoint_id}")
@@ -587,9 +599,7 @@ class WorkflowCheckpointManager:
                         data = json.load(f)
 
                     # Reconstruct metadata
-                    checkpoint_time = datetime.strptime(
-                        data["timestamp"], "%Y%m%d_%H%M%S"
-                    )
+                    checkpoint_time = self._parse_timestamp(data["timestamp"])
 
                     # Filter by date
                     if date_from and checkpoint_time < date_from:
@@ -660,7 +670,7 @@ class WorkflowCheckpointManager:
         cutoff_date = datetime.now() - timedelta(days=retention_days)
 
         # Group checkpoints by workflow
-        workflow_checkpoints: Dict[str, List[tuple[Path, CheckpointMetadata]]] = {}
+        workflow_checkpoints: Dict[str, List[tuple[Path, datetime]]] = {}
 
         for workflow_dir in self.checkpoint_dir.iterdir():
             if not workflow_dir.is_dir():
@@ -684,9 +694,7 @@ class WorkflowCheckpointManager:
                     stats["total_checkpoints"] += 1
 
                     # Parse metadata
-                    checkpoint_time = datetime.strptime(
-                        data["timestamp"], "%Y%m%d_%H%M%S"
-                    )
+                    checkpoint_time = self._parse_timestamp(data["timestamp"])
                     has_tags = bool(data.get("tags"))
 
                     # Keep if tagged
