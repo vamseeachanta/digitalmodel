@@ -289,3 +289,117 @@ def test_coating_breakdown_result_schema_requires_metadata_fields():
 
     assert "edition_used" in required
     assert "standard" in required
+
+
+def _sample_marine_cp_input():
+    from digitalmodel.cathodic_protection.marine_cp import (
+        MarineCPInput,
+        Zone,
+        ZoneType,
+    )
+
+    return MarineCPInput(
+        structure_name="Edition Test Jacket",
+        zones=[
+            Zone(
+                name="submerged",
+                zone_type=ZoneType.SUBMERGED,
+                surface_area_m2=3000.0,
+                coating_breakdown_factor=0.05,
+            ),
+            Zone(
+                name="mudline",
+                zone_type=ZoneType.MUDLINE,
+                surface_area_m2=800.0,
+                coating_breakdown_factor=1.0,
+            ),
+        ],
+        water_temperature_c=8.0,
+        water_depth_m=100.0,
+        design_life_years=25.0,
+        anode_net_mass_kg=250.0,
+        anode_capacity_Ah_kg=2000.0,
+        utilization_factor=0.90,
+    )
+
+
+def test_design_marine_cp_accepts_edition_kwarg():
+    from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
+
+    signature = inspect.signature(design_marine_cp)
+
+    assert "edition" in signature.parameters
+
+
+def test_design_marine_cp_result_carries_explicit_edition_metadata():
+    from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
+
+    result = design_marine_cp(_sample_marine_cp_input(), edition="2017")
+
+    assert result.edition_used == "2017"
+    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+
+
+def test_design_marine_cp_missing_edition_warns_and_defaults_metadata():
+    from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
+        result = design_marine_cp(_sample_marine_cp_input())
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_design_marine_cp_explicit_edition_preserves_p1_numerics():
+    from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
+
+    legacy = design_marine_cp(_sample_marine_cp_input(), edition="2017")
+    current = design_marine_cp(_sample_marine_cp_input(), edition="2021")
+
+    assert current.total_current_demand_A == pytest.approx(
+        legacy.total_current_demand_A
+    )
+    assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
+    assert current.number_of_anodes == legacy.number_of_anodes
+    assert current.zone_demands == legacy.zone_demands
+
+
+def test_marine_cp_result_defaults_metadata_for_legacy_dicts():
+    from digitalmodel.cathodic_protection.marine_cp import MarineCPResult
+
+    result = MarineCPResult(
+        structure_name="legacy",
+        total_current_demand_A=31.0,
+        total_anode_mass_kg=3771.0,
+        number_of_anodes=16,
+        zone_demands=[],
+        design_life_years=25.0,
+    )
+
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_marine_cp_result_rejects_invalid_metadata_with_validation_error():
+    from digitalmodel.cathodic_protection.marine_cp import MarineCPResult
+
+    with pytest.raises(ValidationError, match="edition_used"):
+        MarineCPResult(
+            structure_name="invalid",
+            total_current_demand_A=31.0,
+            total_anode_mass_kg=3771.0,
+            number_of_anodes=16,
+            zone_demands=[],
+            design_life_years=25.0,
+            edition_used="2025",
+        )
+
+
+def test_marine_cp_result_schema_requires_metadata_fields():
+    from digitalmodel.cathodic_protection.marine_cp import MarineCPResult
+
+    required = set(MarineCPResult.model_json_schema()["required"])
+
+    assert "edition_used" in required
+    assert "standard" in required
