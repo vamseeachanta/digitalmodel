@@ -1,0 +1,122 @@
+metadata:
+  code_id: api-rp-2sm
+  publisher: API
+  revision: 2001+2007
+  source_note: >
+    Bounded preliminary-screening defaults for issue 584. Values are local
+    engineering defaults with API RP 2SM citation sidecars; project/vendor data
+    should replace them for final design.
+
+default_profile_keys:
+  polyester: 160mm_polyester
+  hmpe: 180mm_hmpe
+  nylon: 160mm_nylon
+  aramid: 160mm_aramid
+
+fatigue_event_thresholds:
+  limited:
+    watch: 100000
+    critical: 1000000
+  moderate:
+    watch: 250000
+    critical: 2000000
+  good:
+    watch: 1000000
+    critical: 5000000
+
+profiles:
+  160mm_polyester:
+    material: polyester
+    nominal_diameter_mm: 160
+    mass_per_unit_length_kg_m: 18.5
+    submerged_weight_n_m: 7.5
+    mbl_kn: 8500.0
+    axial_stiffness_kn: 200000.0
+    cd_normal: 1.2
+    synthetic_stiffness:
+      static_stiffness_kn: 180000.0
+      dynamic_storm_stiffness_kn: 320000.0
+      post_installation_stiffness_kn: 225000.0
+      mean_load_factor: 1.10
+    synthetic_properties:
+      creep_rate_pct_per_decade: 0.35
+      abrasion_resistance_class: good
+      torque_match_class: balanced
+      bend_over_sheave_min_dia_ratio: 8.0
+      axial_compression_fatigue_resistance: limited
+  220mm_polyester:
+    material: polyester
+    nominal_diameter_mm: 220
+    mass_per_unit_length_kg_m: 35.0
+    submerged_weight_n_m: 14.0
+    mbl_kn: 16000.0
+    axial_stiffness_kn: 400000.0
+    cd_normal: 1.2
+    synthetic_stiffness:
+      static_stiffness_kn: 340000.0
+      dynamic_storm_stiffness_kn: 620000.0
+      post_installation_stiffness_kn: 450000.0
+      mean_load_factor: 1.10
+    synthetic_properties:
+      creep_rate_pct_per_decade: 0.35
+      abrasion_resistance_class: good
+      torque_match_class: balanced
+      bend_over_sheave_min_dia_ratio: 8.0
+      axial_compression_fatigue_resistance: limited
+  180mm_hmpe:
+    material: hmpe
+    nominal_diameter_mm: 180
+    mass_per_unit_length_kg_m: 19.8
+    submerged_weight_n_m: -11.0
+    mbl_kn: 15300.0
+    axial_stiffness_kn: 900000.0
+    cd_normal: 1.2
+    synthetic_stiffness:
+      static_stiffness_kn: 820000.0
+      dynamic_storm_stiffness_kn: 1050000.0
+      post_installation_stiffness_kn: 900000.0
+      mean_load_factor: 1.04
+    synthetic_properties:
+      creep_rate_pct_per_decade: 1.20
+      abrasion_resistance_class: poor_without_jacket
+      torque_match_class: balanced
+      bend_over_sheave_min_dia_ratio: 10.0
+      axial_compression_fatigue_resistance: good
+  160mm_nylon:
+    material: nylon
+    nominal_diameter_mm: 160
+    mass_per_unit_length_kg_m: 15.3
+    submerged_weight_n_m: 1.5
+    mbl_kn: 3840.0
+    axial_stiffness_kn: 75000.0
+    cd_normal: 1.2
+    synthetic_stiffness:
+      static_stiffness_kn: 65000.0
+      dynamic_storm_stiffness_kn: 95000.0
+      post_installation_stiffness_kn: 75000.0
+      mean_load_factor: 1.08
+    synthetic_properties:
+      creep_rate_pct_per_decade: 0.20
+      abrasion_resistance_class: excellent
+      torque_match_class: balanced
+      bend_over_sheave_min_dia_ratio: 8.0
+      axial_compression_fatigue_resistance: good
+  160mm_aramid:
+    material: aramid
+    nominal_diameter_mm: 160
+    mass_per_unit_length_kg_m: 19.3
+    submerged_weight_n_m: 5.6
+    mbl_kn: 9800.0
+    axial_stiffness_kn: 760000.0
+    cd_normal: 1.2
+    synthetic_stiffness:
+      static_stiffness_kn: 710000.0
+      dynamic_storm_stiffness_kn: 890000.0
+      post_installation_stiffness_kn: 760000.0
+      mean_load_factor: 1.03
+    synthetic_properties:
+      creep_rate_pct_per_decade: 0.10
+      abrasion_resistance_class: moderate
+      torque_match_class: balanced
+      bend_over_sheave_min_dia_ratio: 12.0
+      axial_compression_fatigue_resistance: moderate
