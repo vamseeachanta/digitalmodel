@@ -16,9 +16,9 @@ examples/
 
 ## Collection Status
 
-- **Total Examples**: [To be populated]
-- **Categories**: [To be populated]
-- **Last Updated**: 2024-12-19
+- **Total Examples**: 55 indexed examples
+- **Categories**: 13 portal categories
+- **Last Updated**: 2026-06-10
 
 ## Usage
 

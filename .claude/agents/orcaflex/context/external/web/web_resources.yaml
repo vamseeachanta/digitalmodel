@@ -18,6 +18,12 @@ user_added_links:
   type: user_added
   url: https://www.orcina.com/resources/examples/
 - added_by: user
+  date_added: '2026-06-10T19:21:24-05:00'
+  notes: L07 Wave drift load analysis; new Orcina diffraction example posted 2026-06-08
+  title: L07 Wave drift load analysis
+  type: user_added
+  url: https://www.orcina.com/resources/examples/?key=l#50
+- added_by: user
   date_added: '2025-08-10T18:00:55.124906'
   notes: OrcaFlex Python API documentation
   title: https://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/htm/index.htm

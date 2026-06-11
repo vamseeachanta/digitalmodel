@@ -1,6 +1,6 @@
 # Web Resources Review
 
-Generated: 2025-08-10 18:01:42
+Generated: 2026-06-10 19:21:24
 
 Module: orcaflex
 
@@ -12,6 +12,9 @@ Module: orcaflex
 - ✅ https://www.orcina.com/resources/examples/
   Notes: OrcaFlex example models and case studies
   Added: 2025-08-10T18:00:50.834108
+- ✅ https://www.orcina.com/resources/examples/?key=l#50
+  Notes: L07 Wave drift load analysis; new Orcina diffraction example posted 2026-06-08
+  Added: 2026-06-10T19:21:24-05:00
 - ✅ https://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/htm/index.htm
   Notes: OrcaFlex Python API documentation
   Added: 2025-08-10T18:00:55.124906
