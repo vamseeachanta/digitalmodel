@@ -18,13 +18,31 @@ FULL_MATRIX_PREFIXES = (
 )
 FULL_MATRIX_PATHS = {
     ".claude/quality-gates.yaml",
-    ".github/workflows/quality-gates-by-domain.yml",
     "tests/DOMAINS.md",
     "tests/conftest.py",
-    "scripts/ci/detect_touched_domains.py",
     "pytest.ini",
     "pyproject.toml",
 }
+DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("src/digitalmodel/citations/", ("citations",)),
+    (
+        "src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py",
+        ("cathodic-protection",),
+    ),
+    ("tests/benchmarks/test_cp_benchmarks.py", ("cathodic-protection",)),
+    ("tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py", ("cathodic-protection",)),
+    ("tests/orcaflex/test_mooring_design_citations.py", ("citations",)),
+    ("tests/specialized/cathodic_protection/", ("cathodic-protection",)),
+)
+NO_DOMAIN_PATHS = (
+    ".github/workflows/quality-gates.yml",
+    ".github/workflows/quality-gates-by-domain.yml",
+    "scripts/ci/detect_touched_domains.py",
+    "src/digitalmodel/workflows/automation/quality_gates.py",
+    "tests/scripts/test_detect_touched_domains.py",
+    "tests/workflows/automation/test_quality_gates.py",
+    "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py",
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +96,18 @@ def is_full_matrix_trigger(path: str) -> bool:
     )
 
 
+def mapped_domain_names(path: str) -> set[str]:
+    names: set[str] = set()
+    for domain_path, domain_names in DOMAIN_PATHS:
+        if path_matches_root(path, domain_path):
+            names.update(domain_names)
+    return names
+
+
+def is_no_domain_path(path: str) -> bool:
+    return any(path_matches_root(path, ignored_path) for ignored_path in NO_DOMAIN_PATHS)
+
+
 def path_matches_root(path: str, root: str) -> bool:
     normalized_path = path[2:] if path.startswith("./") else path
     normalized_root = root.rstrip("/")
@@ -87,18 +117,23 @@ def path_matches_root(path: str, root: str) -> bool:
 
 
 def touched_domains(changed_files: list[str], domains: list[Domain]) -> list[Domain]:
-    if any(is_full_matrix_trigger(path) for path in changed_files):
-        return domains
+    selected_names: set[str] = set()
+    for path in changed_files:
+        if is_no_domain_path(path):
+            continue
 
-    selected: list[Domain] = []
-    for domain in domains:
-        if any(
-            path_matches_root(path, root)
-            for path in changed_files
-            for root in domain.roots
-        ):
-            selected.append(domain)
-    return selected
+        domain_names = mapped_domain_names(path)
+        if domain_names:
+            selected_names.update(domain_names)
+            continue
+        if is_full_matrix_trigger(path):
+            return domains
+
+        for domain in domains:
+            if any(path_matches_root(path, root) for root in domain.roots):
+                selected_names.add(domain.name)
+
+    return [domain for domain in domains if domain.name in selected_names]
 
 
 def matrix_for(domains: list[Domain]) -> dict[str, list[dict[str, str]]]:
