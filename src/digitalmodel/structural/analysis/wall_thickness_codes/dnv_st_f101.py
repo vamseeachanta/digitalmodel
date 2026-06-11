@@ -215,9 +215,14 @@ class DnvStF101Strategy:
         def g(pc):
             return (pc - p_el) * (pc**2 - p_p**2) - pc * coeff
 
-        lo, hi = 0.0, max(p_el, p_p) * 1.5
-        if g(lo) * g(hi) > 0:
-            hi = max(p_el, p_p) * 3.0
+        # The physical (smallest positive) root always lies in
+        # (0, min(p_el, p_p)) — collapse cannot exceed either the elastic or
+        # the plastic limit: g(0) = p_el*p_p^2 > 0 and
+        # g(min(p_el, p_p)) = -min(p_el, p_p)*coeff < 0, so this bracket is
+        # always valid. The previous bracket (0, max(p_el, p_p)*1.5) converged
+        # to a spurious high root of the cubic whenever p_p > p_el (deepwater,
+        # thin t2/D), overstating collapse resistance ~5x (deckhand#227).
+        lo, hi = 0.0, min(p_el, p_p)
 
         for _ in range(max_iter):
             mid = (lo + hi) / 2
