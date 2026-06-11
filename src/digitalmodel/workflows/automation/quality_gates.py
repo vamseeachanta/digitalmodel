@@ -5,8 +5,8 @@ Implements linear gate execution (tests → coverage → quality → security �
 
 import ast
 import json
+import os
 import subprocess
-import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -175,7 +175,7 @@ class QualityGateValidator:
         for dep in dependencies:
             if dep not in completed_gates:
                 return False
-            if completed_gates[dep] == GateStatus.FAILURE:
+            if completed_gates[dep] not in (GateStatus.PASS, GateStatus.WARNING):
                 return False
 
         return True
@@ -183,6 +183,18 @@ class QualityGateValidator:
     def _execute_gate(self, gate_name: str, gate_config: Dict[str, Any]) -> GateResult:
         """Execute a single quality gate."""
         try:
+            if self._should_delegate_domain_gate_to_ci(gate_name, gate_config):
+                return GateResult(
+                    gate_name=gate_name,
+                    status=GateStatus.SKIPPED,
+                    message="Domain-sharded test gate runs in quality-gates-by-domain workflow",
+                )
+            if self._should_delegate_aggregate_gate_to_ci(gate_config):
+                return GateResult(
+                    gate_name=gate_name,
+                    status=GateStatus.SKIPPED,
+                    message="Aggregate domain gate is handled by quality-gates-by-domain workflow",
+                )
             if gate_name == "tests":
                 return self._execute_tests_gate(gate_config)
             elif gate_name == "coverage":
@@ -207,6 +219,23 @@ class QualityGateValidator:
                 message=f"Execution error: {str(e)}",
                 errors=[str(e)],
             )
+
+    def _should_delegate_domain_gate_to_ci(
+        self, gate_name: str, gate_config: Dict[str, Any]
+    ) -> bool:
+        """Skip domain-sharded test gates in aggregate GitHub Actions jobs."""
+        return (
+            os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+            and gate_name.startswith("tests-")
+            and "domain" in gate_config
+        )
+
+    def _should_delegate_aggregate_gate_to_ci(self, gate_config: Dict[str, Any]) -> bool:
+        """Skip aggregate markers in aggregate GitHub Actions jobs."""
+        return (
+            os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+            and gate_config.get("aggregate") is True
+        )
 
     def _execute_tests_gate(self, config: Dict[str, Any]) -> GateResult:
         """Execute tests gate."""
@@ -466,7 +495,7 @@ class QualityGateValidator:
             output_file = self.reports_dir / "bandit_report.json"
 
             # Run bandit
-            result = subprocess.run(
+            subprocess.run(
                 [
                     "bandit",
                     "-r",
@@ -782,7 +811,7 @@ class QualityGateValidator:
 
             # Print metrics if available
             if result.metrics and self.config["settings"]["cli"].get("show_details", True):
-                print(f"  Metrics:")
+                print("  Metrics:")
                 for key, value in result.metrics.items():
                     if isinstance(value, float):
                         print(f"    • {key}: {value:.2f}")

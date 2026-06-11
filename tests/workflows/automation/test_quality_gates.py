@@ -4,8 +4,7 @@ Tests each gate type: tests, coverage, quality, security, documentation.
 """
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -178,6 +177,92 @@ class TestQualityGateValidator:
         assert result.gate_name == "tests"
         assert result.status == GateStatus.FAILURE
         assert result.metrics["exit_code"] == 1
+
+    @patch("subprocess.run")
+    def test_domain_sharded_gate_skips_in_github_actions(self, mock_run, validator, monkeypatch):
+        """Aggregate CI must not serially execute domain-sharded test gates."""
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+
+        result = validator._execute_gate(
+            "tests-cathodic-protection",
+            {
+                "domain": "cathodic-protection",
+                "command": "pytest tests/cathodic_protection",
+            },
+        )
+
+        assert result.gate_name == "tests-cathodic-protection"
+        assert result.status == GateStatus.SKIPPED
+        assert "quality-gates-by-domain" in result.message
+        mock_run.assert_not_called()
+
+    def test_execute_all_skips_domain_gates_and_dependents_in_github_actions(
+        self, tmp_path, monkeypatch
+    ):
+        """Aggregate CI delegates domain gates and skips gates needing their artifacts."""
+        import yaml
+
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        config = {
+            "gates": {
+                "tests-citations": {
+                    "enabled": True,
+                    "order": 1,
+                    "domain": "citations",
+                    "command": "pytest tests/citations",
+                },
+                "tests-all": {
+                    "enabled": True,
+                    "order": 2,
+                    "aggregate": True,
+                    "depends_on": ["tests-citations"],
+                    "command": "python -c 'print(\"domain test gates complete\")'",
+                },
+                "coverage": {
+                    "enabled": True,
+                    "order": 3,
+                    "depends_on": ["tests-all"],
+                    "output_file": "coverage.json",
+                },
+                "documentation": {
+                    "enabled": True,
+                    "order": 4,
+                    "threshold": 75.0,
+                    "scan_paths": ["src/digitalmodel"],
+                    "exclude_paths": [],
+                },
+            },
+            "settings": {
+                "execution_mode": "dag",
+                "cli": {"strict_mode": False, "verbose": True, "show_details": True},
+                "pre_commit": {"enabled": True, "strict_mode": True, "fail_fast": True},
+                "ci_cd": {
+                    "enabled": True,
+                    "export_results": True,
+                    "result_file": "reports/quality_gates_results.json",
+                },
+                "reporting": {"console": {"enabled": True}, "json": {"enabled": True}},
+                "paths": {
+                    "source_root": "src",
+                    "test_root": "tests",
+                    "reports_dir": "reports",
+                },
+            },
+        }
+        config_file = tmp_path / ".claude" / "quality-gates.yaml"
+        config_file.parent.mkdir(parents=True)
+        config_file.write_text(yaml.dump(config), encoding="utf-8")
+
+        with patch("digitalmodel.workflows.automation.quality_gates.Path.cwd", return_value=tmp_path):
+            validator = QualityGateValidator(config_path=config_file)
+            report = validator.execute_all_gates()
+
+        statuses = {result.gate_name: result.status for result in report.results}
+        assert statuses["tests-citations"] == GateStatus.SKIPPED
+        assert statuses["tests-all"] == GateStatus.SKIPPED
+        assert statuses["coverage"] == GateStatus.SKIPPED
+        assert statuses["documentation"] == GateStatus.PASS
+        assert report.overall_status == GateStatus.PASS
 
     @patch("subprocess.run")
     def test_execute_tests_gate_writes_full_log(self, mock_run, validator, tmp_path):
