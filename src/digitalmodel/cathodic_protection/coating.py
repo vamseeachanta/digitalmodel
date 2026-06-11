@@ -15,9 +15,16 @@ References
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+    standard_for_edition,
+)
 
 
 class CoatingCategory(str, Enum):
@@ -76,6 +83,28 @@ class CoatingBreakdownResult(BaseModel):
         ..., ge=0.0, le=1.0, description="Breakdown factor at end of design life"
     )
     design_life_years: float = Field(..., gt=0, description="Design life [years]")
+    edition_used: Edition = Field(
+        ..., description="DNV-RP-B401 edition used for the coating calculation"
+    )
+    standard: str = Field(
+        ..., description="Standards reference matching the selected edition"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_legacy_metadata(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        values = dict(data)
+        edition = values.get("edition_used") or DEFAULT_EDITION
+        values["edition_used"] = edition
+        if not values.get("standard"):
+            try:
+                values["standard"] = standard_for_edition(edition)
+            except KeyError:
+                pass
+        return values
 
 
 class CoatingLifeResult(BaseModel):
@@ -100,6 +129,7 @@ def coating_breakdown_factors(
     design_life_years: float = 25.0,
     depth_m: float = 0.0,
     temperature_c: float = 20.0,
+    edition: Edition | None = None,
 ) -> CoatingBreakdownResult:
     """Calculate initial, mean, and final coating breakdown factors.
 
@@ -127,6 +157,7 @@ def coating_breakdown_factors(
     CoatingBreakdownResult
         Initial, mean, and final breakdown factors.
     """
+    ed = normalize_edition(edition, stacklevel=3)
     a, b = COATING_CONSTANTS[coating_type]
 
     # Temperature correction: increase degradation rate by 2% per °C above 25°C
@@ -149,6 +180,8 @@ def coating_breakdown_factors(
         mean_factor=fc_mean,
         final_factor=fc_final,
         design_life_years=design_life_years,
+        edition_used=ed,
+        standard=standard_for_edition(ed),
     )
 
 

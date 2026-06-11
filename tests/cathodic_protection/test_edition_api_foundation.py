@@ -203,3 +203,89 @@ def test_anode_sizing_result_schema_requires_metadata_fields():
 
     assert "edition_used" in required
     assert "standard" in required
+
+
+def test_coating_breakdown_factors_accepts_edition_kwarg():
+    from digitalmodel.cathodic_protection.coating import coating_breakdown_factors
+
+    signature = inspect.signature(coating_breakdown_factors)
+
+    assert "edition" in signature.parameters
+
+
+def test_coating_breakdown_result_carries_explicit_edition_metadata():
+    from digitalmodel.cathodic_protection.coating import (
+        CoatingCategory,
+        coating_breakdown_factors,
+    )
+
+    result = coating_breakdown_factors(CoatingCategory.FBE, edition="2017")
+
+    assert result.edition_used == "2017"
+    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+
+
+def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
+    from digitalmodel.cathodic_protection.coating import (
+        CoatingCategory,
+        coating_breakdown_factors,
+    )
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
+        result = coating_breakdown_factors(CoatingCategory.FBE)
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_coating_breakdown_explicit_edition_preserves_p1_numerics():
+    from digitalmodel.cathodic_protection.coating import (
+        CoatingCategory,
+        coating_breakdown_factors,
+    )
+
+    legacy = coating_breakdown_factors(CoatingCategory.FBE, edition="2017")
+    current = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
+
+    assert current.initial_factor == pytest.approx(legacy.initial_factor)
+    assert current.mean_factor == pytest.approx(legacy.mean_factor)
+    assert current.final_factor == pytest.approx(legacy.final_factor)
+
+
+def test_coating_breakdown_result_defaults_metadata_for_legacy_dicts():
+    from digitalmodel.cathodic_protection.coating import CoatingBreakdownResult
+
+    result = CoatingBreakdownResult(
+        coating_type="fbe",
+        initial_factor=0.02,
+        mean_factor=0.0575,
+        final_factor=0.095,
+        design_life_years=25.0,
+    )
+
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_coating_breakdown_result_rejects_invalid_metadata_with_validation_error():
+    from digitalmodel.cathodic_protection.coating import CoatingBreakdownResult
+
+    with pytest.raises(ValidationError, match="edition_used"):
+        CoatingBreakdownResult(
+            coating_type="fbe",
+            initial_factor=0.02,
+            mean_factor=0.0575,
+            final_factor=0.095,
+            design_life_years=25.0,
+            edition_used="2025",
+        )
+
+
+def test_coating_breakdown_result_schema_requires_metadata_fields():
+    from digitalmodel.cathodic_protection.coating import CoatingBreakdownResult
+
+    required = set(CoatingBreakdownResult.model_json_schema()["required"])
+
+    assert "edition_used" in required
+    assert "standard" in required
