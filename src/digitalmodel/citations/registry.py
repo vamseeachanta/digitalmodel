@@ -30,6 +30,13 @@ _DNV_OS_E301_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering/wiki/standards/dnv-os-e301.md",
 }
 
+_DNV_RP_F103_CITATION_TEMPLATE: Final = {
+    "code_id": "dnv-rp-f103",
+    "publisher": "DNV",
+    "revision": "2010",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103.md",
+}
+
 # DNV-OS-E301 Section 2.2 design load factors for mooring systems.
 # Values are industry-standard and also appear in API RP 2SK Table C-1.
 _MOORING_SAFETY_FACTORS: Final[dict[MooringCondition, tuple[float, str]]] = {
@@ -58,3 +65,21 @@ def get_mooring_safety_factor(
     )
     validate_citation(citation, repo_root=repo_root)
     return CitedValue(value=value, citation=citation, units="dimensionless")
+
+
+def get_dnv_f103_reference(
+    section: str, *, note: str = "", repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Return a validated DNV-RP-F103 reference citation.
+
+    Use for F103 calculations whose numeric values come from multiple standard
+    locations instead of one scalar constant. The value is a sentinel; the
+    citation is the payload.
+    """
+    citation = Citation(
+        section=section,
+        note=note,
+        **_DNV_RP_F103_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")

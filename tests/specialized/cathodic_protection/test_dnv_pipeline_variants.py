@@ -1,5 +1,6 @@
 # Standard library imports
 import math
+from pathlib import Path
 
 # Third party imports
 import pytest  # noqa
@@ -12,6 +13,10 @@ from digitalmodel.infrastructure.common.cathodic_protection import CathodicProte
 # Helper — minimal valid DNV_RP_F103_2010 configuration
 # ---------------------------------------------------------------------------
 
+def _citation_fixture_root() -> Path:
+    return Path(__file__).resolve().parents[2] / "citations" / "fixtures"
+
+
 def _minimal_dnv_cfg(
     burial_condition="buried",
     internal_fluid_temp_c=20.0,
@@ -21,6 +26,7 @@ def _minimal_dnv_cfg(
 ):
     """Return a minimal valid DNV_RP_F103_2010 configuration dictionary."""
     return {
+        "citation_repo_root": str(_citation_fixture_root()),
         "inputs": {
             "calculation_type": "DNV_RP_F103_2010",
             "design_data": {"design_life": design_life},
@@ -306,6 +312,7 @@ def test_dnv_pipeline_variant_router_24in_buried_FBE():
     I_cm = 1916.4 * 0.01375 * 0.020 = 0.527 A
     """
     cfg = {
+        "citation_repo_root": str(_citation_fixture_root()),
         "inputs": {
             "calculation_type": "DNV_RP_F103_2010",
             "design_data": {"design_life": 25.0},
