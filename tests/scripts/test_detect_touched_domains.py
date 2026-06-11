@@ -5,6 +5,8 @@ import sys
 import textwrap
 from pathlib import Path
 
+import yaml
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
 
@@ -380,3 +382,11 @@ def test_unmapped_change_outputs_empty_matrix(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == {"include": []}
+
+
+def test_quality_gate_workflows_parse() -> None:
+    for workflow in (
+        Path(".github/workflows/quality-gates.yml"),
+        Path(".github/workflows/quality-gates-by-domain.yml"),
+    ):
+        assert yaml.safe_load(workflow.read_text())

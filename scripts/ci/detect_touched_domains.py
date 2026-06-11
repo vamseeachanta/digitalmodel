@@ -35,6 +35,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("tests/specialized/cathodic_protection/", ("cathodic-protection",)),
 )
 NO_DOMAIN_PATHS = (
+    # These paths are covered by the Quality Gates by Domain
+    # ci-harness-tests job instead of the domain matrix.
     ".github/workflows/quality-gates.yml",
     ".github/workflows/quality-gates-by-domain.yml",
     "scripts/ci/detect_touched_domains.py",

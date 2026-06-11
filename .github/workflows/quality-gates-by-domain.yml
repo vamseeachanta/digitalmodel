@@ -56,7 +56,7 @@ jobs:
           echo "has_domains=$has_domains" >> "$GITHUB_OUTPUT"
 
   ci-harness-tests:
-    name: CI harness detector tests
+    name: CI harness and compliance tests
     needs: detect-domains
     runs-on: ubuntu-latest
     steps:
@@ -71,8 +71,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Run detector tests
-        run: uv run --no-sources --with-editable . python -m pytest tests/scripts/test_detect_touched_domains.py -q --tb=line
+      - name: Run harness tests
+        run: |
+          uv run --no-sources --with-editable . python -m pytest \
+            tests/scripts/test_detect_touched_domains.py \
+            tests/workflows/automation/test_quality_gates.py \
+            tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py::test_no_client_identifiers_in_visualization_package_sources \
+            -q --tb=line
 
   domain-tests:
     name: tests-${{ matrix.domain }}
