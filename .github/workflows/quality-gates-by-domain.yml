@@ -76,7 +76,7 @@ jobs:
           uv run --no-sources --with-editable . python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
             tests/workflows/automation/test_quality_gates.py \
-            tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py::test_no_client_identifiers_in_visualization_package_sources \
+            tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py \
             -q --tb=line
 
   domain-tests:
