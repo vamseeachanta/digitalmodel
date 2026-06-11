@@ -28,6 +28,12 @@
 | [winches-data.md](winches-data.md) | Winch data properties |
 | [winches-wire-properties.md](winches-wire-properties.md) | Winch wire properties |
 
+## Related Orcina Examples
+
+| File | Description |
+|------|-------------|
+| [Orcina L07 wave drift load analysis](../../orcawave/reference/orcina-l07-wave-drift-load-analysis.md) | Full QTF wave drift load example using OrcaWave and OrcaFlex |
+
 ## Not Yet Available
 
 These pages could not be fetched. Run the script again or download manually:

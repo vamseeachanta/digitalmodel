@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-08-20T12:13:39.819860",
+  "last_updated": "2026-06-10T19:21:24-05:00",
   "letter_categories": {
     "a": {
       "url": "https://www.orcina.com/resources/examples/?key=a",
@@ -58,8 +58,8 @@
     },
     "l": {
       "url": "https://www.orcina.com/resources/examples/?key=l",
-      "zip_count": 5,
-      "last_checked": "2025-08-20T12:12:14.805597"
+      "zip_count": 7,
+      "last_checked": "2026-06-10T19:21:24-05:00"
     },
     "z": {
       "url": "https://www.orcina.com/resources/examples/?key=z",
@@ -463,6 +463,17 @@
       "checksum": "5c51f300a91e605518d40c504355be78",
       "downloaded": "2025-08-20T12:13:38.838867",
       "path": "downloads/F01 Lowering hydrodynamics.zip"
+    },
+    "L07 Wave drift load analysis.zip": {
+      "url": "https://www.orcina.com/wp-content/uploads/examples/l/l07/L07 Wave drift load analysis.zip",
+      "category_code": "L07",
+      "category_letter": "L",
+      "source_letter": "L",
+      "description": "Wave drift load analysis",
+      "size_mb": 130.0,
+      "checksum": "b796e76899eb7a723787a833f2f314620d81f2843efdabd51a4b71f6bd1fb2cd",
+      "downloaded": "2026-06-10T19:21:24-05:00",
+      "path": "ace-share:digitalmodel/docs/orcaflex/data/examples/raw/L07/L07 Wave drift load analysis.zip"
     }
   },
   "examples": {
@@ -897,14 +908,22 @@
       "original_path": "F01 Trapped water.sim",
       "extracted_path": "raw/F01/F01 Trapped water.sim",
       "extracted": "2025-08-20T12:13:39.810629"
+    },
+    "L07 Wave drift load analysis.sim": {
+      "category": "L07",
+      "category_letter": "L",
+      "zip_file": "L07 Wave drift load analysis.zip",
+      "original_path": "L07 Wave drift load analysis.sim",
+      "extracted_path": "ace-share:digitalmodel/docs/orcaflex/data/examples/raw/L07/L07 Wave drift load analysis.zip!L07 Wave drift load analysis.sim",
+      "extracted": "2026-06-10T19:21:24-05:00"
     }
   },
   "statistics": {
-    "total_zips": 39,
-    "successful_downloads": 39,
+    "total_zips": 40,
+    "successful_downloads": 40,
     "failed_downloads": 0,
-    "total_extracted": 54,
-    "total_size_mb": 823.0,
+    "total_extracted": 55,
+    "total_size_mb": 953.0,
     "by_category": {
       "E": {
         "zips": 6,
@@ -923,8 +942,8 @@
         "files": 1
       },
       "L": {
-        "zips": 3,
-        "files": 3
+        "zips": 4,
+        "files": 4
       },
       "Z": {
         "zips": 2,

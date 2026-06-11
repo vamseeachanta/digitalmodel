@@ -179,12 +179,12 @@ model.SaveSimulation("output.sim")
 | File requirements | `docs/domains/orcaflex/FILE_REQUIREMENTS.md` | Format specs |
 | Human-friendly YAML | `docs/domains/orcaflex/HUMAN_FRIENDLY_YAML_FORMAT.md` | Readable format guide |
 | Batch YAML | `docs/domains/orcaflex/orcaflex-batch-yml.md` | Batch config format |
-| Examples catalog | `docs/domains/orcaflex/examples/catalog/` | 54 analyzed examples |
+| Examples catalog | `docs/domains/orcaflex/examples/catalog/` | 55 analyzed examples |
 | OrcaWave examples | `docs/domains/orcawave/examples/` | L01-L04 worked examples |
 | Batch processing notes | SKILL.md (orcaflex agent) | API integration learnings |
 
 ### Examples Knowledge Base
-- 54 official OrcaFlex examples analyzed
+- 55 official OrcaFlex examples analyzed
 - Index: `.claude/skills/engineering/orcaflex-agents/orcaflex/context/examples_index.json`
 - Knowledge: `.claude/skills/engineering/orcaflex-agents/orcaflex/context/examples_knowledge.json`
 - Summary: `.claude/skills/engineering/orcaflex-agents/orcaflex/context/examples_knowledge_summary.md`

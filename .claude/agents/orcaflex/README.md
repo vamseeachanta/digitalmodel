@@ -72,14 +72,14 @@ vessel = model.CreateObject(OrcFxAPI.otVessel, "FPSO")
 ## Internal Resources
 - `src/modules/hydrodynamics/` - Hydrodynamic calculation modules
 - `specs/modules/marine-engineering/` - Engineering specifications
-- `context/examples_knowledge.json` - Knowledge base from 54 OrcaFlex examples
+- `context/examples_knowledge.json` - Knowledge base from 55 OrcaFlex examples
 - `context/examples_index.json` - Searchable index for finding relevant examples
 - `context/examples_knowledge_summary.md` - Human-readable summary of examples
 
 ## Examples Knowledge Base
 
-The agent now has access to analyzed metadata from 54 official OrcaFlex examples:
-- **15 unique features** demonstrated (lazy wave, steep wave, SHEAR7 interface, etc.)
+The agent now has access to analyzed metadata from 55 official OrcaFlex examples:
+- **20 unique features** demonstrated (lazy wave, wave drift damping, full QTF loads, SHEAR7 interface, etc.)
 - **Multiple analysis types** covered (static, dynamic, fatigue, VIV, installation)
 - **Various components** modeled (vessels, risers, moorings, buoys)
 - **Searchable index** for finding relevant examples by criteria

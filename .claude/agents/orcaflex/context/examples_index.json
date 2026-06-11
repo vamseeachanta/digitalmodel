@@ -16,21 +16,25 @@
       "E02 Rigid hinged stinger with piggyback line.sim",
       "A05 Catenary with semisub.sim",
       "A05 Catenary with spar.sim",
-      "A05 Lazy wave with FPSO.sim"
+      "A05 Lazy wave with FPSO.sim",
+      "L07 Wave drift load analysis.sim"
     ],
     "buoys": [
       "C07 Metocean buoy in deep water.sim",
       "C06 CALM buoy.sim",
       "C06 Discretised CALM buoy.sim",
-      "H03 Floating and stowed lines.sim"
+      "H03 Floating and stowed lines.sim",
+      "L07 Wave drift load analysis.sim"
     ],
     "winches": [
-      "HeaveCompensatedWinch.sim"
+      "HeaveCompensatedWinch.sim",
+      "L07 Wave drift load analysis.sim"
     ],
     "vessels": [
       "L01 Default vessel.sim",
       "Z09 Vessel time history.sim",
-      "A05 Lazy wave with FPSO.sim"
+      "A05 Lazy wave with FPSO.sim",
+      "L07 Wave drift load analysis.sim"
     ]
   },
   "by_analysis": {
@@ -88,7 +92,8 @@
       "K01 5MW spar FOWT.sim",
       "F01 Lowered cone.sim",
       "F01 Manifold block.sim",
-      "F01 Trapped water.sim"
+      "F01 Trapped water.sim",
+      "L07 Wave drift load analysis.sim"
     ],
     "fatigue_analysis": [
       "A06 SHEAR7 import drag amplification.sim",
@@ -101,6 +106,9 @@
     "installation_analysis": [
       "D02 Pull in analysis.sim",
       "D04 J-tube pull in.sim"
+    ],
+    "dynamic_analysis": [
+      "L07 Wave drift load analysis.sim"
     ]
   },
   "by_feature": {
@@ -156,6 +164,21 @@
     ],
     "BOP handling": [
       "B06 Running BOP.sim"
+    ],
+    "Full QTF wave drift loads": [
+      "L07 Wave drift load analysis.sim"
+    ],
+    "Wave drift damping": [
+      "L07 Wave drift load analysis.sim"
+    ],
+    "Manoeuvring load": [
+      "L07 Wave drift load analysis.sim"
+    ],
+    "CALM buoy mooring": [
+      "L07 Wave drift load analysis.sim"
+    ],
+    "Shallow water diffraction": [
+      "L07 Wave drift load analysis.sim"
     ]
   },
   "by_category": {}

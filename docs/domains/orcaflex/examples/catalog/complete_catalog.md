@@ -1,12 +1,12 @@
 # Complete OrcaFlex Examples Catalog
 
-Generated: 2025-08-20T12:13:39.823814
+Generated: 2026-06-10T19:21:24-05:00
 
 ## Download Statistics
-- Total ZIP files: 39
-- Successfully downloaded: 39
-- Total OrcaFlex files: 54
-- Total size: 823.0MB
+- Total ZIP files: 40
+- Successfully downloaded: 40
+- Total OrcaFlex files: 55
+- Total size: 953.0MB
 
 ## By Letter Category
 - **A**: 5 ZIPs, 14 files
@@ -20,7 +20,7 @@ Generated: 2025-08-20T12:13:39.823814
 - **I**: 1 ZIPs, 1 files
 - **J**: 1 ZIPs, 1 files
 - **K**: 1 ZIPs, 1 files
-- **L**: 3 ZIPs, 3 files
+- **L**: 4 ZIPs, 4 files
 - **Z**: 2 ZIPs, 2 files
 
 ## Examples by Category
@@ -257,6 +257,12 @@ Generated: 2025-08-20T12:13:39.823814
 - Size: 18.0MB
 - Files:
   - L03 Semi-sub multibody analysis.sim
+
+#### L07 - Wave drift load analysis
+- Size: 130.0MB
+- Storage: ace share `digitalmodel/docs/orcaflex/data/examples/raw/L07/L07 Wave drift load analysis.zip`
+- Files:
+  - L07 Wave drift load analysis.sim
 
 
 ### Category Z

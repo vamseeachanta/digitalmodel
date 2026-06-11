@@ -1,7 +1,7 @@
 {
-  "last_updated": "2025-08-20T13:10:22.009915",
+  "last_updated": "2026-06-10T19:21:24-05:00",
   "source": "Orcina Examples Portal - Complete Download",
-  "total_examples": 54,
+  "total_examples": 55,
   "examples": {
     "A06 SHEAR7 import drag amplification.sim": {
       "metadata": {
@@ -2958,6 +2958,88 @@
         }
       },
       "features": []
+    },
+    "L07 Wave drift load analysis.sim": {
+      "metadata": {
+        "name": "L07 Wave drift load analysis.sim",
+        "category": "l",
+        "category_title": "Diffraction",
+        "file_type": ".sim",
+        "size_bytes": 132134586,
+        "source": "Orcina Examples Portal - Category L Diffraction",
+        "source_page_url": "https://www.orcina.com/resources/examples/?key=l",
+        "news_url": "https://www.orcina.com/news/new-wave-drift-load-analysis-example/",
+        "description_pdf_url": "https://www.orcina.com/wp-content/uploads/examples/l/l07/L07%20Wave%20drift%20load%20analysis.pdf",
+        "example_zip_url": "https://www.orcina.com/wp-content/uploads/examples/l/l07/L07%20Wave%20drift%20load%20analysis.zip",
+        "posted_date": "2026-06-08",
+        "local_pdf_share_path": "digitalmodel/docs/orcaflex/literature/examples/raw/L07/docs/L07 Wave drift load analysis.pdf",
+        "local_zip_share_path": "digitalmodel/docs/orcaflex/data/examples/raw/L07/L07 Wave drift load analysis.zip",
+        "pdf_sha256": "8a0db4bae9bfb79c9bb12727a004893f45b923df948c917c5dc60e91832b6157",
+        "zip_sha256": "b796e76899eb7a723787a833f2f314620d81f2843efdabd51a4b71f6bd1fb2cd",
+        "zip_contents": [
+          "L07 body mesh.gdf",
+          "L07 Wave drift load analysis.owr",
+          "L07 Wave drift load analysis.owr.sig",
+          "L07 Wave drift load analysis.pdf",
+          "L07 Wave drift load analysis.sim",
+          "L07 Wave drift load analysis.sim.sig"
+        ]
+      },
+      "components": {
+        "vessels": {
+          "count": 1,
+          "types": [
+            "Vessel"
+          ]
+        },
+        "lines": {
+          "count": 1,
+          "types": [
+            "Hawser/mooring lines"
+          ]
+        },
+        "buoys": {
+          "count": 1,
+          "types": [
+            "CALM buoy"
+          ]
+        },
+        "winches": {
+          "count": 1
+        },
+        "constraints": {
+          "count": 0
+        }
+      },
+      "analysis": {
+        "static_analysis": true,
+        "dynamic_analysis": true,
+        "fatigue_analysis": false,
+        "installation_analysis": false,
+        "viv_analysis": false
+      },
+      "environment": {
+        "water_depth": 20.0,
+        "waves": {
+          "type": "JONSWAP",
+          "height": 3.0,
+          "period": 6.0
+        },
+        "current": {
+          "profile": null,
+          "speed": 0.25
+        },
+        "wind": {
+          "speed": 5.0
+        }
+      },
+      "features": [
+        "Full QTF wave drift loads",
+        "Wave drift damping",
+        "Manoeuvring load",
+        "CALM buoy mooring",
+        "Shallow water diffraction"
+      ]
     }
   },
   "patterns": {
@@ -2967,25 +3049,32 @@
       "winches": 1,
       "vessels": 2,
       "buoys+lines": 1,
-      "lines+vessels": 1
+      "lines+vessels": 1,
+      "buoys+lines+vessels+winches": 1
     },
     "analysis_combinations": {
       "fatigue_analysis+static_analysis+viv_analysis": 2,
       "static_analysis": 50,
-      "installation_analysis+static_analysis": 2
+      "installation_analysis+static_analysis": 2,
+      "dynamic_analysis+static_analysis": 1
     },
     "configuration_types": {
       "Catenary configuration": 3,
       "Lazy wave configuration": 4,
       "Pliant wave configuration": 2,
       "Steep wave configuration": 2,
-      "Chinese lantern configuration": 1
+      "Chinese lantern configuration": 1,
+      "Full QTF wave drift loads": 1,
+      "Wave drift damping": 1,
+      "Manoeuvring load": 1,
+      "CALM buoy mooring": 1,
+      "Shallow water diffraction": 1
     }
   },
   "best_practices": [
     "Most common setup: lines",
-    "Examples cover 1 distinct application categories",
-    "15 unique features/configurations demonstrated"
+    "Examples cover 2 distinct application categories",
+    "20 unique features/configurations demonstrated"
   ],
   "common_configurations": {
     "riser_types": {
@@ -2996,14 +3085,15 @@
     },
     "mooring_types": {},
     "vessel_types": {
-      "Vessel": 2,
+      "Vessel": 3,
       "FPSO": 1
     },
     "analysis_types": {
-      "static_analysis": 54,
+      "static_analysis": 55,
       "fatigue_analysis": 2,
       "viv_analysis": 2,
-      "installation_analysis": 2
+      "installation_analysis": 2,
+      "dynamic_analysis": 1
     }
   },
   "categories": {
@@ -3063,7 +3153,8 @@
         "K01 5MW spar FOWT.sim",
         "F01 Lowered cone.sim",
         "F01 Manifold block.sim",
-        "F01 Trapped water.sim"
+        "F01 Trapped water.sim",
+        "L07 Wave drift load analysis.sim"
       ]
     }
   },
@@ -3085,21 +3176,25 @@
         "E02 Rigid hinged stinger with piggyback line.sim",
         "A05 Catenary with semisub.sim",
         "A05 Catenary with spar.sim",
-        "A05 Lazy wave with FPSO.sim"
+        "A05 Lazy wave with FPSO.sim",
+        "L07 Wave drift load analysis.sim"
       ],
       "buoys": [
         "C07 Metocean buoy in deep water.sim",
         "C06 CALM buoy.sim",
         "C06 Discretised CALM buoy.sim",
-        "H03 Floating and stowed lines.sim"
+        "H03 Floating and stowed lines.sim",
+        "L07 Wave drift load analysis.sim"
       ],
       "winches": [
-        "HeaveCompensatedWinch.sim"
+        "HeaveCompensatedWinch.sim",
+        "L07 Wave drift load analysis.sim"
       ],
       "vessels": [
         "L01 Default vessel.sim",
         "Z09 Vessel time history.sim",
-        "A05 Lazy wave with FPSO.sim"
+        "A05 Lazy wave with FPSO.sim",
+        "L07 Wave drift load analysis.sim"
       ]
     },
     "by_analysis": {
@@ -3157,7 +3252,8 @@
         "K01 5MW spar FOWT.sim",
         "F01 Lowered cone.sim",
         "F01 Manifold block.sim",
-        "F01 Trapped water.sim"
+        "F01 Trapped water.sim",
+        "L07 Wave drift load analysis.sim"
       ],
       "fatigue_analysis": [
         "A06 SHEAR7 import drag amplification.sim",
@@ -3170,6 +3266,9 @@
       "installation_analysis": [
         "D02 Pull in analysis.sim",
         "D04 J-tube pull in.sim"
+      ],
+      "dynamic_analysis": [
+        "L07 Wave drift load analysis.sim"
       ]
     },
     "by_feature": {
@@ -3225,6 +3324,21 @@
       ],
       "BOP handling": [
         "B06 Running BOP.sim"
+      ],
+      "Full QTF wave drift loads": [
+        "L07 Wave drift load analysis.sim"
+      ],
+      "Wave drift damping": [
+        "L07 Wave drift load analysis.sim"
+      ],
+      "Manoeuvring load": [
+        "L07 Wave drift load analysis.sim"
+      ],
+      "CALM buoy mooring": [
+        "L07 Wave drift load analysis.sim"
+      ],
+      "Shallow water diffraction": [
+        "L07 Wave drift load analysis.sim"
       ]
     },
     "by_category": {}
