@@ -38,6 +38,18 @@ from digitalmodel.cathodic_protection.dnv_rp_b401 import (
     number_of_anodes as dnv_number_of_anodes,
     protected_length,
 )
+from digitalmodel.cathodic_protection.dnv_rp_f106 import (
+    COATING_LIBRARY as F106_COATING_LIBRARY,
+    CoatingProperties as F106CoatingProperties,
+    CoatingType as F106CoatingType,
+    HolidayDetectionResult as F106HolidayDetectionResult,
+    SelectionResult as F106SelectionResult,
+    ValidationResult as F106ValidationResult,
+    holiday_detection_result as f106_holiday_detection_result,
+    holiday_detection_voltage as f106_holiday_detection_voltage,
+    select_coating as f106_select_coating,
+    validate_thickness as f106_validate_thickness,
+)
 
 from digitalmodel.cathodic_protection.fuel_system_cp import (
     CoatingType,
@@ -217,6 +229,16 @@ __all__ = [
     "flush_anode_resistance",
     "dnv_number_of_anodes",
     "protected_length",
+    "F106_COATING_LIBRARY",
+    "F106CoatingProperties",
+    "F106CoatingType",
+    "F106HolidayDetectionResult",
+    "F106SelectionResult",
+    "F106ValidationResult",
+    "f106_holiday_detection_result",
+    "f106_holiday_detection_voltage",
+    "f106_select_coating",
+    "f106_validate_thickness",
     "CoatingType",
     "FuelPipeSegment",
     "ImpressedCurrentGroundBed",

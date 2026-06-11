@@ -7,7 +7,9 @@ enamel, and concrete weight coating systems.
 
 References
 ----------
-- DNV-RP-B401 (2017) "Cathodic Protection Design" §10.7, Tables 10-2, 10-4
+- DNV-RP-B401 (2011) "Cathodic Protection Design" §10.7, Tables 10-2, 10-4
+- DNV-RP-F106 (2003) "Factory Applied External Pipeline Coatings" Sec. 5,
+  for external coating family selection and inspection data sheets
 - ISO 15589-2 (2004) "Cathodic Protection of Pipeline Systems — Part 2"
 - NACE SP0169 (2013) "Control of External Corrosion on Underground Pipelines"
 """
@@ -17,7 +19,12 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from digitalmodel.citations import Citation, validate_citation
+
+
+_B401_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-b401.md"
 
 
 class CoatingCategory(str, Enum):
@@ -62,8 +69,23 @@ COATING_DESIGN_LIFE: dict[CoatingCategory, float] = {
 }
 
 
+def _b401_coating_citation() -> Citation:
+    citation = Citation(
+        code_id="dnv-rp-b401",
+        publisher="DNV",
+        revision="2011",
+        section="§10.7 / Tables 10-2 and 10-4",
+        wiki_path=_B401_WIKI_PATH,
+        note="Coating breakdown constants for CP current-demand calculations.",
+    )
+    validate_citation(citation)
+    return citation
+
+
 class CoatingBreakdownResult(BaseModel):
     """Result of coating breakdown factor calculation."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     coating_type: str = Field(..., description="Coating category name")
     initial_factor: float = Field(
@@ -76,6 +98,7 @@ class CoatingBreakdownResult(BaseModel):
         ..., ge=0.0, le=1.0, description="Breakdown factor at end of design life"
     )
     design_life_years: float = Field(..., gt=0, description="Design life [years]")
+    citation: Citation = Field(..., description="Standards citation for constants")
 
 
 class CoatingLifeResult(BaseModel):
@@ -149,6 +172,7 @@ def coating_breakdown_factors(
         mean_factor=fc_mean,
         final_factor=fc_final,
         design_life_years=design_life_years,
+        citation=_b401_coating_citation(),
     )
 
 
