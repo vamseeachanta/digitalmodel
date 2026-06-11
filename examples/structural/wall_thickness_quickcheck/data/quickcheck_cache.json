@@ -1,15 +1,25 @@
 {
+  "buckle_arrestor_sizing": {
+    "additional_wall_mm": 8.025,
+    "arrestor_length_m": 0.648,
+    "arrestor_wall_mm": 25.5,
+    "crossover_pressure_mpa": 15.238,
+    "governing_code": "DNV-ST-F101",
+    "length_basis": "2.0D screening length for integral arrestor section",
+    "pipe_wall_mm": 17.475,
+    "type": "integral buckle arrestor"
+  },
   "case": {
+    "buckle_arrestors": "with",
     "codes": [
       "DNV-ST-F101",
       "API-RP-1111"
     ],
     "geometry": {
       "corrosion_allowance": 0.003,
-      "outer_diameter": 0.3239,
-      "wall_thickness": 0.028575
+      "outer_diameter": 0.3239
     },
-    "label": "12\" Export Line, 1500 m water depth",
+    "label": "12.75 in OD X65 export line, 1500 m water depth",
     "loads": {
       "internal_pressure": 15000000.0
     },
@@ -18,32 +28,1726 @@
       "smts": 531000000.0,
       "smys": 448000000.0
     },
+    "pressure_basis": "design",
     "water_depth_m": 1500.0
   },
-  "external_pressure": 15082875.0,
-  "results": [
+  "external_pressure_mpa": 15.082875,
+  "external_pressure_pa": 15082875.0,
+  "load_premises": "burst/containment checked at p_i = design pressure with zero external pressure (route minimum); collapse and propagation checked for the empty line (p_i = 0) at full water depth",
+  "schema_version": 3,
+  "selection": {
+    "with_arrestors": {
+      "governing_check": "DNV-ST-F101 collapse",
+      "governing_utilisation": 0.629046,
+      "include_propagation": false,
+      "nonstandard_minimum_wall_mm": 14.909,
+      "selected_standard_label": "SCH 80",
+      "selected_standard_wall_in": 0.688,
+      "selected_standard_wall_mm": 17.475
+    },
+    "without_arrestors": {
+      "governing_check": "DNV-ST-F101 propagation_buckling",
+      "governing_utilisation": 0.718566,
+      "include_propagation": true,
+      "nonstandard_minimum_wall_mm": 25.408,
+      "selected_standard_label": "SCH 140",
+      "selected_standard_wall_in": 1.125,
+      "selected_standard_wall_mm": 28.575
+    }
+  },
+  "standard_walls": [
     {
-      "checks": {
-        "collapse": 0.029379,
-        "combined_loading": 0.000123,
-        "pressure_containment": -0.001471,
-        "propagation_buckling": 0.718566
-      },
-      "code_label": "DNV-ST-F101",
-      "governing_check": "propagation_buckling",
-      "is_safe": true,
-      "max_utilisation": 0.718566
+      "label": "SCH 20",
+      "wall_in": 0.25,
+      "wall_mm": 6.35
     },
     {
-      "checks": {
-        "burst": -0.001346,
-        "collapse": 0.24603,
-        "propagation": 0.59501
-      },
-      "code_label": "API-RP-1111",
-      "governing_check": "propagation",
-      "is_safe": true,
-      "max_utilisation": 0.59501
+      "label": "SCH 30",
+      "wall_in": 0.33,
+      "wall_mm": 8.382
+    },
+    {
+      "label": "STD",
+      "wall_in": 0.375,
+      "wall_mm": 9.525
+    },
+    {
+      "label": "SCH 40",
+      "wall_in": 0.406,
+      "wall_mm": 10.312
+    },
+    {
+      "label": "XS",
+      "wall_in": 0.5,
+      "wall_mm": 12.7
+    },
+    {
+      "label": "SCH 60",
+      "wall_in": 0.562,
+      "wall_mm": 14.275
+    },
+    {
+      "label": "SCH 80",
+      "wall_in": 0.688,
+      "wall_mm": 17.475
+    },
+    {
+      "label": "SCH 100",
+      "wall_in": 0.844,
+      "wall_mm": 21.438
+    },
+    {
+      "label": "SCH 120 / XXS",
+      "wall_in": 1.0,
+      "wall_mm": 25.4
+    },
+    {
+      "label": "SCH 140",
+      "wall_in": 1.125,
+      "wall_mm": 28.575
+    },
+    {
+      "label": "SCH 160",
+      "wall_in": 1.312,
+      "wall_mm": 33.325
     }
+  ],
+  "sweep": [
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 40.248686,
+            "combined_loading": 30.754708,
+            "pressure_containment": 2.164176,
+            "propagation_buckling": 115.716031
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 1.182421,
+            "collapse": 5.603551,
+            "propagation": 21.990455
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 20"
+      ],
+      "wall_thickness_in": 0.25,
+      "wall_thickness_mm": 6.35
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 9.863592,
+            "combined_loading": 7.536939,
+            "pressure_containment": 1.339619,
+            "propagation_buckling": 35.370916
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.890041,
+            "collapse": 2.525713,
+            "propagation": 11.294234
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 30"
+      ],
+      "wall_thickness_in": 0.33,
+      "wall_thickness_mm": 8.382
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 5.589319,
+            "combined_loading": 4.270894,
+            "pressure_containment": 1.101493,
+            "propagation_buckling": 21.855173
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.780399,
+            "collapse": 1.779745,
+            "propagation": 8.310271
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "STD"
+      ],
+      "wall_thickness_in": 0.375,
+      "wall_thickness_mm": 9.525
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 4.546691,
+            "combined_loading": 3.474204,
+            "pressure_containment": 1.025407,
+            "propagation_buckling": 18.334136
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.742207,
+            "collapse": 1.564471,
+            "propagation": 7.3942
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.3937,
+      "wall_thickness_mm": 10.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 4.001098,
+            "combined_loading": 3.057307,
+            "pressure_containment": 0.98081,
+            "propagation_buckling": 16.440503
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.719035,
+            "collapse": 1.444315,
+            "propagation": 6.8686
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 40"
+      ],
+      "wall_thickness_in": 0.406,
+      "wall_thickness_mm": 10.312
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 3.714599,
+            "combined_loading": 2.838389,
+            "pressure_containment": 0.955729,
+            "propagation_buckling": 15.429519
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.705738,
+            "collapse": 1.378809,
+            "propagation": 6.577136
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.4134,
+      "wall_thickness_mm": 10.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 3.076704,
+            "combined_loading": 2.350962,
+            "pressure_containment": 0.894761,
+            "propagation_buckling": 13.130479
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.672584,
+            "collapse": 1.226082,
+            "propagation": 5.882321
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.4331,
+      "wall_thickness_mm": 11.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 2.579609,
+            "combined_loading": 1.971123,
+            "pressure_containment": 0.840965,
+            "propagation_buckling": 11.283874
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.642313,
+            "collapse": 1.099349,
+            "propagation": 5.287086
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.4528,
+      "wall_thickness_mm": 11.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 2.186677,
+            "combined_loading": 1.670877,
+            "pressure_containment": 0.793147,
+            "propagation_buckling": 9.781361
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.614565,
+            "collapse": 0.993327,
+            "propagation": 4.773712
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.4724,
+      "wall_thickness_mm": 12.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.872207,
+            "combined_loading": 1.430585,
+            "pressure_containment": 0.750362,
+            "propagation_buckling": 8.544694
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.589036,
+            "collapse": 0.903954,
+            "propagation": 4.328198
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.4921,
+      "wall_thickness_mm": 12.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.764082,
+            "combined_loading": 1.347965,
+            "pressure_containment": 0.734483,
+            "propagation_buckling": 8.111034
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.579388,
+            "collapse": 0.872134,
+            "propagation": 4.166412
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "XS"
+      ],
+      "wall_thickness_in": 0.5,
+      "wall_thickness_mm": 12.7
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.617812,
+            "combined_loading": 1.236198,
+            "pressure_containment": 0.711856,
+            "propagation_buckling": 7.516325
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.565472,
+            "collapse": 0.82807,
+            "propagation": 3.939373
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.5118,
+      "wall_thickness_mm": 13.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.410117,
+            "combined_loading": 1.077494,
+            "pressure_containment": 0.677017,
+            "propagation_buckling": 6.653226
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.543653,
+            "collapse": 0.763195,
+            "propagation": 3.59824
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.5315,
+      "wall_thickness_mm": 13.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.239244,
+            "combined_loading": 0.946927,
+            "pressure_containment": 0.645345,
+            "propagation_buckling": 5.922756
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.523392,
+            "collapse": 0.707365,
+            "propagation": 3.297493
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.5512,
+      "wall_thickness_mm": 14.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.158201,
+            "combined_loading": 0.885001,
+            "pressure_containment": 0.629123,
+            "propagation_buckling": 5.568192
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.512854,
+            "collapse": 0.679933,
+            "propagation": 3.147085
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 60"
+      ],
+      "wall_thickness_in": 0.562,
+      "wall_thickness_mm": 14.275
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 1.097801,
+            "combined_loading": 0.838848,
+            "pressure_containment": 0.616427,
+            "propagation_buckling": 5.299818
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.504529,
+            "collapse": 0.659014,
+            "propagation": 3.031154
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.5709,
+      "wall_thickness_mm": 14.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.980189,
+            "combined_loading": 0.748979,
+            "pressure_containment": 0.589919,
+            "propagation_buckling": 4.764885
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.486923,
+            "collapse": 0.616883,
+            "propagation": 2.794294
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.5906,
+      "wall_thickness_mm": 15.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.88211,
+            "combined_loading": 0.674036,
+            "pressure_containment": 0.565532,
+            "propagation_buckling": 4.302595
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.470453,
+            "collapse": 0.579955,
+            "propagation": 2.582826
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.6102,
+      "wall_thickness_mm": 15.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.800209,
+            "combined_loading": 0.611453,
+            "pressure_containment": 0.54302,
+            "propagation_buckling": 3.900741
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.455012,
+            "collapse": 0.547402,
+            "propagation": 2.393333
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.6299,
+      "wall_thickness_mm": 16.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.731798,
+            "combined_loading": 0.559179,
+            "pressure_containment": 0.522176,
+            "propagation_buckling": 3.549532
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.440508,
+            "collapse": 0.518547,
+            "propagation": 2.22295
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.6496,
+      "wall_thickness_mm": 16.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.674649,
+            "combined_loading": 0.515511,
+            "pressure_containment": 0.502821,
+            "propagation_buckling": 3.241048
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.426856,
+            "collapse": 0.492835,
+            "propagation": 2.069254
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.6693,
+      "wall_thickness_mm": 17.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.629046,
+            "combined_loading": 0.480665,
+            "pressure_containment": 0.485673,
+            "propagation_buckling": 2.981667
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.414611,
+            "collapse": 0.4709,
+            "propagation": 1.936823
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 80"
+      ],
+      "wall_thickness_in": 0.688,
+      "wall_thickness_mm": 17.475
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.626852,
+            "combined_loading": 0.478988,
+            "pressure_containment": 0.484801,
+            "propagation_buckling": 2.968831
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.413985,
+            "collapse": 0.469806,
+            "propagation": 1.930189
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.689,
+      "wall_thickness_mm": 17.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.586731,
+            "combined_loading": 0.448331,
+            "pressure_containment": 0.467982,
+            "propagation_buckling": 2.727579
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.401828,
+            "collapse": 0.449078,
+            "propagation": 1.804003
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.7087,
+      "wall_thickness_mm": 18.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.552824,
+            "combined_loading": 0.422423,
+            "pressure_containment": 0.452249,
+            "propagation_buckling": 2.512906
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.390329,
+            "collapse": 0.430335,
+            "propagation": 1.689192
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.7283,
+      "wall_thickness_mm": 18.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.523891,
+            "combined_loading": 0.400314,
+            "pressure_containment": 0.437498,
+            "propagation_buckling": 2.321163
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.379435,
+            "collapse": 0.413309,
+            "propagation": 1.584465
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.748,
+      "wall_thickness_mm": 19.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.498911,
+            "combined_loading": 0.381226,
+            "pressure_containment": 0.423642,
+            "propagation_buckling": 2.149293
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.3691,
+            "collapse": 0.397778,
+            "propagation": 1.488703
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.7677,
+      "wall_thickness_mm": 19.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.477076,
+            "combined_loading": 0.364542,
+            "pressure_containment": 0.4106,
+            "propagation_buckling": 1.994726
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.359281,
+            "collapse": 0.383553,
+            "propagation": 1.400939
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.7874,
+      "wall_thickness_mm": 20.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.457759,
+            "combined_loading": 0.349781,
+            "pressure_containment": 0.398304,
+            "propagation_buckling": 1.855284
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.349941,
+            "collapse": 0.370473,
+            "propagation": 1.320328
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.8071,
+      "wall_thickness_mm": 20.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.440478,
+            "combined_loading": 0.336577,
+            "pressure_containment": 0.386691,
+            "propagation_buckling": 1.729117
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.341046,
+            "collapse": 0.358403,
+            "propagation": 1.246134
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.8268,
+      "wall_thickness_mm": 21.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.426721,
+            "combined_loading": 0.326065,
+            "pressure_containment": 0.377036,
+            "propagation_buckling": 1.62825
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.333595,
+            "collapse": 0.348567,
+            "propagation": 1.185902
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 100"
+      ],
+      "wall_thickness_in": 0.844,
+      "wall_thickness_mm": 21.438
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.424866,
+            "combined_loading": 0.324647,
+            "pressure_containment": 0.375706,
+            "propagation_buckling": 1.614642
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.332565,
+            "collapse": 0.347226,
+            "propagation": 1.177711
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.8465,
+      "wall_thickness_mm": 21.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.41064,
+            "combined_loading": 0.313777,
+            "pressure_containment": 0.365299,
+            "propagation_buckling": 1.510503
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.323894,
+            "collapse": 0.336843,
+            "propagation": 1.114491
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.8661,
+      "wall_thickness_mm": 22.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.397583,
+            "combined_loading": 0.3038,
+            "pressure_containment": 0.355425,
+            "propagation_buckling": 1.41553
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.316144,
+            "collapse": 0.327168,
+            "propagation": 1.055974
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.8858,
+      "wall_thickness_mm": 22.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.385523,
+            "combined_loading": 0.294585,
+            "pressure_containment": 0.346046,
+            "propagation_buckling": 1.328711
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.308731,
+            "collapse": 0.318127,
+            "propagation": 1.001715
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.9055,
+      "wall_thickness_mm": 23.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.374325,
+            "combined_loading": 0.286028,
+            "pressure_containment": 0.337124,
+            "propagation_buckling": 1.249168
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.301632,
+            "collapse": 0.309655,
+            "propagation": 0.951324
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.9252,
+      "wall_thickness_mm": 23.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.363878,
+            "combined_loading": 0.278045,
+            "pressure_containment": 0.328626,
+            "propagation_buckling": 1.176135
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.294828,
+            "collapse": 0.301697,
+            "propagation": 0.904449
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.9449,
+      "wall_thickness_mm": 24.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.354095,
+            "combined_loading": 0.27057,
+            "pressure_containment": 0.320524,
+            "propagation_buckling": 1.108943
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.288302,
+            "collapse": 0.294203,
+            "propagation": 0.860781
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.9646,
+      "wall_thickness_mm": 24.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.344901,
+            "combined_loading": 0.263545,
+            "pressure_containment": 0.31279,
+            "propagation_buckling": 1.047005
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.282035,
+            "collapse": 0.287131,
+            "propagation": 0.82004
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 0.9843,
+      "wall_thickness_mm": 25.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.337928,
+            "combined_loading": 0.258217,
+            "pressure_containment": 0.306852,
+            "propagation_buckling": 1.000888
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.2772,
+            "collapse": 0.281751,
+            "propagation": 0.789387
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 120 / XXS"
+      ],
+      "wall_thickness_in": 1.0,
+      "wall_thickness_mm": 25.4
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.336235,
+            "combined_loading": 0.256923,
+            "pressure_containment": 0.3054,
+            "propagation_buckling": 0.989804
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.276014,
+            "collapse": 0.280443,
+            "propagation": 0.781978
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.0039,
+      "wall_thickness_mm": 25.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.328045,
+            "combined_loading": 0.250665,
+            "pressure_containment": 0.298331,
+            "propagation_buckling": 0.936884
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.270224,
+            "collapse": 0.274105,
+            "propagation": 0.746372
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.0236,
+      "wall_thickness_mm": 26.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.320286,
+            "combined_loading": 0.244736,
+            "pressure_containment": 0.291563,
+            "propagation_buckling": 0.887842
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.264652,
+            "collapse": 0.268089,
+            "propagation": 0.713019
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.0433,
+      "wall_thickness_mm": 26.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.312921,
+            "combined_loading": 0.239109,
+            "pressure_containment": 0.285077,
+            "propagation_buckling": 0.842321
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.259286,
+            "collapse": 0.262369,
+            "propagation": 0.681739
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.063,
+      "wall_thickness_mm": 27.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.305917,
+            "combined_loading": 0.233756,
+            "pressure_containment": 0.278856,
+            "propagation_buckling": 0.800001
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.254114,
+            "collapse": 0.25692,
+            "propagation": 0.652368
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.0827,
+      "wall_thickness_mm": 27.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.299243,
+            "combined_loading": 0.228657,
+            "pressure_containment": 0.272884,
+            "propagation_buckling": 0.760599
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.249126,
+            "collapse": 0.251722,
+            "propagation": 0.624758
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.1024,
+      "wall_thickness_mm": 28.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.292876,
+            "combined_loading": 0.223791,
+            "pressure_containment": 0.267145,
+            "propagation_buckling": 0.723861
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.244313,
+            "collapse": 0.246756,
+            "propagation": 0.598775
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.122,
+      "wall_thickness_mm": 28.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.291945,
+            "combined_loading": 0.22308,
+            "pressure_containment": 0.266304,
+            "propagation_buckling": 0.718566
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.243605,
+            "collapse": 0.24603,
+            "propagation": 0.59501
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 140"
+      ],
+      "wall_thickness_in": 1.125,
+      "wall_thickness_mm": 28.575
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.286791,
+            "combined_loading": 0.219142,
+            "pressure_containment": 0.261628,
+            "propagation_buckling": 0.68956
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.239665,
+            "collapse": 0.242006,
+            "propagation": 0.574296
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.1417,
+      "wall_thickness_mm": 29.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.280968,
+            "combined_loading": 0.214693,
+            "pressure_containment": 0.256319,
+            "propagation_buckling": 0.657493
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.235174,
+            "collapse": 0.237456,
+            "propagation": 0.551212
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.1614,
+      "wall_thickness_mm": 29.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.275391,
+            "combined_loading": 0.210431,
+            "pressure_containment": 0.251206,
+            "propagation_buckling": 0.627475
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.230832,
+            "collapse": 0.233093,
+            "propagation": 0.52942
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.1811,
+      "wall_thickness_mm": 30.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.270041,
+            "combined_loading": 0.206343,
+            "pressure_containment": 0.246279,
+            "propagation_buckling": 0.599341
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.226632,
+            "collapse": 0.228904,
+            "propagation": 0.508829
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2008,
+      "wall_thickness_mm": 30.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.264905,
+            "combined_loading": 0.202419,
+            "pressure_containment": 0.241529,
+            "propagation_buckling": 0.572942
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.222567,
+            "collapse": 0.224879,
+            "propagation": 0.489354
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2205,
+      "wall_thickness_mm": 31.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.259969,
+            "combined_loading": 0.198647,
+            "pressure_containment": 0.236944,
+            "propagation_buckling": 0.548142
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.218631,
+            "collapse": 0.221006,
+            "propagation": 0.470919
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2402,
+      "wall_thickness_mm": 31.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.255221,
+            "combined_loading": 0.195019,
+            "pressure_containment": 0.232518,
+            "propagation_buckling": 0.52482
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.214817,
+            "collapse": 0.217277,
+            "propagation": 0.453452
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2598,
+      "wall_thickness_mm": 32.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.250649,
+            "combined_loading": 0.191525,
+            "pressure_containment": 0.228242,
+            "propagation_buckling": 0.502864
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.21112,
+            "collapse": 0.213682,
+            "propagation": 0.436889
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2795,
+      "wall_thickness_mm": 32.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.246244,
+            "combined_loading": 0.188159,
+            "pressure_containment": 0.224109,
+            "propagation_buckling": 0.482172
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.207534,
+            "collapse": 0.210215,
+            "propagation": 0.42117
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.2992,
+      "wall_thickness_mm": 33.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.243465,
+            "combined_loading": 0.186036,
+            "pressure_containment": 0.221495,
+            "propagation_buckling": 0.469357
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.205261,
+            "collapse": 0.208025,
+            "propagation": 0.41138
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": true,
+      "standard_labels": [
+        "SCH 160"
+      ],
+      "wall_thickness_in": 1.312,
+      "wall_thickness_mm": 33.325
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.241996,
+            "combined_loading": 0.184913,
+            "pressure_containment": 0.220111,
+            "propagation_buckling": 0.462654
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.204055,
+            "collapse": 0.206867,
+            "propagation": 0.406241
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.3189,
+      "wall_thickness_mm": 33.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.237896,
+            "combined_loading": 0.18178,
+            "pressure_containment": 0.216242,
+            "propagation_buckling": 0.444223
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.200678,
+            "collapse": 0.203632,
+            "propagation": 0.39205
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.3386,
+      "wall_thickness_mm": 34.0
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.233936,
+            "combined_loading": 0.178755,
+            "pressure_containment": 0.212496,
+            "propagation_buckling": 0.426805
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.197398,
+            "collapse": 0.200505,
+            "propagation": 0.378552
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.3583,
+      "wall_thickness_mm": 34.5
+    },
+    {
+      "codes": [
+        {
+          "checks": {
+            "collapse": 0.23011,
+            "combined_loading": 0.175831,
+            "pressure_containment": 0.208867,
+            "propagation_buckling": 0.410327
+          },
+          "code_label": "DNV-ST-F101"
+        },
+        {
+          "checks": {
+            "burst": 0.194211,
+            "collapse": 0.197479,
+            "propagation": 0.365702
+          },
+          "code_label": "API-RP-1111"
+        }
+      ],
+      "is_standard": false,
+      "standard_labels": [],
+      "wall_thickness_in": 1.378,
+      "wall_thickness_mm": 35.0
+    }
+  ],
+  "wall_grid_mm": [
+    6.35,
+    8.382,
+    9.525,
+    10.0,
+    10.312,
+    10.5,
+    11.0,
+    11.5,
+    12.0,
+    12.5,
+    12.7,
+    13.0,
+    13.5,
+    14.0,
+    14.275,
+    14.5,
+    15.0,
+    15.5,
+    16.0,
+    16.5,
+    17.0,
+    17.475,
+    17.5,
+    18.0,
+    18.5,
+    19.0,
+    19.5,
+    20.0,
+    20.5,
+    21.0,
+    21.438,
+    21.5,
+    22.0,
+    22.5,
+    23.0,
+    23.5,
+    24.0,
+    24.5,
+    25.0,
+    25.4,
+    25.5,
+    26.0,
+    26.5,
+    27.0,
+    27.5,
+    28.0,
+    28.5,
+    28.575,
+    29.0,
+    29.5,
+    30.0,
+    30.5,
+    31.0,
+    31.5,
+    32.0,
+    32.5,
+    33.0,
+    33.325,
+    33.5,
+    34.0,
+    34.5,
+    35.0
   ]
 }
