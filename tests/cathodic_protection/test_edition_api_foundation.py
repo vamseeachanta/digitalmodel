@@ -403,3 +403,123 @@ def test_marine_cp_result_schema_requires_metadata_fields():
 
     assert "edition_used" in required
     assert "standard" in required
+
+
+def _sample_marine_structure_zones():
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        ExposureZone,
+        StructuralZone,
+    )
+
+    return [
+        StructuralZone(
+            zone_name="submerged_legs",
+            exposure_zone=ExposureZone.SUBMERGED,
+            surface_area_m2=2000.0,
+            coating_breakdown_factor=0.05,
+        ),
+        StructuralZone(
+            zone_name="buried_piles",
+            exposure_zone=ExposureZone.BURIED_MUDLINE,
+            surface_area_m2=500.0,
+            coating_breakdown_factor=1.0,
+        ),
+    ]
+
+
+def test_marine_structure_current_demand_accepts_edition_kwarg():
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        marine_structure_current_demand,
+    )
+
+    signature = inspect.signature(marine_structure_current_demand)
+
+    assert "edition" in signature.parameters
+
+
+def test_marine_structure_result_carries_explicit_edition_metadata():
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        marine_structure_current_demand,
+    )
+
+    result = marine_structure_current_demand(
+        _sample_marine_structure_zones(),
+        edition="2017",
+    )
+
+    assert result.edition_used == "2017"
+    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+
+
+def test_marine_structure_missing_edition_warns_and_defaults_metadata():
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        marine_structure_current_demand,
+    )
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
+        result = marine_structure_current_demand(_sample_marine_structure_zones())
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_marine_structure_explicit_edition_preserves_p1_numerics():
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        marine_structure_current_demand,
+    )
+
+    legacy = marine_structure_current_demand(
+        _sample_marine_structure_zones(), edition="2017"
+    )
+    current = marine_structure_current_demand(
+        _sample_marine_structure_zones(), edition="2021"
+    )
+
+    assert current.total_initial_current_A == pytest.approx(
+        legacy.total_initial_current_A
+    )
+    assert current.total_mean_current_A == pytest.approx(legacy.total_mean_current_A)
+    assert current.total_final_current_A == pytest.approx(legacy.total_final_current_A)
+    assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
+    assert current.zone_details == legacy.zone_details
+
+
+def test_marine_structure_result_defaults_metadata_for_legacy_dicts():
+    from digitalmodel.cathodic_protection.marine_structure_cp import MarineCPResult
+
+    result = MarineCPResult(
+        total_initial_current_A=40.0,
+        total_mean_current_A=20.0,
+        total_final_current_A=24.0,
+        total_anode_mass_kg=2433.33,
+        number_of_anodes=13,
+        zone_details=[],
+    )
+
+    assert result.edition_used == "2021"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
+
+
+def test_marine_structure_result_rejects_invalid_metadata_with_validation_error():
+    from digitalmodel.cathodic_protection.marine_structure_cp import MarineCPResult
+
+    with pytest.raises(ValidationError, match="edition_used"):
+        MarineCPResult(
+            total_initial_current_A=40.0,
+            total_mean_current_A=20.0,
+            total_final_current_A=24.0,
+            total_anode_mass_kg=2433.33,
+            number_of_anodes=13,
+            zone_details=[],
+            edition_used="2025",
+        )
+
+
+def test_marine_structure_result_schema_requires_metadata_fields():
+    from digitalmodel.cathodic_protection.marine_structure_cp import MarineCPResult
+
+    required = set(MarineCPResult.model_json_schema()["required"])
+
+    assert "edition_used" in required
+    assert "standard" in required

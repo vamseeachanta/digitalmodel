@@ -16,9 +16,16 @@ from __future__ import annotations
 
 import math
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+    standard_for_edition,
+)
 
 
 class ExposureZone(str, Enum):
@@ -102,6 +109,29 @@ class MarineCPResult(BaseModel):
         default_factory=list,
         description="Per-zone breakdown of current demands",
     )
+    edition_used: Edition = Field(
+        ...,
+        description="DNV-RP-B401 edition used for the marine-structure CP design",
+    )
+    standard: str = Field(
+        ..., description="Standards reference matching the selected edition"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_legacy_metadata(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        values = dict(data)
+        edition = values.get("edition_used") or DEFAULT_EDITION
+        values["edition_used"] = edition
+        if not values.get("standard"):
+            try:
+                values["standard"] = standard_for_edition(edition)
+            except KeyError:
+                pass
+        return values
 
 
 class RetrofitAssessment(BaseModel):
@@ -131,6 +161,7 @@ def marine_structure_current_demand(
     anode_net_mass_kg: float = 200.0,
     anode_capacity_Ah_kg: float = 2000.0,
     utilization_factor: float = 0.90,
+    edition: Edition | None = None,
 ) -> MarineCPResult:
     """Calculate current demand and anode requirements for an offshore structure.
 
@@ -157,6 +188,8 @@ def marine_structure_current_demand(
     MarineCPResult
         Total current demand, anode mass, and number of anodes.
     """
+    ed = normalize_edition(edition, stacklevel=3)
+
     total_initial = 0.0
     total_mean = 0.0
     total_final = 0.0
@@ -201,6 +234,8 @@ def marine_structure_current_demand(
         total_anode_mass_kg=round(total_mass, 2),
         number_of_anodes=n_anodes,
         zone_details=zone_details,
+        edition_used=ed,
+        standard=standard_for_edition(ed),
     )
 
 
