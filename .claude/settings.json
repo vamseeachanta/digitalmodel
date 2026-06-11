@@ -6,7 +6,6 @@
   },
   "permissions": {
     "allow": [
-      "Bash(npx claude-flow:*)",
       "Bash(npm run lint)",
       "Bash(npm run test:*)",
       "Bash(npm test:*)",
@@ -61,7 +60,7 @@
           {
             "type": "command",
             "statusMessage": "Capturing correction patterns for RAGS learning",
-            "command": "cat | bash -c 'HOOK=\"\"; [ -f \"/d/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -n \"$HOOK\" ] && cat | \"$HOOK\" || cat > /dev/null'"
+            "command": "cat | bash -c 'HOOK=\"\"; [ -f \"/mnt/local-analysis/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/local-analysis/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/d/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -n \"$HOOK\" ] && cat | \"$HOOK\" || cat > /dev/null'"
           }
         ]
       }
@@ -74,26 +73,6 @@
             "type": "command",
             "statusMessage": "Initializing session logging",
             "command": "bash -c 'LOG_DIR=\"${WORKSPACE_HUB:-/d/workspace-hub}/.claude/skills/session-logs\"; mkdir -p \"$LOG_DIR\"; echo \"{\\\"event\\\":\\\"session_start\\\",\\\"timestamp\\\":\\\"$(date -Iseconds)\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\",\\\"cwd\\\":\\\"$(pwd)\\\"}\" >> \"$LOG_DIR/session_$(date +%Y%m%d).jsonl\" 2>/dev/null || true'"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "manual",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/bin/bash -c 'INPUT=$(cat); CUSTOM=$(echo \"$INPUT\" | jq -r \".custom_instructions // \\\"\\\"\"); echo \"🔄 PreCompact Guidance:\"; echo \"📋 IMPORTANT: Review CLAUDE.md in project root for:\"; echo \"   • 54 available agents and concurrent usage patterns\"; echo \"   • Swarm coordination strategies (hierarchical, mesh, adaptive)\"; echo \"   • SPARC methodology workflows with batchtools optimization\"; echo \"   • Critical concurrent execution rules (GOLDEN RULE: 1 MESSAGE = ALL OPERATIONS)\"; if [ -n \"$CUSTOM\" ]; then echo \"🎯 Custom compact instructions: $CUSTOM\"; fi; echo \"✅ Ready for compact operation\"'"
-          }
-        ]
-      },
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/bin/bash -c 'echo \"🔄 Auto-Compact Guidance (Context Window Full):\"; echo \"📋 CRITICAL: Before compacting, ensure you understand:\"; echo \"   • All 54 agents available in .claude/agents/ directory\"; echo \"   • Concurrent execution patterns from CLAUDE.md\"; echo \"   • Batchtools optimization for 300% performance gains\"; echo \"   • Swarm coordination strategies for complex tasks\"; echo \"⚡ Apply GOLDEN RULE: Always batch operations in single messages\"; echo \"✅ Auto-compact proceeding with full agent context\"'"
           }
         ]
       }
@@ -144,10 +123,6 @@
   },
   "plansDirectory": "specs/modules",
   "includeCoAuthoredBy": true,
-  "enabledMcpjsonServers": [
-    "claude-flow",
-    "ruv-swarm"
-  ],
   "statusLine": {
     "type": "command",
     "command": ".claude/statusline-command.sh"
