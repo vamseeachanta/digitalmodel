@@ -58,6 +58,8 @@ class SpecConverter:
     def __init__(self, spec_path: Path) -> None:
         self.spec_path = Path(spec_path)
         self.spec = DiffractionSpec.from_yaml(self.spec_path)
+        # Non-blocking mesh quality warnings from the most recent convert()
+        self.quality_warnings: list[str] = []
         self.backends: dict[str, AQWABackend | OrcaWaveBackend] = {
             "aqwa": AQWABackend(),
             "orcawave": OrcaWaveBackend(),
@@ -68,6 +70,7 @@ class SpecConverter:
         solver: str,
         format: str = "single",
         output_dir: Path = Path("output"),
+        quality_gates: bool = True,
     ) -> Path:
         """Convert spec to solver-specific input files.
 
@@ -122,12 +125,14 @@ class SpecConverter:
         # references the packaged filenames (#605, #606). AQWA needs no
         # packaging: its backend embeds parsed mesh geometry in the .dat deck.
         spec_to_generate = self.spec
+        self.quality_warnings = []
         if solver == "orcawave":
-            spec_to_generate, _ = package_spec_meshes(
+            spec_to_generate, _, self.quality_warnings = package_spec_meshes(
                 self.spec,
                 output_dir,
                 spec_dir=self.spec_path.parent,
                 solver=solver,
+                quality_gates=quality_gates,
             )
 
         spec_dir = self.spec_path.parent if solver == "aqwa" else None
@@ -241,3 +246,24 @@ class SpecConverter:
                     f"against the spec file directory '{self.spec_path.parent}')."
                 )
         return issues
+
+    def check_mesh_quality(self) -> list["QualityGateResult"]:
+        """Run geometry quality gates on every resolvable mesh (#608).
+
+        Source meshes are checked in place (no packaging side effects);
+        missing files are skipped — existence is :meth:`validate`'s job.
+        """
+        from digitalmodel.hydrodynamics.diffraction.quality_gates import (
+            run_mesh_quality_gate,
+        )
+
+        results = []
+        for reference in iter_mesh_references(self.spec):
+            resolved = resolve_mesh_path(
+                reference.mesh_file, self.spec_path.parent
+            )
+            if resolved.is_file():
+                results.append(
+                    run_mesh_quality_gate(resolved, label=reference.label)
+                )
+        return results

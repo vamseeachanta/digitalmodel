@@ -470,7 +470,15 @@ def batch(config_file):
     default="output",
     help="Output directory (default: output)",
 )
-def convert_spec(spec_path, solver, fmt, output):
+@click.option(
+    "--quality-gates/--no-quality-gates",
+    default=True,
+    help=(
+        "Run geometry quality gates on packaged meshes; FAIL blocks "
+        "conversion (default: --quality-gates)"
+    ),
+)
+def convert_spec(spec_path, solver, fmt, output, quality_gates):
     """Convert a DiffractionSpec YAML to solver input files.
 
     SPEC_PATH: Path to a spec.yml file conforming to DiffractionSpec schema.
@@ -500,10 +508,15 @@ def convert_spec(spec_path, solver, fmt, output):
                 click.echo(f"  {name}: {path}")
         else:
             result_path = converter.convert(
-                solver=solver, format=fmt, output_dir=Path(output)
+                solver=solver,
+                format=fmt,
+                output_dir=Path(output),
+                quality_gates=quality_gates,
             )
             click.echo(click.style("[OK] Conversion complete:", fg="green"))
             click.echo(f"  {solver}: {result_path}")
+        for warning in converter.quality_warnings:
+            click.echo(click.style(f"  [QUALITY] {warning}", fg="yellow"))
 
     except Exception as e:
         click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
@@ -537,8 +550,30 @@ def validate_spec(spec_path):
             for issue in issues:
                 click.echo(f"  - {issue}")
             sys.exit(1)
-        else:
-            click.echo(click.style("[OK] Spec is valid.", fg="green"))
+
+        # Mesh quality gates (#608): FAIL is blocking, warnings are not.
+        quality_failed = False
+        for gate in converter.check_mesh_quality():
+            if gate.status == "FAIL":
+                quality_failed = True
+                click.echo(click.style(
+                    f"[QUALITY FAIL] {gate.label} ('{gate.mesh}'):", fg="red"
+                ))
+                for issue in gate.blocking:
+                    click.echo(f"  - {issue}")
+            elif gate.status == "WARNING":
+                click.echo(click.style(
+                    f"[QUALITY WARN] {gate.label} ('{gate.mesh}'):", fg="yellow"
+                ))
+                for warning in gate.warnings:
+                    click.echo(f"  - {warning}")
+            elif gate.status == "PASS":
+                click.echo(click.style(
+                    f"[QUALITY PASS] {gate.label} ('{gate.mesh}')", fg="green"
+                ))
+        if quality_failed:
+            sys.exit(1)
+        click.echo(click.style("[OK] Spec is valid.", fg="green"))
 
     except Exception as e:
         click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
@@ -695,6 +730,14 @@ def resolve_cmd(
         "(default: --no-strict-validation)"
     ),
 )
+@click.option(
+    "--quality-gates/--no-quality-gates",
+    default=True,
+    help=(
+        "Run geometry quality gates on packaged meshes; FAIL blocks the "
+        "run (default: --quality-gates)"
+    ),
+)
 def run_orcawave_cmd(
     spec_path,
     output,
@@ -704,6 +747,7 @@ def run_orcawave_cmd(
     modular,
     validate,
     strict_validation,
+    quality_gates,
 ):
     """Run an OrcaWave diffraction analysis from a DiffractionSpec YAML.
 
@@ -745,6 +789,7 @@ def run_orcawave_cmd(
             generate_modular=modular,
             validate_outputs=validate,
             validation_strict=strict_validation,
+            quality_gates=quality_gates,
         )
         runner = OrcaWaveRunner(config)
         result = runner.run(spec, spec_path=Path(spec_path))
@@ -756,6 +801,8 @@ def run_orcawave_cmd(
             click.echo(f"  Modular    : {len(result.modular_files)} section files")
         if result.mesh_files:
             click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
+        for warning in getattr(result, "quality_warnings", []):
+            click.echo(click.style(f"  [QUALITY] {warning}", fg="yellow"))
         if result.duration_seconds is not None:
             click.echo(f"  Duration   : {result.duration_seconds:.2f}s")
         _echo_validation_block(result)
@@ -878,6 +925,8 @@ def run_aqwa_cmd(
         click.echo(f"  Output dir : {result.output_dir}")
         if result.mesh_files:
             click.echo(f"  Mesh files : {len(result.mesh_files)} copied")
+        for warning in getattr(result, "quality_warnings", []):
+            click.echo(click.style(f"  [QUALITY] {warning}", fg="yellow"))
         if result.lis_file:
             click.echo(f"  LIS file   : {result.lis_file}")
         if result.ah1_file:
