@@ -222,6 +222,28 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
+    elif basename == "on_bottom_stability":
+        from digitalmodel.subsea.pipeline.integrity_workflows import (
+            run_on_bottom_stability,
+        )
+
+        cfg_base = run_on_bottom_stability(cfg_base)
+    elif basename == "free_span":
+        from digitalmodel.subsea.pipeline.integrity_workflows import run_free_span
+
+        cfg_base = run_free_span(cfg_base)
+    elif basename == "lateral_buckling":
+        from digitalmodel.subsea.pipeline.integrity_workflows import (
+            run_lateral_buckling,
+        )
+
+        cfg_base = run_lateral_buckling(cfg_base)
+    elif basename == "upheaval_buckling":
+        from digitalmodel.subsea.pipeline.integrity_workflows import (
+            run_upheaval_buckling,
+        )
+
+        cfg_base = run_upheaval_buckling(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

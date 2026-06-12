@@ -1,0 +1,27 @@
+basename: on_bottom_stability
+
+on_bottom_stability:
+  pipe:
+    od_steel_m: 0.3239
+    wt_steel_m: 0.0127
+    coating_thickness_m: 0.08
+    rho_steel: 7850.0
+    rho_coating: 3040.0
+    rho_contents: 0.0
+    rho_seawater: 1025.0
+  metocean:
+    water_velocity_m_s: 1.5
+    water_acceleration_m_s2: 0.5235987755982988
+  hydrodynamic:
+    cd: 0.7
+    cm: 3.29
+    cl: 0.9
+  soil:
+    friction_coefficient: 0.5
+  safety_factor: 1.1
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

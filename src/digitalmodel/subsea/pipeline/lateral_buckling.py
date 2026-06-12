@@ -30,6 +30,7 @@ class LateralBuckling:
         lateral_buckling_df = self.get_lateral_buckling(cfg)
 
         self.save_results(cfg, lateral_buckling_df)
+        return cfg
 
     def save_results(self, cfg, lateral_buckling_df):
         file_name = cfg["Analysis"]["file_name_for_overwrite"] + "_lateral_buckling.csv"
@@ -37,7 +38,8 @@ class LateralBuckling:
         lateral_buckling_df.to_csv(file_name, index=False)
 
         csv_groups = [{"file_name": file_name, "label": ""}]
-        self.save_plots(cfg, csv_groups)
+        if cfg.get("default", {}).get("config", {}).get("generate_plots", True):
+            self.save_plots(cfg, csv_groups)
 
     def save_plots(self, cfg, csv_groups):
         self.save_temperature_plot(cfg, csv_groups.copy())

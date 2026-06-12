@@ -3,7 +3,6 @@ DNV RP F105 Section 7.3 + DNV-RP-C203 — Fatigue damage accumulation.
 
 Uses the built-in bilinear S-N curve from ``_bilinear_sn`` which provides
 the complete DNV-RP-C203 Table 2-1 (14 weld classes × 2 environments).
-When ``digitalmodel.structural.fatigue`` is available it is used instead.
 
 DNV-RP-C203 F-class parameters (in air, first slope):
     A1 = 1.73×10¹¹, m1 = 3.0, CAFL = 36.84 MPa
@@ -12,7 +11,11 @@ DNV-RP-C203 F-class parameters (in air, first slope):
 Seawater with CP:
     A1 = 8.51×10¹⁰, m1 = 3.0 (reduced)
     A2 = 1.76×10¹⁴, m2 = 5.0
-    No fatigue limit (CAFL = 0) per DNV-RP-C203 Sec 2.4.4
+
+This screening implementation retains the in-air CAFL as a low-stress cutoff
+before applying the seawater-with-CP curve above the cutoff. That preserves
+the module's historical "below fatigue limit → zero damage" behavior while
+still making seawater-with-CP more damaging for finite-stress checks.
 
 Palmgren-Miner rule (F105 Eq 7.3-1):
     D_annual = f_n × T_year / N(Δσ)
@@ -49,31 +52,21 @@ class SpanFatigueDamage:
         self._inp = inp
         self._fn = fn
         self._stress_mpa = stress_mpa
+        self._fatigue_limit_mpa = 0.0
         self._curve = self._load_sn_curve()
 
     # ------------------------------------------------------------------
-    # S-N curve loading — built-in bilinear with structural.fatigue fallback
+    # S-N curve loading
     # ------------------------------------------------------------------
 
     def _load_sn_curve(self):
         """Load the DNV-RP-C203 S-N curve.
 
-        Strategy:
-        1. Try ``digitalmodel.structural.fatigue.sn_curves.get_dnv_curve``
-           (returns a PowerLawSNCurve — single slope).
-        2. Fall back to the built-in ``_bilinear_sn.get_sn_curve``
-           (returns a BilinearSNCurve — two slopes, full DNV-RP-C203 table).
-
-        Both expose ``.get_allowable_cycles(stress_mpa) -> float`` and
-        ``.fatigue_limit``, so downstream code is unchanged.
+        The free-span fatigue check needs the environment-specific
+        seawater-with-CP curve from DNV-RP-C203. The broader structural
+        fatigue helper currently exposes in-air DNV curves only, so this
+        path uses the local bilinear table directly.
         """
-        try:
-            from digitalmodel.structural.fatigue.sn_curves import get_dnv_curve
-            return get_dnv_curve(self._inp.sn_curve_class)
-        except (ImportError, ModuleNotFoundError):
-            pass
-
-        # Built-in bilinear fallback
         from ._bilinear_sn import get_sn_curve
 
         env_str = (
@@ -81,10 +74,18 @@ class SpanFatigueDamage:
             if self._inp.environment == EnvironmentType.SEAWATER_CP
             else "air"
         )
-        return get_sn_curve(
+        curve = get_sn_curve(
             curve_class=self._inp.sn_curve_class,
             environment=env_str,
         )
+        if env_str == "seawater_cp":
+            self._fatigue_limit_mpa = get_sn_curve(
+                curve_class=self._inp.sn_curve_class,
+                environment="air",
+            ).fatigue_limit
+        else:
+            self._fatigue_limit_mpa = curve.fatigue_limit
+        return curve
 
     # ------------------------------------------------------------------
     # Allowable cycles N(S)
@@ -98,6 +99,8 @@ class SpanFatigueDamage:
 
         Returns ``math.inf`` when *stress_mpa* ≤ CAFL.
         """
+        if abs(stress_mpa) <= self._fatigue_limit_mpa:
+            return math.inf
         N = self._curve.get_allowable_cycles(stress_mpa)
         if math.isinf(N):
             return math.inf
