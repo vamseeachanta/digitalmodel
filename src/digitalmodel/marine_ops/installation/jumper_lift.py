@@ -21,6 +21,7 @@ Units  : SI unless noted (inch inputs converted internally)
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
@@ -1025,9 +1026,11 @@ def generate_orcaflex_line_sections_yaml(
     sections = compute_orcaflex_sections(pipe_geom, pipe_props)
 
     yaml_lines = ["line_sections:"]
-    for i, sec in enumerate(sections):
-        yaml_lines.append(f"  - name: \"{sec['name']}\"")
-        yaml_lines.append(f"    line_type: \"{sec['line_type']}\"")
+    for sec in sections:
+        # Section names embed inch marks (e.g. 10.75"Jumper_wCoat); JSON
+        # string encoding is valid YAML and escapes them correctly.
+        yaml_lines.append(f"  - name: {json.dumps(sec['name'])}")
+        yaml_lines.append(f"    line_type: {json.dumps(sec['line_type'])}")
         yaml_lines.append(f"    length_m: {sec['length_m']:.6f}")
     return "\n".join(yaml_lines)
 

@@ -79,3 +79,57 @@ workflows:
       - examples/workflows/aqwa-diffraction-deck-prep/results/prepared/registry_ship_diffraction.dat
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[aqwa-diffraction-deck-prep]
     runtime: offline
+  - id: dynacard-diagnostics
+    basename: artificial_lift
+    title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
+    input: examples/workflows/dynacard-diagnostics/input.yml
+    outputs:
+      - examples/workflows/dynacard-diagnostics/results/input.yml
+      - examples/workflows/dynacard-diagnostics/results/input_diagnostic_report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dynacard-diagnostics]
+    runtime: offline
+  - id: orcaflex-6dbuoy-dnvrph103
+    basename: code_dnvrph103
+    title: DNV-RP-H103 6D buoy OrcaFlex YAML model preparation
+    input: examples/workflows/orcaflex-6dbuoy-dnvrph103/input.yml
+    outputs:
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/input.yml
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/dnvrph103_demo_6dbuoy_deep.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-6dbuoy-dnvrph103]
+    runtime: offline
+  - id: fpso-spread-mooring
+    basename: fpso_mooring
+    title: FPSO eight-line spread-mooring safety-factor screening
+    input: examples/workflows/fpso-spread-mooring/input.yml
+    outputs:
+      - examples/workflows/fpso-spread-mooring/results/input.yml
+      - examples/workflows/fpso-spread-mooring/results/fpso_spread_mooring_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-spread-mooring]
+    runtime: offline
+  - id: wall-thickness-quickcheck
+    basename: wall_thickness
+    title: DNV/API wall-thickness quickcheck cached deckhand report
+    input: examples/workflows/wall-thickness-quickcheck/input.yml
+    outputs:
+      - examples/workflows/wall-thickness-quickcheck/results/input.yml
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.html
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.json
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wall-thickness-quickcheck]
+    runtime: offline
+  - id: api579-pipe-ffs-b314
+    basename: API579
+    title: API 579 FFS for a 12.75 inch B31.4 oil pipe
+    input: examples/workflows/api579-pipe-ffs-b314/input.yml
+    outputs:
+      - examples/workflows/api579-pipe-ffs-b314/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b314]
+    runtime: offline
+  - id: api579-pipe-ffs-b318
+    basename: API579
+    title: API 579 FFS for a 16 inch B31.8 gas pipe
+    input: examples/workflows/api579-pipe-ffs-b318/input.yml
+    outputs:
+      - examples/workflows/api579-pipe-ffs-b318/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b318]
+    runtime: offline

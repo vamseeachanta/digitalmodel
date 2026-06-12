@@ -1,0 +1,15 @@
+basename: wall_thickness
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+wall_thickness:
+  quickcheck:
+    cache: data/quickcheck_cache.json
+    output_html: results/wall_thickness_quickcheck.html
+    output_json: results/wall_thickness_quickcheck.json
+    output_csv: results/wall_thickness_quickcheck.csv

@@ -205,7 +205,8 @@ def stage_4_generate_yaml(results: Dict) -> str:
         YAML string defining line sections.
     """
     if isinstance(results, dict):
-        return results.get("orcaflex_yaml", "")
+        # Key contract with jumper_lift.run_jumper_analysis() — see issue #601.
+        return results.get("orcaflex_sections_yaml", "")
     return ""
 
 

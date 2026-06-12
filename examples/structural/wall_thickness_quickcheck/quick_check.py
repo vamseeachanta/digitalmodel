@@ -332,10 +332,11 @@ def write_cache(payload: dict[str, Any]) -> None:
     CACHE_PATH.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def run_from_cache() -> dict[str, Any]:
-    if not CACHE_PATH.exists():
-        raise SystemExit(f"[ERROR] cache fixture not found: {CACHE_PATH}")
-    return json.loads(CACHE_PATH.read_text(encoding="utf-8"))
+def run_from_cache(cache_path: Path | None = None) -> dict[str, Any]:
+    path = cache_path or CACHE_PATH
+    if not path.exists():
+        raise SystemExit(f"[ERROR] cache fixture not found: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def print_summary(payload: dict[str, Any]) -> None:

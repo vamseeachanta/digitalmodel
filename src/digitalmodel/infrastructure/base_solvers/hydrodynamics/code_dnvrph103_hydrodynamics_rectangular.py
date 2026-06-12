@@ -54,14 +54,15 @@ class DNVRPH103_hydrodynamics_rectangular:
     def save_model(self, yaml_data, zone):
 
         output_dir = self.cfg["inputs"]["output_dir"]
-        if output_dir is None or not os.path.isdir(output_dir):
+        if output_dir is None:
             output_dir = self.cfg.Analysis["analysis_root_folder"]
+        os.makedirs(output_dir, exist_ok=True)
 
         filename = self.cfg["inputs"]["output_filename"]
 
         save_data.saveDataYaml(
             yaml_data,
-            output_dir + "\\" + filename + "_" + zone,
+            os.path.join(output_dir, filename + "_" + zone),
             default_flow_style=False,
         )
 

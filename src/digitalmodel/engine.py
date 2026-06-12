@@ -200,6 +200,20 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "pipe_capacity":
         pc = PipeCapacity()
         cfg_base = pc.router(cfg_base)
+    elif basename == "wall_thickness":
+        from digitalmodel.structural.wall_thickness_quickcheck import (
+            WallThicknessQuickCheck,
+        )
+
+        wt = WallThicknessQuickCheck()
+        cfg_base = wt.router(cfg_base)
+    elif basename == "API579":
+        from digitalmodel.asset_integrity.API579 import API579
+
+        result_folder = cfg_base.get("Analysis", {}).get("result_folder")
+        if result_folder and not str(result_folder).endswith(os.sep):
+            cfg_base["Analysis"]["result_folder"] = f"{result_folder}{os.sep}"
+        cfg_base = API579(cfg_base)
     elif basename == "ct_hydraulics":
         ct_hydraulics = CTHydraulics()
         cfg_base = ct_hydraulics.router(cfg_base)
@@ -244,6 +258,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         diffraction = DiffractionWorkflow()
         cfg_base = diffraction.router(cfg_base)
+    elif basename == "fpso_mooring":
+        from digitalmodel.subsea.mooring_analysis.fpso_workflow import FPSOMooringWorkflow
+        fmw = FPSOMooringWorkflow()
+        cfg_base = fmw.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

@@ -1,0 +1,23 @@
+basename: API579
+
+default:
+  Analysis:
+    GML:
+      data_source: inline
+      Circumference: true
+      Length: false
+      FCARate: Historical
+      FCA: [0.0, 0.04, 0.08]
+    LML: true
+    B31G: false
+  Units: inch
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+  settings:
+    StartWTFactor: 1
+    AssessmentLengthCeilingFactor_Circumference: null
+    AssessmentLengthCeilingFactor_Length: 1.0
+    CorrosionAllowance: 0.0
