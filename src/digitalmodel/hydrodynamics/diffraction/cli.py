@@ -684,6 +684,65 @@ def resolve_cmd(
 # ---------------------------------------------------------------------------
 
 
+@cli.command("orcawave-doctor")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output directory to test for writability (default: cwd)",
+)
+@click.option(
+    "--executable",
+    type=click.Path(),
+    default=None,
+    help="Explicit OrcaWave executable path to verify.",
+)
+@click.option(
+    "--require-solver",
+    is_flag=True,
+    default=False,
+    help="Exit nonzero if the host cannot actually solve (dry-run only).",
+)
+def orcawave_doctor_cmd(output, executable, require_solver):
+    """Diagnose OrcaWave runtime readiness on this host.
+
+    Reports PASS/WARN/FAIL for the OrcFxAPI binding, executable detection,
+    ORCAWAVE_PATH, output-directory writability, and thread/memory guidance,
+    then states whether the host is solver-capable or dry-run only.
+
+    Exit policy: 0 = host usable (dry-run-only is a supported mode);
+    nonzero = any FAIL check, or dry-run-only with --require-solver.
+    """
+    from digitalmodel.hydrodynamics.diffraction.orcawave_doctor import run_doctor
+
+    click.echo("=" * 80)
+    click.echo("OrcaWave Doctor")
+    click.echo("=" * 80)
+
+    checks, capability = run_doctor(
+        output_dir=Path(output) if output else None,
+        executable=Path(executable) if executable else None,
+    )
+    colors = {"PASS": "green", "WARN": "yellow", "FAIL": "red"}
+    for check in checks:
+        click.echo(
+            click.style(f"[{check.status:4}] ", fg=colors[check.status])
+            + f"{check.name}: {check.detail}"
+        )
+
+    failed = any(c.status == "FAIL" for c in checks)
+    if failed:
+        click.echo(click.style("\n[FAIL] Hard failures present.", fg="red"))
+        sys.exit(1)
+    if require_solver and capability == "dry-run-only":
+        click.echo(click.style(
+            "\n[FAIL] --require-solver: host is dry-run only.", fg="red"
+        ))
+        sys.exit(1)
+    click.echo(click.style(f"\n[OK] Host usable ({capability}).", fg="green"))
+
+
 @cli.command("run-orcawave")
 @click.argument("spec_path", type=click.Path(exists=True))
 @click.option(
