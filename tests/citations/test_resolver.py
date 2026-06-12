@@ -5,7 +5,7 @@ Covers the 6-level precedence chain:
   2. LLM_WIKI_PATH env var
   3. DIGITALMODEL_REPO_ROOT (legacy alias with DeprecationWarning)
   4. bounded parent walk (cap=8) for workspace-hub overlay
-  5. known local clone (Path.home() / 'workspace-hub' / 'llm-wiki')
+  5. known local clones (Path.home() workspace clone and local-analysis clone)
   6. fail-closed with actionable message naming LLM_WIKI_PATH, the
      private repo URL, and the routing-rule pointer.
 
@@ -13,7 +13,6 @@ Also covers layout-detection: standalone llm-wiki repos use `wikis/<domain>/...`
 without the `knowledge/` prefix; workspace-hub overlay uses `knowledge/wikis/...`.
 The resolver detects which layout a given base uses and joins accordingly.
 """
-
 from __future__ import annotations
 
 import logging
@@ -40,9 +39,7 @@ from digitalmodel.citations.resolver import (
 def _make_standalone_clone(root: Path) -> Path:
     """Create a fake standalone-layout llm-wiki clone at root."""
     (root / "wikis" / "engineering" / "wiki" / "standards").mkdir(parents=True)
-    (
-        root / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md"
-    ).write_text(
+    (root / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md").write_text(
         "---\ncode_id: DNV-OS-E301\npublisher: DNV\nrevision: 2021-07\n---\n",
         encoding="utf-8",
     )
@@ -79,7 +76,6 @@ def _clean_cache():
 def isolated_known_clones(monkeypatch):
     """Disable real-filesystem fallbacks for tests that exercise fail-closed paths."""
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "_KNOWN_LOCAL_CLONES", ())
 
 
@@ -121,23 +117,19 @@ def test_resolver_llm_wiki_path_env_valid_workspace_hub_layout(tmp_path, monkeyp
     assert resolved == overlay
 
 
-def test_resolver_llm_wiki_path_env_invalid_path(
-    tmp_path, monkeypatch, isolated_known_clones
-):
+def test_resolver_llm_wiki_path_env_invalid_path(tmp_path, monkeypatch, isolated_known_clones):
     """LLM_WIKI_PATH set but path doesn't exist → fail-closed with specific reason."""
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path / "nonexistent"))
 
     with pytest.raises(CitationResolutionError) as exc:
         resolve_wiki_base()
-    assert exc.value.reason.startswith(
-        "llm_wiki_path_invalid:"
-    ), f"expected reason to start with 'llm_wiki_path_invalid:'; got {exc.value.reason!r}"
+    assert exc.value.reason.startswith("llm_wiki_path_invalid:"), (
+        f"expected reason to start with 'llm_wiki_path_invalid:'; got {exc.value.reason!r}"
+    )
     assert "LLM_WIKI_PATH" in str(exc.value)
 
 
-def test_resolver_llm_wiki_path_env_stale_clone_detection(
-    tmp_path, monkeypatch, isolated_known_clones
-):
+def test_resolver_llm_wiki_path_env_stale_clone_detection(tmp_path, monkeypatch, isolated_known_clones):
     """LLM_WIKI_PATH path exists but is missing the expected wiki structure.
     Distinct reason from invalid-path so operators can diagnose the misconfiguration."""
     bare = tmp_path / "stale"
@@ -146,9 +138,9 @@ def test_resolver_llm_wiki_path_env_stale_clone_detection(
 
     with pytest.raises(CitationResolutionError) as exc:
         resolve_wiki_base()
-    assert exc.value.reason.startswith(
-        "llm_wiki_path_stale_clone:"
-    ), f"expected reason to start with 'llm_wiki_path_stale_clone:'; got {exc.value.reason!r}"
+    assert exc.value.reason.startswith("llm_wiki_path_stale_clone:"), (
+        f"expected reason to start with 'llm_wiki_path_stale_clone:'; got {exc.value.reason!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -191,16 +183,13 @@ def test_resolver_parent_walk_finds_overlay(tmp_path, monkeypatch):
     fake_file.write_text("# fake caller")
 
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
     resolved = resolve_wiki_base()
     assert resolved == overlay
 
 
-def test_resolver_parent_walk_has_sentinel(
-    tmp_path, monkeypatch, isolated_known_clones
-):
+def test_resolver_parent_walk_has_sentinel(tmp_path, monkeypatch, isolated_known_clones):
     """Walk halts at hard cap; does NOT infinite-loop at /."""
     import time
 
@@ -212,7 +201,6 @@ def test_resolver_parent_walk_has_sentinel(
     fake_file.write_text("# fake")
 
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
     start = time.monotonic()
@@ -232,7 +220,6 @@ def test_resolver_known_local_clone_fallback(tmp_path, monkeypatch):
     standalone = _make_standalone_clone(tmp_path / "fake-local-clone")
 
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "_KNOWN_LOCAL_CLONES", (standalone,))
     # disable parent walk by pointing __file__ outside any clone
     fake_file = tmp_path / "outside" / "no_clone_here.py"
@@ -249,15 +236,12 @@ def test_resolver_known_local_clone_fallback(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_resolver_fail_closed_no_env_no_clone(
-    tmp_path, monkeypatch, isolated_known_clones
-):
+def test_resolver_fail_closed_no_env_no_clone(tmp_path, monkeypatch, isolated_known_clones):
     """All resolution paths exhausted → fail-closed with actionable message."""
     fake_file = tmp_path / "outside" / "no_clone.py"
     fake_file.parent.mkdir(parents=True)
     fake_file.write_text("# fake")
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
     with pytest.raises(CitationResolutionError) as exc:
@@ -265,15 +249,12 @@ def test_resolver_fail_closed_no_env_no_clone(
     assert "resolver_unconfigured" in exc.value.reason
 
 
-def test_resolver_fail_closed_message_is_actionable(
-    tmp_path, monkeypatch, isolated_known_clones
-):
+def test_resolver_fail_closed_message_is_actionable(tmp_path, monkeypatch, isolated_known_clones):
     """Fail-closed error message must name LLM_WIKI_PATH, the repo URL, the routing rule, and `export`."""
     fake_file = tmp_path / "outside" / "no_clone.py"
     fake_file.parent.mkdir(parents=True)
     fake_file.write_text("# fake")
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
     with pytest.raises(CitationResolutionError) as exc:
@@ -301,15 +282,12 @@ def test_resolver_info_log_on_success(tmp_path, monkeypatch, caplog):
     assert any(str(standalone) in r.getMessage() for r in info_records)
 
 
-def test_resolver_error_log_on_failure(
-    tmp_path, monkeypatch, caplog, isolated_known_clones
-):
+def test_resolver_error_log_on_failure(tmp_path, monkeypatch, caplog, isolated_known_clones):
     """Failed resolution emits an ERROR log."""
     fake_file = tmp_path / "outside" / "no_clone.py"
     fake_file.parent.mkdir(parents=True)
     fake_file.write_text("# fake")
     from digitalmodel.citations import resolver
-
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
     with caplog.at_level(logging.ERROR, logger="digitalmodel.citations.resolver"):
@@ -331,16 +309,7 @@ def test_resolver_layout_join_workspace_hub(tmp_path, monkeypatch):
 
     resolved = resolve_wiki_path("wikis/engineering/wiki/standards/dnv-os-e301.md")
     assert resolved.is_file()
-    assert (
-        resolved
-        == overlay
-        / "knowledge"
-        / "wikis"
-        / "engineering"
-        / "wiki"
-        / "standards"
-        / "dnv-os-e301.md"
-    )
+    assert resolved == overlay / "knowledge" / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md"
 
 
 def test_resolver_layout_join_standalone(tmp_path, monkeypatch):
@@ -350,15 +319,7 @@ def test_resolver_layout_join_standalone(tmp_path, monkeypatch):
 
     resolved = resolve_wiki_path("wikis/engineering/wiki/standards/dnv-os-e301.md")
     assert resolved.is_file()
-    assert (
-        resolved
-        == standalone
-        / "wikis"
-        / "engineering"
-        / "wiki"
-        / "standards"
-        / "dnv-os-e301.md"
-    )
+    assert resolved == standalone / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md"
 
 
 # ---------------------------------------------------------------------------
@@ -366,9 +327,7 @@ def test_resolver_layout_join_standalone(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_resolver_one_shot_warning_cached(
-    tmp_path, monkeypatch, isolated_known_clones, recwarn
-):
+def test_resolver_one_shot_warning_cached(tmp_path, monkeypatch, isolated_known_clones, recwarn):
     """Multiple deprecation-warn paths emit at most one DeprecationWarning."""
     overlay = _make_workspace_hub_overlay(tmp_path / "wsh")
     monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(overlay))
@@ -377,12 +336,10 @@ def test_resolver_one_shot_warning_cached(
     resolve_wiki_base()
     resolve_wiki_base()
 
-    deprecation_warnings = [
-        w for w in recwarn.list if issubclass(w.category, DeprecationWarning)
-    ]
-    assert (
-        len(deprecation_warnings) == 1
-    ), f"expected exactly 1 DeprecationWarning, got {len(deprecation_warnings)}"
+    deprecation_warnings = [w for w in recwarn.list if issubclass(w.category, DeprecationWarning)]
+    assert len(deprecation_warnings) == 1, (
+        f"expected exactly 1 DeprecationWarning, got {len(deprecation_warnings)}"
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ from digitalmodel.citations.registry import (
     MooringCondition,
     get_mooring_safety_factor,
 )
+from digitalmodel.citations import registry
 
 
 def _repo_root() -> Path:
@@ -71,3 +72,26 @@ def test_registry_canonical_wiki_path_form_is_wikis_no_prefix():
     assert not cv.citation.wiki_path.startswith("knowledge/"), (
         f"Canonical wiki_path should not have 'knowledge/' prefix, got {cv.citation.wiki_path!r}"
     )
+
+
+def test_dnv_f103_reference_emits_cited_value():
+    cv = registry.get_dnv_f103_reference(
+        "Table 5-1 and Annex 1",
+        note="Current density and coating breakdown basis",
+        repo_root=_repo_root(),
+    )
+    assert cv.value == 1.0
+    assert cv.citation.code_id == "dnv-rp-f103"
+    assert cv.citation.publisher == "DNV"
+    assert cv.citation.revision == "2010"
+    assert cv.citation.section == "Table 5-1 and Annex 1"
+    assert cv.citation.wiki_path == "wikis/engineering-standards/wiki/standards/dnv-rp-f103.md"
+    assert cv.citation.note == "Current density and coating breakdown basis"
+    assert cv.units == "reference"
+
+
+def test_dnv_f103_reference_with_broken_repo_root_fails_closed(tmp_path):
+    with pytest.raises(CitationResolutionError) as exc:
+        registry.get_dnv_f103_reference("Table 5-1", repo_root=tmp_path)
+    assert exc.value.code_id == "dnv-rp-f103"
+    assert exc.value.reason == "page_missing"

@@ -1,5 +1,6 @@
 # Standard library imports
 import math
+from pathlib import Path
 
 # Third party imports
 import pytest  # noqa
@@ -11,6 +12,10 @@ from digitalmodel.infrastructure.common.cathodic_protection import CathodicProte
 # ---------------------------------------------------------------------------
 # Helper — minimal valid DNV_RP_F103_2010 configuration (WRK-279 structure)
 # ---------------------------------------------------------------------------
+
+def _citation_fixture_root() -> Path:
+    return Path(__file__).resolve().parents[2] / "citations" / "fixtures"
+
 
 def _dnv_cfg(
     burial_condition="buried",
@@ -25,6 +30,7 @@ def _dnv_cfg(
 ):
     """Return a minimal valid DNV_RP_F103_2010 configuration dictionary."""
     return {
+        "citation_repo_root": str(_citation_fixture_root()),
         "inputs": {
             "calculation_type": "DNV_RP_F103_2010",
             "design_data": {"design_life": design_life},

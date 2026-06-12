@@ -1,4 +1,8 @@
+from dataclasses import asdict
 import math
+from pathlib import Path
+
+from digitalmodel.citations.registry import get_dnv_f103_reference
 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
     _b401_anode_requirements,
@@ -119,6 +123,14 @@ class CathodicProtection:
             inputs, pipeline_geometry, current_densities, coating_breakdown, anode_spacing
         )
 
+        citation_repo_root = cfg.get("citation_repo_root") or inputs.get("citation_repo_root")
+        repo_root = Path(citation_repo_root) if citation_repo_root else None
+        f103_reference = get_dnv_f103_reference(
+            "Table 5-1, Annex 1, Eq.1, Eq.3, Eq.5, Eq.11",
+            note="DNV-RP-F103 2010 basis for pipeline CP current density, coating breakdown, current demand, anode mass, and metallic resistance",
+            repo_root=repo_root,
+        )
+
         cfg["results"] = {
             "design_life_years": round(design_life, 3),
             "pipeline_geometry_m": pipeline_geometry,
@@ -129,6 +141,7 @@ class CathodicProtection:
             "anode_requirements": anode_requirements,
             "anode_spacing_m": anode_spacing,
             "attenuation_analysis": attenuation,
+            "citations": [asdict(f103_reference.citation)],
         }
 
         return cfg
@@ -584,7 +597,6 @@ class CathodicProtection:
         # Extract pipeline geometry parameters
         outer_diameter_m = geometry["outer_diameter_m"]
         wall_thickness_m = geometry["wall_thickness_m"]
-        pipeline_length_m = geometry["length_m"]
         longitudinal_resistance_ohm_per_m = geometry["longitudinal_resistance_ohm_per_m"]
 
         # Calculate inner diameter
