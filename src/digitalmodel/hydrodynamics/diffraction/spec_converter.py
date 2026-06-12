@@ -93,8 +93,13 @@ class SpecConverter:
         backend = self.backends[solver]
         output_dir = Path(output_dir)
 
+        spec_dir = self.spec_path.parent if solver == "aqwa" else None
         if format == "single":
+            if spec_dir is not None:
+                return backend.generate_single(self.spec, output_dir, spec_dir=spec_dir)
             return backend.generate_single(self.spec, output_dir)
+        if spec_dir is not None:
+            return backend.generate_modular(self.spec, output_dir, spec_dir=spec_dir)
         return backend.generate_modular(self.spec, output_dir)
 
     def convert_all(
@@ -147,9 +152,7 @@ class SpecConverter:
         for body in self.spec.get_bodies():
             mesh_file = body.vessel.geometry.mesh_file
             if not mesh_file or mesh_file.strip() == "":
-                issues.append(
-                    f"Body '{body.vessel.name}' has no mesh file specified."
-                )
+                issues.append(f"Body '{body.vessel.name}' has no mesh file specified.")
 
         # Check frequencies are non-empty
         freqs = self.spec.frequencies.to_frequencies_rad_s()
@@ -164,8 +167,6 @@ class SpecConverter:
         # Check mass is positive (already enforced by Pydantic, but belt-and-braces)
         for body in self.spec.get_bodies():
             if body.vessel.inertia.mass <= 0:
-                issues.append(
-                    f"Body '{body.vessel.name}' has non-positive mass."
-                )
+                issues.append(f"Body '{body.vessel.name}' has non-positive mass.")
 
         return issues

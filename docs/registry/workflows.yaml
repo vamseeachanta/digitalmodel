@@ -61,6 +61,24 @@ workflows:
       - examples/workflows/plate-buckling/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]
     runtime: offline
+  - id: orcawave-input-prep
+    basename: diffraction
+    title: OrcaWave diffraction input YAML preparation from a canonical spec
+    input: examples/workflows/orcawave-input-prep/input.yml
+    outputs:
+      - examples/workflows/orcawave-input-prep/results/input.yml
+      - examples/workflows/orcawave-input-prep/results/prepared/RegistryShip.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-input-prep]
+    runtime: offline
+  - id: aqwa-diffraction-deck-prep
+    basename: diffraction
+    title: AQWA diffraction deck preparation from a canonical spec
+    input: examples/workflows/aqwa-diffraction-deck-prep/input.yml
+    outputs:
+      - examples/workflows/aqwa-diffraction-deck-prep/results/input.yml
+      - examples/workflows/aqwa-diffraction-deck-prep/results/prepared/registry_ship_diffraction.dat
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[aqwa-diffraction-deck-prep]
+    runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
     title: Synthetic sucker-rod pump dynacard diagnostic with HTML report

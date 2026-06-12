@@ -1,0 +1,46 @@
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: RegistryShip
+  type: ship
+  geometry:
+    mesh_file: sample_box.gdf
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1000000.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 1.0, 1.0]
+
+environment:
+  water_depth: 120.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.4, 0.8, 1.2]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: true
+
+solver_options:
+  remove_irregular_frequencies: true
+  qtf_calculation: false
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+
+metadata:
+  project: registry_ship_diffraction
+  author: registry-v2
+  description: Compact OrcaWave input-preparation workflow for registry tests
+  tags: [registry, orcawave, diffraction]
