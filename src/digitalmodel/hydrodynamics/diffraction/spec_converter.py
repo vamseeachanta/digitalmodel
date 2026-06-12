@@ -29,6 +29,13 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBack
 class SpecConverter:
     """Main entry point for spec -> solver input conversion.
 
+    Mesh path convention: ``vessel.geometry.mesh_file`` entries are resolved
+    relative to the directory containing the spec file (absolute paths are
+    used as-is). ``convert``/``convert_all`` hard-fail with
+    ``FileNotFoundError`` when any referenced mesh does not resolve, so
+    missing meshes surface at conversion time rather than as cryptic
+    solver-time errors (#500).
+
     Parameters
     ----------
     spec_path : Path
@@ -88,6 +95,13 @@ class SpecConverter:
         if format not in ("single", "modular"):
             raise ValueError(
                 f"Unknown format '{format}'. Choose 'single' or 'modular'."
+            )
+
+        mesh_issues = self._validate_mesh_files()
+        if mesh_issues:
+            raise FileNotFoundError(
+                "Mesh pre-flight validation failed:\n  "
+                + "\n  ".join(mesh_issues)
             )
 
         backend = self.backends[solver]
@@ -169,4 +183,35 @@ class SpecConverter:
             if body.vessel.inertia.mass <= 0:
                 issues.append(f"Body '{body.vessel.name}' has non-positive mass.")
 
+        # Pre-flight mesh existence (#500): convert() refuses to run on these.
+        issues.extend(self._validate_mesh_files())
+
+        return issues
+
+    def _resolve_mesh_path(self, mesh_file: str) -> Path:
+        """Resolve a mesh reference per the spec-relative convention."""
+        mesh_path = Path(mesh_file)
+        if mesh_path.is_absolute():
+            return mesh_path
+        return (self.spec_path.parent / mesh_path).resolve()
+
+    def _validate_mesh_files(self) -> list[str]:
+        """Return an issue per body whose mesh file does not resolve.
+
+        Mesh references are resolved relative to the spec file's directory;
+        absolute paths are checked as-is. Bodies with no mesh specified are
+        reported separately by :meth:`validate` and skipped here.
+        """
+        issues: list[str] = []
+        for body in self.spec.get_bodies():
+            mesh_file = body.vessel.geometry.mesh_file
+            if not mesh_file or mesh_file.strip() == "":
+                continue
+            resolved = self._resolve_mesh_path(mesh_file)
+            if not resolved.is_file():
+                issues.append(
+                    f"Body '{body.vessel.name}': mesh file '{mesh_file}' not "
+                    f"found (resolved to '{resolved}'; relative paths resolve "
+                    f"against the spec file directory '{self.spec_path.parent}')."
+                )
         return issues
