@@ -57,7 +57,10 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     rad_per_s_to_period_s,
 )
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
-from digitalmodel.hydrodynamics.diffraction.mesh_packaging import copy_spec_meshes
+from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
+    copy_spec_meshes,
+    package_spec_meshes,
+)
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     AddedMassSet,
@@ -351,18 +354,25 @@ class OrcaWaveRunner:
             spec_name=spec_name,
         )
 
+        # Package meshes first (copy ready formats, convert others via
+        # MeshPipeline) so the generated input references the packaged
+        # solver-ready filenames (#606).
+        spec_to_generate = spec
+        if self._config.copy_mesh_files:
+            spec_to_generate, mesh_files = package_spec_meshes(
+                spec, output_dir, spec_dir=spec_dir, solver="orcawave"
+            )
+            self._result.mesh_files = mesh_files
+
         # Generate single input file (required for solver)
-        input_file, modular_files = self._generate_input_files(spec, output_dir)
+        input_file, modular_files = self._generate_input_files(
+            spec_to_generate, output_dir
+        )
         self._result.input_file = input_file
         self._result.modular_files = modular_files
 
-        # Copy mesh files
-        if self._config.copy_mesh_files:
-            mesh_files = self._copy_mesh_files(spec, output_dir, spec_dir=spec_dir)
-            self._result.mesh_files = mesh_files
-
         # Validate mesh references
-        warnings = self._validate_mesh_references(spec, output_dir)
+        warnings = self._validate_mesh_references(spec_to_generate, output_dir)
         if warnings:
             self._result.error_message = "; ".join(warnings)
 
