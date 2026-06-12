@@ -1,0 +1,14 @@
+basename: upheaval_buckling
+
+calculation:
+  name: upheaval_buckling
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+Analysis:
+  fe_folder: null

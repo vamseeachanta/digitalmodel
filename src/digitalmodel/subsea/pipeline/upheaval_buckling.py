@@ -30,6 +30,7 @@ class UpheavalBuckling:
         upheaval_buckling_df = self.get_upheaval_buckling(cfg)
 
         self.save_results(cfg, upheaval_buckling_df)
+        return cfg
 
     def get_friction_force(self, cfg):
         pipe_properties = cfg["pipeline"]["pipe_properties"]
@@ -83,6 +84,23 @@ class UpheavalBuckling:
             soil_pipe_friction_model,
             force_in_pipeline_section,
         )
+
+        available_download = trench_and_rock_burial_model["burial_rock_weight"][
+            "pipe_seabed"
+        ]
+        required_download = cfg["pipeline"].get("required_download_N_m", 0.0)
+        cfg["pipeline"]["upheaval_buckling"] = {
+            "force_in_pipeline_section": force_in_pipeline_section,
+            "level_1_analysis": level_1_result,
+            "uplift_resistance_model": uplift_resistance_model,
+            "trench_and_rock_burial_model": trench_and_rock_burial_model,
+            "available_download_N_m": available_download,
+            "required_download_N_m": required_download,
+            "download_margin_N_m": available_download - required_download,
+            "cover_check": "Pass"
+            if available_download >= required_download
+            else "Fail",
+        }
 
         return df
 
@@ -270,17 +288,18 @@ class UpheavalBuckling:
         return force_in_pipeline_section
 
     def save_results(self, cfg, lateral_buckling_df):
-        file_name = cfg["Analysis"]["file_name_for_overwrite"] + "_lateral_buckling.csv"
+        file_name = cfg["Analysis"]["file_name_for_overwrite"] + "_upheaval_buckling.csv"
         file_name = os.path.join(cfg["Analysis"]["result_folder"], file_name)
         lateral_buckling_df.to_csv(file_name, index=False)
 
         csv_groups = [{"file_name": file_name, "label": ""}]
-        self.save_temperature_plot(cfg, csv_groups.copy())
-        self.save_buckling_force_plot_imp(cfg, csv_groups.copy())
-        self.save_buckling_force_plot_met(cfg, csv_groups.copy())
-        self.save_buckling_stress_plot_imp(cfg, csv_groups.copy())
-        self.save_buckling_stress_plot_met(cfg, csv_groups.copy())
-        self.save_buckling_strain_plot(cfg, csv_groups.copy())
+        if cfg.get("default", {}).get("config", {}).get("generate_plots", True):
+            self.save_temperature_plot(cfg, csv_groups.copy())
+            self.save_buckling_force_plot_imp(cfg, csv_groups.copy())
+            self.save_buckling_force_plot_met(cfg, csv_groups.copy())
+            self.save_buckling_stress_plot_imp(cfg, csv_groups.copy())
+            self.save_buckling_stress_plot_met(cfg, csv_groups.copy())
+            self.save_buckling_strain_plot(cfg, csv_groups.copy())
 
     def save_temperature_plot(self, cfg, csv_groups):
         plot_yml = viz_templates.get_xy_line_csv(cfg["Analysis"].copy())

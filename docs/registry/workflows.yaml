@@ -61,6 +61,40 @@ workflows:
       - examples/workflows/plate-buckling/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]
     runtime: offline
+  - id: on-bottom-stability-f109
+    basename: on_bottom_stability
+    title: DNV-RP-F109 on-bottom stability for a concrete-coated GOM pipeline
+    input: examples/workflows/on-bottom-stability-f109/input.yml
+    outputs:
+      - examples/workflows/on-bottom-stability-f109/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[on-bottom-stability-f109]
+    runtime: offline
+  - id: free-span-f105
+    basename: free_span
+    title: DNV-RP-F105 VIV onset screening for a 10.75 inch free span
+    input: examples/workflows/free-span-f105/input.yml
+    outputs:
+      - examples/workflows/free-span-f105/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-f105]
+    runtime: offline
+  - id: pipeline-lateral-buckling
+    basename: lateral_buckling
+    title: HP/HT subsea pipeline lateral buckling screening
+    input: examples/workflows/pipeline-lateral-buckling/input.yml
+    outputs:
+      - examples/workflows/pipeline-lateral-buckling/results/input.yml
+      - examples/workflows/pipeline-lateral-buckling/results/input_lateral_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-lateral-buckling]
+    runtime: offline
+  - id: pipeline-upheaval-buckling
+    basename: upheaval_buckling
+    title: Buried subsea pipeline upheaval buckling screening
+    input: examples/workflows/pipeline-upheaval-buckling/input.yml
+    outputs:
+      - examples/workflows/pipeline-upheaval-buckling/results/input.yml
+      - examples/workflows/pipeline-upheaval-buckling/results/input_upheaval_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-upheaval-buckling]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec

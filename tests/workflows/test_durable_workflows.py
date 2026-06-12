@@ -80,6 +80,41 @@ def test_workflow_registry(workflow):
             pytest.approx(0.236)
         )
         assert result["usage_factor_ultimate_check"]["usage_equivalent"] < 1
+    elif workflow["id"] == "on-bottom-stability-f109":
+        result = cfg["on_bottom_stability"]["result"]
+        assert result["submerged_weight_N_m"] == pytest.approx(2133.496806)
+        assert result["horizontal_load_N_m"] == pytest.approx(715.325862)
+        assert result["lift_load_N_m"] == pytest.approx(502.197469)
+        assert result["required_submerged_weight_N_m"] == pytest.approx(2075.914365)
+        assert result["lateral_utilization"] == pytest.approx(0.964701)
+        assert result["is_laterally_stable"] is True
+    elif workflow["id"] == "free-span-f105":
+        result = cfg["free_span"]["result"]
+        assert result["fn_IL_hz"] == pytest.approx(0.427094447363)
+        assert result["Ks"] == pytest.approx(0.396584516808)
+        assert result["Ur_IL"] == pytest.approx(6.858740341547)
+        assert result["il_viv_onset"] is True
+        assert result["cf_viv_onset"] is True
+        assert result["allowable_span_m"] == pytest.approx(12.378282602856)
+        assert result["span_utilization"] == pytest.approx(2.746746143294)
+        assert result["cf_stress_mpa"] == pytest.approx(97.942915033638)
+    elif workflow["id"] == "pipeline-lateral-buckling":
+        result = cfg["pipeline"]["lateral_buckling"]
+        assert result["lateral_buckling_check"] == "Pass"
+        assert result["anchor_length"]["start"] == pytest.approx(1368.5)
+        assert result["anchor_length"]["end"] == pytest.approx(1368.5)
+        assert result["min_critical_buckling_load"] == pytest.approx(-64701.045412)
+        assert result["effective_axial_load"]["anchor_start"] == pytest.approx(-33.26)
+        assert result["fully_restrained_axial_force"]["L=0"] == pytest.approx(
+            -253.575
+        )
+    elif workflow["id"] == "pipeline-upheaval-buckling":
+        result = cfg["pipeline"]["upheaval_buckling"]
+        assert result["cover_check"] == "Pass"
+        assert result["available_download_N_m"] == pytest.approx(33.048855)
+        assert result["required_download_N_m"] == pytest.approx(30.0)
+        assert result["download_margin_N_m"] == pytest.approx(3.048855)
+        assert result["level_1_analysis"]["N"] == pytest.approx(184397.093676)
     elif workflow["id"] == "orcawave-input-prep":
         generated = Path(cfg["diffraction"]["outputs"]["orcawave"])
         data = yaml.safe_load(generated.read_text())
