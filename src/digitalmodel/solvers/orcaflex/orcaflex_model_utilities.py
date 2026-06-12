@@ -12,7 +12,7 @@ class OrcaflexModelUtilities:
     def get_6d_buoy_template(self):
         library_name = "digitalmodel"
         library_yaml_cfg = {
-            "filename": "base_configs/domains/code_dnvrph103/6d_buoy_template.yml",
+            "filename": "base_configs/modules/code_dnvrph103/6d_buoy_template.yml",
             "library_name": library_name,
         }
         buoy_6d_template = wwy.get_library_yaml_file(library_yaml_cfg)

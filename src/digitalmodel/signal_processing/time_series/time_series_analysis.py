@@ -6,9 +6,11 @@ import logging
 from assetutilities.common.update_deep import update_deep_dictionary
 
 # Reader imports
-from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter
+from digitalmodel.signal_processing.time_series.time_series_components import (
+    TimeSeriesComponents,
+)
 
-tca = TimeSeriesComponentsAdapter()
+tca = TimeSeriesComponents()
 
 
 class TimeSeriesAnalysis:

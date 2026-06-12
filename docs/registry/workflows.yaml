@@ -1,0 +1,63 @@
+schema_version: 1
+invocation: "uv run python -m digitalmodel {input}"
+workflows:
+  - id: cathodic-protection
+    basename: cathodic_protection
+    title: Sacrificial anode demand for a coated offshore structure
+    input: examples/workflows/cathodic-protection/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection]
+    runtime: offline
+  - id: catenary
+    basename: catenary
+    title: Angle-based catenary geometry
+    input: examples/workflows/catenary/input.yml
+    outputs:
+      - examples/workflows/catenary/results/input_equation.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[catenary]
+    runtime: offline
+  - id: pipe-capacity
+    basename: pipe_capacity
+    title: API STD 2RD internal-pressure capacity for an X65 pipeline
+    input: examples/workflows/pipe-capacity/input.yml
+    outputs:
+      - examples/workflows/pipe-capacity/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-capacity]
+    runtime: offline
+  - id: fatigue-analysis
+    basename: fatigue_analysis
+    title: Miner fatigue damage from direct S-N cycle bins
+    input: examples/workflows/fatigue-analysis/input.yml
+    outputs:
+      - examples/workflows/fatigue-analysis/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]
+    runtime: offline
+  - id: time-series
+    basename: time_series
+    title: FFT spectrum from a deterministic synthetic signal
+    input: examples/workflows/time-series/input.yml
+    outputs:
+      - examples/workflows/time-series/results/input.yml
+      - examples/workflows/time-series/results/input_signal_fft.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[time-series]
+    runtime: offline
+  - id: viv-analysis
+    basename: viv_analysis
+    title: Tubular member VIV screening for a single free span
+    input: examples/workflows/viv-analysis/input.yml
+    outputs:
+      - examples/workflows/viv-analysis/results/input.yml
+      - examples/workflows/viv-analysis/results/input_natural_frequencies.csv
+      - examples/workflows/viv-analysis/results/input_vs_frequencies.csv
+      - examples/workflows/viv-analysis/results/input_safety_factors.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]
+    runtime: offline
+  - id: plate-buckling
+    basename: plate_buckling
+    title: DNV-RP-C201 plate buckling usage check
+    input: examples/workflows/plate-buckling/input.yml
+    outputs:
+      - examples/workflows/plate-buckling/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]
+    runtime: offline

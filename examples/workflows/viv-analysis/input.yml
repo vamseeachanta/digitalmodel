@@ -1,0 +1,79 @@
+basename: viv_analysis
+
+calculation:
+  name: tubular_member_viv
+
+inputs:
+  seawater_density: 1025
+
+pipeline:
+  length: 1000
+  span_length: [60]
+  crossection:
+    - Nominal_ID: null
+      Nominal_OD: 12.75
+      Design_WT: 0.5
+      Corrosion_Allowance: 0.125
+      average_internal_metal_loss_percentage: 0
+      external_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        kinematic_viscosity: 1.35e-6
+        pressure:
+          unit: psi
+          pressure: null
+          reference_depth: 410
+      internal_fluid:
+        unit: lb/inch^3
+        density: 0.02218
+        pressure:
+          unit: psi
+          pressure: 1095.2
+          top_side_elevation: 65.62
+          reference_water_depth: 410
+      Material:
+        name: steel
+        grade: API 5L X65
+        ThermalExpansionCoefficient: 0.0000117
+      WeldFactor:
+        Seamless: 1.0
+      coatings:
+        - material: null
+          purpose: insulation
+          thickness: 0
+          density: 0
+        - material: null
+          purpose: anti-corrosion
+          thickness: 0.122
+          density: 0.03396
+      code:
+        - 30 CFR Part 250
+      Manufacturing:
+        Coupling Mass Ratio: 0.0
+
+viv:
+  st: 0.2
+
+environment:
+  current:
+    - label: design_current
+      data:
+        - depth: 0
+          speed: 36.0
+
+modes:
+  analysis:
+    simply_supported: true
+    clamped_clamped: false
+    free_free: false
+  eigen_values:
+    clamped: [4.730, 7.853, 10.996]
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  fe_folder: null

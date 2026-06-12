@@ -1,0 +1,14 @@
+basename: catenary
+calculation: catenary
+
+q: 30.0
+d: 100.0
+
+default:
+  Constants:
+    g: 9.81
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

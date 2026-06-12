@@ -116,7 +116,7 @@ class AqwaDATFiles:
 
         library_name = "digitalmodel"
         library_file_cfg = {
-            "filename": f"base_configs/domains/aqwa/template_decks/{file_name}",
+            "filename": f"base_configs/modules/aqwa/template_decks/{file_name}",
             "library_name": library_name,
         }
 
@@ -131,7 +131,7 @@ class AqwaDATFiles:
 
         library_name = "digitalmodel"
         library_file_cfg = {
-            "filename": f"base_configs/domains/aqwa/template_decks/{file_name}",
+            "filename": f"base_configs/modules/aqwa/template_decks/{file_name}",
             "library_name": library_name,
         }
 

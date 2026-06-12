@@ -363,3 +363,6 @@ specs/
 
 # Client/NDA scratch data — never commit
 .scratch/
+examples/workflows/*/results/
+examples/workflows/*/logs/
+src/digitalmodel/base_configs/modules/*/logs/
