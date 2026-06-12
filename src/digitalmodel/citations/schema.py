@@ -45,12 +45,35 @@ class Citation:
     section: str
     wiki_path: str
     note: str = ""
+    # Wiki sibling routing fields (workspace-hub#2778, calc-citation-contract.md Rule 8).
+    # source_sibling: required — "generic" (sourced from vamseeachanta/llm-wiki) or a
+    #                 client slug (e.g., "acma" when sourced from llm-wiki-acma).
+    #                 Default "generic" preserves backcompat for existing call sites
+    #                 during the rollout; new code should set explicitly.
+    # source_project: optional — populated when the citation is project-scoped
+    #                 (e.g., "sirocco" for content under llm-wiki-acma/projects/sirocco/);
+    #                 None for client-level or generic citations.
+    source_sibling: str = "generic"
+    source_project: Optional[str] = None
 
     def __post_init__(self) -> None:
         for f in ("code_id", "publisher", "revision", "section", "wiki_path"):
             v = getattr(self, f)
             if not isinstance(v, str) or not v.strip():
                 raise CitationValidationError(f"Citation.{f} must be a non-empty string")
+        # source_sibling: must be non-empty string (live registry validation is
+        # the resolver's job at calc time, per workspace-hub#2778 Layer 4).
+        if not isinstance(self.source_sibling, str) or not self.source_sibling.strip():
+            raise CitationValidationError(
+                "Citation.source_sibling must be a non-empty string "
+                "('generic' or a client slug per .claude/rules/wiki-sibling-routing.md)"
+            )
+        # source_project: optional, but when set must be non-empty string.
+        if self.source_project is not None:
+            if not isinstance(self.source_project, str) or not self.source_project.strip():
+                raise CitationValidationError(
+                    "Citation.source_project, when set, must be a non-empty string"
+                )
         _validate_wiki_path(self.wiki_path)
 
 
