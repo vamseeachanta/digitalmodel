@@ -105,13 +105,14 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 
 ### Artifact Map
 
-- `.github/workflows/quality-gates-by-domain.yml` will own event semantics:
+- `.github/workflows/quality-gates-by-domain.yml` will own event semantics, but changes to this workflow will continue to be treated as full-matrix CI infrastructure changes unless the user explicitly approves a maintainer override:
   - PRs will use merge-base/head touched-mode detection so branches behind `main` do not inherit unrelated base-side changes.
   - Pushes to `main`/`develop` will use before/after touched-mode detection.
-  - Required touched-domain contexts will be `Detect touched test domains`, `tests-<domain>`, and `Domain touched aggregate`.
+  - Touched-domain contexts will be `Detect touched test domains`, `tests-<domain>`, and `Domain touched aggregate`.
 - `.github/workflows/domain-baseline-diagnostics.yml` will own scheduled/manual full sweeps:
   - Diagnostic full-sweep contexts will be `Detect baseline domains`, `baseline-tests-<domain>`, and `Domain baseline aggregate`.
-  - Diagnostic baseline jobs will upload artifacts and summarize failures without sharing required PR check names.
+  - Diagnostic baseline jobs will upload artifacts and summarize failures without sharing touched-domain check names.
+- Current GitHub enforcement evidence: `main` has no classic branch protection and the active ruleset does not define required status checks. This plan will not configure dynamic `tests-<domain>` matrix jobs as required; if status-check enforcement is introduced, only stable aggregate contexts such as `Domain touched aggregate` should be required.
 - `scripts/ci/detect_touched_domains.py` will own path and diff classification.
 - `tests/scripts/test_detect_touched_domains.py` will own regression coverage for detector routing.
 - `.claude/quality-gates.yaml` will remain the source of runnable per-domain commands.
@@ -127,14 +128,13 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
   - `src/digitalmodel/orcaflex/` -> `orcaflex` and `orcaflex-solver` until a narrower import-boundary test proves solver isolation
   - `src/digitalmodel/solvers/orcaflex/` -> `orcaflex-solver`
   - `src/digitalmodel/workflows/agents/orcaflex/` -> `workflows` and `orcaflex`
-  - `.github/workflows/quality-gates-by-domain.yml` -> `workflows` for the bootstrap workflow-change PR after the detector patch lands
 - Extend detector internals to allow one path to select multiple domains.
 - Leave broader top-level package/domain mapping expansion to a follow-up unless additional prefixes are needed by this issue.
 - Add a diff-aware `pyproject.toml` classifier so package-data-only declarations can route to the affected domain instead of forcing the full matrix.
 - Keep dependency, build-system, pytest, and tool-configuration changes conservative: those will continue to select the full matrix.
 - Update `quality-gates-by-domain.yml` so push events can use touched-mode detection via `github.event.before` and `github.sha`, rather than always using full mode.
 - Define the required-vs-diagnostic split for full baseline sweeps in this plan rather than leaving it as an implementation-time decision:
-  - touched-domain PR/push checks will remain required in `quality-gates-by-domain.yml`;
+  - touched-domain PR/push checks will remain in `quality-gates-by-domain.yml`;
   - scheduled/manual full sweeps will move to `domain-baseline-diagnostics.yml` with `baseline-tests-*` job names and a non-required diagnostic aggregate.
 - Fix the selected `tests-orcaflex` and `tests-orcaflex-solver` baseline failures required to unblock OrcaFlex-scoped PRs after routing is corrected.
 - Post or update follow-up GitHub issues for stale domain test failures that remain outside the corrected routing contract.
@@ -150,7 +150,7 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 
 - Updated detector logic in `scripts/ci/detect_touched_domains.py`.
 - Unit tests in `tests/scripts/test_detect_touched_domains.py` for source-prefix and `pyproject.toml` package-data routing.
-- Workflow update in `.github/workflows/quality-gates-by-domain.yml` for PR/push touched-domain routing.
+- Workflow update in `.github/workflows/quality-gates-by-domain.yml` for PR/push touched-domain routing. This change will remain full-matrix-triggered by design and will need either a green full matrix or explicit maintainer override; do not hide workflow-infrastructure changes behind narrow routing.
 - New diagnostic workflow `.github/workflows/domain-baseline-diagnostics.yml` for scheduled/manual full baseline sweeps with distinct `baseline-tests-*` contexts.
 - OrcaFlex-family shard fixes sufficient for `tests-orcaflex` and `tests-orcaflex-solver` to pass when selected by an OrcaFlex-scoped PR.
 - A concise issue comment on [#700](https://github.com/vamseeachanta/digitalmodel/issues/700) with the final routing contract, verification commands, and any child issues filed for stale full-suite failures.
@@ -158,9 +158,9 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 ## Approach
 
 1. Land the detector bootstrap first:
-   - Add a red test showing `.github/workflows/quality-gates-by-domain.yml` routes to `workflows`, not the full matrix.
-   - Implement that mapping in `scripts/ci/detect_touched_domains.py`.
+   - Keep workflow-file changes as full-matrix triggers.
    - Keep this first PR detector-only so the current workflow selects the existing green `tests-workflows` shard via the existing `scripts/ci/detect_touched_domains.py` override.
+   - Do not claim the workflow-file change can avoid full-matrix CI; that would reduce CI-infrastructure coverage.
 2. Add red tests for source-prefix routing:
    - `src/digitalmodel/orcaflex/...` will select `orcaflex` and `orcaflex-solver`, not the full matrix.
    - `src/digitalmodel/solvers/orcaflex/...` will select `orcaflex-solver`, not the full matrix.
@@ -173,16 +173,19 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
    - A mixed `pyproject.toml` diff with both package data and dependency changes will select the full matrix.
 4. Refactor detector internals without changing the CLI contract:
    - Preserve `--mode touched`, `--mode full`, and `--output-format`.
+   - Use union-of-all matching source prefixes so overlapping routes like `src/digitalmodel/workflows/agents/orcaflex/` select both `workflows` and `orcaflex`; do not rely on insertion-order first match.
    - For PR mode, compute `git merge-base <base> <head>` and diff `merge-base..head`, not raw `base..head`.
    - For push mode, diff `before..sha` only when `before` is non-zero and reachable; otherwise fall back to `--mode full`.
    - For `pyproject.toml`, structurally parse base and head TOML and route narrowly only when the sole semantic change is under `[tool.setuptools.package-data].digitalmodel`.
    - Replace the current unconditional `pyproject.toml` entry in `FULL_MATRIX_PATHS` with the structural classifier; invalid TOML, missing refs, or any non-package-data semantic change will fall back to full matrix.
-   - Map package-data globs such as `orcaflex/data/*.yml` through the same domain prefix map used for source files.
+   - Translate package-relative data globs such as `orcaflex/data/*.yml` to `src/digitalmodel/orcaflex/data/*.yml` before applying the source-prefix map.
+   - Treat package-data-only diffs with unmapped package-relative prefixes as full-matrix triggers.
    - Keep failures fail-closed: parse errors, unreachable refs, or unclassified config diffs will return the full matrix instead of exiting with detector error when a conservative matrix can be produced.
 5. Update `quality-gates-by-domain.yml` event logic after the detector bootstrap lands:
    - Pull requests will pass PR base/head refs to the detector, which will use merge-base semantics internally.
    - Push events will call touched mode with `github.event.before` and `github.sha`, with zero-SHA/unreachable fallback to full.
    - Remove `schedule` from `quality-gates-by-domain.yml`; keep this workflow for required PR/push touched-domain routing only.
+   - Remove or redirect `workflow_dispatch` from `quality-gates-by-domain.yml`; manual full sweeps belong in `domain-baseline-diagnostics.yml`.
    - Rename the aggregate job to `Domain touched aggregate` so required touched routing does not share the diagnostic aggregate context.
 6. Add `domain-baseline-diagnostics.yml` after the detector bootstrap lands:
    - Run on `schedule` and `workflow_dispatch`.
@@ -211,11 +214,11 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 
 ## TDD Test List
 
-- `tests/scripts/test_detect_touched_domains.py::test_quality_gates_workflow_change_selects_workflows_domain`
 - `tests/scripts/test_detect_touched_domains.py::test_orcaflex_source_change_selects_orcaflex_and_solver_domains`
 - `tests/scripts/test_detect_touched_domains.py::test_orcaflex_solver_source_change_selects_orcaflex_solver_domain`
 - `tests/scripts/test_detect_touched_domains.py::test_orcaflex_agent_source_change_selects_workflows_and_orcaflex_domains`
 - `tests/scripts/test_detect_touched_domains.py::test_pyproject_package_data_only_change_selects_matching_domain`
+- `tests/scripts/test_detect_touched_domains.py::test_pyproject_package_data_unmapped_prefix_selects_full_matrix`
 - `tests/scripts/test_detect_touched_domains.py::test_pyproject_dependency_change_still_selects_full_matrix`
 - `tests/scripts/test_detect_touched_domains.py::test_mixed_pyproject_change_fails_closed_to_full_matrix`
 - `tests/scripts/test_detect_touched_domains.py::test_invalid_pyproject_toml_falls_back_to_full_matrix`
@@ -243,12 +246,13 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 ## Acceptance Criteria
 
 - [ ] A detector-only bootstrap PR can land without selecting the current full matrix.
+- [ ] `.github/workflows/quality-gates-by-domain.yml` remains a full-matrix trigger unless the user explicitly approves a maintainer override for a CI-infrastructure change.
 - [ ] A PR touching `src/digitalmodel/orcaflex/`, `tests/orcaflex/`, and an OrcaFlex package-data declaration in `pyproject.toml` selects `orcaflex` and `orcaflex-solver` only unless additional touched files require more domains.
 - [ ] A PR touching `src/digitalmodel/workflows/agents/orcaflex/` selects both `workflows` and `orcaflex`.
 - [ ] Dependency, pytest, build-system, or unknown global config changes still select the full matrix.
 - [ ] PR detection uses merge-base/head semantics so branches behind `main` do not inherit unrelated base-side changes.
 - [ ] Pushes to `main` use touched-domain detection where GitHub provides reachable before/after SHAs and fall back to full matrix for zero or unreachable `before` SHAs.
-- [ ] Scheduled/manual full baseline sweeps run in `Domain Baseline Diagnostics` with `baseline-tests-*` contexts and do not share `tests-*` or `Domain touched aggregate` required contexts.
+- [ ] Scheduled/manual full baseline sweeps run in `Domain Baseline Diagnostics` with `baseline-tests-*` contexts and do not share `tests-*` or `Domain touched aggregate` touched-domain contexts.
 - [ ] `tests-orcaflex` and `tests-orcaflex-solver` pass locally and in CI when selected by an OrcaFlex-scoped PR.
 - [ ] Stale full-suite failures outside the corrected selected domains are linked to child follow-up issues.
 - [ ] `Quality Gates by Domain` no longer blocks mapped domain-scoped PRs with failures from untouched domains.
@@ -258,6 +262,7 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 - Over-specific source routing could hide necessary tests for shared modules. Mitigation: unknown or shared prefixes will continue to fail closed to the full matrix.
 - A permissive `pyproject.toml` parser could under-test dependency changes. Mitigation: only package-data-only diffs will route narrowly; any other hunk will select the full matrix.
 - The implementation PR can self-block if workflow-file routing is changed before the detector bootstrap lands. Mitigation: land detector routing first, then land workflow changes.
+- Workflow-file changes are CI infrastructure changes; narrowing them to `workflows` only would reduce safety. Mitigation: keep workflow files as full-matrix triggers and require either a green full matrix or explicit maintainer override for workflow PRs.
 - OrcaFlex and OrcaFlex-solver fixes can expand beyond CI routing scope. Mitigation: limit selected-shard repairs to failures that reproduce on current `main` and are required by corrected OrcaFlex-family routing; file child issues for broader domain failures.
 - `src/digitalmodel/orcaflex/` may be less coupled to `src/digitalmodel/solvers/orcaflex/` than conservative routing assumes. Mitigation: start conservative, then narrow only after an import-boundary test proves solver isolation.
 - OrcaFlex-agent code lives under `src/digitalmodel/workflows/agents/orcaflex/`, while its legacy tests live in `tests/test_orcaflex_agent.py` under the `orcaflex` domain. Mitigation: route that source prefix to both `workflows` and `orcaflex`.
@@ -283,6 +288,9 @@ E   AttributeError: 'BaseFileGenerator' object has no attribute 'generate_var_da
 - Round 2 Codex: `MAJOR`. Blocking findings required exact diagnostic/required context names, the real OrcaFlex-agent source file path, and explicit invalid-TOML/unreachable-ref fallback tests.
 - Round 2 Gemini: `MAJOR`. Blocking findings required routing `src/digitalmodel/workflows/agents/orcaflex/` to `orcaflex`, and called out OrcaFlex/orcaflex-solver coupling risk.
 - Round 2 Claude: `UNAVAILABLE`; wrapper produced no usable review artifact.
+- Round 3 Gemini: `MAJOR`. Blocking finding rejected narrow routing for `.github/workflows/quality-gates-by-domain.yml` because workflow-orchestration changes should remain full-matrix infrastructure changes.
+- Round 3 Claude: `MAJOR`. Blocking finding showed there are currently no GitHub required status checks, so the prior required-context plan overstated enforcement and risked requiring dynamic per-domain jobs that may not report on every PR.
+- Round 3 Codex: `UNAVAILABLE`; CLI timed out before a usable verdict.
 - This draft will remain non-approval-ready until a revised review wave returns no `MAJOR` findings.
 
 ## Open Questions
