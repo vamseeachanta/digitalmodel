@@ -4,24 +4,25 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import subprocess
 import sys
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 
 ROOT_RE = re.compile(r"`(tests/[^`]+)`")
-FULL_MATRIX_PREFIXES = (
-    "src/digitalmodel/",
-)
+PYPROJECT_PATH = "pyproject.toml"
+FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
 FULL_MATRIX_PATHS = {
     ".claude/quality-gates.yaml",
     "tests/DOMAINS.md",
     "tests/conftest.py",
     "pytest.ini",
-    "pyproject.toml",
+    PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
@@ -30,12 +31,21 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py",
         ("cathodic-protection",),
     ),
+    ("src/digitalmodel/orcaflex/", ("orcaflex",)),
     ("src/digitalmodel/visualization/agent_dashboard.py", ("workflows",)),
     ("src/digitalmodel/workflows/", ("workflows",)),
     ("tests/benchmarks/test_cp_benchmarks.py", ("cathodic-protection",)),
-    ("tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py", ("cathodic-protection",)),
+    (
+        "tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py",
+        ("cathodic-protection",),
+    ),
     ("tests/orcaflex/test_mooring_design_citations.py", ("citations",)),
     ("tests/specialized/cathodic_protection/", ("cathodic-protection",)),
+)
+PACKAGE_DATA_DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("orcaflex/", ("orcaflex",)),
+    ("subsea/", ("subsea",)),
+    ("naval_architecture/", ("naval-architecture",)),
 )
 NO_DOMAIN_PATHS = (
     # These paths are covered by CI harness tests or repo-wide
@@ -80,7 +90,9 @@ def parse_domains(domains_file: Path) -> list[Domain]:
         domains.append(Domain(name=domain, roots=roots))
 
     if not domains:
-        raise ValueError(f"No domains with backtick-wrapped tests/... roots found in {domains_file}")
+        raise ValueError(
+            f"No domains with backtick-wrapped tests/... roots found in {domains_file}"
+        )
     return domains
 
 
@@ -94,11 +106,91 @@ def git_changed_files(base: str, head: str) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def git_file_text(ref: str, path: str) -> str:
+    result = subprocess.run(
+        ["git", "show", f"{ref}:{path}"],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout
+
+
 def is_full_matrix_trigger(path: str) -> bool:
     normalized = path[2:] if path.startswith("./") else path
     return normalized in FULL_MATRIX_PATHS or any(
         normalized.startswith(prefix) for prefix in FULL_MATRIX_PREFIXES
     )
+
+
+def package_data_domains_for_item(item: str) -> set[str]:
+    names: set[str] = set()
+    normalized = item[2:] if item.startswith("./") else item
+    for package_path, domain_names in PACKAGE_DATA_DOMAIN_PATHS:
+        if normalized.startswith(package_path):
+            names.update(domain_names)
+    return names
+
+
+def without_setuptools_package_data(payload: dict) -> dict:
+    comparable = copy.deepcopy(payload)
+    tool_config = comparable.get("tool")
+    if not isinstance(tool_config, dict):
+        return comparable
+
+    setuptools_config = tool_config.get("setuptools")
+    if isinstance(setuptools_config, dict):
+        setuptools_config.pop("package-data", None)
+    return comparable
+
+
+def digitalmodel_package_data(payload: dict) -> set[str]:
+    tool_config = payload.get("tool")
+    if not isinstance(tool_config, dict):
+        return set()
+    setuptools_config = tool_config.get("setuptools")
+    if not isinstance(setuptools_config, dict):
+        return set()
+    package_data = setuptools_config.get("package-data")
+    if not isinstance(package_data, dict):
+        return set()
+
+    entries = package_data.get("digitalmodel", [])
+    if isinstance(entries, str):
+        entries = [entries]
+    if not isinstance(entries, list):
+        return set()
+    return {str(entry) for entry in entries}
+
+
+def scoped_pyproject_domains(base: str, head: str) -> set[str] | None:
+    base_payload = tomllib.loads(git_file_text(base, PYPROJECT_PATH))
+    head_payload = tomllib.loads(git_file_text(head, PYPROJECT_PATH))
+
+    if without_setuptools_package_data(base_payload) != without_setuptools_package_data(
+        head_payload
+    ):
+        return None
+
+    changed_items = digitalmodel_package_data(base_payload) ^ digitalmodel_package_data(
+        head_payload
+    )
+    domain_names: set[str] = set()
+    for item in changed_items:
+        item_domain_names = package_data_domains_for_item(item)
+        if not item_domain_names:
+            return None
+        domain_names.update(item_domain_names)
+    return domain_names
+
+
+def mapped_config_domain_names(
+    path: str, base: str | None, head: str | None
+) -> set[str] | None:
+    normalized = path[2:] if path.startswith("./") else path
+    if normalized != PYPROJECT_PATH or not base or not head:
+        return None
+    return scoped_pyproject_domains(base, head)
 
 
 def mapped_domain_names(path: str) -> set[str]:
@@ -110,7 +202,9 @@ def mapped_domain_names(path: str) -> set[str]:
 
 
 def is_no_domain_path(path: str) -> bool:
-    return any(path_matches_root(path, ignored_path) for ignored_path in NO_DOMAIN_PATHS)
+    return any(
+        path_matches_root(path, ignored_path) for ignored_path in NO_DOMAIN_PATHS
+    )
 
 
 def path_matches_root(path: str, root: str) -> bool:
@@ -121,10 +215,20 @@ def path_matches_root(path: str, root: str) -> bool:
     return normalized_path == normalized_root
 
 
-def touched_domains(changed_files: list[str], domains: list[Domain]) -> list[Domain]:
+def touched_domains(
+    changed_files: list[str],
+    domains: list[Domain],
+    base: str | None = None,
+    head: str | None = None,
+) -> list[Domain]:
     selected_names: set[str] = set()
     for path in changed_files:
         if is_no_domain_path(path):
+            continue
+
+        config_domain_names = mapped_config_domain_names(path, base, head)
+        if config_domain_names is not None:
+            selected_names.update(config_domain_names)
             continue
 
         domain_names = mapped_domain_names(path)
@@ -144,8 +248,7 @@ def touched_domains(changed_files: list[str], domains: list[Domain]) -> list[Dom
 def matrix_for(domains: list[Domain]) -> dict[str, list[dict[str, str]]]:
     return {
         "include": [
-            {"domain": domain.name, "runner": domain.runner}
-            for domain in domains
+            {"domain": domain.name, "runner": domain.runner} for domain in domains
         ]
     }
 
@@ -156,7 +259,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--mode", choices=("full", "touched"), required=True)
     parser.add_argument("--base")
     parser.add_argument("--head")
-    parser.add_argument("--output-format", choices=("json-matrix", "list"), default="json-matrix")
+    parser.add_argument(
+        "--output-format", choices=("json-matrix", "list"), default="json-matrix"
+    )
     args = parser.parse_args(argv)
     if args.mode == "touched" and (not args.base or not args.head):
         parser.error("--mode touched requires --base and --head")
@@ -170,7 +275,12 @@ def main(argv: list[str] | None = None) -> int:
         selected = (
             domains
             if args.mode == "full"
-            else touched_domains(git_changed_files(args.base, args.head), domains)
+            else touched_domains(
+                git_changed_files(args.base, args.head),
+                domains,
+                args.base,
+                args.head,
+            )
         )
     except Exception as exc:
         print(f"detect_touched_domains.py: {exc}", file=sys.stderr)

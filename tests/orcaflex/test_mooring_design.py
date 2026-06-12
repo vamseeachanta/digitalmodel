@@ -34,13 +34,24 @@ class TestCatenary:
         assert result.suspended_length > 0
 
     def test_catenary_grounded_length(self):
-        """With long line, some should be grounded on seabed."""
+        """With determinate pretension and long line, some should be grounded."""
+        result = solve_catenary(
+            water_depth=200.0,
+            line_length=1000.0,
+            submerged_weight_per_m=800.0,
+            pretension=500.0,
+        )
+        assert result.grounded_length > 0
+
+    def test_no_pretension_uses_all_suspended_estimate(self):
+        """Without pretension or anchor radius, long-line grounding is undefined."""
         result = solve_catenary(
             water_depth=200.0,
             line_length=1000.0,
             submerged_weight_per_m=800.0,
         )
-        assert result.grounded_length > 0
+        assert result.suspended_length == pytest.approx(1000.0)
+        assert result.grounded_length == pytest.approx(0.0)
 
     def test_catenary_short_line_raises(self):
         """Line shorter than water depth should raise ValueError."""
@@ -61,6 +72,17 @@ class TestCatenary:
         )
         assert result.horizontal_tension > 0
         assert result.top_tension > 0
+        assert result.top_tension == pytest.approx(800.0)
+
+    def test_catenary_rejects_impossible_low_pretension(self):
+        """Pretension must exceed the suspended vertical line weight."""
+        with pytest.raises(ValueError, match="exceed suspended line weight"):
+            solve_catenary(
+                water_depth=200.0,
+                line_length=1000.0,
+                submerged_weight_per_m=800.0,
+                pretension=100.0,
+            )
 
 
 class TestMooringLineDesign:
@@ -137,12 +159,16 @@ class TestUtilityFunctions:
 
     def test_estimate_line_length(self):
         """Line length estimate should be water_depth * scope_ratio."""
-        length = estimate_line_length(water_depth=1000.0, scope_ratio=3.0, catenary=False)
+        length = estimate_line_length(
+            water_depth=1000.0, scope_ratio=3.0, catenary=False
+        )
         assert length == pytest.approx(3000.0)
 
     def test_estimate_line_length_with_catenary(self):
         """With catenary flag, should add 10% extra."""
-        length = estimate_line_length(water_depth=1000.0, scope_ratio=3.0, catenary=True)
+        length = estimate_line_length(
+            water_depth=1000.0, scope_ratio=3.0, catenary=True
+        )
         assert length == pytest.approx(3300.0)
 
     def test_material_library_has_properties(self):

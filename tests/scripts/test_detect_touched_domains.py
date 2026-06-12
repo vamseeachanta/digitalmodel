@@ -21,7 +21,9 @@ def load_detector_module():
     return module
 
 
-def run_detector(repo: Path, domains_file: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def run_detector(
+    repo: Path, domains_file: Path, *args: str
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
             "uv",
@@ -56,7 +58,9 @@ def init_repo(path: Path) -> None:
 def commit_all(repo: Path, message: str) -> str:
     subprocess.run(["git", "add", "."], cwd=repo, check=True)
     subprocess.run(["git", "commit", "-m", message], cwd=repo, check=True)
-    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+    ).strip()
 
 
 def write_domains(path: Path) -> None:
@@ -257,7 +261,9 @@ def test_specific_test_override_wins_over_broad_domain_root(tmp_path: Path) -> N
         )
     )
     init_repo(tmp_path)
-    test_file = tmp_path / "tests" / "specialized" / "cathodic_protection" / "test_dnv.py"
+    test_file = (
+        tmp_path / "tests" / "specialized" / "cathodic_protection" / "test_dnv.py"
+    )
     test_file.parent.mkdir(parents=True)
     test_file.write_text("def test_old():\n    assert True\n")
     base = commit_all(tmp_path, "base")
@@ -337,7 +343,9 @@ def test_all_mapped_domain_names_exist_in_real_domains_file() -> None:
     domains = detector.parse_domains(Path("tests/DOMAINS.md"))
     domain_names = {domain.name for domain in domains}
     mapped_domain_names = {
-        domain for _path, domains_for_path in detector.DOMAIN_PATHS for domain in domains_for_path
+        domain
+        for _path, domains_for_path in detector.DOMAIN_PATHS
+        for domain in domains_for_path
     }
 
     assert mapped_domain_names <= domain_names
@@ -370,6 +378,164 @@ def test_config_change_escalates_to_full_matrix(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert [item["domain"] for item in json.loads(result.stdout)["include"]] == [
+        "asset-integrity",
+        "citations",
+        "structural",
+        "workflows",
+    ]
+
+
+def test_pyproject_package_data_change_outputs_matching_domain(tmp_path: Path) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        textwrap.dedent(
+            """\
+            # Test Domains
+
+            | Domain | Test roots | Purpose/deps/notes |
+            | --- | --- | --- |
+            | orcaflex | `tests/orcaflex/` | OrcaFlex tests. |
+            | structural | `tests/structural/` | Structural tests. |
+            | workflows | `tests/workflows/`, `tests/scripts/` | Workflow tests. |
+            """
+        )
+    )
+    init_repo(tmp_path)
+    config = tmp_path / "pyproject.toml"
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.setuptools.package-data]
+            digitalmodel = ["subsea/cross_sections/fixtures/*.yml"]
+            """
+        )
+    )
+    base = commit_all(tmp_path, "base")
+
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.setuptools.package-data]
+            digitalmodel = [
+                "orcaflex/data/*.yml",
+                "subsea/cross_sections/fixtures/*.yml",
+            ]
+            """
+        )
+    )
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["orcaflex"]
+
+
+def test_unknown_pyproject_package_data_change_escalates_to_full_matrix(
+    tmp_path: Path,
+) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    config = tmp_path / "pyproject.toml"
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.setuptools.package-data]
+            digitalmodel = ["subsea/cross_sections/fixtures/*.yml"]
+            """
+        )
+    )
+    base = commit_all(tmp_path, "base")
+
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.setuptools.package-data]
+            digitalmodel = [
+                "new_domain/data/*.yml",
+                "subsea/cross_sections/fixtures/*.yml",
+            ]
+            """
+        )
+    )
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        "asset-integrity",
+        "citations",
+        "structural",
+        "workflows",
+    ]
+
+
+def test_non_package_data_pyproject_change_escalates_to_full_matrix(
+    tmp_path: Path,
+) -> None:
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    config = tmp_path / "pyproject.toml"
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.black]
+            line-length = 88
+            """
+        )
+    )
+    base = commit_all(tmp_path, "base")
+
+    config.write_text(
+        textwrap.dedent(
+            """\
+            [tool.black]
+            line-length = 100
+            """
+        )
+    )
+    head = commit_all(tmp_path, "head")
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
         "asset-integrity",
         "citations",
         "structural",

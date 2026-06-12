@@ -286,31 +286,19 @@ def solve_catenary(
     w_kn = w / 1000.0
 
     if pretension is not None:
-        # Given pretension T at top, solve for horizontal force H
-        # T^2 = H^2 + (V_top)^2, V_top = w * s_suspended
-        # h = (H/w) * [cosh(V/H) - 1]  where V = w*s
-        # Iterative solution
+        # Given top pretension T, use the catenary identity
+        # T = H + w*h, where h is the vertical fairlead-to-seabed span.
+        # This preserves the requested top tension without evaluating
+        # unbounded hyperbolic functions during iteration.
         T = pretension
-        # First estimate
-        H = T * math.cos(math.radians(30.0))  # initial guess
-        for _ in range(100):
-            V = math.sqrt(max(0, T**2 - H**2))
-            if V <= 0:
-                break
-            h_calc = H / w_kn * (math.cosh(V / H) - 1.0) if H > 0 else 0
-            err = h_calc - h
-            # Newton-like step
-            dh_dH = (
-                (1.0 / w_kn) * (math.cosh(V / H) - 1.0)
-                + (H / w_kn) * (-V / H**2) * math.sinh(V / H)
-                if H > 0
-                else 0
+        if T <= 0:
+            raise ValueError("Pretension must be positive")
+        suspended_line_weight = w_kn * h
+        if T <= suspended_line_weight:
+            raise ValueError(
+                "Pretension must exceed suspended line weight for catenary solution"
             )
-            if abs(dh_dH) > 1e-12:
-                H = H - err / dh_dH
-            H = max(1.0, H)
-            if abs(err) < 0.01:
-                break
+        H = T - suspended_line_weight
     else:
         # No pretension given: solve for H that satisfies geometry
         # h = (H/w) * [cosh(w*s/H) - 1], horizontal scope = (H/w) * sinh(w*s/H)
