@@ -28,5 +28,6 @@ fft:
 default:
   log_level: INFO
   config:
+    generate_plots: false   # keep the workflow free of optional viz deps
     overwrite:
       output: true
