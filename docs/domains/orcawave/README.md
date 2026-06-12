@@ -1,79 +1,127 @@
 # OrcaWave Diffraction Analysis
 
-**ABOUTME**: Comprehensive documentation and automation tools for Orcina OrcaWave panel method diffraction analysis with direct integration to OrcaFlex.
+**ABOUTME**: Canonical spec-to-run workflow for Orcina OrcaWave panel-method diffraction analysis — high-level `spec.yml` in, validated hydrodynamic results out, with direct integration to OrcaFlex.
 
 See also: [OrcaFlex & OrcaWave Manuals and References](../orcaflex/MANUALS_AND_REFERENCES.md) for official documentation links, YAML format reference, and API resources.
 
 ---
 
-## Quick Navigation
+## Quick start
 
-### ⚡ Quick Start & CLI Tools
-- **[QUICK START GUIDE](diffraction/QUICK_START.md)** - Fast setup and CLI usage
-- **[Diffraction Capabilities Expansion Plan](DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md)** - Roadmap and enhancements
-- **Command Line Interface** - Run analyses from terminal:
-  ```bash
-  # OrcaWave direct CLI
-  python src/digitalmodel/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress
+The canonical workflow starts from a solver-agnostic high-level spec. A complete
+runnable example ships with the code at
+[`examples/hydrodynamics/diffraction/unit_box_rao/`](../../../examples/hydrodynamics/diffraction/unit_box_rao/)
+(spec + mesh + README) — copy that directory, swap the mesh, edit the spec.
 
-  # Unified Diffraction CLI (AQWA + OrcaWave)
-  python src/digitalmodel/modules/diffraction_cli.py orcawave --vessel sea_cypress
+```bash
+# 1. Validate the spec (any host, no license)
+uv run diffraction validate-spec examples/hydrodynamics/diffraction/unit_box_rao/spec.yml
 
-  # List available vessels
-  python src/digitalmodel/modules/diffraction_cli.py orcawave --list-vessels
+# 2. Generate a self-contained solver package without solving (any host)
+uv run diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml \
+    --dry-run -o output/
 
-  # Dry run (validation only)
-  python src/digitalmodel/modules/diffraction_cli.py orcawave --vessel sea_cypress --dry-run
-  ```
+# 3. Full solve with automatic result validation (licensed Windows host)
+uv run diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml \
+    -o output/
+```
+
+All commands live on the `diffraction` console script (Click CLI at
+`src/digitalmodel/hydrodynamics/diffraction/cli.py`). `python -m digitalmodel
+diffraction ...` works once the routing fix in
+[#713](https://github.com/vamseeachanta/digitalmodel/issues/713) is merged;
+until then use the console script form shown above.
 
 ---
 
-## Overview
+## Command surface
 
-OrcaWave is Orcina's panel method diffraction/radiation software for computing:
-- Added mass and damping matrices
-- Wave excitation forces (RAOs)
-- Quadratic Transfer Functions (QTFs)
-- Mean drift forces
+| Command | Purpose |
+| --- | --- |
+| `diffraction validate-spec <spec.yml>` | Schema-validate a canonical spec |
+| `diffraction convert-spec <spec.yml> [--solver orcawave\|aqwa\|all] [--format single\|modular] [-o DIR]` | Generate solver-native input from a spec (no run) |
+| `diffraction run-orcawave <spec.yml> [-o DIR] [--dry-run] [--validate/--no-validate] [--strict-validation]` | Prepare and execute an OrcaWave run |
+| `diffraction resolve --outcome <name> --mesh <file> --water-depth <d> --out <spec.yml> [--loa --beam --draft --displacement --hull-id --inertia-mode]` | Inverse entry point: outcome + barebones data → complete spec + assumption ledger |
+| `diffraction run-aqwa` / `batch-aqwa` / `batch-orcawave` | AQWA runs and multi-spec batch processing |
+| `diffraction validate-geometry` | Mesh quality checks |
+| `diffraction mesh-build` | Mesh construction/export helpers |
+| `diffraction convert-orcawave` / `convert-aqwa` | Solver results → OrcaFlex vessel type |
+| `diffraction compare` / `plot-raos` | Cross-solver comparison and RAO plotting |
 
-This module provides **automated workflows** for:
-1. Geometry validation and quality checks
-2. Batch diffraction analysis execution
-3. Results conversion to OrcaFlex vessel types
-4. Quality assurance and validation
-5. Report generation and packaging
+Run any command with `--help` for the full option list — the CLI is the source
+of truth, not this table.
+
+### Canonical spec shape
+
+`spec.yml` is solver-agnostic (schema: `hydrodynamics/diffraction/input_schemas.py`,
+Pydantic-validated). Top-level sections: `vessel` (geometry + inertia),
+`environment`, `frequencies`, `wave_headings`, optional `solver_options`,
+`outputs`, `metadata`. See the
+[example spec](../../../examples/hydrodynamics/diffraction/unit_box_rao/spec.yml)
+for a minimal complete instance, and `L00_validation_wamit/*/spec.yml` in this
+directory for the WAMIT validation suite.
 
 ---
 
-## Module Structure
+## Mesh paths and output layout
+
+**Resolution**: `vessel.geometry.mesh_file` is resolved relative to the
+directory containing the spec file. Keep meshes next to the spec with a
+relative reference so the pair stays portable.
+
+**Packaging**: `run-orcawave` (including `--dry-run`) writes a self-contained
+package — the generated OrcaWave input references the mesh relatively and the
+mesh is copied alongside, so the output directory can be moved to a licensed
+machine and solved there:
 
 ```
-src/digitalmodel/modules/orcawave/diffraction/
-├── orchestrator.py              # Main workflow controller
-├── QUICK_START.md              # Quick start guide
-├── configs/
-│   ├── base_diffraction_config.yml
-│   └── vessels/
-│       └── sea_cypress.yml     # Vessel configurations
-├── scripts/
-│   ├── validate_geometry.py    # Geometry validation
-│   ├── convert_to_orcaflex.py  # Results converter
-│   └── run_diffraction_analysis.bat
-└── results/
-    └── [vessel_name]/          # Results organized by vessel
-
-specs/modules/orcawave/diffraction-analysis/
-└── inputs/
-    └── geometry/               # Geometry files (STL, OBJ)
-
-docs/domains/orcawave/
-├── README.md                   # This file
-├── DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md
-├── diffraction/
-│   └── QUICK_START.md
-├── examples/                   # Tutorial examples
-└── L01_aqwa_benchmark/        # AQWA comparison benchmarks
+output/
+├── <VesselName>.yml        # OrcaWave-native input, relative BodyMeshFileName
+├── <mesh file>             # copied next to the input
+└── modular/                # per-section files (01_general ... master.yml) for review
 ```
+
+A licensed solve additionally produces:
+
+```
+output/
+├── <VesselName>.owr        # OrcaWave results
+└── <VesselName>_data.dat   # hydrodynamic data export
+```
+
+`.xlsx` export is deliberately deferred (decision D2,
+[#611](https://github.com/vamseeachanta/digitalmodel/issues/611)).
+Note: `convert-spec` currently writes the input `.yml` only and does not copy
+meshes — self-contained `convert-spec` packages are tracked in
+[#605](https://github.com/vamseeachanta/digitalmodel/issues/605); prefer
+`run-orcawave --dry-run` when you need a runnable package.
+
+---
+
+## Execution behavior: licensed vs unlicensed hosts
+
+The runner (`hydrodynamics/diffraction/orcawave_runner.py`) tries, in order:
+
+1. **OrcFxAPI Python binding** (licensed Windows host): `Diffraction(...).Calculate()`,
+   saving `.owr` + `_data.dat`.
+2. **Subprocess**: `OrcaWave.exe <input.yml>` if an executable is found
+   (explicit `--executable`, `ORCAWAVE_PATH` env var, standard install paths,
+   or `PATH`).
+3. **Dry-run fallback**: with `--dry-run`, or when no solver is available,
+   files are generated and validated but no solve happens — the run reports
+   `DRY_RUN`, not an error.
+
+After a successful solve, the output validator runs automatically
+(`--validate`, on by default; wired in
+[#625](https://github.com/vamseeachanta/digitalmodel/issues/625)): reciprocity,
+energy, asymptote, and completeness checks produce a `PASS`/`WARNING`/`FAIL`
+verdict in the run summary. `--strict-validation` turns a `FAIL`/`ERROR`
+verdict into a failed run.
+
+Every value the resolver or backend assumed on your behalf (defaults, database
+lookups) is recorded in an **assumption ledger**
+(`assumption_ledger.py`, [#624](https://github.com/vamseeachanta/digitalmodel/issues/624))
+so the output report surfaces what was not user-supplied.
 
 ---
 
@@ -105,124 +153,17 @@ The benchmark is a bridge candidate for future OrcaWave -> OrcaFlex handoff vali
 
 ---
 
-## Workflow Phases
-
-The OrcaWave orchestrator provides a **5-phase workflow**:
-
-### Phase 1: Setup & Validation
-- Load vessel configuration
-- Validate geometry files (watertight, normals, panel counts)
-- Check OrcaWave installation
-- Create output directories
-
-### Phase 2: OrcaWave Execution
-- Generate OrcaWave input files
-- Execute diffraction analysis
-- Monitor progress and log results
-
-### Phase 3: Results Processing
-- Extract hydrodynamic coefficients
-- Convert to OrcaFlex vessel type format
-- Generate visualizations (optional)
-
-### Phase 4: Quality Assurance
-- Reciprocity checks
-- Energy balance validation
-- Frequency coverage verification
-
-### Phase 5: Packaging
-- Package results for distribution
-- Generate summary reports
-- Create README documentation
-
----
-
-## Quick Examples
-
-### Example 1: Run Complete Analysis
-
-```bash
-# Run full workflow for Sea Cypress vessel
-python src/digitalmodel/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress
-```
-
-### Example 2: Validation Only
-
-```bash
-# Dry run - validate configuration without running analysis
-python src/digitalmodel/modules/diffraction_cli.py orcawave --vessel sea_cypress --dry-run
-```
-
-### Example 3: Run Specific Phase
-
-```bash
-# Run only setup and validation
-python src/digitalmodel/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --phase setup
-
-# Available phases: setup, execute, process, qa, package
-```
-
-### Example 4: Using Python API
-
-```python
-from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
-
-# Create orchestrator
-orchestrator = OrcaWaveOrchestrator(vessel_name="sea_cypress")
-
-# Run complete workflow
-orchestrator.run_workflow()
-
-# Or run specific phase
-orchestrator._phase1_setup_and_validation()
-```
-
----
-
-## Configuration
-
-### Vessel Configuration Example
-
-```yaml
-# configs/vessels/my_vessel.yml
-vessel:
-  name: "my_vessel"
-  description: "FPSO vessel for GoM operations"
-
-geometry:
-  file_path: "specs/modules/orcawave/diffraction-analysis/inputs/geometry"
-  primary_file: "vessel_mesh.stl"
-  panel_size: 0.25  # meters
-
-analysis:
-  water_depth: 1200  # meters
-  frequencies:
-    min: 0.1  # rad/s
-    max: 2.0
-    count: 40
-  headings:
-    min: 0    # degrees
-    max: 360
-    step: 30
-
-output:
-  generate_plots: true
-  export_orcaflex: true
-  qa_checks: true
-```
-
----
-
 ## Integration with OrcaFlex
 
-OrcaWave results are automatically converted to OrcaFlex vessel type format:
+Convert solver results into an OrcaFlex vessel type:
 
-1. **Hydrodynamic coefficients** exported to Excel/CSV
-2. **Vessel type YAML** generated with proper structure
-3. **Direct import** to OrcaFlex models
+```bash
+uv run diffraction convert-orcawave <results> -o vessel_type/
+```
+
+then load the generated vessel type YAML in OrcaFlex:
 
 ```python
-# In OrcaFlex, load the generated vessel type:
 import OrcFxAPI
 
 model = OrcFxAPI.Model()
@@ -232,88 +173,50 @@ vessel.VesselType = 'my_vessel_vessel_type.yml'
 
 ---
 
-## Available Examples
+## Examples and benchmarks in this directory
 
-### Sea Cypress Benchmark
-- Located in: `specs/modules/orcawave/diffraction-analysis/`
-- Full diffraction analysis with validation
-- Comparison with AQWA results
+- **`L00_validation_wamit/`** — 13 canonical-spec WAMIT validation cases (all pass schema → generation audit; see [`../SPEC_AUDIT_REPORT.md`](../SPEC_AUDIT_REPORT.md))
+- **`examples/L01_default_vessel/` … `L06`** — Orcina-provided OrcaWave-native examples; `L01` includes the licensed smoke-test path ([#468](https://github.com/vamseeachanta/digitalmodel/issues/468)) and `API_EXECUTION_SUMMARY.md` (16-case success; 180-case timeout under investigation in [#714](https://github.com/vamseeachanta/digitalmodel/issues/714))
+- **`L01_aqwa_benchmark/`** — AQWA cross-validation studies
+- **`LICENSED_E2E_ACCEPTANCE.md`** — acceptance contract for the licensed end-to-end run ([#610](https://github.com/vamseeachanta/digitalmodel/issues/610))
 
-### AQWA Benchmark Studies
-- Located in: `docs/domains/orcawave/L01_aqwa_benchmark/`
-- Cross-validation between OrcaWave and AQWA
-- Panel method comparison studies
+---
+
+## Workstream status and related issues
+
+The output-driven diffraction domain epic is
+[#622](https://github.com/vamseeachanta/digitalmodel/issues/622). Key open
+threads relevant to this workflow:
+
+- [#610](https://github.com/vamseeachanta/digitalmodel/issues/610) — licensed end-to-end acceptance run from the canonical spec (the workflow's acceptance gate)
+- [#500](https://github.com/vamseeachanta/digitalmodel/issues/500) — hard-fail mesh preflight in spec conversion
+- [#605](https://github.com/vamseeachanta/digitalmodel/issues/605) — self-contained `convert-spec` packages
+- [#606](https://github.com/vamseeachanta/digitalmodel/issues/606) / [#608](https://github.com/vamseeachanta/digitalmodel/issues/608) — mesh pipeline integration and quality gates before solve
+- [#607](https://github.com/vamseeachanta/digitalmodel/issues/607) — planned given-mesh workflow (largely covered today by `diffraction resolve`)
+- [#613](https://github.com/vamseeachanta/digitalmodel/issues/613) — planned `orcawave-doctor` environment/license diagnostic
+
+## Legacy workflow (historical)
+
+Earlier documentation described a 5-phase vessel-name-driven orchestrator
+(`orchestrator.py --vessel sea_cypress`) and a `modules/` package layout. That
+layout no longer exists; the orchestrator survives at
+`src/digitalmodel/solvers/orcawave/diffraction/orchestrator.py` for existing
+vessel configs but is **not** the canonical path — new work should start from a
+`spec.yml` and the `diffraction` CLI as described above.
 
 ---
 
 ## Prerequisites
 
-### Software Requirements
-1. **OrcaWave** - Licensed installation required
-2. **Python 3.8+** - Python environment
-3. **UV Package Manager** - For dependency management
-
-### Installation
+1. **Any host (dry-run, spec authoring, validation)** — `uv sync` only.
+2. **Licensed solve** — Windows host with OrcaWave installed and either the
+   OrcFxAPI Python binding (preferred) or `OrcaWave.exe` reachable via
+   `ORCAWAVE_PATH`/`PATH`.
 
 ```bash
-# Install dependencies using uv
-uv sync
-
-# Verify OrcaWave installation (Windows)
-where OrcaWave
-
-# Check OrcaFlex API availability
+# Verify solver availability on a licensed host
 python -c "import OrcFxAPI; print(OrcFxAPI.Version())"
-```
-
----
-
-## Troubleshooting
-
-### Geometry Path Issues
-The module uses relative paths from repository root. Ensure:
-- Geometry files are in: `specs/modules/orcawave/diffraction-analysis/inputs/geometry/`
-- Configuration automatically resolves relative paths
-
-### Missing Dependencies
-```bash
-# Install all dependencies
-uv sync
-
-# h5py may need separate installation
-uv add h5py
-```
-
-### OrcaWave Not Found
-- Add OrcaWave to system PATH
-- Set `ORCAWAVE_PATH` environment variable
-- Check license availability
-
----
-
-## Advanced Topics
-
-### Batch Processing Multiple Vessels
-
-```python
-from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
-
-vessels = ['fpso_a', 'fpso_b', 'shuttle_tanker']
-
-for vessel_name in vessels:
-    orchestrator = OrcaWaveOrchestrator(vessel_name=vessel_name)
-    orchestrator.run_workflow()
-    print(f"Completed: {vessel_name}")
-```
-
-### Custom Geometry Validation
-
-```bash
-# Validate geometry with custom thresholds
-python src/digitalmodel/modules/orcawave/diffraction/scripts/validate_geometry.py \
-    --path specs/modules/orcawave/diffraction-analysis/inputs/geometry \
-    --vessel my_vessel \
-    --no-parallel
+where OrcaWave
 ```
 
 ---
@@ -323,50 +226,14 @@ python src/digitalmodel/modules/orcawave/diffraction/scripts/validate_geometry.p
 For detailed OrcaWave Python API documentation, see:
 https://www.orcina.com/webhelp/OrcFxAPI/Redirector.htm?Pythonreference,Diffraction.htm
 
----
-
 ## External Resources
 
-### GitHub Repositories
-- [OrcaPySM1](https://github.com/praveen-kch/OrcaPySM1) - Python scripts for OrcaWave automation
-- [orcawave](https://github.com/Exor8129/orcawave) - Additional OrcaWave utilities
-
-### Orcina Documentation
 - [OrcaWave Manual](https://www.orcina.com/webhelp/OrcaWave/Default.htm)
 - [OrcFxAPI Reference](https://www.orcina.com/webhelp/OrcFxAPI/)
+- [OrcaPySM1](https://github.com/praveen-kch/OrcaPySM1) — Python scripts for OrcaWave automation
+- [orcawave](https://github.com/Exor8129/orcawave) — Additional OrcaWave utilities
 
 ---
 
-## Claude Code Skill
-
-The **orcawave-analysis** skill provides specialized agent capabilities for OrcaWave analysis:
-
-```bash
-# Invoke the OrcaWave analysis skill
-/orcawave-analysis
-```
-
-**Skill capabilities**:
-- Expert guidance for diffraction/radiation analysis
-- Panel mesh generation and optimization
-- Multi-body hydrodynamic interactions
-- QTF computation
-- Batch processing workflows
-- OrcaFlex database generation
-
-**Location**: `.claude/skills/orcawave-analysis/SKILL.md`
-
----
-
-## Support and Contribution
-
-For questions about OrcaWave automation:
-1. Check the **QUICK_START.md** guide
-2. Review **DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md** for roadmap
-3. Use the **orcawave-analysis** skill for expert guidance
-4. See examples in `docs/domains/orcawave/examples/`
-
----
-
-**Last Updated**: 2026-01-03
-**Version**: Phase 1 - Workflow Hardening Complete
+**Last Updated**: 2026-06-12
+**Version**: Canonical spec-to-run workflow (issue #614)
