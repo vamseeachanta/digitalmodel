@@ -1,0 +1,201 @@
+# M-shaped rigid jumper — ExxonMobil VIV model test (industry benchmark)
+#
+# Provenance (see docs/domains/orcaflex/subsea/jumper/m_shaped/LITERATURE_GEOMETRY_SURVEY.md
+# Case 1, and digitalmodel issue #722):
+#   - Wang et al., "VIV Response of a Subsea Jumper in Uniform Current", OMAE2013 V04BT04A043
+#   - Zheng et al., "Numerical Analysis of Experimental Data of Subsea Jumper VIV", OMAE2015
+#   - Igeh, "VIV Fatigue Investigation for Subsea Planar Rigid Spools and Jumpers",
+#     MSc thesis, Univ. of Stavanger 2017 (CC-BY), Tables 1-4 — dimension source:
+#     https://core.ac.uk/download/249952931.pdf
+#
+# Model-scale planar M jumper, 7 welded segments, both ends fully clamped.
+# Segment chain (Igeh Table 1, explicit): V1 1.495 | H1 1.000 | V2 2.323 |
+# H2 4.327 | V3 2.326 | H3 1.000 | V4 1.495  (total 13.966 m)
+#
+# Validation targets (measured, towing tank): natural frequencies
+# f1=0.863 Hz, f2=2.149 Hz, f3=2.194 Hz, f4=2.542 Hz; mode 3 first excited
+# at tow speed ~0.18 m/s. Tow speeds 0.05-1.241 m/s at 10/45/90 deg.
+#
+# Modeling assumptions (NOT from source — flagged per #722):
+#   A1: corner bend radii not published; sharp corners (source FEM did the same)
+#   A2: towing-tank water depth not published; 10 m assumed, jumper hubs at z=-9
+#   A3: spline statics starting shape control points at corner coordinates;
+#       licensed statics refinement is #718/#719 scope
+# Derived (not verbatim from source): mass_per_length and axial_stiffness
+# computed from published OD/ID/rho/E; consistency check: structural+contents
+# mass ratio reproduces published m*=2.33.
+
+metadata:
+  name: mj01_exxonmobil_m_jumper_viv
+  description: ExxonMobil M-jumper VIV towing-tank benchmark (Wang OMAE2013 / Igeh UiS 2017)
+  structure: jumper
+  operation: generic
+  project: model_library
+
+environment:
+  water:
+    depth: 10.0        # A2: assumed (towing tank depth not published)
+    density: 1.025
+  seabed:
+    slope: 0
+    stiffness:
+      normal: 100
+      shear: 100
+  waves:
+    type: airy
+    height: 0.0        # still water — VIV test under tow/current only
+    period: 8
+    direction: 0
+  current:
+    direction: 0       # tow speed sweep applied per-run (0.05-1.241 m/s)
+  wind:
+    speed: 0
+    direction: 0
+
+generic:
+  line_types:
+    - name: mj01_jumper_pipe_aluminium
+      category: General
+      outer_diameter: 0.0605          # m (published)
+      inner_diameter: 0.055           # m (published; WT 2.77 mm)
+      mass_per_length: 0.0013471      # te/m — derived: A=4.9893e-4 m2 x 2.70 te/m3
+      bending_stiffness:              # EI = 1.44e4 N.m2 (published) = 14.4 kN.m2
+        - 14.4
+        - ~
+      axial_stiffness: 34426.0        # kN — derived: E=6.90e10 Pa x A
+      properties:
+        BulkModulus: Infinity
+        CompressionIsLimited: false
+        PoissonRatio: 0.33
+        ExpansionTable: None
+        GJ: 10.8                      # kN.m2 — published 1.08e4 N.m2
+        TensionTorqueCoupling: 0
+        ClashStiffness: 0
+        Ca:                           # added mass coefficient (published Ca=1.0)
+          - 1.0
+          - ~
+          - 0
+        Cd:                           # drag coefficient (published Cd=1.1, drag dia 0.0605)
+          - 1.1
+          - ~
+          - 0.008
+        Cl: 0
+        SeabedLateralFrictionCoefficient: 0.5
+        SeabedAxialFrictionCoefficient: ~
+        RayleighDampingCoefficients: (no damping)
+
+  lines:
+    - name: mj01_m_jumper
+      line_type_refs:
+        - mj01_jumper_pipe_aluminium
+      properties:
+        IncludeTorsion: true          # torsional fatigue significant (Liu et al. 2020)
+        TopEnd: End A
+        LengthAndEndOrientations: Explicit
+        Representation: Finite element
+        DragFormulation: Standard
+        StaticsVIV: None
+        DynamicsVIV: None
+        WaveCalculationMethod: Specified by environment
+        # Both ends fully clamped at hub elevations (test: force dynamometers,
+        # built-in ends). End A at origin; End B 6.327 m along X, +0.003 m
+        # closure from the published 3 mm V2/V3 asymmetry.
+        ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+          ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+        : - - Fixed
+            - 0.0
+            - 0.0
+            - -9.0
+            - 0
+            - 0          # line leaves End A vertically up (V1)
+            - 0
+            - ~
+            - ~
+          - - Fixed
+            - 6.327
+            - 0.0
+            - -8.997
+            - 0
+            - 180        # line arrives at End B vertically down (V4)
+            - 0
+            - ~
+            - ~
+        ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+          - - Infinity
+            - ~
+          - - Infinity
+            - ~
+        # One section per published segment — dimension chain traceable to
+        # Igeh Table 1 (V1 H1 V2 H2 V3 H3 V4).
+        LineType, Length, TargetSegmentLength:
+          - - mj01_jumper_pipe_aluminium
+            - 1.495
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 1.0
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 2.323
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 4.327
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 2.326
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 1.0
+            - 0.1
+          - - mj01_jumper_pipe_aluminium
+            - 1.495
+            - 0.1
+        ContentsMethod: Uniform
+        IncludeAxialContentsInertia: true
+        # Equivalent internal-fluid density used in the source VIVANA FEM
+        # (SG 1.4 fluid + distributed lead ballast): 2328.45 kg/m3.
+        # Consistency: contents 5.532 kg/m + aluminium 1.347 kg/m = 6.879 kg/m
+        # vs displaced 2.947 kg/m -> m* = 2.334 (published mass ratio: 2.33).
+        ContentsDensity: 2.32845
+        ContentsTemperature: ~
+        ContentsPressureRefZ: ~
+        ContentsPressure: 0
+        ContentsFlowRate: 0
+        IncludedInStatics: true
+        StaticsStep1: Spline
+        StaticsStep2: Full statics
+        StaticsSeabedFrictionPolicy: None
+        AsLaidTension: 0
+        SplineOrder: 3
+        # M-shape corner coordinates (A3): hubs z=-9, shoulders z=-7.505/-7.502,
+        # mid-span dip z=-9.828.
+        SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+          - - 0.0
+            - 0.0
+            - -9.0
+          - - 0.0
+            - 0.0
+            - -7.505
+          - - 1.0
+            - 0.0
+            - -7.505
+          - - 1.0
+            - 0.0
+            - -9.828
+          - - 5.327
+            - 0.0
+            - -9.828
+          - - 5.327
+            - 0.0
+            - -7.502
+          - - 6.327
+            - 0.0
+            - -7.502
+          - - 6.327
+            - 0.0
+            - -8.997
+
+simulation:
+  time_step: 0.01
+  stages:
+    - 10.0
+    - 60.0
