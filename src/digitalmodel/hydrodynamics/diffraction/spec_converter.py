@@ -24,8 +24,8 @@ from pathlib import Path
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
-    copy_spec_meshes,
     iter_mesh_references,
+    package_spec_meshes,
     resolve_mesh_path,
 )
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
@@ -115,28 +115,35 @@ class SpecConverter:
         backend = self.backends[solver]
         output_dir = Path(output_dir)
 
+        # OrcaWave inputs reference meshes by basename. Package every
+        # referenced mesh into the output directory first — copying
+        # solver-ready formats unchanged and converting others via
+        # MeshPipeline — and generate from the rewritten spec so the YAML
+        # references the packaged filenames (#605, #606). AQWA needs no
+        # packaging: its backend embeds parsed mesh geometry in the .dat deck.
+        spec_to_generate = self.spec
+        if solver == "orcawave":
+            spec_to_generate, _ = package_spec_meshes(
+                self.spec,
+                output_dir,
+                spec_dir=self.spec_path.parent,
+                solver=solver,
+            )
+
         spec_dir = self.spec_path.parent if solver == "aqwa" else None
         if format == "single":
             if spec_dir is not None:
                 result = backend.generate_single(
-                    self.spec, output_dir, spec_dir=spec_dir
+                    spec_to_generate, output_dir, spec_dir=spec_dir
                 )
             else:
-                result = backend.generate_single(self.spec, output_dir)
+                result = backend.generate_single(spec_to_generate, output_dir)
         elif spec_dir is not None:
-            result = backend.generate_modular(self.spec, output_dir, spec_dir=spec_dir)
-        else:
-            result = backend.generate_modular(self.spec, output_dir)
-
-        # OrcaWave inputs reference meshes by basename; copy them alongside so
-        # the output directory is a self-contained, runnable package (#605).
-        # AQWA needs no copy: its backend embeds parsed mesh geometry in the
-        # generated .dat deck.
-        if solver == "orcawave":
-            package_dir = result if result.is_dir() else result.parent
-            copy_spec_meshes(
-                self.spec, package_dir, spec_dir=self.spec_path.parent
+            result = backend.generate_modular(
+                spec_to_generate, output_dir, spec_dir=spec_dir
             )
+        else:
+            result = backend.generate_modular(spec_to_generate, output_dir)
 
         return result
 
