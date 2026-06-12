@@ -236,6 +236,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
+    elif basename == "fpso_mooring":
+        from digitalmodel.subsea.mooring_analysis.fpso_workflow import FPSOMooringWorkflow
+        fmw = FPSOMooringWorkflow()
+        cfg_base = fmw.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

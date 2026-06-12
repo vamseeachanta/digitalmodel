@@ -61,6 +61,33 @@ workflows:
       - examples/workflows/plate-buckling/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]
     runtime: offline
+  - id: dynacard-diagnostics
+    basename: artificial_lift
+    title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
+    input: examples/workflows/dynacard-diagnostics/input.yml
+    outputs:
+      - examples/workflows/dynacard-diagnostics/results/input.yml
+      - examples/workflows/dynacard-diagnostics/results/input_diagnostic_report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dynacard-diagnostics]
+    runtime: offline
+  - id: orcaflex-6dbuoy-dnvrph103
+    basename: code_dnvrph103
+    title: DNV-RP-H103 6D buoy OrcaFlex YAML model preparation
+    input: examples/workflows/orcaflex-6dbuoy-dnvrph103/input.yml
+    outputs:
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/input.yml
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/dnvrph103_demo_6dbuoy_deep.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-6dbuoy-dnvrph103]
+    runtime: offline
+  - id: fpso-spread-mooring
+    basename: fpso_mooring
+    title: FPSO eight-line spread-mooring safety-factor screening
+    input: examples/workflows/fpso-spread-mooring/input.yml
+    outputs:
+      - examples/workflows/fpso-spread-mooring/results/input.yml
+      - examples/workflows/fpso-spread-mooring/results/fpso_spread_mooring_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-spread-mooring]
+    runtime: offline
   - id: wall-thickness-quickcheck
     basename: wall_thickness
     title: DNV/API wall-thickness quickcheck cached deckhand report
