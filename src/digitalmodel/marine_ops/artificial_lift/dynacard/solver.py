@@ -1,7 +1,10 @@
 # ABOUTME: Main orchestrator for Dynacard analysis in digitalmodel.
 # ABOUTME: Integrates physics solvers, calculations, and diagnostics into unified workflow.
 
+from html import escape
+from pathlib import Path
 from typing import Optional, Literal
+
 from .models import DynacardAnalysisContext, AnalysisResults
 from .physics import DynacardPhysicsSolver
 from .finite_difference import FiniteDifferenceSolver
@@ -51,6 +54,8 @@ class DynacardWorkflow:
         """
         Maps configuration dict to dynacard workflow.
         """
+        self._apply_synthetic_card(cfg)
+
         # 1. Transform dict to Context Model
         if 'well_data' in cfg:
             self.ctx = DynacardAnalysisContext(**cfg['well_data'])
@@ -66,7 +71,111 @@ class DynacardWorkflow:
 
         # 3. Update cfg with results
         cfg['results'] = results.model_dump()
+        if cfg.get('report', {}).get('html', False):
+            html_report = self._write_html_report(cfg, results)
+            cfg.setdefault('outputs', {})['html_report'] = str(html_report)
         return cfg
+
+    def _apply_synthetic_card(self, cfg: dict) -> None:
+        """Build well_data from a pinned synthetic card generator."""
+        if 'synthetic_card' not in cfg or 'well_data' in cfg:
+            return
+
+        from .card_generators import ALL_GENERATORS
+
+        synthetic_cfg = cfg['synthetic_card']
+        mode = synthetic_cfg['mode']
+        card = ALL_GENERATORS[mode](seed=int(synthetic_cfg.get('seed', 0)))
+        well_cfg = cfg.get('well', {})
+        rod_cfg = well_cfg.get('rod', {})
+        pump_cfg = well_cfg.get('pump', {})
+        surface_unit_cfg = well_cfg.get('surface_unit', {})
+
+        cfg['well_data'] = {
+            'api14': well_cfg.get('api14', f'SIM-{mode}'),
+            'surface_card': card.model_dump(),
+            'rod_string': [rod_cfg],
+            'pump': pump_cfg,
+            'surface_unit': surface_unit_cfg,
+            'spm': well_cfg.get('spm', 10.0),
+        }
+
+    def _write_html_report(
+        self,
+        cfg: dict,
+        results: AnalysisResults,
+    ) -> Path:
+        """Write a standalone diagnostic report beside the saved cfg."""
+        from .visualization.diagnostic_annotator import DiagnosticAnnotator
+
+        result_folder = self._result_folder(cfg)
+        result_folder.mkdir(parents=True, exist_ok=True)
+        file_base = self._result_file_base(cfg)
+        report_path = result_folder / f'{file_base}_diagnostic_report.html'
+
+        diag = self.diagnostics.classify_with_context(results)
+        svg = DiagnosticAnnotator().render(
+            results.downhole_card,
+            diag.classification,
+            diag.confidence,
+            diag.differential,
+        )
+        html = self._html_document(results, svg)
+        report_path.write_text(html)
+        return report_path
+
+    def _result_folder(self, cfg: dict) -> Path:
+        analysis = cfg.get('Analysis', {})
+        result_folder = analysis.get('result_folder')
+        if result_folder:
+            return Path(result_folder)
+        if '_config_dir_path' in cfg:
+            return Path(cfg['_config_dir_path']) / 'results'
+        return Path('results')
+
+    def _result_file_base(self, cfg: dict) -> str:
+        analysis = cfg.get('Analysis', {})
+        if analysis.get('file_name'):
+            return Path(str(analysis['file_name'])).stem
+        if cfg.get('_config_file_path'):
+            return Path(str(cfg['_config_file_path'])).stem
+        return 'input'
+
+    def _html_document(
+        self,
+        results: AnalysisResults,
+        svg: str,
+    ) -> str:
+        ctx = results.ctx
+        well_id = ctx.api14 if ctx else 'unknown'
+        return "\n".join([
+            "<!doctype html>",
+            "<html lang=\"en\">",
+            "<head>",
+            "  <meta charset=\"utf-8\">",
+            "  <title>Dynacard Diagnostic Report</title>",
+            "  <style>",
+            "    body { font-family: Arial, sans-serif; margin: 24px; }",
+            "    main { max-width: 960px; margin: 0 auto; }",
+            "    dl { display: grid; grid-template-columns: 180px 1fr; gap: 8px; }",
+            "    dt { font-weight: 700; }",
+            "  </style>",
+            "</head>",
+            "<body>",
+            "  <main>",
+            "    <h1>Dynacard Diagnostic Report</h1>",
+            f"    <p><strong>Well:</strong> {escape(well_id)}</p>",
+            "    <dl>",
+            f"      <dt>Diagnostic</dt><dd>{escape(results.diagnostic_message)}</dd>",
+            f"      <dt>Pump fillage</dt><dd>{results.pump_fillage:.6f}</dd>",
+            f"      <dt>Production</dt><dd>{results.inferred_production:.6f} bbl/day</dd>",
+            f"      <dt>Buckling detected</dt><dd>{results.buckling_detected}</dd>",
+            "    </dl>",
+            svg,
+            "  </main>",
+            "</body>",
+            "</html>",
+        ])
 
     def run_full_analysis(self) -> AnalysisResults:
         """

@@ -48,14 +48,25 @@ class TestSpecConverterConvertAQWA:
         from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
-        result = converter.convert(
-            solver="aqwa", format="single", output_dir=tmp_path
-        )
+        result = converter.convert(solver="aqwa", format="single", output_dir=tmp_path)
 
         assert result.exists()
         assert result.suffix == ".dat"
         content = result.read_text()
         assert len(content) > 0
+
+    def test_convert_aqwa_single_resolves_mesh_relative_to_spec_file(
+        self, ship_spec_path: Path, tmp_path: Path
+    ) -> None:
+        from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
+
+        converter = SpecConverter(ship_spec_path)
+        result = converter.convert(solver="aqwa", format="single", output_dir=tmp_path)
+
+        content = result.read_text()
+        assert "could not be loaded" not in content
+        assert content.count("QPPL") == 5
+        assert "1HRTZ   15   15  0.238732" in content
 
     def test_convert_aqwa_modular_produces_directory(
         self, ship_spec_path: Path, tmp_path: Path
@@ -143,9 +154,7 @@ class TestSpecConverterConvertAll:
 class TestSpecConverterValidate:
     """SpecConverter.validate() method."""
 
-    def test_validate_valid_spec_returns_no_issues(
-        self, ship_spec_path: Path
-    ) -> None:
+    def test_validate_valid_spec_returns_no_issues(self, ship_spec_path: Path) -> None:
         from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(ship_spec_path)
@@ -154,9 +163,7 @@ class TestSpecConverterValidate:
         assert isinstance(issues, list)
         assert len(issues) == 0
 
-    def test_validate_invalid_spec_returns_issues(
-        self, tmp_path: Path
-    ) -> None:
+    def test_validate_invalid_spec_returns_issues(self, tmp_path: Path) -> None:
         """An invalid YAML should raise during construction or return issues."""
         import yaml
 
@@ -179,15 +186,11 @@ class TestSpecConverterValidate:
 class TestSpecConverterMultiBody:
     """SpecConverter with multi-body FPSO+turret fixture."""
 
-    def test_convert_aqwa_multibody(
-        self, fpso_spec_path: Path, tmp_path: Path
-    ) -> None:
+    def test_convert_aqwa_multibody(self, fpso_spec_path: Path, tmp_path: Path) -> None:
         from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
         converter = SpecConverter(fpso_spec_path)
-        result = converter.convert(
-            solver="aqwa", format="single", output_dir=tmp_path
-        )
+        result = converter.convert(solver="aqwa", format="single", output_dir=tmp_path)
         assert result.exists()
         content = result.read_text()
         # Multi-body spec should reference both bodies
@@ -226,9 +229,12 @@ class TestCLIConvertSpec:
             [
                 "convert-spec",
                 str(ship_spec_path),
-                "--solver", "aqwa",
-                "--format", "single",
-                "--output", str(tmp_path),
+                "--solver",
+                "aqwa",
+                "--format",
+                "single",
+                "--output",
+                str(tmp_path),
             ],
         )
         assert result.exit_code == 0, result.output
@@ -244,9 +250,12 @@ class TestCLIConvertSpec:
             [
                 "convert-spec",
                 str(ship_spec_path),
-                "--solver", "orcawave",
-                "--format", "single",
-                "--output", str(tmp_path),
+                "--solver",
+                "orcawave",
+                "--format",
+                "single",
+                "--output",
+                str(tmp_path),
             ],
         )
         assert result.exit_code == 0, result.output
@@ -262,8 +271,10 @@ class TestCLIConvertSpec:
             [
                 "convert-spec",
                 str(ship_spec_path),
-                "--solver", "all",
-                "--output", str(tmp_path),
+                "--solver",
+                "all",
+                "--output",
+                str(tmp_path),
             ],
         )
         assert result.exit_code == 0, result.output
@@ -283,9 +294,7 @@ class TestCLIConvertSpec:
 class TestCLIValidateSpec:
     """CLI validate-spec command tests."""
 
-    def test_validate_spec_valid_exit_0(
-        self, ship_spec_path: Path
-    ) -> None:
+    def test_validate_spec_valid_exit_0(self, ship_spec_path: Path) -> None:
         from digitalmodel.hydrodynamics.diffraction.cli import cli
 
         runner = CliRunner()
@@ -295,9 +304,7 @@ class TestCLIValidateSpec:
         )
         assert result.exit_code == 0, result.output
 
-    def test_validate_spec_invalid_exit_nonzero(
-        self, tmp_path: Path
-    ) -> None:
+    def test_validate_spec_invalid_exit_nonzero(self, tmp_path: Path) -> None:
         import yaml
 
         bad_spec_path = tmp_path / "bad_spec.yml"

@@ -173,7 +173,7 @@ class AQWABackend:
         # AQWA on Windows expects CRLF line endings
         # Use newline='' to prevent Python from adding extra line conversion
         content = "\r\n".join(all_cards) + "\r\n"
-        with open(output_path, "w", newline='') as f:
+        with open(output_path, "w", newline="") as f:
             f.write(content)
         return output_path
 
@@ -266,9 +266,7 @@ class AQWABackend:
     def _make_filename(self, spec: DiffractionSpec) -> str:
         """Derive a .dat filename from the spec metadata."""
         project = spec.metadata.project or "aqwa_analysis"
-        safe_name = (
-            project.replace(" ", "_").replace("/", "_").replace("\\", "_")
-        )
+        safe_name = project.replace(" ", "_").replace("/", "_").replace("\\", "_")
         return f"{safe_name}.dat"
 
     def _resolve_mesh_path(self, mesh_file: str) -> Path:
@@ -311,35 +309,29 @@ class AQWABackend:
         - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
         """
         with open(file_path, "r") as f:
-            lines = f.readlines()
+            lines = [
+                line.strip()
+                for line in f.readlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+
+        def _starts_numeric(line: str) -> bool:
+            try:
+                float(line.split()[0])
+            except (ValueError, IndexError):
+                return False
+            return True
 
         line_idx = 0
 
-        # Skip header comments starting with '#'
-        while line_idx < len(lines) and lines[line_idx].strip().startswith("#"):
+        # Optional non-comment title line.
+        if line_idx < len(lines) and not _starts_numeric(lines[line_idx]):
             line_idx += 1
 
-        # Line 1 may be a title (not starting with #), skip it
-        # Then read ULEN GRAV line
-        if line_idx < len(lines):
-            line_idx += 1  # Skip title or ULEN/GRAV
+        # Read ULEN/GRAV and symmetry lines.
+        line_idx += 2
 
-        # Read ULEN, GRAV (might be line 1 if no title)
-        if line_idx < len(lines):
-            parts = lines[line_idx].split()
-            # Check if this looks like numbers (ULEN GRAV) or text (title)
-            try:
-                float(parts[0])
-                # This is ULEN/GRAV line, continue
-            except (ValueError, IndexError):
-                pass
-            line_idx += 1
-
-        # Read symmetry flags (ISX ISY)
-        if line_idx < len(lines):
-            line_idx += 1
-
-        # Read number of panels (NPAN)
+        # Read number of panels (NPAN).
         npan = 0
         if line_idx < len(lines):
             try:
@@ -480,9 +472,7 @@ class AQWABackend:
                 )
             else:
                 # Fallback: emit warning comment if mesh cannot be loaded
-                cards.append(
-                    f"* WARNING: Mesh file '{mesh_file}' could not be loaded"
-                )
+                cards.append(f"* WARNING: Mesh file '{mesh_file}' could not be loaded")
 
         cards.append(" END")
         return cards
@@ -517,9 +507,7 @@ class AQWABackend:
                 xmin, xmax, ymin, ymax = -100.0, 100.0, -100.0, 100.0
 
             # SEAG card — resolution only (non-Workbench mode accepts 2 params)
-            cards.append(
-                f"      SEAG          ( 81, 51)"
-            )
+            cards.append(f"      SEAG          ( 81, 51)")
             # ZLWL (waterline) card
             wl_z = body.vessel.geometry.waterline_z or 0.0
             cards.append(f"      ZLWL          ({wl_z:>9.1f})")
@@ -528,9 +516,7 @@ class AQWABackend:
             # matching the LHFR option set in Deck 0.
             if spec.solver_options.remove_irregular_frequencies:
                 lid_group = 21
-                cards.append(
-                    f"     {struct_idx}ILID AUTO   {lid_group}"
-                )
+                cards.append(f"     {struct_idx}ILID AUTO   {lid_group}")
             # Group ID comment
             group_id = 15
             cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
@@ -551,9 +537,7 @@ class AQWABackend:
                         f"  Aqwa Elem No: {elem_idx:>4d}"
                     )
             else:
-                cards.append(
-                    f"* WARNING: Mesh file '{mesh_file}' could not be loaded"
-                )
+                cards.append(f"* WARNING: Mesh file '{mesh_file}' could not be loaded")
 
             # PMAS element — point mass at CoG node (98000)
             pmas_group = 18
@@ -581,9 +565,7 @@ class AQWABackend:
             mass = body.vessel.inertia.mass
             # Reference node 98000 is AQWA convention for CoG
             mass_str = _fmt_float(mass)
-            cards.append(
-                f"{_WS:>5s}{idx:>1d}{_WS:>9s}98000{mass_str}"
-            )
+            cards.append(f"{_WS:>5s}{idx:>1d}{_WS:>9s}98000{mass_str}")
 
         cards.append(" END")
         return cards
@@ -600,9 +582,7 @@ class AQWABackend:
 
         bodies = spec.get_bodies()
         for idx, body in enumerate(bodies, start=1):
-            ixx, iyy, izz, ixy, ixz, iyz = self._compute_inertia(
-                body.vessel.inertia
-            )
+            ixx, iyy, izz, ixy, ixz, iyz = self._compute_inertia(body.vessel.inertia)
             cards.append(
                 f"{_WS:>5s}{idx:>1d}PMAS{_WS:>5s}98000"
                 f"{_fmt_float(ixx)}{_fmt_float(ixy)}{_fmt_float(ixz)}"
@@ -685,20 +665,24 @@ class AQWABackend:
         bodies = spec.get_bodies()
         for body in bodies:
             vessel = body.vessel
-            if (
-                vessel.external_damping is not None
-                and self._matrix_has_nonzero(vessel.external_damping)
+            if vessel.external_damping is not None and self._matrix_has_nonzero(
+                vessel.external_damping
             ):
-                cards.extend(self._build_matrix_cards(
-                    vessel.external_damping, keyword="FIDP",
-                ))
-            if (
-                vessel.external_stiffness is not None
-                and self._matrix_has_nonzero(vessel.external_stiffness)
+                cards.extend(
+                    self._build_matrix_cards(
+                        vessel.external_damping,
+                        keyword="FIDP",
+                    )
+                )
+            if vessel.external_stiffness is not None and self._matrix_has_nonzero(
+                vessel.external_stiffness
             ):
-                cards.extend(self._build_matrix_cards(
-                    vessel.external_stiffness, keyword="FISK",
-                ))
+                cards.extend(
+                    self._build_matrix_cards(
+                        vessel.external_stiffness,
+                        keyword="FISK",
+                    )
+                )
 
         cards.append(" END")
         return cards
@@ -710,7 +694,8 @@ class AQWABackend:
 
     @staticmethod
     def _build_matrix_cards(
-        matrix: list[list[float]], keyword: str = "FIDP",
+        matrix: list[list[float]],
+        keyword: str = "FIDP",
     ) -> list[str]:
         """Build AQWA 6x6 matrix cards (FIDP or FISK format).
 
@@ -796,18 +781,14 @@ class AQWABackend:
 
         for i, freq_hz in enumerate(freqs_hz, start=1):
             freq_str = f"{freq_hz:>10g}"
-            cards.append(
-                f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}"
-            )
+            cards.append(f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}")
 
         # Headings — AQWA requires -180 to +180 range for no-symmetry bodies
         headings = spec.wave_headings.to_heading_list()
         aqwa_headings = self._expand_headings_for_aqwa(headings)
         for i, heading_deg in enumerate(aqwa_headings, start=1):
             heading_str = f"{heading_deg:>10g}"
-            cards.append(
-                f"{_WS:>5s}1DIRN{i:>5d}{i:>5d}{heading_str}"
-            )
+            cards.append(f"{_WS:>5s}1DIRN{i:>5d}{i:>5d}{heading_str}")
 
         cards.append(" END")
         return cards

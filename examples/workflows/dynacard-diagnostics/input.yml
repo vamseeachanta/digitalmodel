@@ -1,0 +1,30 @@
+basename: artificial_lift
+
+synthetic_card:
+  mode: PUMP_TAGGING
+  seed: 711
+
+well:
+  api14: SIM-PUMP-TAGGING-711
+  rod:
+    diameter: 1.0
+    length: 5000.0
+  pump:
+    diameter: 1.75
+    depth: 5000.0
+  surface_unit:
+    manufacturer: Sim
+    unit_type: Test
+    stroke_length: 144.0
+    gear_box_rating: 640000.0
+  spm: 10.0
+
+report:
+  html: true
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
