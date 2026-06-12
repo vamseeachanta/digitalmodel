@@ -1,0 +1,5 @@
+time_s,mean_load_pct_mbl,dynamic_tension_range_pct_mbl,low_tension_event
+0,18.0,22.0,false
+600,20.0,28.0,false
+1200,21.5,35.0,true
+1800,20.5,31.0,false
