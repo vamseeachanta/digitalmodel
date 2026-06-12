@@ -57,6 +57,7 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     rad_per_s_to_period_s,
 )
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.mesh_packaging import copy_spec_meshes
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     AddedMassSet,
@@ -848,66 +849,14 @@ class OrcaWaveRunner:
     ) -> list[Path]:
         """Copy mesh files referenced in the spec to the output directory.
 
-        Resolves mesh paths relative to *spec_dir* (the directory containing
-        the spec YAML file) when the mesh path is relative.
+        Delegates to :func:`mesh_packaging.copy_spec_meshes`, the shared
+        implementation also used by ``SpecConverter`` (#605). Relative mesh
+        paths resolve against *spec_dir* (the directory containing the spec
+        YAML file).
 
         Returns list of destination paths.
         """
-        copied: list[Path] = []
-        bodies = spec.get_bodies()
-
-        for body in bodies:
-            mesh_file_str = body.vessel.geometry.mesh_file
-            mesh_source = Path(mesh_file_str)
-
-            if not mesh_source.is_absolute() and spec_dir is not None:
-                mesh_source = (spec_dir / mesh_file_str).resolve()
-
-            if mesh_source.exists():
-                dest = output_dir / mesh_source.name
-                if not dest.exists() or not dest.samefile(mesh_source):
-                    shutil.copy2(mesh_source, dest)
-                copied.append(dest)
-
-        # Copy damping lid mesh if present
-        if spec.damping_lid is not None:
-            lid_file_str = spec.damping_lid.mesh_file
-            lid_source = Path(lid_file_str)
-            if not lid_source.is_absolute() and spec_dir is not None:
-                lid_source = (spec_dir / lid_file_str).resolve()
-            if lid_source.exists():
-                dest = output_dir / lid_source.name
-                if not dest.exists() or not dest.samefile(lid_source):
-                    shutil.copy2(lid_source, dest)
-                copied.append(dest)
-
-        # Copy control surface mesh if present
-        for body in bodies:
-            cs = getattr(body.vessel, "control_surface", None)
-            if cs is not None and cs.mesh_file:
-                cs_source = Path(cs.mesh_file)
-                if not cs_source.is_absolute() and spec_dir is not None:
-                    cs_source = (spec_dir / cs.mesh_file).resolve()
-                if cs_source.exists():
-                    dest = output_dir / cs_source.name
-                    if not dest.exists() or not dest.samefile(cs_source):
-                        shutil.copy2(cs_source, dest)
-                    copied.append(dest)
-
-        # Copy free surface zone mesh if present
-        fsz = getattr(spec, "free_surface_zone", None)
-        if fsz is not None and fsz.mesh_file:
-            fsz_file_str = fsz.mesh_file
-            fsz_source = Path(fsz_file_str)
-            if not fsz_source.is_absolute() and spec_dir is not None:
-                fsz_source = (spec_dir / fsz_file_str).resolve()
-            if fsz_source.exists():
-                dest = output_dir / fsz_source.name
-                if not dest.exists() or not dest.samefile(fsz_source):
-                    shutil.copy2(fsz_source, dest)
-                copied.append(dest)
-
-        return copied
+        return copy_spec_meshes(spec, output_dir, spec_dir=spec_dir)
 
     def _validate_mesh_references(
         self, spec: DiffractionSpec, output_dir: Path
