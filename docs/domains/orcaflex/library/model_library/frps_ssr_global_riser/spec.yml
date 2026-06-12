@@ -77,7 +77,7 @@ environment:
   waves:
     type: JONSWAP                               # storm spectrum (PLACEHOLDER - see metocean matrix)
     height: 0.0                                 # Hs (m) - SET per load case
-    period: 0.0                                 # Tp (s) - SET per load case
+    period: 8.0                                 # Tp (s) PLACEHOLDER (schema requires >0) - SET per load case
     direction: 180
     gamma: 2.4                                  # GoM hurricane (PLACEHOLDER)
   current:
