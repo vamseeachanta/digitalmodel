@@ -67,7 +67,7 @@ def current_demand(
     float
         Current demand [A].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     return surface_area_m2 * current_density_A_m2 * breakdown_factor
 
 
@@ -98,7 +98,7 @@ def anode_mass_requirement(
     float
         Required net anode mass [kg].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     return (I_mean_A * T_design_years * 8760.0) / (E_capacity * u_f)
 
 
@@ -126,7 +126,7 @@ def coating_breakdown_factor(
     float
         Coating breakdown factor at time t (dimensionless).
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     return a + b * t_years
 
 
@@ -158,7 +158,7 @@ def anode_resistance_slender_standoff(
     float
         Anode-to-electrolyte resistance [ohm].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     R_a = (rho / (2.0 * math.pi * L_a)) * (
         math.log(4.0 * L_a / r_a) - 1.0
     )
@@ -195,7 +195,7 @@ def anode_current_output(
     float
         Anode current output [A].
     """
-    ed = normalize_edition(edition)
+    ed = normalize_edition(edition, stacklevel=3)
     R_a = anode_resistance_slender_standoff(
         rho, L_a, r_a, proximity_factor, edition=ed
     )
@@ -229,7 +229,7 @@ def equivalent_radius_from_mass(
     float
         Equivalent radius [m].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     return math.sqrt(net_mass_kg / (math.pi * L_a * density))
 
 
@@ -256,7 +256,7 @@ def number_of_anodes(
     int
         Number of anodes (rounded up to nearest integer or even integer).
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     n = math.ceil(total_mass_kg / anode_net_mass_kg)
     if round_to_even and n % 2 != 0:
         n += 1
@@ -296,7 +296,7 @@ def protected_length(
     float
         Protected length [m].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     return math.sqrt(
         (delta_E_me * WT * (D - WT)) / (rho_me * D * f_cf * i_cm)
     )
@@ -338,7 +338,7 @@ def flush_anode_resistance(
     float
         Anode-to-electrolyte resistance [ohm].
     """
-    _ = normalize_edition(edition)
+    _ = normalize_edition(edition, stacklevel=3)
     # W_in and H_in are accepted for compatibility with standard CP
     # spreadsheet call signatures; the slender-body formula only needs
     # L and r_eq (all cross-section information is collapsed into r_eq).

@@ -17,8 +17,16 @@ from __future__ import annotations
 
 import math
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+    standard_for_edition,
+)
 
 
 # ───────────────────────────────────────────────────────────────────────
@@ -123,6 +131,28 @@ class MarineCPResult(BaseModel):
     design_life_years: float = Field(
         ..., description="Design life used [years]"
     )
+    edition_used: Edition = Field(
+        ..., description="DNV-RP-B401 edition used for the marine CP design"
+    )
+    standard: str = Field(
+        ..., description="Standards reference matching the selected edition"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_legacy_metadata(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        values = dict(data)
+        edition = values.get("edition_used") or DEFAULT_EDITION
+        values["edition_used"] = edition
+        if not values.get("standard"):
+            try:
+                values["standard"] = standard_for_edition(edition)
+            except KeyError:
+                pass
+        return values
 
 
 def get_seawater_current_density(
@@ -242,6 +272,7 @@ def calculate_zone_demand(
 
 def design_marine_cp(
     input_params: MarineCPInput,
+    edition: Edition | None = None,
 ) -> MarineCPResult:
     """Design multi-zone CP system for a marine structure.
 
@@ -258,6 +289,8 @@ def design_marine_cp(
     MarineCPResult
         Complete CP design result with per-zone breakdown.
     """
+    ed = normalize_edition(edition, stacklevel=3)
+
     zone_demands: list[dict] = []
     total_demand = 0.0
 
@@ -292,4 +325,6 @@ def design_marine_cp(
         number_of_anodes=n_anodes,
         zone_demands=zone_demands,
         design_life_years=input_params.design_life_years,
+        edition_used=ed,
+        standard=standard_for_edition(ed),
     )
