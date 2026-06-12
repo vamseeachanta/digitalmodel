@@ -9,7 +9,9 @@ from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
 from digitalmodel.hydrodynamics.aqwa import Aqwa
-from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
+    CathodicProtection,
+)
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
@@ -34,13 +36,21 @@ from digitalmodel.structural.pipe_capacity.pipe_capacity import PipeCapacity
 from digitalmodel.subsea.pipeline.pipeline import Pipeline
 from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics
 from digitalmodel.hydrodynamics.rao_analysis.rao_analysis import RAOAnalysis
-from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis
+from digitalmodel.signal_processing.time_series.time_series_analysis import (
+    TimeSeriesAnalysis,
+)
 from digitalmodel.infrastructure.transformation.transformation import Transformation
+
 # from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
-from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import PlateBuckling
+from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import (
+    PlateBuckling,
+)
 from loguru import logger
-from digitalmodel.solvers.orcaflex.output_control import OutputController, get_output_level_from_argv
+from digitalmodel.solvers.orcaflex.output_control import (
+    OutputController,
+    get_output_level_from_argv,
+)
 
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
@@ -114,15 +124,15 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
     else:
         cfg_base = cfg
-    
+
     # Apply output control settings from command line
     output_level = get_output_level_from_argv()
     if output_level == OutputController.QUIET:
-        cfg_base['quiet'] = True
-        cfg_base['verbose'] = False
+        cfg_base["quiet"] = True
+        cfg_base["verbose"] = False
     elif output_level == OutputController.VERBOSE:
-        cfg_base['quiet'] = False
-        cfg_base['verbose'] = True
+        cfg_base["quiet"] = False
+        cfg_base["verbose"] = True
 
     logger.info(f"{basename}, application ... START")
 
@@ -210,18 +220,30 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "mooring":
         logger.info("Mooring analysis routed to mooring_analysis module")
         from digitalmodel.subsea.mooring_analysis.cli import cli as mooring_cli
+
         raise NotImplementedError(
             "Mooring via engine requires mooring_analysis CLI or direct API. "
             "Use: python -m digitalmodel.subsea.mooring_analysis.cli"
         )
     elif basename == "artificial_lift":
-        from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+        from digitalmodel.marine_ops.artificial_lift.dynacard.solver import (
+            DynacardWorkflow,
+        )
+
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
     elif basename == "digitalmarketing":
-        from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
+        from digitalmodel.specialized.digitalmarketing.digitalmarketing import (
+            DigitalMarketing,
+        )
+
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
+    elif basename == "diffraction":
+        from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+        diffraction = DiffractionWorkflow()
+        cfg_base = diffraction.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
