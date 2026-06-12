@@ -257,8 +257,9 @@ def _build_body_dict(
     if add_interior:
         body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
 
-    # Control surface mesh (for mean drift loads)
-    cs = getattr(vessel, "control_surface", None)
+    # Control surface mesh (for mean drift loads). Body-level definitions
+    # take precedence over vessel-level (#609).
+    cs = body_spec.resolve_control_surface()
     if cs is not None and cs.mesh_file is not None:
         body["BodyControlSurfaceType"] = "Defined by mesh file"
         body["BodyControlSurfaceMeshFileName"] = Path(cs.mesh_file).name
@@ -427,16 +428,12 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
                 solver.qtf_calculation
             )
     # Check if any body has an explicit control surface defined
-    has_body_control_surface = False
-    bodies = getattr(spec, "bodies", None)
-    if bodies:
-        for b in bodies:
-            if getattr(b, "control_surface", None) is not None:
-                has_body_control_surface = True
-                break
-    elif getattr(spec, "vessel", None) is not None:
-        if getattr(spec.vessel, "control_surface", None) is not None:
-            has_body_control_surface = True
+    # Same resolution rule as per-body emission: body-level overrides
+    # vessel-level (#609).
+    has_body_control_surface = any(
+        body.resolve_control_surface() is not None
+        for body in spec.get_bodies()
+    )
 
     if is_qtf:
         section["QuadraticLoadControlSurface"] = "No"

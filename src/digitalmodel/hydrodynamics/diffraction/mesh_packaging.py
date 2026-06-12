@@ -63,7 +63,7 @@ def _iter_mesh_slots(spec: DiffractionSpec) -> Iterator[_MeshSlot]:
         yield _MeshSlot("Damping lid mesh", damping_lid.mesh_file, damping_lid)
 
     for body in bodies:
-        control_surface = getattr(body.vessel, "control_surface", None)
+        control_surface = body.resolve_control_surface()
         if control_surface is not None and control_surface.mesh_file:
             yield _MeshSlot(
                 f"Body '{body.vessel.name}' control surface mesh",

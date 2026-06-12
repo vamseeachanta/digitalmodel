@@ -656,6 +656,19 @@ class BodySpec(BaseModel):
         ),
     )
 
+    def resolve_control_surface(self) -> Optional["ControlSurfaceSpec"]:
+        """Resolve this body's control surface (#609).
+
+        Precedence: a body-level ``BodySpec.control_surface`` overrides the
+        vessel-level ``VesselSpec.control_surface``. This is the single
+        resolution rule shared by backend generation, mesh packaging, and
+        validation — multi-body specs with per-body control surfaces must
+        never be silently ignored.
+        """
+        if self.control_surface is not None:
+            return self.control_surface
+        return self.vessel.control_surface
+
 
 # ---------------------------------------------------------------------------
 # Top-level spec
