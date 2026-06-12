@@ -35,7 +35,7 @@
 #       blocked_on: <optional — what's blocking the proof>
 
 schema_version: "1.0.0"
-last_updated: "2026-05-11"
+last_updated: "2026-06-12"
 purpose: "inventory_not_claim"
 
 inventory:
@@ -67,14 +67,54 @@ inventory:
       Companion to c06_calm_buoy. The #2472 plan focuses on CALM buoys;
       SPM-specific proof remains TBD.
 
+  # --------------------------------------------------------------------
+  # Literature-derived M-shaped jumper family (digitalmodel #722).
+  # Geometry from published sources; spec headers carry per-dimension
+  # stated-vs-assumed provenance. L1 enforced by
+  # tests/solvers/orcaflex/modular_generator/test_m_jumper_library_specs.py.
+  # L2/L3 proof = published natural frequencies (recorded in spec headers)
+  # vs licensed OrcaFlex modal/statics runs — #718/#719 sitting.
+  # --------------------------------------------------------------------
+
+  - name: mj01_exxonmobil_m_jumper_viv
+    family: jumper
+    builder_track: generic
+    proof_plan: "digitalmodel issue #722"
+    blocked_on: "L2/L3 require licensed OrcaFlex (modal comparison vs measured 0.863/2.149/2.194/2.542 Hz)"
+    notes: |
+      ExxonMobil M-jumper VIV towing-tank benchmark (Wang OMAE2013 /
+      Zheng OMAE2015; dimensions from Igeh UiS MSc thesis 2017, CC-BY).
+      Only published M-jumper with full dimension chain AND measured
+      multi-speed/multi-heading VIV response.
+
+  - name: mj02_zhu2022_m_jumper_fullscale
+    family: jumper
+    builder_track: generic
+    proof_plan: "digitalmodel issue #722"
+    blocked_on: "L2/L3 require licensed OrcaFlex (out-of-plane f1 ~ 1.464 Hz target)"
+    notes: |
+      Full-scale gas-oil M-jumper slug FIV case (Zhu et al. 2022,
+      Processes 10:2133). Only full-scale published M geometry with
+      explicit dimensions including bend radii; pipe size near-identical
+      to Ballymore 10.75in jumpers.
+
+  - name: mj03_li2024_m_jumper_lab
+    family: jumper
+    builder_track: generic
+    proof_plan: "digitalmodel issue #722"
+    blocked_on: "L2/L3 require licensed OrcaFlex (13 tabulated modes, f1=8.520 Hz target)"
+    notes: |
+      Lab-scale M-jumper combined internal/external flow case (Li et al.
+      2024, JMSE 12:1261). Geometry resolved from paper Figure 1 +
+      Table 1 ("total length" is the X-envelope, not arc length — see
+      spec header).
+
 # Roll-up:
-#   Total entries: 3
-#   By family: 1 riser, 1 buoy, 1 mooring
-#   By builder_track: 1 riser, 2 generic
-#   All entries have proof_plan references but no test_enforcing path.
+#   Total entries: 6
+#   By family: 1 riser, 1 buoy, 1 mooring, 3 jumper
+#   By builder_track: 1 riser, 5 generic
 #
 # Coverage gap (informational): MODEL_CLAIM_REGISTRY.yaml lists 3 attested
-# L1 entries; this inventory lists 3 pending. Together they describe 6 of
-# 20 model_library/ directories (30%). The remaining 14 models are not
-# inventoried here — adding them would imply intent-to-prove, which has
-# not been established.
+# L1 entries; this inventory lists 6 pending. The remaining model_library/
+# directories are not inventoried here — adding them would imply
+# intent-to-prove, which has not been established.

@@ -1,0 +1,219 @@
+# M-shaped rigid jumper — full-scale gas-oil production jumper (Zhu et al. 2022)
+#
+# Provenance (see docs/domains/orcaflex/subsea/jumper/m_shaped/LITERATURE_GEOMETRY_SURVEY.md
+# Case 2, and digitalmodel issue #722):
+#   - Zhu, Hu, Tang, Ji, Zhou, "Evolution of Gas-Liquid Two-Phase Flow in an
+#     M-Shaped Jumper and the Resultant Flow-Induced Vibration Response",
+#     Processes 10(10):2133, 2022 (open access):
+#     https://www.mdpi.com/2227-9717/10/10/2133
+#
+# Full-scale planar M, 6 bends (Table 1 of paper, all explicit):
+#   inlet/outlet verticals L1 = 4 m | top horizontals L2 = 3 m |
+#   inner verticals L3 = 6 m | bottom horizontal L4 = 10 m |
+#   bend radius R = 2D = 0.54 m
+# Corner-to-corner chain: 4 | 3 | 6 | 10 | 6 | 3 | 4 (36 m); centerline arc
+# length with 6 x 90 deg bends = 36 - 6*(2*0.54) + 6*(pi/2*0.54) = 34.609 m.
+# Pipe size near-identical to Ballymore 10.75in jumpers (OD 0.273 m).
+#
+# Validation targets (computed, two-way FSI): fundamental out-of-plane
+# f1 ~ 1.464 Hz; FIV response locked to 2.5 Hz slug frequency; max structural
+# stress at Bend 5, max pressure stress at Bend 3.
+#
+# Modeling assumptions (NOT from source — flagged per #722):
+#   A1: water depth not published; 100 m assumed, jumper flanges at z=-95
+#       (mid-span dip 3 m above seabed)
+#   A2: end fixity assumed clamped (flanged connections to subsea equipment)
+#   A3: drag/added-mass coefficients not published (paper is internal-flow
+#       FIV); Cd=1.2 / Ca=1.0 standard bare-pipe values assumed
+#   A4: contents density not tabulated (gas-oil multiphase at 6 MPa);
+#       ContentsDensity 0 placeholder — set per analysis load case
+# Derived (not verbatim): mass_per_length, EA, EI, GJ computed from published
+# OD/ID, steel rho 7.85 te/m3, E=2.068e11 Pa, nu=0.303.
+
+metadata:
+  name: mj02_zhu2022_m_jumper_fullscale
+  description: Full-scale M-jumper gas-oil slug FIV case (Zhu et al. 2022, Processes 10:2133)
+  structure: jumper
+  operation: generic
+  project: model_library
+
+environment:
+  water:
+    depth: 100.0       # A1: assumed (not published)
+    density: 1.025
+  seabed:
+    slope: 0
+    stiffness:
+      normal: 100
+      shear: 100
+  waves:
+    type: airy
+    height: 0.0        # still water — internal slug FIV case
+    period: 8
+    direction: 0
+  current:
+    direction: 0
+  wind:
+    speed: 0
+    direction: 0
+
+generic:
+  line_types:
+    - name: mj02_jumper_pipe_steel
+      category: General
+      outer_diameter: 0.27            # m (published)
+      inner_diameter: 0.21            # m (published; WT 30 mm)
+      mass_per_length: 0.17756        # te/m — derived: A=2.26195e-2 m2 x 7.85 te/m3
+      bending_stiffness:              # EI — derived: E=2.068e11 Pa x I=1.65416e-4 m4
+        - 34208.0
+        - ~
+      axial_stiffness: 4677700.0      # kN — derived: E x A
+      properties:
+        BulkModulus: Infinity
+        CompressionIsLimited: false
+        PoissonRatio: 0.303           # published
+        ExpansionTable: None
+        GJ: 26253.0                   # kN.m2 — derived: G=E/2(1+nu) x J=2I
+        TensionTorqueCoupling: 0
+        ClashStiffness: 0
+        Ca:                           # A3: assumed
+          - 1.0
+          - ~
+          - 0
+        Cd:                           # A3: assumed
+          - 1.2
+          - ~
+          - 0.008
+        Cl: 0
+        SeabedLateralFrictionCoefficient: 0.5
+        SeabedAxialFrictionCoefficient: ~
+        RayleighDampingCoefficients: (no damping)
+
+  lines:
+    - name: mj02_m_jumper
+      line_type_refs:
+        - mj02_jumper_pipe_steel
+      properties:
+        IncludeTorsion: false
+        TopEnd: End A
+        LengthAndEndOrientations: Explicit
+        Representation: Finite element
+        DragFormulation: Standard
+        StaticsVIV: None
+        DynamicsVIV: None
+        WaveCalculationMethod: Specified by environment
+        # A2: both ends clamped at flange elevations. End A at origin,
+        # End B 16 m along X (overall span).
+        ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+          ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+        : - - Fixed
+            - 0.0
+            - 0.0
+            - -95.0
+            - 0
+            - 0          # line leaves End A vertically up (inlet riser leg)
+            - 0
+            - ~
+            - ~
+          - - Fixed
+            - 16.0
+            - 0.0
+            - -95.0
+            - 0
+            - 180        # line arrives at End B vertically down (outlet leg)
+            - 0
+            - ~
+            - ~
+        ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+          - - Infinity
+            - ~
+          - - Infinity
+            - ~
+        # Section chain: straights shortened by R=0.54 at each bend end,
+        # 90-deg arcs (pi/2 x 0.54 = 0.84823 m) between them. Sum = 34.609 m.
+        LineType, Length, TargetSegmentLength:
+          - - mj02_jumper_pipe_steel    # inlet vertical (L1=4, less bend cut)
+            - 3.46
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 1 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # top horizontal (L2=3)
+            - 1.92
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 2 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # inner vertical down (L3=6)
+            - 4.92
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 3 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # bottom span (L4=10)
+            - 8.92
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 4 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # inner vertical up (L3=6)
+            - 4.92
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 5 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # top horizontal (L2=3)
+            - 1.92
+            - 0.5
+          - - mj02_jumper_pipe_steel    # bend 6 arc
+            - 0.84823
+            - 0.25
+          - - mj02_jumper_pipe_steel    # outlet vertical (L1=4)
+            - 3.46
+            - 0.5
+        ContentsMethod: Uniform
+        IncludeAxialContentsInertia: true
+        ContentsDensity: 0.0            # A4: multiphase gas-oil, set per load case
+        ContentsTemperature: ~
+        ContentsPressureRefZ: ~
+        ContentsPressure: 6000.0        # kPa — published 6 MPa back pressure
+        ContentsFlowRate: 0
+        IncludedInStatics: true
+        StaticsStep1: Spline
+        StaticsStep2: Full statics
+        StaticsSeabedFrictionPolicy: None
+        AsLaidTension: 0
+        SplineOrder: 3
+        # M-shape corner coordinates: flanges z=-95, shoulders z=-91,
+        # mid-span dip z=-97.
+        SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+          - - 0.0
+            - 0.0
+            - -95.0
+          - - 0.0
+            - 0.0
+            - -91.0
+          - - 3.0
+            - 0.0
+            - -91.0
+          - - 3.0
+            - 0.0
+            - -97.0
+          - - 13.0
+            - 0.0
+            - -97.0
+          - - 13.0
+            - 0.0
+            - -91.0
+          - - 16.0
+            - 0.0
+            - -91.0
+          - - 16.0
+            - 0.0
+            - -95.0
+
+simulation:
+  time_step: 0.05
+  stages:
+    - 10.0
+    - 120.0

@@ -126,13 +126,26 @@ def cmd_validate(args: argparse.Namespace) -> int:
     print(f"  Current speed:     {spec.environment.current.speed} m/s")
     print(f"  Wind speed:        {spec.environment.wind.speed} m/s")
     print()
-    print("Pipeline:")
-    print(f"  Name:              {spec.pipeline.name}")
-    print(f"  Material:          {spec.pipeline.material}")
-    print(f"  Outer diameter:    {spec.pipeline.dimensions.outer_diameter} m")
-    print(f"  Wall thickness:    {spec.pipeline.dimensions.wall_thickness} m")
-    print(f"  Total length:      {spec.get_total_pipeline_length()} m")
-    print(f"  Segments:          {len(spec.pipeline.segments)}")
+    if spec.pipeline is not None:
+        print("Pipeline:")
+        print(f"  Name:              {spec.pipeline.name}")
+        print(f"  Material:          {spec.pipeline.material}")
+        print(f"  Outer diameter:    {spec.pipeline.dimensions.outer_diameter} m")
+        print(f"  Wall thickness:    {spec.pipeline.dimensions.wall_thickness} m")
+        print(f"  Total length:      {spec.get_total_pipeline_length()} m")
+        print(f"  Segments:          {len(spec.pipeline.segments)}")
+    elif spec.riser is not None:
+        print("Riser:")
+        print(f"  Line types:        {len(spec.riser.line_types)}")
+        print(f"  Lines:             {len(spec.riser.lines)}")
+    elif spec.mooring is not None:
+        print("Mooring:")
+        print(f"  Lines:             {len(spec.mooring.lines)}")
+    elif spec.generic is not None:
+        print("Generic model:")
+        print(f"  Line types:        {len(spec.generic.line_types)}")
+        print(f"  Lines:             {len(spec.generic.lines)}")
+        print(f"  Vessels:           {len(spec.generic.vessels)}")
     print()
     print("Equipment:")
     if spec.equipment.tugs:
@@ -211,6 +224,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         from .builders.registry import BuilderRegistry
 
         context = BuilderContext()
+        written_files: list[str] = []
 
         for file_name, builder_class in BuilderRegistry.get_ordered_builders():
             builder_name = builder_class.__name__
@@ -229,6 +243,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             with open(file_path, 'w', encoding='utf-8') as f:
                 yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
+            written_files.append(file_name)
             print_success(f"Generated: includes/{file_name}")
 
         # Generate parameters.yml
@@ -260,7 +275,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
             '',
             '---',
         ]
-        for file_name in BuilderRegistry.get_include_order():
+        # Only reference include files actually written — skipped builders
+        # produce no file and a dangling includefile fails OrcFxAPI load.
+        for file_name in written_files:
             master_lines.append(f'- includefile: includes/{file_name}')
 
         master_path = output_dir / 'master.yml'
@@ -282,7 +299,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
     print(f"  {output_dir}/")
     print(f"    master.yml")
     print(f"    includes/")
-    for file_name in BuilderRegistry.get_include_order():
+    for file_name in written_files:
         print(f"      {file_name}")
     print(f"    inputs/")
     print(f"      parameters.yml")
