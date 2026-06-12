@@ -20,21 +20,50 @@ class API579_components():
     def __init__(self, cfg):
         self.cfg = cfg
 
+    def _generate_plots(self):
+        return self.cfg.get("default", {}).get("config", {}).get(
+            "generate_plots", True
+        )
+
+    def _to_builtin(self, value):
+        if isinstance(value, dict):
+            return {key: self._to_builtin(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [self._to_builtin(item) for item in value]
+        if isinstance(value, tuple):
+            return [self._to_builtin(item) for item in value]
+        if isinstance(value, np.generic):
+            return value.item()
+        return value
+
+    def _inline_grid_to_dataframe(self, data):
+        grid = data["grid"]
+        values = grid["values"]
+        index = grid.get("index", list(range(len(values))))
+        columns = grid.get("columns", list(range(len(values[0]))))
+        return pd.DataFrame(values, index=index, columns=columns)
+
     def gml(self):
         import numpy as np
         import pandas as pd
 
         self.cfg['Result'] = {}
         self.cfg['Result']['Circumference'] = []
+        self.cfg['Result']['GML_MAWP'] = []
+        self.cfg['Result']['GML_Acceptable_FCA'] = []
 
         self.read_gml_grids()
 
         for fileIndex in range(0, len(self.gml_wt_grids)):
             df = self.gml_wt_grids[fileIndex]
-            self.prepare_contour_plot_gml(df, fileIndex)
+            if self._generate_plots():
+                self.prepare_contour_plot_gml(df, fileIndex)
 
             summary, GMLMAWPResults = self.API579GML(df, fileIndex)
             self.cfg['Result']['Circumference'].append(summary)
+            self.cfg['Result']['GML_MAWP'].append(
+                self._to_builtin(GMLMAWPResults)
+            )
 
             GMLMAWPResultsDF = pd.DataFrame.from_dict(GMLMAWPResults)
             FileName = self.cfg['Analysis']['result_folder'] + self.cfg[
@@ -44,11 +73,15 @@ class API579_components():
                 self.cfg['Design'][0]['InternalPressure']['Outer_Pipe'],
                 GMLMAWPResultsDF['MAWP'].iloc[::-1].values,
                 GMLMAWPResultsDF['FCA'].iloc[::-1].values)
+            self.cfg['Result']['GML_Acceptable_FCA'].append(
+                self._to_builtin(Acceptable_FCA)
+            )
             print("Acceptable GML FCA for design condition 1 is : {0}".format(
                 Acceptable_FCA))
 
-            self.plot_and_save_gml_results(Acceptable_FCA, GMLMAWPResultsDF,
-                                           fileIndex)
+            if self._generate_plots():
+                self.plot_and_save_gml_results(Acceptable_FCA, GMLMAWPResultsDF,
+                                               fileIndex)
 
         return self.cfg
 
@@ -199,6 +232,8 @@ class API579_components():
 
         LMLSummaryDFArray = []
         LMLFileNameArray = []
+        self.cfg.setdefault('Result', {})
+        self.cfg['Result']['LML'] = []
         for fileIndex in range(0, len(self.cfg['LML']['LTA'])):
             customdata = {
                 "io": self.cfg['LML']['LTA'][fileIndex]['io'],
@@ -207,10 +242,16 @@ class API579_components():
                 "skipfooter": self.cfg['LML']['LTA'][fileIndex]['skipfooter'],
                 "index_col": self.cfg['LML']['LTA'][fileIndex]['index_col']
             }
-            df = ExcelRead(customdata)
+            if self.cfg['LML']['LTA'][fileIndex].get('grid') is not None:
+                df = self._inline_grid_to_dataframe(
+                    self.cfg['LML']['LTA'][fileIndex]
+                )
+            else:
+                df = ExcelRead(customdata)
             df = df * self.cfg['LML']['LTA'][fileIndex]['DataCorrectionFactor']
             LMLResults = self.API579LML(df, self.cfg, fileIndex)
             LMLSummaryDF = pd.DataFrame.from_dict(LMLResults)
+            self.cfg['Result']['LML'].append(self._to_builtin(LMLResults))
             FileName = self.cfg['Analysis']['result_folder'] + self.cfg[
                 'Analysis']['file_name'] + 'Summary_LML_' + str(fileIndex)
             LMLFileNameArray.append('LML_' + str(fileIndex) + '_')
@@ -219,9 +260,10 @@ class API579_components():
                 index=LMLSummaryDF.columns.values)
             LMLSummaryDF = LMLSummaryDF.round(decimalArray)
             LMLSummaryDFArray.append(LMLSummaryDF)
-            DataFrame_To_Image(LMLSummaryDF,
-                               FileName + '_TBL' + '.png',
-                               col_width=1.0)
+            if self._generate_plots():
+                DataFrame_To_Image(LMLSummaryDF,
+                                   FileName + '_TBL' + '.png',
+                                   col_width=1.0)
             # LMLSummaryDF.to_csv(FileName + '_TBL' +'.csv')
             # DataFrame_To_xlsx(LMLSummaryDF, customdata)
             no_of_design_conditions = len(self.cfg['Design'])
@@ -306,7 +348,8 @@ class API579_components():
                         self.cfg['Analysis']['file_name'] + 'Summary_LML_' +
                         str(fileIndex) + '_PLT' + '.png'
                 }
-                plotCustom(LMLSummaryDF, customdata)
+                if self._generate_plots():
+                    plotCustom(LMLSummaryDF, customdata)
 
                 #  For plot without the MAWP
                 customdata = {
@@ -379,7 +422,8 @@ class API579_components():
                         self.cfg['Analysis']['file_name'] + 'Summary_LML_' +
                         str(fileIndex) + '_PLT1' + '.png'
                 }
-                plotCustom(LMLSummaryDF, customdata)
+                if self._generate_plots():
+                    plotCustom(LMLSummaryDF, customdata)
 
             #  Send LML Data to Excel Sheet
             customdata = {
@@ -391,7 +435,8 @@ class API579_components():
                 "thin_border":
                     True
             }
-            DataFrameArray_To_xlsx_openpyxl(LMLSummaryDFArray, customdata)
+            if self._generate_plots():
+                DataFrameArray_To_xlsx_openpyxl(LMLSummaryDFArray, customdata)
 
         return self.cfg
 
@@ -452,6 +497,16 @@ class API579_components():
             self.read_gml_grids_from_excel()
         elif self.cfg.default['Analysis']['GML']['data_source'] == 'simulated':
             self.read_gml_grids_from_simulations()
+        elif self.cfg.default['Analysis']['GML']['data_source'] == 'inline':
+            self.read_gml_grids_from_inline()
+
+    def read_gml_grids_from_inline(self):
+        self.gml_wt_grids = []
+        for fileIndex in range(0, len(self.cfg['ReadingSets'])):
+            df = self._inline_grid_to_dataframe(self.cfg['ReadingSets'][fileIndex])
+            df = df * self.cfg['ReadingSets'][fileIndex]['DataCorrectionFactor']
+            if len(df) > 0:
+                self.gml_wt_grids.append(df)
 
     def read_gml_grids_from_simulations(self):
         self.gml_wt_grids = []
@@ -668,6 +723,8 @@ class API579_components():
                     'data_source'] == 'simulated':
                 custom_grid_data = self.cfg['gml_simulated_grid'][
                     fileIndex].copy()
+            elif self.cfg.default['Analysis']['GML']['data_source'] == 'inline':
+                custom_grid_data = self.cfg['ReadingSets'][fileIndex].copy()
 
             file_name = self.cfg['Analysis']['result_folder'] + self.cfg[
                 'Analysis']['file_name'] + '_' + custom_grid_data[
@@ -795,6 +852,10 @@ class API579_components():
         dfLTA = df.iloc[sIndex0:sIndex1, cIndex0:cIndex1].copy()
         print(dfLTA)
 
+        source_label = Path(
+            cfg['LML']['LTA'][fileIndex].get('io')
+            or cfg['LML']['LTA'][fileIndex]['Label']
+        ).stem
         customdata = {
             "Index_Name":
                 'Length',
@@ -802,7 +863,7 @@ class API579_components():
                 'Circumference',
             "FileName":
                 self.cfg.Analysis['result_folder'] + '\\Plot\\Flaw_' +
-                Path(cfg['LML']['LTA'][fileIndex]['io']).stem + '_' +
+                source_label + '_' +
                 cfg['LML']['LTA'][fileIndex]['Label'],
             "PltSupTitle":
                 cfg['PlotSettings']['Data']['PltSupTitle'],
@@ -828,7 +889,8 @@ class API579_components():
         }
         # plotHeatMap(df, customdata)
 
-        plotContourf(dfLTA, customdata)
+        if self._generate_plots():
+            plotContourf(dfLTA, customdata)
 
         dfrd = df.copy()
         dfrd.iloc[sIndex0:sIndex1, cIndex0:cIndex1] = np.nan
