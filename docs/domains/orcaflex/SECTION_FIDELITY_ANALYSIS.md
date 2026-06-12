@@ -1,5 +1,12 @@
 # OrcaFlex Section Fidelity Analysis
 
+> **SUPERSEDED (failure counts):** the per-spec failure inventory below is a
+> 2026-04-10 snapshot and is obsolete — every failure category it lists has
+> since been fixed. Current pass rates and regeneration instructions live in
+> [`SPEC_AUDIT_SNAPSHOT.md`](SPEC_AUDIT_SNAPSHOT.md) (2026-06-12: 91/91
+> OrcaFlex, 13/13 OrcaWave all-stages pass). The builder-track architecture
+> and section-coverage matrix below remain valid reference material.
+
 **Date:** 2026-04-10
 **Scope:** Modular generator builders vs OrcaFlex YAML-strict sections
 

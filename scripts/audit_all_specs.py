@@ -2,9 +2,25 @@
 """Audit all spec.yml files for OrcaFlex and OrcaWave readiness.
 
 Reports pass/fail/error for each spec across multiple validation stages.
+
+Usage:
+    uv run python scripts/audit_all_specs.py                 # full audit
+    uv run python scripts/audit_all_specs.py --domain orcaflex
+    uv run python scripts/audit_all_specs.py --changed-only  # vs origin/main
+    uv run python scripts/audit_all_specs.py --workers 8 --json /tmp/audit.json
+
+Specs run in parallel worker processes (default: cpu_count - 1); use
+--workers 1 to force the legacy sequential behavior. --changed-only audits
+only spec.yml files that differ from origin/main (suitable for the #509
+pre-commit hook).
 """
 
+import argparse
+import json
+import multiprocessing
+import subprocess
 import sys
+import time
 from pathlib import Path
 import yaml
 import traceback
@@ -208,7 +224,52 @@ def audit_orcawave_spec(spec_path: Path) -> dict:
     return result
 
 
+def _changed_spec_paths() -> set[Path]:
+    """spec.yml files changed vs origin/main (working tree + staged)."""
+    repo_root = Path(__file__).parent.parent
+    out = subprocess.run(
+        ["git", "diff", "--name-only", "origin/main", "--", "*spec.yml"],
+        capture_output=True, text=True, cwd=repo_root,
+    )
+    return {
+        (repo_root / line).resolve()
+        for line in out.stdout.splitlines()
+        if line.strip()
+    }
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--domain", choices=["all", "orcaflex", "orcawave"], default="all",
+        help="Restrict the audit to one solver domain",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=max(1, multiprocessing.cpu_count() - 1),
+        help="Parallel worker processes (1 = sequential)",
+    )
+    parser.add_argument(
+        "--changed-only", action="store_true",
+        help="Audit only spec.yml files changed vs origin/main",
+    )
+    parser.add_argument(
+        "--json", type=Path, default=None, metavar="PATH",
+        help="Also write full results as JSON to PATH",
+    )
+    return parser.parse_args()
+
+
+def _run_audits(audit_fn, specs: list[Path], workers: int) -> list[dict]:
+    if workers <= 1 or len(specs) <= 1:
+        return [audit_fn(p) for p in specs]
+    with multiprocessing.Pool(workers) as pool:
+        return pool.map(audit_fn, specs)
+
+
 def main():
+    args = _parse_args()
+    started = time.monotonic()
+
     print("=" * 80)
     print("OrcaFlex & OrcaWave Spec Readiness Audit")
     print("=" * 80)
@@ -217,17 +278,29 @@ def main():
     orcaflex_specs = sorted(ORCAFLEX_SPEC_DIR.rglob("spec.yml"))
     orcawave_specs = sorted(ORCAWAVE_SPEC_DIR.rglob("spec.yml"))
 
-    print(f"\nFound {len(orcaflex_specs)} OrcaFlex specs, {len(orcawave_specs)} OrcaWave specs\n")
+    if args.domain == "orcaflex":
+        orcawave_specs = []
+    elif args.domain == "orcawave":
+        orcaflex_specs = []
+
+    if args.changed_only:
+        changed = _changed_spec_paths()
+        orcaflex_specs = [p for p in orcaflex_specs if p.resolve() in changed]
+        orcawave_specs = [p for p in orcawave_specs if p.resolve() in changed]
+        if not orcaflex_specs and not orcawave_specs:
+            print("\nNo spec.yml changes vs origin/main — nothing to audit.")
+            return [], []
+
+    print(f"\nFound {len(orcaflex_specs)} OrcaFlex specs, {len(orcawave_specs)} OrcaWave specs"
+          f" (workers={args.workers})\n")
 
     # Audit OrcaFlex
     print("=" * 80)
     print("ORCAFLEX SPECS")
     print("=" * 80)
 
-    ofx_results = []
-    for i, spec_path in enumerate(orcaflex_specs, 1):
-        r = audit_orcaflex_spec(spec_path)
-        ofx_results.append(r)
+    ofx_results = _run_audits(audit_orcaflex_spec, orcaflex_specs, args.workers)
+    for i, r in enumerate(ofx_results, 1):
         is_alt = r["schema_valid"] == "different_schema"
         all_pass = is_alt or all(
             v == "pass"
@@ -250,10 +323,8 @@ def main():
     print("ORCAWAVE SPECS")
     print("=" * 80)
 
-    ow_results = []
-    for i, spec_path in enumerate(orcawave_specs, 1):
-        r = audit_orcawave_spec(spec_path)
-        ow_results.append(r)
+    ow_results = _run_audits(audit_orcawave_spec, orcawave_specs, args.workers)
+    for i, r in enumerate(ow_results, 1):
         all_pass = all(
             v == "pass" for k, v in r.items() if k not in ("path", "errors")
         )
@@ -352,6 +423,17 @@ def main():
             patterns[prefix] = patterns.get(prefix, 0) + 1
         for pattern, count in sorted(patterns.items(), key=lambda x: -x[1])[:15]:
             print(f"  {count:3d}x {pattern}")
+
+    elapsed = time.monotonic() - started
+    print(f"\nAudit wall time: {elapsed:.1f} s (workers={args.workers})")
+
+    if args.json:
+        args.json.write_text(json.dumps(
+            {"orcaflex": ofx_results, "orcawave": ow_results,
+             "elapsed_seconds": round(elapsed, 1)},
+            indent=2,
+        ))
+        print(f"JSON results written: {args.json}")
 
     # Return results for report generation
     return ofx_results, ow_results
