@@ -131,6 +131,13 @@ class RunConfig(BaseModel):
         default=True,
         description="Generate modular section files alongside the single input file.",
     )
+    quality_gates: bool = Field(
+        default=True,
+        description=(
+            "Run geometry quality gates on packaged meshes; FAIL blocks the "
+            "run, warnings are reported (#608)."
+        ),
+    )
     copy_mesh_files: bool = Field(
         default=True,
         description="Copy mesh files referenced by the spec into the output directory.",
@@ -217,6 +224,8 @@ class RunResult:
     xlsx_path: Path | None = None
     report_path: Path | None = None
     # --- #625 validation contract ---
+    quality_warnings: list[str] = field(default_factory=list)
+
     validation_report_path: Path | None = None
     validation_verdict: str = "SKIPPED"
     validation_issues: list[str] = field(default_factory=list)
@@ -359,10 +368,15 @@ class OrcaWaveRunner:
         # solver-ready filenames (#606).
         spec_to_generate = spec
         if self._config.copy_mesh_files:
-            spec_to_generate, mesh_files = package_spec_meshes(
-                spec, output_dir, spec_dir=spec_dir, solver="orcawave"
+            spec_to_generate, mesh_files, quality_warnings = package_spec_meshes(
+                spec,
+                output_dir,
+                spec_dir=spec_dir,
+                solver="orcawave",
+                quality_gates=self._config.quality_gates,
             )
             self._result.mesh_files = mesh_files
+            self._result.quality_warnings = quality_warnings
 
         # Generate single input file (required for solver)
         input_file, modular_files = self._generate_input_files(

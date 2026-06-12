@@ -244,11 +244,16 @@ class GeometryQualityChecker:
         min_aspect = float('inf')
 
         for panel in panels:
-            panel_nodes = nodes[panel[:3]]
+            indices = list(panel)
+            # Triangles are often stored as degenerate quads (last index
+            # repeated); drop the duplicate so every edge has real length.
+            if len(indices) == 4 and indices[3] == indices[2]:
+                indices = indices[:3]
+            panel_nodes = nodes[indices]
 
             # Calculate edge lengths
             edges = []
-            n = len(panel)
+            n = len(panel_nodes)
             for i in range(n):
                 edge_len = np.linalg.norm(panel_nodes[(i+1) % n] - panel_nodes[i])
                 edges.append(edge_len)
@@ -291,11 +296,16 @@ class GeometryQualityChecker:
         # Calculate characteristic size for each panel
         sizes = []
         for panel in panels:
-            panel_nodes = nodes[panel[:3]]
+            indices = list(panel)
+            # Triangles are often stored as degenerate quads (last index
+            # repeated); drop the duplicate so every edge has real length.
+            if len(indices) == 4 and indices[3] == indices[2]:
+                indices = indices[:3]
+            panel_nodes = nodes[indices]
 
             # Use edge lengths
             edges = []
-            n = len(panel)
+            n = len(panel_nodes)
             for i in range(n):
                 edge_len = np.linalg.norm(panel_nodes[(i+1) % n] - panel_nodes[i])
                 edges.append(edge_len)

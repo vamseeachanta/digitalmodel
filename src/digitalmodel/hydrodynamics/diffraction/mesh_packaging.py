@@ -157,7 +157,8 @@ def package_spec_meshes(
     output_dir: Path,
     spec_dir: Path | None = None,
     solver: str = "orcawave",
-) -> tuple[DiffractionSpec, list[Path]]:
+    quality_gates: bool = True,
+) -> tuple[DiffractionSpec, list[Path], list[str]]:
     """Prepare every referenced mesh for *solver* into *output_dir* (#606).
 
     Solver-ready formats (e.g. ``.gdf`` for OrcaWave) and solver-native
@@ -168,15 +169,22 @@ def package_spec_meshes(
     anything is written. Missing files are skipped — existence is the
     pre-flight's responsibility (#500).
 
+    With *quality_gates* enabled (#608), every packaged panel mesh runs the
+    geometry quality checks: a FAIL verdict raises ``MeshQualityError`` and
+    a machine-readable ``mesh_quality_report.json`` is written next to the
+    packaged meshes. Non-blocking warnings are returned for the caller to
+    surface.
+
     Conversions are recorded in ``mesh_provenance.json`` next to the
     packaged meshes (source path, formats, units/symmetry where the spec
     carries them).
 
     Returns
     -------
-    tuple[DiffractionSpec, list[Path]]
+    tuple[DiffractionSpec, list[Path], list[str]]
         A deep copy of *spec* whose mesh references (and formats) point at
-        the packaged files, and the packaged file paths.
+        the packaged files, the packaged file paths, and non-blocking
+        quality warnings.
     """
     solver = solver.lower()
     if solver not in _SOLVER_READY_EXTENSIONS:
@@ -195,6 +203,7 @@ def package_spec_meshes(
     pipeline = None
     packaged: list[Path] = []
     provenance: list[dict[str, Any]] = []
+    gate_results: list[Any] = []
 
     for slot in _iter_mesh_slots(packaged_spec):
         source = resolve_mesh_path(slot.mesh_file, spec_dir)
@@ -232,8 +241,24 @@ def package_spec_meshes(
         _set_mesh_reference(slot.owner, dest.name, dest.suffix.lstrip("."))
         packaged.append(dest)
 
+        if quality_gates:
+            from digitalmodel.hydrodynamics.diffraction.quality_gates import (
+                run_mesh_quality_gate,
+            )
+
+            gate_results.append(run_mesh_quality_gate(dest, label=slot.label))
+
     if provenance:
         (output_dir / PROVENANCE_FILENAME).write_text(
             json.dumps(provenance, indent=2)
         )
-    return packaged_spec, packaged
+
+    quality_warnings: list[str] = []
+    if quality_gates and gate_results:
+        from digitalmodel.hydrodynamics.diffraction.quality_gates import (
+            enforce_quality_gates,
+        )
+
+        quality_warnings = enforce_quality_gates(gate_results, output_dir)
+
+    return packaged_spec, packaged, quality_warnings
