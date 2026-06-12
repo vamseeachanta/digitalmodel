@@ -31,7 +31,26 @@ Evidence gathered on 2026-06-12 from branch `chore/703-detector-routing-plan` at
   style.
 - `tests/DOMAINS.md` defines separate `orcaflex`, `orcaflex-solver`, and
   `workflows` domains. `.claude/quality-gates.yaml` maps those domains to
-  separate test commands, so routing can target them independently.
+  separate test commands, so routing can target them without invoking the full
+  matrix.
+- Import-owner audit found additional non-OrcaFlex domains with direct imports
+  or compatibility checks for OrcaFlex modules:
+  - `contracts`: `tests/test_restructure_compat.py` checks
+    `digitalmodel.orcaflex` and OrcaFlex solver CLI module paths;
+    `tests/test_validation_utils.py` imports OrcaFlex validation utilities.
+  - `infrastructure-other`: `tests/test_level1_minimal.py` and
+    `tests/coverage_analysis.py` reference OrcaFlex solver modules.
+  - `misc`: `tests/test_engine.py`, `tests/simple_engine_test.py`,
+    `tests/additional_engine_tests.py`, and `tests/test_engine_isolated.py`
+    reference or import OrcaFlex solver modules.
+  - `specialized`: `tests/signal_processing/signal_analysis/test_integration_simple.py`
+    imports an OrcaFlex solver time-trace processor.
+  - `workflows`: `tests/scripts/test_extract_property_inventory.py` and
+    test-automation fixtures reference OrcaFlex solver modules.
+- Because [#703](https://github.com/vamseeachanta/digitalmodel/issues/703)
+  requires avoiding the full matrix rather than proving exact two-domain
+  exclusivity, the implementation will include these import-owner domains where
+  they are directly coupled to the changed source prefix.
 - This checkout does not contain `docs/plans/README.md` or
   `docs/plans/_template-issue-plan.md`; the plan will follow the existing
   `digitalmodel` standalone plan-file pattern under `docs/plans/`.
@@ -76,10 +95,12 @@ raw_base_head_diff=structural,citations
 merge_base_head_diff=citations
 ```
 
-The implementation will turn these into the narrower expected selections:
+The implementation will turn these into scoped, non-full-matrix selections:
 
-- `src/digitalmodel/orcaflex/...` -> `orcaflex`, `orcaflex-solver`
-- `src/digitalmodel/solvers/orcaflex/...` -> `orcaflex-solver`
+- `src/digitalmodel/orcaflex/...` -> `orcaflex`, `orcaflex-solver`,
+  `contracts`
+- `src/digitalmodel/solvers/orcaflex/...` -> `orcaflex-solver`,
+  `contracts`, `infrastructure-other`, `misc`, `specialized`, `workflows`
 - `src/digitalmodel/workflows/agents/orcaflex/...` -> `workflows`, `orcaflex`
 - package-data-only `pyproject.toml` OrcaFlex globs -> the same source-domain
   mapping used by concrete source paths
@@ -114,44 +135,70 @@ shared, invalid, or unavailable evidence fail-closed to the full domain matrix.
    - `src/digitalmodel/citations/` -> `citations`
    - `src/digitalmodel/workflows/` -> `workflows`
 4. Add OrcaFlex mappings:
-   - `src/digitalmodel/orcaflex/` -> `orcaflex`, `orcaflex-solver`
-   - `src/digitalmodel/solvers/orcaflex/` -> `orcaflex-solver`
+   - `src/digitalmodel/orcaflex/` -> `orcaflex`, `orcaflex-solver`,
+     `contracts`
+   - `src/digitalmodel/solvers/orcaflex/` -> `orcaflex-solver`,
+     `contracts`, `infrastructure-other`, `misc`, `specialized`, `workflows`
    - `src/digitalmodel/workflows/agents/orcaflex/` -> `workflows`, `orcaflex`
 5. Keep unmapped `src/digitalmodel/...` paths as full-matrix triggers.
 6. Keep `.github/workflows/quality-gates-by-domain.yml`, `tests/DOMAINS.md`,
    `tests/conftest.py`, and `pytest.ini` as unconditional full-matrix triggers.
 7. Remove `pyproject.toml` from unconditional full-matrix handling and classify
    it through a dedicated fail-closed helper.
+8. Replace the current pure-path selection flow with a context-aware flow:
+   `collect_changed_files(base, head)` will return changed paths plus the
+   merge-base ref, and `select_touched_domains(changes, domains)` will handle
+   context-dependent paths such as `pyproject.toml` before generic full-matrix
+   checks. This prevents `pyproject.toml` from being removed from
+   `FULL_MATRIX_PATHS` but then dropped before scoped package-data domains are
+   added.
 
 ### `pyproject.toml` classifier
 
 The implementation will classify a `pyproject.toml` change as scoped only when
 all of the following are true:
 
-- both base and head TOML blobs can be read from git;
+- both merge-base and head TOML blobs can be read from git;
 - both blobs parse with `tomllib`;
 - the only semantic difference is under
   `[tool.setuptools.package-data].digitalmodel`;
+- at least one package-data entry under the `digitalmodel` key is added,
+  removed, or changed;
 - every changed package-data entry is a relative package glob without `..`,
   absolute-path syntax, or an empty prefix;
 - every translated package path maps to at least one known source-domain prefix.
+
+The semantic-diff check will be explicit:
+
+1. Parse the merge-base and head TOML blobs with `tomllib`.
+2. Extract `tool.setuptools.package-data.digitalmodel` from each parsed document.
+3. Compare the remaining parsed documents with normal Python equality. Any
+   difference outside that extracted key will force the full matrix.
+4. Compute the symmetric difference of the old and new `digitalmodel`
+   package-data entry lists. An empty symmetric difference will force the full
+   matrix so comment-only, formatting-only, and parse-equivalent edits cannot
+   produce an empty test matrix.
+5. Map every changed entry, including removed-only entries. Any unsafe or
+   unmapped entry will force the full matrix.
 
 For scoped package-data-only diffs, each changed package-relative glob will be
 translated into a source-style path under `src/digitalmodel/`, using the stable
 prefix before the first glob metacharacter. Examples:
 
 - `orcaflex/data/*.yml` -> `src/digitalmodel/orcaflex/data/` -> `orcaflex`,
-  `orcaflex-solver`
+  `orcaflex-solver`, `contracts`
 - `solvers/orcaflex/**/*.yml` -> `src/digitalmodel/solvers/orcaflex/` ->
-  `orcaflex-solver`
+  `orcaflex-solver`, `contracts`, `infrastructure-other`, `misc`,
+  `specialized`, `workflows`
 - `workflows/agents/orcaflex/templates/*.yml` ->
   `src/digitalmodel/workflows/agents/orcaflex/templates/` -> `workflows`,
   `orcaflex`
 
 The helper will fail closed to full matrix for dependency changes, build-system
 changes, tool config changes, mixed package-data and non-package-data changes,
-invalid TOML, unreadable blobs, unreachable refs, and unmapped package-data
-prefixes.
+invalid TOML, unreadable blobs, parse-equivalent/comment-only edits, unsafe
+globs, package-data keys other than `digitalmodel`, unreachable refs, and
+unmapped package-data prefixes.
 
 ### Git diff semantics
 
@@ -163,21 +210,28 @@ changed = git diff --name-only merge_base head
 ```
 
 If `merge-base` or `diff` fails, the detector will return the full matrix with
-exit code `0`. That preserves fail-closed CI behavior for deleted refs,
-unreachable refs, shallow checkout gaps, and other git-state problems.
+exit code `0` and print a stderr diagnostic naming the git operation that
+failed. This will change current behavior from a loud detector failure to a
+full-matrix fallback; the diagnostic is required so misconfigured refs remain
+visible in CI logs.
 
 ## TDD Test List
 
 The implementation will add failing tests first in
 `tests/scripts/test_detect_touched_domains.py`, then make them pass:
 
-- `test_orcaflex_source_change_outputs_orcaflex_and_solver_domains`
-- `test_orcaflex_solver_source_change_outputs_solver_domain`
+- `test_orcaflex_source_change_includes_orcaflex_solver_and_contract_domains`
+- `test_orcaflex_solver_source_change_includes_solver_and_import_owner_domains`
 - `test_workflow_orcaflex_agent_source_change_outputs_workflows_and_orcaflex`
 - `test_package_data_only_pyproject_change_routes_through_source_mapping`
+- `test_package_data_removed_only_pyproject_change_routes_through_source_mapping`
 - `test_unmapped_package_data_pyproject_change_escalates_to_full_matrix`
 - `test_dependency_pyproject_change_escalates_to_full_matrix`
+- `test_mixed_package_data_and_dependency_pyproject_change_escalates_to_full_matrix`
+- `test_comment_only_pyproject_change_escalates_to_full_matrix`
 - `test_invalid_pyproject_toml_escalates_to_full_matrix`
+- `test_unsafe_package_data_glob_escalates_to_full_matrix`
+- `test_non_digitalmodel_package_data_key_change_escalates_to_full_matrix`
 - `test_unreachable_ref_escalates_to_full_matrix`
 - `test_touched_mode_uses_merge_base_head_not_raw_base_head`
 
@@ -191,29 +245,36 @@ Existing detector tests will remain in place and should continue passing.
    domain names.
 3. Add OrcaFlex-specific source-domain mappings.
 4. Change git diff collection to merge-base/head semantics with full-matrix
-   fallback on git failures.
+   fallback plus stderr diagnostics on git failures.
 5. Add the `pyproject.toml` package-data classifier and wire it into touched
    selection before generic full-matrix path handling.
 6. Run focused tests and detector smoke commands.
-7. Run the repo legal sanity scan before final code-stage review.
+7. Run the available legal scan gate before final code-stage review. This repo
+   does not currently contain `scripts/legal/legal-sanity-scan.sh`; if a
+   repo-local wrapper is still absent during implementation closeout, run the
+   workspace-level scanner from `/mnt/local-analysis/workspace-hub` and report
+   the exact command and target checkout used.
 
 ## Acceptance Criteria
 
-- `src/digitalmodel/orcaflex/` changes select `orcaflex` and
-  `orcaflex-solver`, not the full matrix.
-- `src/digitalmodel/solvers/orcaflex/` changes select `orcaflex-solver`, not
-  the full matrix.
+- `src/digitalmodel/orcaflex/` changes include `orcaflex`,
+  `orcaflex-solver`, and `contracts`, not the full matrix.
+- `src/digitalmodel/solvers/orcaflex/` changes include `orcaflex-solver`,
+  `contracts`, `infrastructure-other`, `misc`, `specialized`, and
+  `workflows`, not the full matrix.
 - `src/digitalmodel/workflows/agents/orcaflex/` changes select both
   `workflows` and `orcaflex`.
 - Package-data-only `pyproject.toml` diffs under
   `[tool.setuptools.package-data].digitalmodel` route through package-relative
   glob translation to `src/digitalmodel/...` and then the source-domain map.
-- Dependency/build/tool config changes in `pyproject.toml`, invalid TOML,
-  unreachable refs, and unmapped package-data prefixes fail closed to the full
-  matrix.
+- Dependency/build/tool config changes in `pyproject.toml`, mixed TOML changes,
+  comment-only/parse-equivalent TOML changes, invalid TOML, unsafe package-data
+  globs, non-`digitalmodel` package-data key changes, unreachable refs, and
+  unmapped package-data prefixes fail closed to the full matrix.
 - PR diff detection uses merge-base/head semantics rather than raw base/head
   diff.
 - Tests cover overlapping prefix union semantics, unmapped package-data
+  fallback, mixed TOML fallback, comment-only TOML fallback, unsafe glob
   fallback, invalid TOML fallback, and unreachable-ref fallback.
 - `.github/workflows/quality-gates-by-domain.yml` changes still trigger full
   matrix; workflow orchestration remains unchanged.
@@ -223,10 +284,11 @@ Existing detector tests will remain in place and should continue passing.
 After implementation and before code review, run:
 
 ```bash
-python scripts/ci/detect_touched_domains.py --mode full --domains-file tests/DOMAINS.md --output-format list
+uv run --no-sources python scripts/ci/detect_touched_domains.py --mode full --domains-file tests/DOMAINS.md --output-format list
+uv run --no-sources python scripts/ci/detect_touched_domains.py --mode touched --base origin/main --head HEAD --domains-file tests/DOMAINS.md --output-format list
 uv run --no-sources --with-editable . python -m pytest tests/scripts/test_detect_touched_domains.py -q -p no:randomly -p no:sugar
-python -m py_compile scripts/ci/detect_touched_domains.py
-scripts/legal/legal-sanity-scan.sh
+uv run --no-sources python -m py_compile scripts/ci/detect_touched_domains.py
+if [ -x scripts/legal/legal-sanity-scan.sh ]; then scripts/legal/legal-sanity-scan.sh --diff-only; else (cd /mnt/local-analysis/workspace-hub && scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only); fi
 ```
 
 If `uv` mutates environment or lock artifacts, the closeout will clean or
@@ -238,11 +300,16 @@ restore unrelated residue before reporting completion.
   are interpreted too narrowly. The implementation will use the stable
   non-glob prefix and fail closed when that prefix cannot be safely mapped.
 - `pyproject.toml` comment-only or formatting-only edits are not required for
-  optimization. They may remain full-matrix if the implementation cannot prove a
-  scoped package-data semantic change.
+  optimization. They must remain full-matrix so a parsed-no-op edit cannot
+  produce an empty matrix and skip all domain tests.
 - `src/digitalmodel/orcaflex/` intentionally selects both `orcaflex` and
-  `orcaflex-solver`. That is conservative for solver consumers and matches the
-  issue acceptance criteria.
+  `orcaflex-solver`, plus `contracts` for package compatibility checks. That is
+  conservative for solver consumers and compatibility importers while still
+  avoiding the full matrix.
+- `src/digitalmodel/solvers/orcaflex/` intentionally selects several
+  import-owner domains beyond `orcaflex-solver`. This is broader than the
+  minimum issue wording, but it remains scoped and avoids known fail-open import
+  gaps found during review.
 - The broad CI baseline remains red outside this detector slice. The PR for
   this issue may still be affected by parent [#700](https://github.com/vamseeachanta/digitalmodel/issues/700)
   domain-gate failures until [#704](https://github.com/vamseeachanta/digitalmodel/issues/704),
@@ -262,11 +329,17 @@ Planned review artifacts:
 - `scripts/review/results/2026-06-12-plan-703-codex.md`
 - `scripts/review/results/2026-06-12-plan-703-gemini.md`
 
-If any provider returns `MAJOR`, the plan will stay in draft/needs-revision
-state and implementation will remain blocked.
+Round 1 returned Claude `MAJOR`, Codex `MAJOR`, and Gemini `APPROVE` with minor
+TOML-diff tightening. This revision addresses the MAJOR findings by specifying
+equal-parse TOML fallback, mixed-diff tests, import-owner domains, merge-base
+blob selection, context-aware classifier plumbing, git-failure diagnostics, and
+an executable legal-scan fallback. If any provider returns `MAJOR` after
+re-review, the plan will stay in draft/needs-revision state and implementation
+will remain blocked.
 
 ## Approval Gate
 
 Implementation must not start until the issue has user-provided
-`status:plan-approved` evidence and the local approval marker exists. This plan
-does not self-approve and does not authorize code edits.
+`status:plan-approved` evidence and `.planning/plan-approved/703.md` exists for
+the reviewed plan SHA or an issue comment that names that SHA. This plan does
+not self-approve and does not authorize code edits.
