@@ -2,7 +2,7 @@
 
 **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/703
 **Parent:** https://github.com/vamseeachanta/digitalmodel/issues/700
-**Status:** draft
+**Status:** plan-review
 **Tier:** T2 (CI detector behavior; single script plus focused tests)
 **Client:** N/A
 **Project:** N/A
@@ -328,14 +328,17 @@ Planned review artifacts:
 - `scripts/review/results/2026-06-12-plan-703-claude.md`
 - `scripts/review/results/2026-06-12-plan-703-codex.md`
 - `scripts/review/results/2026-06-12-plan-703-gemini.md`
+- `scripts/review/results/2026-06-12-plan-703-r2-claude.md`
+- `scripts/review/results/2026-06-12-plan-703-r2-codex.md`
+- `scripts/review/results/2026-06-12-plan-703-r2-gemini.md`
 
 Round 1 returned Claude `MAJOR`, Codex `MAJOR`, and Gemini `APPROVE` with minor
 TOML-diff tightening. This revision addresses the MAJOR findings by specifying
 equal-parse TOML fallback, mixed-diff tests, import-owner domains, merge-base
 blob selection, context-aware classifier plumbing, git-failure diagnostics, and
-an executable legal-scan fallback. If any provider returns `MAJOR` after
-re-review, the plan will stay in draft/needs-revision state and implementation
-will remain blocked.
+an executable legal-scan fallback. Round 2 returned Claude `APPROVE`, Codex
+`APPROVE`, and Gemini `APPROVE`. The issue can move to `status:plan-review`,
+but implementation remains blocked until user approval.
 
 ## Approval Gate
 
