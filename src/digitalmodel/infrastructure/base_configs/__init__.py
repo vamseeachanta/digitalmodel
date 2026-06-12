@@ -3,9 +3,9 @@ ABOUTME: Backward-compatibility shim for base_configs module (WRK-415 Phase 2A).
 ABOUTME: Python logic (ConfigLoader, SchemaValidator, ConfigManager, ConfigModel) has
 ABOUTME: moved to infrastructure/config/. This shim re-exports for existing callers.
 
-NOTE: domains/ YAML data directory is intentionally kept here because external
-callers reference it via pkgutil.get_data("digitalmodel", "base_configs/domains/...")
-filesystem paths and cannot be changed in Phase 2A.
+NOTE: YAML data lives under digitalmodel/base_configs/modules because external
+callers reference it via pkgutil.get_data("digitalmodel", "base_configs/modules/...")
+filesystem paths.
 """
 
 import warnings

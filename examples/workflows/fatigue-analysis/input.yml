@@ -1,0 +1,27 @@
+basename: fatigue_analysis
+
+fatigue_data:
+  csv: true
+  io: examples/workflows/fatigue-analysis/fatigue_curves.csv
+
+inputs:
+  software: null
+  calculation_type: damage
+  stress_input: sn
+  fatigue_curve: DnV 2005 C2 Seawater CP
+  SN:
+    - s: 120.0
+      n_cycles: 500000
+      thickness: 25.0
+    - s: 80.0
+      n_cycles: 2000000
+      thickness: 25.0
+    - s: 45.0
+      n_cycles: 5000000
+      thickness: 25.0
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -62,6 +62,8 @@ class VIVTubularMembers:
         self.save_plots(cfg)
 
     def save_plots(self, cfg):
+        if not cfg.get("default", {}).get("config", {}).get("generate_plots", True):
+            return
         self.get_natural_frequencies_plot(cfg)
         self.get_vs_frequencies_plot(cfg)
         self.get_safety_factor_plot(cfg)

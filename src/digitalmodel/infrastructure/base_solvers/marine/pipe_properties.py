@@ -183,7 +183,7 @@ class PipeProperties:
         return section_properties
 
     def get_material_properties(self, pipe_cfg):
-        steel_material_file_name = "data/steel_material.yml"
+        steel_material_file_name = "data_systems/data/steel_material.yml"
         library_name = "digitalmodel"
         library_cfg = {
             "filename": steel_material_file_name,

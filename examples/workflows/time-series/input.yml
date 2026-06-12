@@ -1,0 +1,33 @@
+basename: time_series
+
+analysis:
+  basic:
+    sample_fft: true
+    sample_window_averaged_fft: false
+    window_averaged_fft: false
+    rainflow: false
+
+fft:
+  seed: 1234
+  time_step: 0.02
+  peak_period: 5
+  time_range: [0, 20]
+  filter:
+    band_pass:
+      flag: false
+      frequency_minimum: null
+      frequency_maximum: null
+  window:
+    size: 128
+    moving_average:
+      flag: false
+      window_size: 5
+  peaks:
+    flag: false
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false   # keep the workflow free of optional viz deps
+    overwrite:
+      output: true

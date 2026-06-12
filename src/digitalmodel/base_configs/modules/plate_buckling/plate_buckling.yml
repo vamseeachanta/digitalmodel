@@ -1,0 +1,14 @@
+basename: plate_buckling
+
+calculation_type: DNV_rp_C201
+
+groups: []
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL

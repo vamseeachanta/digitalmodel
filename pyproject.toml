@@ -226,6 +226,9 @@ exclude = ["tests*", "docs*"]
 
 [tool.setuptools.package-data]
 digitalmodel = [
+    "base_configs/**/*.yml",
+    "base_configs/**/*.deck",
+    "data_systems/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
     "naval_architecture/data/*.yml",

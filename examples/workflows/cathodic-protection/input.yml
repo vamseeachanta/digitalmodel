@@ -1,0 +1,84 @@
+basename: cathodic_protection
+
+inputs:
+  calculation_type: ABS_gn_ships_2018
+
+  environment:
+    seawater:
+      max_temperature: 10
+      resistivity:
+        input: 0.5875
+        csv_filename: null
+
+  design_data:
+    design_life: 5
+    biofouling:
+      type: aerobic
+
+  anode:
+    material: aluminium
+    protection_potential: 0.8
+    closed_circuit_anode_potential: -1.09
+    anode_density: 2750
+    anode_current_capacity: 2270
+    anode_Utilisation_factor: 0.85
+    physical_properties:
+      mean_length: 1.4
+      width: 0.15
+      height: 0.06
+      volume: 0.0126
+      net_weight: 27.5
+      ratio_of_gross_to_net_weight: 1.1
+      gross_weight: 30.25
+    geometry:
+      type: long_flush
+      length_m: 1.4
+      width_m: 0.15
+      radius_m: null
+      exposed_area_m2: null
+      offset_m: null
+      final_length_m: 1.281
+      final_width_m: 0.15
+      final_radius_m: null
+      final_exposed_area_m2: null
+
+  structure:
+    coating: true
+    area_coverage: 100
+    coating_yearly_breakdown_factor: 3
+    coating_initial_breakdown_factor: 2
+    coating_initial_breakdown_duration: 2
+    coating_breakdown_factor_max: 2.0
+    steel_coated_area: 13446.04
+    steel_total_area: 13446.04
+
+  design_current:
+    input: fixed
+    csv_filename: null
+    coated_steel_mA_m2: 13.5
+    uncoated_steel_mA_m2: 200
+
+ABS_gn_ships_2018:
+  v_ssc:
+    - steel:
+        aerobic: -0.8
+        anaerobic: -0.9
+    - iron:
+        aerobic: -0.8
+        anaerobic: -0.9
+    - high_strength_steel:
+        aerobic: -0.8
+        anaerobic: -0.9
+    - austenitic_stainless_steel_n_pre_10_to_1000:
+        aerobic: -0.3
+        anaerobic: -0.3
+    - austenitic_stainless_steel_n_pre_0_to_10:
+        aerobic: -0.6
+        anaerobic: -0.6
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

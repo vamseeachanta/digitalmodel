@@ -167,6 +167,8 @@ class TimeSeriesComponents:
         return cfg
 
     def plot_fft_results(self, cfg):
+        if not cfg.get("default", {}).get("config", {}).get("generate_plots", True):
+            return
 
         plot_yml = viz_templates.get_xy_line_csv(cfg["Analysis"].copy())
         file_name = cfg[cfg["basename"]]["csv"]["signal_fft"]
