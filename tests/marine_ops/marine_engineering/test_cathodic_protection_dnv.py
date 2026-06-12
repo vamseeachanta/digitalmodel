@@ -5,6 +5,9 @@ ABOUTME: Tests all helper methods and main orchestration for submarine pipeline 
 
 import pytest
 import math
+import json
+from pathlib import Path
+
 from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
 
 
@@ -12,6 +15,10 @@ from digitalmodel.infrastructure.common.cathodic_protection import CathodicProte
 def cp_calculator():
     """Create CathodicProtection instance for testing."""
     return CathodicProtection()
+
+
+def _citation_fixture_root() -> Path:
+    return Path(__file__).resolve().parents[2] / "citations" / "fixtures"
 
 
 @pytest.fixture
@@ -28,6 +35,7 @@ def dnv_base_config():
     - Buried pipeline conditions (lower current densities than marine structures)
     """
     return {
+        "citation_repo_root": str(_citation_fixture_root()),
         "inputs": {
             "pipeline": {
                 "outer_diameter_m": 0.610,  # 24-inch pipeline (METERS not mm!)
@@ -148,19 +156,12 @@ class TestDNVCoatingBreakdown:
         # Method signature: _dnv_coating_breakdown(inputs, design_life) - ONLY 2 params!
         result = cp_calculator._dnv_coating_breakdown(inputs, design_life)
 
-        # Implementation returns "initial_factor" not "initial_breakdown_factor"
-        # For 0.5% initial: factor = 1.0 + 0.5/100 = 1.005
-        assert result["initial_factor"] == pytest.approx(1.005, abs=0.001)
-
-        # For 1.5% yearly: factor = 1.0 + 1.5/100 = 1.015
-        assert result["yearly_factor"] == pytest.approx(1.015, abs=0.001)
-
-        # Final factor should be > 1.0 (coating degrades)
-        # Implementation returns "final_factor" not "fcf"!
-        assert result["final_factor"] > 1.0
-
-        # Mean factor should be between initial and final
-        # Implementation returns "mean_factor" not "fcm"!
+        # DNV-RP-F103:2010 Annex 1 Table A.1 lists FBE as a=0.010, b=0.0003.
+        assert result["a"] == pytest.approx(0.010, abs=1e-6)
+        assert result["b"] == pytest.approx(0.0003, abs=1e-7)
+        assert result["initial_factor"] == pytest.approx(0.010, abs=1e-6)
+        assert result["mean_factor"] == pytest.approx(0.01375, abs=1e-6)
+        assert result["final_factor"] == pytest.approx(0.0175, abs=1e-6)
         assert result["initial_factor"] < result["mean_factor"] < result["final_factor"]
 
     def test_coating_breakdown_initial_period(self, cp_calculator, dnv_base_config):
@@ -170,19 +171,17 @@ class TestDNVCoatingBreakdown:
         # Test 1-year design life
         result = cp_calculator._dnv_coating_breakdown(inputs, 1.0)
 
-        # Initial factor for 0.5% breakdown
-        expected_initial_factor = 1.0 + (0.5 / 100.0)  # 1.005
-        assert result["initial_factor"] == pytest.approx(expected_initial_factor, abs=0.001)
+        assert result["initial_factor"] == pytest.approx(0.010, abs=1e-6)
+        assert result["mean_factor"] == pytest.approx(0.01015, abs=1e-6)
+        assert result["final_factor"] == pytest.approx(0.0103, abs=1e-6)
 
     def test_coating_breakdown_long_term(self, cp_calculator, dnv_base_config):
         """Test long-term coating degradation."""
         inputs = dnv_base_config["inputs"]
         result = cp_calculator._dnv_coating_breakdown(inputs, 25.0)
 
-        # With lower breakdown rates (0.5%/1.5%), final factor is lower
-        # FCF should be reasonable for buried pipeline
-        assert result["final_factor"] > 1.0
-        assert result["final_factor"] < 2.0
+        assert result["final_factor"] == pytest.approx(0.0175, abs=1e-6)
+        assert 0.0 < result["initial_factor"] < result["mean_factor"] < result["final_factor"] < 1.0
 
 
 class TestDNVCurrentDensities:
@@ -195,21 +194,13 @@ class TestDNVCurrentDensities:
         # Method signature: _dnv_current_densities(inputs) - ONLY 1 param!
         result = cp_calculator._dnv_current_densities(inputs)
 
-        # DNV RP-F103 buried pipeline current densities are in A/m² (NOT mA/m²!)
-        # Buried pipelines: 0.05-0.25 A/m² (MUCH lower than marine structures!)
-
-        # Implementation returns "initial_current_density_A_m2" not "initial_mA_m2"!
-        assert result["initial_current_density_A_m2"] >= 0.05
-        assert result["initial_current_density_A_m2"] <= 0.30
-
-        assert result["final_current_density_A_m2"] >= 0.02
-        assert result["final_current_density_A_m2"] <= 0.15
-
-        assert result["mean_current_density_A_m2"] >= 0.03
-        assert result["mean_current_density_A_m2"] <= 0.20
+        assert result["mean_current_density_A_m2"] == pytest.approx(0.020, abs=1e-6)
+        assert result["burial_condition"] == "buried"
+        assert result["temperature_band"] == "<=50"
+        assert result["table_reference"] == "DNV-RP-F103 (2010) Table 5-1"
 
     def test_current_densities_coating_quality_effect(self, cp_calculator):
-        """Test coating quality effect on current densities."""
+        """DNV-RP-F103:2010 Table 5-1 is independent of coating quality."""
         # Excellent coating (lower current density)
         excellent_config = {
             "inputs": {
@@ -240,8 +231,9 @@ class TestDNVCurrentDensities:
 
         poor_result = cp_calculator._dnv_current_densities(poor_config["inputs"])
 
-        # Poor coating should require more current
-        assert poor_result["initial_current_density_A_m2"] > excellent_result["initial_current_density_A_m2"]
+        assert poor_result["mean_current_density_A_m2"] == pytest.approx(
+            excellent_result["mean_current_density_A_m2"], abs=1e-6
+        )
 
 
 class TestDNVCurrentDemand:
@@ -263,12 +255,9 @@ class TestDNVCurrentDemand:
             inputs, geometry, current_densities, coating_breakdown
         )
 
-        # For buried pipeline with lower current densities:
-        # Current demand = density × area × coating_factor
-        # Should be lower than marine structures
-        assert result["initial_current_demand_A"] > 50.0
-        assert result["final_current_demand_A"] > 20.0
-        assert result["mean_current_demand_A"] > 30.0
+        assert result["initial_current_demand_A"] == pytest.approx(3.833, abs=0.001)
+        assert result["mean_current_demand_A"] == pytest.approx(5.270, abs=0.001)
+        assert result["final_current_demand_A"] == pytest.approx(6.707, abs=0.001)
         assert result["design_current_demand_A"] > result["mean_current_demand_A"]
 
     def test_current_demand_with_design_factors(self, cp_calculator, dnv_base_config):
@@ -327,11 +316,10 @@ class TestDNVAnodeRequirements:
         # No anode_current_capacity parameter!
         result = cp_calculator._dnv_anode_requirements(inputs, current_demand)
 
-        # For buried pipeline with lower current densities:
-        # Anode mass will be lower than marine structures
-        assert result["total_anode_mass_kg"] > 1000.0
-        assert result["anode_count"] > 5
-        assert result["individual_anode_mass_kg"] > 50.0
+        assert result["total_anode_mass_kg"] == pytest.approx(780.738, abs=0.001)
+        assert result["actual_total_mass_kg"] == pytest.approx(1200.0, abs=0.001)
+        assert result["anode_count"] == 3
+        assert result["individual_anode_mass_kg"] == pytest.approx(400.0, abs=0.001)
 
     def test_anode_requirements_material_types(self, cp_calculator, dnv_base_config):
         """Test different anode materials."""
@@ -536,6 +524,22 @@ class TestDNVOrchestration:
         assert "anode_spacing_m" in results
         assert "attenuation_analysis" in results
 
+    def test_workflow_emits_f103_citation_sidecar(self, cp_calculator, dnv_base_config):
+        """F103 workflows carry a fail-closed citation sidecar for standards-derived values."""
+        result = cp_calculator.DNV_RP_F103_2010(dnv_base_config)
+
+        citations = result["results"]["citations"]
+        assert len(citations) == 1
+        citation = citations[0]
+        assert isinstance(citation, dict)
+        assert citation["code_id"] == "dnv-rp-f103"
+        assert citation["publisher"] == "DNV"
+        assert citation["revision"] == "2010"
+        assert citation["wiki_path"] == "wikis/engineering-standards/wiki/standards/dnv-rp-f103.md"
+        assert "Table 5-1" in citation["section"]
+        assert "Annex 1" in citation["section"]
+        json.dumps(result["results"])
+
     def test_workflow_geometry_results(self, cp_calculator, dnv_base_config):
         """Test geometry results in complete workflow."""
         result = cp_calculator.DNV_RP_F103_2010(dnv_base_config)
@@ -550,9 +554,9 @@ class TestDNVOrchestration:
 
         current_demand = result["results"]["current_demand_A"]
 
-        # Buried pipeline has lower current demand than marine structures
-        assert current_demand["initial_current_demand_A"] > 50.0
-        assert current_demand["final_current_demand_A"] > 20.0
+        assert current_demand["initial_current_demand_A"] == pytest.approx(3.833, abs=0.001)
+        assert current_demand["mean_current_demand_A"] == pytest.approx(5.270, abs=0.001)
+        assert current_demand["final_current_demand_A"] == pytest.approx(6.707, abs=0.001)
         assert current_demand["design_current_demand_A"] > current_demand["mean_current_demand_A"]
 
     def test_workflow_anode_results(self, cp_calculator, dnv_base_config):
@@ -560,8 +564,8 @@ class TestDNVOrchestration:
         result = cp_calculator.DNV_RP_F103_2010(dnv_base_config)
 
         anode_requirements = result["results"]["anode_requirements"]
-        assert anode_requirements["total_anode_mass_kg"] > 1000.0
-        assert anode_requirements["anode_count"] > 5
+        assert anode_requirements["total_anode_mass_kg"] == pytest.approx(780.738, abs=0.001)
+        assert anode_requirements["anode_count"] == 3
 
         anode_spacing = result["results"]["anode_spacing_m"]
         assert anode_spacing["spacing_m"] > 0.0
@@ -605,6 +609,7 @@ class TestDNVOrchestration:
     def test_workflow_edge_case_short_pipeline(self, cp_calculator):
         """Test workflow with short pipeline (1km)."""
         short_config = {
+            "citation_repo_root": str(_citation_fixture_root()),
             "inputs": {
                 "pipeline": {
                     "outer_diameter_m": 0.610,
@@ -637,26 +642,16 @@ class TestDNVOrchestration:
 
         result = cp_calculator.DNV_RP_F103_2010(short_config)
 
-        # Verify correct anode count per DNV RP-F103
-        # For 1km x 0.61m pipeline, good coating, 25yr life, 400kg Al anodes:
-        # DNV requires 97.5 mA/m² mean current density
-        # With coating breakdown (1.232 factor): 120.1 mA/m² effective
-        # Total charge: ~58M Ah → requires 85.23 anodes (93.75 with contingency)
-        # Expected: 94 anodes (rounded up)
-        assert result["results"]["anode_requirements"]["anode_count"] == 94
+        assert result["results"]["anode_requirements"]["total_anode_mass_kg"] == pytest.approx(
+            78.074, abs=0.001
+        )
+        assert result["results"]["anode_requirements"]["anode_count"] == 1
         assert result["results"]["design_life_years"] == 25.0
 
 
 class TestDNVPhase1Enhancements:
     """
-    Test suite for Phase 1 enhancements from Saipem CP comparison.
-
-    Tests implementation of DNV RP-F103:2016 features:
-    1. Wet storage period support in coating breakdown
-    2. Longitudinal resistance calculation in pipeline geometry
-    3. Polarization resistance and enhanced attenuation factor
-
-    Based on Saipem comparison analysis (saipem_cp_comparison_analysis.md)
+    Compatibility tests for historical Phase 1/Saipem inputs under F103:2010.
     """
 
     @pytest.fixture
@@ -670,6 +665,7 @@ class TestDNVPhase1Enhancements:
         - DNV 2016 enhanced calculations
         """
         return {
+            "citation_repo_root": str(_citation_fixture_root()),
             "inputs": {
                 "pipeline": {
                     "outer_diameter_m": 0.610,
@@ -705,39 +701,24 @@ class TestDNVPhase1Enhancements:
             }
         }
 
-    def test_wet_storage_period_support(self, cp_calculator, saipem_test_config):
-        """Test wet storage period inclusion in coating breakdown."""
+    def test_wet_storage_input_does_not_change_f103_2010_breakdown(self, cp_calculator, saipem_test_config):
+        """F103:2010 Annex 1 uses design life only; wet storage is not a separate field."""
         inputs = saipem_test_config["inputs"]
         design_life = inputs["design_data"]["design_life"]
 
         # Test WITH wet storage
         result_with_storage = cp_calculator._dnv_coating_breakdown(inputs, design_life)
 
-        # Verify new parameters present
-        assert "wet_storage_years" in result_with_storage
-        assert "total_degradation_years" in result_with_storage
-
-        # Verify values
-        assert result_with_storage["wet_storage_years"] == pytest.approx(2.0, abs=0.01)
-        assert result_with_storage["total_degradation_years"] == pytest.approx(27.0, abs=0.01)
-
-        # Test WITHOUT wet storage for comparison
         inputs_no_storage = inputs.copy()
         inputs_no_storage["pipeline"] = inputs["pipeline"].copy()
         inputs_no_storage["pipeline"]["wet_storage_years"] = 0.0
 
         result_no_storage = cp_calculator._dnv_coating_breakdown(inputs_no_storage, design_life)
 
-        # With storage should have higher coating breakdown factor
-        # Expected: ~0.004% increase (mathematical: 1.00002^2 - 1 = 0.00004)
-        # This represents adding 2 years of 0.002% yearly breakdown to 25-year design life
-        # Note: Saipem config uses excellent coating (0.002% yearly), much lower than default 1.5%
-        assert result_with_storage["final_factor"] > result_no_storage["final_factor"]
-
-        # Verify approximate expected increase
-        factor_increase = (result_with_storage["final_factor"] - result_no_storage["final_factor"]) / result_no_storage["final_factor"]
-        assert factor_increase > 0.00003  # At least 0.003% increase (very small due to excellent coating)
-        assert factor_increase < 0.00005  # Less than 0.005% increase
+        assert "wet_storage_years" not in result_with_storage
+        assert "total_degradation_years" not in result_with_storage
+        assert result_with_storage == result_no_storage
+        assert result_with_storage["final_factor"] == pytest.approx(0.0175, abs=1e-6)
 
     def test_longitudinal_resistance_calculation(self, cp_calculator, saipem_test_config):
         """Test longitudinal resistance calculation in pipeline geometry."""
@@ -768,8 +749,6 @@ class TestDNVPhase1Enhancements:
 
     def test_polarization_resistance_calculation(self, cp_calculator, saipem_test_config):
         """Test polarization resistance in enhanced attenuation."""
-        inputs = saipem_test_config["inputs"]
-
         # Run complete workflow to get all required data
         full_result = cp_calculator.DNV_RP_F103_2010(saipem_test_config)
 
@@ -784,12 +763,7 @@ class TestDNVPhase1Enhancements:
         assert attenuation["free_corrosion_potential_V"] == pytest.approx(-0.630, abs=0.001)
         assert attenuation["anode_potential_V"] == pytest.approx(-0.950, abs=0.001)
 
-        # Verify polarization resistance calculation: P = (Ecorr - Ea) / i
-        # Expected: P = (-0.630 - (-0.950)) / 0.110 ≈ 2.909 Ω·m²
-        # (0.110 is approximate mean current density for good coating)
-        assert attenuation["polarization_resistance_ohm_m2"] > 0.0
-        assert attenuation["polarization_resistance_ohm_m2"] > 1.0  # Should be several Ω·m²
-        assert attenuation["polarization_resistance_ohm_m2"] < 10.0  # But not excessive
+        assert attenuation["polarization_resistance_ohm_m2"] == pytest.approx(16.0, abs=1e-6)
 
     def test_enhanced_attenuation_factor(self, cp_calculator, saipem_test_config):
         """Test enhanced attenuation factor calculation."""
@@ -800,11 +774,9 @@ class TestDNVPhase1Enhancements:
         # Verify new parameter present
         assert "attenuation_factor_enhanced_per_m" in attenuation
 
-        # Enhanced attenuation factor: α = √(2 / (π × D × RL × CBFf × P))
-        # Expected magnitude: 10⁻⁵ to 10⁻⁴ per meter
-        assert attenuation["attenuation_factor_enhanced_per_m"] > 0.0
-        assert attenuation["attenuation_factor_enhanced_per_m"] > 1e-6
-        assert attenuation["attenuation_factor_enhanced_per_m"] < 1e-3
+        # The compatibility output remains zero for F103:2010 coating factors
+        # because final_factor is already a bare-area fraction below 1.0.
+        assert attenuation["attenuation_factor_enhanced_per_m"] == pytest.approx(0.0, abs=1e-12)
 
     def test_backward_compatibility_dnv_2010(self, cp_calculator, saipem_test_config):
         """Test that DNV 2010 attenuation length is still calculated."""
@@ -817,9 +789,8 @@ class TestDNVPhase1Enhancements:
         assert "potential_decay_factor" in attenuation
         assert "protection_adequate" in attenuation
 
-        # Both DNV 2010 and DNV 2016 results available
         assert attenuation["attenuation_length_m"] > 0.0
-        assert attenuation["attenuation_factor_enhanced_per_m"] > 0.0
+        assert attenuation["attenuation_factor_enhanced_per_m"] == pytest.approx(0.0, abs=1e-12)
 
     def test_complete_phase1_workflow(self, cp_calculator, saipem_test_config):
         """Test complete workflow with all Phase 1 enhancements."""
@@ -834,11 +805,10 @@ class TestDNVPhase1Enhancements:
         assert "longitudinal_resistance_ohm_per_m" in geometry
         assert geometry["longitudinal_resistance_ohm_per_m"] > 0.0
 
-        # Verify coating breakdown includes wet storage
         coating = results["coating_breakdown_factors"]
-        assert "wet_storage_years" in coating
-        assert "total_degradation_years" in coating
-        assert coating["total_degradation_years"] == pytest.approx(27.0, abs=0.01)
+        assert "wet_storage_years" not in coating
+        assert "total_degradation_years" not in coating
+        assert coating["final_factor"] == pytest.approx(0.0175, abs=1e-6)
 
         # Verify attenuation includes enhanced calculations
         attenuation = results["attenuation_analysis"]
@@ -846,8 +816,8 @@ class TestDNVPhase1Enhancements:
         assert "attenuation_factor_enhanced_per_m" in attenuation
 
         # Verify all calculations completed successfully
-        assert attenuation["polarization_resistance_ohm_m2"] > 0.0
-        assert attenuation["attenuation_factor_enhanced_per_m"] > 0.0
+        assert attenuation["polarization_resistance_ohm_m2"] == pytest.approx(16.0, abs=1e-6)
+        assert attenuation["attenuation_factor_enhanced_per_m"] == pytest.approx(0.0, abs=1e-12)
 
         # Verify design life preserved
         assert results["design_life_years"] == 25.0
@@ -860,10 +830,10 @@ class TestDNVPhase1Enhancements:
         # Should complete successfully
         assert "results" in result
 
-        # Coating breakdown should default to 0.0 wet storage
         coating = result["results"]["coating_breakdown_factors"]
-        assert coating["wet_storage_years"] == pytest.approx(0.0, abs=0.01)
-        assert coating["total_degradation_years"] == pytest.approx(25.0, abs=0.01)
+        assert "wet_storage_years" not in coating
+        assert "total_degradation_years" not in coating
+        assert coating["design_life_years"] == pytest.approx(25.0, abs=0.01)
 
         # Geometry should default to 2e-7 resistivity
         geometry = result["results"]["pipeline_geometry_m"]

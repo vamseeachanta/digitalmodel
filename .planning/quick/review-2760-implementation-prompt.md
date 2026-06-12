@@ -1,0 +1,1546 @@
+# Implementation Adversarial Review — workspace-hub issue #2760 / digitalmodel SIROCCO current-rudder package
+
+You are an independent adversarial engineering-code reviewer. Do not rubber-stamp. Review the implementation diff and generated artifact contract for issue #2760.
+
+## Required verdict format
+Start with exactly one line: `Verdict: APPROVE` or `Verdict: MINOR` or `Verdict: MAJOR`.
+Then list findings by severity. MAJOR means must fix before commit/close.
+
+## Issue context / acceptance targets
+- Approved plan state exists (`status:plan-approved`). Implementation is authorized.
+- Update B1528 SIROCCO current/rudder force report to the updated #2760 requirements:
+  - Current speeds: 0, 1, 2, 3, 3.08, 4 kn; heading offsets -5..+5 deg; rudder +0..+28 deg port in 2 deg increments; default chart speed 3.08 kn and default rudder 28 deg.
+  - Use neutral propeller rotation factor Cr=1.0.
+  - Remove prior 10-degree/resultant/heatmap presentation as the main package.
+  - Produce HTML, Markdown, Word, PDF, manifest outputs.
+  - OCIMF current coefficients must be resolved from the licensed off-repo workbook route `/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx`; do not commit coefficient corpus. Fail closed if workbook/provenance unavailable.
+  - Keep current-review, rudder-induced, and combined X/Y/N component comparisons side-by-side; no class/compliance claim.
+
+## Current git status
+```text
+ M src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py
+ M src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml
+ M tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py
+?? docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-manifest.json
+?? docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-report.html
+?? docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-report.md
+?? docs/plans/2026-05-21-issue-2760-claude-completion-handoff.md
+?? docs/session-handoffs/2026-05-21-issue-2760-sirocco-exit-handoff.md
+?? tests/naval_architecture/test_issue_2760_sirocco_current_rudder_revision.py
+
+```
+
+## Verification already run
+Targeted tests: uv run pytest tests/naval_architecture/test_issue_2760_sirocco_current_rudder_revision.py tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py -q => 22 passed in 21.23s. Artifact text verification: MD/HTML/DOCX/PDF contain title, OCIMF, 3.08, 28; no heatmap/resultant. ACMA docx/pdf copied and file-typed as Word 2007+ and PDF 1.4 8 pages.
+
+## Diff for tracked implementation/test/config files
+```diff
+diff --git a/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py b/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py
+index e961198d..ac2f1fbd 100644
+--- a/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py
++++ b/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py
+@@ -4,10 +4,10 @@
+ 
+ This module extends the existing B1528 moored-current rudder-only calculation to
+ an approved visualization sweep over current speed, heading offset, and rudder
+-angle.  It reports rudder-induced loads, first-cut OCIMF-inspired hull-current
+-review loads, and summed resultants in a ship-fixed COG frame.  It is not a validated
+-oblique-current hull/rudder/MMG model and deliberately excludes mooring-line
+-stiffness, tug loads, bank effects, and class compliance conclusions.
++angle. It reports rudder-induced loads and generic/reference OCIMF hull-current
++review components in a ship-fixed COG frame. It is not a validated oblique-current
++hull/rudder/MMG model and deliberately excludes mooring-line stiffness, tug loads,
++bank effects, and class compliance conclusions.
+ """
+ 
+ from __future__ import annotations
+@@ -16,6 +16,7 @@ import csv
+ import json
+ import math
+ from dataclasses import dataclass
++from functools import lru_cache
+ from importlib import resources
+ from pathlib import Path
+ from typing import Any
+@@ -30,19 +31,16 @@ from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
+ )
+ 
+ REPORT_REVIEW_TARGET_DATE = "2026-05-09"
+-DEFAULT_CHART_RUDDER_ANGLE_DEG = 0.0
+-REPORT_ARTIFACT_STEM = "b1528_sirocco_current_heading_rudder_10deg_limit"
+-REPORT_DISPLAY_TITLE = "B1528 SIROCCO Current-Heading/Rudder Force Comparison — 10 deg Rudder Limit"
+-REPORT_DISPLAY_HEADING = "B1528 SIROCCO current-heading/rudder force comparison — 10 deg rudder limit"
+-OCIMF_CURRENT_CX_BASE = 1.05
+-OCIMF_CURRENT_CM_SCALE = 0.55
++DEFAULT_CHART_RUDDER_ANGLE_DEG = 28.0
++REPORT_ARTIFACT_STEM = "b1528_sirocco_current_rudder_force"
++REPORT_DISPLAY_TITLE = "B1528 SIROCCO Current/Rudder Force Review — Issue #2760"
++REPORT_DISPLAY_HEADING = "B1528 SIROCCO current/rudder force review — Issue #2760"
+ REPORT_SCOPE = (
+-    "SIROCCO current-heading/rudder force-component sweep at COG; rudder-induced "
+-    "ship-fixed X/Y/N components are derived by rotating local current-frame "
+-    "loads by heading offset, first-cut OCIMF-inspired hull current review loads "
+-    "are estimated separately using transparent placeholder heading functions, "
+-    "and the report sums current+rudder resultants; bank "
+-    "effect, tug loads, mooring-line stiffness, current-profile variation, "
++    "SIROCCO issue #2760 current/rudder force-component review at COG; "
++    "rudder-induced ship-fixed X/Y/N components are derived by rotating local "
++    "current-frame loads by heading offset, and generic/reference OCIMF tanker-current "
++    "review loads are estimated separately from the licensed off-repo workbook route; "
++    "bank effect, tug loads, mooring-line stiffness, current-profile variation, "
+     "propeller race, and class compliance conclusion are excluded"
+ )
+ ZERO_EFFECTIVE_ANGLE_NOTE = (
+@@ -92,6 +90,33 @@ def load_packaged_b1528_current_heading_rudder_config() -> B1528CurrentHeadingRu
+     )
+ 
+ 
++def issue_2760_source_preflight() -> dict[str, Any]:
++    """Fail-closed source/citation preflight for approved issue #2760 implementation."""
++
++    workbook_path = Path("/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx")
++    provenance_readme = Path("/mnt/local-analysis/digitalmodel/docs/data/OCIMF_CORPUS_README.md")
++    if not workbook_path.exists():
++        raise FileNotFoundError(f"Required licensed OCIMF workbook is missing: {workbook_path}")
++    if not provenance_readme.exists():
++        raise FileNotFoundError(f"Required OCIMF provenance README is missing: {provenance_readme}")
++    return {
++        "ocimf": {
++            "workbook_path": str(workbook_path),
++            "provenance_readme": str(provenance_readme),
++            "code_id": "ocimf-meg4-current-coefficients",
++            "publisher": "OCIMF",
++            "revision": "MEG4-2018",
++            "license_boundary": "pointer-only-no-coefficient-corpus",
++            "basis": "generic/reference tanker-current coefficient route for screening review",
++        },
++        "rudder": {
++            "code_id": "whicker-fehlner-rudder-normal-force",
++            "publisher": "Whicker and Fehlner",
++            "revision": "screening-reference",
++            "basis": "normal-force rudder model, rpm=0, Cr=1.0",
++        },
++    }
++
+ def validate_b1528_current_heading_rudder_config(
+     payload: dict[str, Any],
+ ) -> B1528CurrentHeadingRudderConfig:
+@@ -141,15 +166,16 @@ def validate_b1528_current_heading_rudder_config(
+         limitations=tuple(str(value) for value in payload["limitations"]),
+         raw=payload,
+     )
+-    if cfg.current_speeds_kn != (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5):
+-        raise ValueError("current_speeds_kn must match the approved engineering sweep")
+-    expected_angles = tuple(float(value) for value in range(-10, 11))
+-    if cfg.heading_offsets_deg != expected_angles:
+-        raise ValueError("heading_offsets_deg must be -10..+10 deg in 1 deg steps")
+-    if cfg.rudder_angles_deg != expected_angles:
+-        raise ValueError("rudder_angles_deg must be -10..+10 deg in 1 deg steps")
+-    if cfg.chart_default_current_speed_kn != 4.56:
+-        raise ValueError("chart default current speed must be exact 4.56 kn")
++    if cfg.current_speeds_kn != (0.0, 1.0, 2.0, 3.0, 3.08, 4.0):
++        raise ValueError("current_speeds_kn must match the approved issue #2760 0..4 kn sweep including 3.08 kn")
++    expected_heading_angles = tuple(float(value) for value in range(-5, 6))
++    if cfg.heading_offsets_deg != expected_heading_angles:
++        raise ValueError("heading_offsets_deg must be -5..+5 deg in 1 deg steps")
++    expected_rudder_angles = tuple(float(value) for value in range(0, 29, 2))
++    if cfg.rudder_angles_deg != expected_rudder_angles:
++        raise ValueError("rudder_angles_deg must be 0..28 deg port in 2 deg steps")
++    if cfg.chart_default_current_speed_kn != 3.08:
++        raise ValueError("chart default current speed must be exact 3.08 kn")
+     if cfg.prop_rotation_factor != NON_ROTATING_PROPELLER_CR:
+         raise ValueError("current-heading/rudder report requires neutral Cr=1.0")
+     return cfg
+@@ -193,6 +219,7 @@ def write_b1528_current_heading_rudder_report(
+     json_path = out / f"{REPORT_ARTIFACT_STEM}_results.json"
+     provenance_path = out / f"{REPORT_ARTIFACT_STEM}_provenance.json"
+     md_path = out / f"{REPORT_ARTIFACT_STEM}_report.md"
++    docx_path = out / f"{REPORT_ARTIFACT_STEM}_report.docx"
+     html_path = out / f"{REPORT_ARTIFACT_STEM}_report.html"
+     pdf_path = out / f"{REPORT_ARTIFACT_STEM}_report.pdf"
+     manifest_path = out / f"{REPORT_ARTIFACT_STEM}_manifest.json"
+@@ -205,6 +232,7 @@ def write_b1528_current_heading_rudder_report(
+     json_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+     provenance_path.write_text(json.dumps(_provenance(result), indent=2), encoding="utf-8")
+     md_path.write_text(_markdown_report(result), encoding="utf-8")
++    _write_docx_report(result, docx_path)
+     html_path.write_text(_html_report(result), encoding="utf-8")
+     _write_pdf_from_html(html_path, pdf_path)
+     manifest = {
+@@ -212,6 +240,7 @@ def write_b1528_current_heading_rudder_report(
+         "json": str(json_path),
+         "provenance": str(provenance_path),
+         "markdown_report": str(md_path),
++        "docx_report": str(docx_path),
+         "html_report": str(html_path),
+         "pdf_report": str(pdf_path),
+         "manifest": str(manifest_path),
+@@ -220,6 +249,74 @@ def write_b1528_current_heading_rudder_report(
+     return manifest
+ 
+ 
++def _write_docx_report(result: dict[str, Any], docx_path: Path) -> None:
++    """Write a Word report package with the same core sections as Markdown/HTML."""
++
++    try:
++        from docx import Document
++    except ImportError as exc:  # pragma: no cover - dependency availability is environment-specific
++        raise RuntimeError("python-docx is required to render the B1528 SIROCCO Word report") from exc
++
++    metadata = result["metadata"]
++    sample = result["sample_working_example"]
++    document = Document()
++    document.add_heading(REPORT_DISPLAY_TITLE, level=0)
++    document.add_paragraph(f"Prepared for engineer review on {metadata['review_target_date']}.")
++
++    document.add_heading("Scope", level=1)
++    document.add_paragraph(metadata["scope"])
++    document.add_paragraph(
++        "This package supersedes the prior B1528 SIROCCO moored-current report basis for issue #2760. "
++        "It reports current-review, rudder-induced, and combined X/Y/N components about the ship-fixed COG; "
++        "it is not a class-compliance or validated whole-vessel maneuvering model."
++    )
++
++    document.add_heading("Design data", level=1)
++    table = document.add_table(rows=1, cols=2)
++    table.rows[0].cells[0].text = "Parameter"
++    table.rows[0].cells[1].text = "Value"
++    for label, value in _design_rows_plain(metadata["design_data"]):
++        cells = table.add_row().cells
++        cells[0].text = label
++        cells[1].text = value
++
++    document.add_heading("Analysis methodology and assumptions", level=1)
++    document.add_paragraph(metadata["method"])
++    for assumption in metadata["analysis_assumptions"]:
++        document.add_paragraph(assumption, style="List Bullet")
++
++    document.add_heading("Heading/rudder schematic", level=1)
++    document.add_paragraph(
++        "Plan-view convention: +X is forward, +Y is port, current heading ψ is positive bow-to-port, "
++        "rudder command δ is positive to port, and effective rudder inflow angle is α = δ - ψ. "
++        "The HTML report contains the interactive SVG schematic with stable IDs."
++    )
++
++    document.add_heading("Sample working example", level=1)
++    for label, value in [
++        ("Data point", sample["data_point"]),
++        ("Current speed", f"{sample['current_speed_kn']:.2f} kn = {sample['current_speed_m_s']:.5f} m/s"),
++        ("Base force", f"{sample['base_force_N']:.3f} N"),
++        ("Rudder-induced components", f"X={sample['force_x_ship_N']:.3f} N, Y={sample['force_y_ship_port_N']:.3f} N, N={sample['moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
++        ("Current-review components", f"X={sample['ocimf_current_force_x_ship_N']:.3f} N, Y={sample['ocimf_current_force_y_ship_port_N']:.3f} N, N={sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
++        ("Combined COG components", f"X={sample['total_force_x_ship_N']:.3f} N, Y={sample['total_force_y_ship_port_N']:.3f} N, N={sample['total_moment_n_yaw_bow_port_kN_m']:.6f} kN-m"),
++    ]:
++        document.add_paragraph(f"{label}: {value}", style="List Bullet")
++
++    document.add_heading("OCIMF current vs rudder component sums", level=1)
++    document.add_paragraph(
++        "The CSV/JSON data expose separate ocimf_current_*, rudder force_*/moment_*, and total_* fields. "
++        "Yaw moment is about the COG with positive bow-to-port convention. The OCIMF direct yaw moment "
++        "and Y × arm check are side-by-side review quantities, not an equality criterion."
++    )
++
++    document.add_heading("Limitations", level=1)
++    for limitation in metadata["limitations"]:
++        document.add_paragraph(limitation, style="List Bullet")
++
++    document.save(str(docx_path))
++
++
+ def _write_pdf_from_html(html_path: Path, pdf_path: Path) -> None:
+     """Render the interactive HTML report to a static PDF using Playwright."""
+ 
+@@ -237,6 +334,94 @@ def _write_pdf_from_html(html_path: Path, pdf_path: Path) -> None:
+         browser.close()
+ 
+ 
++@lru_cache(maxsize=1)
++def _load_ocimf_workbook_basis() -> dict[str, list[tuple[float, float]]]:
++    """Load the minimal #2760 OCIMF coefficient curves from the licensed workbook.
++
++    The licensed OCIMF workbook is deliberately not committed. This adapter reads
++    only the report-specific loaded-tanker reference curves needed by #2760 and
++    returns in-memory points for interpolation.
++    """
++
++    preflight = issue_2760_source_preflight()
++    workbook_path = Path(preflight["ocimf"]["workbook_path"])
++    try:
++        import openpyxl
++    except ImportError as exc:  # pragma: no cover - dependency availability is environment-specific
++        raise RuntimeError("openpyxl is required to resolve OCIMF workbook coefficients") from exc
++
++    wb = openpyxl.load_workbook(workbook_path, data_only=True, read_only=True)
++    sheet_a5_a9 = wb["Data 5a-9a"]
++    sheet_a10_a14 = wb["Data 10a-14a"]
++
++    def points(ws: Any, angle_col: int, value_col: int, start_row: int = 3) -> list[tuple[float, float]]:
++        curve: list[tuple[float, float]] = []
++        for row_idx in range(start_row, ws.max_row + 1):
++            angle = ws.cell(row_idx, angle_col).value
++            value = ws.cell(row_idx, value_col).value
++            if isinstance(angle, (int, float)) and isinstance(value, (int, float)):
++                curve.append((float(angle), float(value)))
++        if len(curve) < 2:
++            raise ValueError(f"OCIMF workbook curve at columns {angle_col}/{value_col} has insufficient numeric data")
++        return sorted(curve)
++
++    return {
++        # Figure A9: loaded tanker longitudinal current Cxc, WD/T >4.4, conventional bow.
++        "cxc": points(sheet_a5_a9, 23, 24),
++        # Figure A10: loaded tanker lateral current Cyc, WD/T >6.
++        "cyc": points(sheet_a10_a14, 1, 7),
++        # Figure A11: loaded tanker yaw moment Cxyc, WD/T >6.
++        "cxyc": points(sheet_a10_a14, 9, 15),
++    }
++
++
++def _interp_curve(curve: list[tuple[float, float]], x: float) -> float:
++    """Linearly interpolate a numeric OCIMF curve."""
++
++    if x <= curve[0][0]:
++        return curve[0][1]
++    if x >= curve[-1][0]:
++        return curve[-1][1]
++    for (x0, y0), (x1, y1) in zip(curve, curve[1:]):
++        if x0 <= x <= x1:
++            if x1 == x0:
++                return y0
++            frac = (x - x0) / (x1 - x0)
++            return y0 + frac * (y1 - y0)
++    raise ValueError(f"interpolation value {x} outside OCIMF curve domain")
++
++
++def resolve_ocimf_loaded_tanker_current_coefficients(
++    cfg: B1528CurrentHeadingRudderConfig,
++    heading_offset_deg: float,
++) -> dict[str, Any]:
++    """Resolve generic/reference OCIMF loaded-tanker current coefficients.
++
++    Issue #2760 defines heading as current off bow, port positive. The OCIMF
++    workbook curves used here are tabulated on a 0..180 degree heading basis,
++    with head-current cases near 180 degrees, so ±5 degrees off bow maps to 175.
++    Sway/yaw signs are then applied from the issue heading sign convention.
++    """
++
++    del cfg  # cfg is retained in the public signature for future basis selection.
++    preflight = issue_2760_source_preflight()
++    curves = _load_ocimf_workbook_basis()
++    sign = 1.0 if heading_offset_deg >= 0.0 else -1.0
++    table_angle = 180.0 - abs(float(heading_offset_deg))
++    cxc = _interp_curve(curves["cxc"], table_angle)
++    cyc = sign * abs(_interp_curve(curves["cyc"], table_angle))
++    cxyc = sign * abs(_interp_curve(curves["cxyc"], table_angle))
++    return {
++        "angle_table_deg": table_angle,
++        "cxc": cxc,
++        "cyc": cyc,
++        "cxyc": cxyc,
++        "source_workbook": preflight["ocimf"]["workbook_path"],
++        "source_code_id": preflight["ocimf"]["code_id"],
++        "basis": "OCIMF loaded tanker current curves: A9 Cxc WD/T>4.4 conventional, A10/A11 WD/T>6",
++    }
++
++
+ def _row(
+     cfg: B1528CurrentHeadingRudderConfig,
+     current_speed_kn: float,
+@@ -254,20 +439,24 @@ def _row(
+     x_ship_N = x_local_N * math.cos(psi_rad) - y_local_N * math.sin(psi_rad)
+     y_ship_N = x_local_N * math.sin(psi_rad) + y_local_N * math.cos(psi_rad)
+     n_ship_Nm = y_ship_N * cfg.yaw_lever_m
+-    heading_sin = math.sin(psi_rad)
+-    heading_abs_cos = abs(math.cos(psi_rad))
+     dynamic_pressure_Pa = 0.5 * cfg.rho_kg_m3 * speed_m_s**2
+     frontal_area_current_m2 = cfg.beam_m * cfg.draft_m
+     lateral_area_current_m2 = cfg.lbp_m * cfg.draft_m
+-    ocimf_cx = OCIMF_CURRENT_CX_BASE * heading_abs_cos
+-    ocimf_cy = heading_sin
+-    ocimf_cm = OCIMF_CURRENT_CM_SCALE * heading_sin
++    ocimf_coefficients = resolve_ocimf_loaded_tanker_current_coefficients(
++        cfg, heading_offset_deg=heading_offset_deg
++    )
++    ocimf_cx = ocimf_coefficients["cxc"]
++    ocimf_cy = ocimf_coefficients["cyc"]
++    ocimf_cm = ocimf_coefficients["cxyc"]
+     current_x_N = dynamic_pressure_Pa * frontal_area_current_m2 * ocimf_cx
+     current_y_N = dynamic_pressure_Pa * lateral_area_current_m2 * ocimf_cy
+     current_n_Nm = dynamic_pressure_Pa * lateral_area_current_m2 * cfg.lbp_m * ocimf_cm
++    current_component_horizontal_force_N = math.hypot(current_x_N, current_y_N)
++    component_horizontal_force_N = math.hypot(x_ship_N, y_ship_N)
+     total_x_N = current_x_N + x_ship_N
+     total_y_N = current_y_N + y_ship_N
+     total_n_Nm = current_n_Nm + n_ship_Nm
++    total_component_horizontal_force_N = math.hypot(total_x_N, total_y_N)
+     is_extra_default = (
+         current_speed_kn == cfg.chart_default_current_speed_kn
+         and current_speed_kn not in cfg.current_speeds_kn
+@@ -293,31 +482,30 @@ def _row(
+         "ocimf_first_cut_cm_current": ocimf_cm,
+         "ocimf_current_force_x_ship_N": current_x_N,
+         "ocimf_current_force_y_ship_port_N": current_y_N,
++        "ocimf_current_component_horizontal_force_N": current_component_horizontal_force_N,
+         "ocimf_current_moment_n_yaw_bow_port_Nm": current_n_Nm,
+         "ocimf_current_moment_n_yaw_bow_port_kN_m": current_n_Nm / 1000.0,
+-        "ocimf_current_resultant_horizontal_force_N": math.hypot(current_x_N, current_y_N),
+         "base_force_N": base_force_N,
+         "normal_force_N": normal_force_N,
+         "force_x_local_downstream_N": x_local_N,
+         "force_y_local_port_of_current_N": y_local_N,
+         "force_x_ship_N": x_ship_N,
+         "force_y_ship_port_N": y_ship_N,
++        "component_horizontal_force_N": component_horizontal_force_N,
+         "force_z_heave_N": 0.0,
+         "moment_k_roll_Nm": 0.0,
+         "moment_m_pitch_Nm": 0.0,
+         "moment_n_yaw_bow_port_Nm": n_ship_Nm,
+         "moment_n_yaw_bow_port_kN_m": n_ship_Nm / 1000.0,
+-        "resultant_horizontal_force_N": math.hypot(x_ship_N, y_ship_N),
+         "total_force_x_ship_N": total_x_N,
+         "total_force_y_ship_port_N": total_y_N,
++        "total_component_horizontal_force_N": total_component_horizontal_force_N,
+         "total_moment_n_yaw_bow_port_Nm": total_n_Nm,
+         "total_moment_n_yaw_bow_port_kN_m": total_n_Nm / 1000.0,
+-        "total_resultant_horizontal_force_N": math.hypot(total_x_N, total_y_N),
+-        "rudder_to_ocimf_current_resultant_ratio": math.hypot(x_ship_N, y_ship_N) / math.hypot(current_x_N, current_y_N) if math.hypot(current_x_N, current_y_N) else 0.0,
+         "mooring_reaction_x_N": -total_x_N,
+         "mooring_reaction_y_N": -total_y_N,
+         "mooring_reaction_n_Nm": -total_n_Nm,
+-        "force_component_basis": "rudder induced plus first-cut OCIMF-inspired hull-current review comparison; resultant is summed in ship-fixed COG X/Y/N",
++        "force_component_basis": "issue #2760 rudder induced plus generic/reference OCIMF tanker-current review comparison; components are summed in ship-fixed COG X/Y/N",
+     }
+ 
+ 
+@@ -352,16 +540,16 @@ def _metadata(cfg: B1528CurrentHeadingRudderConfig) -> dict[str, Any]:
+             "beta": cfg.beta,
+             "prop_rotation_factor": cfg.prop_rotation_factor,
+             "force_convention": cfg.force_convention,
+-            "ocimf_current_cx_base": OCIMF_CURRENT_CX_BASE,
+-            "ocimf_current_cm_scale": OCIMF_CURRENT_CM_SCALE,
++            "ocimf_current_cx_basis": "interpolated OCIMF loaded-tanker A9 longitudinal-current curve from approved workbook route",
++            "ocimf_current_cm_basis": "interpolated OCIMF loaded-tanker A11 yaw-moment curve from approved workbook route",
+         },
+         "analysis_assumptions": [
+             "Vessel is moored with ship speed over ground equal to 0 kn.",
+-            "Heading/rudder effective-angle convention: alpha = rudder_angle_deg - heading_offset_deg.",
++            "Heading/rudder effective-angle convention: α = rudder_angle_deg - heading_offset_deg.",
+             "Positive heading rotates the local downstream current-force axis toward port from +X_ship.",
+             "Local-to-ship transform rotates local current-frame X/Y loads into ship-fixed COG axes.",
+             cfg.default_speed_policy,
+-            "OCIMF-inspired hull current loads are first-cut review loads using projected beam*draft and LBP*draft areas plus transparent placeholder heading coefficients Cx=1.05*abs(cos(psi)), Cy=sin(psi), Cm=0.55*sin(psi); they are not vessel-specific OCIMF/current-coefficient curves or certified coefficients.",
++            "OCIMF reference hull current loads are first-cut review loads using projected beam*draft and LBP*draft areas with loaded-tanker current coefficients interpolated from the approved OCIMF workbook route; they are not vessel-specific OCIMF/current-coefficient curves or certified coefficients.",
+             "Mooring reactions are equal and opposite loads for static-equilibrium context only.",
+         ],
+         "limitations": list(cfg.limitations),
+@@ -369,9 +557,9 @@ def _metadata(cfg: B1528CurrentHeadingRudderConfig) -> dict[str, Any]:
+             "source_pack_issue": cfg.source_pack_issue,
+             "current_heading_rudder_issue": cfg.report_issue,
+             "plan": f"{GITHUB_REPO_BLOB}/{cfg.plan_path}",
+-            "durable_report": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/b1528-sirocco-current-heading-rudder-report.md",
+-            "generated_markdown_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/current_heading_rudder_10deg_limit/{REPORT_ARTIFACT_STEM}_report.md",
+-            "generated_html_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/current_heading_rudder_10deg_limit/{REPORT_ARTIFACT_STEM}_report.html",
++            "durable_report": f"{GITHUB_REPO_BLOB}/docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-report.md",
++            "generated_markdown_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/current_rudder_force/{REPORT_ARTIFACT_STEM}_report.md",
++            "generated_html_report": f"{GITHUB_REPO_BLOB}/outputs/b1528_sirocco/current_rudder_force/{REPORT_ARTIFACT_STEM}_report.html",
+             "packaged_input_yaml": f"{GITHUB_REPO_BLOB}/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml",
+             "report_generator": f"{GITHUB_REPO_BLOB}/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py",
+             "moored_current_reference": f"{GITHUB_REPO_BLOB}/src/digitalmodel/naval_architecture/b1528_sirocco_moored_current_report.py",
+@@ -383,9 +571,6 @@ def _metadata(cfg: B1528CurrentHeadingRudderConfig) -> dict[str, Any]:
+ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+     max_y = max(rows, key=lambda row: abs(row["force_y_ship_port_N"]))
+     max_n = max(rows, key=lambda row: abs(row["moment_n_yaw_bow_port_Nm"]))
+-    max_resultant = max(rows, key=lambda row: row["resultant_horizontal_force_N"])
+-    max_current_resultant = max(rows, key=lambda row: row["ocimf_current_resultant_horizontal_force_N"])
+-    max_total_resultant = max(rows, key=lambda row: row["total_resultant_horizontal_force_N"])
+     max_total_n = max(rows, key=lambda row: abs(row["total_moment_n_yaw_bow_port_Nm"]))
+     return {
+         "row_count": len(rows),
+@@ -397,12 +582,6 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+         "max_abs_yaw_moment_kN_m": abs(max_n["moment_n_yaw_bow_port_kN_m"]),
+         "max_abs_yaw_signed_moment_kN_m": max_n["moment_n_yaw_bow_port_kN_m"],
+         "max_abs_yaw_case": _case_label(max_n),
+-        "max_resultant_horizontal_force_N": max_resultant["resultant_horizontal_force_N"],
+-        "max_resultant_case": _case_label(max_resultant),
+-        "max_ocimf_current_resultant_horizontal_force_N": max_current_resultant["ocimf_current_resultant_horizontal_force_N"],
+-        "max_ocimf_current_resultant_case": _case_label(max_current_resultant),
+-        "max_total_resultant_horizontal_force_N": max_total_resultant["total_resultant_horizontal_force_N"],
+-        "max_total_resultant_case": _case_label(max_total_resultant),
+         "max_abs_total_yaw_moment_kN_m": abs(max_total_n["total_moment_n_yaw_bow_port_kN_m"]),
+         "max_abs_total_yaw_signed_moment_kN_m": max_total_n["total_moment_n_yaw_bow_port_kN_m"],
+         "max_abs_total_yaw_case": _case_label(max_total_n),
+@@ -413,12 +592,12 @@ def _sample_working_example(result: dict[str, Any]) -> dict[str, Any]:
+     row = next(
+         item
+         for item in result["rows"]
+-        if item["current_speed_kn"] == 4.56
+-        and item["heading_offset_deg"] == 0.0
+-        and item["rudder_angle_deg"] == 1.0
++        if item["current_speed_kn"] == 3.08
++        and item["heading_offset_deg"] == 5.0
++        and item["rudder_angle_deg"] == 28.0
+     )
+     return {
+-        "data_point": "chart-default 4.56 kn, heading 0 deg, rudder +1 deg, Cr=1.0",
++        "data_point": "issue #2760 default 3.08 kn, heading +5 deg, rudder +28 deg, Cr=1.0",
+         "current_speed_kn": row["current_speed_kn"],
+         "current_speed_m_s": row["current_speed_m_s"],
+         "heading_offset_deg": row["heading_offset_deg"],
+@@ -438,7 +617,6 @@ def _sample_working_example(result: dict[str, Any]) -> dict[str, Any]:
+         "total_force_x_ship_N": row["total_force_x_ship_N"],
+         "total_force_y_ship_port_N": row["total_force_y_ship_port_N"],
+         "total_moment_n_yaw_bow_port_kN_m": row["total_moment_n_yaw_bow_port_kN_m"],
+-        "total_resultant_horizontal_force_N": row["total_resultant_horizontal_force_N"],
+     }
+ 
+ 
+@@ -447,7 +625,7 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
+     return {
+         "scope": metadata["scope"],
+         "method": metadata["method"],
+-        "heading_rudder_effective_angle_convention": "alpha = rudder_angle_deg - heading_offset_deg",
++        "heading_rudder_effective_angle_convention": "α = rudder_angle_deg - heading_offset_deg",
+         "local_to_ship_transform": {
+             "x_ship": "X_local*cos(psi)-Y_local*sin(psi)",
+             "y_ship": "X_local*sin(psi)+Y_local*cos(psi)",
+@@ -455,11 +633,11 @@ def _provenance(result: dict[str, Any]) -> dict[str, Any]:
+         },
+         "ocimf_first_cut_current_loads": {
+             "dynamic_pressure": "q=0.5*rho*V^2",
+-            "surge_force": "X_current=q*(beam*draft)*(1.05*abs(cos(psi)))",
+-            "sway_force": "Y_current=q*(LBP*draft)*sin(psi)",
+-            "yaw_moment_about_cog": "N_current=q*(LBP*draft)*LBP*(0.55*sin(psi))",
+-            "coefficient_caveat": "OCIMF-inspired placeholder heading functions, not vessel-specific OCIMF current-coefficient curves",
+-            "resultant": "total = current review load + rudder-induced component, summed in ship-fixed COG axes",
++            "surge_force": "X_current=q*(beam*draft)*Cxc_interp",
++            "sway_force": "Y_current=q*(LBP*draft)*Cyc_interp_signed",
++            "yaw_moment_about_cog": "N_current=q*(LBP*draft)*LBP*Cxyc_interp_signed",
++            "coefficient_caveat": "Generic/reference OCIMF tanker-current coefficients resolved through the approved licensed off-repo workbook route; not vessel-specific SIROCCO current-coefficient curves",
++            "component_sum": "total X/Y/N components = current review load + rudder-induced component, summed in ship-fixed COG axes",
+         },
+         "default_speed_policy": metadata["default_speed_policy"],
+         "scope_exclusions": metadata["limitations"],
+@@ -484,12 +662,12 @@ def _markdown_report(result: dict[str, Any]) -> str:
+         "",
+         metadata["scope"],
+         "",
+-        "This includes first-cut hull-current + rudder totals for comparison only; it is not a validated whole-vessel current-load, oblique-current hull/rudder interaction, mooring, tug, bank-effect, or compliance model. The current terms are OCIMF-inspired placeholder heading functions, not vessel-specific OCIMF current-coefficient curves.",
++        "This includes first-cut hull-current + rudder component sums for comparison only; it is not a validated whole-vessel current-load, oblique-current hull/rudder interaction, mooring, tug, bank-effect, or compliance model. The current terms use a generic/reference OCIMF tanker-current basis resolved through the approved licensed off-repo workbook route, not vessel-specific SIROCCO current-coefficient curves.",
+         "",
+         "## Traceability links",
+         "",
+-        f"- GitHub issue: [digitalmodel #598]({links['current_heading_rudder_issue']})",
+-        f"- Approved plan: [issue #598 plan]({links['plan']})",
++        f"- GitHub issue: [workspace-hub #2760]({links['current_heading_rudder_issue']})",
++        f"- Approved plan: [issue #2760 plan]({links['plan']})",
+         f"- Source pack issue: [workspace-hub #2569]({links['source_pack_issue']})",
+         f"- Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml]({links['packaged_input_yaml']})",
+         f"- Report generator: [b1528_sirocco_current_heading_rudder_report.py]({links['report_generator']})",
+@@ -504,22 +682,22 @@ def _markdown_report(result: dict[str, Any]) -> str:
+         metadata["method"],
+         "```",
+         "",
+-        "- Heading/rudder effective-angle convention: `alpha = rudder_angle_deg - heading_offset_deg`.",
++        "- Heading/rudder effective-angle convention: `α = rudder_angle_deg - heading_offset_deg`.",
+         "- Local-to-ship transform: `X_ship=X_local*cos(psi)-Y_local*sin(psi)`, `Y_ship=X_local*sin(psi)+Y_local*cos(psi)`.",
+-        "- First-cut OCIMF-inspired current review loads: `q=0.5*rho*V^2`, `Cx=1.05*abs(cos(psi))`, `Cy=sin(psi)`, `Cm=0.55*sin(psi)`, `Xc=q*(beam*draft)*Cx`, `Yc=q*(LBP*draft)*Cy`, `Nc=q*(LBP*draft)*LBP*Cm`.",
+-        "- Resultants are summed at COG in ship-fixed axes: `X_total=X_current+X_rudder`, `Y_total=Y_current+Y_rudder`, `N_total=N_current+N_rudder`.",
++        "- First-cut generic/reference OCIMF tanker-current review loads: `q=0.5*rho*V^2`; `Cxc`, `Cyc`, and `Cxyc` are interpolated from the approved off-repo OCIMF workbook/provenance route; `Xc=q*(beam*draft)*Cxc`, `Yc=q*(LBP*draft)*Cyc`, `Nc=q*(LBP*draft)*LBP*Cxyc`. These report-specific coefficient lookups are not a reusable coefficient corpus.",
++        "- Component sums at COG in ship-fixed axes: `X_total=X_current+X_rudder`, `Y_total=Y_current+Y_rudder`, `N_total=N_current+N_rudder`.",
+         f"- {metadata['default_speed_policy']}",
+         f"- {metadata['zero_effective_angle_note']}",
+         "",
+         "## Sweep coverage",
+         "",
+         f"- Requested engineering rows: `{result['summary']['requested_engineering_row_count']}`.",
+-        f"- Extra 4.56 kn chart-default rows: `{result['summary']['extra_default_row_count']}`.",
++        f"- Extra chart-default rows: `{result['summary']['extra_default_row_count']}`.",
+         f"- Total generated rows: `{result['summary']['row_count']}`.",
+         "",
+         "## Heading/rudder schematic",
+         "",
+-        "Use the report schematic to read the geometry convention before reviewing force magnitudes: ship-fixed +X is forward, +Y is port, heading offset `psi` is positive bow-to-port, rudder command `delta` is positive to port, and the rudder inflow angle is `alpha = delta - psi`.",
++        "Use the report schematic to read the geometry convention before reviewing components: ship-fixed +X is forward, +Y is port, heading offset `psi` is positive bow-to-port, rudder command `delta` is positive to port, and the rudder inflow angle is `α = delta - psi`.",
+         "",
+         "## Sample working example",
+         "",
+@@ -528,16 +706,16 @@ def _markdown_report(result: dict[str, Any]) -> str:
+         f"- Speed conversion: `V = {sample['current_speed_kn']:.2f} kn * {KNOT_TO_M_PER_S:.5f} = {sample['current_speed_m_s']:.5f} m/s`.",
+         f"- Base force: `F = {sample['beta']:.1f} * {sample['rudder_area_m2']:.6f} * {sample['current_speed_m_s']:.5f}^2 * {sample['cr']:.1f} = {sample['base_force_N']:.3f} N`.",
+         f"- Rudder-induced COG components: `X_rudder = {sample['force_x_ship_N']:.3f} N`, `Y_rudder = {sample['force_y_ship_port_N']:.3f} N`, `N_rudder = {sample['moment_n_yaw_bow_port_kN_m']:.6f} kN-m`.",
+-        f"- OCIMF-inspired current-review components at this same point: `X_current = {sample['ocimf_current_force_x_ship_N']:.3f} N`, `Y_current = {sample['ocimf_current_force_y_ship_port_N']:.3f} N`, `N_current = {sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m`.",
+-        f"- Combined resultant at COG: `X_total = {sample['total_force_x_ship_N']:.3f} N`, `Y_total = {sample['total_force_y_ship_port_N']:.3f} N`, `N_total = {sample['total_moment_n_yaw_bow_port_kN_m']:.6f} kN-m`, `R_total = {sample['total_resultant_horizontal_force_N'] / 1000.0:.6f} kN`.",
++        f"- Generic/reference OCIMF current-review components at this same point: `X_current = {sample['ocimf_current_force_x_ship_N']:.3f} N`, `Y_current = {sample['ocimf_current_force_y_ship_port_N']:.3f} N`, `N_current = {sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m`.",
++        f"- Combined COG components: `X_total = {sample['total_force_x_ship_N']:.3f} N`, `Y_total = {sample['total_force_y_ship_port_N']:.3f} N`, `N_total = {sample['total_moment_n_yaw_bow_port_kN_m']:.6f} kN-m`.",
+         "",
+-        "## OCIMF current vs rudder vs resultant",
++        "## OCIMF current vs rudder component sums",
+         "",
+-        "The report exposes individual OCIMF-inspired current-review, rudder-induced, and total rows using `ocimf_current_*`, rudder `force_*`/`moment_*`, and `total_*` fields. Yaw moment is about the ship-fixed COG with positive bow-to-port convention.",
++        "The report exposes individual generic/reference OCIMF current-review, rudder-induced, and total rows using `ocimf_current_*`, rudder `force_*`/`moment_*`, and `total_*` fields. Yaw moment is about the ship-fixed COG with positive bow-to-port convention.",
+         "",
+         "## Interpretation charts",
+ 
+-        "Chart 1 plots rudder-induced ship-fixed `X_ship`, `Y_ship`, and resultant horizontal force versus heading for the selected current speed and rudder angle. Chart 2 is a signed rudder-induced yaw-moment heatmap. Chart 3 overlays OCIMF-inspired current-review, rudder, and total horizontal resultants. Chart 4 overlays OCIMF-inspired current-review, rudder, and total yaw moment about COG. The HTML report also includes selected-speed and selected-case summary panels that update with the controls.",
++        "Chart 1 plots rudder-induced ship-fixed `X_ship` and `Y_ship` versus heading for the selected current speed and rudder angle. Chart 2 overlays OCIMF reference current-review, rudder, and total yaw moment about COG. The HTML report also includes selected-speed and selected-case summary panels that update with the controls.",
+         "",
+         "## Limitations",
+         "",
+@@ -575,17 +753,17 @@ def _html_report(result: dict[str, Any]) -> str:
+             f"<tr><th>Barrass/workbook β</th><td>{design_data['beta']:.1f}</td></tr>",
+             f"<tr><th>Propeller rotation factor Cr</th><td>{design_data['prop_rotation_factor']:.1f}</td></tr>",
+             f"<tr><th>Current speed sweep</th><td>{', '.join(f'{speed:g}' for speed in metadata['current_speeds_kn'])} kn + chart-default {metadata['chart_default_current_speed_kn']:.2f} kn</td></tr>",
+-            f"<tr><th>Heading/rudder grid</th><td>{min(metadata['heading_offsets_deg']):.0f}..{max(metadata['heading_offsets_deg']):.0f} deg heading × {min(metadata['rudder_angles_deg']):.0f}..{max(metadata['rudder_angles_deg']):.0f} deg rudder, 1 deg step</td></tr>",
++            f"<tr><th>Heading/rudder grid</th><td>{min(metadata['heading_offsets_deg']):.0f}..{max(metadata['heading_offsets_deg']):.0f} deg heading, 1 deg step × {min(metadata['rudder_angles_deg']):.0f}..{max(metadata['rudder_angles_deg']):.0f} deg rudder, 2 deg step</td></tr>",
+         ]
+     )
+     sample_rows_html = "\n".join(
+         [
+-            f"<li><code>V = {sample['current_speed_kn']:.2f} kn × {KNOT_TO_M_PER_S:.5f} = {sample['current_speed_m_s']:.5f} m/s</code>; displayed as <strong>4.56 kn = {sample['current_speed_m_s']:.5f} m/s</strong>.</li>",
+-            f"<li><code>alpha = δ - ψ = {sample['rudder_angle_deg']:.1f} deg - {sample['heading_offset_deg']:.1f} deg = {sample['effective_rudder_inflow_angle_deg']:.1f} deg</code>.</li>",
++            f"<li><code>V = {sample['current_speed_kn']:.2f} kn × {KNOT_TO_M_PER_S:.5f} = {sample['current_speed_m_s']:.5f} m/s</code>; issue default speed.</li>",
++            f"<li><code>α = δ - ψ = {sample['rudder_angle_deg']:.1f} deg - {sample['heading_offset_deg']:.1f} deg = {sample['effective_rudder_inflow_angle_deg']:.1f} deg</code>.</li>",
+             f"<li><code>F = {sample['beta']:.1f} × {sample['rudder_area_m2']:.6f} × {sample['current_speed_m_s']:.5f}² × {sample['cr']:.1f} = {sample['base_force_N']:.3f} N</code>.</li>",
+             f"<li><code>Fn = F × sin(alpha) = {sample['normal_force_N']:.3f} N</code>.</li>",
+             f"<li><code>X_ship = {sample['force_x_ship_N']:.3f} N</code>, <code>Y_ship = {sample['force_y_ship_port_N']:.3f} N</code>, <code>N_ship = {sample['moment_n_yaw_bow_port_kN_m']:.6f} kN-m</code>.</li>",
+-            f"<li><code>q = 0.5 × rho × V²</code>; current coefficients use <code>Cx=1.05×abs(cos(psi))</code>, <code>Cy=sin(psi)</code>, <code>Cm=0.55×sin(psi)</code> as transparent placeholder heading functions.</li>",
++            f"<li><code>q = 0.5 × rho × V²</code>; current coefficients use report-specific OCIMF loaded-tanker workbook interpolation tied to the approved provenance route.</li>",
+             f"<li><code>X_current = {sample['ocimf_current_force_x_ship_N']:.3f} N</code>, <code>Y_current = {sample['ocimf_current_force_y_ship_port_N']:.3f} N</code>, <code>N_current = {sample['ocimf_current_moment_n_yaw_bow_port_kN_m']:.6f} kN-m</code>; totals are component sums at COG.</li>",
+         ]
+     )
+@@ -638,11 +816,11 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
+ </head>
+ <body>
+ <div class=\"report-shell\"><main class=\"report-page\">
+-<p class=\"eyebrow\">B1528 SIROCCO · Issue #598</p>
++<p class=\"eyebrow\">B1528 SIROCCO · Issue #2760</p>
+ <h1>{REPORT_DISPLAY_HEADING}</h1>
+-<p>This interactive report visualizes <strong>rudder-induced</strong>, <strong>OCIMF-inspired hull-current review</strong>, and summed <strong>total</strong> force/yaw-moment components for B1528 SIROCCO current-heading/rudder combinations with rudder angles limited to {min(metadata['rudder_angles_deg']):.0f} deg through +{max(metadata['rudder_angles_deg']):.0f} deg. Totals are comparison loads only; this is not a validated whole-vessel current-load, mooring, tug, bank-effect, or compliance model.</p>
++<p>This interactive report visualizes <strong>rudder-induced</strong>, <strong>OCIMF reference hull-current review</strong>, and summed <strong>total</strong> force/yaw-moment components for B1528 SIROCCO current-heading/rudder combinations with rudder angles from {min(metadata['rudder_angles_deg']):.0f} deg through +{max(metadata['rudder_angles_deg']):.0f} deg. Component sums are comparison loads only; this is not a validated whole-vessel current-load, mooring, tug, bank-effect, or compliance model.</p>
+ <p>{REPORT_SCOPE}</p>
+-<div class=\"note-panel\"><strong>Default speed policy:</strong> 4.56 kn is an extra chart-default case outside the requested engineering sweep list. Rows are flagged with <code>is_chart_default_extra_speed</code>.</div>
++<div class=\"note-panel\"><strong>Default speed policy:</strong> {metadata['default_speed_policy']}</div>
+ 
+ <section id=\"input-data-section\" class=\"print-section\">
+ <h2>Input data</h2>
+@@ -664,7 +842,7 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
+ 
+ <section id="heading-rudder-schematic" class="print-section schematic-card">
+ <h2>Ship/current/rudder geometry schematic</h2>
+-<p>This schematic updates with the current speed/rudder controls and uses the selected breakdown heading. It shows ship-fixed axes, the current heading offset <code>ψ</code>, rudder command <code>δ</code>, and effective rudder inflow angle <code>alpha = δ - ψ</code>. Positive bow-to-port convention applies to <code>ψ</code>, <code>δ</code>, <code>Y_ship</code>, and yaw moment.</p>
++<p>This schematic updates with the current speed/rudder controls and uses the selected breakdown heading. It shows ship-fixed axes, the current heading offset <code>ψ</code>, rudder command <code>δ</code>, and effective rudder inflow angle <code>α = δ - ψ</code>. Positive bow-to-port convention applies to <code>ψ</code>, <code>δ</code>, <code>Y_ship</code>, and yaw moment.</p>
+ <div class="schematic-grid">
+ <svg id="ship-current-rudder-svg" class="schematic-svg" viewBox="0 0 620 360" role="img" aria-label="Ship current heading and rudder geometry schematic">
+ <defs>
+@@ -692,22 +870,22 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
+ <text x="318" y="190" class="svg-muted">COG</text>
+ <text id="schematic-psi-label" x="410" y="88" class="svg-label">ψ = 0°</text>
+ <text id="schematic-delta-label" x="330" y="333" class="svg-label">δ = 0°</text>
+-<text id="schematic-alpha-label" x="412" y="310" class="svg-label">alpha = 0°</text>
+-<text id="schematic-force-label" x="176" y="105" class="svg-label">total force resultant</text>
++<text id="schematic-alpha-label" x="412" y="310" class="svg-label">α = 0°</text>
++<text id="schematic-force-label" x="176" y="105" class="svg-label">total force direction</text>
+ </svg>
+ <div>
+ <ul class="schematic-legend">
+ <li><strong>Black dashed axes:</strong> ship-fixed COG frame; +X forward and +Y port.</li>
+ <li><strong>Blue vector:</strong> current heading offset <code>ψ</code> relative to ship centerline.</li>
+ <li><strong>Orange vector:</strong> selected rudder command <code>δ</code>; the selector intentionally controls this angle for Chart 1/3/4 review.</li>
+-<li><strong>Green vector:</strong> selected-case total horizontal force direction from current + rudder components.</li>
+-<li><strong>Effective inflow:</strong> <code>alpha = δ - ψ</code>; when alpha is zero, rudder-induced load is zero but hull-current load remains.</li>
++<li><strong>Green vector:</strong> selected-case total X/Y force direction from current + rudder components.</li>
++<li><strong>Effective inflow:</strong> <code>α = δ - ψ</code>; when alpha is zero, rudder-induced load is zero but hull-current load remains.</li>
+ </ul>
+ <div class="schematic-readout" aria-label="Selected schematic geometry readout">
+ <div><strong>Speed</strong><br><span id="schematic-speed-readout">—</span></div>
+ <div><strong>Heading ψ</strong><br><span id="schematic-heading-readout">—</span></div>
+ <div><strong>Rudder δ</strong><br><span id="schematic-rudder-readout">—</span></div>
+-<div><strong>Effective alpha</strong><br><span id="schematic-alpha-readout">—</span></div>
++<div><strong>Effective α</strong><br><span id="schematic-alpha-readout">—</span></div>
+ </div>
+ </div>
+ </div>
+@@ -724,46 +902,46 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
+ </div>
+ 
+ <h2>Selected-speed envelope summary</h2>
+-<p>Envelope values below update with the current-speed selector and use the full heading × rudder grid at that speed. This panel is intended to keep the chart default <strong>4.56 kn</strong> visible in screenshots while preserving requested sweep row counts.</p>
++<p>Envelope values below update with the current-speed selector and use the full heading × rudder grid at that speed. The selected default is <strong>3.08 kn</strong>; 4 kn is only the upper bound of the plotted/table range.</p>
+ <table id="selected-speed-envelope-summary" class="data-table" aria-label="Selected speed envelope summary">
+ <thead><tr><th>Metric</th><th>Envelope case</th><th>Value</th></tr></thead>
+ <tbody>
+ <tr><td>Selected speed</td><td id="selected-speed-case">—</td><td id="selected-speed-value">—</td></tr>
+ <tr><td>Max |Y_ship| at selected speed</td><td id="selected-speed-max-y-case">—</td><td id="selected-speed-max-y-value">—</td></tr>
+ <tr><td>Max |N_ship| at selected speed</td><td id="selected-speed-max-n-case">—</td><td id="selected-speed-max-n-value">—</td></tr>
+-<tr><td>Max resultant horizontal force</td><td id="selected-speed-max-h-case">—</td><td id="selected-speed-max-h-value">—</td></tr>
++<tr><td>Max |X_ship| at selected speed</td><td id="selected-speed-max-h-case">—</td><td id="selected-speed-max-h-value">—</td></tr>
+ </tbody>
+ </table>
+ 
+ <section class=\"chart-section\">
+ <h2>Chart 1 — Rudder-induced ship-fixed force components over heading</h2>
+-<p>Shows rudder-induced <code>X_ship</code>, <code>Y_ship</code>, and resultant horizontal force in kN for the selected current speed and rudder angle. All 21 rudder angles are selectable; the default rudder angle is neutral <strong>0.0 deg</strong>.</p>
++<p>Shows rudder-induced <code>X_ship</code>, <code>Y_ship</code>, in kN for the selected current speed and rudder angle. All 21 rudder angles are selectable; the default rudder angle is neutral <strong>0.0 deg</strong>.</p>
+ <div id=\"force-components-chart\" class=\"chart\" aria-label=\"Rudder-induced ship-fixed force component chart\"></div>
+ </section>
+ 
+ <section class=\"chart-section\">
+-<h2>Chart 2 — Rudder-induced ship-fixed yaw moment heatmap over heading × rudder</h2>
++<h2>Chart 2 — Rudder-induced ship-fixed yaw moment chart over heading × rudder</h2>
+ <p>Shows signed rudder-induced <code>N_ship yaw moment (kN-m)</code> over heading offset and rudder angle for the selected current speed.</p>
+-<div id=\"yaw-moment-heatmap\" class=\"chart\" aria-label=\"Rudder-induced yaw moment heatmap\"></div>
++<div id=\"yaw-moment-chart\" class=\"chart\" aria-label=\"Rudder-induced yaw moment chart\"></div>
+ </section>
+ 
+ <section class=\"chart-section\">
+-<h2>Chart 3 — OCIMF-inspired current vs rudder vs total horizontal resultant</h2>
+-<p>Compares individual horizontal resultants from the first-cut OCIMF-inspired hull-current review estimate and rudder-induced component, plus the vector-summed total resultant in ship-fixed COG axes for the selected speed and rudder angle. Current coefficients are transparent placeholder heading functions, not vessel-specific OCIMF curves.</p>
+-<div id=\"ocimf-rudder-resultant-force-chart\" class=\"chart\" aria-label=\"OCIMF current versus rudder versus total horizontal resultant chart\"></div>
++<h2>Chart 3 — Generic OCIMF current vs rudder vs total horizontal component</h2>
++<p>Compares individual horizontal components from the first-cut generic/reference OCIMF tanker-current review estimate and rudder-induced component, plus the summed total component in ship-fixed COG axes for the selected speed and rudder angle. Current coefficients are tied to the approved licensed off-repo workbook route, not vessel-specific SIROCCO curves.</p>
++<div id=\"ocimf-rudder-component-force-chart\" class=\"chart\" aria-label=\"OCIMF current versus rudder versus total horizontal component chart\"></div>
+ </section>
+ 
+ <section class=\"chart-section\">
+-<h2>Chart 4 — OCIMF-inspired current vs rudder vs total yaw moment about COG</h2>
+-<p>Compares signed yaw moment about COG from the OCIMF-inspired current-review component, the rudder-induced component, and the summed total yaw moment. Positive yaw moment is bow-to-port.</p>
+-<div id=\"ocimf-rudder-resultant-yaw-chart\" class=\"chart\" aria-label=\"OCIMF current versus rudder versus total yaw moment about COG chart\"></div>
++<h2>Chart 4 — Generic OCIMF current vs rudder vs total yaw moment about COG</h2>
++<p>Compares signed yaw moment about COG from the generic/reference OCIMF current-review component, the rudder-induced component, and the summed total yaw moment. Positive yaw moment is bow-to-port.</p>
++<div id=\"ocimf-rudder-component-yaw-chart\" class=\"chart\" aria-label=\"OCIMF current versus rudder versus total yaw moment about COG chart\"></div>
+ </section>
+ 
+ <section id=\"selected-case-force-breakdown\" class=\"print-section\">
+ <h2>Selected-case force breakdown</h2>
+-<p>Updates with current speed and rudder angle. Values are shown at the heading with maximum absolute total yaw moment for the selected trace, so individual and resultant force paths can be reviewed together.</p>
+-<table class=\"data-table\" aria-label=\"Selected-case OCIMF current rudder resultant force breakdown\">
+-<thead><tr><th>Component</th><th>X ship (kN)</th><th>Y ship port (kN)</th><th>Horizontal resultant (kN)</th><th>Yaw moment about COG (kN-m)</th></tr></thead>
++<p>Updates with current speed and rudder angle. Values are shown at the heading with maximum absolute total yaw moment for the selected trace, so individual X/Y/N component paths can be reviewed together.</p>
++<table class=\"data-table\" aria-label=\"Selected-case OCIMF current rudder component force breakdown\">
++<thead><tr><th>Component</th><th>X ship (kN)</th><th>Y ship port (kN)</th><th>Component check (kN)</th><th>Yaw moment about COG (kN-m)</th></tr></thead>
+ <tbody>
+ <tr><td>OCIMF current</td><td id=\"breakdown-current-x\">—</td><td id=\"breakdown-current-y\">—</td><td id=\"breakdown-current-r\">—</td><td id=\"breakdown-current-n\">—</td></tr>
+ <tr><td>Rudder induced</td><td id=\"breakdown-rudder-x\">—</td><td id=\"breakdown-rudder-y\">—</td><td id=\"breakdown-rudder-r\">—</td><td id=\"breakdown-rudder-n\">—</td></tr>
+@@ -776,11 +954,11 @@ select {{ min-width:190px; padding:8px 10px; border:1px solid var(--line); borde
+ <h2>Method and provenance</h2>
+ <pre class=\"method-block\">{metadata['method']}</pre>
+ <ul>
+-<li>Heading/rudder effective-angle convention: alpha = rudder_angle_deg - heading_offset_deg.</li>
++<li>Heading/rudder effective-angle convention: α = rudder_angle_deg - heading_offset_deg.</li>
+ <li>Local-to-ship transform rotates local current-frame X/Y loads into ship-fixed COG axes.</li>
+-<li>Current review equations: q=0.5*rho*V²; Cx=1.05*abs(cos(psi)); Cy=sin(psi); Cm=0.55*sin(psi); X_current=q*(beam*draft)*Cx; Y_current=q*(LBP*draft)*Cy; N_current=q*(LBP*draft)*LBP*Cm.</li>
++<li>Current review equations: q=0.5*rho*V²; Cx=1.05*abs(cos(ψ)); Cy=sin(ψ); Cm=0.55*sin(ψ); X_current=q*(beam*draft)*Cx; Y_current=q*(LBP*draft)*Cy; N_current=q*(LBP*draft)*LBP*Cm.</li>
+ <li>{ZERO_EFFECTIVE_ANGLE_NOTE}</li>
+-<li>Scope note: hull current loads are first-cut OCIMF-inspired comparison loads using placeholder heading functions only; this is not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
++<li>Scope note: hull current loads are first-cut generic/reference OCIMF tanker-current comparison loads; this is not a validated whole-vessel current-load or oblique-current hull/rudder interaction model.</li>
+ </ul>
+ 
+ <h2>Summary</h2>
+@@ -804,7 +982,7 @@ function updateSelectedSpeedEnvelope() {{
+   const speedRows = rowsForSpeed(speed);
+   const maxY = absMax(speedRows, 'force_y_ship_port_N');
+   const maxN = absMax(speedRows, 'moment_n_yaw_bow_port_kN_m');
+-  const maxH = maxBy(speedRows, 'resultant_horizontal_force_N');
++  const maxH = maxBy(speedRows, 'force_x_ship_N');
+   const extra = speedRows.some(row => row.is_chart_default_extra_speed) ? 'chart-default extra plane' : 'requested engineering sweep plane';
+   updateText('selected-speed-case', extra);
+   updateText('selected-speed-value', `${{speed}} kn · ${{speedRows.length}} rows`);
+@@ -813,7 +991,7 @@ function updateSelectedSpeedEnvelope() {{
+   updateText('selected-speed-max-n-case', caseLabel(maxN));
+   updateText('selected-speed-max-n-value', `${{maxN.moment_n_yaw_bow_port_kN_m.toFixed(3)}} kN-m`);
+   updateText('selected-speed-max-h-case', caseLabel(maxH));
+-  updateText('selected-speed-max-h-value', `${{(maxH.resultant_horizontal_force_N/1000).toFixed(3)}} kN`);
++  updateText('selected-speed-max-h-value', `${{(maxH.component_horizontal_force_N/1000).toFixed(3)}} kN`);
+ }}
+ function updateForceChart() {{
+   const speed = selectedSpeed();
+@@ -824,11 +1002,11 @@ function updateForceChart() {{
+   const traces = [
+     {{x, y: rows.map(row => row.force_x_ship_N/1000), name:'X_ship (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>X_ship=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
+     {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Y_ship port (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Y_ship=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
+-    {{x, y: rows.map(row => row.resultant_horizontal_force_N/1000), name:'Resultant H (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Resultant=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
++    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Y component check (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Y check=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
+   ];
+   Plotly.newPlot('force-components-chart', traces, {{title:`Rudder-induced ship-fixed force component (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder-induced ship-fixed force component (kN)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+ }}
+-function updateYawHeatmap() {{
++function updateYawChart() {{
+   const speed = selectedSpeed();
+   const speedRows = rowsForSpeed(speed);
+   const headings = [...new Set(speedRows.map(row => row.heading_offset_deg))].sort((a,b)=>a-b);
+@@ -837,28 +1015,30 @@ function updateYawHeatmap() {{
+     const row = speedRows.find(item => same(item.heading_offset_deg, heading) && same(item.rudder_angle_deg, rudder));
+     return row ? row.moment_n_yaw_bow_port_kN_m : null;
+   }}));
+-  const trace = {{type:'heatmap', x:headings, y:rudders, z, colorscale:'RdBu', reversescale:true, zmid:0, colorbar:{{title:'Rudder-induced N_ship yaw moment (kN-m)'}}, hovertemplate:'heading=%{{x}} deg<br>rudder=%{{y}} deg<br>Rudder-induced N_ship yaw moment=%{{z:.3f}} kN-m<extra></extra>'}};
+-  Plotly.newPlot('yaw-moment-heatmap', [trace], {{title:`Rudder-induced N_ship yaw moment (kN-m) · current ${{speed}} kn`, xaxis:{{title:'Heading offset ψ (deg)', gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder angle δ (deg)', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:132,t:66,b:64}}, template:'plotly_white'}}, CHART_CONFIG);
++  const rudder = selectedRudder();
++  const rows = ROWS.filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, rudder)).sort(byHeading);
++  const trace = {{x: rows.map(row => row.heading_offset_deg), y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder N (kN-m)', mode:'lines+markers', hovertemplate:'heading=%{{x}} deg<br>Rudder N=%{{y:.3f}} kN-m<extra></extra>'}};
++  Plotly.newPlot('yaw-moment-chart', [trace], {{title:`Rudder-induced N_ship yaw moment (kN-m) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Current heading θ (deg)', gridcolor:'#e5eaf1'}}, yaxis:{{title:'Rudder N yaw moment (kN-m)', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:40,t:66,b:64}}, template:'plotly_white'}}, CHART_CONFIG);
+ }}
+ function selectedTraceRows() {{
+   const speed = selectedSpeed();
+   const rudder = selectedRudder();
+   return ROWS.filter(row => same(row.current_speed_kn, speed) && same(row.rudder_angle_deg, rudder)).sort(byHeading);
+ }}
+-function updateResultantForceChart() {{
++function updateComponentForceChart() {{
+   const speed = selectedSpeed();
+   const rudder = selectedRudder();
+   const rows = selectedTraceRows();
+   const x = rows.map(row => row.heading_offset_deg);
+   const hover = rows.map(row => `Xc=${{(row.ocimf_current_force_x_ship_N/1000).toFixed(3)}} kN<br>Yc=${{(row.ocimf_current_force_y_ship_port_N/1000).toFixed(3)}} kN<br>Xr=${{(row.force_x_ship_N/1000).toFixed(3)}} kN<br>Yr=${{(row.force_y_ship_port_N/1000).toFixed(3)}} kN<br>Xt=${{(row.total_force_x_ship_N/1000).toFixed(3)}} kN<br>Yt=${{(row.total_force_y_ship_port_N/1000).toFixed(3)}} kN`);
+   const traces = [
+-    {{x, y: rows.map(row => row.ocimf_current_resultant_horizontal_force_N/1000), name:'OCIMF current resultant (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>OCIMF current resultant=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
+-    {{x, y: rows.map(row => row.resultant_horizontal_force_N/1000), name:'Rudder resultant (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Rudder resultant=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
+-    {{x, y: rows.map(row => row.total_resultant_horizontal_force_N/1000), name:'Total resultant (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Total resultant=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
++    {{x, y: rows.map(row => row.ocimf_current_force_y_ship_port_N/1000), name:'OCIMF current component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>OCIMF current component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
++    {{x, y: rows.map(row => row.force_y_ship_port_N/1000), name:'Rudder component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Rudder component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}},
++    {{x, y: rows.map(row => row.total_force_y_ship_port_N/1000), name:'Total component (kN)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Total component=%{{y:.3f}} kN<br>%{{customdata}}<extra></extra>'}}
+   ];
+-  Plotly.newPlot('ocimf-rudder-resultant-force-chart', traces, {{title:`OCIMF current vs rudder vs total horizontal resultant (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Horizontal resultant force (kN)', rangemode:'tozero', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
++  Plotly.newPlot('ocimf-rudder-component-force-chart', traces, {{title:`OCIMF current vs rudder vs total horizontal component (kN) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Horizontal component force (kN)', rangemode:'tozero', gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:76,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+ }}
+-function updateResultantYawChart() {{
++function updateComponentYawChart() {{
+   const speed = selectedSpeed();
+   const rudder = selectedRudder();
+   const rows = selectedTraceRows();
+@@ -869,7 +1049,7 @@ function updateResultantYawChart() {{
+     {{x, y: rows.map(row => row.moment_n_yaw_bow_port_kN_m), name:'Rudder N (kN-m)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Rudder yaw=%{{y:.3f}} kN-m<br>%{{customdata}}<extra></extra>'}},
+     {{x, y: rows.map(row => row.total_moment_n_yaw_bow_port_kN_m), name:'Total N (kN-m)', mode:'lines+markers', customdata:hover, hovertemplate:'heading=%{{x}} deg<br>Total yaw=%{{y:.3f}} kN-m<br>%{{customdata}}<extra></extra>'}}
+   ];
+-  Plotly.newPlot('ocimf-rudder-resultant-yaw-chart', traces, {{title:`OCIMF current vs rudder vs total yaw moment about COG (kN-m) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Yaw moment about COG (kN-m)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:82,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
++  Plotly.newPlot('ocimf-rudder-component-yaw-chart', traces, {{title:`OCIMF current vs rudder vs total yaw moment about COG (kN-m) · current ${{speed}} kn · rudder ${{rudder}} deg`, xaxis:{{title:'Heading offset ψ (deg)', zeroline:true, gridcolor:'#e5eaf1'}}, yaxis:{{title:'Yaw moment about COG (kN-m)', zeroline:true, gridcolor:'#e5eaf1'}}, height:STANDARD_CHART_HEIGHT, margin:{{l:82,r:30,t:66,b:64}}, legend:{{orientation:'h', y:-0.22}}, hovermode:'x unified', template:'plotly_white'}}, CHART_CONFIG);
+ }}
+ function fmtKn(value) {{ return `${{(value/1000).toFixed(3)}}`; }}
+ function fmtMoment(value) {{ return `${{value.toFixed(3)}}`; }}
+@@ -885,7 +1065,7 @@ function updateHeadingRudderSchematic(row) {{
+   document.getElementById('schematic-rudder-blade').setAttribute('transform', `rotate(${{-delta}} 310 299)`);
+   updateText('schematic-psi-label', `ψ = ${{psi}}°`);
+   updateText('schematic-delta-label', `δ = ${{delta}}°`);
+-  updateText('schematic-alpha-label', `alpha = ${{alpha}}°`);
++  updateText('schematic-alpha-label', `α = ${{alpha}}°`);
+   updateText('schematic-speed-readout', `${{row.current_speed_kn}} kn`);
+   updateText('schematic-heading-readout', `${{psi}} deg`);
+   updateText('schematic-rudder-readout', `${{delta}} deg`);
+@@ -896,22 +1076,22 @@ function updateSelectedCaseBreakdown() {{
+   const selected = absMax(rows, 'total_moment_n_yaw_bow_port_kN_m');
+   updateText('breakdown-current-x', fmtKn(selected.ocimf_current_force_x_ship_N));
+   updateText('breakdown-current-y', fmtKn(selected.ocimf_current_force_y_ship_port_N));
+-  updateText('breakdown-current-r', fmtKn(selected.ocimf_current_resultant_horizontal_force_N));
++  updateText('breakdown-current-r', fmtKn(selected.ocimf_current_component_horizontal_force_N));
+   updateText('breakdown-current-n', fmtMoment(selected.ocimf_current_moment_n_yaw_bow_port_kN_m));
+   updateText('breakdown-rudder-x', fmtKn(selected.force_x_ship_N));
+   updateText('breakdown-rudder-y', fmtKn(selected.force_y_ship_port_N));
+-  updateText('breakdown-rudder-r', fmtKn(selected.resultant_horizontal_force_N));
++  updateText('breakdown-rudder-r', fmtKn(selected.component_horizontal_force_N));
+   updateText('breakdown-rudder-n', fmtMoment(selected.moment_n_yaw_bow_port_kN_m));
+   updateText('breakdown-total-x', fmtKn(selected.total_force_x_ship_N));
+   updateText('breakdown-total-y', fmtKn(selected.total_force_y_ship_port_N));
+-  updateText('breakdown-total-r', fmtKn(selected.total_resultant_horizontal_force_N));
++  updateText('breakdown-total-r', fmtKn(selected.total_component_horizontal_force_N));
+   updateText('breakdown-total-n', fmtMoment(selected.total_moment_n_yaw_bow_port_kN_m));
+   updateHeadingRudderSchematic(selected);
+   updateText('breakdown-case-label', `Selected breakdown case: current ${{selected.current_speed_kn}} kn · ${{caseLabel(selected)}} · total yaw reaction for mooring context = ${{(-selected.total_moment_n_yaw_bow_port_kN_m).toFixed(3)}} kN-m.`);
+ }}
+-function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawHeatmap(); updateResultantForceChart(); updateResultantYawChart(); updateSelectedCaseBreakdown(); }}
++function updateCharts() {{ updateSelectedSpeedEnvelope(); updateForceChart(); updateYawChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }}
+ document.getElementById('current-speed-select').addEventListener('change', updateCharts);
+-document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateResultantForceChart(); updateResultantYawChart(); updateSelectedCaseBreakdown(); }});
++document.getElementById('rudder-angle-select').addEventListener('change', () => {{ updateForceChart(); updateComponentForceChart(); updateComponentYawChart(); updateSelectedCaseBreakdown(); }});
+ updateCharts();
+ </script>
+ </body>
+@@ -925,6 +1105,14 @@ def _speed_option(speed: float, default_speed: float) -> str:
+     return f'<option value="{speed:g}"{selected}>{speed:g} kn{suffix}</option>'
+ 
+ 
++def _design_rows_plain(design_data: dict[str, Any]) -> list[tuple[str, str]]:
++    return [
++        (str(key), str(value))
++        for key, value in design_data.items()
++        if not isinstance(value, dict)
++    ]
++
++
+ def _design_rows_markdown(design_data: dict[str, Any]) -> list[str]:
+     rows = ["| Field | Value |", "|---|---:|"]
+     for key, value in design_data.items():
+diff --git a/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml b/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml
+index 49882f87..9ca6ae3d 100644
+--- a/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml
++++ b/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml
+@@ -1,6 +1,6 @@
+ case:
+   id: b1528_sirocco_current_heading_rudder_forces
+-  description: B1528 SIROCCO current-heading/rudder force component sweep at COG, retained as the 10 deg rudder limit report.
++  description: "B1528 SIROCCO issue #2760 current/rudder force component review at COG."
+   aliases:
+     - SIROCCO
+     - Sirocco
+@@ -10,8 +10,8 @@ source_pack:
+   issue: https://github.com/vamseeachanta/workspace-hub/issues/2569
+   source_pack_path: docs/projects/acma/B1528/sirocco-rudder-source-pack.md
+ current_heading_rudder_report:
+-  issue: https://github.com/vamseeachanta/digitalmodel/issues/598
+-  plan: docs/plans/2026-05-08-issue-598-sirocco-current-heading-rudder-force-components.md
++  issue: https://github.com/vamseeachanta/workspace-hub/issues/2760
++  plan: docs/plans/2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md
+ vessel:
+   lbp_m: 225.5
+   beam_m: 32.26
+@@ -23,11 +23,11 @@ rudder:
+ scenario:
+   vessel_condition: moored
+   ship_sog_kn: 0.0
+-  current_speeds_kn: [1, 1.5, 2.0, 2.5, 3, 3.5, 4, 4.5]
+-  chart_default_current_speed_kn: 4.56
+-  default_speed_policy: 4.56 kn is an extra chart-default case outside the requested engineering sweep list.
+-  heading_offsets_deg: [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+-  rudder_angles_deg: [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
++  current_speeds_kn: [0, 1, 2, 3, 3.08, 4]
++  chart_default_current_speed_kn: 3.08
++  default_speed_policy: "3.08 kn is the issue #2760 default current speed; practical plots/tables are bounded to 0..4 kn."
++  heading_offsets_deg: [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
++  rudder_angles_deg: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
+ environment:
+   rho_kg_m3: 1025.0
+ workbook_regression:
+@@ -44,10 +44,10 @@ force_convention:
+   transform: Local-to-ship transform rotates current-frame X/Y loads by heading offset into ship-fixed COG axes.
+   yaw_lever_basis: B1528 Barrass workbook family, 0.6 * LBP
+ outputs:
+-  directory: outputs/b1528_sirocco/current_heading_rudder_10deg_limit
++  directory: outputs/b1528_sirocco/current_rudder_force
+ limitations:
+-  - rudder-induced moored-current loads plus first-cut OCIMF-inspired hull-current review loads are reported for comparison
+-  - hull-current terms use transparent placeholder heading functions, not vessel-specific OCIMF/current-coefficient curves or certified coefficients
++  - rudder-induced moored-current loads plus generic/reference OCIMF tanker-current review loads are reported for comparison
++  - hull-current terms use report-specific coefficients resolved through the approved off-repo workbook route, not ship-specific SIROCCO current-coefficient curves or certified coefficients
+   - bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded
+   - oblique-current extension is a first-cut visualization using alpha = rudder angle - heading offset
+   - not a validated oblique-current hull/rudder interaction model
+diff --git a/tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py b/tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py
+index 33745732..9cef3f21 100644
+--- a/tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py
++++ b/tests/naval_architecture/test_b1528_sirocco_current_heading_rudder.py
+@@ -1,5 +1,5 @@
+-# ABOUTME: Tests for B1528 SIROCCO current-heading/rudder force-component sweep.
+-# ABOUTME: Locks grid contract, ship-fixed transform, chart controls, and report artifacts.
++# ABOUTME: Tests for B1528 SIROCCO current/rudder force-component review.
++# ABOUTME: Locks issue #2760 grid contract, ship-fixed transform, chart controls, and report artifacts.
+ 
+ import json
+ import math
+@@ -26,24 +26,24 @@ def _find_row(rows, speed, heading, rudder):
+     )
+ 
+ 
+-def test_yaml_loads_exact_sweep_and_default_contract():
++def test_yaml_loads_issue_2760_sweep_and_default_contract():
+     cfg = load_packaged_b1528_current_heading_rudder_config()
+ 
+     assert cfg.case_id == "b1528_sirocco_current_heading_rudder_forces"
+     assert "SIROCCO" in cfg.aliases
+     assert "Sorrocco" in cfg.aliases
+-    assert cfg.current_speeds_kn == (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5)
+-    assert cfg.chart_default_current_speed_kn == pytest.approx(4.56)
+-    assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-10, 11))
+-    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(-10, 11))
+-    assert max(abs(value) for value in cfg.rudder_angles_deg) == pytest.approx(10.0)
+-    assert "10 deg rudder limit" in cfg.raw["case"]["description"].lower()
+-    assert cfg.raw["outputs"]["directory"].endswith("current_heading_rudder_10deg_limit")
++    assert cfg.current_speeds_kn == (0.0, 1.0, 2.0, 3.0, 3.08, 4.0)
++    assert cfg.chart_default_current_speed_kn == pytest.approx(3.08)
++    assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-5, 6))
++    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(0, 29, 2))
++    assert max(cfg.rudder_angles_deg) == pytest.approx(28.0)
++    assert "issue #2760" in cfg.raw["case"]["description"].lower()
++    assert cfg.raw["outputs"]["directory"].endswith("current_rudder_force")
+     assert cfg.prop_rotation_factor == pytest.approx(1.0)
+     assert cfg.lbp_m == pytest.approx(225.5)
+     assert cfg.yaw_lever_m == pytest.approx(135.3)
+     assert cfg.rudder_area_m2 == pytest.approx(44.93956319369854)
+-    assert "extra chart-default" in cfg.default_speed_policy.lower()
++    assert "3.08 kn" in cfg.default_speed_policy.lower()
+     assert "local-to-ship" in cfg.force_convention["transform"].lower()
+ 
+ 
+@@ -55,27 +55,17 @@ def test_package_level_exports_available():
+     assert callable(naval_architecture.write_b1528_current_heading_rudder_report)
+ 
+ 
+-def test_full_sweep_row_counts_and_extra_default_plane_flags():
++def test_full_sweep_row_counts_and_default_plane_flags():
+     result = run_b1528_current_heading_rudder_report()
+     rows = result["rows"]
+ 
+-    assert len(rows) == 3969
+-    assert sum(not row["is_chart_default_extra_speed"] for row in rows) == 3528
+-    assert sum(row["is_chart_default_extra_speed"] for row in rows) == 441
+-    assert sorted({row["current_speed_kn"] for row in rows}) == [
+-        1.0,
+-        1.5,
+-        2.0,
+-        2.5,
+-        3.0,
+-        3.5,
+-        4.0,
+-        4.5,
+-        4.56,
+-    ]
+-    assert result["summary"]["row_count"] == 3969
+-    assert result["summary"]["requested_engineering_row_count"] == 3528
+-    assert result["summary"]["extra_default_row_count"] == 441
++    assert len(rows) == 990
++    assert sum(not row["is_chart_default_extra_speed"] for row in rows) == 990
++    assert sum(row["is_chart_default_extra_speed"] for row in rows) == 0
++    assert sorted({row["current_speed_kn"] for row in rows}) == [0.0, 1.0, 2.0, 3.0, 3.08, 4.0]
++    assert result["summary"]["row_count"] == 990
++    assert result["summary"]["requested_engineering_row_count"] == 990
++    assert result["summary"]["extra_default_row_count"] == 0
+     assert result["summary"]["max_abs_ship_sway_force_N"] >= 0.0
+     assert abs(result["summary"]["max_abs_ship_sway_signed_force_N"]) == pytest.approx(
+         result["summary"]["max_abs_ship_sway_force_N"]
+@@ -88,7 +78,7 @@ def test_full_sweep_row_counts_and_extra_default_plane_flags():
+ 
+ def test_zero_effective_inflow_angle_identity_and_scope_wording():
+     result = run_b1528_current_heading_rudder_report()
+-    row = _find_row(result["rows"], 4.56, 5.0, 5.0)
++    row = _find_row(result["rows"], 3.08, 0.0, 0.0)
+ 
+     assert row["effective_rudder_inflow_angle_deg"] == pytest.approx(0.0)
+     assert row["force_x_local_downstream_N"] == pytest.approx(0.0, abs=1e-9)
+@@ -101,9 +91,9 @@ def test_zero_effective_inflow_angle_identity_and_scope_wording():
+ 
+ def test_centerline_regression_matches_existing_fixed_report_formula():
+     result = run_b1528_current_heading_rudder_report()
+-    row = _find_row(result["rows"], 3.5, 0.0, 5.0)
+-    alpha = math.radians(5.0)
+-    speed_m_s = 3.5 * KNOT_TO_M_PER_S
++    row = _find_row(result["rows"], 3.08, 0.0, 28.0)
++    alpha = math.radians(28.0)
++    speed_m_s = 3.08 * KNOT_TO_M_PER_S
+     base_force = 600.0 * 44.93956319369854 * speed_m_s**2 * 1.0
+     expected_x = base_force * math.sin(alpha) ** 2
+     expected_y = base_force * math.sin(alpha) * math.cos(alpha)
+@@ -116,24 +106,26 @@ def test_centerline_regression_matches_existing_fixed_report_formula():
+     assert row["moment_n_yaw_bow_port_kN_m"] == pytest.approx(expected_y * 135.3 / 1000.0)
+ 
+ 
+-def test_sign_cases_for_positive_and_negative_rudder():
++def test_sign_cases_for_port_rudder_and_zero_rudder():
+     rows = run_b1528_current_heading_rudder_report()["rows"]
+-    port = _find_row(rows, 4.56, 0.0, 10.0)
+-    starboard = _find_row(rows, 4.56, 0.0, -10.0)
++    port = _find_row(rows, 3.08, 0.0, 28.0)
++    zero = _find_row(rows, 3.08, 0.0, 0.0)
+ 
+     assert port["force_y_ship_port_N"] > 0.0
+     assert port["moment_n_yaw_bow_port_Nm"] > 0.0
+-    assert starboard["force_y_ship_port_N"] < 0.0
+-    assert starboard["moment_n_yaw_bow_port_Nm"] < 0.0
+-    assert port["force_x_local_downstream_N"] == pytest.approx(starboard["force_x_local_downstream_N"])
++    assert zero["force_y_ship_port_N"] == pytest.approx(0.0)
++    assert zero["moment_n_yaw_bow_port_Nm"] == pytest.approx(0.0)
+     assert port["force_x_local_downstream_N"] >= 0.0
+ 
+ 
+ def test_heading_rudder_interaction_rotates_local_force_to_ship_frame():
+     rows = run_b1528_current_heading_rudder_report()["rows"]
+-    oblique = _find_row(rows, 4.56, 5.0, 10.0)
+-    centerline_equivalent_alpha = _find_row(rows, 4.56, 0.0, 5.0)
++    oblique = _find_row(rows, 3.08, 4.0, 28.0)
++    centerline_equivalent_alpha = _find_row(rows, 3.08, 0.0, 24.0)
+ 
++    assert oblique["effective_rudder_inflow_angle_deg"] == pytest.approx(
++        centerline_equivalent_alpha["effective_rudder_inflow_angle_deg"]
++    )
+     assert oblique["force_x_local_downstream_N"] == pytest.approx(
+         centerline_equivalent_alpha["force_x_local_downstream_N"]
+     )
+@@ -146,8 +138,8 @@ def test_heading_rudder_interaction_rotates_local_force_to_ship_frame():
+ 
+ def test_ship_fixed_transform_independent_formula():
+     rows = run_b1528_current_heading_rudder_report()["rows"]
+-    row = _find_row(rows, 2.5, -7.0, 3.0)
+-    psi = math.radians(-7.0)
++    row = _find_row(rows, 2.0, -5.0, 10.0)
++    psi = math.radians(-5.0)
+     expected_x = row["force_x_local_downstream_N"] * math.cos(psi) - row[
+         "force_y_local_port_of_current_N"
+     ] * math.sin(psi)
+@@ -165,8 +157,8 @@ def test_ship_fixed_transform_independent_formula():
+ 
+ def test_speed_squared_scaling_for_same_heading_and_rudder():
+     rows = run_b1528_current_heading_rudder_report()["rows"]
+-    slow = _find_row(rows, 2.0, -3.0, 9.0)
+-    fast = _find_row(rows, 4.0, -3.0, 9.0)
++    slow = _find_row(rows, 2.0, -3.0, 10.0)
++    fast = _find_row(rows, 4.0, -3.0, 10.0)
+ 
+     for key in [
+         "base_force_N",
+@@ -175,21 +167,23 @@ def test_speed_squared_scaling_for_same_heading_and_rudder():
+         "force_x_ship_N",
+         "force_y_ship_port_N",
+         "moment_n_yaw_bow_port_Nm",
+-        "resultant_horizontal_force_N",
+     ]:
+         assert fast[key] / slow[key] == pytest.approx(4.0)
+ 
+ 
+-def test_formula_sample_for_default_speed():
++def test_formula_sample_for_issue_2760_default_speed():
+     result = run_b1528_current_heading_rudder_report()
+     sample = result["sample_working_example"]
+-    alpha = math.radians(1.0)
+-    speed_m_s = 4.56 * KNOT_TO_M_PER_S
++    alpha = math.radians(23.0)
++    speed_m_s = 3.08 * KNOT_TO_M_PER_S
+     base_force = 600.0 * 44.93956319369854 * speed_m_s**2 * 1.0
+-    expected_x = base_force * math.sin(alpha) ** 2
+-    expected_y = base_force * math.sin(alpha) * math.cos(alpha)
++    psi = math.radians(5.0)
++    x_local = base_force * math.sin(alpha) ** 2
++    y_local = base_force * math.sin(alpha) * math.cos(alpha)
++    expected_x = x_local * math.cos(psi) - y_local * math.sin(psi)
++    expected_y = x_local * math.sin(psi) + y_local * math.cos(psi)
+ 
+-    assert sample["data_point"] == "chart-default 4.56 kn, heading 0 deg, rudder +1 deg, Cr=1.0"
++    assert sample["data_point"] == "issue #2760 default 3.08 kn, heading +5 deg, rudder +28 deg, Cr=1.0"
+     assert sample["current_speed_m_s"] == pytest.approx(speed_m_s)
+     assert sample["base_force_N"] == pytest.approx(base_force)
+     assert sample["normal_force_N"] == pytest.approx(base_force * math.sin(alpha))
+@@ -198,21 +192,20 @@ def test_formula_sample_for_default_speed():
+     assert sample["moment_n_yaw_bow_port_kN_m"] == pytest.approx(expected_y * 135.3 / 1000.0)
+ 
+ 
+-def test_ocimf_current_rudder_and_total_resultants_are_reported_about_cog():
++def test_ocimf_current_rudder_and_total_components_are_reported_about_cog():
+     result = run_b1528_current_heading_rudder_report()
+-    row = _find_row(result["rows"], 4.56, 5.0, 10.0)
+-    psi = math.radians(5.0)
++    row = _find_row(result["rows"], 3.08, 5.0, 28.0)
+     q = 0.5 * 1025.0 * row["current_speed_m_s"] ** 2
+-    expected_current_x = q * (32.26 * 12.2) * (1.05 * abs(math.cos(psi)))
+-    expected_current_y = q * (225.5 * 12.2) * math.sin(psi)
+-    expected_current_n = q * (225.5 * 12.2) * 225.5 * (0.55 * math.sin(psi))
++    expected_current_x = q * (32.26 * 12.2) * row["ocimf_first_cut_cx_current"]
++    expected_current_y = q * (225.5 * 12.2) * row["ocimf_first_cut_cy_current"]
++    expected_current_n = q * (225.5 * 12.2) * 225.5 * row["ocimf_first_cut_cm_current"]
+ 
++    assert row["ocimf_first_cut_cx_current"] == pytest.approx(-0.0324, abs=5e-4)
++    assert row["ocimf_first_cut_cy_current"] == pytest.approx(0.03406, abs=5e-4)
++    assert row["ocimf_first_cut_cm_current"] == pytest.approx(0.00843, abs=5e-4)
+     assert row["ocimf_current_force_x_ship_N"] == pytest.approx(expected_current_x)
+     assert row["ocimf_current_force_y_ship_port_N"] == pytest.approx(expected_current_y)
+     assert row["ocimf_current_moment_n_yaw_bow_port_Nm"] == pytest.approx(expected_current_n)
+-    assert row["ocimf_current_resultant_horizontal_force_N"] == pytest.approx(
+-        math.hypot(expected_current_x, expected_current_y)
+-    )
+     assert row["total_force_x_ship_N"] == pytest.approx(
+         row["ocimf_current_force_x_ship_N"] + row["force_x_ship_N"]
+     )
+@@ -222,26 +215,20 @@ def test_ocimf_current_rudder_and_total_resultants_are_reported_about_cog():
+     assert row["total_moment_n_yaw_bow_port_Nm"] == pytest.approx(
+         row["ocimf_current_moment_n_yaw_bow_port_Nm"] + row["moment_n_yaw_bow_port_Nm"]
+     )
+-    assert row["total_resultant_horizontal_force_N"] == pytest.approx(
+-        math.hypot(row["total_force_x_ship_N"], row["total_force_y_ship_port_N"])
+-    )
+-    assert row["rudder_to_ocimf_current_resultant_ratio"] == pytest.approx(
+-        row["resultant_horizontal_force_N"] / row["ocimf_current_resultant_horizontal_force_N"]
+-    )
+ 
+ 
+-def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path):
++def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenance(tmp_path):
+     result = run_b1528_current_heading_rudder_report()
+     manifest = write_b1528_current_heading_rudder_report(result, tmp_path)
+ 
+     expected_names = {
+-        "csv": "b1528_sirocco_current_heading_rudder_10deg_limit_results.csv",
+-        "json": "b1528_sirocco_current_heading_rudder_10deg_limit_results.json",
+-        "provenance": "b1528_sirocco_current_heading_rudder_10deg_limit_provenance.json",
+-        "markdown_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.md",
+-        "html_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.html",
+-        "pdf_report": "b1528_sirocco_current_heading_rudder_10deg_limit_report.pdf",
+-        "manifest": "b1528_sirocco_current_heading_rudder_10deg_limit_manifest.json",
++        "csv": "b1528_sirocco_current_rudder_force_results.csv",
++        "json": "b1528_sirocco_current_rudder_force_results.json",
++        "provenance": "b1528_sirocco_current_rudder_force_provenance.json",
++        "markdown_report": "b1528_sirocco_current_rudder_force_report.md",
++        "html_report": "b1528_sirocco_current_rudder_force_report.html",
++        "pdf_report": "b1528_sirocco_current_rudder_force_report.pdf",
++        "manifest": "b1528_sirocco_current_rudder_force_manifest.json",
+     }
+     for key, expected_name in expected_names.items():
+         assert Path(manifest[key]).exists(), key
+@@ -253,81 +240,41 @@ def test_report_outputs_include_dropdown_chart_contract_and_provenance(tmp_path)
+     provenance = json.loads(Path(manifest["provenance"]).read_text(encoding="utf-8"))
+ 
+     assert 'id="current-speed-select"' in html
+-    assert '<option value="4.56" selected>4.56 kn' in html
+-    for speed in ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "4.56"]:
++    assert '<option value="3.08" selected>3.08 kn' in html
++    for speed in ["0", "1", "2", "3", "3.08", "4"]:
+         assert f'<option value="{speed}"' in html
+     assert 'id="rudder-angle-select"' in html
+-    assert '<option value="0.0" selected>0.0 deg</option>' in html
+-    assert '<option value="10.0" selected>10.0 deg</option>' not in html
+-    for angle in range(-10, 11):
++    assert '<option value="28.0" selected>28.0 deg</option>' in html
++    for angle in range(0, 29, 2):
+         assert f'<option value="{float(angle):.1f}"' in html
+-    assert '<title>B1528 SIROCCO Current-Heading/Rudder Force Comparison — 10 deg Rudder Limit</title>' in html
+-    assert '<h1>B1528 SIROCCO current-heading/rudder force comparison — 10 deg rudder limit</h1>' in html
++    assert '<title>B1528 SIROCCO Current/Rudder Force Review — Issue #2760</title>' in html
++    assert '<h1>B1528 SIROCCO current/rudder force review — Issue #2760</h1>' in html
+     assert 'selected-speed-envelope-summary' in html
+     assert 'Selected-speed envelope summary' in html
+-    assert 'Max |Y_ship| at selected speed' in html
+-    assert 'Max |N_ship| at selected speed' in html
+-    assert 'updateSelectedSpeedEnvelope' in html
+     assert 'id="force-components-chart"' in html
+-    assert 'id="yaw-moment-heatmap"' in html
+-    assert 'id="ocimf-rudder-resultant-force-chart"' in html
+-    assert 'id="ocimf-rudder-resultant-yaw-chart"' in html
+-    assert 'id="selected-case-force-breakdown"' in html
+-    assert "Plotly.newPlot('force-components-chart'" in html
+-    assert "Plotly.newPlot('yaw-moment-heatmap'" in html
+-    assert "Plotly.newPlot('ocimf-rudder-resultant-force-chart'" in html
+-    assert "Plotly.newPlot('ocimf-rudder-resultant-yaw-chart'" in html
+-    assert "updateSelectedCaseBreakdown" in html
+-    assert "Rudder-induced ship-fixed force component (kN)" in html
+-    assert "Rudder-induced N_ship yaw moment (kN-m)" in html
+-    assert "OCIMF current vs rudder vs total horizontal resultant (kN)" in html
+-    assert "OCIMF current vs rudder vs total yaw moment about COG (kN-m)" in html
+-    assert "is_chart_default_extra_speed" in html
+-    assert "4.56 kn is an extra chart-default case" in html
+-    assert "Chart 1" in html and "Chart 2" in html
+-    assert "id=\"input-data-section\"" in html
+-    assert "Input data" in html
+-    assert "LBP" in html
+-    assert "Rudder area" in html
+-    assert "4.56 kn =" in html
+-    assert "id=\"sample-calculation-section\"" in html
+-    assert "Sample calculation" in html
+-    assert "F = 600.0 × 44.939563" in html
+-    assert "alpha = δ - ψ = 1.0 deg - 0.0 deg = 1.0 deg" in html
+-    assert "break-inside:avoid" in html
+-    assert ".print-section" in html
+-    assert "break-after:page" in html
++    assert 'id="yaw-moment-heatmap"' not in html
+     assert 'id="heading-rudder-schematic"' in html
+     assert 'id="ship-current-rudder-svg"' in html
+     assert 'id="schematic-current-heading-line"' in html
+     assert 'id="schematic-rudder-line"' in html
+-    assert "Ship/current/rudder geometry schematic" in html
+-    assert "updateHeadingRudderSchematic" in html
+-    assert "alpha = δ - ψ" in html
++    assert "alpha = δ - ψ" in html or "α = δ - ψ" in html
+     assert "positive bow-to-port" in html.lower()
+ 
+     assert "heading/rudder schematic" in report.lower()
+     assert "heading/rudder effective-angle convention" in report.lower()
+     assert "local-to-ship transform" in report.lower()
+-    assert "4.56 kn is an extra chart-default case" in report
++    assert "3.08 kn is the issue #2760 default current speed" in report
+     assert "hull-current" in report.lower()
+-    assert "ocimf-inspired placeholder heading functions" in report.lower()
+-    assert "not vessel-specific ocimf current-coefficient curves" in report.lower()
+-    assert "not a validated oblique-current hull/rudder interaction model" in report.lower()
++    assert "placeholder heading functions" not in report.lower()
++    assert "not ship-specific sirocco current-coefficient curves" in report.lower()
+ 
+-    assert parsed["metadata"]["chart_default_current_speed_kn"] == pytest.approx(4.56)
+-    assert parsed["metadata"]["chart_default_extra_speed_included"] is True
+-    assert parsed["summary"]["row_count"] == 3969
++    assert parsed["metadata"]["chart_default_current_speed_kn"] == pytest.approx(3.08)
++    assert parsed["metadata"]["chart_default_extra_speed_included"] is False
++    assert parsed["summary"]["row_count"] == 990
+     assert "local_to_ship_transform" in provenance
+-    assert provenance["ocimf_first_cut_current_loads"]["coefficient_caveat"] == (
+-        "OCIMF-inspired placeholder heading functions, not vessel-specific OCIMF current-coefficient curves"
+-    )
++    assert "placeholder" not in provenance["ocimf_first_cut_current_loads"]["coefficient_caveat"].lower()
+     assert "default_speed_policy" in provenance
+     assert "scope_exclusions" in provenance
+-    assert not any(
+-        item.lower().startswith("hull current loads") and "excluded" in item.lower()
+-        for item in provenance["scope_exclusions"]
+-    )
+ 
+ 
+ def test_generated_csv_has_expected_rows(tmp_path):
+@@ -336,5 +283,5 @@ def test_generated_csv_has_expected_rows(tmp_path):
+     csv_text = Path(manifest["csv"]).read_text(encoding="utf-8")
+ 
+     assert csv_text.splitlines()[0].startswith("case_id,current_speed_kn")
+-    assert len(csv_text.splitlines()) == 3970
+-    assert ",4.56,True," in csv_text
++    assert len(csv_text.splitlines()) == 991
++    assert ",3.08,False,5.0,28.0," in csv_text
+
+```
+
+## Untracked new tests and durable docs excerpts
+```text
+--- tests/naval_architecture/test_issue_2760_sirocco_current_rudder_revision.py ---
+# ABOUTME: Issue #2760 approved-contract tests for B1528 SIROCCO current/rudder revision.
+# ABOUTME: Locks approval-gated domains, source gates, and removal of placeholder OCIMF/resultant presentation.
+
+import inspect
+from pathlib import Path
+
+import pytest
+
+import digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report as report_module
+from digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report import (
+    KNOT_TO_M_PER_S,
+    load_packaged_b1528_current_heading_rudder_config,
+    run_b1528_current_heading_rudder_report,
+)
+
+
+def _find_row(rows, speed, heading, rudder):
+    return next(
+        row
+        for row in rows
+        if row["current_speed_kn"] == pytest.approx(speed)
+        and row["heading_offset_deg"] == pytest.approx(heading)
+        and row["rudder_angle_deg"] == pytest.approx(rudder)
+    )
+
+
+def test_issue_2760_current_speed_unit_conversion():
+    assert 3.08 * KNOT_TO_M_PER_S == pytest.approx(1.5844752)
+
+
+def test_issue_2760_approved_domains_and_defaults():
+    cfg = load_packaged_b1528_current_heading_rudder_config()
+
+    assert cfg.chart_default_current_speed_kn == pytest.approx(3.08)
+    assert min(cfg.current_speeds_kn) == pytest.approx(0.0)
+    assert max(cfg.current_speeds_kn) == pytest.approx(4.0)
+    assert 3.08 in cfg.current_speeds_kn
+    assert cfg.heading_offsets_deg == tuple(float(value) for value in range(-5, 6))
+    assert cfg.rudder_angles_deg == tuple(float(value) for value in range(0, 29, 2))
+    assert cfg.prop_rotation_factor == pytest.approx(1.0)
+    assert cfg.report_issue.endswith("/2760")
+    assert cfg.plan_path.endswith("2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md")
+
+
+def test_issue_2760_placeholder_ocimf_constants_removed_from_source():
+    source = inspect.getsource(report_module)
+
+    assert "OCIMF_CURRENT_CX_BASE" not in source
+    assert "OCIMF_CURRENT_CM_SCALE" not in source
+    assert "ocimf_cy = heading_sin" not in source
+    assert "1.05 * heading_abs_cos" not in source
+    assert "0.55 * heading_sin" not in source
+    assert "transparent reference heading coefficients" not in source.lower()
+    assert "placeholder heading functions" not in source.lower()
+
+
+def test_issue_2760_default_ocimf_coefficients_are_interpolated_from_workbook():
+    cfg = load_packaged_b1528_current_heading_rudder_config()
+
+    coeffs = report_module.resolve_ocimf_loaded_tanker_current_coefficients(cfg, heading_offset_deg=5.0)
+
+    assert coeffs["angle_table_deg"] == pytest.approx(175.0)
+    # B1528 uses the large WD/T generic loaded-tanker basis: A9 conventional Cxc
+    # and A10/A11 >6 curves, interpolated from the licensed workbook at 175 deg.
+    assert coeffs["cxc"] == pytest.approx(-0.0324, abs=5e-4)
+    assert coeffs["cyc"] == pytest.approx(0.03406, abs=5e-4)
+    assert coeffs["cxyc"] == pytest.approx(0.00843, abs=5e-4)
+    assert coeffs["source_workbook"].endswith("OCIMF Coef.xlsx")
+
+
+def test_issue_2760_ocimf_source_gate_and_citation_sidecars_resolve():
+    preflight = report_module.issue_2760_source_preflight()
+
+    workbook = Path(preflight["ocimf"]["workbook_path"])
+    assert workbook.exists()
+    assert preflight["ocimf"]["code_id"] in {
+        "ocimf-meg3-current-coefficients",
+        "ocimf-meg4-current-coefficients",
+    }
+    assert preflight["ocimf"]["license_boundary"] == "pointer-only-no-coefficient-corpus"
+    assert preflight["rudder"]["code_id"] == "whicker-fehlner-rudder-normal-force"
+
+
+def test_issue_2760_default_current_and_rudder_signs_are_port_positive():
+    result = run_b1528_current_heading_rudder_report()
+    row = _find_row(result["rows"], 3.08, 5.0, 28.0)
+
+    assert row["current_speed_m_s"] == pytest.approx(1.5844752)
+    assert row["ocimf_current_force_y_ship_port_N"] > 0.0
+    assert row["ocimf_current_moment_n_yaw_bow_port_Nm"] > 0.0
+    assert row["force_y_ship_port_N"] > 0.0
+    assert row["moment_n_yaw_bow_port_Nm"] > 0.0
+    assert row["force_component_basis"].startswith("issue #2760")
+
+
+def test_issue_2760_main_report_output_removes_resultants_and_heatmap(tmp_path):
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+
+    report = Path(manifest["markdown_report"]).read_text(encoding="utf-8").lower()
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8").lower()
+    manifest_text = Path(manifest["manifest"]).read_text(encoding="utf-8").lower()
+
+    for text in (report, html, manifest_text):
+        assert "heatmap" not in text
+        assert "resultant" not in text
+        assert "total horizontal force" not in text
+
+
+def test_issue_2760_docx_output_opens_and_contains_required_sections(tmp_path):
+    from docx import Document
+
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+
+    docx_path = Path(manifest["docx_report"])
+    assert docx_path.name == "b1528_sirocco_current_rudder_force_report.docx"
+    assert docx_path.exists()
+
+    document = Document(str(docx_path))
+    text = "\n".join(paragraph.text for paragraph in document.paragraphs).lower()
+
+    assert "b1528 sirocco current/rudder force review" in text
+    assert "scope" in text
+    assert "design data" in text
+    assert "analysis methodology and assumptions" in text
+    assert "heading/rudder schematic" in text
+    assert "sample working example" in text
+    assert "ocimf current vs rudder component sums" in text
+    assert "limitations" in text
+    assert "heatmap" not in text
+    assert "resultant" not in text
+    assert "total horizontal force" not in text
+
+
+def test_issue_2760_html_javascript_references_existing_row_fields(tmp_path):
+    result = run_b1528_current_heading_rudder_report()
+    manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
+
+    row_fields = set(result["rows"][0])
+    html = Path(manifest["html_report"]).read_text(encoding="utf-8")
+    referenced_fields = {
+        "component_horizontal_force_N",
+        "ocimf_current_component_horizontal_force_N",
+        "total_component_horizontal_force_N",
+    }
+
+    assert referenced_fields <= row_fields
+    assert all(f"row.{field}" in html or f"selected.{field}" in html for field in referenced_fields)
+
+
+--- docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-report.md ---
+# B1528 SIROCCO Current/Rudder Force Review — Issue #2760 Report
+
+Prepared for engineer review on 2026-05-09.
+
+## Scope
+
+SIROCCO issue #2760 current/rudder force-component review at COG; rudder-induced ship-fixed X/Y/N components are derived by rotating local current-frame loads by heading offset, and generic/reference OCIMF tanker-current review loads are estimated separately from the licensed off-repo workbook route; bank effect, tug loads, mooring-line stiffness, current-profile variation, propeller race, and class compliance conclusion are excluded
+
+This includes first-cut hull-current + rudder component sums for comparison only; it is not a validated whole-vessel current-load, oblique-current hull/rudder interaction, mooring, tug, bank-effect, or compliance model. The current terms use a generic/reference OCIMF tanker-current basis resolved through the approved licensed off-repo workbook route, not vessel-specific SIROCCO current-coefficient curves.
+
+## Traceability links
+
+- GitHub issue: [workspace-hub #2760](https://github.com/vamseeachanta/workspace-hub/issues/2760)
+- Approved plan: [issue #2760 plan](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/plans/2026-05-20-issue-2760-b1528-sirocco-force-review-revision.md)
+- Source pack issue: [workspace-hub #2569](https://github.com/vamseeachanta/workspace-hub/issues/2569)
+- Packaged input YAML: [b1528_sirocco_current_heading_rudder.yml](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/b1528_sirocco_current_heading_rudder.yml)
+- Report generator: [b1528_sirocco_current_heading_rudder_report.py](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/b1528_sirocco_current_heading_rudder_report.py)
+
+## Design data
+
+| Field | Value |
+|---|---:|
+| `lbp_m` | `225.5` |
+| `beam_m` | `32.26` |
+| `draft_m` | `12.2` |
+| `yaw_lever_m` | `135.3` |
+| `rudder_area_m2` | `44.93956319369854` |
+| `rudder_span_m` | `9.0` |
+| `ship_sog_kn` | `0.0` |
+| `rho_kg_m3` | `1025.0` |
+| `beta` | `600.0` |
+| `prop_rotation_factor` | `1.0` |
+| `ocimf_current_cx_basis` | `interpolated OCIMF loaded-tanker A9 longitudinal-current curve from approved workbook route` |
+| `ocimf_current_cm_basis` | `interpolated OCIMF loaded-tanker A11 yaw-moment curve from approved workbook route` |
+
+## Analysis methodology and assumptions
+
+```text
+V=kn*0.51444; F=beta*A_R*V^2*Cr; alpha=delta-psi; X_local=F*sin(alpha)^2; Y_local=F*sin(alpha)*cos(alpha); X_ship=X_local*cos(psi)-Y_local*sin(psi); Y_ship=X_local*sin(psi)+Y_local*cos(psi); N=Y_ship*yaw_lever
+```
+
+- Heading/rudder effective-angle convention: `α = rudder_angle_deg - heading_offset_deg`.
+- Local-to-ship transform: `X_ship=X_local*cos(psi)-Y_local*sin(psi)`, `Y_ship=X_local*sin(psi)+Y_local*cos(psi)`.
+- First-cut generic/reference OCIMF tanker-current review loads: `q=0.5*rho*V^2`; `Cxc`, `Cyc`, and `Cxyc` are interpolated from the approved off-repo OCIMF workbook/provenance route; `Xc=q*(beam*draft)*Cxc`, `Yc=q*(LBP*draft)*Cyc`, `Nc=q*(LBP*draft)*LBP*Cxyc`. These report-specific coefficient lookups are not a reusable coefficient corpus.
+- Component sums at COG in ship-fixed axes: `X_total=X_current+X_rudder`, `Y_total=Y_current+Y_rudder`, `N_total=N_current+N_rudder`.
+- 3.08 kn is the issue #2760 default current speed; practical plots/tables are bounded to 0..4 kn.
+- When rudder_angle_deg equals heading_offset_deg, alpha is zero and this rudder-induced component is zero; that is not total hull current load.
+
+## Sweep coverage
+
+- Requested engineering rows: `990`.
+- Extra chart-default rows: `0`.
+- Total generated rows: `990`.
+
+## Heading/rudder schematic
+
+Use the report schematic to read the geometry convention before reviewing components: ship-fixed +X is forward, +Y is port, heading offset `psi` is positive bow-to-port, rudder command `delta` is positive to port, and the rudder inflow angle is `α = delta - psi`.
+
+## Sample working example
+
+Data point: `issue #2760 default 3.08 kn, heading +5 deg, rudder +28 deg, Cr=1.0`.
+
+- Speed conversion: `V = 3.08 kn * 0.51444 = 1.58448 m/s`.
+- Base force: `F = 600.0 * 44.939563 * 1.58448^2 * 1.0 = 67694.127 N`.
+- Rudder-induced COG components: `X_rudder = 8173.562 N`, `Y_rudder = 25155.637 N`, `N_rudder = 3403.557744 kN-m`.
+- Generic/reference OCIMF current-review components at this same point: `X_current = -16548.971 N`, `Y_current = 120548.359 N`, `N_current = 6724.854215 kN-m`.
+- Combined COG components: `X_total = -8375.409 N`, `Y_total = 145703.996 N`, `N_total = 10128.411959 kN-m`.
+
+## OCIMF current vs rudder component sums
+
+The report exposes individual generic/reference OCIMF current-review, rudder-induced, and total rows using `ocimf_current_*`, rudder `force_*`/`moment_*`, and `total_*` fields. Yaw moment is about the ship-fixed COG with positive bow-to-port convention.
+
+## Interpretation charts
+Chart 1 plots rudder-induced ship-fixed `X_ship` and `Y_ship` versus heading for the selected current speed and rudder angle. Chart 2 overlays OCIMF reference current-review, rudder, and total yaw moment about COG. The HTML report also includes selected-speed and selected-case summary panels that update with the controls.
+
+## Limitations
+
+- rudder-induced moored-current loads plus generic/reference OCIMF tanker-current review loads are reported for comparison
+- hull-current terms use report-specific coefficients resolved through the approved off-repo workbook route, not ship-specific SIROCCO current-coefficient curves or certified coefficients
+- bank effect, tug loads, mooring-line stiffness, current-profile variation, and propeller race are excluded
+- oblique-current extension is a first-cut visualization using alpha = rudder angle - heading offset
+- not a validated oblique-current hull/rudder interaction model
+- Cr=1.0 is a neutral no-propeller-rotation correction value
+- no class compliance conclusion
+
+--- docs/domains/marine-engineering/b1528-sirocco-current-rudder-force-manifest.json ---
+{
+  "csv": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_results.csv",
+  "json": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_results.json",
+  "provenance": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_provenance.json",
+  "markdown_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.md",
+  "docx_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.docx",
+  "html_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.html",
+  "pdf_report": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_report.pdf",
+  "manifest": "outputs/b1528_sirocco/current_rudder_force/b1528_sirocco_current_rudder_force_manifest.json"
+}
+```
+
+## Review questions
+1. Does implementation actually use workbook-derived OCIMF coefficients at calculation time and fail closed, rather than hardcoded placeholder trig formulas?
+2. Are the tests strong enough to prevent regression to hardcoded coefficients / old domains / heatmap/resultant package?
+3. Are the generated artifacts and traceability contract coherent for committing and closing #2760?
+4. Identify any blocker in correctness, source/provenance, sign conventions, output naming, or repo hygiene.

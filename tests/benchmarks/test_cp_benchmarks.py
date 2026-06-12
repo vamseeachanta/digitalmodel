@@ -6,7 +6,7 @@ Run with:
         tests/benchmarks/test_cp_benchmarks.py --benchmark-only -q
 """
 
-import pytest
+from pathlib import Path
 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
     CathodicProtection,
@@ -35,6 +35,10 @@ _ANODE_LONG_FLUSH = {
 }
 
 
+def _citation_fixture_root() -> Path:
+    return Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+
+
 def _abs_ships_cfg():
     return {
         "inputs": {
@@ -58,6 +62,7 @@ def test_bench_cp_abs_gn_ships(benchmark):
 def test_bench_cp_dnv_rp_f103(benchmark):
     """Benchmark DNV_RP_F103_2010 cathodic protection route (pipeline)."""
     cfg = {
+        "citation_repo_root": str(_citation_fixture_root()),
         "inputs": {
             "calculation_type": "DNV_RP_F103_2010",
             "design_data": {"design_life": 25},

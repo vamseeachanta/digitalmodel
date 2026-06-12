@@ -16,8 +16,16 @@ from __future__ import annotations
 
 import math
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+    standard_for_edition,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -123,6 +131,28 @@ class AnodeSizingResult(BaseModel):
     mass_check_ok: bool = Field(
         ..., description="Whether anode count provides sufficient total mass"
     )
+    edition_used: Edition = Field(
+        ..., description="DNV-RP-B401 edition used for the design"
+    )
+    standard: str = Field(
+        ..., description="Standards reference matching the selected edition"
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_legacy_metadata(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        values = dict(data)
+        edition = values.get("edition_used") or DEFAULT_EDITION
+        values["edition_used"] = edition
+        if not values.get("standard"):
+            try:
+                values["standard"] = standard_for_edition(edition)
+            except KeyError:
+                pass
+        return values
 
 
 def calculate_current_demand(
@@ -243,7 +273,10 @@ def calculate_anode_resistance(
     return R_a
 
 
-def design_cp_system(input_params: AnodeSizingInput) -> AnodeSizingResult:
+def design_cp_system(
+    input_params: AnodeSizingInput,
+    edition: Edition | None = None,
+) -> AnodeSizingResult:
     """Design a complete sacrificial anode CP system.
 
     End-to-end calculation: current demand → anode mass → anode count →
@@ -259,6 +292,8 @@ def design_cp_system(input_params: AnodeSizingInput) -> AnodeSizingResult:
     AnodeSizingResult
         Complete CP system design result.
     """
+    ed = normalize_edition(edition, stacklevel=3)
+
     # Step 1: Current demand
     i_demand = calculate_current_demand(
         surface_area_m2=input_params.surface_area_m2,
@@ -308,4 +343,6 @@ def design_cp_system(input_params: AnodeSizingInput) -> AnodeSizingResult:
         driving_voltage_V=input_params.driving_voltage_V,
         anode_type=input_params.anode_type.value,
         mass_check_ok=mass_check_ok,
+        edition_used=ed,
+        standard=standard_for_edition(ed),
     )

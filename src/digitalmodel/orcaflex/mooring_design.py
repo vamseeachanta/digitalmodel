@@ -13,13 +13,13 @@ References:
 """
 
 import math
-import os
 import warnings
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+import yaml
 from pydantic import BaseModel, Field
 
 from digitalmodel.citations import Citation, CitationResolutionError, CitedValue
@@ -67,8 +67,10 @@ def _default_repo_root(explicit: Optional[Path] = None) -> Optional[Path]:
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class MooringPattern(str, Enum):
     """Mooring pattern types."""
+
     SPREAD = "spread"
     TURRET = "turret"
     CALM = "CALM"
@@ -76,6 +78,7 @@ class MooringPattern(str, Enum):
 
 class SegmentMaterial(str, Enum):
     """Mooring line segment material."""
+
     CHAIN_R3 = "chain_R3"
     CHAIN_R3S = "chain_R3S"
     CHAIN_R4 = "chain_R4"
@@ -86,17 +89,20 @@ class SegmentMaterial(str, Enum):
     POLYESTER = "polyester"
     HMPE = "hmpe"
     NYLON = "nylon"
+    ARAMID = "aramid"
 
 
 # ---------------------------------------------------------------------------
 # Material property library
 # ---------------------------------------------------------------------------
 
+
 class MooringMaterialProperties(BaseModel):
     """Material properties for a mooring line component.
 
     Reference: API RP 2SK Table C-1, DNV-OS-E302 Table B1.
     """
+
     material: SegmentMaterial
     nominal_diameter: float = Field(..., gt=0.0, description="Nominal diameter (mm)")
     mass_per_unit_length: float = Field(..., gt=0.0, description="Mass in air (kg/m)")
@@ -104,6 +110,64 @@ class MooringMaterialProperties(BaseModel):
     mbl: float = Field(..., gt=0.0, description="Minimum breaking load (kN)")
     axial_stiffness: float = Field(..., gt=0.0, description="Axial stiffness EA (kN)")
     cd_normal: float = Field(2.4, gt=0.0, description="Normal drag coefficient")
+    synthetic_stiffness: Optional["SyntheticRopeStiffness"] = None
+    synthetic_properties: Optional["SyntheticRopeProperties"] = None
+
+
+class SyntheticRopeStiffness(BaseModel):
+    """API RP 2SM synthetic-rope stiffness envelope.
+
+    Synthetic ropes have load-history dependent axial stiffness. RP 2SM treats
+    storm, post-installation, and mean-load adjusted stiffness as distinct
+    design inputs rather than a single scalar.
+    """
+
+    static_stiffness_kn: float = Field(..., gt=0.0)
+    dynamic_storm_stiffness_kn: float = Field(..., gt=0.0)
+    post_installation_stiffness_kn: float = Field(..., gt=0.0)
+    mean_load_factor: float = Field(..., gt=0.0)
+
+
+class SyntheticRopeProperties(BaseModel):
+    """API RP 2SM synthetic-rope design-property envelope."""
+
+    creep_rate_pct_per_decade: float = Field(..., ge=0.0)
+    abrasion_resistance_class: str
+    torque_match_class: str
+    bend_over_sheave_min_dia_ratio: float = Field(..., gt=0.0)
+    axial_compression_fatigue_resistance: str
+
+
+def _synthetic_rope_profile_config_path() -> Path:
+    return Path(__file__).resolve().parent / "data" / "synthetic_rope_profiles.yml"
+
+
+def _load_synthetic_rope_profile_payload() -> dict[str, Any]:
+    return yaml.safe_load(
+        _synthetic_rope_profile_config_path().read_text(encoding="utf-8")
+    )
+
+
+def _load_synthetic_rope_material_library() -> dict[str, MooringMaterialProperties]:
+    profile_payload = _load_synthetic_rope_profile_payload().get("profiles", {})
+    material_library: dict[str, MooringMaterialProperties] = {}
+    for profile_key, profile in profile_payload.items():
+        material_library[profile_key] = MooringMaterialProperties(
+            material=SegmentMaterial(profile["material"]),
+            nominal_diameter=profile["nominal_diameter_mm"],
+            mass_per_unit_length=profile["mass_per_unit_length_kg_m"],
+            submerged_weight=profile["submerged_weight_n_m"],
+            mbl=profile["mbl_kn"],
+            axial_stiffness=profile["axial_stiffness_kn"],
+            cd_normal=profile["cd_normal"],
+            synthetic_stiffness=SyntheticRopeStiffness(
+                **profile["synthetic_stiffness"]
+            ),
+            synthetic_properties=SyntheticRopeProperties(
+                **profile["synthetic_properties"]
+            ),
+        )
+    return material_library
 
 
 # Standard mooring component library
@@ -158,24 +222,7 @@ MOORING_MATERIAL_LIBRARY: Dict[str, MooringMaterialProperties] = {
         axial_stiffness=1_700_000.0,
         cd_normal=1.0,
     ),
-    "160mm_polyester": MooringMaterialProperties(
-        material=SegmentMaterial.POLYESTER,
-        nominal_diameter=160,
-        mass_per_unit_length=18.5,
-        submerged_weight=7.5,
-        mbl=8500.0,
-        axial_stiffness=200_000.0,
-        cd_normal=1.2,
-    ),
-    "220mm_polyester": MooringMaterialProperties(
-        material=SegmentMaterial.POLYESTER,
-        nominal_diameter=220,
-        mass_per_unit_length=35.0,
-        submerged_weight=14.0,
-        mbl=16000.0,
-        axial_stiffness=400_000.0,
-        cd_normal=1.2,
-    ),
+    **_load_synthetic_rope_material_library(),
 }
 
 
@@ -183,15 +230,21 @@ MOORING_MATERIAL_LIBRARY: Dict[str, MooringMaterialProperties] = {
 # Catenary equations
 # ---------------------------------------------------------------------------
 
+
 class CatenaryResult(BaseModel):
     """Result of catenary equation solution."""
-    horizontal_tension: float = Field(..., description="Horizontal tension component (kN)")
+
+    horizontal_tension: float = Field(
+        ..., description="Horizontal tension component (kN)"
+    )
     vertical_tension_top: float = Field(..., description="Vertical tension at top (kN)")
     top_tension: float = Field(..., description="Tension at top of catenary (kN)")
     top_angle: float = Field(..., description="Angle at top from horizontal (deg)")
     suspended_length: float = Field(..., description="Suspended line length (m)")
     grounded_length: float = Field(..., description="Length of line on seabed (m)")
-    anchor_radius: float = Field(..., description="Horizontal distance from fairlead to anchor (m)")
+    anchor_radius: float = Field(
+        ..., description="Horizontal distance from fairlead to anchor (m)"
+    )
     catenary_parameter: float = Field(..., description="Catenary parameter a = H/w (m)")
 
 
@@ -225,34 +278,27 @@ def solve_catenary(
     if w <= 0:
         raise ValueError("Submerged weight must be positive for catenary solution")
     if line_length <= h:
-        raise ValueError(f"Line length ({line_length} m) must exceed vertical span ({h} m)")
+        raise ValueError(
+            f"Line length ({line_length} m) must exceed vertical span ({h} m)"
+        )
 
     # Convert weight to kN/m for consistency
     w_kn = w / 1000.0
 
     if pretension is not None:
-        # Given pretension T at top, solve for horizontal force H
-        # T^2 = H^2 + (V_top)^2, V_top = w * s_suspended
-        # h = (H/w) * [cosh(V/H) - 1]  where V = w*s
-        # Iterative solution
+        # Given top pretension T, use the catenary identity
+        # T = H + w*h, where h is the vertical fairlead-to-seabed span.
+        # This preserves the requested top tension without evaluating
+        # unbounded hyperbolic functions during iteration.
         T = pretension
-        # First estimate
-        H = T * math.cos(math.radians(30.0))  # initial guess
-        for _ in range(100):
-            V = math.sqrt(max(0, T**2 - H**2))
-            if V <= 0:
-                break
-            s_susp = V / w_kn
-            h_calc = H / w_kn * (math.cosh(V / H) - 1.0) if H > 0 else 0
-            err = h_calc - h
-            # Newton-like step
-            dh_dH = (1.0 / w_kn) * (math.cosh(V / H) - 1.0) + \
-                     (H / w_kn) * (-V / H**2) * math.sinh(V / H) if H > 0 else 0
-            if abs(dh_dH) > 1e-12:
-                H = H - err / dh_dH
-            H = max(1.0, H)
-            if abs(err) < 0.01:
-                break
+        if T <= 0:
+            raise ValueError("Pretension must be positive")
+        suspended_line_weight = w_kn * h
+        if T <= suspended_line_weight:
+            raise ValueError(
+                "Pretension must exceed suspended line weight for catenary solution"
+            )
+        H = T - suspended_line_weight
     else:
         # No pretension given: solve for H that satisfies geometry
         # h = (H/w) * [cosh(w*s/H) - 1], horizontal scope = (H/w) * sinh(w*s/H)
@@ -293,8 +339,10 @@ def solve_catenary(
 # Mooring line sizing
 # ---------------------------------------------------------------------------
 
+
 class MooringLineSegment(BaseModel):
     """Single segment of a mooring line."""
+
     material_key: str = Field(..., description="Key in MOORING_MATERIAL_LIBRARY")
     length: float = Field(..., gt=0.0, description="Segment length (m)")
 
@@ -304,12 +352,23 @@ class MooringLineDesign(BaseModel):
 
     Reference: API RP 2SK Section 5.
     """
+
     water_depth: float = Field(1500.0, gt=0.0, description="Water depth (m)")
-    fairlead_depth: float = Field(10.0, ge=0.0, description="Fairlead depth below surface (m)")
-    target_pretension: float = Field(1500.0, gt=0.0, description="Target pretension at fairlead (kN)")
-    safety_factor_intact: float = Field(1.67, gt=1.0, description="FoS for intact condition (API RP 2SK)")
-    safety_factor_damaged: float = Field(1.25, gt=1.0, description="FoS for damaged condition")
-    max_offset_pct: float = Field(8.0, gt=0.0, description="Max vessel offset as % of water depth")
+    fairlead_depth: float = Field(
+        10.0, ge=0.0, description="Fairlead depth below surface (m)"
+    )
+    target_pretension: float = Field(
+        1500.0, gt=0.0, description="Target pretension at fairlead (kN)"
+    )
+    safety_factor_intact: float = Field(
+        1.67, gt=1.0, description="FoS for intact condition (API RP 2SK)"
+    )
+    safety_factor_damaged: float = Field(
+        1.25, gt=1.0, description="FoS for damaged condition"
+    )
+    max_offset_pct: float = Field(
+        8.0, gt=0.0, description="Max vessel offset as % of water depth"
+    )
     segments: List[MooringLineSegment] = Field(
         default_factory=lambda: [
             MooringLineSegment(material_key="R4_84mm_chain", length=150.0),
@@ -509,15 +568,19 @@ class MooringLineDesign(BaseModel):
 # Spread mooring layout
 # ---------------------------------------------------------------------------
 
+
 class SpreadMooringConfig(BaseModel):
     """Spread mooring system configuration.
 
     Reference: API RP 2SK Section 5, DNV-OS-E301.
     """
+
     pattern: MooringPattern = MooringPattern.SPREAD
     num_lines: int = Field(12, ge=3, description="Number of mooring lines")
     num_groups: int = Field(4, ge=1, description="Number of line groups (clusters)")
-    group_angular_spread: float = Field(5.0, ge=0.0, description="Angular spread within a group (deg)")
+    group_angular_spread: float = Field(
+        5.0, ge=0.0, description="Angular spread within a group (deg)"
+    )
     water_depth: float = Field(1500.0, gt=0.0, description="Water depth (m)")
     line_design: MooringLineDesign = Field(default_factory=MooringLineDesign)
 
@@ -537,8 +600,11 @@ class SpreadMooringConfig(BaseModel):
             if n == 1:
                 azimuths = [base_az]
             else:
-                spread = np.linspace(-self.group_angular_spread * (n - 1) / 2,
-                                     self.group_angular_spread * (n - 1) / 2, n)
+                spread = np.linspace(
+                    -self.group_angular_spread * (n - 1) / 2,
+                    self.group_angular_spread * (n - 1) / 2,
+                    n,
+                )
                 azimuths = [base_az + s for s in spread]
 
             for az in azimuths:
@@ -551,12 +617,14 @@ class SpreadMooringConfig(BaseModel):
 
                 ax = radius * math.sin(math.radians(az_norm))
                 ay = radius * math.cos(math.radians(az_norm))
-                layout.append({
-                    "azimuth_deg": round(az_norm, 2),
-                    "anchor_x": round(ax, 1),
-                    "anchor_y": round(ay, 1),
-                    "anchor_radius": round(radius, 1),
-                })
+                layout.append(
+                    {
+                        "azimuth_deg": round(az_norm, 2),
+                        "anchor_x": round(ax, 1),
+                        "anchor_y": round(ay, 1),
+                        "anchor_radius": round(radius, 1),
+                    }
+                )
 
         return layout
 
@@ -566,12 +634,17 @@ class TurretMooringConfig(BaseModel):
 
     Reference: API RP 2SK Section 5.4.
     """
+
     pattern: MooringPattern = MooringPattern.TURRET
     num_lines: int = Field(12, ge=3, description="Number of mooring lines")
-    turret_radius: float = Field(5.0, ge=0.0, description="Turret radius from vessel CG (m)")
+    turret_radius: float = Field(
+        5.0, ge=0.0, description="Turret radius from vessel CG (m)"
+    )
     water_depth: float = Field(1500.0, gt=0.0, description="Water depth (m)")
     line_length: float = Field(2500.0, gt=0.0, description="Line length per line (m)")
-    angular_spread: float = Field(30.0, ge=0.0, description="Total angular spread (deg)")
+    angular_spread: float = Field(
+        30.0, ge=0.0, description="Total angular spread (deg)"
+    )
 
     def generate_layout(self) -> List[Dict]:
         """Generate turret mooring layout with even angular spacing."""
@@ -586,12 +659,14 @@ class TurretMooringConfig(BaseModel):
 
             ax = radius * math.sin(math.radians(az))
             ay = radius * math.cos(math.radians(az))
-            layout.append({
-                "azimuth_deg": round(float(az), 2),
-                "anchor_x": round(ax, 1),
-                "anchor_y": round(ay, 1),
-                "anchor_radius": round(radius, 1),
-            })
+            layout.append(
+                {
+                    "azimuth_deg": round(float(az), 2),
+                    "anchor_x": round(ax, 1),
+                    "anchor_y": round(ay, 1),
+                    "anchor_radius": round(radius, 1),
+                }
+            )
         return layout
 
 

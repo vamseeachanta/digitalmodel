@@ -360,3 +360,6 @@ specs/
 
 # Agent worktrees (local-only, must not be tracked as gitlinks)
 .claude/worktrees/
+
+# Client/NDA scratch data — never commit
+.scratch/

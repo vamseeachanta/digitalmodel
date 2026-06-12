@@ -99,3 +99,55 @@ def test_cited_value_preserves_numeric_interface():
     v = CitedValue(value=1.67, citation=c, units="dimensionless")
     assert v.value == 1.67
     assert v.units == "dimensionless"
+
+
+# ── workspace-hub#2778 — source_sibling + source_project fields ──────────
+
+
+def test_citation_defaults_source_sibling_to_generic():
+    """Backcompat: existing call sites omitting source_sibling get 'generic'."""
+    c = Citation(**_valid_kwargs())
+    assert c.source_sibling == "generic"
+    assert c.source_project is None
+
+
+def test_citation_accepts_explicit_source_sibling_client_slug():
+    """source_sibling can be set to a client slug per workspace-hub#2778."""
+    c = Citation(**_valid_kwargs(source_sibling="acma"))
+    assert c.source_sibling == "acma"
+
+
+def test_citation_accepts_source_project_when_set():
+    """source_project is optional but valid when populated."""
+    c = Citation(**_valid_kwargs(source_sibling="acma", source_project="sirocco"))
+    assert c.source_project == "sirocco"
+
+
+def test_citation_rejects_empty_source_sibling():
+    """Rule: source_sibling must be a non-empty string."""
+    with pytest.raises(CitationValidationError):
+        Citation(**_valid_kwargs(source_sibling=""))
+
+
+def test_citation_rejects_whitespace_source_sibling():
+    """Rule: source_sibling must be non-empty (whitespace-stripped)."""
+    with pytest.raises(CitationValidationError):
+        Citation(**_valid_kwargs(source_sibling="   "))
+
+
+def test_citation_rejects_non_string_source_sibling():
+    """Rule: source_sibling must be a string."""
+    with pytest.raises(CitationValidationError):
+        Citation(**_valid_kwargs(source_sibling=42))
+
+
+def test_citation_rejects_empty_source_project_when_set():
+    """source_project, when not None, must be non-empty string."""
+    with pytest.raises(CitationValidationError):
+        Citation(**_valid_kwargs(source_project=""))
+
+
+def test_citation_allows_source_project_none():
+    """source_project may be None (generic or client-level citation)."""
+    c = Citation(**_valid_kwargs(source_project=None))
+    assert c.source_project is None

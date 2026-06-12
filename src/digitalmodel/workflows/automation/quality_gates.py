@@ -5,6 +5,7 @@ Implements linear gate execution (tests → coverage → quality → security �
 
 import ast
 import json
+import os
 import subprocess
 from dataclasses import dataclass, field
 from enum import Enum
@@ -182,11 +183,17 @@ class QualityGateValidator:
     def _execute_gate(self, gate_name: str, gate_config: Dict[str, Any]) -> GateResult:
         """Execute a single quality gate."""
         try:
-            if gate_config.get("domain"):
+            if self._should_delegate_domain_gate_to_ci(gate_name, gate_config):
                 return GateResult(
                     gate_name=gate_name,
                     status=GateStatus.SKIPPED,
-                    message="Domain test gate is handled by domain-sharded CI",
+                    message="domain-sharded test gate runs in quality-gates-by-domain workflow",
+                )
+            if self._should_delegate_aggregate_gate_to_ci(gate_config):
+                return GateResult(
+                    gate_name=gate_name,
+                    status=GateStatus.SKIPPED,
+                    message="Aggregate domain gate is handled by quality-gates-by-domain workflow",
                 )
             if gate_name == "tests":
                 return self._execute_tests_gate(gate_config)
@@ -212,6 +219,19 @@ class QualityGateValidator:
                 message=f"Execution error: {str(e)}",
                 errors=[str(e)],
             )
+
+    def _should_delegate_domain_gate_to_ci(
+        self, gate_name: str, gate_config: Dict[str, Any]
+    ) -> bool:
+        """Skip domain-sharded test gates in the aggregate runner."""
+        return gate_name.startswith("tests-") and "domain" in gate_config
+
+    def _should_delegate_aggregate_gate_to_ci(self, gate_config: Dict[str, Any]) -> bool:
+        """Skip aggregate markers in aggregate GitHub Actions jobs."""
+        return (
+            os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+            and gate_config.get("aggregate") is True
+        )
 
     def _execute_tests_gate(self, config: Dict[str, Any]) -> GateResult:
         """Execute tests gate."""
