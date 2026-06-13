@@ -1,6 +1,4 @@
-# Sample box mesh in WAMIT GDF format
-# A simple unit box with 5 wetted panels (bottom + 4 sides, open top at waterline)
-# Generated for durable diffraction workflow testing
+Unit box, 5 wetted panels (bottom + 4 sides, open top at waterline) - BEMRosetta module test mesh
 1.0  9.81
 0  0
 5
