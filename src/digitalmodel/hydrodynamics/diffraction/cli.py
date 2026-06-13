@@ -867,6 +867,9 @@ def run_orcawave_cmd(
         _echo_validation_block(result)
         if result.error_message:
             click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
+        # A failed run must fail the command for scripting/CI callers (#740)
+        if str(getattr(result.status, "value", result.status)).lower() == "failed":
+            sys.exit(1)
 
     except Exception as e:
         click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
@@ -997,6 +1000,9 @@ def run_aqwa_cmd(
         _echo_validation_block(result)
         if result.error_message:
             click.echo(click.style(f"  Error      : {result.error_message}", fg="red"))
+        # A failed run must fail the command for scripting/CI callers (#740)
+        if str(getattr(result.status, "value", result.status)).lower() == "failed":
+            sys.exit(1)
 
     except Exception as e:
         click.echo(click.style(f"\n[ERROR] {e}", fg="red", bold=True))
