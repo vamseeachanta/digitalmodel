@@ -167,3 +167,33 @@ workflows:
       - examples/workflows/api579-pipe-ffs-b318/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b318]
     runtime: offline
+  - id: jacket-member-joint-checks
+    basename: jacket_checks
+    title: API RP 2A-WSD tubular member and joint unity checks
+    input: examples/workflows/jacket-member-joint-checks/input.yml
+    outputs:
+      - examples/workflows/jacket-member-joint-checks/results/input.yml
+      - examples/workflows/jacket-member-joint-checks/results/jacket_checks_summary.json
+      - examples/workflows/jacket-member-joint-checks/results/jacket_member_unity_checks.csv
+      - examples/workflows/jacket-member-joint-checks/results/jacket_joint_unity_checks.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jacket-member-joint-checks]
+    runtime: offline
+  - id: ocimf-tanker-loads
+    basename: ocimf
+    title: OCIMF tanker wind and current environmental loads
+    input: examples/workflows/ocimf-tanker-loads/input.yml
+    outputs:
+      - examples/workflows/ocimf-tanker-loads/results/input.yml
+      - examples/workflows/ocimf-tanker-loads/results/ocimf_tanker_loads.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ocimf-tanker-loads]
+    runtime: offline
+  - id: naval-arch-yaw-moment
+    basename: naval_arch
+    title: Preliminary rudder-induced yaw moment screen
+    input: examples/workflows/naval-arch-yaw-moment/input.yml
+    outputs:
+      - examples/workflows/naval-arch-yaw-moment/results/input.yml
+      - examples/workflows/naval-arch-yaw-moment/results/naval_arch_yaw_moment/yaw_moment_sweep.csv
+      - examples/workflows/naval-arch-yaw-moment/results/naval_arch_yaw_moment/yaw_moment_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[naval-arch-yaw-moment]
+    runtime: offline
