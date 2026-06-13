@@ -38,6 +38,7 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     FrequencyInputType,
     LoadRAOMethod,
     SymmetryType,
+    IrregularFrequencyMethod,
 )
 
 
@@ -251,8 +252,12 @@ def _build_body_dict(
     body["BodyMeshLengthUnits"] = geom.length_units
     body["BodyMeshSymmetry"] = mesh_sym
 
-    # Interior surface panels (for irregular frequency removal)
-    add_interior = spec.solver_options.remove_irregular_frequencies
+    # Interior surface panels (for irregular frequency removal). The 3-way
+    # method (#501): interior_panels keeps today's emission; none and
+    # control_surface emit No (the control surface itself is emitted below
+    # from the body's control_surface spec).
+    irreg_method = spec.solver_options.irregular_frequency_method
+    add_interior = irreg_method is IrregularFrequencyMethod.INTERIOR_PANELS
     body["BodyAddInteriorSurfacePanels"] = _bool_to_yn(add_interior)
     if add_interior:
         body["BodyInteriorSurfacePanelMethod"] = "Triangulation method"
@@ -387,6 +392,7 @@ def _effective_solve_type(spec: DiffractionSpec) -> str:
 def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
     """Build the general/calculation section."""
     solver = spec.solver_options
+    qtf = solver.resolved_qtf()
     method = _LOAD_RAO_METHOD_MAP.get(solver.load_rao_method.value, "Both")
 
     _SOLVE_TYPE_MAP = {
@@ -425,7 +431,7 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
             section["QuadraticLoadPressureIntegration"] = "Yes"
         else:
             section["QuadraticLoadPressureIntegration"] = _bool_to_yn(
-                solver.qtf_calculation
+                qtf.enabled
             )
     # Check if any body has an explicit control surface defined
     # Same resolution rule as per-body emission: body-level overrides
@@ -439,10 +445,10 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
         section["QuadraticLoadControlSurface"] = "No"
     else:
         section["QuadraticLoadControlSurface"] = _bool_to_yn(
-            solver.qtf_calculation or has_body_control_surface
+            qtf.enabled or has_body_control_surface
         )
     section["QuadraticLoadMomentumConservation"] = "No"
-    if solver.qtf_calculation or is_qtf:
+    if qtf.enabled or is_qtf:
         section["PreferredQuadraticLoadCalculationMethod"] = (
             "Pressure integration" if is_qtf else "Control surface"
         )
@@ -508,18 +514,21 @@ def _build_headings_section(spec: DiffractionSpec) -> dict[str, Any]:
     }
     solve_type = _effective_solve_type(spec)
     is_qtf = solve_type in ("diagonal_qtf", "full_qtf")
-    if spec.solver_options.qtf_calculation or is_qtf:
-        section["QTFMinCrossingAngle"] = 0
-        section["QTFMaxCrossingAngle"] = 180
+    qtf = spec.solver_options.resolved_qtf()
+    # Emission stays inside the existing gate (#501 plan C1): crossing-angle
+    # overrides never leak into non-QTF outputs.
+    if qtf.enabled or is_qtf:
+        section["QTFMinCrossingAngle"] = int(qtf.min_crossing_angle)
+        section["QTFMaxCrossingAngle"] = int(qtf.max_crossing_angle)
         qtf_max_period = "Infinity"
         qtf_min_period: float | int = 0
-        if spec.solver_options.qtf_max_frequency is not None:
+        if qtf.max_frequency is not None:
             qtf_min_period = round(
-                rad_per_s_to_period_s(spec.solver_options.qtf_max_frequency), 6
+                rad_per_s_to_period_s(qtf.max_frequency), 6
             )
-        if spec.solver_options.qtf_min_frequency is not None:
+        if qtf.min_frequency is not None:
             qtf_max_period = round(
-                rad_per_s_to_period_s(spec.solver_options.qtf_min_frequency), 6
+                rad_per_s_to_period_s(qtf.min_frequency), 6
             )
         section["QTFMinPeriodOrFrequency"] = qtf_min_period
         section["QTFMaxPeriodOrFrequency"] = qtf_max_period
@@ -547,7 +556,23 @@ def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
     # OutputPanelVelocities is dormant for "Potential formulation only"
     if has_source:
         section["OutputPanelVelocities"] = "No"
-    section["DetectAndSkipFieldPointsInsideBodies"] = "Yes"
+    outputs = spec.outputs
+    section["DetectAndSkipFieldPointsInsideBodies"] = _bool_to_yn(
+        outputs.detect_field_points_inside_bodies
+    )
+    if outputs.field_points:
+        all_points = [
+            point
+            for group in outputs.field_points
+            for point in group.points
+        ]
+        xs, ys, zs = zip(*all_points)
+        # Combined-key convention per benchmark_input_comparison.py (#501)
+        section["FieldPointX, FieldPointY, FieldPointZ"] = [
+            list(xs),
+            list(ys),
+            list(zs),
+        ]
     return section
 
 
@@ -572,9 +597,16 @@ def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
     if solve_type not in ("diagonal_qtf", "full_qtf"):
         return {}
 
+    qtf = spec.solver_options.resolved_qtf()
     section: dict[str, Any] = {}
-    section["QTFCalculationMethod"] = "Both"
-    section["PreferredQTFCalculationMethod"] = "Direct method"
+    # Direct pass-through of OrcaWave's vocabulary (Direct/Indirect/Both);
+    # default "Both" preserves today's emission byte-for-byte (#501).
+    section["QTFCalculationMethod"] = qtf.load_calculation_method
+    section["PreferredQTFCalculationMethod"] = (
+        "Direct method"
+        if qtf.load_calculation_method in ("Direct", "Both")
+        else "Indirect method"
+    )
 
     # Free surface zone
     fsz = getattr(spec, "free_surface_zone", None)

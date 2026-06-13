@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+import warnings
+from typing import Any, Literal, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -443,6 +444,46 @@ class WaveHeadingSpec(BaseModel):
         return headings
 
 
+class IrregularFrequencyMethod(str, Enum):
+    """Irregular frequency removal method (#501).
+
+    - ``none``: no removal (legacy ``remove_irregular_frequencies: false``)
+    - ``interior_panels``: interior surface panels, triangulation method
+      (legacy ``remove_irregular_frequencies: true`` and the default)
+    - ``control_surface``: removal via the body's control surface mesh
+    """
+
+    NONE = "none"
+    INTERIOR_PANELS = "interior_panels"
+    CONTROL_SURFACE = "control_surface"
+
+
+class QTFOptions(BaseModel):
+    """Quadratic Transfer Function configuration (#501).
+
+    Supersedes the flat ``qtf_calculation`` / ``qtf_min_frequency`` /
+    ``qtf_max_frequency`` fields on :class:`SolverOptions` (which remain as
+    deprecated aliases). Resolution goes through
+    :meth:`SolverOptions.resolved_qtf` — the single source of truth.
+    """
+
+    enabled: bool = False
+    # int literals match today's emitted YAML tokens (0 / 180), keeping the
+    # byte-identity gate honest (plan r2, M1 fix).
+    min_crossing_angle: int = 0
+    max_crossing_angle: int = 180
+    min_frequency: Optional[float] = Field(
+        None, description="Minimum QTF frequency (rad/s)"
+    )
+    max_frequency: Optional[float] = Field(
+        None, description="Maximum QTF frequency (rad/s)"
+    )
+    # Pass-through of OrcaWave's own QTFCalculationMethod vocabulary — see
+    # OrcaWave User Manual, "QTF calculation method" (Direct / Indirect /
+    # Both); no translation layer (plan r2, L1 fix).
+    load_calculation_method: Literal["Direct", "Indirect", "Both"] = "Both"
+
+
 class SolverOptions(BaseModel):
     """Solver-specific options."""
 
@@ -454,13 +495,39 @@ class SolverOptions(BaseModel):
             "'diagonal_qtf', 'full_qtf'"
         ),
     )
-    remove_irregular_frequencies: bool = Field(
-        default=True,
-        description="Remove irregular frequency effects",
+    irregular_frequency_method: IrregularFrequencyMethod = Field(
+        default=IrregularFrequencyMethod.INTERIOR_PANELS,
+        description=(
+            "Irregular frequency removal method: none | interior_panels | "
+            "control_surface (#501)"
+        ),
     )
-    qtf_calculation: bool = Field(
-        default=False,
-        description="Calculate Quadratic Transfer Functions",
+    remove_irregular_frequencies: Optional[bool] = Field(
+        default=None,
+        # excluded from dumps: after validation this is a derived value;
+        # serializing it alongside irregular_frequency_method would trip the
+        # mutual-exclusion guard on reload.
+        exclude=True,
+        description=(
+            "DEPRECATED legacy alias - use irregular_frequency_method. "
+            "True -> interior_panels, False -> none. After validation this "
+            "field is normalized to the effective boolean for legacy readers."
+        ),
+    )
+    qtf: Optional[QTFOptions] = Field(
+        default=None,
+        description="QTF configuration (#501); supersedes flat qtf_* fields",
+    )
+    qtf_calculation: Optional[bool] = Field(
+        default=None,
+        # excluded from dumps for the same reason as
+        # remove_irregular_frequencies above.
+        exclude=True,
+        description=(
+            "DEPRECATED legacy alias - use qtf.enabled. After validation "
+            "this field is normalized to the effective boolean for legacy "
+            "readers."
+        ),
     )
     load_rao_method: LoadRAOMethod = Field(
         default=LoadRAOMethod.BOTH,
@@ -494,6 +561,128 @@ class SolverOptions(BaseModel):
         description="Maximum QTF frequency (rad/s)",
     )
 
+    @model_validator(mode="after")
+    def _migrate_irregular_frequency_fields(self) -> "SolverOptions":
+        """Legacy bool -> enum migration with mutual exclusion (#501).
+
+        Unset-both-fields keeps today's default (interior_panels) with no
+        warning (plan r2, H1 fix). After migration the legacy field is
+        normalized to the effective boolean so existing readers
+        (AQWA backend, comparison tooling) keep working.
+        """
+        legacy_set = "remove_irregular_frequencies" in self.model_fields_set
+        method_set = "irregular_frequency_method" in self.model_fields_set
+
+        if legacy_set:
+            if method_set:
+                raise ValueError(
+                    "Set either remove_irregular_frequencies (deprecated) or "
+                    "irregular_frequency_method, not both."
+                )
+            warnings.warn(
+                "remove_irregular_frequencies is deprecated; use "
+                "irregular_frequency_method ('interior_panels' | 'none' | "
+                "'control_surface').",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.irregular_frequency_method = (
+                IrregularFrequencyMethod.INTERIOR_PANELS
+                if self.remove_irregular_frequencies
+                else IrregularFrequencyMethod.NONE
+            )
+        # Normalize the legacy field for downstream legacy readers, then
+        # drop it from fields_set so revalidation of this instance (nested
+        # model validation, model_copy) does not re-trip mutual exclusion.
+        self.remove_irregular_frequencies = (
+            self.irregular_frequency_method
+            is not IrregularFrequencyMethod.NONE
+        )
+        self.__pydantic_fields_set__.discard("remove_irregular_frequencies")
+        return self
+
+    @model_validator(mode="after")
+    def _migrate_qtf_fields(self) -> "SolverOptions":
+        """Flat qtf_* -> nested QTFOptions migration with mutual exclusion."""
+        flat_set = [
+            name
+            for name in ("qtf_calculation", "qtf_min_frequency", "qtf_max_frequency")
+            if name in self.model_fields_set
+        ]
+        if self.qtf is not None and flat_set:
+            raise ValueError(
+                f"Set either the nested 'qtf' options or the deprecated flat "
+                f"fields ({', '.join(flat_set)}), not both."
+            )
+        if flat_set:
+            warnings.warn(
+                f"Flat QTF fields ({', '.join(flat_set)}) are deprecated; "
+                "use the nested 'qtf' options.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        # Normalize the legacy flag for downstream legacy readers; drop it
+        # from fields_set so revalidation does not re-trip mutual exclusion.
+        if self.qtf_calculation is None:
+            self.qtf_calculation = (
+                self.qtf.enabled if self.qtf is not None else False
+            )
+        self.__pydantic_fields_set__.discard("qtf_calculation")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_qtf_solve_type(self) -> "SolverOptions":
+        """Explicit nested QTF opt-in requires a QTF solve type (plan C1).
+
+        Deliberately scoped to the NEW nested ``qtf`` model only: the legacy
+        flat ``qtf_calculation: true`` with a non-QTF solve type is a
+        long-standing supported combination (the L03 ship benchmark fixture
+        uses it), so the strict gate binds only where users opted into the
+        new schema.
+        """
+        if (
+            self.qtf is not None
+            and self.qtf.enabled
+            and self.solve_type not in ("diagonal_qtf", "full_qtf")
+        ):
+            raise ValueError(
+                f"QTFOptions.enabled=True requires solve_type 'diagonal_qtf' "
+                f"or 'full_qtf'; got {self.solve_type!r}. Set a QTF solve "
+                f"type or leave QTF disabled."
+            )
+        return self
+
+    def resolved_qtf(self) -> QTFOptions:
+        """Single source of truth for QTF settings (#501).
+
+        Returns the nested options when present, else a QTFOptions built
+        from the deprecated flat fields (today's defaults when unset).
+        """
+        if self.qtf is not None:
+            return self.qtf
+        return QTFOptions(
+            enabled=bool(self.qtf_calculation),
+            min_frequency=self.qtf_min_frequency,
+            max_frequency=self.qtf_max_frequency,
+        )
+
+
+class FieldPointSpec(BaseModel):
+    """Named group of field points for wave elevation/pressure output (#501).
+
+    OrcaWave likely honors only the global
+    ``OutputSpec.detect_field_points_inside_bodies`` switch; the per-group
+    flag is informational and validated at schema level only.
+    """
+
+    name: str
+    points: list[tuple[float, float, float]] = Field(
+        ...,
+        min_length=1,
+        description="Field point coordinates [(x, y, z), ...]",
+    )
+    detect_inside_bodies: bool = True
+
 
 class OutputSpec(BaseModel):
     """Output configuration."""
@@ -501,6 +690,17 @@ class OutputSpec(BaseModel):
     formats: list[OutputFormat] = Field(
         default=[OutputFormat.CSV],
         description="Output file formats",
+    )
+    field_points: list[FieldPointSpec] = Field(
+        default=[],
+        description="Field point groups for wave elevation/pressure (#501)",
+    )
+    detect_field_points_inside_bodies: bool = Field(
+        default=True,
+        description=(
+            "Skip field points that fall inside body meshes (emits "
+            "DetectAndSkipFieldPointsInsideBodies; #501)"
+        ),
     )
     components: list[OutputComponent] = Field(
         default=[
@@ -737,6 +937,26 @@ class DiffractionSpec(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _validate_control_surface_method(self) -> "DiffractionSpec":
+        """irregular_frequency_method=control_surface needs a CS mesh (#501)."""
+        if (
+            self.solver_options is not None
+            and self.solver_options.irregular_frequency_method
+            is IrregularFrequencyMethod.CONTROL_SURFACE
+        ):
+            missing = [
+                body.vessel.name
+                for body in self.get_bodies()
+                if body.resolve_control_surface() is None
+            ]
+            if missing:
+                raise ValueError(
+                    "irregular_frequency_method='control_surface' requires a "
+                    f"control surface on every body; missing on: {missing}"
+                )
+        return self
+
     def get_bodies(self) -> list[BodySpec]:
         """Get all bodies as a list, wrapping single vessel if needed."""
         if self.bodies is not None:
@@ -791,6 +1011,9 @@ __all__ = [
     "FrequencySpec",
     "HeadingRangeSpec",
     "WaveHeadingSpec",
+    "IrregularFrequencyMethod",
+    "QTFOptions",
+    "FieldPointSpec",
     "SolverOptions",
     "OutputSpec",
     "MetadataSpec",
