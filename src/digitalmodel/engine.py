@@ -284,6 +284,23 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.subsea.mooring_analysis.fpso_workflow import FPSOMooringWorkflow
         fmw = FPSOMooringWorkflow()
         cfg_base = fmw.router(cfg_base)
+    elif basename == "jacket_checks":
+        from digitalmodel.structural.jacket_topside.workflow import JacketChecksWorkflow
+
+        jacket_checks = JacketChecksWorkflow()
+        cfg_base = jacket_checks.router(cfg_base)
+    elif basename == "ocimf":
+        from digitalmodel.marine_ops.marine_analysis.environmental_loading.workflow import (
+            OCIMFWorkflow,
+        )
+
+        ocimf = OCIMFWorkflow()
+        cfg_base = ocimf.router(cfg_base)
+    elif basename == "naval_arch":
+        from digitalmodel.naval_architecture.workflow import NavalArchitectureWorkflow
+
+        naval_arch = NavalArchitectureWorkflow()
+        cfg_base = naval_arch.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

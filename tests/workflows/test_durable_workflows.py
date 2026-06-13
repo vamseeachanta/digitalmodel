@@ -232,5 +232,42 @@ def test_workflow_registry(workflow):
         design_pressure = cfg["Design"][0]["InternalPressure"]["Outer_Pipe"]
         assert gml_mawp["MAWP"] >= design_pressure
         assert lml["MAWPr, L2"] >= design_pressure
+    elif workflow["id"] == "jacket-member-joint-checks":
+        result = cfg["jacket_checks"]
+        members = {item["member_id"]: item for item in result["members"]}
+        joints = {item["joint_id"]: item for item in result["joints"]}
+
+        assert result["overall_status"] == "PASS"
+        assert members["JKT-LEG-01"]["governing_check"] == "combined"
+        assert members["JKT-LEG-01"]["governing_uc"] == pytest.approx(0.416667)
+        assert members["TSD-BRACE-01"]["governing_uc"] == pytest.approx(0.574074)
+        assert joints["JNT-T-01"]["joint_type"] == "T/Y"
+        assert joints["JNT-T-01"]["unity_check"] == pytest.approx(0.062164331)
+        assert joints["JNT-T-01"]["allowable_vp"] == pytest.approx(17.810291)
+    elif workflow["id"] == "ocimf-tanker-loads":
+        loads = cfg["ocimf"]["results"]["loads"]
+        wind = loads["wind"]
+        current = loads["current"]
+        total = loads["total"]
+
+        assert wind["fx_N"] == pytest.approx(73500.000472)
+        assert wind["fy_N"] == pytest.approx(665172.461887)
+        assert wind["mz_Nm"] == pytest.approx(57764978.137437)
+        assert current["fx_N"] == pytest.approx(1394305.164879)
+        assert current["fy_N"] == pytest.approx(4185843.706462)
+        assert total["fx_N"] == pytest.approx(1467805.165352)
+        assert total["fy_N"] == pytest.approx(4851016.168349)
+        assert total["mz_Nm"] == pytest.approx(727673679.141325)
+    elif workflow["id"] == "naval-arch-yaw-moment":
+        rows = cfg["naval_arch"]["yaw_moment"]["result"]["rows"]
+        row = rows[0]
+
+        assert len(rows) == 1
+        assert row["speed_m_s"] == pytest.approx(5.0)
+        assert row["rudder_angle_deg"] == pytest.approx(10.0)
+        assert row["scalar_normal_force_N"] == pytest.approx(97417.402886)
+        assert row["transverse_force_N"] == pytest.approx(97417.402886)
+        assert row["yaw_moment_Nm"] == pytest.approx(-4383783.129880)
+        assert row["sign_convention"] == "port"
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")

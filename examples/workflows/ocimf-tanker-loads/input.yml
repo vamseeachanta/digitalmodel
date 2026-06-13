@@ -1,0 +1,25 @@
+basename: ocimf
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+ocimf:
+  database: data/ocimf_vlcc_coefficients.csv
+  displacement: 250000.0
+  vessel_geometry:
+    loa: 330.0
+    beam: 60.0
+    draft: 22.0
+  conditions:
+    wind_speed: 20.0
+    wind_direction: 60.0
+    current_speed: 1.5
+    current_direction: 30.0
+    air_density: 1.225
+    water_density: 1025.0
+  output:
+    result_json: results/ocimf_tanker_loads.json

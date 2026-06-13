@@ -1,0 +1,37 @@
+basename: naval_arch
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+naval_arch:
+  calculation: yaw_moment
+  yaw_moment:
+    case:
+      id: registry_yaw_moment
+      description: Registry yaw moment screen
+    vessel:
+      name: registry_ship
+    rudder:
+      area_m2: 20.0
+      span_m: 5.0
+      x_from_cg_m: -45.0
+      behind_hull: false
+    environment:
+      rho_kg_m3: 1025.0
+    sweep:
+      speeds:
+        units: m/s
+        values: [5.0]
+      rudder_angles_deg: [10.0]
+    sign_convention:
+      positive_force_direction: port
+    outputs:
+      directory: results/naval_arch_yaw_moment
+      tables: [csv, json]
+      charts:
+        enabled: false
+        formats: []

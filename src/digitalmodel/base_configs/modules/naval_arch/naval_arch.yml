@@ -1,0 +1,10 @@
+basename: naval_arch
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+naval_arch: {}
