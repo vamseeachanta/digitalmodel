@@ -1,0 +1,40 @@
+basename: naval_arch
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+naval_arch:
+  calculation: rudder_stock_torque
+  rudder_stock_torque:
+    case:
+      id: registry_rudder_stock_torque
+      description: Registry preliminary rudder-stock torque screen
+    vessel:
+      type: typical_single_screw_ship
+      length_between_perpendiculars_m: 120.0
+      beam_m: 20.0
+      draft_m: 7.0
+      design_speed_kn: 12.0
+    rudder:
+      area_m2: 20.0
+      span_m: 5.0
+      behind_hull: true
+    stock:
+      stock_to_center_of_pressure_arm_m: 0.75
+    environment:
+      rho_kg_m3: 1025.0
+    sweep:
+      speeds:
+        units: kn
+        values: [12.0]
+      rudder_angles_deg: [35.0]
+    outputs:
+      directory: results/rudder_stock_torque
+      tables: [csv, json]
+      charts:
+        enabled: false
+        formats: []

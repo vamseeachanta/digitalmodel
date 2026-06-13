@@ -1,0 +1,35 @@
+basename: production
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+production:
+  calculation: nodal_analysis
+  nodal_analysis:
+    case:
+      id: registry_nodal_analysis
+      description: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    reservoir:
+      ipr_model: vogel
+      reservoir_pressure_psi: 3000.0
+      bubble_point_psi: 2500.0
+      productivity_index_bopd_psi: 2.0
+    tubing:
+      depth_ft: 8000.0
+      tubing_id_in: 2.992
+    fluid:
+      oil_api: 35.0
+      gas_gravity: 0.65
+      temperature_f: 180.0
+    surface:
+      whp_psi: 200.0
+      watercut: 0.2
+      gor_scf_per_bbl: 400.0
+      test_quality_score: 85.0
+    outputs:
+      directory: results/nodal_analysis
+      summary_json: nodal_analysis_summary.json

@@ -197,3 +197,40 @@ workflows:
       - examples/workflows/naval-arch-yaw-moment/results/naval_arch_yaw_moment/yaw_moment_sweep.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[naval-arch-yaw-moment]
     runtime: offline
+  - id: rudder-stock-torque
+    basename: naval_arch
+    title: Preliminary rudder-stock torque and steering-gear holding-torque screen
+    input: examples/workflows/rudder-stock-torque/input.yml
+    outputs:
+      - examples/workflows/rudder-stock-torque/results/input.yml
+      - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.csv
+      - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rudder-stock-torque]
+    runtime: offline
+  - id: pile-axial-capacity
+    basename: geotechnical
+    title: API RP 2GEO alpha-method axial pile capacity in clay
+    input: examples/workflows/pile-axial-capacity/input.yml
+    outputs:
+      - examples/workflows/pile-axial-capacity/results/input.yml
+      - examples/workflows/pile-axial-capacity/results/pile_axial_capacity/pile_axial_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-axial-capacity]
+    runtime: offline
+  - id: drag-anchor-holding
+    basename: geotechnical
+    title: DNV-RP-E302 / API RP 2SK empirical drag-anchor holding capacity
+    input: examples/workflows/drag-anchor-holding/input.yml
+    outputs:
+      - examples/workflows/drag-anchor-holding/results/input.yml
+      - examples/workflows/drag-anchor-holding/results/drag_anchor_holding/drag_anchor_holding_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drag-anchor-holding]
+    runtime: offline
+  - id: nodal-analysis-ipr-vlp
+    basename: production
+    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    input: examples/workflows/nodal-analysis-ipr-vlp/input.yml
+    outputs:
+      - examples/workflows/nodal-analysis-ipr-vlp/results/input.yml
+      - examples/workflows/nodal-analysis-ipr-vlp/results/nodal_analysis/nodal_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis-ipr-vlp]
+    runtime: offline

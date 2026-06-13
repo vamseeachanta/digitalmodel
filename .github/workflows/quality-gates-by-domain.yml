@@ -76,6 +76,7 @@ jobs:
           uv run --no-sources --with-editable . python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
             tests/workflows/automation/test_quality_gates.py \
+            tests/workflows/test_durable_workflows.py \
             -q --tb=line
 
   domain-tests:
