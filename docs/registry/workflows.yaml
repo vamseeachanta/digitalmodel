@@ -70,6 +70,14 @@ workflows:
       - examples/workflows/stress-strain/results/input_stress_strain.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
     runtime: offline
+  - id: von-mises
+    basename: von_mises
+    title: Two-element cantilever beam Von Mises stress check
+    input: examples/workflows/von-mises/input.yml
+    outputs:
+      - examples/workflows/von-mises/results/input_von_mises.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[von-mises]
+    runtime: offline
   - id: stress-strain-parametric
     basename: parametric_run
     title: Ramberg-Osgood material grade sweep for offshore pipeline steels

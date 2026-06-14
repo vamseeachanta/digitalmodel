@@ -98,6 +98,24 @@ def test_workflow_registry(workflow):
         assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
         assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
         assert curve["stress"].is_monotonic_increasing
+    elif workflow["id"] == "von-mises":
+        summary = cfg["von_mises"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        element_results = pd.read_csv(results_path)
+
+        assert summary["status"] == "completed"
+        assert summary["max_stress"] > 0.0
+        assert math.isfinite(summary["max_stress"])
+        assert summary["min_safety_factor"] > 0.0
+        assert summary["min_safety_factor"] == pytest.approx(
+            summary["yield_strength"] / summary["max_stress"]
+        )
+        assert summary["n_critical"] == 0
+        assert len(element_results) == summary["num_elements"]
+        assert (element_results["von_mises_stress"] > 0.0).all()
+        assert (element_results["safety_factor"] > 0.0).all()
     elif workflow["id"] == "stress-strain-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
