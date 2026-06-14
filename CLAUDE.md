@@ -12,3 +12,4 @@ Plans: `.planning/` (long-duration: `docs/plans/`) | Specs: `specs/`
 
 ## Repo Overrides
 Add repo-specific rules below without weakening required gates.
+> Memory: read THIS repo's `.claude/memory/` first; consult workspace-hub memory only for cross-repo concerns
