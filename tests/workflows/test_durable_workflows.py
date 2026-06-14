@@ -98,6 +98,19 @@ def test_workflow_registry(workflow):
         assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
         assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
         assert curve["stress"].is_monotonic_increasing
+    elif workflow["id"] == "compare-tool":
+        summary = cfg["compare_tool"]
+        comparison_path = Path(summary["comparison_csv"])
+        if not comparison_path.is_absolute():
+            comparison_path = REPO_ROOT / comparison_path
+        comparison = pd.read_csv(comparison_path)
+        row_x2 = comparison.loc[comparison["x"] == 2].iloc[0]
+
+        assert summary["n_sources"] == 2
+        assert summary["n_rows"] == 6
+        assert len(comparison) == 6
+        assert row_x2["run_b_minus_run_a"] == pytest.approx(3.0)
+        assert row_x2["run_b_ratio"] == pytest.approx(1.1)
     elif workflow["id"] == "von-mises":
         summary = cfg["von_mises"]
         results_path = Path(summary["results_csv"])

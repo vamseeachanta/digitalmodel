@@ -1,0 +1,13 @@
+basename: compare_tool
+
+compare_tool:
+  key: x
+  value: y
+  sources: []
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

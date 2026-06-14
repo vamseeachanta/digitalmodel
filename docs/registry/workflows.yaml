@@ -70,6 +70,14 @@ workflows:
       - examples/workflows/stress-strain/results/input_stress_strain.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
     runtime: offline
+  - id: compare-tool
+    basename: compare_tool
+    title: Offline overlay comparison for two tabular result sets
+    input: examples/workflows/compare-tool/input.yml
+    outputs:
+      - examples/workflows/compare-tool/results/input_comparison.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[compare-tool]
+    runtime: offline
   - id: von-mises
     basename: von_mises
     title: Two-element cantilever beam Von Mises stress check
