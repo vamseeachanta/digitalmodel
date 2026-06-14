@@ -269,5 +269,47 @@ def test_workflow_registry(workflow):
         assert row["transverse_force_N"] == pytest.approx(97417.402886)
         assert row["yaw_moment_Nm"] == pytest.approx(-4383783.129880)
         assert row["sign_convention"] == "port"
+    elif workflow["id"] == "rudder-stock-torque":
+        row = cfg["naval_arch"]["rudder_stock_torque"]["result"]["rows"][0]
+        assert cfg["naval_arch"]["calculation"] == "rudder_stock_torque"
+        assert len(cfg["naval_arch"]["rudder_stock_torque"]["result"]["rows"]) == 1
+        assert row["speed_kn"] == pytest.approx(12.0)
+        assert row["rudder_angle_deg"] == pytest.approx(35.0)
+        assert row["scalar_normal_force_N"] == pytest.approx(722870.905140)
+        assert row["hydrodynamic_rudder_stock_torque_Nm"] == pytest.approx(542153.178855)
+        assert row["required_steering_gear_holding_torque_Nm"] == pytest.approx(
+            -542153.178855
+        )
+        assert row["rudder_stock_torque_abs_kNm"] == pytest.approx(542.153178855)
+    elif workflow["id"] == "pile-axial-capacity":
+        block = cfg["geotechnical"]["pile_axial_capacity"]
+        result = block["result"]
+        design = block["design"]
+        assert block["standard"] == "API RP 2GEO"
+        assert result["total_capacity_kn"] == pytest.approx(16137.983938)
+        assert result["skin_friction_kn"] == pytest.approx(14305.807103)
+        assert result["end_bearing_kn"] == pytest.approx(1832.176836)
+        assert result["alpha"] == pytest.approx(0.790569415)
+        assert design["allowable_capacity_kn"] == pytest.approx(8068.991969)
+        assert design["utilization"] == pytest.approx(0.619656088)
+        assert design["status"] == "PASS"
+    elif workflow["id"] == "drag-anchor-holding":
+        block = cfg["geotechnical"]["drag_anchor"]
+        result = block["result"]
+        design = block["design"]
+        assert block["standard"] == "DNV-RP-E302"
+        assert result["holding_capacity_kn"] == pytest.approx(3600.0)
+        assert result["efficiency"] == pytest.approx(30.0)
+        assert design["allowable_holding_kn"] == pytest.approx(2400.0)
+        assert design["status"] == "PASS"
+    elif workflow["id"] == "nodal-analysis-ipr-vlp":
+        block = cfg["production"]["nodal_analysis"]
+        op = block["operating_point"]
+        assert block["ipr_model"] == "vogel"
+        assert op["q_bopd"] == pytest.approx(996.727220, rel=1e-4)
+        assert op["pwf_psi"] == pytest.approx(2458.137610, rel=1e-4)
+        assert op["confidence"] == "Green"
+        assert op["q_uncertainty_fraction"] == pytest.approx(0.05)
+        assert op["q_low_bopd"] < op["q_bopd"] < op["q_high_bopd"]
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")

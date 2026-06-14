@@ -301,6 +301,18 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         naval_arch = NavalArchitectureWorkflow()
         cfg_base = naval_arch.router(cfg_base)
+    elif basename == "geotechnical":
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        geotechnical = GeotechnicalWorkflow()
+        cfg_base = geotechnical.router(cfg_base)
+    elif basename == "production":
+        from digitalmodel.production_engineering.workflow import (
+            ProductionEngineeringWorkflow,
+        )
+
+        production = ProductionEngineeringWorkflow()
+        cfg_base = production.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

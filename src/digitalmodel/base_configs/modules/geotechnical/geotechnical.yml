@@ -1,0 +1,10 @@
+basename: geotechnical
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+geotechnical: {}
