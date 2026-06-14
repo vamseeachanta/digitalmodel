@@ -6,6 +6,10 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
+from tests.workflows.field_dev_production_assertions import (
+    FIELD_DEV_PRODUCTION_WORKFLOWS,
+    assert_field_dev_production_workflow,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -78,8 +82,9 @@ def test_workflow_registry(workflow):
             REPO_ROOT / "examples/workflows/viv-parametric/results/cases.csv"
         )
         case_0 = yaml.safe_load(
-            (REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml")
-            .read_text()
+            (
+                REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml"
+            ).read_text()
         )
 
         assert len(cases) == 6
@@ -182,9 +187,7 @@ def test_workflow_registry(workflow):
         assert result["anchor_length"]["end"] == pytest.approx(1368.5)
         assert result["min_critical_buckling_load"] == pytest.approx(-64701.045412)
         assert result["effective_axial_load"]["anchor_start"] == pytest.approx(-33.26)
-        assert result["fully_restrained_axial_force"]["L=0"] == pytest.approx(
-            -253.575
-        )
+        assert result["fully_restrained_axial_force"]["L=0"] == pytest.approx(-253.575)
     elif workflow["id"] == "pipeline-upheaval-buckling":
         result = cfg["pipeline"]["upheaval_buckling"]
         assert result["cover_check"] == "Pass"
@@ -218,9 +221,7 @@ def test_workflow_registry(workflow):
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]
-        assert results["diagnostic_message"].startswith(
-            "Classification: PUMP_TAGGING."
-        )
+        assert results["diagnostic_message"].startswith("Classification: PUMP_TAGGING.")
         assert results["pump_fillage"] == pytest.approx(75.909653)
         assert results["inferred_production"] == pytest.approx(338.041470)
 
@@ -238,8 +239,7 @@ def test_workflow_registry(workflow):
         assert props["I"]["Ix"] == pytest.approx(19.471869)
 
         model_path = (
-            REPO_ROOT
-            / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
+            REPO_ROOT / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
             "dnvrph103_demo_6dbuoy_deep.yml"
         )
         model = yaml.safe_load(model_path.read_text())
@@ -258,9 +258,7 @@ def test_workflow_registry(workflow):
         assert summary["n_results"] == 8
         assert summary["min_safety_factor"] == pytest.approx(2.08)
         assert summary["max_utilization"] == pytest.approx(0.48)
-        assert result["environmental_loads"]["total_force"] == pytest.approx(
-            2280.94225
-        )
+        assert result["environmental_loads"]["total_force"] == pytest.approx(2280.94225)
 
         summary_path = Path(cfg["outputs"]["summary_json"])
         if not summary_path.is_absolute():
@@ -353,7 +351,9 @@ def test_workflow_registry(workflow):
         assert row["speed_kn"] == pytest.approx(12.0)
         assert row["rudder_angle_deg"] == pytest.approx(35.0)
         assert row["scalar_normal_force_N"] == pytest.approx(722870.905140)
-        assert row["hydrodynamic_rudder_stock_torque_Nm"] == pytest.approx(542153.178855)
+        assert row["hydrodynamic_rudder_stock_torque_Nm"] == pytest.approx(
+            542153.178855
+        )
         assert row["required_steering_gear_holding_torque_Nm"] == pytest.approx(
             -542153.178855
         )
@@ -388,5 +388,7 @@ def test_workflow_registry(workflow):
         assert op["confidence"] == "Green"
         assert op["q_uncertainty_fraction"] == pytest.approx(0.05)
         assert op["q_low_bopd"] < op["q_bopd"] < op["q_high_bopd"]
+    elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
+        assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
