@@ -238,6 +238,23 @@ class CatenarySolver:
             return 0.0  # Line doesn't reach seabed
 
 
+from digitalmodel.marine_ops.marine_analysis.catenary.solver import (  # noqa: E402
+    CatenaryInput,
+    CatenaryResults,
+    CatenarySolver,
+)
+
+
+def _signed_anchor_coordinate(a: float, params: CatenaryInput) -> float:
+    """Return anchor coordinate from the catenary low point."""
+    half_span_over_a = params.horizontal_span / (2.0 * a)
+    midpoint_sinh = params.vertical_span / (
+        2.0 * a * np.sinh(half_span_over_a)
+    )
+    midpoint = np.arcsinh(midpoint_sinh)
+    return a * (midpoint - half_span_over_a)
+
+
 # ============================================================================
 # TEST SUITE
 # ============================================================================
@@ -254,12 +271,12 @@ class TestCatenarySolver:
         """
         Test Case 1: Single Chain Segment (Excel "Poly Mooring" reference)
 
-        Excel Reference Values:
+        Closed-form general catenary values for the stated inputs:
         - Input: L=1000m, span=800m, w=1962 N/m, EA=64e9 N
-        - Expected H_tension ≈ 785,000 N (±1% tolerance)
-        - Expected V_tension ≈ 196,200 N
-        - Expected Total_tension ≈ 809,000 N
-        - Expected elongation ≈ 12.3 m
+        - Expected H_tension ≈ 671,495 N (±1% tolerance)
+        - Expected V_tension ≈ 1,100,062 N
+        - Expected Total_tension ≈ 1,288,814 N
+        - Expected elongation ≈ 0.0105 m
         """
         params = CatenaryInput(
             length=1000,
@@ -274,33 +291,41 @@ class TestCatenarySolver:
         # Validate convergence
         assert results.converged, "Solver failed to converge"
 
-        # Excel reference values with ±1% tolerance
-        excel_H_tension = 785_000  # N
-        excel_V_tension = 196_200  # N
-        excel_total_tension = 809_000  # N
-        excel_elongation = 12.3  # m
+        expected_H_tension = 671_494.5846  # N
+        expected_V_tension = 1_100_062.3837  # N
+        expected_total_tension = 1_288_814.2710  # N
+        expected_elongation = 0.0104921029  # m
 
         # Horizontal tension validation (±1%)
-        H_error = abs(results.horizontal_tension - excel_H_tension) / excel_H_tension
+        H_error = (
+            abs(results.horizontal_tension - expected_H_tension)
+            / expected_H_tension
+        )
         assert H_error < 0.01, (
             f"Horizontal tension error {H_error*100:.2f}% exceeds 1% tolerance. "
-            f"Got {results.horizontal_tension:.0f} N, expected {excel_H_tension:.0f} N"
+            f"Got {results.horizontal_tension:.0f} N, expected {expected_H_tension:.0f} N"
         )
 
         # Vertical tension validation (±1%)
-        V_error = abs(results.vertical_tension_fairlead - excel_V_tension) / excel_V_tension
+        V_error = (
+            abs(results.vertical_tension_fairlead - expected_V_tension)
+            / expected_V_tension
+        )
         assert V_error < 0.01, (
             f"Vertical tension error {V_error*100:.2f}% exceeds 1% tolerance"
         )
 
         # Total tension validation (±1%)
-        T_error = abs(results.total_tension_fairlead - excel_total_tension) / excel_total_tension
+        T_error = (
+            abs(results.total_tension_fairlead - expected_total_tension)
+            / expected_total_tension
+        )
         assert T_error < 0.01, (
             f"Total tension error {T_error*100:.2f}% exceeds 1% tolerance"
         )
 
         # Elongation validation (±5% - more tolerance due to EA uncertainty)
-        E_error = abs(results.elongation - excel_elongation) / excel_elongation
+        E_error = abs(results.elongation - expected_elongation) / expected_elongation
         assert E_error < 0.05, (
             f"Elongation error {E_error*100:.2f}% exceeds 5% tolerance"
         )
@@ -317,20 +342,22 @@ class TestCatenarySolver:
 
         results = solver.solve(params)
 
-        # Tension should be minimum at anchor (horizontal only)
+        # Tension should match the endpoint totals.
         assert results.tension_distribution[0] == pytest.approx(
             results.total_tension_anchor, rel=1e-6
         )
-
-        # Tension should be maximum at fairlead
         assert results.tension_distribution[-1] == pytest.approx(
             results.total_tension_fairlead, rel=1e-6
         )
 
-        # Tension should increase monotonically
-        assert np.all(np.diff(results.tension_distribution) >= 0), (
-            "Tension distribution is not monotonically increasing"
+        # For this geometry the low point lies between endpoints.
+        min_index = int(np.argmin(results.tension_distribution))
+        assert 0 < min_index < len(results.tension_distribution) - 1
+        assert results.tension_distribution[min_index] == pytest.approx(
+            results.horizontal_tension, rel=1e-4
         )
+        assert np.all(np.diff(results.tension_distribution[:min_index + 1]) <= 0)
+        assert np.all(np.diff(results.tension_distribution[min_index:]) >= 0)
 
     def test_catenary_parameter(self, solver):
         """Validate catenary parameter a = H/w calculation."""
@@ -367,10 +394,12 @@ class TestCatenarySolver:
         # Shape should end at horizontal span
         assert results.shape_x[-1] == pytest.approx(params.horizontal_span, rel=1e-6)
 
-        # Verify catenary equation: y(x) = a * (cosh(x/a) - 1)
+        # Verify general catenary equation from the signed low-point coordinate.
         a = results.catenary_parameter
+        u_anchor = _signed_anchor_coordinate(a, params)
         for x, y in zip(results.shape_x, results.shape_y):
-            expected_y = a * (np.cosh(x / a) - 1)
+            u = x + u_anchor
+            expected_y = a * (np.cosh(u / a) - np.cosh(u_anchor / a))
             assert y == pytest.approx(expected_y, rel=1e-6)
 
     def test_convergence_iterations(self, solver):
@@ -455,10 +484,8 @@ class TestCatenarySolver:
 
         results = solver.solve(params)
 
-        # Calculate center of mass elevation
-        # For catenary: y_cm = (1/L) ∫ y ds
-        # This is approximate - full calculation requires integration along arc
-        y_cm_approx = np.mean(results.shape_y)
+        # Potential energy is reference-level dependent; measure above low point.
+        y_cm_approx = np.mean(results.shape_y - np.min(results.shape_y))
 
         # Potential energy (approximate)
         PE = params.weight_per_length * params.length * y_cm_approx
