@@ -1,0 +1,23 @@
+basename: parametric_run
+
+parametric_run:
+  base_input: examples/workflows/viv-analysis/input.yml
+  target_basename: viv_analysis
+  variants:
+    source: factorial
+    parameters:
+      - name: span_length
+        values: [40, 60, 80]
+      - name: design_wt
+        values: [0.5, 0.625]
+    mapping:
+      span_length: pipeline.span_length.0
+      design_wt: pipeline.crossection.0.Design_WT
+  render:
+    output_dir: examples/workflows/viv-parametric/results
+    output_pattern: case_{index}
+  run:
+    engine: python
+    mode: serial
+  collect:
+    manifest: examples/workflows/viv-parametric/results/cases.csv

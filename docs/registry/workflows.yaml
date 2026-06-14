@@ -53,6 +53,15 @@ workflows:
       - examples/workflows/viv-analysis/results/input_safety_factors.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]
     runtime: offline
+  - id: viv-parametric
+    basename: parametric_run
+    title: Six-case VIV parametric sweep over span length and wall thickness
+    input: examples/workflows/viv-parametric/input.yml
+    outputs:
+      - examples/workflows/viv-parametric/results/cases.csv
+      - examples/workflows/viv-parametric/results/case_0.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-parametric]
+    runtime: offline
   - id: plate-buckling
     basename: plate_buckling
     title: DNV-RP-C201 plate buckling usage check

@@ -71,6 +71,21 @@ def test_workflow_registry(workflow):
         assert natural.loc[0, "mode 1"] == pytest.approx(2.623697)
         assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(0.564706)
         assert safety.loc[0, "safety_factor_inline"] == pytest.approx(4.646130)
+    elif workflow["id"] == "viv-parametric":
+        cases = cfg["parametric_run"]["cases"]
+        manifest = pd.read_csv(
+            REPO_ROOT / "examples/workflows/viv-parametric/results/cases.csv"
+        )
+        case_0 = yaml.safe_load(
+            (REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml")
+            .read_text()
+        )
+
+        assert len(cases) == 6
+        assert manifest["status"].tolist() == ["completed"] * 6
+        assert case_0["basename"] == "viv_analysis"
+        assert case_0["pipeline"]["span_length"][0] == pytest.approx(40.0)
+        assert case_0["pipeline"]["crossection"][0]["Design_WT"] == pytest.approx(0.5)
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]
         assert result["dnv_rp_usage_factor"]["usage_longtudinal"] == pytest.approx(
