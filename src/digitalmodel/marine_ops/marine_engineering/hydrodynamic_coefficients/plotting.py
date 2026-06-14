@@ -536,9 +536,13 @@ class HydrodynamicPlotter:
         # Plot correlation heatmap
         fig, ax = plt.subplots(figsize=figsize)
 
-        sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0,
-                   square=True, linewidths=0.5, cbar_kws={"shrink": 0.8},
-                   ax=ax, vmin=-1, vmax=1)
+        corr_values = np.nan_to_num(corr_matrix.to_numpy(dtype=float), nan=0.0)
+        im = ax.imshow(corr_values, cmap='coolwarm', vmin=-1, vmax=1, aspect='equal')
+        ax.set_xticks(range(len(corr_matrix.columns)))
+        ax.set_yticks(range(len(corr_matrix.index)))
+        ax.set_xticklabels(corr_matrix.columns, rotation=90, fontsize=6)
+        ax.set_yticklabels(corr_matrix.index, fontsize=6)
+        plt.colorbar(im, ax=ax, shrink=0.8)
 
         title = f'Coefficient Correlation Matrix - {coefficient_type.replace("_", " ").title()}'
         ax.set_title(title, fontsize=14, fontweight='bold', pad=15)
