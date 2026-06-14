@@ -259,7 +259,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         cfg_base = pipe_ovality(cfg_base)
     elif basename == "wave_spectrum":
-        from digitalmodel.hydrodynamics.wave_spectrum.workflow import router as wave_spectrum
+        from digitalmodel.hydrodynamics.wave_spectrum.workflow import (
+            router as wave_spectrum,
+        )
 
         cfg_base = wave_spectrum(cfg_base)
     elif basename == "von_mises":
@@ -276,8 +278,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
     elif basename == "gis":
-        tsa = TimeSeriesAnalysis()
-        cfg_base = tsa.router(cfg_base)
+        from digitalmodel.specialized.gis import GISModule
+
+        gis = GISModule()
+        cfg_base = gis.router(cfg_base)
 
     elif basename == "plate_buckling":
         pb = PlateBuckling()
