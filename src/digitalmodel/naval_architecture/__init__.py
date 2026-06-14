@@ -62,6 +62,12 @@ from digitalmodel.naval_architecture.rudder_stock_torque import (
     load_packaged_rudder_stock_torque_yaml,
     run_rudder_stock_torque_sweep,
 )
+from digitalmodel.naval_architecture.turning_circle import (
+    load_packaged_turning_circle_yaml,
+    run_turning_circle_sweep,
+    simulate_nomoto_turning_circle,
+    write_turning_circle_results,
+)
 from digitalmodel.naval_architecture.yaw_moment import (
     load_packaged_typical_ship_yaml,
     load_yaw_moment_input,
@@ -89,6 +95,7 @@ __all__ = [
     "load_packaged_b1528_time_trace_config",
     "load_packaged_b1528_yaw_config",
     "load_packaged_rudder_stock_torque_yaml",
+    "load_packaged_turning_circle_yaml",
     "load_packaged_typical_ship_yaml",
     "load_yaw_moment_input",
     "merge_template_into_registry",
@@ -105,8 +112,10 @@ __all__ = [
     "run_b1528_moored_current_report",
     "run_b1528_time_trace_report",
     "run_rudder_stock_torque_sweep",
+    "run_turning_circle_sweep",
     "run_yaw_moment_sweep",
     "simulate_b1528_time_trace",
+    "simulate_nomoto_turning_circle",
     "stability_curve_estimate",
     "summarize_drilling_rig_hull_validation",
     "validate_drilling_rig_fleet",
@@ -116,5 +125,6 @@ __all__ = [
     "write_b1528_current_heading_rudder_report",
     "write_b1528_moored_current_report",
     "write_b1528_time_trace_report",
+    "write_turning_circle_results",
     "write_yaw_moment_results",
 ]
