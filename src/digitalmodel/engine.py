@@ -175,6 +175,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "rao_analysis":
         rao = RAOAnalysis()
         cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
+    elif basename == "rao_tabulation":
+        from digitalmodel.hydrodynamics.rao_tabulation.workflow import (
+            router as rao_tabulation,
+        )
+
+        cfg_base = rao_tabulation(cfg_base)
     elif basename == "installation":
         orc_install = OrcInstallation()
         if cfg_base["structure"]["flag"]:
@@ -232,6 +238,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.drilling_riser.workflow import router as riser_stackup
 
         cfg_base = riser_stackup(cfg_base)
+    elif basename == "tsj_sizing":
+        from digitalmodel.drilling_riser.tsj_workflow import router as tsj_sizing
+
+        cfg_base = tsj_sizing(cfg_base)
     elif basename == "sn_curve":
         from digitalmodel.fatigue.workflow import router as sn_curve
 
@@ -244,10 +254,20 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.code_checks.workflow import router as code_check
 
         cfg_base = code_check(cfg_base)
+    elif basename == "pipe_ovality":
+        from digitalmodel.structural.ovality.workflow import router as pipe_ovality
+
+        cfg_base = pipe_ovality(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 
         cfg_base = von_mises(cfg_base)
+    elif basename == "elastic_buckling":
+        from digitalmodel.structural.fe.elastic_buckling_workflow import (
+            router as elastic_buckling,
+        )
+
+        cfg_base = elastic_buckling(cfg_base)
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)

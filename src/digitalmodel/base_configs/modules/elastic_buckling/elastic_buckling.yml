@@ -1,0 +1,106 @@
+basename: elastic_buckling
+
+elastic_buckling:
+  nodes:
+    - id: 0
+      x: 0.0
+      y: 0.0
+    - id: 1
+      x: 0.375
+      y: 0.0
+    - id: 2
+      x: 0.75
+      y: 0.0
+    - id: 3
+      x: 1.125
+      y: 0.0
+    - id: 4
+      x: 1.5
+      y: 0.0
+    - id: 5
+      x: 1.875
+      y: 0.0
+    - id: 6
+      x: 2.25
+      y: 0.0
+    - id: 7
+      x: 2.625
+      y: 0.0
+    - id: 8
+      x: 3.0
+      y: 0.0
+  elements:
+    - id: 0
+      node1: 0
+      node2: 1
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 1
+      node1: 1
+      node2: 2
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 2
+      node1: 2
+      node2: 3
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 3
+      node1: 3
+      node2: 4
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 4
+      node1: 4
+      node2: 5
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 5
+      node1: 5
+      node2: 6
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 6
+      node1: 6
+      node2: 7
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+    - id: 7
+      node1: 7
+      node2: 8
+      E: 2.10e11
+      I: 8.10e-6
+      A: 1.0e-2
+  boundary_conditions:
+    pinned_nodes:
+      - 0
+      - 8
+  loads:
+    - node: 8
+      direction: x
+      magnitude: -1.0
+  material:
+    E: 2.10e11
+    nu: 0.3
+    rho: 7850.0
+    sigma_y: 4.48e8
+  axial_force: 1.0
+  num_modes: 3
+  reference:
+    length: 3.0
+    effective_length_factor: 1.0
+    euler_tolerance: 0.05
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
