@@ -522,5 +522,49 @@ def test_workflow_registry(workflow):
         assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
         assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
         assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+    elif workflow["id"] == "well-bore-design":
+        block = cfg["well_bore_design"]
+        summary = block["summary"]
+        assert block["hole_type"] == "standard_hole"
+        assert summary["casing_count"] == 5
+        assert summary["total_cost_usd"] == pytest.approx(21500000.0)
+        assert summary["production_potential_bopd"] == pytest.approx(15000.0)
+        assert summary["risk"]["overall_score"] == pytest.approx(4.0)
+        assert summary["recommended_hole_type"] == "standard_hole"
+    elif workflow["id"] == "well-hydraulics":
+        result = cfg["well_hydraulics"]["result"]
+        assert result["annular_velocity_ft_min"] == pytest.approx(188.538461538)
+        assert result["pressure_drop_annulus_psi"] == pytest.approx(127.087912088)
+        assert result["ecd_ppg"] == pytest.approx(10.805499789)
+        assert result["cuttings_transport_ratio"] == pytest.approx(1.0)
+    elif workflow["id"] == "rop-analysis":
+        result = cfg["rop_analysis"]["result"]
+        by = result["bourgoyne_young"]
+        warren = result["warren"]
+        assert by["rop_ft_hr"] == pytest.approx(5.636893157)
+        assert by["sensitivity_wob_ft_hr_per_klb"] == pytest.approx(0.140933341)
+        assert by["sensitivity_rpm_ft_hr_per_rpm"] == pytest.approx(0.033829259)
+        assert warren["rop_ft_hr"] == pytest.approx(167.096226327)
+    elif workflow["id"] == "tubular-design-envelope":
+        summary = cfg["tubular_design"]["summary"]
+        assert summary["geometry"]["yield_force_lbf"] == pytest.approx(603928.713320)
+        assert summary["envelopes"]["vme_isotropic"]["max_pressure_psi"] == (
+            pytest.approx(7224.808854)
+        )
+        assert summary["envelopes"]["vme_isotropic"]["min_pressure_psi"] == (
+            pytest.approx(-7224.808854)
+        )
+        assert summary["envelopes"]["api_ellipse"]["max_pressure_psi"] == (
+            pytest.approx(4984.071753)
+        )
+        assert summary["envelopes"]["api_ellipse"]["min_pressure_psi"] == (
+            pytest.approx(-5340.076878)
+        )
+        envelope_csv = Path(cfg["outputs"]["envelope_csv"])
+        if not envelope_csv.is_absolute():
+            envelope_csv = REPO_ROOT / envelope_csv
+        envelope = pd.read_csv(envelope_csv)
+        assert len(envelope) == 160
+        assert set(envelope["envelope"]) == {"vme_isotropic", "api_ellipse"}
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")

@@ -359,6 +359,22 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "well_bore_design":
+        from digitalmodel.well.workflow import run_well_bore_design
+
+        cfg_base = run_well_bore_design(cfg_base)
+    elif basename == "well_hydraulics":
+        from digitalmodel.well.workflow import run_well_hydraulics
+
+        cfg_base = run_well_hydraulics(cfg_base)
+    elif basename == "rop_analysis":
+        from digitalmodel.well.workflow import run_rop_analysis
+
+        cfg_base = run_rop_analysis(cfg_base)
+    elif basename == "tubular_design":
+        from digitalmodel.well.workflow import run_tubular_design
+
+        cfg_base = run_tubular_design(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
