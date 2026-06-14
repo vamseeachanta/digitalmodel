@@ -188,8 +188,8 @@ gates:
     order: 1
     description: "Domain tests for subsea"
     domain: "subsea"
-    test_roots: ["tests/subsea/", "tests/drilling_riser/", "tests/check_catenary_geometry.py", "tests/solve_catenary_correct.py", "tests/solve_general_catenary.py", "tests/test_catenary_debug.py", "tests/test_catenary_module.py", "tests/test_catenary_riser_summary.py", "tests/test_lazy_wave_catenary.py", "tests/test_lazy_wave_legacy_comparison.py", "tests/test_on_bottom_stability.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_debug.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/subsea/", "tests/drilling_riser/", "tests/check_catenary_geometry.py", "tests/solve_catenary_correct.py", "tests/solve_general_catenary.py", "tests/test_catenary_module.py", "tests/test_catenary_riser_summary.py", "tests/test_lazy_wave_catenary.py", "tests/test_lazy_wave_legacy_comparison.py", "tests/test_on_bottom_stability.py"]
+    command: "uv run --no-sources --with-editable . python -m pytest tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

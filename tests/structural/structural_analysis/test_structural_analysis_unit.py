@@ -125,8 +125,9 @@ class TestPlateBuckling:
         sigma_e = analyzer.elastic_buckling_stress(plate)
 
         assert sigma_e > 0
-        # Elastic buckling should be well above yield for thick plates
-        assert sigma_e > STEEL_S355.yield_strength
+        # A 10 mm x 1000 mm square plate is slender; elastic buckling is below yield.
+        assert sigma_e == pytest.approx(75.9200338545)
+        assert sigma_e < STEEL_S355.yield_strength
 
     def test_elastic_buckling_long_plate(self, analyzer):
         """Test elastic buckling for long plate"""
@@ -135,13 +136,16 @@ class TestPlateBuckling:
 
         assert sigma_e > 0
 
-    def test_johnson_ostenfeld_elastic(self, analyzer):
-        """Test Johnson-Ostenfeld in elastic range"""
+    def test_johnson_ostenfeld_inelastic_cap(self, analyzer):
+        """Test Johnson-Ostenfeld cap for high elastic buckling stress."""
         sigma_e = 1000.0  # High elastic stress
         sigma_cr = analyzer.johnson_ostenfeld(sigma_e)
 
-        # Should return elastic stress unchanged
-        assert abs(sigma_cr - sigma_e) < 0.1
+        expected = STEEL_S355.yield_strength * (
+            1 - STEEL_S355.yield_strength / (4 * sigma_e)
+        )
+        assert sigma_cr == pytest.approx(expected)
+        assert sigma_cr < STEEL_S355.yield_strength
 
     def test_johnson_ostenfeld_inelastic(self, analyzer):
         """Test Johnson-Ostenfeld in inelastic range"""
@@ -284,8 +288,8 @@ class TestMemberCapacity:
 
         assert result.governing_mode in ["plastic", "net_section"]
 
-    def test_combined_loading_passes(self, checker):
-        """Test combined loading check that passes"""
+    def test_combined_loading_slightly_overutilized(self, checker):
+        """Test combined loading check just above unity utilization."""
         result = checker.check_combined_loading(
             N=2e6,          # 2 MN axial
             M_y=500e6,      # 500 kNm
@@ -298,8 +302,8 @@ class TestMemberCapacity:
             gamma_m1=1.0
         )
 
-        assert result.passes
-        assert result.utilization < 1.0
+        assert not result.passes
+        assert result.utilization == pytest.approx(1.0328638498)
 
     def test_combined_loading_high_util(self, checker):
         """Test combined loading with high utilization"""

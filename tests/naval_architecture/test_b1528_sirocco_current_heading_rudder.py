@@ -3,6 +3,7 @@
 
 import json
 import math
+import os
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,12 @@ from digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report
     run_b1528_current_heading_rudder_report,
     validate_b1528_current_heading_rudder_config,
     write_b1528_current_heading_rudder_report,
+)
+
+
+requires_ocimf_workbook = pytest.mark.skipif(
+    not os.environ.get("OCIMF_WORKBOOK_PATH"),
+    reason="OCIMF_WORKBOOK_PATH is not set; licensed OCIMF workbook is optional/off-repo",
 )
 
 
@@ -55,6 +62,7 @@ def test_package_level_exports_available():
     assert callable(naval_architecture.write_b1528_current_heading_rudder_report)
 
 
+@requires_ocimf_workbook
 def test_full_sweep_row_counts_and_default_plane_flags():
     result = run_b1528_current_heading_rudder_report()
     rows = result["rows"]
@@ -76,6 +84,7 @@ def test_full_sweep_row_counts_and_default_plane_flags():
     )
 
 
+@requires_ocimf_workbook
 def test_zero_effective_inflow_angle_identity_and_scope_wording():
     result = run_b1528_current_heading_rudder_report()
     row = _find_row(result["rows"], 3.08, 0.0, 0.0)
@@ -89,6 +98,7 @@ def test_zero_effective_inflow_angle_identity_and_scope_wording():
     assert "not total hull current load" in result["metadata"]["zero_effective_angle_note"].lower()
 
 
+@requires_ocimf_workbook
 def test_centerline_regression_matches_existing_fixed_report_formula():
     result = run_b1528_current_heading_rudder_report()
     row = _find_row(result["rows"], 3.08, 0.0, 28.0)
@@ -106,6 +116,7 @@ def test_centerline_regression_matches_existing_fixed_report_formula():
     assert row["moment_n_yaw_bow_port_kN_m"] == pytest.approx(expected_y * 135.3 / 1000.0)
 
 
+@requires_ocimf_workbook
 def test_sign_cases_for_port_rudder_and_zero_rudder():
     rows = run_b1528_current_heading_rudder_report()["rows"]
     port = _find_row(rows, 3.08, 0.0, 28.0)
@@ -118,6 +129,7 @@ def test_sign_cases_for_port_rudder_and_zero_rudder():
     assert port["force_x_local_downstream_N"] >= 0.0
 
 
+@requires_ocimf_workbook
 def test_heading_rudder_interaction_rotates_local_force_to_ship_frame():
     rows = run_b1528_current_heading_rudder_report()["rows"]
     oblique = _find_row(rows, 3.08, 4.0, 28.0)
@@ -136,6 +148,7 @@ def test_heading_rudder_interaction_rotates_local_force_to_ship_frame():
     assert oblique["force_y_ship_port_N"] != pytest.approx(centerline_equivalent_alpha["force_y_ship_port_N"])
 
 
+@requires_ocimf_workbook
 def test_ship_fixed_transform_independent_formula():
     rows = run_b1528_current_heading_rudder_report()["rows"]
     row = _find_row(rows, 2.0, -5.0, 10.0)
@@ -155,6 +168,7 @@ def test_ship_fixed_transform_independent_formula():
     assert row["mooring_reaction_n_Nm"] == pytest.approx(-row["total_moment_n_yaw_bow_port_Nm"])
 
 
+@requires_ocimf_workbook
 def test_speed_squared_scaling_for_same_heading_and_rudder():
     rows = run_b1528_current_heading_rudder_report()["rows"]
     slow = _find_row(rows, 2.0, -3.0, 10.0)
@@ -171,6 +185,7 @@ def test_speed_squared_scaling_for_same_heading_and_rudder():
         assert fast[key] / slow[key] == pytest.approx(4.0)
 
 
+@requires_ocimf_workbook
 def test_formula_sample_for_issue_2760_default_speed():
     result = run_b1528_current_heading_rudder_report()
     sample = result["sample_working_example"]
@@ -192,6 +207,7 @@ def test_formula_sample_for_issue_2760_default_speed():
     assert sample["moment_n_yaw_bow_port_kN_m"] == pytest.approx(expected_y * 135.3 / 1000.0)
 
 
+@requires_ocimf_workbook
 def test_ocimf_current_rudder_and_total_components_are_reported_about_cog():
     result = run_b1528_current_heading_rudder_report()
     row = _find_row(result["rows"], 3.08, 5.0, 28.0)
@@ -217,6 +233,7 @@ def test_ocimf_current_rudder_and_total_components_are_reported_about_cog():
     )
 
 
+@requires_ocimf_workbook
 def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenance(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = write_b1528_current_heading_rudder_report(result, tmp_path)
@@ -293,6 +310,7 @@ def test_report_outputs_include_issue_2760_dropdown_chart_contract_and_provenanc
     assert "scope_exclusions" in provenance
 
 
+@requires_ocimf_workbook
 def test_generated_csv_has_expected_rows(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = write_b1528_current_heading_rudder_report(result, tmp_path)

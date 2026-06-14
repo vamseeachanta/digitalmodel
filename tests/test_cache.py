@@ -169,7 +169,7 @@ class TestCacheClientRedisBackend:
     @pytest.fixture
     def cache_client(self):
         """Create cache client with fakeredis."""
-        import fakeredis
+        fakeredis = pytest.importorskip("fakeredis")
 
         config = CacheConfig(enable_redis=True)
         client = CacheClient(config)
