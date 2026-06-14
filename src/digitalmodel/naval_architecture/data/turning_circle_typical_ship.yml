@@ -1,0 +1,52 @@
+# Typical single-screw ship preliminary Nomoto turning-circle sweep input.
+case:
+  id: typical_single_screw_turning_circle
+  description: >-
+    Typical ship preliminary first-order Nomoto turning-circle estimate for
+    advance, transfer, and tactical-diameter sensitivity.
+
+vessel:
+  type: typical_single_screw_ship
+  length_between_perpendiculars_m: 120.0
+  beam_m: 20.0
+  draft_m: 7.0
+  design_speed_kn: 12.0
+
+nomoto:
+  K_per_s: 0.12
+  T_s: 20.0
+  assumption: >-
+    Assumed first-order Nomoto gain and time constant for preliminary source-gap
+    sensitivity; not calibrated from trial or telemetry data.
+
+simulation:
+  duration_s: 240.0
+  dt_s: 1.0
+
+sweep:
+  speeds:
+    units: kn
+    values: [10.0, 15.0]
+  rudder_angles_deg: [-20.0, 20.0, 30.0]
+
+outputs:
+  directory: results/turning_circle
+  tables: [csv, json]
+  sidecars:
+    provenance: turning_circle_provenance.json
+    artifact_manifest: artifact_manifest.json
+  charts:
+    enabled: true
+    formats: [png, html]
+    required:
+      - trajectory_by_case
+      - yaw_rate_vs_time
+      - heading_vs_time
+      - turning_metrics_vs_rudder_angle
+
+warnings:
+  scope_limitations:
+    - Preliminary constant-speed first-order Nomoto estimate only.
+    - Not MMG and not a full MMG maneuvering model.
+    - Not an IMO maneuvering compliance assessment.
+    - No ABS or class compliance conclusion is made.
