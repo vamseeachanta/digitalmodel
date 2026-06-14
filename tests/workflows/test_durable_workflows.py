@@ -161,6 +161,20 @@ def test_workflow_registry(workflow):
             expected_out_of_roundness
         )
         assert bool(results.loc[0, "passes"]) is True
+    elif workflow["id"] == "wave-spectrum":
+        summary = cfg["wave_spectrum"]
+        results_path = Path(summary["spectrum_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        spectrum = pd.read_csv(results_path)
+        omega_p = 2.0 * math.pi / summary["Tp"]
+
+        assert summary["spectrum"] == "jonswap"
+        assert summary["Hs_input"] == pytest.approx(3.0)
+        assert summary["Hs_check"] == pytest.approx(3.0, rel=0.05)
+        assert summary["peak_frequency"] == pytest.approx(omega_p, abs=0.02)
+        assert len(spectrum) == 181
+        assert (spectrum["S"] >= 0.0).all()
     elif workflow["id"] == "rao-tabulation":
         summary = cfg["rao_tabulation"]
         results_path = Path(summary["rao_csv"])
@@ -618,6 +632,20 @@ def test_workflow_registry(workflow):
         assert result["pressure_drop_annulus_psi"] == pytest.approx(127.087912088)
         assert result["ecd_ppg"] == pytest.approx(10.805499789)
         assert result["cuttings_transport_ratio"] == pytest.approx(1.0)
+    elif workflow["id"] == "wellpath":
+        summary = cfg["wellpath"]
+        results_path = Path(summary["wellpath_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        survey = pd.read_csv(results_path)
+
+        assert summary["total_depth"] == pytest.approx(400.0)
+        assert summary["total_tvd"] < summary["total_depth"]
+        assert summary["max_dls"] > 0.0
+        assert summary["max_dls_depth"] == pytest.approx(200.0)
+        assert len(survey) == 5
+        assert survey["tvd"].iloc[-1] < survey["md"].iloc[-1]
+        assert survey["dls"].iloc[2] > 0.0
     elif workflow["id"] == "rop-analysis":
         result = cfg["rop_analysis"]["result"]
         by = result["bourgoyne_young"]
@@ -651,3 +679,80 @@ def test_workflow_registry(workflow):
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
+
+
+def test_wellpath_minimum_curvature_textbook_case(tmp_path):
+    input_path = tmp_path / "wellpath.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "wellpath",
+                "wellpath": {
+                    "stations": [
+                        {
+                            "measured_depth_m": 0.0,
+                            "inclination_deg": 0.0,
+                            "azimuth_deg": 0.0,
+                        },
+                        {
+                            "measured_depth_m": 100.0,
+                            "inclination_deg": 30.0,
+                            "azimuth_deg": 0.0,
+                        },
+                    ],
+                    "output_dir": "results",
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    cfg = engine(inputfile=str(input_path))
+    survey = pd.read_csv(tmp_path / "results" / "wellpath_wellpath.csv")
+
+    assert cfg["wellpath"]["total_depth"] == pytest.approx(100.0)
+    assert survey.loc[1, "tvd"] == pytest.approx(95.4929658551)
+    assert survey.loc[1, "north"] == pytest.approx(25.5872630837)
+    assert survey.loc[1, "east"] == pytest.approx(0.0, abs=1.0e-12)
+    assert survey.loc[1, "dls"] == pytest.approx(9.0)
+
+
+def test_wave_spectrum_pierson_moskowitz_engine_textbook_check(tmp_path):
+    input_path = tmp_path / "wave_spectrum.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "wave_spectrum",
+                "wave_spectrum": {
+                    "spectrum": "pierson_moskowitz",
+                    "Hs": 2.5,
+                    "Tp": 8.0,
+                    "frequency_grid": {
+                        "units": "rad_s",
+                        "start": 0.2,
+                        "stop": 2.5,
+                        "num": 231,
+                    },
+                    "output_dir": "results",
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    cfg = engine(inputfile=str(input_path))
+    spectrum = pd.read_csv(tmp_path / "results" / "wave_spectrum_spectrum.csv")
+    omega_p = 2.0 * math.pi / 8.0
+
+    assert cfg["wave_spectrum"]["spectrum"] == "pierson_moskowitz"
+    assert cfg["wave_spectrum"]["Hs_check"] == pytest.approx(2.5, rel=0.05)
+    assert cfg["wave_spectrum"]["peak_frequency"] == pytest.approx(omega_p, abs=0.02)
+    assert spectrum.loc[spectrum["S"].idxmax(), "frequency"] == pytest.approx(
+        cfg["wave_spectrum"]["peak_frequency"]
+    )

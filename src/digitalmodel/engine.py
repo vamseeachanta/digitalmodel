@@ -258,6 +258,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.structural.ovality.workflow import router as pipe_ovality
 
         cfg_base = pipe_ovality(cfg_base)
+    elif basename == "wave_spectrum":
+        from digitalmodel.hydrodynamics.wave_spectrum.workflow import router as wave_spectrum
+
+        cfg_base = wave_spectrum(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 
@@ -394,6 +398,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.well.workflow import run_well_hydraulics
 
         cfg_base = run_well_hydraulics(cfg_base)
+    elif basename == "wellpath":
+        from digitalmodel.well.wellpath.workflow import router as wellpath
+
+        cfg_base = wellpath(cfg_base)
     elif basename == "rop_analysis":
         from digitalmodel.well.workflow import run_rop_analysis
 
