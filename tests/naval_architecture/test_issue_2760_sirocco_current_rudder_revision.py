@@ -3,6 +3,7 @@
 
 import inspect
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,23 @@ from digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report
     KNOT_TO_M_PER_S,
     load_packaged_b1528_current_heading_rudder_config,
     run_b1528_current_heading_rudder_report,
+)
+
+
+requires_ocimf_workbook = pytest.mark.skipif(
+    not os.environ.get(report_module.OCIMF_WORKBOOK_PATH_ENV),
+    reason="OCIMF_WORKBOOK_PATH is not set; licensed OCIMF workbook is optional/off-repo",
+)
+requires_ocimf_provenance = pytest.mark.skipif(
+    not all(
+        (Path.cwd() / path).exists()
+        for path in (
+            report_module.OCIMF_PROVENANCE_README,
+            "wikis/marine-engineering/wiki/standards/ocimf-meg4.md",
+            "wikis/acma-projects/wiki/concepts/b1528-sirocco-rudder-yaw-moment-inputs.md",
+        )
+    ),
+    reason="OCIMF citation/provenance wiki artifacts are unavailable in this checkout",
 )
 
 
@@ -56,6 +74,7 @@ def test_issue_2760_placeholder_ocimf_constants_removed_from_source():
     assert "placeholder heading functions" not in source.lower()
 
 
+@requires_ocimf_workbook
 def test_issue_2760_default_ocimf_coefficients_are_interpolated_from_workbook():
     cfg = load_packaged_b1528_current_heading_rudder_config()
 
@@ -78,6 +97,7 @@ def test_issue_2760_default_ocimf_coefficients_are_interpolated_from_workbook():
     assert coeffs["source_workbook"] == "licensed-off-repo-ocimf-workbook"
 
 
+@requires_ocimf_workbook
 def test_issue_2760_cxyc_preserves_workbook_sign_in_negative_regime():
     """Sentinel for the latent abs() defect on Cxyc.
 
@@ -121,6 +141,7 @@ def test_issue_2760_cxyc_preserves_workbook_sign_in_negative_regime():
     assert stbd_far["cyc"] < 0.0
 
 
+@requires_ocimf_workbook
 def test_issue_2760_ocimf_source_gate_and_citation_sidecars_resolve():
     preflight = report_module.issue_2760_source_preflight()
 
@@ -153,6 +174,7 @@ def test_issue_2760_ocimf_source_gate_rejects_missing_workbook(monkeypatch, tmp_
         report_module.issue_2760_source_preflight()
 
 
+@requires_ocimf_provenance
 def test_issue_2760_ocimf_preflight_does_not_return_local_workbook_path(monkeypatch, tmp_path):
     workbook = tmp_path / "OCIMF Coef.xlsx"
     workbook.write_bytes(b"placeholder")
@@ -165,6 +187,7 @@ def test_issue_2760_ocimf_preflight_does_not_return_local_workbook_path(monkeypa
     assert preflight["ocimf"]["workbook_source_id"] == "licensed-off-repo-ocimf-workbook"
 
 
+@requires_ocimf_workbook
 def test_issue_2760_generated_provenance_emits_citation_sidecar(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
@@ -204,6 +227,7 @@ def test_issue_2760_ocimf_basis_selection_is_geometry_documented():
     assert selection["rejected_alternatives"]
 
 
+@requires_ocimf_workbook
 def test_issue_2760_default_current_and_rudder_signs_are_port_positive():
     result = run_b1528_current_heading_rudder_report()
     row = _find_row(result["rows"], 3.08, 5.0, 28.0)
@@ -216,6 +240,7 @@ def test_issue_2760_default_current_and_rudder_signs_are_port_positive():
     assert row["force_component_basis"].startswith("issue #2760")
 
 
+@requires_ocimf_workbook
 def test_issue_2760_main_report_output_removes_resultants_and_heatmap(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)
@@ -230,6 +255,7 @@ def test_issue_2760_main_report_output_removes_resultants_and_heatmap(tmp_path):
         assert "total horizontal force" not in text
 
 
+@requires_ocimf_workbook
 def test_issue_2760_docx_output_opens_and_contains_required_sections(tmp_path):
     from docx import Document
 
@@ -267,6 +293,7 @@ def test_issue_2760_docx_output_opens_and_contains_required_sections(tmp_path):
     assert "Heading/rudder schematic" not in text  # superseded by per-section schematic references
 
 
+@requires_ocimf_workbook
 def test_issue_2760_canonical_section_layout_in_markdown(tmp_path):
     """Pass A contract: MD must follow the 6-section canonical layout from
     issue thread comment 4492317819 and approved plan §3.1.
@@ -295,6 +322,7 @@ def test_issue_2760_canonical_section_layout_in_markdown(tmp_path):
     )
 
 
+@requires_ocimf_workbook
 def test_issue_2760_canonical_section_layout_in_html(tmp_path):
     """Pass A contract: HTML must follow the same 6-section canonical layout."""
     result = run_b1528_current_heading_rudder_report()
@@ -317,6 +345,7 @@ def test_issue_2760_canonical_section_layout_in_html(tmp_path):
     )
 
 
+@requires_ocimf_workbook
 def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
     """Pass A→B handoff contract: each major calculation section has its own
     schematic placeholder/anchor. Pass B fills the SVG content; Pass A
@@ -336,6 +365,7 @@ def test_issue_2760_per_section_schematic_anchors_exist(tmp_path):
         assert f'id="{sid}"' in html, f"Missing per-section schematic anchor: {sid}"
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
     """Pass B/G contract: per-section schematic SVGs (current-loading,
     current-moment, rudder-loading) must contain real ship+arrow markup,
@@ -385,6 +415,7 @@ def test_issue_2760_pass_b_schematic_svgs_have_real_content(tmp_path):
         )
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_h_docx_embeds_schematic_pictures(tmp_path):
     """Pass H "add pictures" contract: the DOCX embeds at least 4 inline
     pictures (one per OCIMF schematic — axes/sign, current loading,
@@ -405,6 +436,7 @@ def test_issue_2760_pass_h_docx_embeds_schematic_pictures(tmp_path):
         pass  # Playwright unavailable; DOCX correctly degrades to text-only
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_h_docx_has_sensitivity_and_appendix(tmp_path):
     """Pass H DOCX parity: the Word artifact must carry the same Pass H
     additions as HTML/PDF (was stripped at §5.1 / §6 only).
@@ -429,6 +461,7 @@ def test_issue_2760_pass_h_docx_has_sensitivity_and_appendix(tmp_path):
     assert "Key variables" in text or "Default case" in text
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_h_revisions(tmp_path):
     """Pass H contract: §4.2 transverse current force chart, §5.1 renamed to
     Whicker-Fehlner - Model A, §5.4/§5.5 lead-in key variables, §5.6
@@ -466,6 +499,7 @@ def test_issue_2760_pass_h_revisions(tmp_path):
     assert max(result["metadata"]["rudder_angles_deg"]) == pytest.approx(28.0)
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_g_schematics_have_ocimf_caption_block(tmp_path):
     """Pass G contract: each per-section schematic SVG is followed by a
     caption block (.schematic-caption div) carrying the full English
@@ -538,6 +572,7 @@ def test_issue_2760_pass_c_simple_plate_rudder_helper_exists_and_is_sane():
     assert f_60 <= f_28 + 1e-9
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_c_simple_plate_fields_in_row_dict():
     """Pass C contract: each row in the sweep carries simple-plate model
     fields alongside the existing Whicker-Fehlner fields, so the HTML
@@ -565,6 +600,7 @@ def test_issue_2760_pass_c_simple_plate_fields_in_row_dict():
     assert default_row["force_y_ship_port_N"] > 0
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_e_yaw_side_by_side_chart_and_field(tmp_path):
     """Pass E contract: §4.2 includes a side-by-side yaw chart comparing
     OCIMF direct yaw moment (Method A: Nc = q·A_l·LBP·Cxyc) with
@@ -595,6 +631,7 @@ def test_issue_2760_pass_e_yaw_side_by_side_chart_and_field(tmp_path):
     )
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_d_decimal_rounding_in_display_values(tmp_path):
     """Pass D contract: kN and kN·m display values are rounded to 0 decimals
     when |val| ≥ 1, and to 2 decimals otherwise (per plan §130 and user
@@ -621,6 +658,7 @@ def test_issue_2760_pass_d_decimal_rounding_in_display_values(tmp_path):
     assert ".toFixed(0)" in html, "Pass D needs at least one .toFixed(0) display rounder"
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_d_force_labels_use_english_terms(tmp_path):
     """Pass D contract: HTML uses English force labels
     "longitudinal" / "transverse" / "yaw moment" alongside the symbolic
@@ -641,6 +679,7 @@ def test_issue_2760_pass_d_force_labels_use_english_terms(tmp_path):
     assert "transverse y" in html or "transverse force" in html
 
 
+@requires_ocimf_workbook
 def test_issue_2760_pass_c_html_has_side_by_side_rudder_comparison(tmp_path):
     """Pass C contract: HTML §5 contains a Model A vs Model B side-by-side
     comparison table at the default case AND a chart comparing both
@@ -656,6 +695,7 @@ def test_issue_2760_pass_c_html_has_side_by_side_rudder_comparison(tmp_path):
     assert 'id="rudder-model-comparison-chart"' in html
 
 
+@requires_ocimf_workbook
 def test_issue_2760_html_javascript_uses_only_x_y_n_component_fields(tmp_path):
     result = run_b1528_current_heading_rudder_report()
     manifest = report_module.write_b1528_current_heading_rudder_report(result, tmp_path)

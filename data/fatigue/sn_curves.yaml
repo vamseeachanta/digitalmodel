@@ -1,0 +1,181 @@
+metadata:
+  version: '1.0'
+  tier: 2
+  source: digitalmodel.structural.fatigue.sn_curves.StandardSNCurves
+  generated_from: production_curve_dictionaries
+standards:
+  DNV:
+    curves:
+      B1:
+        A: 4220000000000000.0
+        m: 4.0
+        fatigue_limit: 106.97
+      B2:
+        A: 1010000000000000.0
+        m: 3.5
+        fatigue_limit: 93.59
+      C:
+        A: 1080000000000.0
+        m: 3.0
+        fatigue_limit: 73.1
+      C1:
+        A: 423000000000.0
+        m: 3.0
+        fatigue_limit: 65.5
+      C2:
+        A: 108000000000.0
+        m: 3.0
+        fatigue_limit: 46.78
+      D:
+        A: 573000000000.0
+        m: 3.0
+        fatigue_limit: 52.63
+      E:
+        A: 329000000000.0
+        m: 3.0
+        fatigue_limit: 45.54
+      F:
+        A: 173000000000.0
+        m: 3.0
+        fatigue_limit: 36.84
+      F1:
+        A: 108000000000.0
+        m: 3.0
+        fatigue_limit: 36.58
+      F3:
+        A: 57300000000.0
+        m: 3.0
+        fatigue_limit: 29.64
+      G:
+        A: 28200000000.0
+        m: 3.0
+        fatigue_limit: 23.44
+      W1:
+        A: 21500000000.0
+        m: 3.0
+        fatigue_limit: 21.34
+      W2:
+        A: 10800000000.0
+        m: 3.0
+        fatigue_limit: 16.92
+      W3:
+        A: 5300000000.0
+        m: 3.0
+        fatigue_limit: 13.35
+    multislope:
+      D_MULTISLOPE:
+        slopes:
+        - 3.0
+        - 3.5
+        - 5.0
+        constants:
+        - 573000000000.0
+        - 108000000000.0
+        - 25000000000.0
+        transition_cycles:
+        - 2000000.0
+        - 10000000.0
+        fatigue_limit: 52.63
+      F_MULTISLOPE:
+        slopes:
+        - 3.0
+        - 4.0
+        - 5.0
+        constants:
+        - 173000000000.0
+        - 86000000000.0
+        - 21500000000.0
+        transition_cycles:
+        - 2000000.0
+        - 10000000.0
+        fatigue_limit: 36.84
+  API:
+    curves:
+      X:
+        A: 1010000000000.0
+        m: 3.0
+        fatigue_limit: 48.0
+      X_prime:
+        A: 152000000000.0
+        m: 3.0
+        fatigue_limit: 32.7
+      Y:
+        A: 356000000000.0
+        m: 3.0
+        fatigue_limit: 40.6
+      S-N1:
+        A: 621000000000.0
+        m: 3.0
+        fatigue_limit: 0.0
+      S-N2:
+        A: 124000000000.0
+        m: 3.0
+        fatigue_limit: 0.0
+  BS:
+    curves:
+      B:
+        A: 3900000000000.0
+        m: 3.0
+        fatigue_limit: 100.0
+      C:
+        A: 1000000000000.0
+        m: 3.0
+        fatigue_limit: 63.0
+      D:
+        A: 390000000000.0
+        m: 3.0
+        fatigue_limit: 50.0
+      E:
+        A: 160000000000.0
+        m: 3.0
+        fatigue_limit: 40.0
+      F:
+        A: 63000000000.0
+        m: 3.0
+        fatigue_limit: 32.0
+      F2:
+        A: 25000000000.0
+        m: 3.0
+        fatigue_limit: 25.0
+      G:
+        A: 10000000000.0
+        m: 3.0
+        fatigue_limit: 20.0
+      W:
+        A: 3900000000.0
+        m: 3.0
+        fatigue_limit: 16.0
+  AWS:
+    curves:
+      A:
+        A: 811000000000.0
+        m: 3.0
+        fatigue_limit: 165.0
+      B:
+        A: 391000000000.0
+        m: 3.0
+        fatigue_limit: 110.0
+      B1:
+        A: 263000000000.0
+        m: 3.0
+        fatigue_limit: 83.0
+      C:
+        A: 137000000000.0
+        m: 3.0
+        fatigue_limit: 69.0
+      C1:
+        A: 101000000000.0
+        m: 3.0
+        fatigue_limit: 55.0
+      D:
+        A: 72100000000.0
+        m: 3.0
+        fatigue_limit: 48.0
+      E:
+        A: 36100000000.0
+        m: 3.0
+        fatigue_limit: 31.0
+      E1:
+        A: 18100000000.0
+        m: 3.0
+        fatigue_limit: 18.0

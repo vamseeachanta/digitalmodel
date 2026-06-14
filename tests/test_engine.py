@@ -112,8 +112,8 @@ class TestEngineConfiguration:
         """Test engine with provided configuration."""
         cfg = AttributeDict(sample_config)
 
-        # Mock all external dependencies including the Mooring module
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        # Mock all external dependencies including the Pipeline module
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg
             mock_mooring.return_value = mock_instance
@@ -129,13 +129,13 @@ class TestEngineConfiguration:
     def test_engine_config_file_path_tracking(self, temp_config_file):
         """Test that engine tracks config file paths for relative path resolution."""
         config_data = {
-            "basename": "mooring",
+            "basename": "pipeline",
             "inputs": {"test": "value"},
             "_config_file_path": os.path.abspath(temp_config_file),
             "_config_dir_path": os.path.dirname(os.path.abspath(temp_config_file))
         }
 
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_instance = MagicMock()
             mock_instance.router.return_value = config_data
             mock_mooring.return_value = mock_instance
@@ -163,9 +163,9 @@ class TestEngineConfiguration:
 
     def test_basename_extraction_from_config(self):
         """Test basename extraction from different config structures."""
-        # Test basename in root - use valid mooring basename
-        cfg1 = {"basename": "mooring"}
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        # Test basename in root - use valid pipeline basename
+        cfg1 = {"basename": "pipeline"}
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg1
             mock_mooring.return_value = mock_instance
@@ -177,9 +177,9 @@ class TestEngineConfiguration:
                     result = engine(cfg=cfg1, config_flag=False)
                     assert "basename" in result
 
-        # Test basename in meta - use valid mooring basename
-        cfg2 = {"meta": {"basename": "mooring"}}
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        # Test basename in meta - use valid pipeline basename
+        cfg2 = {"meta": {"basename": "pipeline"}}
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_instance = MagicMock()
             mock_instance.router.return_value = cfg2
             mock_mooring.return_value = mock_instance
@@ -207,7 +207,7 @@ class TestEngineConfiguration:
             from digitalmodel.solvers.orcaflex.output_control import OutputController
             mock_output.return_value = OutputController.QUIET
 
-            with patch('digitalmodel.engine.Mooring') as mock_mooring:
+            with patch('digitalmodel.engine.Pipeline') as mock_mooring:
                 mock_instance = MagicMock()
                 mock_instance.router.return_value = cfg
                 mock_mooring.return_value = mock_instance
@@ -224,7 +224,7 @@ class TestEngineConfiguration:
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
             mock_output.return_value = OutputController.VERBOSE
 
-            with patch('digitalmodel.engine.Mooring') as mock_mooring:
+            with patch('digitalmodel.engine.Pipeline') as mock_mooring:
                 mock_instance = MagicMock()
                 mock_instance.router.return_value = cfg
                 mock_mooring.return_value = mock_instance
@@ -385,21 +385,15 @@ class TestModuleRouting:
                     mock_instance.router.assert_called_once_with(cfg)
 
     def test_mooring_routing(self):
-        """Test routing to mooring module."""
+        """Test current mooring route points callers to the CLI/API."""
         cfg = {"basename": "mooring"}
 
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
-            mock_instance = MagicMock()
-            mock_instance.router.return_value = cfg
-            mock_mooring.return_value = mock_instance
+        with patch('digitalmodel.engine.app_manager') as mock_app_manager:
+            mock_app_manager.save_cfg = MagicMock()
 
-            with patch('digitalmodel.engine.app_manager') as mock_app_manager:
-                mock_app_manager.save_cfg = MagicMock()
-
-                with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
-                    mock_mooring.assert_called_once()
-                    mock_instance.router.assert_called_once_with(cfg)
+            with patch('digitalmodel.engine.logger'):
+                with pytest.raises(NotImplementedError, match="mooring_analysis CLI"):
+                    engine(cfg=cfg, config_flag=False)
 
 
 class TestComplexModuleRouting:
@@ -652,7 +646,7 @@ class TestErrorHandling:
                 mock_fm_instance.router.return_value = cfg
                 mock_fm.return_value = mock_fm_instance
 
-                with patch('digitalmodel.engine.Mooring') as mock_mooring:
+                with patch('digitalmodel.engine.Pipeline') as mock_mooring:
                     mock_mooring_instance = MagicMock()
                     mock_mooring_instance.router.return_value = cfg
                     mock_mooring.return_value = mock_mooring_instance
@@ -671,11 +665,11 @@ class TestConfigurationManagement:
     def test_config_dir_path_preservation(self, temp_config_file):
         """Test that config directory paths are preserved through processing."""
         config_data = {
-            "basename": "mooring",
+            "basename": "pipeline",
             "inputs": {"test": "value"}
         }
 
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_mooring_instance = MagicMock()
             mock_mooring_instance.router.return_value = AttributeDict(config_data)
             mock_mooring.return_value = mock_mooring_instance
@@ -708,7 +702,7 @@ class TestConfigurationManagement:
         """Test that library name and basename are correctly used in configuration."""
         cfg = AttributeDict(sample_config)
 
-        with patch('digitalmodel.engine.Mooring') as mock_mooring:
+        with patch('digitalmodel.engine.Pipeline') as mock_mooring:
             mock_mooring_instance = MagicMock()
             mock_mooring_instance.router.return_value = cfg
             mock_mooring.return_value = mock_mooring_instance
@@ -729,7 +723,7 @@ class TestConfigurationManagement:
                         # Verify correct parameters passed to configure
                         call_args = mock_app_manager.configure.call_args[0]
                         assert call_args[1] == "digitalmodel"  # library_name
-                        assert call_args[2] == "mooring"       # basename
+                        assert call_args[2] == "pipeline"       # basename
 
 
 # Test fixtures
@@ -737,10 +731,10 @@ class TestConfigurationManagement:
 def sample_config():
     """Provide sample configuration for testing.
 
-    Uses 'mooring' as basename since it's a valid, simple handler in engine.py.
+    Uses 'pipeline' as basename since it's a valid, simple handler in engine.py.
     """
     return {
-        "basename": "mooring",
+        "basename": "pipeline",
         "inputs": {
             "test_parameter": "test_value",
             "shape": "rectangular"
@@ -1281,7 +1275,7 @@ class TestEngineComprehensiveIntegration:
     def test_engine_multiple_module_workflow(self):
         """Test engine handling multiple different modules in sequence."""
         test_modules = [
-            'transformation', 'pipeline', 'fatigue_analysis', 'mooring', 'time_series'
+            'transformation', 'pipeline', 'fatigue_analysis', 'time_series'
         ]
 
         for basename in test_modules:
@@ -1292,7 +1286,6 @@ class TestEngineComprehensiveIntegration:
                 'transformation': 'Transformation',
                 'pipeline': 'Pipeline',
                 'fatigue_analysis': 'FatigueAnalysis',
-                'mooring': 'Mooring',
                 'time_series': 'TimeSeriesAnalysis'
             }
 
