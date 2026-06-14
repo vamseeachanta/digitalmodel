@@ -35,17 +35,17 @@ def safe_sinh(x: Union[float, np.ndarray], max_arg: float = 700.0) -> Union[floa
         mask_large_neg = x < -max_arg
 
         result[mask_small] = np.sinh(x[mask_small])
-        result[mask_large_pos] = np.exp(x[mask_large_pos]) / 2.0
-        result[mask_large_neg] = -np.exp(-x[mask_large_neg]) / 2.0
+        result[mask_large_pos] = np.finfo(float).max
+        result[mask_large_neg] = -np.finfo(float).max
 
         return result
     else:
         if abs(x) <= max_arg:
             return np.sinh(x)
         elif x > 0:
-            return np.exp(x) / 2.0
+            return np.finfo(float).max
         else:
-            return -np.exp(-x) / 2.0
+            return -np.finfo(float).max
 
 
 def safe_cosh(x: Union[float, np.ndarray], max_arg: float = 700.0) -> Union[float, np.ndarray]:
@@ -73,14 +73,14 @@ def safe_cosh(x: Union[float, np.ndarray], max_arg: float = 700.0) -> Union[floa
         mask_large = np.abs(x) > max_arg
 
         result[mask_small] = np.cosh(x[mask_small])
-        result[mask_large] = np.exp(np.abs(x[mask_large])) / 2.0
+        result[mask_large] = np.finfo(float).max
 
         return result
     else:
         if abs(x) <= max_arg:
             return np.cosh(x)
         else:
-            return np.exp(abs(x)) / 2.0
+            return np.finfo(float).max
 
 
 def validate_catenary_inputs(

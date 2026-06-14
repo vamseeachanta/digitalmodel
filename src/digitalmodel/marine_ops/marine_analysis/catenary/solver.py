@@ -24,8 +24,7 @@ Author: Digital Model Project
 from dataclasses import dataclass
 from typing import Optional, Tuple
 import numpy as np
-from scipy.optimize import fsolve, brentq
-import warnings
+from scipy.optimize import brentq
 
 
 @dataclass
@@ -108,112 +107,116 @@ class CatenarySolver:
         if params.length < straight_dist:
             raise ValueError(f"Length {params.length}m < straight distance {straight_dist:.2f}m")
 
-        # Solve for H and geometry
-        H_solution, converged, iterations = self._solve_general_catenary(params)
+        # Solve for H and signed low-point geometry.
+        H_solution, u_anchor, u_fairlead, converged, iterations = (
+            self._solve_general_catenary(params)
+        )
 
         # Compute all results
-        return self._compute_results(params, H_solution, converged, iterations)
+        return self._compute_results(
+            params, H_solution, u_anchor, u_fairlead, converged, iterations
+        )
 
-    def _solve_general_catenary(self, params: CatenaryInput) -> Tuple[float, bool, int]:
+    def _solve_general_catenary(
+        self, params: CatenaryInput
+    ) -> Tuple[float, float, float, bool, int]:
         """
-        Solve general catenary BVP for H, x1, x2.
+        Solve the general catenary BVP for H and endpoint positions.
 
-        Uses system of 3 equations:
-        1. x2 - x1 = X (horizontal span)
-        2. h2 - h1 = Y (vertical span)
-        3. s2 - s1 + elongation = L (length)
+        Coordinates are signed distances from the catenary low point. This
+        allows the low point to lie left of the anchor, between endpoints, or
+        right of the fairlead.
 
-        Where:
-          x1, x2 = horizontal distances from low point to anchor/fairlead
-          h1, h2 = heights above low point at anchor/fairlead
-          s1, s2 = arc lengths from low point to anchor/fairlead
+        Midpoint identities reduce the geometry to a one-variable solve in
+        ``a = H / w``. When elastic stretch creates a second very high-tension
+        root, the first bracketed root is the physically relevant sagging line.
 
         Returns
         -------
         H : float
             Horizontal tension
+        u_anchor : float
+            Signed coordinate of the anchor from the low point.
+        u_fairlead : float
+            Signed coordinate of the fairlead from the low point.
         converged : bool
             Convergence flag
         iterations : int
             Number of iterations
         """
+        scale = max(
+            params.length,
+            params.horizontal_span,
+            abs(params.vertical_span),
+            1.0
+        )
+        a_low = max(scale * 1e-3, 1e-9)
+        f_low = self._length_error_for_a(a_low, params)
+        iterations = 1
+        while np.isfinite(f_low) and f_low < 0.0:
+            a_low *= 0.5
+            f_low = self._length_error_for_a(a_low, params)
+            iterations += 1
 
-        def system_equations(vars):
-            """System of equations for catenary BVP."""
-            H, x1, x2 = vars
+        a_high = a_low
+        f_high = f_low
+        for _ in range(max(self.max_iterations, 200)):
+            a_high *= 2.0
+            f_high = self._length_error_for_a(a_high, params)
+            iterations += 1
+            if np.isfinite(f_low) and np.isfinite(f_high) and f_low * f_high <= 0:
+                break
+            a_low = a_high
+            f_low = f_high
+        else:
+            raise ValueError("Failed to bracket catenary solution")
 
-            if H <= 0 or x1 < 0 or x2 <= x1:
-                return [1e10, 1e10, 1e10]
-
-            a = H / params.weight_per_length
-
-            # Catenary equations from low point
-            h1 = a * np.cosh(x1 / a)
-            h2 = a * np.cosh(x2 / a)
-            s1 = a * np.sinh(x1 / a)
-            s2 = a * np.sinh(x2 / a)
-
-            # Elongation (use average tension approximation)
-            # More accurate would integrate tension along line
-            T_avg = H  # Conservative: use horizontal tension
-            elongation = T_avg * params.length / params.ea_stiffness
-
-            # System of equations
-            eq1 = (x2 - x1) - params.horizontal_span
-            eq2 = (h2 - h1) - params.vertical_span
-            eq3 = (s2 - s1 + elongation) - params.length
-
-            return [eq1, eq2, eq3]
-
-        # Initial guess strategy
-        # For mooring: low point typically below anchor
-        # Estimate x1 from sag: for small angles, x1 ≈ sqrt(2*a*h1)
-        # Where h1 (height of anchor above low point) relates to sag
-
-        # Simple heuristic:  start with x1 ≈ L/4, x2 ≈ x1 + X
-        x1_guess = params.length / 4
-        x2_guess = x1_guess + params.horizontal_span
-
-        # Estimate H from geometry
-        # For catenary: a ≈ L² / (8 * max_sag) for parabolic approximation
-        # Assume max_sag ≈ (L - X) (excess length drops as sag)
-        sag_estimate = max(params.length - params.horizontal_span, 10)
-        a_estimate = params.horizontal_span**2 / (8 * sag_estimate)
-        H_guess = params.weight_per_length * a_estimate
-
-        initial_guess = [H_guess, x1_guess, x2_guess]
-
-        # Solve using fsolve
-        try:
-            solution = fsolve(
-                system_equations,
-                initial_guess,
-                full_output=True,
-                xtol=self.tolerance
-            )
-
-            vars_sol, info, ier, msg = solution
-
-            if ier == 1:
-                H_sol = vars_sol[0]
-                converged = True
-                iterations = info['nfev']
-
-                # Verify solution is physical
-                if H_sol > 0:
-                    return H_sol, converged, iterations
-
-        except:
-            pass
-
-        # If fsolve failed, try simpler 1D approach
-        # Assume low point at anchor (x1=0), solve for H only
-        warnings.warn(
-            "General catenary BVP failed to converge. Using simplified formulation with low point at anchor.",
-            UserWarning
+        root, result = brentq(
+            lambda a: self._length_error_for_a(a, params),
+            a_low,
+            a_high,
+            xtol=self.tolerance,
+            maxiter=self.max_iterations,
+            full_output=True
         )
 
-        return self._solve_simplified(params)
+        _, u_anchor, u_fairlead = self._geometry_for_a(root, params)
+        H_sol = root * params.weight_per_length
+        return (
+            H_sol,
+            u_anchor,
+            u_fairlead,
+            result.converged,
+            iterations + result.iterations
+        )
+
+    def _length_error_for_a(self, a: float, params: CatenaryInput) -> float:
+        """Return length error for a catenary parameter."""
+        arc_length, _, _ = self._geometry_for_a(a, params)
+        if not np.isfinite(arc_length):
+            return np.inf
+
+        horizontal_tension = a * params.weight_per_length
+        elongation = horizontal_tension * params.length / params.ea_stiffness
+        return arc_length + elongation - params.length
+
+    def _geometry_for_a(
+        self, a: float, params: CatenaryInput
+    ) -> Tuple[float, float, float]:
+        """Return arc length and signed endpoint coordinates for ``a``."""
+        half_span_over_a = params.horizontal_span / (2.0 * a)
+        if half_span_over_a > 350.0:
+            return np.inf, -np.inf, np.inf
+
+        sinh_half_span = np.sinh(half_span_over_a)
+        midpoint_sinh = params.vertical_span / (2.0 * a * sinh_half_span)
+        midpoint = np.arcsinh(midpoint_sinh)
+        midpoint_cosh = np.sqrt(1.0 + midpoint_sinh**2)
+
+        arc_length = 2.0 * a * midpoint_cosh * sinh_half_span
+        u_anchor = a * (midpoint - half_span_over_a)
+        u_fairlead = a * (midpoint + half_span_over_a)
+        return arc_length, u_anchor, u_fairlead
 
     def _solve_simplified(self, params: CatenaryInput) -> Tuple[float, bool, int]:
         """
@@ -273,18 +276,20 @@ class CatenarySolver:
         self,
         params: CatenaryInput,
         H: float,
+        u_anchor: float,
+        u_fairlead: float,
         converged: bool,
         iterations: int
     ) -> CatenaryResults:
         """Compute all catenary results from solved H."""
 
         a = H / params.weight_per_length
-        X = params.horizontal_span
 
-        # Tensions (assuming low point at or near anchor)
-        V_fairlead = H * np.sinh(X / a)
+        # Endpoint tensions from signed low-point coordinates.
+        V_fairlead = H * np.sinh(u_fairlead / a)
+        V_anchor = H * np.sinh(u_anchor / a)
         T_fairlead = np.sqrt(H**2 + V_fairlead**2)
-        T_anchor = H  # At low point, V=0
+        T_anchor = np.sqrt(H**2 + V_anchor**2)
 
         # Elongation
         elongation = H * params.length / params.ea_stiffness
@@ -292,17 +297,24 @@ class CatenarySolver:
         # Touchdown
         touchdown = None
         if params.water_depth is not None:
-            arg = params.water_depth / a + 1
-            if arg > 1.0:
-                touchdown = a * np.arccosh(arg)
+            target = params.water_depth / a + np.cosh(u_anchor / a)
+            if target >= 1.0:
+                root = a * np.arccosh(target)
+                candidates = []
+                for u_touchdown in (-root, root):
+                    if u_anchor <= u_touchdown <= u_fairlead:
+                        candidates.append(u_touchdown - u_anchor)
+                touchdown = min(candidates) if candidates else None
 
         # Line shape
         n_points = 100
-        x = np.linspace(0, X, n_points)
-        y = a * (np.cosh(x / a) - 1)
+        u = np.linspace(u_anchor, u_fairlead, n_points)
+        x = u - u_anchor
+        y = a * (np.cosh(u / a) - np.cosh(u_anchor / a))
 
         # Tension distribution
-        tension_dist = np.sqrt(H**2 + (H * np.sinh(x / a))**2)
+        vertical_tension = H * np.sinh(u / a)
+        tension_dist = np.sqrt(H**2 + vertical_tension**2)
 
         return CatenaryResults(
             horizontal_tension=H,

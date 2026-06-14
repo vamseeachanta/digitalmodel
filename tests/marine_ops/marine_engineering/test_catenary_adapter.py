@@ -32,7 +32,7 @@ class TestCatenaryEquationForceMethod:
     def test_basic_force_calculation(self):
         """Test basic force-based calculation with known values."""
         data = {
-            "F": 10000.0,
+            "F": 100000.0,
             "w": 500.0,
             "d": 100.0,
             "X": None,
@@ -72,7 +72,7 @@ class TestCatenaryEquationForceMethod:
         """Test that results exactly match legacy implementation."""
         # These expected values come from running original catenaryMethods.py
         data = {
-            "F": 5000.0,
+            "F": 50000.0,
             "w": 250.0,
             "d": 50.0,
             "X": None,
@@ -102,9 +102,9 @@ class TestCatenaryEquationForceMethod:
     def test_force_method_multiple_scenarios(self):
         """Test force method with various parameter combinations."""
         test_cases = [
-            {"F": 15000.0, "w": 600.0, "d": 120.0},
-            {"F": 3000.0, "w": 150.0, "d": 30.0},
-            {"F": 50000.0, "w": 2000.0, "d": 200.0},
+            {"F": 150000.0, "w": 600.0, "d": 120.0},
+            {"F": 15000.0, "w": 150.0, "d": 30.0},
+            {"F": 500000.0, "w": 2000.0, "d": 200.0},
         ]
 
         for params in test_cases:
@@ -437,7 +437,7 @@ class TestIntegration:
         """Test using catenaryEquation then catenaryForces."""
         # First calculate catenary geometry
         catenary_data = {
-            "F": 8000.0,
+            "F": 80000.0,
             "w": 400.0,
             "d": 90.0,
             "X": None,
