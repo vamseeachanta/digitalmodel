@@ -297,7 +297,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         diffraction = DiffractionWorkflow()
         cfg_base = diffraction.router(cfg_base)
     elif basename == "fpso_mooring":
-        from digitalmodel.subsea.mooring_analysis.fpso_workflow import FPSOMooringWorkflow
+        from digitalmodel.subsea.mooring_analysis.fpso_workflow import (
+            FPSOMooringWorkflow,
+        )
+
         fmw = FPSOMooringWorkflow()
         cfg_base = fmw.router(cfg_base)
     elif basename == "jacket_checks":
@@ -322,6 +325,21 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         geotechnical = GeotechnicalWorkflow()
         cfg_base = geotechnical.router(cfg_base)
+    elif basename == "anchor_capacity":
+        from digitalmodel.geotechnical.cfg_workflows import AnchorCapacityWorkflow
+
+        anchor_capacity = AnchorCapacityWorkflow()
+        cfg_base = anchor_capacity.router(cfg_base)
+    elif basename == "pile_capacity":
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        pile_capacity = PileCapacityWorkflow()
+        cfg_base = pile_capacity.router(cfg_base)
+    elif basename == "scour":
+        from digitalmodel.geotechnical.cfg_workflows import ScourWorkflow
+
+        scour = ScourWorkflow()
+        cfg_base = scour.router(cfg_base)
     elif basename == "production":
         from digitalmodel.production_engineering.workflow import (
             ProductionEngineeringWorkflow,

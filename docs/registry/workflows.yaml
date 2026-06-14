@@ -276,3 +276,30 @@ workflows:
       - examples/workflows/nodal-analysis-ipr-vlp/results/nodal_analysis/nodal_analysis_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis-ipr-vlp]
     runtime: offline
+  - id: anchor-capacity
+    basename: anchor_capacity
+    title: Anchor drag + suction holding capacity screen (DNV-RP-E302 / E303)
+    input: examples/workflows/anchor-capacity/input.yml
+    outputs:
+      - examples/workflows/anchor-capacity/results/input.yml
+      - examples/workflows/anchor-capacity/results/anchor_capacity/anchor_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[anchor-capacity]
+    runtime: offline
+  - id: pile-capacity
+    basename: pile_capacity
+    title: API RP 2GEO alpha-method pile capacity in firm clay
+    input: examples/workflows/pile-capacity/input.yml
+    outputs:
+      - examples/workflows/pile-capacity/results/input.yml
+      - examples/workflows/pile-capacity/results/pile_capacity/pile_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-capacity]
+    runtime: offline
+  - id: scour-assessment
+    basename: scour
+    title: DNV-RP-F107 pipeline, monopile, and rock armour scour assessment
+    input: examples/workflows/scour-assessment/input.yml
+    outputs:
+      - examples/workflows/scour-assessment/results/input.yml
+      - examples/workflows/scour-assessment/results/scour/scour_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]
+    runtime: offline
