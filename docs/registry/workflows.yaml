@@ -398,3 +398,48 @@ workflows:
       - examples/workflows/tubular-design-envelope/results/tubular_design/tubular_design_envelope.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tubular-design-envelope]
     runtime: offline
+  - id: capex-estimate
+    basename: capex_estimate
+    title: Mars-style TLP CAPEX estimate from GoM benchmarks
+    input: examples/workflows/capex-estimate/input.yml
+    outputs:
+      - examples/workflows/capex-estimate/results/input.yml
+      - examples/workflows/capex-estimate/results/capex_estimate/capex_estimate_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[capex-estimate]
+    runtime: offline
+  - id: opex-estimate
+    basename: opex_estimate
+    title: Semi-submersible annual OPEX estimate from GoM benchmarks
+    input: examples/workflows/opex-estimate/input.yml
+    outputs:
+      - examples/workflows/opex-estimate/results/input.yml
+      - examples/workflows/opex-estimate/results/opex_estimate/opex_estimate_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[opex-estimate]
+    runtime: offline
+  - id: concept-selection
+    basename: concept_selection
+    title: Mars analogue host concept ranking
+    input: examples/workflows/concept-selection/input.yml
+    outputs:
+      - examples/workflows/concept-selection/results/input.yml
+      - examples/workflows/concept-selection/results/concept_selection/concept_selection_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-selection]
+    runtime: offline
+  - id: nodal-analysis
+    basename: nodal_analysis
+    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    input: examples/workflows/nodal-analysis/input.yml
+    outputs:
+      - examples/workflows/nodal-analysis/results/input.yml
+      - examples/workflows/nodal-analysis/results/nodal_analysis/nodal_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis]
+    runtime: offline
+  - id: vlp-correlations
+    basename: vlp_correlations
+    title: Hagedorn-Brown VLP curve for a vertical oil well
+    input: examples/workflows/vlp-correlations/input.yml
+    outputs:
+      - examples/workflows/vlp-correlations/results/input.yml
+      - examples/workflows/vlp-correlations/results/vlp_correlations/vlp_correlations_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[vlp-correlations]
+    runtime: offline

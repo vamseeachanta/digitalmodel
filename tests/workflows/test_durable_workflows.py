@@ -6,6 +6,10 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
+from tests.workflows.field_dev_production_assertions import (
+    FIELD_DEV_PRODUCTION_WORKFLOWS,
+    assert_field_dev_production_workflow,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -566,5 +570,7 @@ def test_workflow_registry(workflow):
         envelope = pd.read_csv(envelope_csv)
         assert len(envelope) == 160
         assert set(envelope["envelope"]) == {"vme_isotropic", "api_ellipse"}
+    elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
+        assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
