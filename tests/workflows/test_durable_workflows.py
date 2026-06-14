@@ -24,6 +24,9 @@ def _load_registry():
     ids=lambda workflow: workflow["id"],
 )
 def test_workflow_registry(workflow):
+    if workflow.get("runtime", "offline") != "offline":
+        pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
+
     input_path = REPO_ROOT / workflow["input"]
     cfg = engine(inputfile=str(input_path))
 
@@ -111,6 +114,31 @@ def test_workflow_registry(workflow):
         assert len(comparison) == 6
         assert row_x2["run_b_minus_run_a"] == pytest.approx(3.0)
         assert row_x2["run_b_ratio"] == pytest.approx(1.1)
+    elif workflow["id"] in {
+        "api-rp-2rd-riser",
+        "dnv-os-f201-riser",
+        "api-2sk-mooring",
+    }:
+        expected_codes = {
+            "api-rp-2rd-riser": "API_RP_2RD",
+            "dnv-os-f201-riser": "DNV_OS_F201",
+            "api-2sk-mooring": "API_RP_2SK",
+        }
+        summary = cfg["code_check"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        results = pd.read_csv(results_path)
+
+        assert summary["code"] == expected_codes[workflow["id"]]
+        assert summary["governing_utilisation"] > 0.0
+        assert math.isfinite(summary["governing_utilisation"])
+        assert summary["governing_utilisation"] == pytest.approx(
+            results["utilisation"].max()
+        )
+        assert (results["code"] == expected_codes[workflow["id"]]).all()
+        assert (results["utilisation"] > 0.0).all()
+        assert results["utilisation"].map(math.isfinite).all()
     elif workflow["id"] == "von-mises":
         summary = cfg["von_mises"]
         results_path = Path(summary["results_csv"])

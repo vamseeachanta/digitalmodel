@@ -78,6 +78,30 @@ workflows:
       - examples/workflows/compare-tool/results/input_comparison.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[compare-tool]
     runtime: offline
+  - id: api-rp-2rd-riser
+    basename: code_check
+    title: API RP 2RD riser combined tension and bending utilisation check
+    input: examples/workflows/api-rp-2rd-riser/input.yml
+    outputs:
+      - examples/workflows/api-rp-2rd-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-rp-2rd-riser]
+    runtime: offline
+  - id: dnv-os-f201-riser
+    basename: code_check
+    title: DNV-OS-F201 riser LRFD combined loading utilisation check
+    input: examples/workflows/dnv-os-f201-riser/input.yml
+    outputs:
+      - examples/workflows/dnv-os-f201-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dnv-os-f201-riser]
+    runtime: offline
+  - id: api-2sk-mooring
+    basename: code_check
+    title: API RP 2SK mooring line tension utilisation check
+    input: examples/workflows/api-2sk-mooring/input.yml
+    outputs:
+      - examples/workflows/api-2sk-mooring/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-2sk-mooring]
+    runtime: offline
   - id: von-mises
     basename: von_mises
     title: Two-element cantilever beam Von Mises stress check
