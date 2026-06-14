@@ -238,8 +238,10 @@ class TestHydroRAOIntegration:
         mass = 50000e3
         stiffness = 5e6
 
-        frequencies = np.linspace(0.3, 1.2, 100)
+        frequencies = np.linspace(0.2, 1.2, 120)
         phases = []
+        undamped_phases = []
+        dynamic_stiffness = []
 
         for omega in frequencies:
             A_heave = db.get_added_mass(omega, 'Heave', 'Heave')
@@ -247,23 +249,30 @@ class TestHydroRAOIntegration:
 
             total_mass = mass + A_heave
 
-            # Phase angle: φ = arctan(ωB / (k - ω²m))
+            # Response phase is the phase of 1 / (k - omega^2 m + i omega B).
             numerator = omega * B_heave
             denominator = stiffness - omega**2 * total_mass
 
-            phase = np.arctan2(numerator, denominator)
-            phases.append(np.degrees(phase))
+            phase = -np.degrees(np.arctan2(numerator, denominator))
+            undamped_phase = -np.degrees(np.arctan2(0.0, denominator))
+            phases.append(phase)
+            undamped_phases.append(undamped_phase)
+            dynamic_stiffness.append(denominator)
 
         phases = np.array(phases)
+        undamped_phases = np.array(undamped_phases)
+        dynamic_stiffness = np.array(dynamic_stiffness)
 
         # Phase should transition through -90° at resonance
         # Below resonance: phase ≈ 0°
         # At resonance: phase ≈ -90°
         # Above resonance: phase ≈ -180°
 
-        min_phase_idx = np.argmin(phases)
-        assert -120 <= phases[min_phase_idx] <= -60, \
-            f"Phase at resonance {phases[min_phase_idx]:.1f}° should be near -90°"
+        resonance_idx = np.argmin(np.abs(dynamic_stiffness))
+        assert -120 <= phases[resonance_idx] <= -60, \
+            f"Phase at resonance {phases[resonance_idx]:.1f}° should be near -90°"
+        assert abs(phases[resonance_idx] - undamped_phases[resonance_idx]) > 20, \
+            "Radiation damping should shift response phase near resonance"
 
         # Create phase chart
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -296,14 +305,28 @@ class TestHydroRAOIntegration:
         # Coupling term should be non-zero
         assert abs(A_heave_pitch) > 0, "Heave-pitch coupling should be non-zero"
 
-        # Coupling should be smaller than diagonal terms
-        A_heave_heave = db.get_added_mass(freq_test, 'Heave', 'Heave')
-        A_pitch_pitch = db.get_added_mass(freq_test, 'Pitch', 'Pitch')
+        # Coupling terms should change the solved response versus diagonal-only.
+        omega = freq_test
+        mass_matrix = np.diag([50000e3, 2.5e6])
+        stiffness_matrix = np.diag([5e6, 5e5])
 
-        assert abs(A_heave_pitch) < abs(A_heave_heave), \
-            "Coupling term should be smaller than diagonal term"
-        assert abs(A_heave_pitch) < abs(A_pitch_pitch), \
-            "Coupling term should be smaller than diagonal term"
+        A_coupled = db.get_added_mass_matrix(freq_test)[np.ix_([2, 4], [2, 4])]
+        B_coupled = db.get_damping_matrix(freq_test)[np.ix_([2, 4], [2, 4])]
+        A_diagonal = np.diag(np.diag(A_coupled))
+        B_diagonal = np.diag(np.diag(B_coupled))
+
+        excitation = np.array([1.0, 0.0], dtype=complex)
+        response_coupled = np.linalg.solve(
+            stiffness_matrix - omega**2 * (mass_matrix + A_coupled) + 1j * omega * B_coupled,
+            excitation,
+        )
+        response_diagonal = np.linalg.solve(
+            stiffness_matrix - omega**2 * (mass_matrix + A_diagonal) + 1j * omega * B_diagonal,
+            excitation,
+        )
+
+        assert not np.allclose(response_coupled, response_diagonal), \
+            "Off-diagonal hydrodynamic coupling should change the solved response"
 
     def test_full_matrix_interpolation(self, sample_database, output_dir):
         """Test interpolation of full 6×6 matrices."""
@@ -323,12 +346,26 @@ class TestHydroRAOIntegration:
         assert np.allclose(B_matrix, B_matrix.T, rtol=1e-3), \
             "Damping matrix should be symmetric"
 
-        # Check diagonal dominance (diagonal > off-diagonal)
+        # Full-matrix interpolation should be consistent with every scalar DOF-pair lookup.
         for i in range(6):
             for j in range(6):
-                if i != j:
-                    assert abs(A_matrix[i, i]) > abs(A_matrix[i, j]), \
-                        f"Added mass should be diagonally dominant at ({i},{j})"
+                assert A_matrix[i, j] == pytest.approx(db.get_added_mass(freq_test, i, j))
+                assert B_matrix[i, j] == pytest.approx(db.get_damping(freq_test, i, j))
+
+        # At tabulated frequencies, interpolation must reproduce the stored matrices exactly.
+        node_freq = 0.8
+        np.testing.assert_allclose(
+            db.get_added_mass_matrix(node_freq),
+            db.added_mass_matrices[node_freq].matrix,
+            rtol=1e-12,
+            atol=1e-6,
+        )
+        np.testing.assert_allclose(
+            db.get_damping_matrix(node_freq),
+            db.damping_matrices[node_freq].matrix,
+            rtol=1e-12,
+            atol=1e-6,
+        )
 
         # Create heatmap visualization
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))

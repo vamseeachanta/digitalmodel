@@ -123,7 +123,7 @@ class KramersKronigValidator:
             relative_error = np.abs((B - damping_reconstructed) / (B + 1e-10))
 
         max_error = np.max(relative_error[~np.isnan(relative_error)])
-        is_valid = max_error < tolerance
+        is_valid = bool(max_error < tolerance)
 
         return is_valid, max_error
 
@@ -217,6 +217,8 @@ class CoefficientDatabase:
         if self._interpolators_built:
             return
 
+        interp_kind = 'cubic' if len(self.frequencies) >= 4 else 'linear'
+
         # Build interpolators for each DOF pair
         for i in range(6):
             for j in range(6):
@@ -228,7 +230,7 @@ class CoefficientDatabase:
                 self._interpolators_added_mass[(i, j)] = interp1d(
                     self.frequencies,
                     added_mass_values,
-                    kind='cubic',
+                    kind=interp_kind,
                     bounds_error=False,
                     fill_value='extrapolate'
                 )
@@ -241,7 +243,7 @@ class CoefficientDatabase:
                 self._interpolators_damping[(i, j)] = interp1d(
                     self.frequencies,
                     damping_values,
-                    kind='cubic',
+                    kind=interp_kind,
                     bounds_error=False,
                     fill_value='extrapolate'
                 )
