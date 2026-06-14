@@ -97,6 +97,21 @@ def test_workflow_registry(workflow):
         assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
         assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
         assert curve["stress"].is_monotonic_increasing
+    elif workflow["id"] == "riser-stackup":
+        summary = cfg["riser_stackup"]
+        profile_path = Path(summary["profile_csv"])
+        if not profile_path.is_absolute():
+            profile_path = REPO_ROOT / profile_path
+        profile = pd.read_csv(profile_path)
+
+        assert summary["top_tension_required_kn"] > 0
+        assert summary["top_tension_required_kn"] >= summary["submerged_weight_kn"]
+        assert summary["wall_thickness_required_mm"] > 0
+        assert summary["points"] == 5
+        assert len(profile) == 5
+        assert profile["effective_tension_kn"].iloc[0] > (
+            profile["effective_tension_kn"].iloc[-1]
+        )
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]
         assert result["dnv_rp_usage_factor"]["usage_longtudinal"] == pytest.approx(

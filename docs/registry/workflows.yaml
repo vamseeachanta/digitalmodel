@@ -70,6 +70,14 @@ workflows:
       - examples/workflows/stress-strain/results/input_stress_strain.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
     runtime: offline
+  - id: riser-stackup
+    basename: riser_stackup
+    title: Deepwater drilling riser stack-up tension and wall check
+    input: examples/workflows/riser-stackup/input.yml
+    outputs:
+      - examples/workflows/riser-stackup/results/input_riser_stackup.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup]
+    runtime: offline
   - id: plate-buckling
     basename: plate_buckling
     title: DNV-RP-C201 plate buckling usage check
