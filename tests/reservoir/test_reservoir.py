@@ -1,16 +1,14 @@
 # ABOUTME: Tests for digitalmodel.reservoir package — imports and module verification.
 # ABOUTME: Part of SKELETON → DEVELOPMENT coverage uplift (#1589).
-# ABOUTME: reservoir.stratigraphic is a raw plotting script (not importable as-is),
-# ABOUTME: so tests focus on package importability and module existence.
+# ABOUTME: reservoir.stratigraphic is importable after the plotting refactor.
 """
 Tests for digitalmodel.reservoir
 
 The reservoir package is minimal:
 - __init__.py (package docstring only)
-- stratigraphic.py (a raw matplotlib plotting script, not a callable module)
+- stratigraphic.py (importable plotting module)
 
-Since stratigraphic.py uses undefined globals (WELL1, df_logs, etc.),
-we cannot import it directly. Tests verify:
+Tests verify:
 - Package importability
 - Module file existence
 - __init__.py docstring presence
@@ -18,7 +16,6 @@ we cannot import it directly. Tests verify:
 
 import os
 import importlib
-import pytest
 
 
 class TestPackageImport:
@@ -51,7 +48,7 @@ class TestModuleExistence:
 
 
 class TestStratigraphicScript:
-    """Verify stratigraphic.py content without importing it (it has undefined globals)."""
+    """Verify stratigraphic.py content and importability."""
 
     def _read_source(self) -> str:
         import digitalmodel.reservoir
@@ -74,6 +71,6 @@ class TestStratigraphicScript:
         assert "UWI" in src or "wells_list" in src
 
     def test_script_not_importable_due_to_globals(self):
-        """stratigraphic.py references undefined globals (WELL1, df_logs) — importing should fail."""
-        with pytest.raises((NameError, ImportError, Exception)):
-            importlib.import_module("digitalmodel.reservoir.stratigraphic")
+        """stratigraphic.py exposes callable functions instead of module globals."""
+        module = importlib.import_module("digitalmodel.reservoir.stratigraphic")
+        assert callable(module.create_cross_section)

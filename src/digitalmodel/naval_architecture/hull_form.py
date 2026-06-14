@@ -145,6 +145,9 @@ def validate_drilling_rig_hull_form(
     hull_form_type = rig_type_to_hull_form(rig_type)
     if not rig_name or hull_form_type is None:
         return None
+    dimension_source = str(record.get("DIMENSION_CONFIDENCE") or "").strip().lower()
+    if dimension_source in {"estimated", "generic"}:
+        return None
 
     loa_m = _coerce_positive_number(record.get("LOA_M"))
     beam_m = _coerce_positive_number(record.get("BEAM_M"))

@@ -771,6 +771,12 @@ class TestPipeSizingCatenaryFunctions:
             insulation_section = result["InsulationSection"]
             assert insulation_section["OD"] == 13.75  # NominalOD + 2*coating thickness
             assert insulation_section["ID"] == 12.75  # NominalOD
+            assert insulation_section["A"] == pytest.approx(
+                (math.pi / 4) * (13.75**2 - 12.75**2)
+            )
+            assert insulation_section["I"] == pytest.approx(
+                (math.pi / 64) * (13.75**4 - 12.75**4)
+            )
         finally:
             # Cleanup
             if original_sectionprops is None and 'sectionProperties' in globals():
@@ -799,7 +805,10 @@ class TestPipeSizingCatenaryFunctions:
         assert "massPerUnitLength" in equiv_pipe
         assert "weightPerUnitLength" in equiv_pipe
         assert equiv_pipe["massPerUnitLength"] > 0
-        assert equiv_pipe["weightPerUnitLength"] < equiv_pipe["massPerUnitLength"]  # Weight < mass due to buoyancy
+        submerged_mass_per_length = (
+            equiv_pipe["weightPerUnitLength"] / catenary_config["default"]["Constants"]["g"]
+        )
+        assert submerged_mass_per_length < equiv_pipe["massPerUnitLength"]
 
     def test_equivalent_pipe_with_strakes_no_buoyancy(self):
         """Test equivalent pipe calculation with strakes but no buoyancy."""
@@ -916,6 +925,12 @@ class TestPipeSizingCatenaryFunctions:
             buoyancy_section = result["BuoyancySection"]
             assert buoyancy_section["OD"] == 19.0  # 15.0 + 2*2.0
             assert buoyancy_section["ID"] == 15.0
+            assert buoyancy_section["A"] == pytest.approx(
+                (math.pi / 4) * (19.0**2 - 15.0**2)
+            )
+            assert buoyancy_section["I"] == pytest.approx(
+                (math.pi / 64) * (19.0**4 - 15.0**4)
+            )
         finally:
             if original_sectionprops is None and 'sectionProperties' in globals():
                 del globals()['sectionProperties']

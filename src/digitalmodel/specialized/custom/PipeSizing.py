@@ -174,7 +174,7 @@ class PipeSizing:
         )
         ID = cfg["geometry"]["NominalOD"]
         data = {"OD": OD, "ID": ID}
-        cfg["InsulationSection"] = sectionProperties(data)
+        cfg["InsulationSection"] = self.sectionProperties(data)
 
         return cfg
 
@@ -185,7 +185,7 @@ class PipeSizing:
         )
         ID = cfg["InsulationSection"]["OD"]
         data = {"OD": OD, "ID": ID}
-        cfg["BuoyancySection"] = sectionProperties(data)
+        cfg["BuoyancySection"] = self.sectionProperties(data)
 
         return cfg
 

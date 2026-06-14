@@ -275,7 +275,7 @@ def create_cross_section(
     tops_df["Thick"] = tops_df["BASE"] - tops_df["TOP"]
     well_tops = tops_df.set_index("UWI")[["TOP", "BASE"]].to_dict(orient="index")
     well_thick = tops_df.groupby("UWI")["Thick"].apply(list).to_dict()
-    wells = well_data_df.groupby("UWI")
+    wells = well_data_df.groupby("UWI", observed=True)
 
     n_wells = len(wells_list)
     fig, axes = plt.subplots(
