@@ -110,6 +110,14 @@ workflows:
       - examples/workflows/pipe-ovality/results/input_ovality.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-ovality]
     runtime: offline
+  - id: wave-spectrum
+    basename: wave_spectrum
+    title: Offline JONSWAP and Pierson-Moskowitz wave energy spectrum
+    input: examples/workflows/wave-spectrum/input.yml
+    outputs:
+      - examples/workflows/wave-spectrum/results/input_spectrum.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wave-spectrum]
+    runtime: offline
   - id: rao-tabulation
     basename: rao_tabulation
     title: Offline 6-DOF vessel RAO amplitude and phase tabulation
@@ -418,6 +426,14 @@ workflows:
       - examples/workflows/well-hydraulics/results/input.yml
       - examples/workflows/well-hydraulics/results/well_hydraulics/well_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[well-hydraulics]
+    runtime: offline
+  - id: wellpath
+    basename: wellpath
+    title: Minimum-curvature directional survey interpolation
+    input: examples/workflows/wellpath/input.yml
+    outputs:
+      - examples/workflows/wellpath/results/input_wellpath.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wellpath]
     runtime: offline
   - id: rop-analysis
     basename: rop_analysis
