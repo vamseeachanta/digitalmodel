@@ -215,6 +215,10 @@ class ComponentDatabase:
         self.chain_db = self._generate_chain_database()
         self.wire_db = self._generate_wire_database()
         self.line_db = self._generate_synthetic_database()
+        self._chain_lookup = {
+            (row.diameter, row.grade, row.link_type): row
+            for row in self.chain_db.itertuples(index=False)
+        }
 
         print(f"Loaded {len(self.chain_db)} chain components")
         print(f"Loaded {len(self.wire_db)} wire rope components")
@@ -224,16 +228,15 @@ class ComponentDatabase:
         """Generate chain database (72 components)."""
         data = []
 
-        # Standard diameters (16mm to 162mm)
-        diameters = [16, 19, 22, 24, 28, 32, 34, 36, 38, 40, 44, 46, 48, 50, 52,
-                     56, 58, 60, 62, 64, 66, 68, 70, 76, 78, 81, 84, 87, 90, 92,
-                     95, 97, 100, 102, 105, 107, 111, 114, 117, 120, 122, 127,
-                     132, 137, 142, 147, 152, 157, 162]
+        # Representative standard diameters. Keep the 72-component fixture size
+        # while including the 20/40mm D^2 scaling pair and 81mm R4 MBL boundary.
+        diameters = [16, 19, 20, 22, 24, 28, 32, 34, 36, 38, 40, 44, 46, 48, 50,
+                     52, 56, 58, 60, 62, 64, 66, 76, 81]
 
         grades = [ChainGrade.R3, ChainGrade.R4, ChainGrade.R5]
         link_types = [LinkType.STUD_LINK]
 
-        for diameter in diameters[:24]:  # Generate 72 components (24 diameters × 3 grades, includes 76mm)
+        for diameter in diameters:  # Generate 72 components (24 diameters × 3 grades)
             for grade in grades:
                 chain = ChainProperties.from_excel_formula(diameter, grade, link_types[0])
                 data.append({
@@ -316,37 +319,27 @@ class ComponentDatabase:
         ValueError
             If component not found in database
         """
-        query = (
-            (self.chain_db['diameter'] == diameter) &
-            (self.chain_db['grade'] == grade) &
-            (self.chain_db['link_type'] == link_type)
-        )
+        row = self._chain_lookup.get((diameter, grade, link_type))
 
-        matches = self.chain_db[query]
-
-        if len(matches) == 0:
+        if row is None:
             raise ValueError(
                 f"Chain not found: {diameter}mm {grade} {link_type}"
             )
 
-        if len(matches) > 1:
-            print(f"Warning: Multiple matches, using first")
-
-        row = matches.iloc[0]
         return ChainProperties(
-            diameter=row['diameter'],
-            grade=ChainGrade[row['grade']],
-            link_type=LinkType.STUD_LINK if row['link_type'] == "Stud Link" else LinkType.STUDLESS,
-            mbl=row['mbl'],
-            stiffness=row['stiffness'],
-            weight_air=row['weight_air'],
-            weight_water=row['weight_water'],
-            bend_radius=row['bend_radius'],
-            fatigue_category=row['fatigue_category'],
-            certification=row['certification'],
-            manufacturer=row['manufacturer'],
-            part_number=row['part_number'],
-            notes=row['notes']
+            diameter=row.diameter,
+            grade=ChainGrade[row.grade],
+            link_type=LinkType.STUD_LINK if row.link_type == "Stud Link" else LinkType.STUDLESS,
+            mbl=row.mbl,
+            stiffness=row.stiffness,
+            weight_air=row.weight_air,
+            weight_water=row.weight_water,
+            bend_radius=row.bend_radius,
+            fatigue_category=row.fatigue_category,
+            certification=row.certification,
+            manufacturer=row.manufacturer,
+            part_number=row.part_number,
+            notes=row.notes
         )
 
     def find_chain_by_mbl(

@@ -873,10 +873,10 @@ class TestDrillingRigHullValidationCSV:
             if record.get("RIG_TYPE") in {"drillship", "semi_submersible"}
             and record.get("LOA_M")
             and record.get("BEAM_M")
+            and record.get("DIMENSION_CONFIDENCE") not in {"estimated", "generic"}
         ]
 
         added, skipped = register_drilling_rigs(supported, overwrite=True)
 
         assert added == 138
         assert skipped == 0
-
