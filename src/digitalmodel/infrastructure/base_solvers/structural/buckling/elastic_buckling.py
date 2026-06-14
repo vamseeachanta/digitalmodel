@@ -127,12 +127,14 @@ class ElasticBucklingSolver(StructuralSolver):
 
             # Apply boundary conditions
             logger.info("Applying boundary conditions")
-            K_mod, _ = self.apply_boundary_conditions(K, np.zeros(K.shape[0]))
-            Kg_mod, _ = self.apply_boundary_conditions(Kg, np.zeros(Kg.shape[0]))
+            K_mod, Kg_mod, free_dofs = self._reduce_buckling_matrices(K, Kg)
 
             # Solve eigenvalue problem
             logger.info("Solving eigenvalue problem: (K - λKg)φ = 0")
             eigenvalues, eigenvectors = self._solve_eigenvalue_problem(K_mod, Kg_mod)
+            eigenvectors = self._expand_eigenvectors(
+                eigenvectors, free_dofs, K.shape[0]
+            )
 
             # Store results
             self._store_results(eigenvalues, eigenvectors)
@@ -213,6 +215,9 @@ class ElasticBucklingSolver(StructuralSolver):
         Returns:
             Estimated axial force (N)
         """
+        if hasattr(element, "axial_force"):
+            return float(element.axial_force)
+
         # Compute total load magnitude
         total_load = sum(abs(load['magnitude']) for load in self.loads)
 
@@ -231,11 +236,13 @@ class ElasticBucklingSolver(StructuralSolver):
         """
         Compute element geometric stiffness matrix.
 
-        For a beam element:
-        Kg = (N/L) * [0, 0, 0, 0]
-                      [0, 6/5, 0, 1/10]
-                      [0, 0, 0, 0]
-                      [0, 1/10, 0, 6/5]
+        For a Euler-Bernoulli beam-column element with transverse displacement
+        and rotation DOFs, positive axial_force is compressive reference load:
+
+        Kg = N/(30L) * [ 36,   3L, -36,   3L]
+                      [ 3L, 4L², -3L,  -L²]
+                      [-36,  -3L,  36,  -3L]
+                      [ 3L, -L², -3L, 4L²]
 
         Args:
             element: Element object
@@ -245,17 +252,83 @@ class ElasticBucklingSolver(StructuralSolver):
             4×4 element geometric stiffness matrix
         """
         L = element.L
-        N_over_L = axial_force / L
+        L2 = L * L
 
-        # Simplified geometric stiffness (for bending)
-        kg = N_over_L * np.array([
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 6.0/5.0, 0.0, 1.0/10.0],
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0/10.0, 0.0, 6.0/5.0]
+        kg = (axial_force / (30.0 * L)) * np.array([
+            [36.0, 3.0 * L, -36.0, 3.0 * L],
+            [3.0 * L, 4.0 * L2, -3.0 * L, -L2],
+            [-36.0, -3.0 * L, 36.0, -3.0 * L],
+            [3.0 * L, -L2, -3.0 * L, 4.0 * L2],
         ])
 
         return kg
+
+    def _reduce_buckling_matrices(
+        self, K: np.ndarray, Kg: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, List[int]]:
+        """
+        Reduce K and Kg to free DOFs for a generalized buckling eigenproblem.
+
+        Constrained DOFs must be removed rather than identity-stamped into both
+        matrices; otherwise fixed DOFs create artificial eigenvalues of 1.0.
+        """
+        n_dof = K.shape[0]
+        constrained = self._constrained_dof_indices(n_dof)
+        free_dofs = [index for index in range(n_dof) if index not in constrained]
+        if not free_dofs:
+            raise ValueError("All DOFs are constrained; buckling eigenproblem is empty")
+
+        selector = np.ix_(free_dofs, free_dofs)
+        return K[selector], Kg[selector], free_dofs
+
+    def _constrained_dof_indices(self, n_dof: int) -> set[int]:
+        constrained: set[int] = set()
+        dofs_per_node = 2
+
+        for node in self.boundary_conditions.get("fixed_nodes", []):
+            node_id = int(node)
+            constrained.update(
+                index
+                for index in range(
+                    node_id * dofs_per_node,
+                    node_id * dofs_per_node + dofs_per_node,
+                )
+                if 0 <= index < n_dof
+            )
+
+        for node in self.boundary_conditions.get("pinned_nodes", []):
+            dof_index = int(node) * dofs_per_node
+            if 0 <= dof_index < n_dof:
+                constrained.add(dof_index)
+
+        for item in self.boundary_conditions.get("fixed_dofs", []):
+            node_id = int(item["node"])
+            for dof_name in item["dofs"]:
+                offset = self._dof_offset(str(dof_name))
+                dof_index = node_id * dofs_per_node + offset
+                if 0 <= dof_index < n_dof:
+                    constrained.add(dof_index)
+
+        return constrained
+
+    def _dof_offset(self, dof_name: str) -> int:
+        normalized = dof_name.lower()
+        if normalized in {"y", "uy", "translation", "transverse"}:
+            return 0
+        if normalized in {"theta", "rotation", "rz"}:
+            return 1
+        raise ValueError(f"Unsupported beam DOF name for buckling BC: {dof_name}")
+
+    def _expand_eigenvectors(
+        self,
+        eigenvectors: np.ndarray,
+        free_dofs: List[int],
+        n_dof: int,
+    ) -> np.ndarray:
+        expanded = np.zeros((n_dof, eigenvectors.shape[1]))
+        for reduced_index, dof_index in enumerate(free_dofs):
+            expanded[dof_index, :] = eigenvectors[reduced_index, :]
+        return expanded
 
     def _solve_eigenvalue_problem(
         self,
@@ -286,7 +359,11 @@ class ElasticBucklingSolver(StructuralSolver):
 
             # Filter to real positive eigenvalues
             # (complex eigenvalues indicate numerical issues)
-            real_mask = np.isreal(eigenvalues) & (np.real(eigenvalues) > 0)
+            real_mask = (
+                np.isreal(eigenvalues)
+                & np.isfinite(np.real(eigenvalues))
+                & (np.real(eigenvalues) > 0)
+            )
             eigenvalues = np.real(eigenvalues[real_mask])
             eigenvectors = np.real(eigenvectors[:, real_mask])
 
@@ -299,6 +376,9 @@ class ElasticBucklingSolver(StructuralSolver):
             n_modes = min(self.num_modes, len(eigenvalues))
             eigenvalues = eigenvalues[:n_modes]
             eigenvectors = eigenvectors[:, :n_modes]
+
+            if len(eigenvalues) == 0:
+                raise ValueError("No finite positive buckling eigenvalues found")
 
             logger.debug("Eigenvalue problem solved - %d modes found", len(eigenvalues))
             logger.debug("Eigenvalues (critical load factors): %s", eigenvalues)

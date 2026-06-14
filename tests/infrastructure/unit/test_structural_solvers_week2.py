@@ -188,45 +188,63 @@ class TestElasticBucklingSolver:
         """Setup simple column for buckling analysis."""
         solver = buckling_solver
 
-        # Nodes: {0: [0, 0], 1: [0, 1]} (1m vertical column) - dictionary format required
-        solver.set_nodes({
-            0: np.array([0.0, 0.0]),
-            1: np.array([0.0, 1.0])
-        })
+        length = 1.0
+        num_elements = 8
+        axial_reference_load = 1.0
+        E = 2.1e11
+        I = 1.0e-5
+        A = 1.0e-3
 
-        # Single beam element
-        elem = BeamElement(
-            elem_id=0,
-            node1=0, node2=1,
-            coord1=np.array([0.0, 0.0]),
-            coord2=np.array([0.0, 1.0]),
-            E=2.1e11,
-            I=1.0e-5,
-            A=1.0e-3
-        )
-        solver.set_elements([elem])
+        # 1m beam-column aligned with the axial load direction.
+        nodes = {
+            node_id: np.array([length * node_id / num_elements, 0.0])
+            for node_id in range(num_elements + 1)
+        }
+        solver.set_nodes(nodes)
 
-        # Boundary conditions: pinned-pinned
+        elements = []
+        for elem_id in range(num_elements):
+            elem = BeamElement(
+                elem_id=elem_id,
+                node1=elem_id,
+                node2=elem_id + 1,
+                coord1=nodes[elem_id],
+                coord2=nodes[elem_id + 1],
+                E=E,
+                I=I,
+                A=A
+            )
+            elem.axial_force = axial_reference_load
+            elements.append(elem)
+        solver.set_elements(elements)
+
+        # Pinned-pinned: constrain end transverse DOFs only; rotations remain free.
         solver.set_boundary_conditions({
-            'fixed_nodes': [0, 1],
-            'pinned_nodes': [],
+            'fixed_nodes': [],
+            'pinned_nodes': [0, num_elements],
             'prescribed_displacements': {}
         })
 
-        # Axial load at top
+        # Nonzero load record keeps validation honest; element.axial_force supplies Kg.
         solver.set_loads([
-            {'node': 1, 'direction': 'y', 'magnitude': -100000.0}
+            {'node': num_elements, 'direction': 'x', 'magnitude': -axial_reference_load}
         ])
 
         # Material properties
         solver.set_material_properties({
-            'E': 2.1e11,
+            'E': E,
             'nu': 0.3,
             'rho': 7850,
             'sigma_y': 2.5e8
         })
 
         return solver
+
+    def _euler_pinned_pinned_load(self, solver):
+        """Euler critical load for the pinned-pinned test column."""
+        length = sum(element.L for element in solver.elements)
+        element = solver.elements[0]
+        return np.pi**2 * element.E * element.I / length**2
 
     def test_initialization(self, buckling_solver):
         """Test buckling solver initialization."""
@@ -274,12 +292,14 @@ class TestElasticBucklingSolver:
         solver = setup_column
         solver.set_num_modes(1)  # Only first mode
         result = solver.solve()
+        euler_load = self._euler_pinned_pinned_load(solver)
 
         assert result['status'] == 'completed'
         assert 'critical_loads' in result
         assert 'mode_shapes' in result
         assert 'eigenvalues' in result
-        assert result['first_critical_load'] > 0
+        assert result['num_modes'] == 1
+        assert result['first_critical_load'] == pytest.approx(euler_load, rel=0.05)
 
     def test_critical_loads_positive(self, setup_column):
         """Test critical loads are positive."""
@@ -287,7 +307,10 @@ class TestElasticBucklingSolver:
         solver.set_num_modes(3)
         result = solver.solve()
 
-        assert all(load > 0 for load in result['critical_loads'].values())
+        assert result['status'] == 'completed'
+        critical_loads = list(result['critical_loads'].values())
+        assert len(critical_loads) == 3
+        assert all(np.isfinite(load) and load > 0 for load in critical_loads)
 
     def test_first_mode_lowest_load(self, setup_column):
         """Test first buckling load is lowest."""
@@ -295,9 +318,13 @@ class TestElasticBucklingSolver:
         solver.set_num_modes(3)
         result = solver.solve()
 
+        assert result['status'] == 'completed'
         critical_loads = list(result['critical_loads'].values())
-        for i in range(len(critical_loads) - 1):
-            assert critical_loads[i] <= critical_loads[i + 1]
+        assert len(critical_loads) == 3
+        assert all(
+            critical_loads[i] < critical_loads[i + 1]
+            for i in range(len(critical_loads) - 1)
+        )
 
     def test_mode_shapes_vectors(self, setup_column):
         """Test mode shapes are vectors."""
@@ -305,10 +332,13 @@ class TestElasticBucklingSolver:
         solver.set_num_modes(2)
         result = solver.solve()
 
+        assert result['status'] == 'completed'
+        expected_dofs = len(solver.nodes) * 2
         assert len(result['mode_shapes']) == 2
         for mode_id, shape in result['mode_shapes'].items():
             assert isinstance(shape, np.ndarray)
-            assert len(shape) > 0
+            assert shape.shape == (expected_dofs,)
+            assert np.linalg.norm(shape) > 0.0
 
     def test_solver_metadata(self, buckling_solver):
         """Test buckling solver metadata."""

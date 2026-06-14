@@ -162,6 +162,32 @@ def test_workflow_registry(workflow):
         assert len(element_results) == summary["num_elements"]
         assert (element_results["von_mises_stress"] > 0.0).all()
         assert (element_results["safety_factor"] > 0.0).all()
+    elif workflow["id"] == "elastic-buckling":
+        summary = cfg["elastic_buckling"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        mode_results = pd.read_csv(results_path)
+
+        assert summary["status"] == "completed"
+        assert summary["first_critical_load"] > 0.0
+        assert math.isfinite(summary["first_critical_load"])
+        assert summary["num_modes"] >= 2
+        assert len(mode_results) == summary["num_modes"]
+        assert mode_results["critical_load"].iloc[0] == pytest.approx(
+            summary["first_critical_load"]
+        )
+        assert mode_results["critical_load"].iloc[1] > mode_results[
+            "critical_load"
+        ].iloc[0]
+        assert not math.isclose(
+            mode_results["critical_load"].iloc[0],
+            mode_results["critical_load"].iloc[1],
+        )
+        assert summary["first_critical_load"] == pytest.approx(
+            summary["euler_reference_load"],
+            rel=0.05,
+        )
     elif workflow["id"] == "stress-strain-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
