@@ -232,6 +232,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.drilling_riser.workflow import router as riser_stackup
 
         cfg_base = riser_stackup(cfg_base)
+    elif basename == "sn_curve":
+        from digitalmodel.fatigue.workflow import router as sn_curve
+
+        cfg_base = sn_curve(cfg_base)
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)

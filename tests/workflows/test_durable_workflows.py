@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -111,6 +112,23 @@ def test_workflow_registry(workflow):
         assert len(profile) == 5
         assert profile["effective_tension_kn"].iloc[0] > (
             profile["effective_tension_kn"].iloc[-1]
+        )
+    elif workflow["id"] == "sn-curve":
+        summary = cfg["sn_curve"]
+        curve_path = Path(summary["curve_csv"])
+        if not curve_path.is_absolute():
+            curve_path = REPO_ROOT / curve_path
+        curve = pd.read_csv(curve_path)
+        cycles = curve["allowable_cycles_n"]
+
+        assert summary["points"] == 6
+        assert len(curve) == 6
+        assert curve["stress_range_mpa"].is_monotonic_increasing
+        assert (cycles > 0).all()
+        assert cycles.map(math.isfinite).all()
+        assert all(
+            cycles.iloc[index] < cycles.iloc[index - 1]
+            for index in range(1, len(cycles))
         )
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]

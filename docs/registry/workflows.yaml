@@ -78,6 +78,14 @@ workflows:
       - examples/workflows/riser-stackup/results/input_riser_stackup.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup]
     runtime: offline
+  - id: sn-curve
+    basename: sn_curve
+    title: DNV-RP-C203 S-N endurance curve grid
+    input: examples/workflows/sn-curve/input.yml
+    outputs:
+      - examples/workflows/sn-curve/results/input_sn_curve.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve]
+    runtime: offline
   - id: plate-buckling
     basename: plate_buckling
     title: DNV-RP-C201 plate buckling usage check
