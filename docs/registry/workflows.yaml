@@ -102,6 +102,14 @@ workflows:
       - examples/workflows/api-2sk-mooring/results/input_code_check.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-2sk-mooring]
     runtime: offline
+  - id: pipe-ovality
+    basename: pipe_ovality
+    title: DNV-OS-F101 pipe out-of-roundness geometry check
+    input: examples/workflows/pipe-ovality/input.yml
+    outputs:
+      - examples/workflows/pipe-ovality/results/input_ovality.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-ovality]
+    runtime: offline
   - id: von-mises
     basename: von_mises
     title: Two-element cantilever beam Von Mises stress check
@@ -143,6 +151,14 @@ workflows:
     outputs:
       - examples/workflows/riser-stackup/results/input_riser_stackup.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup]
+    runtime: offline
+  - id: tsj-sizing
+    basename: tsj_sizing
+    title: API RP 2RD taper stress joint membrane sizing
+    input: examples/workflows/tsj-sizing/input.yml
+    outputs:
+      - examples/workflows/tsj-sizing/results/input_tsj.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tsj-sizing]
     runtime: offline
   - id: riser-stackup-parametric
     basename: parametric_run

@@ -232,6 +232,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.drilling_riser.workflow import router as riser_stackup
 
         cfg_base = riser_stackup(cfg_base)
+    elif basename == "tsj_sizing":
+        from digitalmodel.drilling_riser.tsj_workflow import router as tsj_sizing
+
+        cfg_base = tsj_sizing(cfg_base)
     elif basename == "sn_curve":
         from digitalmodel.fatigue.workflow import router as sn_curve
 
@@ -244,6 +248,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.code_checks.workflow import router as code_check
 
         cfg_base = code_check(cfg_base)
+    elif basename == "pipe_ovality":
+        from digitalmodel.structural.ovality.workflow import router as pipe_ovality
+
+        cfg_base = pipe_ovality(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 

@@ -144,6 +144,23 @@ def test_workflow_registry(workflow):
         assert (results["code"] == expected_codes[workflow["id"]]).all()
         assert (results["utilisation"] > 0.0).all()
         assert results["utilisation"].map(math.isfinite).all()
+    elif workflow["id"] == "pipe-ovality":
+        summary = cfg["pipe_ovality"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        results = pd.read_csv(results_path)
+        expected_out_of_roundness = (325.0 - 322.7) / 323.85
+
+        assert summary["out_of_roundness"] == pytest.approx(expected_out_of_roundness)
+        assert summary["ovality_percent"] == pytest.approx(
+            expected_out_of_roundness * 100.0
+        )
+        assert summary["passes"] is True
+        assert results.loc[0, "out_of_roundness"] == pytest.approx(
+            expected_out_of_roundness
+        )
+        assert bool(results.loc[0, "passes"]) is True
     elif workflow["id"] == "von-mises":
         summary = cfg["von_mises"]
         results_path = Path(summary["results_csv"])
@@ -177,9 +194,10 @@ def test_workflow_registry(workflow):
         assert mode_results["critical_load"].iloc[0] == pytest.approx(
             summary["first_critical_load"]
         )
-        assert mode_results["critical_load"].iloc[1] > mode_results[
-            "critical_load"
-        ].iloc[0]
+        assert (
+            mode_results["critical_load"].iloc[1]
+            > mode_results["critical_load"].iloc[0]
+        )
         assert not math.isclose(
             mode_results["critical_load"].iloc[0],
             mode_results["critical_load"].iloc[1],
@@ -206,13 +224,11 @@ def test_workflow_registry(workflow):
             ).read_text()
         )
         low_yield = pd.read_csv(
-            REPO_ROOT
-            / "examples/workflows/stress-strain-parametric/results/"
+            REPO_ROOT / "examples/workflows/stress-strain-parametric/results/"
             "results/case_0_stress_strain.csv"
         )
         high_yield = pd.read_csv(
-            REPO_ROOT
-            / "examples/workflows/stress-strain-parametric/results/"
+            REPO_ROOT / "examples/workflows/stress-strain-parametric/results/"
             "results/case_2_stress_strain.csv"
         )
 
@@ -241,6 +257,22 @@ def test_workflow_registry(workflow):
         assert profile["effective_tension_kn"].iloc[0] > (
             profile["effective_tension_kn"].iloc[-1]
         )
+    elif workflow["id"] == "tsj-sizing":
+        summary = cfg["tsj_sizing"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        results = pd.read_csv(results_path)
+
+        assert summary["max_utilisation"] > 0.0
+        assert math.isfinite(summary["max_utilisation"])
+        assert summary["passes"] is True
+        assert summary["governing_section"]["position_m"] == pytest.approx(30.0)
+        assert len(results) == 4
+        assert (results["utilisation"] > 0.0).all()
+        assert results["utilisation"].map(math.isfinite).all()
+        assert results["utilisation"].max() == pytest.approx(summary["max_utilisation"])
+        assert results["vm_stress_Pa"].iloc[-1] > results["vm_stress_Pa"].iloc[0]
     elif workflow["id"] == "riser-stackup-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
