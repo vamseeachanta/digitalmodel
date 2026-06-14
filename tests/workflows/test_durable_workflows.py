@@ -113,6 +113,24 @@ def test_workflow_registry(workflow):
         assert profile["effective_tension_kn"].iloc[0] > (
             profile["effective_tension_kn"].iloc[-1]
         )
+    elif workflow["id"] == "riser-stackup-parametric":
+        cases = cfg["parametric_run"]["cases"]
+        manifest = pd.read_csv(
+            REPO_ROOT / "examples/workflows/riser-stackup-parametric/results/cases.csv"
+        )
+        case_0 = yaml.safe_load(
+            (
+                REPO_ROOT
+                / "examples/workflows/riser-stackup-parametric/results/case_0.yml"
+            ).read_text()
+        )
+
+        assert len(cases) == 10
+        assert manifest["status"].tolist() == ["completed"] * 10
+        assert case_0["basename"] == "riser_stackup"
+        assert case_0["riser_stackup"]["submerged_weight_kn"] == pytest.approx(
+            4268.0377
+        )
     elif workflow["id"] == "sn-curve":
         summary = cfg["sn_curve"]
         curve_path = Path(summary["curve_csv"])

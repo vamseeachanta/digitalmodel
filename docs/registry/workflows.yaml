@@ -78,6 +78,15 @@ workflows:
       - examples/workflows/riser-stackup/results/input_riser_stackup.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup]
     runtime: offline
+  - id: riser-stackup-parametric
+    basename: parametric_run
+    title: Legacy-derived drilling riser stack-up parametric sweep
+    input: examples/workflows/riser-stackup-parametric/input.yml
+    outputs:
+      - examples/workflows/riser-stackup-parametric/results/cases.csv
+      - examples/workflows/riser-stackup-parametric/results/case_0.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-parametric]
+    runtime: offline
   - id: sn-curve
     basename: sn_curve
     title: DNV-RP-C203 S-N endurance curve grid
