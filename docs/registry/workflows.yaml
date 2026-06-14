@@ -118,6 +118,14 @@ workflows:
       - examples/workflows/elastic-buckling/results/input_elastic_buckling.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[elastic-buckling]
     runtime: offline
+  - id: orcaflex-strength-post
+    basename: orcaflex_post_process
+    title: OrcaFlex strength post-processing (tension/moment/curvature) — needs OrcaFlex license
+    input: examples/workflows/orcaflex-strength-post/input.yml
+    outputs:
+      - examples/workflows/orcaflex-strength-post/results/strength_loadcase_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-strength-post]
+    runtime: requires-license
   - id: stress-strain-parametric
     basename: parametric_run
     title: Ramberg-Osgood material grade sweep for offshore pipeline steels
