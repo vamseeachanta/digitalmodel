@@ -1,0 +1,10 @@
+basename: vlp_correlations
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+vlp_correlations: {}

@@ -352,6 +352,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         scour = ScourWorkflow()
         cfg_base = scour.router(cfg_base)
+    elif basename in ["capex_estimate", "opex_estimate", "concept_selection"]:
+        from digitalmodel.field_development.registry_workflows import (
+            FieldDevelopmentRegistryWorkflow,
+        )
+
+        field_development = FieldDevelopmentRegistryWorkflow()
+        cfg_base = field_development.router(cfg_base)
     elif basename == "production":
         from digitalmodel.production_engineering.workflow import (
             ProductionEngineeringWorkflow,
@@ -375,6 +382,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.well.workflow import run_tubular_design
 
         cfg_base = run_tubular_design(cfg_base)
+    elif basename in ["nodal_analysis", "vlp_correlations"]:
+        from digitalmodel.production_engineering.workflow import (
+            ProductionEngineeringWorkflow,
+        )
+
+        production = ProductionEngineeringWorkflow()
+        cfg_base = production.router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

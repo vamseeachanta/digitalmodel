@@ -1,0 +1,10 @@
+basename: nodal_analysis
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+nodal_analysis: {}

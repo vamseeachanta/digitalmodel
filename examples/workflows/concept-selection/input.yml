@@ -1,0 +1,20 @@
+basename: concept_selection
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+concept_selection:
+  case:
+    id: registry_concept_selection
+    description: Mars analogue host concept ranking
+  water_depth_m: 896.0
+  reservoir_size_mmbbl: 100.0
+  distance_to_infra_km: 50.0
+  fluid_type: oil
+  outputs:
+    directory: results/concept_selection
+    summary_json: concept_selection_summary.json
