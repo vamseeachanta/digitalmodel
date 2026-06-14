@@ -11,18 +11,43 @@ Tests all functionality including:
 import pytest
 import numpy as np
 import pandas as pd
+import os
 from pathlib import Path
 import tempfile
 import shutil
 
-from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients import (
+
+def _path_writable_or_creatable(path: Path) -> bool:
+    """Return True when path exists writable or can be created below a writable parent."""
+    current = path
+    while not current.exists():
+        if current.parent == current:
+            return False
+        current = current.parent
+    return os.access(current, os.W_OK | os.X_OK)
+
+
+def _matplotlib_cache_available() -> bool:
+    config_dir = os.environ.get("MPLCONFIGDIR")
+    if config_dir and not Path(config_dir).name.startswith("matplotlib-"):
+        return _path_writable_or_creatable(Path(config_dir))
+    return _path_writable_or_creatable(Path.home() / ".config" / "matplotlib")
+
+
+requires_matplotlib_cache = pytest.mark.skipif(
+    not _matplotlib_cache_available(),
+    reason="matplotlib plotting tests require a writable config/cache directory",
+)
+
+from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.coefficients import (
     CoefficientDatabase,
     FrequencyDependentMatrix,
     KramersKronigValidator,
-    AQWAParser,
-    HydrodynamicPlotter,
     DOF_NAMES,
     DOF_INDEX
+)
+from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.aqwa_parser import (
+    AQWAParser,
 )
 
 
@@ -321,9 +346,15 @@ ADDED MASS MATRIX
 class TestHydrodynamicPlotter:
     """Test suite for visualization methods."""
 
+    pytestmark = requires_matplotlib_cache
+
     @pytest.fixture
     def plotter(self, tmp_path):
         """Create plotter with sample database."""
+        from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.plotting import (
+            HydrodynamicPlotter,
+        )
+
         # Create sample database
         frequencies = [0.1, 0.2, 0.3, 0.4, 0.5]
 
@@ -444,8 +475,14 @@ class TestHydrodynamicPlotter:
 class TestIntegration:
     """Integration tests for complete workflows."""
 
+    pytestmark = requires_matplotlib_cache
+
     def test_csv_to_visualization_workflow(self, tmp_path):
         """Test complete workflow from CSV to visualization."""
+        from digitalmodel.marine_ops.marine_analysis.hydrodynamic_coefficients.plotting import (
+            HydrodynamicPlotter,
+        )
+
         # Create test data
         frequencies = [0.1, 0.3, 0.5]
 
