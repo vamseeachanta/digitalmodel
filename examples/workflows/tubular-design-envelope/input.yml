@@ -1,0 +1,25 @@
+basename: tubular_design
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+tubular_design:
+  case:
+    id: registry_tubular_design_envelope
+    description: 7 inch 26 ppf L80 casing API/VME design envelope
+  geometry:
+    od_in: 7.0
+    id_in: 6.276
+    smys_psi: 80000.0
+    burst_rating_psi: 5180.0
+    collapse_rating_psi: 5550.0
+  design_factor: 1.2
+  n_points: 80
+  outputs:
+    directory: results/tubular_design
+    summary_json: tubular_design_summary.json
+    envelope_csv: tubular_design_envelope.csv
