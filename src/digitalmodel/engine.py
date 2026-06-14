@@ -297,7 +297,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         diffraction = DiffractionWorkflow()
         cfg_base = diffraction.router(cfg_base)
     elif basename == "fpso_mooring":
-        from digitalmodel.subsea.mooring_analysis.fpso_workflow import FPSOMooringWorkflow
+        from digitalmodel.subsea.mooring_analysis.fpso_workflow import (
+            FPSOMooringWorkflow,
+        )
+
         fmw = FPSOMooringWorkflow()
         cfg_base = fmw.router(cfg_base)
     elif basename == "jacket_checks":
@@ -329,6 +332,22 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "well_bore_design":
+        from digitalmodel.well.workflow import run_well_bore_design
+
+        cfg_base = run_well_bore_design(cfg_base)
+    elif basename == "well_hydraulics":
+        from digitalmodel.well.workflow import run_well_hydraulics
+
+        cfg_base = run_well_hydraulics(cfg_base)
+    elif basename == "rop_analysis":
+        from digitalmodel.well.workflow import run_rop_analysis
+
+        cfg_base = run_rop_analysis(cfg_base)
+    elif basename == "tubular_design":
+        from digitalmodel.well.workflow import run_tubular_design
+
+        cfg_base = run_tubular_design(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

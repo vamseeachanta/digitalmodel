@@ -276,3 +276,40 @@ workflows:
       - examples/workflows/nodal-analysis-ipr-vlp/results/nodal_analysis/nodal_analysis_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis-ipr-vlp]
     runtime: offline
+  - id: well-bore-design
+    basename: well_bore_design
+    title: Standard offshore wellbore casing/cost/risk screen
+    input: examples/workflows/well-bore-design/input.yml
+    outputs:
+      - examples/workflows/well-bore-design/results/input.yml
+      - examples/workflows/well-bore-design/results/well_bore_design/well_bore_design_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[well-bore-design]
+    runtime: offline
+  - id: well-hydraulics
+    basename: well_hydraulics
+    title: 8.5 inch hole annular hydraulics ECD and cleaning screen
+    input: examples/workflows/well-hydraulics/input.yml
+    outputs:
+      - examples/workflows/well-hydraulics/results/input.yml
+      - examples/workflows/well-hydraulics/results/well_hydraulics/well_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[well-hydraulics]
+    runtime: offline
+  - id: rop-analysis
+    basename: rop_analysis
+    title: Bourgoyne-Young and Warren ROP model comparison
+    input: examples/workflows/rop-analysis/input.yml
+    outputs:
+      - examples/workflows/rop-analysis/results/input.yml
+      - examples/workflows/rop-analysis/results/rop_analysis/rop_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rop-analysis]
+    runtime: offline
+  - id: tubular-design-envelope
+    basename: tubular_design
+    title: 7 inch L80 casing API/VME tubular design envelope
+    input: examples/workflows/tubular-design-envelope/input.yml
+    outputs:
+      - examples/workflows/tubular-design-envelope/results/input.yml
+      - examples/workflows/tubular-design-envelope/results/tubular_design/tubular_design_summary.json
+      - examples/workflows/tubular-design-envelope/results/tubular_design/tubular_design_envelope.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tubular-design-envelope]
+    runtime: offline

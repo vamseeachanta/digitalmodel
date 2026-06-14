@@ -78,8 +78,9 @@ def test_workflow_registry(workflow):
             REPO_ROOT / "examples/workflows/viv-parametric/results/cases.csv"
         )
         case_0 = yaml.safe_load(
-            (REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml")
-            .read_text()
+            (
+                REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml"
+            ).read_text()
         )
 
         assert len(cases) == 6
@@ -182,9 +183,7 @@ def test_workflow_registry(workflow):
         assert result["anchor_length"]["end"] == pytest.approx(1368.5)
         assert result["min_critical_buckling_load"] == pytest.approx(-64701.045412)
         assert result["effective_axial_load"]["anchor_start"] == pytest.approx(-33.26)
-        assert result["fully_restrained_axial_force"]["L=0"] == pytest.approx(
-            -253.575
-        )
+        assert result["fully_restrained_axial_force"]["L=0"] == pytest.approx(-253.575)
     elif workflow["id"] == "pipeline-upheaval-buckling":
         result = cfg["pipeline"]["upheaval_buckling"]
         assert result["cover_check"] == "Pass"
@@ -218,9 +217,7 @@ def test_workflow_registry(workflow):
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]
-        assert results["diagnostic_message"].startswith(
-            "Classification: PUMP_TAGGING."
-        )
+        assert results["diagnostic_message"].startswith("Classification: PUMP_TAGGING.")
         assert results["pump_fillage"] == pytest.approx(75.909653)
         assert results["inferred_production"] == pytest.approx(338.041470)
 
@@ -238,8 +235,7 @@ def test_workflow_registry(workflow):
         assert props["I"]["Ix"] == pytest.approx(19.471869)
 
         model_path = (
-            REPO_ROOT
-            / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
+            REPO_ROOT / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
             "dnvrph103_demo_6dbuoy_deep.yml"
         )
         model = yaml.safe_load(model_path.read_text())
@@ -258,9 +254,7 @@ def test_workflow_registry(workflow):
         assert summary["n_results"] == 8
         assert summary["min_safety_factor"] == pytest.approx(2.08)
         assert summary["max_utilization"] == pytest.approx(0.48)
-        assert result["environmental_loads"]["total_force"] == pytest.approx(
-            2280.94225
-        )
+        assert result["environmental_loads"]["total_force"] == pytest.approx(2280.94225)
 
         summary_path = Path(cfg["outputs"]["summary_json"])
         if not summary_path.is_absolute():
@@ -353,7 +347,9 @@ def test_workflow_registry(workflow):
         assert row["speed_kn"] == pytest.approx(12.0)
         assert row["rudder_angle_deg"] == pytest.approx(35.0)
         assert row["scalar_normal_force_N"] == pytest.approx(722870.905140)
-        assert row["hydrodynamic_rudder_stock_torque_Nm"] == pytest.approx(542153.178855)
+        assert row["hydrodynamic_rudder_stock_torque_Nm"] == pytest.approx(
+            542153.178855
+        )
         assert row["required_steering_gear_holding_torque_Nm"] == pytest.approx(
             -542153.178855
         )
@@ -388,5 +384,49 @@ def test_workflow_registry(workflow):
         assert op["confidence"] == "Green"
         assert op["q_uncertainty_fraction"] == pytest.approx(0.05)
         assert op["q_low_bopd"] < op["q_bopd"] < op["q_high_bopd"]
+    elif workflow["id"] == "well-bore-design":
+        block = cfg["well_bore_design"]
+        summary = block["summary"]
+        assert block["hole_type"] == "standard_hole"
+        assert summary["casing_count"] == 5
+        assert summary["total_cost_usd"] == pytest.approx(21500000.0)
+        assert summary["production_potential_bopd"] == pytest.approx(15000.0)
+        assert summary["risk"]["overall_score"] == pytest.approx(4.0)
+        assert summary["recommended_hole_type"] == "standard_hole"
+    elif workflow["id"] == "well-hydraulics":
+        result = cfg["well_hydraulics"]["result"]
+        assert result["annular_velocity_ft_min"] == pytest.approx(188.538461538)
+        assert result["pressure_drop_annulus_psi"] == pytest.approx(127.087912088)
+        assert result["ecd_ppg"] == pytest.approx(10.805499789)
+        assert result["cuttings_transport_ratio"] == pytest.approx(1.0)
+    elif workflow["id"] == "rop-analysis":
+        result = cfg["rop_analysis"]["result"]
+        by = result["bourgoyne_young"]
+        warren = result["warren"]
+        assert by["rop_ft_hr"] == pytest.approx(5.636893157)
+        assert by["sensitivity_wob_ft_hr_per_klb"] == pytest.approx(0.140933341)
+        assert by["sensitivity_rpm_ft_hr_per_rpm"] == pytest.approx(0.033829259)
+        assert warren["rop_ft_hr"] == pytest.approx(167.096226327)
+    elif workflow["id"] == "tubular-design-envelope":
+        summary = cfg["tubular_design"]["summary"]
+        assert summary["geometry"]["yield_force_lbf"] == pytest.approx(603928.713320)
+        assert summary["envelopes"]["vme_isotropic"]["max_pressure_psi"] == (
+            pytest.approx(7224.808854)
+        )
+        assert summary["envelopes"]["vme_isotropic"]["min_pressure_psi"] == (
+            pytest.approx(-7224.808854)
+        )
+        assert summary["envelopes"]["api_ellipse"]["max_pressure_psi"] == (
+            pytest.approx(4984.071753)
+        )
+        assert summary["envelopes"]["api_ellipse"]["min_pressure_psi"] == (
+            pytest.approx(-5340.076878)
+        )
+        envelope_csv = Path(cfg["outputs"]["envelope_csv"])
+        if not envelope_csv.is_absolute():
+            envelope_csv = REPO_ROOT / envelope_csv
+        envelope = pd.read_csv(envelope_csv)
+        assert len(envelope) == 160
+        assert set(envelope["envelope"]) == {"vme_isotropic", "api_ellipse"}
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")

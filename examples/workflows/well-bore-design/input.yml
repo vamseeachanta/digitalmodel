@@ -1,0 +1,19 @@
+basename: well_bore_design
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+well_bore_design:
+  case:
+    id: registry_well_bore_design
+    description: Standard offshore wellbore design comparison
+  hole_type: standard_hole
+  water_depth_m: 500.0
+  objective: development
+  outputs:
+    directory: results/well_bore_design
+    summary_json: well_bore_design_summary.json
