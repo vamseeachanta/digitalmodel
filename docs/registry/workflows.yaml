@@ -70,6 +70,16 @@ workflows:
       - examples/workflows/stress-strain/results/input_stress_strain.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
     runtime: offline
+  - id: stress-strain-parametric
+    basename: parametric_run
+    title: Ramberg-Osgood material grade sweep for offshore pipeline steels
+    input: examples/workflows/stress-strain-parametric/input.yml
+    outputs:
+      - examples/workflows/stress-strain-parametric/results/cases.csv
+      - examples/workflows/stress-strain-parametric/results/case_0.yml
+      - examples/workflows/stress-strain-parametric/results/results/case_0_stress_strain.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain-parametric]
+    runtime: offline
   - id: riser-stackup
     basename: riser_stackup
     title: Deepwater drilling riser stack-up tension and wall check
@@ -94,6 +104,14 @@ workflows:
     outputs:
       - examples/workflows/sn-curve/results/input_sn_curve.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve]
+    runtime: offline
+  - id: sn-curve-comparison
+    basename: sn_curve
+    title: DNV-RP-C203 S-N curve comparison over a common stress grid
+    input: examples/workflows/sn-curve-comparison/input.yml
+    outputs:
+      - examples/workflows/sn-curve-comparison/results/input_sn_curve.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve-comparison]
     runtime: offline
   - id: plate-buckling
     basename: plate_buckling
