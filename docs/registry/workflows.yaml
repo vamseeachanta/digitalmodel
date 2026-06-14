@@ -110,6 +110,14 @@ workflows:
       - examples/workflows/von-mises/results/input_von_mises.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[von-mises]
     runtime: offline
+  - id: elastic-buckling
+    basename: elastic_buckling
+    title: Pinned-pinned Euler column elastic buckling check
+    input: examples/workflows/elastic-buckling/input.yml
+    outputs:
+      - examples/workflows/elastic-buckling/results/input_elastic_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[elastic-buckling]
+    runtime: offline
   - id: stress-strain-parametric
     basename: parametric_run
     title: Ramberg-Osgood material grade sweep for offshore pipeline steels

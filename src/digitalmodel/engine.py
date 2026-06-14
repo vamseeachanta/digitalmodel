@@ -248,6 +248,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 
         cfg_base = von_mises(cfg_base)
+    elif basename == "elastic_buckling":
+        from digitalmodel.structural.fe.elastic_buckling_workflow import (
+            router as elastic_buckling,
+        )
+
+        cfg_base = elastic_buckling(cfg_base)
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
