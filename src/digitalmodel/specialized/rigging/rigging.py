@@ -1,8 +1,7 @@
-
 from assetutilities.common.data import ReadFromExcel
 
-from digitalmodel.custom.rigging_components import Slings
-from digitalmodel.custom.rigging_components import Shackles
+from digitalmodel.specialized.rigging.rigging_components import Slings
+from digitalmodel.specialized.rigging.rigging_components import Shackles
 
 read_excel = ReadFromExcel()
 
@@ -19,6 +18,9 @@ class Rigging:
         rigging_groups = self.cfg.rigging["groups"]
         for rigging_group in rigging_groups:
             self.get_rigging_group(rigging_group)
+        # Return the cfg so the engine's `cfg_base = ...router/get_rigging_groups`
+        # assignment doesn't null the config (was returning None).
+        return self.cfg
 
     def get_rigging_group(self, rigging_group=None):
         rigging_elements = rigging_group["elements"]
