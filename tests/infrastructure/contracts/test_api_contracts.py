@@ -152,6 +152,40 @@ class APIContractValidator:
                     }
                 },
                 "additionalProperties": False
+            },
+            "analysis_response": {
+                "type": "object",
+                "required": ["status_code", "data"],
+                "properties": {
+                    "status_code": {"type": "integer", "minimum": 200, "maximum": 599},
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "analysis_id": {"type": "string", "pattern": "^[a-zA-Z0-9-]+$"},
+                            "status": {
+                                "type": "string",
+                                "enum": ["queued", "running", "completed", "failed", "cancelled"]
+                            },
+                            "results": {
+                                "type": "object",
+                                "properties": {
+                                    "summary": {"type": "object", "additionalProperties": True},
+                                    "details": {
+                                        "type": "array",
+                                        "items": {"type": "object", "additionalProperties": True}
+                                    }
+                                },
+                                "additionalProperties": True
+                            },
+                            "metadata": {"type": "object"}
+                        },
+                        "required": ["analysis_id", "status", "results"]
+                    },
+                    "message": {"type": ["string", "null"]},
+                    "timestamp": {"type": ["string", "null"]},
+                    "version": {"type": "string", "pattern": "^\\d+\\.\\d+$"}
+                },
+                "additionalProperties": False
             }
         }
 
@@ -524,11 +558,12 @@ class TestEndToEndContracts:
         result = contract_runner.test_endpoint_contract(
             "/api/v1/analysis/run",
             request_data,
-            "simulation_response"
+            "analysis_response"
         )
 
         assert result['schema_valid'], f"Contract validation failed: {result['errors']}"
         assert result['response']['status_code'] == 200
+        assert 'analysis_id' in result['response']['data']
 
     def test_error_handling_contracts(self, contract_runner):
         """Test error handling contracts."""

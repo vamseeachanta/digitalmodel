@@ -312,27 +312,27 @@ class ReferenceSeaStateProcessor:
         """Find reference with closest direction"""
         if not refs:
             return ""
-        
-        best_ref = ""
-        best_diff = float('inf')
-        
+
+        candidates = []
+        target_dir = target_dir % 360
+
         for ref in refs:
             # Extract direction from name (e.g., "wind_045deg_...")
             parts = ref.split('_')
             if len(parts) >= 2:
                 try:
-                    ref_dir = float(parts[1].replace('deg', ''))
+                    ref_dir = float(parts[1].replace('deg', '')) % 360
                     diff = abs(ref_dir - target_dir)
                     if diff > 180:
                         diff = 360 - diff
-                    
-                    if diff < best_diff:
-                        best_diff = diff
-                        best_ref = ref
+                    candidates.append((diff, -ref_dir, ref))
                 except ValueError:
                     continue
-        
-        return best_ref
+
+        if not candidates:
+            return ""
+
+        return min(candidates)[2]
     
     def _find_closest_wave(self, refs: List[str], target_dir: float, target_tp: float) -> str:
         """Find wave reference with closest direction and Tp"""

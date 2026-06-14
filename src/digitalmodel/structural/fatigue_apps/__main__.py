@@ -28,10 +28,20 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 import json
+import numpy as np
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
+from digitalmodel.structural.fatigue_apps.fatigue_damage_calculator import (
+    FatigueDamageCalculator,
+)
+from digitalmodel.structural.fatigue_apps.integrated_processor import (
+    FatigueCondition as IntegratedFatigueCondition,
+    IntegratedFatigueProcessor,
+    ProductionDataHandler,
+    main as run_integrated_analysis,
+)
 from digitalmodel.structural.fatigue_apps.reference_seastate_processor import (
     ReferenceSeaStateProcessor,
     FatigueCondition,
@@ -257,11 +267,6 @@ def run_analysis(args):
     
     # Initialize processor
     try:
-        from .integrated_processor import (
-            IntegratedFatigueProcessor,
-            ProductionDataHandler
-        )
-        
         # Create data handler
         data_handler = ProductionDataHandler(
             base_path=data_path,
@@ -282,7 +287,6 @@ def run_analysis(args):
         
         # Override S-N curve if specified
         if args.sn_curve != 'ABS_E_AIR':
-            from .fatigue_damage_calculator import FatigueDamageCalculator
             processor.fatigue_calculator = FatigueDamageCalculator(
                 sn_curve=FatigueDamageCalculator.CURVES[args.sn_curve],
                 scf=args.scf,
@@ -297,8 +301,7 @@ def run_analysis(args):
             # Convert to FatigueCondition objects
             conditions = []
             for _, row in df.iterrows():
-                from .integrated_processor import FatigueCondition
-                conditions.append(FatigueCondition(
+                conditions.append(IntegratedFatigueCondition(
                     id=int(row.get('Row', len(conditions) + 1)),
                     wind_speed=float(row.get('Wind Speed (m/s)', 5.0)),
                     wind_dir=float(row.get('Wind Dir (°)', 0.0)),
@@ -345,9 +348,16 @@ def run_analysis(args):
         logging.info("\n" + "="*60)
         logging.info("STARTING FATIGUE ANALYSIS")
         logging.info("="*60)
-        
+
+        parallel_workers = getattr(args, 'parallel', 1)
+        if not isinstance(parallel_workers, int):
+            parallel_workers = 1
+        adaptive_processing = getattr(args, 'adaptive', False)
+        if not isinstance(adaptive_processing, bool):
+            adaptive_processing = False
+
         # Check if parallel processing is requested
-        if args.parallel and args.parallel > 1:
+        if parallel_workers > 1:
             # Use parallel processor
             from .parallel_processor import (
                 ParallelFatigueProcessor,
@@ -367,20 +377,20 @@ def run_analysis(args):
             )
             
             # Create appropriate parallel processor
-            if args.adaptive:
+            if adaptive_processing:
                 parallel_processor = AdaptiveParallelProcessor(
                     base_processor=base_processor,
-                    num_workers=args.parallel if args.parallel > 0 else None,
+                    num_workers=parallel_workers if parallel_workers > 0 else None,
                     show_progress=not args.verbose
                 )
                 logging.info("Using adaptive parallel processing")
             else:
                 parallel_processor = ParallelFatigueProcessor(
                     base_processor=base_processor,
-                    num_workers=args.parallel,
+                    num_workers=parallel_workers,
                     show_progress=not args.verbose
                 )
-                logging.info(f"Using parallel processing with {args.parallel} workers")
+                logging.info(f"Using parallel processing with {parallel_workers} workers")
             
             # Get configurations to process
             if config_list:
@@ -442,7 +452,7 @@ def run_analysis(args):
                 }
             
             # Save performance report
-            if args.parallel > 1:
+            if parallel_workers > 1:
                 parallel_processor.save_performance_report()
                 logging.info(f"Parallel processing metrics:")
                 logging.info(f"  Total tasks: {metrics['total_tasks']}")
@@ -453,8 +463,7 @@ def run_analysis(args):
             results = results_data
         else:
             # Use sequential processing (original method)
-            from .integrated_processor import main
-            results, summary = main(data_path)
+            results, summary = run_integrated_analysis(data_path)
         
         # Save results
         if results:
