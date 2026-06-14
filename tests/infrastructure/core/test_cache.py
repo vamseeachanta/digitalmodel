@@ -1,617 +1,485 @@
 """
-ABOUTME: Test suite for cache layer with Redis and in-memory fallback.
-Tests cache decorators, TTL, invalidation, and performance metrics.
+ABOUTME: CacheClient test suite for memory and Redis-backed caching.
+Exercises the production cache API, decorator, TTL, invalidation, and stats.
 """
 
-import time
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import pickle
-import hashlib
 import json
+import pickle
+import sys
+import types
+from unittest.mock import MagicMock
+
+import pytest
+
+from digitalmodel.infrastructure.core.cache import (
+    CacheClient,
+    CacheConfig,
+    CacheStats,
+    cache_result,
+)
+
+cache_module = sys.modules[CacheClient.__module__]
 
 
 @pytest.fixture
-def mock_redis():
-    """Mock Redis client for testing."""
-    redis_mock = MagicMock()
-    redis_mock.ping.return_value = True
-    redis_mock.get.return_value = None
-    redis_mock.set.return_value = True
-    redis_mock.delete.return_value = 1
-    redis_mock.exists.return_value = 0
-    return redis_mock
+def memory_client():
+    """Create a CacheClient with the memory backend forced on."""
+    config = CacheConfig(enable_redis=False, max_memory_items=3, default_ttl=60)
+    return CacheClient(config)
 
 
 @pytest.fixture
-def cache_with_redis(mock_redis):
-    """Cache instance with mocked Redis backend."""
-    from digitalmodel.infrastructure.core.cache import Cache
+def redis_client():
+    """Create a CacheClient backed by fakeredis."""
+    fakeredis = pytest.importorskip("fakeredis")
 
-    with patch('digitalmodel.infrastructure.core.cache.redis.Redis', return_value=mock_redis):
-        cache = Cache(redis_url="redis://localhost:6379")
-        yield cache
-
-
-@pytest.fixture
-def cache_without_redis():
-    """Cache instance with in-memory fallback (no Redis)."""
-    from digitalmodel.infrastructure.core.cache import Cache
-
-    with patch('digitalmodel.infrastructure.core.cache.redis.Redis', side_effect=Exception("Redis unavailable")):
-        cache = Cache(redis_url="redis://localhost:6379")
-        yield cache
+    client = CacheClient(CacheConfig(enable_redis=False, default_ttl=60))
+    client.redis = fakeredis.FakeRedis(decode_responses=False)
+    client.backend = "redis"
+    return client
 
 
-class TestCacheInitialization:
-    """Test cache initialization and backend selection."""
+class TestCacheConfig:
+    """Test cache configuration."""
 
-    def test_redis_backend_initialization(self, mock_redis):
-        """Test successful Redis backend initialization."""
-        from digitalmodel.infrastructure.core.cache import Cache
+    def test_default_config_matches_production_defaults(self):
+        config = CacheConfig()
 
-        with patch('digitalmodel.infrastructure.core.cache.redis.Redis', return_value=mock_redis):
-            cache = Cache(redis_url="redis://localhost:6379")
-            assert cache.backend_type == "redis"
-            assert cache._redis_client is not None
+        assert config.redis_host == "localhost"
+        assert config.redis_port == 6379
+        assert config.redis_db == 0
+        assert config.redis_password is None
+        assert config.default_ttl == 3600
+        assert config.max_memory_items == 1000
+        assert config.enable_redis is True
 
-    def test_fallback_to_memory_on_redis_failure(self):
-        """Test fallback to in-memory cache when Redis fails."""
-        from digitalmodel.infrastructure.core.cache import Cache
+    def test_custom_config_is_preserved(self):
+        config = CacheConfig(
+            redis_host="cache.local",
+            redis_port=6380,
+            redis_db=2,
+            redis_password="secret",
+            default_ttl=120,
+            max_memory_items=10,
+            enable_redis=False,
+        )
 
-        with patch('digitalmodel.infrastructure.core.cache.redis.Redis', side_effect=Exception("Connection failed")):
-            cache = Cache(redis_url="redis://localhost:6379")
-            assert cache.backend_type == "memory"
-            assert cache._memory_cache is not None
-
-    def test_default_redis_url_from_env(self, monkeypatch):
-        """Test Redis URL defaults to environment variable."""
-        from digitalmodel.infrastructure.core.cache import Cache
-
-        monkeypatch.setenv("DM_REDIS_URL", "redis://custom:6380")
-        with patch('digitalmodel.infrastructure.core.cache.redis.Redis') as mock_redis_class:
-            cache = Cache()
-            # Verify Redis was initialized with custom URL
-            mock_redis_class.assert_called_once()
-            call_args = mock_redis_class.call_args
-            assert "custom" in str(call_args) or call_args[1].get('host') == 'custom'
-
-
-class TestCacheKeyGeneration:
-    """Test cache key generation from function arguments."""
-
-    def test_simple_function_key_generation(self, cache_with_redis):
-        """Test cache key for simple function with basic args."""
-        @cache_with_redis.cache(ttl=60)
-        def simple_func(a, b):
-            return a + b
-
-        # Generate expected key
-        args_key = pickle.dumps(((), {'a': 1, 'b': 2}))
-        hash_key = hashlib.sha256(args_key).hexdigest()
-        expected_key = f"cache:test_cache:TestCacheKeyGeneration:simple_func:{hash_key}"
-
-        # Call function to generate key
-        result = simple_func(a=1, b=2)
-
-        # Verify key was used
-        cache_with_redis._redis_client.get.assert_called()
-        call_key = cache_with_redis._redis_client.get.call_args[0][0]
-        assert call_key.startswith("cache:")
-        assert "simple_func" in call_key
-
-    def test_unhashable_args_key_generation(self, cache_with_redis):
-        """Test cache key generation with unhashable arguments (dict, list)."""
-        @cache_with_redis.cache(ttl=60)
-        def dict_func(data):
-            return data['value']
-
-        # Call with dict argument
-        result = dict_func(data={'value': 42, 'nested': [1, 2, 3]})
-
-        # Verify key was generated (should not raise exception)
-        cache_with_redis._redis_client.get.assert_called()
-        call_key = cache_with_redis._redis_client.get.call_args[0][0]
-        assert call_key.startswith("cache:")
-
-    def test_method_key_includes_class_name(self, cache_with_redis):
-        """Test cache key for class methods includes class name."""
-        class TestClass:
-            @cache_with_redis.cache(ttl=60)
-            def method(self, value):
-                return value * 2
-
-        obj = TestClass()
-        result = obj.method(value=5)
-
-        # Verify class name in key
-        call_key = cache_with_redis._redis_client.get.call_args[0][0]
-        assert "TestClass" in call_key
-        assert "method" in call_key
-
-    def test_namespace_prefix_format(self, cache_with_redis):
-        """Test cache key has correct namespace prefix format."""
-        @cache_with_redis.cache(ttl=60)
-        def namespaced_func():
-            return "test"
-
-        namespaced_func()
-
-        call_key = cache_with_redis._redis_client.get.call_args[0][0]
-        # Format: cache:[module]:[class]:[method]:[hash]
-        parts = call_key.split(':')
-        assert parts[0] == "cache"
-        assert len(parts) >= 4
+        assert config.redis_host == "cache.local"
+        assert config.redis_port == 6380
+        assert config.redis_db == 2
+        assert config.redis_password == "secret"
+        assert config.default_ttl == 120
+        assert config.max_memory_items == 10
+        assert config.enable_redis is False
 
 
-class TestCacheDecoratorBasics:
-    """Test basic cache decorator functionality."""
+class TestCacheStats:
+    """Test cache statistics value object."""
 
-    def test_cache_miss_calls_function(self, cache_with_redis):
-        """Test cache miss triggers function execution."""
-        mock_func = Mock(return_value=42)
+    def test_stats_initialise_to_zero(self):
+        stats = CacheStats()
 
-        @cache_with_redis.cache(ttl=60)
-        def cached_func():
-            return mock_func()
+        assert stats.hits == 0
+        assert stats.misses == 0
+        assert stats.sets == 0
+        assert stats.deletes == 0
+        assert stats.errors == 0
+        assert stats.hit_rate == 0.0
 
-        cache_with_redis._redis_client.get.return_value = None
-        result = cached_func()
+    def test_hit_rate_uses_hits_and_misses(self):
+        stats = CacheStats(hits=3, misses=1)
 
-        assert result == 42
-        mock_func.assert_called_once()
+        assert stats.hit_rate == pytest.approx(0.75)
 
-    def test_cache_hit_skips_function(self, cache_with_redis):
-        """Test cache hit returns cached value without calling function."""
-        mock_func = Mock(return_value=42)
-        cached_value = pickle.dumps(99)
+    def test_to_dict_exports_supported_metrics(self):
+        stats = CacheStats(hits=2, misses=3, sets=4, deletes=5, errors=6)
 
-        @cache_with_redis.cache(ttl=60)
-        def cached_func():
-            return mock_func()
-
-        cache_with_redis._redis_client.get.return_value = cached_value
-        result = cached_func()
-
-        assert result == 99
-        mock_func.assert_not_called()
-
-    def test_cache_stores_result_on_miss(self, cache_with_redis):
-        """Test function result is stored in cache on miss."""
-        @cache_with_redis.cache(ttl=60)
-        def cached_func():
-            return {'data': [1, 2, 3]}
-
-        cache_with_redis._redis_client.get.return_value = None
-        result = cached_func()
-
-        # Verify set was called with pickled result
-        cache_with_redis._redis_client.set.assert_called()
-        call_args = cache_with_redis._redis_client.set.call_args
-        stored_value = pickle.loads(call_args[0][1])
-        assert stored_value == {'data': [1, 2, 3]}
-
-    def test_ttl_parameter_passed_to_redis(self, cache_with_redis):
-        """Test TTL parameter is passed to Redis SET command."""
-        @cache_with_redis.cache(ttl=120)
-        def cached_func():
-            return "test"
-
-        cache_with_redis._redis_client.get.return_value = None
-        cached_func()
-
-        # Verify TTL was set
-        call_args = cache_with_redis._redis_client.set.call_args
-        assert call_args[1].get('ex') == 120 or call_args[0][2] == 120
+        assert stats.to_dict() == {
+            "hits": 2,
+            "misses": 3,
+            "sets": 4,
+            "deletes": 5,
+            "errors": 6,
+            "hit_rate": pytest.approx(0.4),
+        }
 
 
-class TestInMemoryFallback:
-    """Test in-memory LRU cache fallback."""
+class TestCacheClientInitialization:
+    """Test backend selection during CacheClient construction."""
 
-    def test_memory_cache_basic_operation(self, cache_without_redis):
-        """Test basic cache operations with in-memory backend."""
+    def test_memory_backend_when_redis_disabled(self):
+        client = CacheClient(CacheConfig(enable_redis=False, max_memory_items=7))
+
+        assert client.backend == "memory"
+        assert client.redis is None
+        assert client.memory_cache.max_items == 7
+
+    def test_redis_backend_when_connection_succeeds(self, monkeypatch):
+        redis_module = types.ModuleType("redis")
+        created = {}
+
+        class FakeRedisConnection:
+            def __init__(self, **kwargs):
+                created["kwargs"] = kwargs
+
+            def ping(self):
+                return True
+
+        redis_module.Redis = FakeRedisConnection
+        monkeypatch.setitem(sys.modules, "redis", redis_module)
+
+        config = CacheConfig(
+            redis_host="cache.local",
+            redis_port=6380,
+            redis_db=4,
+            redis_password="pw",
+            enable_redis=True,
+        )
+        client = CacheClient(config)
+
+        assert client.backend == "redis"
+        assert isinstance(client.redis, FakeRedisConnection)
+        assert created["kwargs"]["host"] == "cache.local"
+        assert created["kwargs"]["port"] == 6380
+        assert created["kwargs"]["db"] == 4
+        assert created["kwargs"]["password"] == "pw"
+        assert created["kwargs"]["decode_responses"] is False
+
+    def test_falls_back_to_memory_when_redis_connection_fails(self, monkeypatch):
+        redis_module = types.ModuleType("redis")
+
+        class FailingRedisConnection:
+            def __init__(self, **_kwargs):
+                raise RuntimeError("redis unavailable")
+
+        redis_module.Redis = FailingRedisConnection
+        monkeypatch.setitem(sys.modules, "redis", redis_module)
+
+        client = CacheClient(CacheConfig(enable_redis=True, max_memory_items=5))
+
+        assert client.backend == "memory"
+        assert client.redis is None
+        assert client.memory_cache.max_items == 5
+
+
+class TestMemoryBackend:
+    """Test CacheClient against the in-memory LRU backend."""
+
+    def test_set_get_delete_and_clear(self, memory_client):
+        memory_client.set("alpha", {"value": 1})
+        memory_client.set("beta", [1, 2, 3])
+
+        assert memory_client.get("alpha") == {"value": 1}
+        assert memory_client.get("beta") == [1, 2, 3]
+
+        memory_client.delete("alpha")
+        assert memory_client.get("alpha") is None
+
+        memory_client.clear()
+        assert memory_client.get("beta") is None
+
+    def test_missing_key_returns_none_and_records_miss(self, memory_client):
+        assert memory_client.get("missing") is None
+
+        stats = memory_client.get_stats()
+        assert stats["misses"] == 1
+        assert stats["hits"] == 0
+
+    def test_default_ttl_is_applied_to_memory_entries(self, monkeypatch):
+        now = [1000.0]
+        monkeypatch.setattr(cache_module.time, "time", lambda: now[0])
+
+        client = CacheClient(CacheConfig(enable_redis=False, default_ttl=10))
+        client.set("short-lived", "value")
+
+        assert client.get("short-lived") == "value"
+
+        now[0] = 1011.0
+        assert client.get("short-lived") is None
+
+    def test_explicit_ttl_controls_memory_expiration(self, monkeypatch, memory_client):
+        now = [2000.0]
+        monkeypatch.setattr(cache_module.time, "time", lambda: now[0])
+
+        memory_client.set("short-lived", "value", ttl=5)
+
+        now[0] = 2004.0
+        assert memory_client.get("short-lived") == "value"
+
+        now[0] = 2006.0
+        assert memory_client.get("short-lived") is None
+
+    def test_lru_eviction_removes_least_recently_used_entry(self, memory_client):
+        memory_client.set("one", 1)
+        memory_client.set("two", 2)
+        memory_client.set("three", 3)
+
+        assert memory_client.get("one") == 1
+        memory_client.set("four", 4)
+
+        assert memory_client.get("one") == 1
+        assert memory_client.get("two") is None
+        assert memory_client.get("three") == 3
+        assert memory_client.get("four") == 4
+
+    def test_stats_track_supported_operations(self, memory_client):
+        memory_client.set("key", "value")
+        memory_client.get("key")
+        memory_client.get("missing")
+        memory_client.delete("key")
+
+        assert memory_client.get_stats() == {
+            "hits": 1,
+            "misses": 1,
+            "sets": 1,
+            "deletes": 1,
+            "errors": 0,
+            "hit_rate": pytest.approx(0.5),
+        }
+
+    def test_reset_stats_replaces_counters(self, memory_client):
+        memory_client.set("key", "value")
+        memory_client.get("key")
+
+        memory_client.reset_stats()
+
+        assert memory_client.get_stats() == {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "deletes": 0,
+            "errors": 0,
+            "hit_rate": 0.0,
+        }
+
+    def test_export_stats_writes_json(self, tmp_path, memory_client):
+        memory_client.set("key", "value")
+        memory_client.get("key")
+        memory_client.get("missing")
+
+        stats_path = tmp_path / "cache-stats.json"
+        memory_client.export_stats(str(stats_path))
+
+        assert json.loads(stats_path.read_text()) == {
+            "hits": 1,
+            "misses": 1,
+            "sets": 1,
+            "deletes": 0,
+            "errors": 0,
+            "hit_rate": 0.5,
+        }
+
+
+class TestRedisBackend:
+    """Test CacheClient against a fakeredis backend."""
+
+    def test_redis_set_get_uses_pickle_serialization(self, redis_client):
+        value = {"array": [1, 2, 3], "nested": {"ok": True}}
+
+        redis_client.set("payload", value)
+
+        raw_value = redis_client.redis.get("payload")
+        assert isinstance(raw_value, bytes)
+        assert pickle.loads(raw_value) == value
+        assert redis_client.get("payload") == value
+
+    def test_redis_delete_and_clear(self, redis_client):
+        redis_client.set("one", 1)
+        redis_client.set("two", 2)
+
+        redis_client.delete("one")
+        assert redis_client.get("one") is None
+        assert redis_client.get("two") == 2
+
+        redis_client.clear()
+        assert redis_client.get("two") is None
+
+    def test_redis_ttl_expiration(self, redis_client):
+        redis_client.set("short-lived", "value", ttl=1)
+
+        assert redis_client.get("short-lived") == "value"
+        redis_client.redis.expire("short-lived", 0)
+        assert redis_client.get("short-lived") is None
+
+    def test_redis_errors_are_counted_and_do_not_raise(self):
+        client = CacheClient(CacheConfig(enable_redis=False))
+        client.backend = "redis"
+        client.redis = MagicMock()
+        client.redis.get.side_effect = RuntimeError("connection lost")
+
+        assert client.get("key") is None
+
+        stats = client.get_stats()
+        assert stats["errors"] == 1
+        assert stats["hits"] == 0
+        assert stats["misses"] == 0
+
+
+class TestCacheDecorator:
+    """Test the cache_result decorator."""
+
+    def test_decorator_caches_by_arguments(self, memory_client):
         call_count = 0
 
-        @cache_without_redis.cache(ttl=60)
-        def memory_func(x):
+        @cache_result(memory_client, ttl=60)
+        def expensive_sum(left, right):
             nonlocal call_count
             call_count += 1
-            return x * 2
+            return left + right
 
-        # First call - cache miss
-        result1 = memory_func(5)
-        assert result1 == 10
-        assert call_count == 1
+        assert expensive_sum(1, 2) == 3
+        assert expensive_sum(1, 2) == 3
+        assert expensive_sum(2, 3) == 5
 
-        # Second call - cache hit
-        result2 = memory_func(5)
-        assert result2 == 10
-        assert call_count == 1  # Function not called again
-
-    def test_memory_cache_lru_eviction(self, cache_without_redis):
-        """Test LRU eviction when cache size exceeds limit."""
-        # Set small cache size for testing
-        cache_without_redis._memory_cache.clear()
-        cache_without_redis._cache_max_size = 3
-
-        @cache_without_redis.cache(ttl=60)
-        def limited_func(x):
-            return x * 2
-
-        # Fill cache beyond limit
-        for i in range(5):
-            limited_func(i)
-
-        # Cache should only have most recent 3 items
-        assert len(cache_without_redis._memory_cache) <= 3
-
-    def test_memory_cache_ttl_expiration(self, cache_without_redis):
-        """Test TTL expiration in memory cache."""
-        call_count = 0
-
-        @cache_without_redis.cache(ttl=1)  # 1 second TTL
-        def expiring_func():
-            nonlocal call_count
-            call_count += 1
-            return "result"
-
-        # First call
-        result1 = expiring_func()
-        assert call_count == 1
-
-        # Immediate second call - should hit cache
-        result2 = expiring_func()
-        assert call_count == 1
-
-        # Wait for expiration
-        time.sleep(1.1)
-
-        # Third call - should miss cache after expiration
-        result3 = expiring_func()
         assert call_count == 2
+        assert memory_client.get_stats()["hits"] == 1
 
+    def test_decorator_handles_kwargs_as_distinct_keys(self, memory_client):
+        call_count = 0
 
-class TestCacheInvalidation:
-    """Test cache invalidation methods."""
+        @cache_result(memory_client, ttl=60)
+        def scale(value, *, factor=1):
+            nonlocal call_count
+            call_count += 1
+            return value * factor
 
-    def test_invalidate_single_key(self, cache_with_redis):
-        """Test invalidating a single cache key."""
-        @cache_with_redis.cache(ttl=60)
-        def func_to_invalidate(x):
-            return x * 2
+        assert scale(2, factor=3) == 6
+        assert scale(2, factor=3) == 6
+        assert scale(2, factor=4) == 8
 
-        # Generate cache key by calling function
-        func_to_invalidate(5)
-        cache_key = cache_with_redis._redis_client.get.call_args[0][0]
+        assert call_count == 2
+        assert memory_client.get_stats()["sets"] == 2
 
-        # Invalidate
-        cache_with_redis.invalidate(cache_key)
-        cache_with_redis._redis_client.delete.assert_called_with(cache_key)
+    def test_decorator_uses_custom_key_prefix(self, memory_client):
+        @cache_result(memory_client, ttl=60, key_prefix="custom-prefix")
+        def double(value):
+            return value * 2
 
-    def test_invalidate_pattern(self, cache_with_redis):
-        """Test invalidating multiple keys by pattern."""
-        cache_with_redis._redis_client.keys.return_value = [
-            b'cache:test:func1:hash1',
-            b'cache:test:func1:hash2',
-            b'cache:test:func2:hash1'
-        ]
+        assert double(5) == 10
+        assert memory_client.get("custom-prefix:(5,)") == 10
 
-        # Invalidate pattern
-        deleted = cache_with_redis.invalidate_pattern("cache:test:func1:*")
+    def test_decorator_preserves_wrapped_function_metadata(self, memory_client):
+        @cache_result(memory_client)
+        def named_function():
+            """Original docstring."""
+            return "ok"
 
-        # Verify keys were found and deleted
-        cache_with_redis._redis_client.keys.assert_called_with("cache:test:func1:*")
-        assert cache_with_redis._redis_client.delete.call_count > 0
+        assert named_function.__name__ == "named_function"
+        assert named_function.__doc__ == "Original docstring."
 
-    def test_invalidate_all(self, cache_with_redis):
-        """Test invalidating all cache entries."""
-        cache_with_redis._redis_client.keys.return_value = [
-            b'cache:test:func1:hash1',
-            b'cache:test:func2:hash2'
-        ]
+    def test_exceptions_are_not_cached(self, memory_client):
+        call_count = 0
 
-        cache_with_redis.invalidate_all()
+        @cache_result(memory_client, ttl=60)
+        def failing_function():
+            nonlocal call_count
+            call_count += 1
+            raise ValueError("boom")
 
-        cache_with_redis._redis_client.keys.assert_called_with("cache:*")
+        with pytest.raises(ValueError):
+            failing_function()
+        with pytest.raises(ValueError):
+            failing_function()
 
-    def test_memory_invalidate_single_key(self, cache_without_redis):
-        """Test invalidating single key in memory cache."""
-        @cache_without_redis.cache(ttl=60)
-        def memory_func(x):
-            return x * 2
-
-        # Populate cache
-        memory_func(5)
-        initial_size = len(cache_without_redis._memory_cache)
-
-        # Get the key that was generated
-        keys = list(cache_without_redis._memory_cache.keys())
-        if keys:
-            cache_without_redis.invalidate(keys[0])
-            assert len(cache_without_redis._memory_cache) < initial_size
-
-    def test_memory_invalidate_all(self, cache_without_redis):
-        """Test invalidating all entries in memory cache."""
-        @cache_without_redis.cache(ttl=60)
-        def memory_func(x):
-            return x * 2
-
-        # Populate cache
-        for i in range(3):
-            memory_func(i)
-
-        assert len(cache_without_redis._memory_cache) > 0
-        cache_without_redis.invalidate_all()
-        assert len(cache_without_redis._memory_cache) == 0
-
-
-class TestCacheStatistics:
-    """Test cache performance metrics and statistics."""
-
-    def test_stats_tracking_hits_and_misses(self, cache_with_redis):
-        """Test hit and miss statistics are tracked correctly."""
-        @cache_with_redis.cache(ttl=60)
-        def stats_func(x):
-            return x * 2
-
-        # First call - miss
-        cache_with_redis._redis_client.get.return_value = None
-        stats_func(1)
-
-        # Second call - hit
-        cache_with_redis._redis_client.get.return_value = pickle.dumps(2)
-        stats_func(1)
-
-        stats = cache_with_redis.get_stats()
-        assert stats['hits'] >= 1
-        assert stats['misses'] >= 1
-
-    def test_stats_hit_rate_calculation(self, cache_with_redis):
-        """Test hit rate calculation."""
-        @cache_with_redis.cache(ttl=60)
-        def rate_func(x):
-            return x
-
-        # 2 misses, 3 hits
-        cache_with_redis._redis_client.get.side_effect = [
-            None, None,  # misses
-            pickle.dumps(1), pickle.dumps(2), pickle.dumps(3)  # hits
-        ]
-
-        for i in range(5):
-            rate_func(i)
-
-        stats = cache_with_redis.get_stats()
-        expected_rate = 3 / 5  # 60%
-        assert abs(stats['hit_rate'] - expected_rate) < 0.01
-
-    def test_stats_cache_size(self, cache_without_redis):
-        """Test cache size tracking."""
-        @cache_without_redis.cache(ttl=60)
-        def size_func(x):
-            return x
-
-        # Add 3 items
-        for i in range(3):
-            size_func(i)
-
-        stats = cache_without_redis.get_stats()
-        assert stats['size'] == 3
-
-    def test_stats_persist_across_backends(self):
-        """Test stats persist when switching between Redis and memory."""
-        from digitalmodel.infrastructure.core.cache import Cache
-
-        # Start with Redis, record some hits
-        with patch('digitalmodel.infrastructure.core.cache.redis.Redis') as mock_redis_class:
-            mock_redis = MagicMock()
-            mock_redis.ping.return_value = True
-            mock_redis.get.return_value = pickle.dumps(42)
-            mock_redis_class.return_value = mock_redis
-
-            cache = Cache()
-
-            @cache.cache(ttl=60)
-            def persistent_func():
-                return 42
-
-            persistent_func()
-            stats1 = cache.get_stats()
-
-        # Stats should be preserved
-        assert stats1['hits'] + stats1['misses'] > 0
-
-    def test_stats_latency_tracking(self, cache_with_redis):
-        """Test average latency tracking."""
-        @cache_with_redis.cache(ttl=60)
-        def latency_func():
-            time.sleep(0.01)  # Simulate work
-            return "result"
-
-        cache_with_redis._redis_client.get.return_value = None
-        latency_func()
-
-        stats = cache_with_redis.get_stats()
-        assert 'avg_latency_ms' in stats
-        assert stats['avg_latency_ms'] > 0
+        assert call_count == 2
+        assert memory_client.get_stats()["sets"] == 0
 
 
 class TestCacheWarming:
-    """Test cache warming utilities."""
+    """Test CacheClient cache warming."""
 
-    def test_warm_with_args_list(self, cache_with_redis):
-        """Test warming cache with list of arguments."""
-        call_count = 0
+    def test_warm_populates_cache_for_args(self, memory_client):
+        def compute(value):
+            return value * 2
 
-        @cache_with_redis.cache(ttl=60)
-        def warmable_func(x, y):
-            nonlocal call_count
-            call_count += 1
-            return x + y
+        memory_client.warm(compute, [(1,), (2,), (3,)])
 
-        # Warm cache with multiple argument sets
-        args_list = [
-            {'x': 1, 'y': 2},
-            {'x': 3, 'y': 4},
-            {'x': 5, 'y': 6}
-        ]
+        assert memory_client.get("compute:(1,)") == 2
+        assert memory_client.get("compute:(2,)") == 4
+        assert memory_client.get("compute:(3,)") == 6
 
-        cache_with_redis.warm(warmable_func, args_list)
+    def test_warm_populates_cache_for_kwargs(self, memory_client):
+        def compute(value, factor=1):
+            return value * factor
 
-        # Function should be called for each arg set
-        assert call_count == 3
-        assert cache_with_redis._redis_client.set.call_count >= 3
+        memory_client.warm(
+            compute,
+            [(2,), (3,)],
+            [{"factor": 5}, {"factor": 7}],
+        )
 
-    def test_warm_skips_errors(self, cache_with_redis):
-        """Test warming continues on errors."""
-        def error_func(x):
-            if x == 2:
-                raise ValueError("Test error")
-            return x * 2
+        assert memory_client.get("compute:(2,):{'factor': 5}") == 10
+        assert memory_client.get("compute:(3,):{'factor': 7}") == 21
 
-        decorated = cache_with_redis.cache(ttl=60)(error_func)
+    def test_warm_continues_after_function_error(self, memory_client):
+        calls = []
 
-        args_list = [{'x': 1}, {'x': 2}, {'x': 3}]
+        def compute(value):
+            calls.append(value)
+            if value == 2:
+                raise ValueError("bad input")
+            return value * 2
 
-        # Should not raise, should skip error case
-        cache_with_redis.warm(decorated, args_list)
+        memory_client.warm(compute, [(1,), (2,), (3,)])
 
-        # At least 2 successful calls
-        assert cache_with_redis._redis_client.set.call_count >= 2
-
-
-class TestCacheEdgeCases:
-    """Test edge cases and error handling."""
-
-    def test_none_return_value_cached(self, cache_with_redis):
-        """Test that None return values are properly cached."""
-        call_count = 0
-
-        @cache_with_redis.cache(ttl=60)
-        def none_func():
-            nonlocal call_count
-            call_count += 1
-            return None
-
-        cache_with_redis._redis_client.get.return_value = None
-        result1 = none_func()
-
-        cache_with_redis._redis_client.get.return_value = pickle.dumps(None)
-        result2 = none_func()
-
-        assert result1 is None
-        assert result2 is None
-
-    def test_exception_not_cached(self, cache_with_redis):
-        """Test that exceptions are not cached."""
-        call_count = 0
-
-        @cache_with_redis.cache(ttl=60)
-        def error_func():
-            nonlocal call_count
-            call_count += 1
-            raise ValueError("Test error")
-
-        # First call raises
-        with pytest.raises(ValueError):
-            error_func()
-
-        # Second call should also raise (not cached)
-        with pytest.raises(ValueError):
-            error_func()
-
-        assert call_count == 2
-        # Verify set was not called
-        cache_with_redis._redis_client.set.assert_not_called()
-
-    def test_redis_connection_error_fallback(self, cache_with_redis):
-        """Test graceful fallback when Redis operations fail."""
-        call_count = 0
-
-        @cache_with_redis.cache(ttl=60)
-        def fallback_func(x):
-            nonlocal call_count
-            call_count += 1
-            return x * 2
-
-        # Simulate Redis failure mid-operation
-        cache_with_redis._redis_client.get.side_effect = Exception("Connection lost")
-
-        # Should still execute function
-        result = fallback_func(5)
-        assert result == 10
-        assert call_count == 1
-
-    def test_large_object_serialization(self, cache_with_redis):
-        """Test caching large objects."""
-        large_data = {'data': [i for i in range(10000)]}
-
-        @cache_with_redis.cache(ttl=60)
-        def large_func():
-            return large_data
-
-        cache_with_redis._redis_client.get.return_value = None
-        result = large_func()
-
-        # Verify large object was serialized
-        cache_with_redis._redis_client.set.assert_called()
-        call_args = cache_with_redis._redis_client.set.call_args
-        serialized = call_args[0][1]
-        assert len(serialized) > 1000  # Should be substantial
+        assert calls == [1, 2, 3]
+        assert memory_client.get("compute:(1,)") == 2
+        assert memory_client.get("compute:(2,)") is None
+        assert memory_client.get("compute:(3,)") == 6
 
 
-class TestCacheIntegration:
-    """Integration tests for real-world scenarios."""
+class TestSupportedInvalidation:
+    """Test invalidation operations that CacheClient actually exposes."""
 
-    def test_multiple_cached_functions(self, cache_with_redis):
-        """Test multiple functions sharing same cache instance."""
-        @cache_with_redis.cache(ttl=60)
-        def func1(x):
-            return x * 2
+    def test_delete_invalidates_single_memory_key(self, memory_client):
+        memory_client.set("target", "value")
 
-        @cache_with_redis.cache(ttl=120)
-        def func2(x):
-            return x * 3
+        memory_client.delete("target")
 
-        cache_with_redis._redis_client.get.return_value = None
+        assert memory_client.get("target") is None
 
-        func1(5)
-        func2(5)
+    def test_clear_invalidates_all_memory_keys(self, memory_client):
+        memory_client.set("one", 1)
+        memory_client.set("two", 2)
 
-        # Both should have different cache keys
-        assert cache_with_redis._redis_client.set.call_count == 2
-        call_keys = [
-            call[0][0] for call in cache_with_redis._redis_client.set.call_args_list
-        ]
-        assert call_keys[0] != call_keys[1]
+        memory_client.clear()
 
-    def test_concurrent_access_safety(self, cache_without_redis):
-        """Test thread-safe cache access."""
-        import threading
+        assert memory_client.get("one") is None
+        assert memory_client.get("two") is None
 
-        results = []
-        call_count = 0
-        lock = threading.Lock()
+    def test_delete_invalidates_single_redis_key(self, redis_client):
+        redis_client.set("target", "value")
 
-        @cache_without_redis.cache(ttl=60)
-        def concurrent_func(x):
-            nonlocal call_count
-            with lock:
-                call_count += 1
-            time.sleep(0.01)  # Simulate work
-            return x * 2
+        redis_client.delete("target")
 
-        def worker(value):
-            result = concurrent_func(value)
-            results.append(result)
+        assert redis_client.get("target") is None
 
-        # Run 10 threads with same argument
-        threads = [threading.Thread(target=worker, args=(5,)) for _ in range(10)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
 
-        # Function should be called once (or very few times due to race)
-        assert call_count <= 3  # Allow some race condition
-        assert all(r == 10 for r in results)
+class TestIntegrationScenarios:
+    """Realistic cache scenarios using the production API."""
+
+    def test_multiple_cached_functions_share_client_with_distinct_keys(
+        self, memory_client
+    ):
+        @cache_result(memory_client, ttl=60)
+        def added_mass(period):
+            return {"period": period, "added_mass": [period * 0.1]}
+
+        @cache_result(memory_client, ttl=60)
+        def damping(period):
+            return {"period": period, "damping": [period * 0.01]}
+
+        assert added_mass(10.0) == {"period": 10.0, "added_mass": [1.0]}
+        assert damping(10.0) == {"period": 10.0, "damping": [0.1]}
+        assert added_mass(10.0) == {"period": 10.0, "added_mass": [1.0]}
+        assert damping(10.0) == {"period": 10.0, "damping": [0.1]}
+
+        assert memory_client.get_stats()["sets"] == 2
+        assert memory_client.get_stats()["hits"] == 2
+
+    def test_large_object_round_trips_through_redis(self, redis_client):
+        large_payload = {"values": list(range(1000))}
+
+        redis_client.set("large", large_payload)
+
+        assert redis_client.get("large") == large_payload
