@@ -175,6 +175,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "rao_analysis":
         rao = RAOAnalysis()
         cfg_base = rao.read_orcaflex_displacement_raos(cfg_base)
+    elif basename == "rao_tabulation":
+        from digitalmodel.hydrodynamics.rao_tabulation.workflow import (
+            router as rao_tabulation,
+        )
+
+        cfg_base = rao_tabulation(cfg_base)
     elif basename == "installation":
         orc_install = OrcInstallation()
         if cfg_base["structure"]["flag"]:

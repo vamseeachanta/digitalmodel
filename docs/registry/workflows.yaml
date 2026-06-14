@@ -110,6 +110,14 @@ workflows:
       - examples/workflows/pipe-ovality/results/input_ovality.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-ovality]
     runtime: offline
+  - id: rao-tabulation
+    basename: rao_tabulation
+    title: Offline 6-DOF vessel RAO amplitude and phase tabulation
+    input: examples/workflows/rao-tabulation/input.yml
+    outputs:
+      - examples/workflows/rao-tabulation/results/input_rao.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-tabulation]
+    runtime: offline
   - id: von-mises
     basename: von_mises
     title: Two-element cantilever beam Von Mises stress check

@@ -161,6 +161,25 @@ def test_workflow_registry(workflow):
             expected_out_of_roundness
         )
         assert bool(results.loc[0, "passes"]) is True
+    elif workflow["id"] == "rao-tabulation":
+        summary = cfg["rao_tabulation"]
+        results_path = Path(summary["rao_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        results = pd.read_csv(results_path)
+
+        assert summary["n_query_points"] == 3
+        assert summary["dofs"] == ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+        assert summary["peak_heave_amplitude"] == pytest.approx(1.02)
+        assert summary["peak_heave_period_s"] == pytest.approx(18.0)
+        assert summary["peak_heave_heading_deg"] == pytest.approx(0.0)
+        assert len(results) == 3
+        assert (results["heave"] > 0.0).all()
+        assert results["heave"].map(math.isfinite).all()
+
+        interpolated_heave = results.loc[0, "heave"]
+        assert interpolated_heave == pytest.approx(0.575)
+        assert 0.30 < interpolated_heave < 0.75
     elif workflow["id"] == "von-mises":
         summary = cfg["von_mises"]
         results_path = Path(summary["results_csv"])
