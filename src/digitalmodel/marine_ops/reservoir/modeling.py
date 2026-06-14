@@ -175,6 +175,9 @@ class MaterialBalance:
         
         # Get cumulative production
         cum_prod = self.calculate_cumulative_production()
+        cumulative_oil = self._cumulative_value(cum_prod['oil'])
+        cumulative_gas = self._cumulative_value(cum_prod['gas'])
+        cumulative_water = self._cumulative_value(cum_prod['water'])
         
         # Calculate expansion terms
         oil_expansion = self.reservoir.fluids.oil_formation_volume_factor
@@ -184,9 +187,9 @@ class MaterialBalance:
         
         # Material balance equation: Np*Bo + Np*Rs*Bg = N*Bo*[(Bo-Boi)/Boi + Co*ΔP] + m*N*Boi*[(Bg/Bgi-1)]
         # Simplified for oil reservoir
-        if cum_prod['oil'] > 0:
+        if cumulative_oil > 0:
             # Estimate OOIP from material balance
-            withdrawal = cum_prod['oil'] * oil_expansion + cum_prod['gas'] * self.reservoir.fluids.gas_formation_volume_factor
+            withdrawal = cumulative_oil * oil_expansion + cumulative_gas * self.reservoir.fluids.gas_formation_volume_factor
             expansion_factor = (oil_expansion - 1.0) + pressure_drop * (self.reservoir.fluids.water_compressibility + 
                                                                         (self.reservoir.rock.compressibility or 3e-6))
             
@@ -204,10 +207,20 @@ class MaterialBalance:
             'water_expansion_factor': water_expansion,
             'rock_expansion_factor': rock_expansion,
             'ooip_estimate': ooip_estimate,
-            'cumulative_oil': cum_prod['oil'],
-            'cumulative_gas': cum_prod['gas'],
-            'cumulative_water': cum_prod['water']
+            'cumulative_oil': cumulative_oil,
+            'cumulative_gas': cumulative_gas,
+            'cumulative_water': cumulative_water
         }
+
+    @staticmethod
+    def _cumulative_value(value: Union[float, np.ndarray]) -> float:
+        """Return the final cumulative amount, treating empty histories as zero."""
+        array = np.asarray(value, dtype=float)
+        if array.size == 0:
+            return 0.0
+        if array.ndim == 0:
+            return float(array)
+        return float(array[-1])
 
 
 class WellTestAnalysis:
