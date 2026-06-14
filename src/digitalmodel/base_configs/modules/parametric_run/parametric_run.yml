@@ -1,0 +1,23 @@
+basename: parametric_run
+
+parametric_run:
+  base_input: null
+  target_basename: null
+  variants:
+    source: factorial
+    parameters: []
+    mapping: {}
+  render:
+    output_dir: results/parametric_run
+    output_pattern: case_{index}
+  run:
+    engine: python
+    mode: serial
+  collect:
+    manifest: results/parametric_run/cases.csv
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

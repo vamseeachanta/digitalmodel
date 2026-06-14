@@ -1,0 +1,15 @@
+basename: sn_curve
+
+sn_curve:
+  curve_id: DNV-RP-C203:D:air
+  stress_ranges:
+    start: 50.0
+    stop: 300.0
+    num: 6
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

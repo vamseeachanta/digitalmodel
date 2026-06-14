@@ -220,6 +220,22 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "viv_analysis":
         viv = VIVAnalysis()
         cfg_base = viv.router(cfg_base)
+    elif basename == "parametric_run":
+        from digitalmodel.workflows.parametric_run import router as parametric_run
+
+        cfg_base = parametric_run(cfg_base)
+    elif basename == "stress_strain":
+        from digitalmodel.structural.stress.workflow import router as stress_strain
+
+        cfg_base = stress_strain(cfg_base)
+    elif basename == "riser_stackup":
+        from digitalmodel.drilling_riser.workflow import router as riser_stackup
+
+        cfg_base = riser_stackup(cfg_base)
+    elif basename == "sn_curve":
+        from digitalmodel.fatigue.workflow import router as sn_curve
+
+        cfg_base = sn_curve(cfg_base)
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)

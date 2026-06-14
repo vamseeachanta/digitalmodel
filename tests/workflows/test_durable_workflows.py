@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -71,6 +72,82 @@ def test_workflow_registry(workflow):
         assert natural.loc[0, "mode 1"] == pytest.approx(2.623697)
         assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(0.564706)
         assert safety.loc[0, "safety_factor_inline"] == pytest.approx(4.646130)
+    elif workflow["id"] == "viv-parametric":
+        cases = cfg["parametric_run"]["cases"]
+        manifest = pd.read_csv(
+            REPO_ROOT / "examples/workflows/viv-parametric/results/cases.csv"
+        )
+        case_0 = yaml.safe_load(
+            (REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml")
+            .read_text()
+        )
+
+        assert len(cases) == 6
+        assert manifest["status"].tolist() == ["completed"] * 6
+        assert case_0["basename"] == "viv_analysis"
+        assert case_0["pipeline"]["span_length"][0] == pytest.approx(40.0)
+        assert case_0["pipeline"]["crossection"][0]["Design_WT"] == pytest.approx(0.5)
+    elif workflow["id"] == "stress-strain":
+        summary = cfg["stress_strain"]
+        curve = pd.read_csv(REPO_ROOT / summary["curve_csv"])
+
+        assert summary["points"] == 21
+        assert summary["elastic_modulus"] == pytest.approx(207000.0)
+        assert summary["yield_strength"] == pytest.approx(448.0)
+        assert len(curve) == 21
+        assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
+        assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
+        assert curve["stress"].is_monotonic_increasing
+    elif workflow["id"] == "riser-stackup":
+        summary = cfg["riser_stackup"]
+        profile_path = Path(summary["profile_csv"])
+        if not profile_path.is_absolute():
+            profile_path = REPO_ROOT / profile_path
+        profile = pd.read_csv(profile_path)
+
+        assert summary["top_tension_required_kn"] > 0
+        assert summary["top_tension_required_kn"] >= summary["submerged_weight_kn"]
+        assert summary["wall_thickness_required_mm"] > 0
+        assert summary["points"] == 5
+        assert len(profile) == 5
+        assert profile["effective_tension_kn"].iloc[0] > (
+            profile["effective_tension_kn"].iloc[-1]
+        )
+    elif workflow["id"] == "riser-stackup-parametric":
+        cases = cfg["parametric_run"]["cases"]
+        manifest = pd.read_csv(
+            REPO_ROOT / "examples/workflows/riser-stackup-parametric/results/cases.csv"
+        )
+        case_0 = yaml.safe_load(
+            (
+                REPO_ROOT
+                / "examples/workflows/riser-stackup-parametric/results/case_0.yml"
+            ).read_text()
+        )
+
+        assert len(cases) == 10
+        assert manifest["status"].tolist() == ["completed"] * 10
+        assert case_0["basename"] == "riser_stackup"
+        assert case_0["riser_stackup"]["submerged_weight_kn"] == pytest.approx(
+            4268.0377
+        )
+    elif workflow["id"] == "sn-curve":
+        summary = cfg["sn_curve"]
+        curve_path = Path(summary["curve_csv"])
+        if not curve_path.is_absolute():
+            curve_path = REPO_ROOT / curve_path
+        curve = pd.read_csv(curve_path)
+        cycles = curve["allowable_cycles_n"]
+
+        assert summary["points"] == 6
+        assert len(curve) == 6
+        assert curve["stress_range_mpa"].is_monotonic_increasing
+        assert (cycles > 0).all()
+        assert cycles.map(math.isfinite).all()
+        assert all(
+            cycles.iloc[index] < cycles.iloc[index - 1]
+            for index in range(1, len(cycles))
+        )
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]
         assert result["dnv_rp_usage_factor"]["usage_longtudinal"] == pytest.approx(
