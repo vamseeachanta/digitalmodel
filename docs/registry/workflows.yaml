@@ -62,6 +62,14 @@ workflows:
       - examples/workflows/viv-parametric/results/case_0.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-parametric]
     runtime: offline
+  - id: stress-strain
+    basename: stress_strain
+    title: Ramberg-Osgood stress-strain curve for API 5L X65 steel
+    input: examples/workflows/stress-strain/input.yml
+    outputs:
+      - examples/workflows/stress-strain/results/input_stress_strain.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
+    runtime: offline
   - id: plate-buckling
     basename: plate_buckling
     title: DNV-RP-C201 plate buckling usage check

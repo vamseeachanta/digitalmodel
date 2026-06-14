@@ -86,6 +86,17 @@ def test_workflow_registry(workflow):
         assert case_0["basename"] == "viv_analysis"
         assert case_0["pipeline"]["span_length"][0] == pytest.approx(40.0)
         assert case_0["pipeline"]["crossection"][0]["Design_WT"] == pytest.approx(0.5)
+    elif workflow["id"] == "stress-strain":
+        summary = cfg["stress_strain"]
+        curve = pd.read_csv(REPO_ROOT / summary["curve_csv"])
+
+        assert summary["points"] == 21
+        assert summary["elastic_modulus"] == pytest.approx(207000.0)
+        assert summary["yield_strength"] == pytest.approx(448.0)
+        assert len(curve) == 21
+        assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
+        assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
+        assert curve["stress"].is_monotonic_increasing
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]
         assert result["dnv_rp_usage_factor"]["usage_longtudinal"] == pytest.approx(
