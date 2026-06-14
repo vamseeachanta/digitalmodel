@@ -1,0 +1,32 @@
+basename: scour
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+scour:
+  case:
+    id: registry_scour_assessment
+    description: DNV-RP-F107 pipeline, monopile, and rock armour scour screen
+  pipeline:
+    pipe_od_m: 0.5
+    current_velocity_ms: 0.8
+    wave_orbital_velocity_ms: 0.3
+    sediment_d50_mm: 0.3
+    burial_ratio: 0.25
+    wave_period_s: 8.0
+  monopile:
+    pile_diameter_m: 6.0
+    current_velocity_ms: 1.0
+    water_depth_m: 30.0
+  rock_armour:
+    current_velocity_ms: 1.0
+    rock_density_kg_m3: 2650.0
+    water_density_kg_m3: 1025.0
+    rock_d50_m: 0.3
+  outputs:
+    directory: results/scour
+    summary_json: scour_summary.json
