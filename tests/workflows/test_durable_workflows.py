@@ -24,6 +24,9 @@ def _load_registry():
     ids=lambda workflow: workflow["id"],
 )
 def test_workflow_registry(workflow):
+    if workflow.get("runtime", "offline") != "offline":
+        pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
+
     input_path = REPO_ROOT / workflow["input"]
     cfg = engine(inputfile=str(input_path))
 
@@ -98,6 +101,100 @@ def test_workflow_registry(workflow):
         assert curve["stress"].iloc[0] == pytest.approx(0.0, abs=1.0e-6)
         assert curve["stress"].iloc[-1] > curve["stress"].iloc[1]
         assert curve["stress"].is_monotonic_increasing
+    elif workflow["id"] == "compare-tool":
+        summary = cfg["compare_tool"]
+        comparison_path = Path(summary["comparison_csv"])
+        if not comparison_path.is_absolute():
+            comparison_path = REPO_ROOT / comparison_path
+        comparison = pd.read_csv(comparison_path)
+        row_x2 = comparison.loc[comparison["x"] == 2].iloc[0]
+
+        assert summary["n_sources"] == 2
+        assert summary["n_rows"] == 6
+        assert len(comparison) == 6
+        assert row_x2["run_b_minus_run_a"] == pytest.approx(3.0)
+        assert row_x2["run_b_ratio"] == pytest.approx(1.1)
+    elif workflow["id"] in {
+        "api-rp-2rd-riser",
+        "dnv-os-f201-riser",
+        "api-2sk-mooring",
+    }:
+        expected_codes = {
+            "api-rp-2rd-riser": "API_RP_2RD",
+            "dnv-os-f201-riser": "DNV_OS_F201",
+            "api-2sk-mooring": "API_RP_2SK",
+        }
+        summary = cfg["code_check"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        results = pd.read_csv(results_path)
+
+        assert summary["code"] == expected_codes[workflow["id"]]
+        assert summary["governing_utilisation"] > 0.0
+        assert math.isfinite(summary["governing_utilisation"])
+        assert summary["governing_utilisation"] == pytest.approx(
+            results["utilisation"].max()
+        )
+        assert (results["code"] == expected_codes[workflow["id"]]).all()
+        assert (results["utilisation"] > 0.0).all()
+        assert results["utilisation"].map(math.isfinite).all()
+    elif workflow["id"] == "von-mises":
+        summary = cfg["von_mises"]
+        results_path = Path(summary["results_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        element_results = pd.read_csv(results_path)
+
+        assert summary["status"] == "completed"
+        assert summary["max_stress"] > 0.0
+        assert math.isfinite(summary["max_stress"])
+        assert summary["min_safety_factor"] > 0.0
+        assert summary["min_safety_factor"] == pytest.approx(
+            summary["yield_strength"] / summary["max_stress"]
+        )
+        assert summary["n_critical"] == 0
+        assert len(element_results) == summary["num_elements"]
+        assert (element_results["von_mises_stress"] > 0.0).all()
+        assert (element_results["safety_factor"] > 0.0).all()
+    elif workflow["id"] == "stress-strain-parametric":
+        cases = cfg["parametric_run"]["cases"]
+        manifest = pd.read_csv(
+            REPO_ROOT / "examples/workflows/stress-strain-parametric/results/cases.csv"
+        )
+        case_0 = yaml.safe_load(
+            (
+                REPO_ROOT
+                / "examples/workflows/stress-strain-parametric/results/case_0.yml"
+            ).read_text()
+        )
+        case_2 = yaml.safe_load(
+            (
+                REPO_ROOT
+                / "examples/workflows/stress-strain-parametric/results/case_2.yml"
+            ).read_text()
+        )
+        low_yield = pd.read_csv(
+            REPO_ROOT
+            / "examples/workflows/stress-strain-parametric/results/"
+            "results/case_0_stress_strain.csv"
+        )
+        high_yield = pd.read_csv(
+            REPO_ROOT
+            / "examples/workflows/stress-strain-parametric/results/"
+            "results/case_2_stress_strain.csv"
+        )
+
+        assert len(cases) == 3
+        assert manifest["status"].tolist() == ["completed"] * 3
+        assert case_0["basename"] == "stress_strain"
+        assert case_0["stress_strain"]["material"]["yield_strength"] == pytest.approx(
+            359.0
+        )
+        assert case_2["stress_strain"]["material"]["yield_strength"] == pytest.approx(
+            552.0
+        )
+        assert high_yield["stress"].iloc[-1] > low_yield["stress"].iloc[-1]
     elif workflow["id"] == "riser-stackup":
         summary = cfg["riser_stackup"]
         profile_path = Path(summary["profile_csv"])
@@ -148,6 +245,30 @@ def test_workflow_registry(workflow):
             cycles.iloc[index] < cycles.iloc[index - 1]
             for index in range(1, len(cycles))
         )
+    elif workflow["id"] == "sn-curve-comparison":
+        summary = cfg["sn_curve"]
+        curve_path = Path(summary["curve_csv"])
+        if not curve_path.is_absolute():
+            curve_path = REPO_ROOT / curve_path
+        curve = pd.read_csv(curve_path)
+        curve_ids = {
+            "DNV-RP-C203:D:air",
+            "DNV-RP-C203:E:air",
+            "DNV-RP-C203:F:air",
+            "DNV-RP-C203:F1:air",
+        }
+
+        assert summary["points"] == 24
+        assert len(summary["curves"]) == 4
+        assert len(curve) == 24
+        assert set(curve["curve_id"]) == curve_ids
+        for _, group in curve.groupby("curve_id"):
+            assert group["stress_range_mpa"].is_monotonic_increasing
+            cycles = group["allowable_cycles_n"]
+            assert all(
+                cycles.iloc[index] < cycles.iloc[index - 1]
+                for index in range(1, len(cycles))
+            )
     elif workflow["id"] == "plate-buckling":
         result = cfg["plate_buckling"][0]
         assert result["dnv_rp_usage_factor"]["usage_longtudinal"] == pytest.approx(

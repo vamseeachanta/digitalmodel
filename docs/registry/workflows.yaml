@@ -70,6 +70,56 @@ workflows:
       - examples/workflows/stress-strain/results/input_stress_strain.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
     runtime: offline
+  - id: compare-tool
+    basename: compare_tool
+    title: Offline overlay comparison for two tabular result sets
+    input: examples/workflows/compare-tool/input.yml
+    outputs:
+      - examples/workflows/compare-tool/results/input_comparison.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[compare-tool]
+    runtime: offline
+  - id: api-rp-2rd-riser
+    basename: code_check
+    title: API RP 2RD riser combined tension and bending utilisation check
+    input: examples/workflows/api-rp-2rd-riser/input.yml
+    outputs:
+      - examples/workflows/api-rp-2rd-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-rp-2rd-riser]
+    runtime: offline
+  - id: dnv-os-f201-riser
+    basename: code_check
+    title: DNV-OS-F201 riser LRFD combined loading utilisation check
+    input: examples/workflows/dnv-os-f201-riser/input.yml
+    outputs:
+      - examples/workflows/dnv-os-f201-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dnv-os-f201-riser]
+    runtime: offline
+  - id: api-2sk-mooring
+    basename: code_check
+    title: API RP 2SK mooring line tension utilisation check
+    input: examples/workflows/api-2sk-mooring/input.yml
+    outputs:
+      - examples/workflows/api-2sk-mooring/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-2sk-mooring]
+    runtime: offline
+  - id: von-mises
+    basename: von_mises
+    title: Two-element cantilever beam Von Mises stress check
+    input: examples/workflows/von-mises/input.yml
+    outputs:
+      - examples/workflows/von-mises/results/input_von_mises.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[von-mises]
+    runtime: offline
+  - id: stress-strain-parametric
+    basename: parametric_run
+    title: Ramberg-Osgood material grade sweep for offshore pipeline steels
+    input: examples/workflows/stress-strain-parametric/input.yml
+    outputs:
+      - examples/workflows/stress-strain-parametric/results/cases.csv
+      - examples/workflows/stress-strain-parametric/results/case_0.yml
+      - examples/workflows/stress-strain-parametric/results/results/case_0_stress_strain.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain-parametric]
+    runtime: offline
   - id: riser-stackup
     basename: riser_stackup
     title: Deepwater drilling riser stack-up tension and wall check
@@ -94,6 +144,14 @@ workflows:
     outputs:
       - examples/workflows/sn-curve/results/input_sn_curve.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve]
+    runtime: offline
+  - id: sn-curve-comparison
+    basename: sn_curve
+    title: DNV-RP-C203 S-N curve comparison over a common stress grid
+    input: examples/workflows/sn-curve-comparison/input.yml
+    outputs:
+      - examples/workflows/sn-curve-comparison/results/input_sn_curve.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve-comparison]
     runtime: offline
   - id: plate-buckling
     basename: plate_buckling

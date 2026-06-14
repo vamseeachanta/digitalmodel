@@ -1,0 +1,25 @@
+basename: code_check
+
+code_check:
+  code: DNV_OS_F201
+  inputs:
+    outer_diameter: 0.2731
+    wall_thickness: 0.0254
+    smys: 448000000.0
+    smts: 531000000.0
+    safety_class: normal
+    fab_factor: 0.93
+    material_factor: 1.15
+    condition_factor: 1.0
+    arc_lengths: [0.0, 750.0, 1500.0]
+    effective_tension_kN: [1400.0, 1800.0, 2300.0]
+    bending_moment_kNm: [250.0, 350.0, 450.0]
+    external_pressure_MPa: [0.0, 7.5, 15.0]
+    internal_pressure_MPa: [5.0, 5.0, 5.0]
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -236,6 +236,18 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.fatigue.workflow import router as sn_curve
 
         cfg_base = sn_curve(cfg_base)
+    elif basename == "compare_tool":
+        from digitalmodel.compare_tool.workflow import router as compare_tool
+
+        cfg_base = compare_tool(cfg_base)
+    elif basename == "code_check":
+        from digitalmodel.code_checks.workflow import router as code_check
+
+        cfg_base = code_check(cfg_base)
+    elif basename == "von_mises":
+        from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
+
+        cfg_base = von_mises(cfg_base)
     elif basename == "time_series":
         tsa = TimeSeriesAnalysis()
         cfg_base = tsa.router(cfg_base)
