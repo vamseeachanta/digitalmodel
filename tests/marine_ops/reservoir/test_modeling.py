@@ -345,17 +345,15 @@ class TestMaterialBalance:
             mb.tank_material_balance(current_pressure=3500.0)
 
     def test_tank_material_balance_no_production(self):
-        """With no production data, cumulative_production returns empty arrays.
-
-        The source code evaluates ``cum_prod['oil'] > 0`` on an empty
-        numpy array, which raises ValueError in NumPy.  We verify the
-        known behaviour here: the method raises when production history
-        is empty.
-        """
+        """With no production, tank material balance has zero withdrawal."""
         rp = _make_reservoir()
         mb = MaterialBalance(rp)
-        with pytest.raises(ValueError):
-            mb.tank_material_balance(current_pressure=4500.0)
+        result = mb.tank_material_balance(current_pressure=rp.pvt.initial_pressure)
+        assert result['pressure_drop'] == pytest.approx(0.0)
+        assert result['cumulative_oil'] == pytest.approx(0.0)
+        assert result['cumulative_gas'] == pytest.approx(0.0)
+        assert result['cumulative_water'] == pytest.approx(0.0)
+        assert result['ooip_estimate'] is None
 
     def test_tank_material_balance_ooip_positive(self):
         rp = _make_reservoir()
