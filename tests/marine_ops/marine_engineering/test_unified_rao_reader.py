@@ -114,6 +114,13 @@ VesselTypes:
         surge_amp_0deg = disp.surge.amplitude[0, 0]
         assert np.isclose(surge_amp_0deg, 1.0, rtol=0.01)
 
+        # Verify velocity and acceleration values against fixture content
+        assert len(rao_data.velocity.headings) == 2
+        assert np.isclose(rao_data.velocity.surge.amplitude[0, 0], 0.628, rtol=0.01)
+        assert np.isclose(rao_data.velocity.yaw.phase[0, 1], 25.0, rtol=0.01)
+        assert len(rao_data.acceleration.headings) == 1
+        assert np.isclose(rao_data.acceleration.heave.amplitude[0, 0], 0.315, rtol=0.01)
+
     def test_read_aqwa_lis_displacement_only(self, reader, sample_aqwa_lis_content, tmp_path):
         """Test reading only displacement RAOs."""
         lis_file = tmp_path / "test_vessel.lis"
@@ -211,6 +218,13 @@ VesselTypes:
         assert 'surge' in legacy_dict['raos']
         assert 'amplitude' in legacy_dict['raos']['surge']
         assert 'phase' in legacy_dict['raos']['surge']
+        np.testing.assert_allclose(legacy_dict['frequencies'], [0.628], rtol=0.01)
+        np.testing.assert_allclose(legacy_dict['headings'], [0.0, 90.0, 180.0])
+        np.testing.assert_allclose(
+            legacy_dict['raos']['surge']['amplitude'][0],
+            [1.0, 0.2, 1.05],
+            rtol=0.01
+        )
 
     def test_empty_file_handling(self, reader, tmp_path):
         """Test handling of empty files."""
@@ -231,7 +245,10 @@ VesselTypes:
             reader.read(str(unicode_file))
         except RAOReaderError as e:
             # Expected to fail parsing but not encoding
-            assert "unicode" not in str(e).lower()
+            message = str(e).lower()
+            assert "unicodedecodeerror" not in message
+            assert "codec" not in message
+            assert "encoding" not in message
 
 
 if __name__ == "__main__":

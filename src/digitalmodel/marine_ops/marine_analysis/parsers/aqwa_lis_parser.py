@@ -73,6 +73,15 @@ class AQWALISParser:
             re.IGNORECASE
         )
 
+        self.any_rao_pattern = re.compile(
+            r'(?:VEL\s+|ACC\s+)?R\.A\.O\.S-VARIATION\s+WITH\s+WAVE\s+DIRECTION',
+            re.IGNORECASE
+        )
+
+        self.number_pattern = re.compile(
+            r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?'
+        )
+
         # Header pattern for data table
         self.header_pattern = re.compile(
             r'PERIOD\s+FREQ(?:UENCY)?\s+DIRECTION\s+X\s+Y\s+Z\s+RX\s+RY\s+RZ',
@@ -250,45 +259,27 @@ class AQWALISParser:
     def _find_rao_sections(self, content: str, pattern: re.Pattern) -> List[str]:
         """Find all RAO sections matching the given pattern."""
         sections = []
-        matches = list(pattern.finditer(content))
-
-        for i, match in enumerate(matches):
+        for match in pattern.finditer(content):
             start_pos = match.start()
-
-            # Find section end
-            if i < len(matches) - 1:
-                # Not last section - ends where next section of same type starts
-                end_pos = matches[i + 1].start()
-            else:
-                # Last section - find end using end patterns OR next different RAO type
-                end_pos = len(content)
-                section_content = content[start_pos:]
-
-                # First check if there's a velocity or acceleration section after this
-                # (which would indicate end of displacement section)
-                vel_match = self.velocity_pattern.search(section_content)
-                acc_match = self.acceleration_pattern.search(section_content)
-
-                earliest_end = None
-                if vel_match:
-                    earliest_end = vel_match.start()
-                if acc_match and (earliest_end is None or acc_match.start() < earliest_end):
-                    earliest_end = acc_match.start()
-
-                if earliest_end is not None:
-                    end_pos = start_pos + earliest_end
-                else:
-                    # Use generic end patterns
-                    for end_pattern in self.section_end_patterns:
-                        end_match = re.search(end_pattern, section_content)
-                        if end_match:
-                            end_pos = start_pos + end_match.start()
-                            break
-
-            section = content[start_pos:end_pos]
-            sections.append(section)
+            end_pos = self._find_section_end(content, match)
+            sections.append(content[start_pos:end_pos])
 
         return sections
+
+    def _find_section_end(self, content: str, match: re.Match) -> int:
+        """Find the earliest boundary after a RAO section marker."""
+        candidates = []
+        next_rao = self.any_rao_pattern.search(content, match.end())
+        if next_rao:
+            candidates.append(next_rao.start())
+
+        section_content = content[match.start():]
+        for end_pattern in self.section_end_patterns:
+            end_match = re.search(end_pattern, section_content, re.IGNORECASE)
+            if end_match and end_match.start() > 0:
+                candidates.append(match.start() + end_match.start())
+
+        return min(candidates) if candidates else len(content)
 
     def _parse_rao_section(self, section: str) -> Optional[Dict]:
         """Parse a RAO section and extract structured data.
@@ -308,127 +299,89 @@ class AQWALISParser:
         if header_idx == -1:
             return None
 
-        # Skip header, separator, units, separator (4 lines)
-        data_start = header_idx + 4
-
         rao_data = {}
         current_freq = None
         current_period = None
         current_heading = None  # Track current heading for inheritance
 
-        for line_idx in range(data_start, len(lines)):
-            line = lines[line_idx]
-
-            # Skip empty lines
-            if not line.strip():
+        for line in lines[header_idx + 1:]:
+            parsed = self._parse_rao_data_line(
+                line,
+                current_period,
+                current_freq,
+                current_heading
+            )
+            if parsed is None:
                 continue
 
-            # Skip separator lines (lines with only dashes, spaces, and maybe other chars)
-            # But NOT data lines that happen to start with negative numbers
-            stripped = line.strip()
-            if stripped.startswith('-') and not any(c.isdigit() for c in stripped[:15]):
-                # It's a separator line like "----" or "-----  -----"
-                continue
-
-            # Stop at section boundary
-            if '*' in line and len(line.replace('*', '').replace(' ', '')) < 5:
-                break
-
-            # Must be long enough for data
-            if len(line) < 27:
-                continue
-
-            try:
-                # Check for data line with period + frequency
-                period_str = line[0:8].strip()
-                freq_str = line[8:16].strip()
-                direction_str = line[16:27].strip()
-
-                if period_str and freq_str:
-                    # Line has period and frequency - this is a new period/frequency block
-                    period = float(period_str)
-                    freq = float(freq_str)
-
-                    # Check if direction is provided on this line
-                    if direction_str:
-                        # New heading block - direction explicitly provided
-                        try:
-                            direction = float(direction_str)
-                            if -180 <= direction <= 360:
-                                current_heading = direction  # Track this heading
-                            else:
-                                continue  # Invalid direction, skip this line
-                        except ValueError:
-                            continue  # Not a valid direction, skip
-                    else:
-                        # Direction column is blank - inherit from current_heading
-                        if current_heading is None:
-                            continue  # No heading to inherit, skip this line
-                        direction = current_heading
-
-                    current_freq = freq
-                    current_period = period
-
-                    dof_values = self._extract_dof_values(line, 27)
-
-                    if dof_values:
-                        if freq not in rao_data:
-                            rao_data[freq] = {}
-                        rao_data[freq][direction] = dof_values
-
-                elif not period_str and not freq_str and direction_str:
-                    # Continuation line: no period/freq, but has heading
-                    # This is additional heading data for the current period/frequency
-                    if current_freq is None:
-                        continue  # No frequency context, skip
-
-                    try:
-                        direction = float(direction_str)
-                        if not (-180 <= direction <= 360):
-                            continue  # Invalid direction
-                    except ValueError:
-                        continue  # Not a valid direction
-
-                    current_heading = direction  # Update current heading
-
-                    dof_values = self._extract_dof_values(line, 27)
-
-                    if dof_values:
-                        if current_freq not in rao_data:
-                            rao_data[current_freq] = {}
-                        rao_data[current_freq][direction] = dof_values
-
-            except (ValueError, IndexError):
-                continue
+            period, freq, direction, dof_values = parsed
+            current_period = period
+            current_freq = freq
+            current_heading = direction
+            rao_data.setdefault(freq, {})[direction] = dof_values
 
         return rao_data if rao_data else None
 
-    def _extract_dof_values(self, line: str, start_pos: int) -> Optional[Dict]:
+    def _parse_rao_data_line(self,
+                             line: str,
+                             current_period: Optional[float],
+                             current_freq: Optional[float],
+                             current_heading: Optional[float]) -> Optional[Tuple]:
+        """Parse one RAO table row in full or continuation form."""
+        if self._should_skip_table_line(line):
+            return None
+
+        values = self._numeric_values(line)
+        if len(values) >= 15:
+            period, freq, direction = values[:3]
+            dof_numbers = values[3:15]
+        elif len(values) >= 14 and current_heading is not None:
+            period, freq = values[:2]
+            direction = current_heading
+            dof_numbers = values[2:14]
+        elif len(values) >= 13 and current_freq is not None:
+            period = current_period
+            freq = current_freq
+            direction = values[0]
+            dof_numbers = values[1:13]
+        else:
+            return None
+
+        if period is None or not self._is_valid_direction(direction):
+            return None
+
+        return period, freq, direction, self._extract_dof_values(dof_numbers)
+
+    def _should_skip_table_line(self, line: str) -> bool:
+        """Return True for header, unit, separator, and boundary lines."""
+        stripped = line.strip()
+        if not stripped:
+            return True
+        if '*' in line and len(line.replace('*', '').replace(' ', '')) < 5:
+            return True
+        if set(stripped) <= {'-'}:
+            return True
+        return stripped.upper().startswith(('PERIOD', '(SECS)', '(RAD/S)'))
+
+    def _numeric_values(self, line: str) -> List[float]:
+        """Extract numeric tokens, including scientific Fortran notation."""
+        values = []
+        for match in self.number_pattern.finditer(line):
+            token = match.group(0).replace('D', 'E').replace('d', 'e')
+            values.append(float(token))
+        return values
+
+    def _is_valid_direction(self, direction: float) -> bool:
+        """Check whether a parsed wave direction is in the AQWA heading range."""
+        return -180 <= direction <= 360
+
+    def _extract_dof_values(self, values: List[float]) -> Dict:
         """Extract 6-DOF amplitude and phase values from line.
 
         Returns:
             Dictionary: {dof_name: {'amplitude': val, 'phase': val}}
         """
-        if len(line) < start_pos:
-            return None
-
-        data_part = line[start_pos:]
         dof_names = ['surge', 'sway', 'heave', 'roll', 'pitch', 'yaw']
-
-        values = []
-        pos = 0
-
-        # Extract 12 values (6 DOF * 2 for amp/phase)
-        while pos < len(data_part) and len(values) < 12:
-            val_str = data_part[pos:pos + self.value_width].strip()
-            if val_str:
-                try:
-                    values.append(float(val_str))
-                except ValueError:
-                    values.append(0.0)
-            else:
-                values.append(0.0)
-            pos += self.value_width
 
         # Ensure we have 12 values
         while len(values) < 12:
