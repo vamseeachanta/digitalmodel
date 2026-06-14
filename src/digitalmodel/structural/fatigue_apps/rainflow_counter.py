@@ -63,15 +63,14 @@ class RainflowCounter:
         reversals, reversal_indices = self._extract_reversals(time_series)
         logger.debug(f"Extracted {len(reversals)} reversal points")
         
-        # Apply gate filter if specified
-        if self.gate_value is not None:
-            reversals, reversal_indices = self._apply_gate_filter(
-                reversals, reversal_indices
-            )
-            logger.debug(f"After gate filter: {len(reversals)} reversals remain")
-        
         # Perform rainflow counting
         self.cycles = self._rainflow_algorithm(reversals, reversal_indices)
+        if self.gate_value is not None:
+            self.cycles = [
+                cycle for cycle in self.cycles
+                if cycle.range_value >= self.gate_value
+            ]
+            logger.debug(f"After gate filter: {len(self.cycles)} cycles remain")
         logger.info(f"Identified {len(self.cycles)} cycles")
         
         # Convert to range-count format
@@ -176,65 +175,47 @@ class RainflowCounter:
         """
         cycles = []
         stack = []
-        
-        # Push first two reversals onto stack
-        for i in range(min(2, len(reversals))):
-            stack.append((reversals[i], indices[i]))
-        
-        # Process remaining reversals
-        for i in range(2, len(reversals)):
-            stack.append((reversals[i], indices[i]))
-            
-            # Check for cycles
+
+        for reversal, index in zip(reversals, indices):
+            stack.append((reversal, index))
+
             while len(stack) >= 3:
-                # Get last three points
-                X = abs(stack[-2][0] - stack[-1][0])  # Range X-Y
-                Y = abs(stack[-3][0] - stack[-2][0])  # Range S-X
-                
-                if X >= Y:
-                    # Found a cycle
-                    if len(stack) == 3:
-                        # Half cycle
-                        cycle_range = Y
-                        cycle_mean = (stack[-3][0] + stack[-2][0]) / 2
-                        cycles.append(RainflowCycle(
-                            range_value=cycle_range,
-                            mean_value=cycle_mean,
-                            count=0.5,
-                            start_index=stack[-3][1],
-                            end_index=stack[-2][1]
-                        ))
-                        # Remove middle point
-                        del stack[-2]
-                        break
-                    else:
-                        # Full cycle
-                        cycle_range = Y
-                        cycle_mean = (stack[-3][0] + stack[-2][0]) / 2
-                        cycles.append(RainflowCycle(
-                            range_value=cycle_range,
-                            mean_value=cycle_mean,
-                            count=1.0,
-                            start_index=stack[-3][1],
-                            end_index=stack[-2][1]
-                        ))
-                        # Remove the two points that formed the cycle
-                        del stack[-3:-1]  # Remove S and X, keep Y
-                else:
+                new_range = abs(stack[-2][0] - stack[-1][0])
+                prior_range = abs(stack[-3][0] - stack[-2][0])
+
+                if new_range < prior_range:
                     break
+
+                cycle_range = prior_range
+                if cycle_range > 0:
+                    cycles.append(RainflowCycle(
+                        range_value=cycle_range,
+                        mean_value=(stack[-3][0] + stack[-2][0]) / 2,
+                        count=0.5 if len(stack) == 3 else 1.0,
+                        start_index=stack[-3][1],
+                        end_index=stack[-2][1]
+                    ))
+
+                if len(stack) == 3:
+                    stack.pop(0)
+                else:
+                    last = stack.pop()
+                    stack.pop()
+                    stack.pop()
+                    stack.append(last)
         
         # Process remaining points in stack as half cycles
-        while len(stack) >= 2:
-            cycle_range = abs(stack[0][0] - stack[1][0])
-            cycle_mean = (stack[0][0] + stack[1][0]) / 2
+        for i in range(len(stack) - 1):
+            cycle_range = abs(stack[i][0] - stack[i + 1][0])
+            if cycle_range == 0:
+                continue
             cycles.append(RainflowCycle(
                 range_value=cycle_range,
-                mean_value=cycle_mean,
+                mean_value=(stack[i][0] + stack[i + 1][0]) / 2,
                 count=0.5,
-                start_index=stack[0][1],
-                end_index=stack[1][1]
+                start_index=stack[i][1],
+                end_index=stack[i + 1][1]
             ))
-            stack.pop(0)
         
         return cycles
     

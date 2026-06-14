@@ -201,7 +201,7 @@ class TestReferenceSeaStateProcessor:
             wind_speed=10,
             wind_dir=45,  # Closest to 90
             hs=1.0,
-            tp=3.0,  # Closest to 3.47
+            tp=3.2,  # Closest to 3.47
             wave_dir=45,  # Closest to 90
             occurrence=5.0
         )

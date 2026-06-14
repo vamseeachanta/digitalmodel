@@ -227,8 +227,8 @@ class TestAnalysisExecution:
         
         with patch('digitalmodel.structural.fatigue_apps.__main__.IntegratedFatigueProcessor') as MockProcessor:
             with patch('digitalmodel.structural.fatigue_apps.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.structural.fatigue_apps.__main__.main') as mock_main:
-                    mock_main.return_value = ([], {})
+                with patch('digitalmodel.structural.fatigue_apps.__main__.run_integrated_analysis') as mock_analysis:
+                    mock_analysis.return_value = ([], {})
                     
                     result = run_analysis(args)
                     
@@ -262,8 +262,23 @@ class TestAnalysisExecution:
         
         with patch('digitalmodel.structural.fatigue_apps.__main__.IntegratedFatigueProcessor') as MockProcessor:
             with patch('digitalmodel.structural.fatigue_apps.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.structural.fatigue_apps.__main__.main') as mock_main:
-                    mock_main.return_value = ([{"test": "result"}], {"summary": "data"})
+                mock_handler = MagicMock()
+                mock_handler.configurations = {
+                    'fsts_l015': MagicMock(description="Test Config", weight=100.0)
+                }
+                MockHandler.return_value = mock_handler
+
+                with patch('digitalmodel.structural.fatigue_apps.__main__.run_integrated_analysis') as mock_analysis:
+                    mock_analysis.return_value = (
+                        [{"test": "result"}],
+                        {
+                            "fsts_l015": {
+                                "weight_pct": 100.0,
+                                "critical_strut": "Strut1",
+                                "min_fatigue_life": 25.0,
+                            }
+                        },
+                    )
                     
                     result = run_analysis(args)
                     
@@ -345,10 +360,10 @@ class TestAnalysisExecution:
         
         with patch('digitalmodel.structural.fatigue_apps.__main__.IntegratedFatigueProcessor') as MockProcessor:
             with patch('digitalmodel.structural.fatigue_apps.__main__.ProductionDataHandler') as MockHandler:
-                with patch('digitalmodel.structural.fatigue_apps.__main__.main') as mock_main:
+                with patch('digitalmodel.structural.fatigue_apps.__main__.run_integrated_analysis') as mock_analysis:
                     mock_processor = MagicMock()
                     MockProcessor.return_value = mock_processor
-                    mock_main.return_value = ([], {})
+                    mock_analysis.return_value = ([], {})
                     
                     result = run_analysis(args)
                     

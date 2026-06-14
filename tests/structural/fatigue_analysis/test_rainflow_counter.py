@@ -196,7 +196,7 @@ class TestRainflowValidation:
     def test_astm_example_1(self):
         """Test against ASTM E1049 Example 1"""
         # Standard ASTM test sequence
-        stress = np.array([0, -2, 1, -3, 5, -1, 3, -4, 4, -2, 0])
+        stress = np.array([-2, 1, -3, 5, -1, 3, -4, 4, -2])
         
         counter = RainflowCounter()
         ranges, counts = counter.count_cycles(stress)
@@ -210,12 +210,8 @@ class TestRainflowValidation:
             9: 0.5    # Range 9, half cycle
         }
         
-        # Verify against expected (allowing for algorithm variations)
-        total_expected = sum(expected_ranges.values())
-        total_actual = np.sum(counts)
-        
-        # Total counts should match
-        assert abs(total_actual - total_expected) < 1.0
+        actual_ranges = dict(zip(ranges, counts))
+        assert actual_ranges == expected_ranges
     
     def test_repeating_pattern(self):
         """Test with repeating load pattern"""
