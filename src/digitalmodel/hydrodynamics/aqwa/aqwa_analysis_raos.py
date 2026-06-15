@@ -16,7 +16,7 @@ from assetutilities.engine import engine as au_engine
 
 # Reader imports
 try:  # pragma: no cover - compatibility shim for environments without custom package
-    from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities  # noqa: F401
+    from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities  # noqa: F401
 except ModuleNotFoundError:  # pragma: no cover
     from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities  # type: ignore
 from digitalmodel.engine import engine as dm_engine  # noqa

@@ -9,7 +9,7 @@ import numpy as np
 
 # Reader imports
 try:  # pragma: no cover - compatibility shim for environments without custom package
-    from digitalmodel.custom.aqwa.aqwa_analysis_raos import AqwaRAOs  # type: ignore
+    from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
     from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
 

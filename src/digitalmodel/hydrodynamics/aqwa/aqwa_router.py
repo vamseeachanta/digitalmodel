@@ -81,7 +81,7 @@ class Aqwa:
                 viscous_cfg["results"] = run_result
             else:
                 try:
-                    from digitalmodel.custom.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
+                    from digitalmodel.hydrodynamics.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
                 except ModuleNotFoundError:
                     from digitalmodel.hydrodynamics.aqwa.aqwa_analysis import AqwaAnalysis  # type: ignore
 

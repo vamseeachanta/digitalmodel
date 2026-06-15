@@ -32,7 +32,7 @@ from hypothesis.strategies import floats, integers, dictionaries, text, booleans
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from digitalmodel.custom.PipeSizing import PipeSizing
+from digitalmodel.specialized.custom.PipeSizing import PipeSizing
 
 
 class TestPipeSizingUnit:

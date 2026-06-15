@@ -14,7 +14,7 @@ import os
 # Add the source directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../src'))
 
-from digitalmodel.custom.PipeSizing import PipeSizing
+from digitalmodel.specialized.custom.PipeSizing import PipeSizing
 
 
 class TestProductionReadiness:
