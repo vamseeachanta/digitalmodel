@@ -64,6 +64,28 @@ def test_workflow_registry(workflow):
         damage = cfg["fatigue_analysis"]["damage"]
         assert damage == pytest.approx(7.418780212e-11)
         assert 0 < damage < 1.0e-9
+    elif workflow["id"] == "jumper-installation":
+        summary = cfg["jumper_installation"]["summary"]
+        results_path = Path(summary["cases_csv"])
+        summary_path = Path(summary["summary_json"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+
+        cases = pd.read_csv(results_path)
+        summary_json = yaml.safe_load(summary_path.read_text())
+
+        assert summary["screening_status"] in {"pass", "fail"}
+        assert summary["screening_status"] == "pass"
+        assert summary["governing_phase"] == "splash_zone"
+        assert summary["max_utilisation"] == pytest.approx(cases["max_utilisation"].max())
+        assert len(cases) == 3
+        assert cases["hs_m"].tolist() == [1.0, 2.0, 3.0]
+        assert cases["max_utilisation"].is_monotonic_increasing
+        assert set(cases["governing_phase"]) == {"splash_zone"}
+        assert summary_json["summary"]["screening_status"] == "pass"
+        assert summary_json["summary"]["governing_phase"] == "splash_zone"
     elif workflow["id"] == "mooring-fatigue":
         summary = cfg["mooring_fatigue"]
         results_path = Path(summary["results_csv"])
