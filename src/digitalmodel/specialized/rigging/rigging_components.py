@@ -1,8 +1,8 @@
 import pkgutil
 
 from assetutilities.common.data import ReadFromExcel
-from digitalmodel.custom.fea_model.LineType_components import LineType
-from digitalmodel.custom.fea_model.line_components import Line
+from digitalmodel.solvers.fea_model.LineType_components import LineType
+from digitalmodel.solvers.fea_model.line_components import Line
 
 read_excel = ReadFromExcel()
 

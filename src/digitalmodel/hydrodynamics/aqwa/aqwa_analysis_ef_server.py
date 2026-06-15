@@ -23,14 +23,14 @@ from colorama import init as colorama_init
 
 # Reader imports - these may also be unavailable
 try:
-    from digitalmodel.custom.aqwa.aqwa_utilities import AqwaUtilities
+    from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities
     _HAS_AQWA_UTILS = True
 except ImportError:
     _HAS_AQWA_UTILS = False
     AqwaUtilities = None
 
 try:
-    from digitalmodel.custom.aqwa.ef_server.AqwaServerMgr import *
+    from digitalmodel.hydrodynamics.aqwa.ef_server.AqwaServerMgr import *
     _HAS_AQWA_SERVER = True
 except ImportError:
     _HAS_AQWA_SERVER = False

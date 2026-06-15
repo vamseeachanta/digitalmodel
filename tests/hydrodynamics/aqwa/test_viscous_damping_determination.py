@@ -1,25 +1,7 @@
-import sys
-import types
 from pathlib import Path
 
 import numpy as np
 import pytest
-
-
-_custom_pkg = types.ModuleType("digitalmodel.custom")
-_aqwa_pkg = types.ModuleType("digitalmodel.custom.aqwa")
-_aqwa_raos = types.ModuleType("digitalmodel.custom.aqwa.aqwa_analysis_raos")
-_aqwa_raos.AqwaRAOs = object
-_aqwa_utilities = types.ModuleType("digitalmodel.custom.aqwa.aqwa_utilities")
-_aqwa_utilities.AqwaUtilities = object
-
-sys.modules.setdefault("digitalmodel.custom", _custom_pkg)
-sys.modules.setdefault("digitalmodel.custom.aqwa", _aqwa_pkg)
-sys.modules.setdefault("digitalmodel.custom.aqwa.aqwa_analysis_raos", _aqwa_raos)
-sys.modules.setdefault("digitalmodel.custom.aqwa.aqwa_utilities", _aqwa_utilities)
-setattr(_custom_pkg, "aqwa", _aqwa_pkg)
-setattr(_aqwa_pkg, "aqwa_analysis_raos", _aqwa_raos)
-setattr(_aqwa_pkg, "aqwa_utilities", _aqwa_utilities)
 
 
 from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import (

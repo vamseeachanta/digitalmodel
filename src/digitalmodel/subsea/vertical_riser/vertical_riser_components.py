@@ -6,7 +6,7 @@ import math
 from digitalmodel.units import Q_
 from assetutilities.common.data import ReadData
 
-from digitalmodel.custom.PipeSizing import PipeSizing
+from digitalmodel.specialized.custom.PipeSizing import PipeSizing
 from digitalmodel.infrastructure.base_solvers.marine.typical_riser_stack_up_calculations import (
     TypicalRiserStackUpCalculations,
 )
