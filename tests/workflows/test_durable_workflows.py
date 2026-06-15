@@ -675,6 +675,49 @@ def test_workflow_registry(workflow):
         envelope = pd.read_csv(envelope_csv)
         assert len(envelope) == 160
         assert set(envelope["envelope"]) == {"vme_isotropic", "api_ellipse"}
+    elif workflow["id"] == "damage-stability":
+        result = cfg["naval_arch"]["damage_stability"]["result"]
+        assert cfg["naval_arch"]["calculation"] == "damage_stability"
+        assert result["imo_intact_stability"]["overall_pass"] is True
+        assert result["area_to_30_m_rad"] == pytest.approx(0.236055781)
+        assert result["area_to_40_m_rad"] == pytest.approx(0.434237918)
+        assert result["gz_at_30_m"] == pytest.approx(0.945)
+        assert result["angle_of_max_gz_deg"] == pytest.approx(50.0)
+        assert result["sinkage_m"] == pytest.approx(0.2125)
+        assert result["flooded_gm_m"] == pytest.approx(1.0)
+    elif workflow["id"] == "platform-stability":
+        result = cfg["naval_arch"]["platform_stability"]["result"]
+        assert cfg["naval_arch"]["calculation"] == "platform_stability"
+        assert result["platform_type"] == "fpso"
+        assert result["intact"] is True
+        assert result["gm_m"] == pytest.approx(2.784602183)
+        assert result["gz_at_30deg"] == pytest.approx(1.392301092)
+        assert result["area_0_to_30"] == pytest.approx(0.372829168)
+        assert result["area_0_to_40"] == pytest.approx(0.651059664)
+        assert result["wind_heel_angle_deg"] == pytest.approx(0.655465685)
+        assert result["wind_criterion_ok"] is True
+    elif workflow["id"] == "hull-resistance":
+        result = cfg["naval_arch"]["hull_resistance"]["result"]
+        coefficients = result["coefficients"]
+        assert cfg["naval_arch"]["calculation"] == "hull_resistance"
+        assert coefficients["cb"] == pytest.approx(0.60)
+        assert coefficients["cm"] == pytest.approx(0.977)
+        assert coefficients["cwp"] == pytest.approx(0.70)
+        assert coefficients["cp_from_cb_cm"] == pytest.approx(0.614124872)
+        assert result["froude_number"] == pytest.approx(0.223226279)
+        assert result["wetted_surface_m2"] == pytest.approx(2429.246060393)
+        assert result["total_resistance_N"] == pytest.approx(195598.466626663)
+        assert result["effective_power_W"] == pytest.approx(1510020.162357836)
+    elif workflow["id"] == "hull-seakeeping":
+        result = cfg["naval_arch"]["hull_seakeeping"]["result"]
+        assert cfg["naval_arch"]["calculation"] == "hull_seakeeping"
+        assert result["natural_roll_period_s"] == pytest.approx(24.072800169)
+        assert result["natural_heave_period_s"] == pytest.approx(3.617618822)
+        assert result["natural_pitch_period_s"] == pytest.approx(6.142299697)
+        assert result["encounter_frequency_rad_s"] == pytest.approx(1.321916412)
+        assert result["simple_heave_rao"] == pytest.approx(1.267131324)
+        assert result["motion_sickness_incidence_pct"] == pytest.approx(8.485281374)
+        assert result["significant_motion_m"] == pytest.approx(2.0)
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
