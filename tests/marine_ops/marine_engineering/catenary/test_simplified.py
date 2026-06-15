@@ -2,7 +2,7 @@
 Comprehensive tests for simplified catenary module.
 
 Tests verify:
-1. Exact numerical match to legacy implementations (±0.0001 tolerance)
+1. Exact numerical match to closed-form catenary equations (±0.0001 tolerance)
 2. Edge case handling
 3. Input validation
 4. API consistency
@@ -19,26 +19,46 @@ from digitalmodel.marine_ops.marine_analysis.catenary.simplified import (
 )
 
 
+def expected_from_angle(angle_deg, vertical_distance):
+    """Closed-form catenary geometry from fairlead angle and vertical span."""
+    slope = math.tan(math.radians(angle_deg))
+    catenary_parameter = vertical_distance / (math.sqrt(1.0 + slope**2) - 1.0)
+    return {
+        "arc_length": catenary_parameter * slope,
+        "horizontal_distance": catenary_parameter * math.asinh(slope),
+        "bend_radius": catenary_parameter,
+    }
+
+
+def expected_from_force(force, weight_per_length, vertical_distance):
+    """Closed-form catenary geometry from total fairlead force."""
+    horizontal_tension = force - weight_per_length * vertical_distance
+    catenary_parameter = horizontal_tension / weight_per_length
+    x_over_a = math.acosh(1.0 + vertical_distance / catenary_parameter)
+    arc_length = catenary_parameter * math.sinh(x_over_a)
+    return {
+        "arc_length": arc_length,
+        "horizontal_distance": catenary_parameter * x_over_a,
+        "weight_suspended": weight_per_length * arc_length,
+        "horizontal_tension": horizontal_tension,
+        "shape_parameter": weight_per_length / horizontal_tension,
+    }
+
+
 class TestSimplifiedCatenarySolverAngleBased:
     """Tests for angle-based catenary calculations."""
 
     def test_angle_based_basic(self):
-        """Test basic angle-based calculation matches legacy."""
+        """Test basic angle-based calculation matches closed form."""
         solver = SimplifiedCatenarySolver()
 
         # Test case: 30 degrees, 100m vertical distance
         result = solver.solve_from_angle(angle_deg=30.0, vertical_distance=100.0)
+        expected = expected_from_angle(30.0, 100.0)
 
-        # Expected values calculated from legacy formulas
-        # tanq = tan(60°) = 1.732050808...
-        # cos(60°) = 0.5, (1 - 0.5) = 0.5
-        # BendRadius = 100 * 0.5 / 0.5 = 100
-        # S = 100 * 1.732050808 = 173.2050808
-        # X = 100 * asinh(1.732050808) = 100 * 1.316957897 = 131.6957897
-
-        assert result.arc_length == pytest.approx(173.2050808, abs=0.0001)
-        assert result.horizontal_distance == pytest.approx(131.6957897, abs=0.0001)
-        assert result.bend_radius == pytest.approx(100.0, abs=0.0001)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=0.0001)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.0001)
+        assert result.bend_radius == pytest.approx(expected["bend_radius"], abs=0.0001)
         assert result.horizontal_tension is None
         assert result.shape_parameter is None
 
@@ -47,48 +67,33 @@ class TestSimplifiedCatenarySolverAngleBased:
         solver = SimplifiedCatenarySolver()
 
         result = solver.solve_from_angle(angle_deg=45.0, vertical_distance=100.0)
+        expected = expected_from_angle(45.0, 100.0)
 
-        # tanq = tan(45°) = 1.0
-        # cos(45°) = 0.707106781, (1 - 0.707106781) = 0.292893219
-        # BendRadius = 100 * 0.707106781 / 0.292893219 = 241.4213562
-        # S = 241.4213562 * 1.0 = 241.4213562
-        # X = 241.4213562 * asinh(1.0) = 241.4213562 * 0.881373587 = 212.7322122
-
-        assert result.arc_length == pytest.approx(241.4213562, abs=0.0001)
-        assert result.horizontal_distance == pytest.approx(212.782407, abs=0.001)
-        assert result.bend_radius == pytest.approx(241.4213562, abs=0.0001)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=0.0001)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.001)
+        assert result.bend_radius == pytest.approx(expected["bend_radius"], abs=0.0001)
 
     def test_angle_based_small_angle(self):
-        """Test small angle case (steep catenary)."""
+        """Test small angle case (shallow catenary)."""
         solver = SimplifiedCatenarySolver()
 
         result = solver.solve_from_angle(angle_deg=10.0, vertical_distance=100.0)
+        expected = expected_from_angle(10.0, 100.0)
 
-        # tanq = tan(80°) = 5.671281820
-        # cos(80°) = 0.173648178, (1 - 0.173648178) = 0.826351822
-        # BendRadius = 100 * 0.173648178 / 0.826351822 = 21.0094635
-        # S = 21.0094635 * 5.671281820 = 119.1456584
-        # X = 21.0094635 * asinh(5.671281820) = 52.9903811
-
-        assert result.arc_length == pytest.approx(119.175359, abs=0.001)
-        assert result.horizontal_distance == pytest.approx(52.991147, abs=0.001)
-        assert result.bend_radius == pytest.approx(21.009463, abs=0.001)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=0.001)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.001)
+        assert result.bend_radius == pytest.approx(expected["bend_radius"], abs=0.001)
 
     def test_angle_based_large_angle(self):
-        """Test large angle case (shallow catenary)."""
+        """Test large angle case (steep catenary)."""
         solver = SimplifiedCatenarySolver()
 
         result = solver.solve_from_angle(angle_deg=80.0, vertical_distance=100.0)
+        expected = expected_from_angle(80.0, 100.0)
 
-        # tanq = tan(10°) = 0.176326981
-        # cos(10°) = 0.984807753, (1 - 0.984807753) = 0.015192247
-        # BendRadius = 100 * 0.984807753 / 0.015192247 = 6482.9235039
-        # S = 6482.9235039 * 0.176326981 = 1143.0662321
-        # X = 6482.9235039 * asinh(0.176326981) = 1135.3661647
-
-        assert result.arc_length == pytest.approx(1143.00523, abs=0.001)
-        assert result.horizontal_distance == pytest.approx(1135.315774, abs=0.001)
-        assert result.bend_radius == pytest.approx(6482.92347, abs=0.001)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=0.001)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.001)
+        assert result.bend_radius == pytest.approx(expected["bend_radius"], abs=0.001)
 
     def test_angle_based_invalid_angle_zero(self):
         """Test that angle=0 raises ValueError."""
@@ -130,60 +135,45 @@ class TestSimplifiedCatenarySolverForceBased:
     """Tests for force-based catenary calculations."""
 
     def test_force_based_basic(self):
-        """Test basic force-based calculation matches legacy."""
+        """Test basic force-based calculation matches closed form."""
         solver = SimplifiedCatenarySolver()
 
-        # Use valid values where F > w*d/2
-        # F=10000, w=50, d=100 gives F/w=200 > d/2=50
         result = solver.solve_from_force(
             force=10000.0,
             weight_per_length=50.0,
             vertical_distance=100.0
         )
+        expected = expected_from_force(10000.0, 50.0, 100.0)
 
-        # F/w = 200
-        # S = 100 * (2*200 - 100) = 100 * 300 = 30000
-        # X = (200 - 100) * ln((30000 + 200) / (200 - 100))
-        # X = 100 * ln(30200 / 100) = 100 * ln(302) = 100 * 5.710427 = 571.0427
-        # W = 50 * 30000 = 1500000
-        # TH = 10000 * 571.0427 / sqrt(30000^2 + 571.0427^2)
-        # TH = 5710427 / sqrt(900326183.98) = 5710427 / 30005.4359 = 190.3152
-        # b = 50 * 9.81 / 190.3152 = 490.5 / 190.3152 = 2.5775
-
-        assert result.arc_length == pytest.approx(30000.0, abs=0.0001)
-        assert result.horizontal_distance == pytest.approx(571.0427, abs=0.01)
-        assert result.weight_suspended == pytest.approx(1500000.0, abs=0.0001)
-        assert result.horizontal_tension == pytest.approx(190.3152, abs=0.01)
-        assert result.shape_parameter == pytest.approx(2.5775, abs=0.001)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=0.0001)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.01)
+        assert result.weight_suspended == pytest.approx(expected["weight_suspended"], abs=0.0001)
+        assert result.horizontal_tension == pytest.approx(expected["horizontal_tension"], abs=0.01)
+        assert result.shape_parameter == pytest.approx(expected["shape_parameter"], abs=0.001)
 
     def test_force_based_realistic_marine_cable(self):
         """Test with realistic marine cable parameters."""
         solver = SimplifiedCatenarySolver()
 
         # Realistic: 50-ton cable, 100kg/m weight, 500m depth
-        # Need F > w*d/2 = 981*500/2 = 245,250 N
+        # Need F > w*d = 981*500 = 490,500 N
         result = solver.solve_from_force(
             force=500000.0,  # 50 tons = 500 kN
-            weight_per_length=981.0,  # 100 kg/m * 9.81 m/s�
+            weight_per_length=981.0,  # 100 kg/m * 9.81 m/s^2
             vertical_distance=500.0
         )
+        expected = expected_from_force(500000.0, 981.0, 500.0)
 
-        
-        # F/w = 509.684
-        # S = 500 * (2*509.684 - 500) = 500 * 519.368 = 259684
-        # X = (509.684 - 500) * ln((259684 + 509.684) / (509.684 - 500))
-        # X = 9.684 * ln(260193.684 / 9.684) = 9.684 * ln(26863.066) = 9.684 * 10.198 = 98.76
-
-        assert result.arc_length == pytest.approx(259684.0, abs=1.0)
-        assert result.horizontal_distance == pytest.approx(98.76, abs=0.1)
-        assert result.weight_suspended == pytest.approx(254729604.0, abs=1000.0)
+        assert result.arc_length == pytest.approx(expected["arc_length"], abs=1.0)
+        assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=0.1)
+        assert result.weight_suspended == pytest.approx(expected["weight_suspended"], abs=1000.0)
 
     def test_force_based_invalid_force_too_small(self):
         """Test that force too small raises ValueError."""
         solver = SimplifiedCatenarySolver()
 
-        # F < w*d/2 should fail
-        # w*d/2 = 50*100/2 = 2500
+        # F <= w*d should fail
+        # w*d = 50*100 = 5000
         with pytest.raises(ValueError, match="force too small"):
             solver.solve_from_force(
                 force=2000.0,  # Less than 2500
@@ -240,14 +230,14 @@ class TestCalculateForces:
         )
 
         # Fv = 50 * 100 = 5000
-        # sin(60°) = 0.866025404
-        # cos(60°) = 0.5
-        # F = 5000 / 0.866025404 = 5773.502692
-        # Fh = 5773.502692 * 0.5 = 2886.751346
+        # sin(30°) = 0.5
+        # cos(30°) = 0.866025404
+        # F = 5000 / 0.5 = 10000
+        # Fh = 10000 * 0.866025404 = 8660.254038
 
         assert Fv == pytest.approx(5000.0, abs=0.0001)
-        assert F == pytest.approx(5773.502692, abs=0.0001)
-        assert Fh == pytest.approx(2886.751346, abs=0.0001)
+        assert F == pytest.approx(10000.0, abs=0.0001)
+        assert Fh == pytest.approx(8660.254038, abs=0.0001)
 
     def test_calculate_forces_45_degrees(self):
         """Test force calculation at 45 degrees."""
@@ -283,8 +273,8 @@ class TestCalculateForces:
             solver.calculate_forces(-50.0, 100.0, 30.0)
 
 
-class TestLegacyCompatibility:
-    """Tests for legacy dictionary-based API."""
+class TestDictionaryApi:
+    """Tests for dictionary-based API."""
 
     def test_solve_catenary_dict_force_based(self):
         """Test dictionary API for force-based calculation."""
@@ -303,7 +293,8 @@ class TestLegacyCompatibility:
         assert 'W' in result
         assert 'THorizontal' in result
         assert 'b' in result
-        assert result['S'] == pytest.approx(30000.0, abs=0.0001)
+        expected = expected_from_force(10000.0, 50.0, 100.0)
+        assert result['S'] == pytest.approx(expected["arc_length"], abs=0.0001)
 
     def test_solve_catenary_dict_angle_based(self):
         """Test dictionary API for angle-based calculation."""
@@ -320,9 +311,10 @@ class TestLegacyCompatibility:
         assert 'S' in result
         assert 'X' in result
         assert 'BendRadius' in result
-        assert result['S'] == pytest.approx(173.2050808, abs=0.0001)
-        assert result['X'] == pytest.approx(131.6957897, abs=0.0001)
-        assert result['BendRadius'] == pytest.approx(100.0, abs=0.0001)
+        expected = expected_from_angle(30.0, 100.0)
+        assert result['S'] == pytest.approx(expected["arc_length"], abs=0.0001)
+        assert result['X'] == pytest.approx(expected["horizontal_distance"], abs=0.0001)
+        assert result['BendRadius'] == pytest.approx(expected["bend_radius"], abs=0.0001)
 
     def test_solve_catenary_dict_x_based_not_implemented(self):
         """Test that X-based calculation raises NotImplementedError."""
@@ -351,15 +343,15 @@ class TestLegacyCompatibility:
         assert 'F' in result
         assert 'Fh' in result
         assert result['Fv'] == pytest.approx(5000.0, abs=0.0001)
-        assert result['F'] == pytest.approx(5773.502692, abs=0.0001)
-        assert result['Fh'] == pytest.approx(2886.751346, abs=0.0001)
+        assert result['F'] == pytest.approx(10000.0, abs=0.0001)
+        assert result['Fh'] == pytest.approx(8660.254038, abs=0.0001)
 
 
-class TestComparisonWithLegacy:
-    """Direct comparison tests with legacy implementation."""
+class TestComparisonWithClosedForm:
+    """Direct comparison tests with closed-form catenary equations."""
 
-    def test_angle_based_matches_legacy_exactly(self):
-        """Verify new implementation matches legacy for multiple angle cases."""
+    def test_angle_based_matches_closed_form_exactly(self):
+        """Verify implementation matches closed form for multiple angle cases."""
         solver = SimplifiedCatenarySolver()
 
         test_cases = [
@@ -376,48 +368,35 @@ class TestComparisonWithLegacy:
             # Calculate using new implementation
             result = solver.solve_from_angle(angle, distance)
 
-            # Calculate using legacy formula (direct port)
-            complementary = 90.0 - angle
-            tanq = math.tan(math.radians(complementary))
-            cos_comp = math.cos(math.radians(complementary))
-            bend_radius_legacy = distance * cos_comp / (1.0 - cos_comp)
-            S_legacy = bend_radius_legacy * tanq
-            X_legacy = bend_radius_legacy * math.asinh(tanq)
+            expected = expected_from_angle(angle, distance)
 
             # Verify exact match
-            assert result.arc_length == pytest.approx(S_legacy, abs=1e-9)
-            assert result.horizontal_distance == pytest.approx(X_legacy, abs=1e-9)
-            assert result.bend_radius == pytest.approx(bend_radius_legacy, abs=1e-9)
+            assert result.arc_length == pytest.approx(expected["arc_length"], abs=1e-9)
+            assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=1e-9)
+            assert result.bend_radius == pytest.approx(expected["bend_radius"], abs=1e-9)
 
-    def test_force_based_matches_legacy_exactly(self):
-        """Verify new implementation matches legacy for multiple force cases."""
+    def test_force_based_matches_closed_form_exactly(self):
+        """Verify implementation matches closed form for multiple force cases."""
         solver = SimplifiedCatenarySolver()
 
         test_cases = [
-            (10000.0, 50.0, 100.0),   # F/w=200 > d/2=50
-            (25000.0, 100.0, 200.0),  # F/w=250 > d/2=100
-            (50000.0, 200.0, 150.0),  # F/w=250 > d/2=75
+            (10000.0, 50.0, 100.0),   # F=10000 > w*d=5000
+            (25000.0, 100.0, 200.0),  # F=25000 > w*d=20000
+            (50000.0, 200.0, 150.0),  # F=50000 > w*d=30000
         ]
 
         for force, weight, distance in test_cases:
             # Calculate using new implementation
             result = solver.solve_from_force(force, weight, distance)
 
-            # Calculate using legacy formula (direct port)
-            S_legacy = distance * (2 * force / weight - distance)
-            X_legacy = ((force / weight) - distance) * math.log(
-                (S_legacy + (force / weight)) / ((force / weight) - distance)
-            )
-            W_legacy = weight * S_legacy
-            TH_legacy = force * X_legacy / math.sqrt(S_legacy**2 + X_legacy**2)
-            b_legacy = weight * 9.81 / TH_legacy
+            expected = expected_from_force(force, weight, distance)
 
             # Verify exact match
-            assert result.arc_length == pytest.approx(S_legacy, abs=1e-9)
-            assert result.horizontal_distance == pytest.approx(X_legacy, abs=1e-9)
-            assert result.weight_suspended == pytest.approx(W_legacy, abs=1e-9)
-            assert result.horizontal_tension == pytest.approx(TH_legacy, abs=1e-9)
-            assert result.shape_parameter == pytest.approx(b_legacy, abs=1e-9)
+            assert result.arc_length == pytest.approx(expected["arc_length"], abs=1e-9)
+            assert result.horizontal_distance == pytest.approx(expected["horizontal_distance"], abs=1e-9)
+            assert result.weight_suspended == pytest.approx(expected["weight_suspended"], abs=1e-9)
+            assert result.horizontal_tension == pytest.approx(expected["horizontal_tension"], abs=1e-9)
+            assert result.shape_parameter == pytest.approx(expected["shape_parameter"], abs=1e-9)
 
 
 if __name__ == '__main__':

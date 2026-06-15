@@ -6,11 +6,11 @@ Provides fast closed-form solutions for common catenary problems:
 - Angle-based catenary (given q, d)
 - Catenary forces calculation
 
-This module ports and modernizes the legacy implementations from:
-- digitalmodel.subsea.catenary.catenaryMethods.catenaryEquation
-- digitalmodel.subsea.catenary.catenary_equation.CatenaryCalculator
-
-Mathematical formulas are preserved exactly to ensure numerical accuracy.
+The modern solver uses the closed-form catenary with the low point at the
+touchdown:
+- a = H / w
+- y = a * (cosh(x / a) - 1)
+- T = H + w * y
 """
 
 from dataclasses import dataclass
@@ -35,7 +35,7 @@ class SimplifiedCatenaryInput:
     force: Optional[float] = None  # Applied force (F) [N]
     weight_per_length: Optional[float] = None  # Weight per unit length (w) [N/m]
 
-    # Distance-based (not implemented in legacy)
+    # Distance-based (not implemented)
     horizontal_distance: Optional[float] = None  # Horizontal distance (X) [m]
 
 
@@ -46,7 +46,7 @@ class SimplifiedCatenaryResults:
     horizontal_distance: float  # Horizontal span (X) [m]
     bend_radius: Optional[float] = None  # Bend radius (R) [m] - for angle-based
     horizontal_tension: Optional[float] = None  # Horizontal tension (TH) [N] - for force-based
-    shape_parameter: Optional[float] = None  # Shape parameter (b = w*g/TH) [1/m]
+    shape_parameter: Optional[float] = None  # Shape parameter (1/a = w/H) [1/m]
     weight_suspended: Optional[float] = None  # Weight of suspended chain (W) [N]
 
 
@@ -54,8 +54,7 @@ class SimplifiedCatenarySolver:
     """Fast closed-form catenary solutions.
 
     This solver provides exact mathematical solutions for simplified catenary
-    problems where closed-form expressions exist. It ports the legacy
-    implementations while providing a modern, type-safe API.
+    problems where closed-form expressions exist.
 
     Example:
         >>> solver = SimplifiedCatenarySolver()
@@ -64,7 +63,7 @@ class SimplifiedCatenarySolver:
         >>> print(f"Arc length: {result.arc_length:.2f} m")
         >>>
         >>> # Force-based calculation
-        >>> result = solver.solve_from_force(force=1000.0, weight_per_length=50.0,
+        >>> result = solver.solve_from_force(force=10000.0, weight_per_length=50.0,
         ...                                   vertical_distance=100.0)
         >>> print(f"Horizontal distance: {result.horizontal_distance:.2f} m")
     """
@@ -79,11 +78,11 @@ class SimplifiedCatenarySolver:
         This method solves the catenary equation when the departure angle
         from horizontal (q) and vertical distance (d) are known.
 
-        Mathematical formulation (ported from legacy catenaryMethods.py lines 32-44):
-        - tanq = tan(90° - q)
-        - BendRadius = d * cos(90° - q) / (1 - cos(90° - q))
-        - S = BendRadius * tanq
-        - X = BendRadius * asinh(tanq)
+        Mathematical formulation:
+        - slope = tan(q)
+        - a = d / (sqrt(1 + slope^2) - 1)
+        - S = a * slope
+        - X = a * asinh(slope)
 
         Args:
             angle_deg: Angle from horizontal at departure point [degrees]
@@ -103,7 +102,7 @@ class SimplifiedCatenarySolver:
             >>> solver = SimplifiedCatenarySolver()
             >>> result = solver.solve_from_angle(30.0, 100.0)
             >>> result.arc_length
-            267.949...
+            373.205...
         """
         # Input validation
         if not (0 < angle_deg < 90):
@@ -115,29 +114,24 @@ class SimplifiedCatenarySolver:
                 f"vertical_distance must be positive, got {vertical_distance}"
             )
 
-        # Port exact math from legacy (lines 32-44)
-        # Note: Legacy uses (90 - q) as complementary angle
-        complementary_angle_deg = 90.0 - angle_deg
-        complementary_angle_rad = math.radians(complementary_angle_deg)
+        angle_rad = math.radians(angle_deg)
+        slope = math.tan(angle_rad)
+        cosh_at_fairlead = math.sqrt(1.0 + slope**2)
 
-        tanq = math.tan(complementary_angle_rad)
-        cos_comp = math.cos(complementary_angle_rad)
-
-        # Check for divide-by-zero (when cos ≈ 1)
-        denominator = 1.0 - cos_comp
+        denominator = cosh_at_fairlead - 1.0
         if abs(denominator) < 1e-12:
             raise ValueError(
-                f"Calculation unstable: angle_deg={angle_deg} results in cos≈1"
+                f"Calculation unstable: angle_deg={angle_deg} gives near-zero sag"
             )
 
-        # Calculate bend radius
-        bend_radius = vertical_distance * cos_comp / denominator
+        # The bend radius at touchdown is the catenary parameter a.
+        bend_radius = vertical_distance / denominator
 
         # Calculate arc length
-        arc_length = bend_radius * tanq
+        arc_length = bend_radius * slope
 
         # Calculate horizontal distance
-        horizontal_distance = bend_radius * math.asinh(tanq)
+        horizontal_distance = bend_radius * math.asinh(slope)
 
         return SimplifiedCatenaryResults(
             arc_length=arc_length,
@@ -156,19 +150,20 @@ class SimplifiedCatenarySolver:
     ) -> SimplifiedCatenaryResults:
         """Calculate catenary from force, weight per length, and vertical distance.
 
-        This method solves the catenary equation when the applied force (F),
+        This method solves the catenary equation when the total fairlead force (F),
         weight per unit length (w), and vertical distance (d) are known.
 
-        Mathematical formulation (ported from legacy catenaryMethods.py lines 10-25):
-        - S = d * (2*F/w - d)
-        - X = ((F/w) - d) * ln((S + (F/w)) / ((F/w) - d))
+        Mathematical formulation:
+        - H = F - w*d
+        - a = H/w
+        - X = a * acosh(1 + d/a)
+        - S = a * sinh(X/a)
         - W = w * S
-        - TH = F * X / sqrt(S² + X²)
-        - b = w * g / TH
+        - b = 1/a = w/H
 
         Args:
-            force: Applied force at departure point [N]
-                   Must be positive and > w*d/2 for valid catenary
+            force: Total fairlead force [N]. Must be greater than w*d so the
+                   horizontal tension is positive.
             weight_per_length: Weight per unit length of cable [N/m]
                              Must be positive
             vertical_distance: Vertical distance between endpoints [m]
@@ -179,14 +174,14 @@ class SimplifiedCatenarySolver:
 
         Raises:
             ValueError: If any input is not positive
-            ValueError: If force is too small (F < w*d/2)
-            ValueError: If calculation results in invalid logarithm
+            ValueError: If force is too small (F <= w*d)
+            ValueError: If calculation results in invalid catenary geometry
 
         Example:
             >>> solver = SimplifiedCatenarySolver()
-            >>> result = solver.solve_from_force(1000.0, 50.0, 100.0)
+            >>> result = solver.solve_from_force(10000.0, 50.0, 100.0)
             >>> result.arc_length
-            1800.0
+            173.205...
         """
         # Input validation
         if force <= 0:
@@ -200,58 +195,25 @@ class SimplifiedCatenarySolver:
                 f"vertical_distance must be positive, got {vertical_distance}"
             )
 
-        # Port exact math from legacy (lines 11-25)
-        ratio_F_w = force / weight_per_length
-
-        # Check for valid catenary condition
-        min_force_needed = weight_per_length * vertical_distance / 2.0
-        if force < min_force_needed:
+        min_force_needed = weight_per_length * vertical_distance
+        if force <= min_force_needed:
             raise ValueError(
-                f"force too small: {force} N < {min_force_needed} N (w*d/2). "
-                f"Need force > {min_force_needed:.2f} N for valid catenary."
+                f"force too small: {force} N <= {min_force_needed} N (w*d). "
+                f"Need force > {min_force_needed:.2f} N for positive horizontal tension."
             )
 
-        # Calculate arc length (S)
-        arc_length = vertical_distance * (2.0 * ratio_F_w - vertical_distance)
+        horizontal_tension = force - min_force_needed
+        catenary_parameter = horizontal_tension / weight_per_length
 
-        # Check arc length validity
-        if arc_length <= 0:
-            raise ValueError(
-                f"Invalid arc_length={arc_length}. Check input parameters."
-            )
-
-        # Calculate horizontal distance (X)
-        numerator = arc_length + ratio_F_w
-        denominator = ratio_F_w - vertical_distance
-
-        if denominator <= 0:
-            raise ValueError(
-                f"Invalid denominator in log: (F/w - d) = {denominator}. "
-                f"Need F/w > d (i.e., {force/weight_per_length} > {vertical_distance})"
-            )
-        if numerator <= 0:
-            raise ValueError(
-                f"Invalid numerator in log: (S + F/w) = {numerator}"
-            )
-
-        log_argument = numerator / denominator
-        if log_argument <= 0:
-            raise ValueError(
-                f"Invalid log argument: {log_argument}. Check parameters."
-            )
-
-        horizontal_distance = denominator * math.log(log_argument)
+        x_over_a = math.acosh(1.0 + vertical_distance / catenary_parameter)
+        horizontal_distance = catenary_parameter * x_over_a
+        arc_length = catenary_parameter * math.sinh(x_over_a)
 
         # Calculate weight of suspended chain (W)
         weight_suspended = weight_per_length * arc_length
 
-        # Calculate horizontal tension component (TH)
-        hypotenuse = math.sqrt(arc_length**2 + horizontal_distance**2)
-        horizontal_tension = force * horizontal_distance / hypotenuse
-
-        # Calculate catenary shape parameter (b = w*g/TH)
-        # Note: Legacy uses 9.81 m/s² for gravity
-        shape_parameter = weight_per_length * 9.81 / horizontal_tension
+        # Shape parameter is inverse catenary parameter.
+        shape_parameter = weight_per_length / horizontal_tension
 
         return SimplifiedCatenaryResults(
             arc_length=arc_length,
@@ -270,13 +232,13 @@ class SimplifiedCatenarySolver:
     ) -> tuple[float, float, float]:
         """Calculate forces on catenary from geometry.
 
-        This method ports the legacy catenaryForces function (lines 47-57)
-        to calculate the vertical, total, and horizontal forces.
+        This method calculates vertical, total, and horizontal force
+        components from suspended length and fairlead angle.
 
         Mathematical formulation:
         - Fv = w * S (vertical force)
-        - F = Fv / sin(90° - q) (total force)
-        - Fh = F * cos(90° - q) (horizontal force)
+        - F = Fv / sin(q) (total force)
+        - Fh = F * cos(q) (horizontal force)
 
         Args:
             weight_per_length: Weight per unit length [N/m]
@@ -307,14 +269,13 @@ class SimplifiedCatenarySolver:
                 f"angle_deg must be between 0 and 90, got {angle_deg}"
             )
 
-        # Port exact math from legacy (lines 49-53)
-        complementary_angle_rad = math.radians(90.0 - angle_deg)
+        angle_rad = math.radians(angle_deg)
 
-        sin_comp = math.sin(complementary_angle_rad)
-        cos_comp = math.cos(complementary_angle_rad)
+        sin_angle = math.sin(angle_rad)
+        cos_angle = math.cos(angle_rad)
 
         # Check for divide-by-zero
-        if abs(sin_comp) < 1e-12:
+        if abs(sin_angle) < 1e-12:
             raise ValueError(
                 f"Calculation unstable: angle_deg={angle_deg} results in sin≈0"
             )
@@ -323,19 +284,19 @@ class SimplifiedCatenarySolver:
         Fv = weight_per_length * arc_length
 
         # Calculate total force along catenary
-        F = Fv / sin_comp
+        F = Fv / sin_angle
 
         # Calculate horizontal force along catenary
-        Fh = F * cos_comp
+        Fh = F * cos_angle
 
         return (Fv, F, Fh)
 
 
 def solve_catenary_dict(data: dict) -> dict:
-    """Legacy-compatible wrapper that accepts and returns dictionaries.
+    """Dictionary wrapper that accepts and returns catenary data.
 
-    This function provides a drop-in replacement for the legacy
-    catenaryEquation function, accepting the same dictionary format.
+    This function accepts the historic dictionary shape but uses the modern
+    closed-form simplified solver semantics.
 
     Args:
         data: Dictionary with keys:
@@ -351,14 +312,14 @@ def solve_catenary_dict(data: dict) -> dict:
         ValueError: If inputs are invalid
 
     Example:
-        >>> data = {'F': 1000.0, 'w': 50.0, 'd': 100.0, 'q': None, 'X': None}
+        >>> data = {'F': 10000.0, 'w': 50.0, 'd': 100.0, 'q': None, 'X': None}
         >>> result = solve_catenary_dict(data)
         >>> result['S']
-        1800.0
+        173.205...
     """
     solver = SimplifiedCatenarySolver()
 
-    # Determine which method to use (same logic as legacy)
+    # Determine which method to use.
     if data.get("F") is not None:
         # Force-based method
         result = solver.solve_from_force(
@@ -399,9 +360,7 @@ def solve_catenary_dict(data: dict) -> dict:
 
 
 def calculate_forces_dict(data: dict) -> dict:
-    """Legacy-compatible wrapper for force calculation.
-
-    Provides drop-in replacement for legacy catenaryForces function.
+    """Dictionary wrapper for force calculation.
 
     Args:
         data: Dictionary with keys:

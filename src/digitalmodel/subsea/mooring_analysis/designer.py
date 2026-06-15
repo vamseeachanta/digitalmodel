@@ -190,7 +190,7 @@ class MooringDesigner:
             # Apply dynamic factor
             max_tension = result.fairlead_tension * dynamic_factor
 
-            return max_tension
+            return float(max_tension)
 
         except Exception as e:
             logger.warning(f"Catenary solution failed for {line.line_id}: {e}")
@@ -204,7 +204,7 @@ class MooringDesigner:
             # Estimate tension from geometry
             w = main_segment.weight_water * 9.81 / 1000
             T_estimate = w * line_length + line.pretension
-            return T_estimate * dynamic_factor
+            return float(T_estimate * dynamic_factor)
 
     def analyze_intact_condition(
         self,
@@ -243,7 +243,7 @@ class MooringDesigner:
             if max_tension > 0 and max_tension < float('inf'):
                 sf_actual = actual_mbl / max_tension
                 utilization = max_tension / actual_mbl
-                passes = sf_actual >= sf_required
+                passes = bool(sf_actual >= sf_required)
             else:
                 sf_actual = 0.0
                 utilization = 1.0
@@ -327,7 +327,7 @@ class MooringDesigner:
             if max_tension > 0 and max_tension < float('inf'):
                 sf_actual = actual_mbl / max_tension
                 utilization = max_tension / actual_mbl
-                passes = sf_actual >= sf_required
+                passes = bool(sf_actual >= sf_required)
             else:
                 sf_actual = 0.0
                 utilization = 1.0
