@@ -359,6 +359,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         fmw = FPSOMooringWorkflow()
         cfg_base = fmw.router(cfg_base)
+    elif basename == "fpso_mooring_full":
+        from digitalmodel.marine_ops.marine_engineering.mooring_analysis.fpso_full_workflow import (
+            FPSOMooringFullWorkflow,
+        )
+
+        fmw = FPSOMooringFullWorkflow()
+        cfg_base = fmw.router(cfg_base)
     elif basename == "jacket_checks":
         from digitalmodel.structural.jacket_topside.workflow import JacketChecksWorkflow
 

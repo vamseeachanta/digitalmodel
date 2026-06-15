@@ -1,0 +1,38 @@
+basename: fpso_mooring_full
+
+vessel:
+  loa: 330.0
+  beam: 60.0
+  draft: 22.0
+  freeboard: 25.0
+  displacement: 320000.0
+
+environment:
+  Hs: 3.0
+  Tp: 10.0
+  gamma: 3.3
+  wave_heading: 45.0
+  wind_speed: 20.0
+  wind_heading: 45.0
+  current_speed: 1.5
+  current_heading: 30.0
+
+mooring:
+  n_lines: 8
+  chain_diameter: 120.0
+  chain_grade: R4
+  chain_link_type: Studless
+  water_depth: 1500.0
+  line_length: 2000.0
+  pretension: 1500000.0
+
+output:
+  summary_json: examples/workflows/fpso-mooring-full/results/fpso_mooring_full_summary.json
+  line_tensions_csv: examples/workflows/fpso-mooring-full/results/fpso_mooring_full_line_tensions.csv
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
