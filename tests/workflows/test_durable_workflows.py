@@ -64,6 +64,35 @@ def test_workflow_registry(workflow):
         damage = cfg["fatigue_analysis"]["damage"]
         assert damage == pytest.approx(7.418780212e-11)
         assert 0 < damage < 1.0e-9
+    elif workflow["id"] == "mooring-fatigue":
+        summary = cfg["mooring_fatigue"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+
+        results = pd.read_csv(results_path)
+        line_summary = pd.read_csv(summary_path)
+
+        assert summary["governing_line"] == "wire-01"
+        assert summary["governing_damage"] > 0.0
+        assert summary["governing_fatigue_life_years"] == pytest.approx(
+            summary["design_life_years"] / summary["governing_damage"]
+        )
+        assert summary["governing_dff_margin"] == pytest.approx(
+            summary["governing_fatigue_life_years"]
+            / (summary["design_life_years"] * summary["dff"])
+        )
+        assert len(results) == 6
+        assert set(line_summary["line_id"]) == {"chain-01", "wire-01"}
+        assert (results["stress_range_MPa"] > 0.0).all()
+        assert (results["damage"] > 0.0).all()
+        assert (
+            results.sort_values("stress_range_MPa")["allowable_cycles"]
+            .is_monotonic_decreasing
+        )
     elif workflow["id"] == "time-series":
         fft_path = Path(cfg["time_series"]["csv"]["signal_fft"])
         fft = pd.read_csv(fft_path)
