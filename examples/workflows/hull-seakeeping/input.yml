@@ -1,0 +1,34 @@
+basename: naval_arch
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+naval_arch:
+  calculation: hull_seakeeping
+  hull_seakeeping:
+    case:
+      id: registry_hull_seakeeping
+      description: Registry natural-period and simple wave-response screen
+    vessel:
+      beam_m: 30.0
+      gm_m: 1.0
+      displacement_tonnes: 10000.0
+      waterplane_area_m2: 3000.0
+      lwl_m: 150.0
+      gml_m: 150.0
+      speed_ms: 8.0
+    wave:
+      frequency_rad_s: 0.8
+      heading_deg: 180.0
+      damping_ratio: 0.05
+      vertical_accel_rms_g: 0.05
+      exposure_hours: 2.0
+      rao_values: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      spectrum_values: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      frequency_step_rad_s: 0.1
+    outputs:
+      directory: results/hull_seakeeping

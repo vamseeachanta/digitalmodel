@@ -499,3 +499,39 @@ workflows:
       - examples/workflows/vlp-correlations/results/vlp_correlations/vlp_correlations_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[vlp-correlations]
     runtime: offline
+  - id: damage-stability
+    basename: naval_arch
+    title: IMO intact and damage-stability screen from a tabulated GZ curve
+    input: examples/workflows/damage-stability/input.yml
+    outputs:
+      - examples/workflows/damage-stability/results/input.yml
+      - examples/workflows/damage-stability/results/damage_stability/damage_stability_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[damage-stability]
+    runtime: offline
+  - id: platform-stability
+    basename: naval_arch
+    title: FPSO intact stability and wind-heel screen
+    input: examples/workflows/platform-stability/input.yml
+    outputs:
+      - examples/workflows/platform-stability/results/input.yml
+      - examples/workflows/platform-stability/results/platform_stability/platform_stability_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[platform-stability]
+    runtime: offline
+  - id: hull-resistance
+    basename: naval_arch
+    title: Series 60 hull-form coefficients and Holtrop-Mennen resistance screen
+    input: examples/workflows/hull-resistance/input.yml
+    outputs:
+      - examples/workflows/hull-resistance/results/input.yml
+      - examples/workflows/hull-resistance/results/hull_resistance/hull_resistance_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hull-resistance]
+    runtime: offline
+  - id: hull-seakeeping
+    basename: naval_arch
+    title: Hull natural-period and simple seakeeping response screen
+    input: examples/workflows/hull-seakeeping/input.yml
+    outputs:
+      - examples/workflows/hull-seakeeping/results/input.yml
+      - examples/workflows/hull-seakeeping/results/hull_seakeeping/hull_seakeeping_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hull-seakeeping]
+    runtime: offline
