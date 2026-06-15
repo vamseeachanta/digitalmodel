@@ -39,10 +39,17 @@ class DesignCode(Enum):
 @dataclass
 class MaterialProperties:
     """Material properties for VIV analysis."""
-    youngs_modulus: float    # Pa (N/m²)
+    youngs_modulus: float    # MPa
     density: float           # kg/m³
     poissons_ratio: float = 0.3
     name: str = "Steel"
+
+    @property
+    def youngs_modulus_pa(self) -> float:
+        """Young's modulus in Pa for SI calculations."""
+        if self.youngs_modulus > 1e8:
+            return self.youngs_modulus
+        return self.youngs_modulus * 1e6
 
 
 @dataclass
@@ -54,8 +61,15 @@ class TubularMember:
     wall_thickness: float            # meters
     material: MaterialProperties
     boundary_condition: BoundaryCondition = BoundaryCondition.PINNED_PINNED
-    effective_length_factor: float = 1.0
+    effective_length_factor: Optional[float] = None
     top_tension: Optional[float] = None  # N (for tension-controlled members like risers)
+
+    def __post_init__(self) -> None:
+        self._custom_effective_length_factor = self.effective_length_factor is not None
+        if self.effective_length_factor is None:
+            self.effective_length_factor = (
+                2.0 if self.boundary_condition == BoundaryCondition.CANTILEVER else 1.0
+            )
 
     @property
     def inner_diameter(self) -> float:
@@ -84,6 +98,7 @@ class FluidProperties:
     density: float = 1025.0           # kg/m³ (seawater)
     kinematic_viscosity: float = 1.19e-6  # m²/s
     added_mass_coefficient: float = 1.0   # Ca (typically 1.0 for circular cylinder)
+    name: str = "Seawater"
 
 
 @dataclass
@@ -199,21 +214,21 @@ class VIVFatigueResult:
 
 # Pre-defined materials
 STEEL_CARBON = MaterialProperties(
-    youngs_modulus=207e9,
+    youngs_modulus=207_000,
     density=7850.0,
     poissons_ratio=0.3,
     name="Carbon Steel"
 )
 
 STEEL_STAINLESS = MaterialProperties(
-    youngs_modulus=193e9,
+    youngs_modulus=193_000,
     density=8000.0,
     poissons_ratio=0.3,
     name="Stainless Steel"
 )
 
 TITANIUM = MaterialProperties(
-    youngs_modulus=110e9,
+    youngs_modulus=110_000,
     density=4500.0,
     poissons_ratio=0.34,
     name="Titanium"
@@ -241,9 +256,12 @@ def get_material(material_name: str) -> MaterialProperties:
         MaterialProperties instance
 
     Raises:
-        KeyError: If material not found
+        ValueError: If material not found
     """
-    return VIV_MATERIALS[material_name.lower()]
+    try:
+        return VIV_MATERIALS[material_name.lower()]
+    except KeyError as exc:
+        raise ValueError(f"Unknown material: {material_name}") from exc
 
 
 # VIV parameters from design codes

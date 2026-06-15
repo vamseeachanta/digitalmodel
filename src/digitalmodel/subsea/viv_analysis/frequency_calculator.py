@@ -106,11 +106,18 @@ class FrequencyCalculator:
 
         lambda_n = eigenvalues[mode - 1]
 
-        # Effective length
-        L_eff = member.length * member.effective_length_factor
+        # Boundary-condition eigenvalues are already based on the member length.
+        # Apply an effective-length factor only when the caller explicitly
+        # supplies one, avoiding a second cantilever correction.
+        length_factor = (
+            member.effective_length_factor
+            if getattr(member, "_custom_effective_length_factor", False)
+            else 1.0
+        )
+        L_eff = member.length * length_factor
 
         # Material properties
-        E = member.material.youngs_modulus
+        E = member.material.youngs_modulus_pa
         I = member.second_moment_of_area
 
         # Mass per unit length

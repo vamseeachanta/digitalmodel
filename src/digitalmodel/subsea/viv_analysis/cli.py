@@ -123,13 +123,13 @@ def screening_cmd(length, diameter, thickness, current, material, boundary, outp
 
         # Output
         output_data = {
-            'natural_frequency_hz': round(result.natural_frequency, 4),
-            'shedding_frequency_hz': round(result.shedding_frequency, 4),
-            'reduced_velocity': round(result.reduced_velocity, 2),
-            'is_susceptible': result.is_susceptible,
-            'lock_in_status': result.lock_in_status,
-            'safety_factor': round(result.safety_factor, 2),
-            'recommendation': result.recommendation
+            'natural_frequency_hz': round(float(result.natural_frequency), 4),
+            'shedding_frequency_hz': round(float(result.shedding_frequency), 4),
+            'reduced_velocity': round(float(result.reduced_velocity), 2),
+            'is_susceptible': bool(result.is_susceptible),
+            'lock_in_status': str(result.lock_in_status),
+            'safety_factor': round(float(result.safety_factor), 2),
+            'recommendation': str(result.recommendation)
         }
 
         click.echo("\n=== VIV Screening Results ===\n")

@@ -117,7 +117,8 @@ class VortexSheddingAnalyzer:
         member: TubularMember,
         current_velocity: float,
         strouhal_number: Optional[float] = None,
-        depth: Optional[float] = None
+        depth: Optional[float] = None,
+        surface_condition: str = 'smooth'
     ) -> VortexSheddingResult:
         """
         Analyze vortex shedding for a tubular member.
@@ -127,6 +128,7 @@ class VortexSheddingAnalyzer:
             current_velocity: Current velocity (m/s)
             strouhal_number: Strouhal number (if None, use Reynolds-dependent)
             depth: Depth for reporting (m, optional)
+            surface_condition: Surface condition key for Strouhal selection
 
         Returns:
             VortexSheddingResult with shedding frequency and Re
@@ -138,7 +140,10 @@ class VortexSheddingAnalyzer:
 
         # Strouhal number
         if strouhal_number is None:
-            strouhal_number = self.strouhal_from_reynolds(Re)
+            strouhal_number = self.strouhal_from_reynolds(
+                Re,
+                surface_roughness=surface_condition
+            )
 
         # Shedding frequency
         f_s = self.shedding_frequency(D, current_velocity, strouhal_number)
