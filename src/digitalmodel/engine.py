@@ -258,12 +258,24 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.structural.ovality.workflow import router as pipe_ovality
 
         cfg_base = pipe_ovality(cfg_base)
-    elif basename == "wave_spectrum":
+    elif basename in ["wave_spectrum", "wave_spectra"]:
         from digitalmodel.hydrodynamics.wave_spectrum.workflow import (
             router as wave_spectrum,
         )
 
         cfg_base = wave_spectrum(cfg_base)
+    elif basename == "hydro_coefficients":
+        from digitalmodel.marine_ops.marine_engineering.hydrodynamic_coefficients.workflow import (
+            router as hydro_coefficients,
+        )
+
+        cfg_base = hydro_coefficients(cfg_base)
+    elif basename == "passing_ship":
+        from digitalmodel.hydrodynamics.passing_ship.workflow import (
+            router as passing_ship,
+        )
+
+        cfg_base = passing_ship(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 

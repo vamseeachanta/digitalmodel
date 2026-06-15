@@ -1,0 +1,19 @@
+basename: wave_spectra
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+wave_spectra:
+  spectrum: pierson_moskowitz
+  Hs: 2.5
+  Tp: 8.0
+  frequency_grid:
+    units: rad_s
+    start: 0.2
+    stop: 2.5
+    num: 231
+  output_dir: results

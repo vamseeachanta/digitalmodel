@@ -718,6 +718,16 @@ def test_workflow_registry(workflow):
         assert result["simple_heave_rao"] == pytest.approx(1.267131324)
         assert result["motion_sickness_incidence_pct"] == pytest.approx(8.485281374)
         assert result["significant_motion_m"] == pytest.approx(2.0)
+    elif workflow["id"] in {
+        "hydro-coefficients",
+        "wave-spectra",
+        "passing-ship",
+    }:
+        from tests.workflows.hydrodynamics_assertions import (
+            assert_hydrodynamics_workflow,
+        )
+
+        assert_hydrodynamics_workflow(workflow["id"], cfg)
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:

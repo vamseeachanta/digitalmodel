@@ -535,3 +535,30 @@ workflows:
       - examples/workflows/hull-seakeeping/results/hull_seakeeping/hull_seakeeping_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hull-seakeeping]
     runtime: offline
+  - id: hydro-coefficients
+    basename: hydro_coefficients
+    title: Frequency-dependent added-mass and damping coefficient interpolation
+    input: examples/workflows/hydro-coefficients/input.yml
+    outputs:
+      - examples/workflows/hydro-coefficients/results/input.yml
+      - examples/workflows/hydro-coefficients/results/input_hydro_coefficients.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hydro-coefficients]
+    runtime: offline
+  - id: wave-spectra
+    basename: wave_spectra
+    title: Pierson-Moskowitz spectrum moments from significant height and peak period
+    input: examples/workflows/wave-spectra/input.yml
+    outputs:
+      - examples/workflows/wave-spectra/results/input.yml
+      - examples/workflows/wave-spectra/results/input_spectrum.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wave-spectra]
+    runtime: offline
+  - id: passing-ship
+    basename: passing_ship
+    title: Wang passing-ship surge, sway, and yaw interaction forces
+    input: examples/workflows/passing-ship/input.yml
+    outputs:
+      - examples/workflows/passing-ship/results/input.yml
+      - examples/workflows/passing-ship/results/input_passing_ship.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[passing-ship]
+    runtime: offline

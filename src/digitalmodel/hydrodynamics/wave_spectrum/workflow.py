@@ -14,7 +14,8 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 def router(cfg: dict) -> dict:
-    settings = cfg.get("wave_spectrum") or {}
+    settings_key = _settings_key(cfg)
+    settings = cfg.get(settings_key) or {}
     spectrum = _spectrum_name(settings)
     significant_height = _positive_float(settings, "Hs")
     peak_period = _positive_float(settings, "Tp")
@@ -50,10 +51,10 @@ def router(cfg: dict) -> dict:
     _write_spectrum_csv(csv_path, rows)
 
     m0 = generator.spectral_moment(frequencies, spectral_density, n=0)
-    peak_frequency = float(generator.peak_frequency_from_spectrum(
-        frequencies, spectral_density
-    ))
-    cfg["wave_spectrum"] = {
+    peak_frequency = float(
+        generator.peak_frequency_from_spectrum(frequencies, spectral_density)
+    )
+    cfg[settings_key] = {
         "spectrum": spectrum,
         "Hs_input": significant_height,
         "Hs_check": 4.0 * math.sqrt(m0),
@@ -66,6 +67,12 @@ def router(cfg: dict) -> dict:
         "spectrum_csv": _display_path(csv_path),
     }
     return cfg
+
+
+def _settings_key(cfg: dict) -> str:
+    if cfg.get("basename") == "wave_spectra" or "wave_spectra" in cfg:
+        return "wave_spectra"
+    return "wave_spectrum"
 
 
 def _spectrum_name(settings: dict[str, Any]) -> str:
@@ -177,4 +184,3 @@ def _display_path(path: Path) -> str:
         return str(resolved.relative_to(REPO_ROOT.resolve()))
     except ValueError:
         return str(resolved)
-

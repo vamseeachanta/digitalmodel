@@ -1,0 +1,17 @@
+basename: hydro_coefficients
+
+hydro_coefficients:
+  data_dir: data
+  query_points: []
+  causality_check:
+    dof_i: Surge
+    dof_j: Surge
+    tolerance: 0.1
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
