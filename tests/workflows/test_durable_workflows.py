@@ -494,6 +494,31 @@ def test_workflow_registry(workflow):
         html = html_report.read_text()
         assert "Pump Tagging" in html
         assert "SIM-PUMP-TAGGING-711" in html
+    elif workflow["id"] == "artificial-lift-field-health":
+        summary = cfg["artificial_lift_field_health"]
+        statuses = {row["api14"]: row["health_status"] for row in summary["wells"]}
+
+        assert cfg["screening_status"] == "fail"
+        assert summary["screening_status"] == "fail"
+        assert summary["n_wells"] == 3
+        assert summary["field_status_counts"] == {
+            "warning": 1,
+            "critical": 1,
+            "failure": 1,
+        }
+        assert statuses == {
+            "SIM-FIELD-RESTRICTION-711": "warning",
+            "SIM-FIELD-PUMP-TAGGING-711": "critical",
+            "SIM-FIELD-ROD-PARTING-711": "failure",
+        }
+        assert summary["worst_wells"][0]["api14"] == "SIM-FIELD-ROD-PARTING-711"
+
+        wells_csv = Path(cfg["outputs"]["well_status_csv"])
+        if not wells_csv.is_absolute():
+            wells_csv = REPO_ROOT / wells_csv
+        well_rows = pd.read_csv(wells_csv)
+        assert len(well_rows) == 3
+        assert set(well_rows["health_status"]) == {"warning", "critical", "failure"}
     elif workflow["id"] == "orcaflex-6dbuoy-dnvrph103":
         props = cfg["code_dnvrph103"]["properties"]
         translational = props["translational"]

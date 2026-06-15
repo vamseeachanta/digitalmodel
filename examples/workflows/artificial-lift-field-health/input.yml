@@ -1,0 +1,38 @@
+basename: artificial_lift_field_health
+
+artificial_lift_field_health:
+  solver_method: gibbs
+  output_dir: results
+  worst_wells_limit: 3
+  well_defaults:
+    rod:
+      diameter: 1.0
+      length: 5000.0
+    pump:
+      diameter: 1.75
+      depth: 5000.0
+    surface_unit:
+      manufacturer: Sim
+      unit_type: Test
+      stroke_length: 144.0
+      gear_box_rating: 640000.0
+    spm: 10.0
+  wells:
+    - api14: SIM-FIELD-RESTRICTION-711
+      synthetic_card:
+        mode: FLUID_POUND
+        seed: 0
+    - api14: SIM-FIELD-PUMP-TAGGING-711
+      synthetic_card:
+        mode: PUMP_TAGGING
+        seed: 0
+    - api14: SIM-FIELD-ROD-PARTING-711
+      synthetic_card:
+        mode: ROD_PARTING
+        seed: 0
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
