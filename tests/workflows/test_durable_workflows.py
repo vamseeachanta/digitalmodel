@@ -801,6 +801,47 @@ def test_workflow_registry(workflow):
         assert ct["id_in"] == pytest.approx(1.482)
         assert ct["reynolds_number"] == pytest.approx(131177.7)
         assert ct["pressure_loss_psi"] == pytest.approx(1300.1)
+    elif workflow["id"] == "rigging":
+        groups = cfg["rigging"]["resolved_groups"]
+        assert len(groups) == 1
+        group = groups[0]
+        assert group["label"] == "uta1_clump_weight"
+
+        elements = {element["part_number"]: element for element in group["elements"]}
+        assert set(elements) == {2038614, 1500, 1019533}
+
+        # Shackle G2100 part 2038614 resolves to its crosby workbook row.
+        g2100 = elements[2038614]
+        assert g2100["category"] == "shackle"
+        assert g2100["subcategory"] == "G2100"
+        assert g2100["catalog_record"]["wll_te"] == pytest.approx(25.0)
+        assert g2100["catalog_record"]["w_lb"] == pytest.approx(38.6)
+        assert g2100["catalog_record"]["design_factor"] == 6
+
+        # Sling 1500 (polyester endless round) resolves to its rated
+        # capacities, width range, unit weight, and design factor.
+        sling = elements[1500]
+        assert sling["category"] == "sling"
+        model = sling["model"]
+        assert model["wll_vertical_lb"] == pytest.approx(15000.0)
+        assert model["wll_choker_lb"] == pytest.approx(12000.0)
+        assert model["wll_vertical_basket_90_deg_lb"] == pytest.approx(30000.0)
+        assert model["min_width_in"] == pytest.approx(1.5)
+        assert model["max_width_in"] == pytest.approx(3.0)
+        assert model["weight_lb_per_ft"] == pytest.approx(0.45)
+        assert model["design_factor"] == 5
+
+        # Shackle G2130 part 1019533 resolves to its bolt-type anchor row.
+        g2130 = elements[1019533]
+        assert g2130["subcategory"] == "G2130"
+        assert g2130["catalog_record"]["wll_te"] == pytest.approx(6.5)
+        assert g2130["catalog_record"]["size_in"] == pytest.approx(0.875)
+
+        summary_path = Path(cfg["rigging"]["summary_json"])
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        summary = yaml.safe_load(summary_path.read_text())
+        assert summary["groups"][0]["label"] == "uta1_clump_weight"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
