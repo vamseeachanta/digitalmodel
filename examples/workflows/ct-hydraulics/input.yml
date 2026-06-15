@@ -1,0 +1,31 @@
+basename: ct_hydraulics
+
+# Steady-state coiled-tubing hydraulics screen: 1.75 in CT run into a
+# 4.892 in (5-1/2 in 17 ppf casing) wellbore at 3000 m, circulating a
+# 8.55 ppg (light brine) fluid at 60 gpm.
+ct_hydraulics:
+  well:
+    name: example-ct-cleanout
+    measured_depth_m: 3000.0
+    tvd_m: 3000.0
+    hole_id_in: 4.892
+    wellhead_pressure_psi: 500.0
+  ct:
+    od_in: 1.75
+    wall_thickness_in: 0.134
+    length_m: 3000.0
+    roughness_in: 0.0006
+    reel_pressure_drop_psi: 150.0
+  annulus:
+    hole_id_in: 4.892
+    inner_od_in: 1.75
+  bha:
+    pressure_drop_psi: 300.0
+  fluid:
+    density_ppg: 8.55
+    ct_viscosity_cp: 1.0
+  flow:
+    rate_gpm: 60.0
+  options:
+    flow_regime_transition_re: 2100.0
+    include_annulus_friction_in_pump_pressure: true

@@ -1,4 +1,6 @@
+import json
 import math
+from pathlib import Path
 
 from digitalmodel.units import Q_
 
@@ -20,12 +22,39 @@ class CTHydraulics:
 
         Returns:
             The configuration dictionary with computed ``results``
-            added under ``cfg["ct_hydraulics"]["results"]``.
+            added under ``cfg["ct_hydraulics"]["results"]``. A
+            deterministic JSON summary is also written under
+            ``results/ct_hydraulics/`` next to the input file.
         """
         ct_cfg = cfg.get("ct_hydraulics", {})
-        ct_cfg["results"] = self.calculate(ct_cfg)
+        results = self.calculate(ct_cfg)
+        ct_cfg["results"] = results
+        summary_path = self._write_summary(cfg, ct_cfg, results)
+        if summary_path is not None:
+            ct_cfg["summary_json"] = summary_path
         cfg["ct_hydraulics"] = ct_cfg
         return cfg
+
+    def _write_summary(self, cfg: dict, ct_cfg: dict, results: dict):
+        """Write a deterministic JSON summary of the hydraulics results.
+
+        Mirrors the naval_arch workflow output convention: the file is
+        written to ``<output_dir>/<stem>_summary.json`` resolved relative
+        to the input file's directory. Returns the repo-relative path, or
+        ``None`` when no config directory is known.
+        """
+        config_dir = cfg.get("_config_dir_path")
+        if not config_dir:
+            return None
+        output_dir = Path(ct_cfg.get("output_dir", "results")) / "ct_hydraulics"
+        if not output_dir.is_absolute():
+            output_dir = Path(config_dir) / output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+        summary_path = output_dir / "ct_hydraulics_summary.json"
+        with summary_path.open("w", encoding="utf-8") as stream:
+            json.dump(results, stream, indent=2, sort_keys=True)
+            stream.write("\n")
+        return str(summary_path)
 
     def calculate(self, ct_cfg: dict) -> dict:
         """Perform steady-state coiled tubing hydraulics calculations.
@@ -65,14 +94,21 @@ class CTHydraulics:
         ct_rough_in = float(ct.get("roughness_in", 0.0))
         reel_pressure_drop_psi = float(ct.get("reel_pressure_drop_psi", 0.0))
 
+        # Use ``or``-style coalescing so an explicit ``None`` from a
+        # deep-merged base config falls back to the same defaults as a
+        # missing key (dict.get only substitutes when the key is absent).
         hole_id_in = float(
-            annulus.get("hole_id_in", well.get("hole_id_in", 0.0))
+            self._coalesce(annulus.get("hole_id_in"), well.get("hole_id_in"), 0.0)
         )
         ann_length_m = float(
-            annulus.get("length_m", well.get("measured_depth_m", ct_length_m))
+            self._coalesce(
+                annulus.get("length_m"),
+                well.get("measured_depth_m"),
+                ct_length_m,
+            )
         )
-        ann_rough_in = float(annulus.get("roughness_in", ct_rough_in))
-        ann_inner_od_in = float(annulus.get("inner_od_in", ct_od_in))
+        ann_rough_in = float(self._coalesce(annulus.get("roughness_in"), ct_rough_in))
+        ann_inner_od_in = float(self._coalesce(annulus.get("inner_od_in"), ct_od_in))
         ann_dh_override_in = annulus.get("hydraulic_diameter_override_in")
 
         ct_section = self._compute_pipe_section(
@@ -276,6 +312,14 @@ class CTHydraulics:
             return 0.0
         delta_p_pa = friction_factor * (length_m / diameter_m) * 0.5 * density * velocity_m_s**2
         return Q_(delta_p_pa, 'Pa').to('psi').magnitude
+
+    @staticmethod
+    def _coalesce(*values):
+        """Return the first non-``None`` value (last value is the default)."""
+        for value in values:
+            if value is not None:
+                return value
+        return values[-1] if values else None
 
     @staticmethod
     def _ppg_to_kgm3(ppg: float) -> float:

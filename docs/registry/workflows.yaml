@@ -572,3 +572,12 @@ workflows:
       - examples/workflows/propeller-rudder-interaction/results/propeller_rudder/propeller_rudder_sweep.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[propeller-rudder-interaction]
     runtime: offline
+  - id: ct-hydraulics
+    basename: ct_hydraulics
+    title: Steady-state coiled-tubing pressure-loss, pump pressure, and ECD screen
+    input: examples/workflows/ct-hydraulics/input.yml
+    outputs:
+      - examples/workflows/ct-hydraulics/results/input.yml
+      - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
+    runtime: offline

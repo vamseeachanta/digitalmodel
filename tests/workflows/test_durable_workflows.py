@@ -761,6 +761,17 @@ def test_workflow_registry(workflow):
         )
 
         assert_hydrodynamics_workflow(workflow["id"], cfg)
+    elif workflow["id"] == "ct-hydraulics":
+        results = cfg["ct_hydraulics"]["results"]
+        summary = results["summary"]
+        assert summary["hydrostatic_pressure_psi"] == pytest.approx(4376.0)
+        assert summary["pump_pressure_psi"] == pytest.approx(2258.6)
+        assert summary["downhole_pressure_psi"] == pytest.approx(6476.1)
+        assert summary["equivalent_circulating_density_ppg"] == pytest.approx(8.567)
+        ct = results["coiled_tubing"]
+        assert ct["id_in"] == pytest.approx(1.482)
+        assert ct["reynolds_number"] == pytest.approx(131177.7)
+        assert ct["pressure_loss_psi"] == pytest.approx(1300.1)
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
