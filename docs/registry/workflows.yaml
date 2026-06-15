@@ -601,3 +601,12 @@ workflows:
       - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
     runtime: offline
+  - id: rigging
+    basename: rigging
+    title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)
+    input: examples/workflows/rigging/input.yml
+    outputs:
+      - examples/workflows/rigging/results/input.yml
+      - examples/workflows/rigging/results/rigging/rigging_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rigging]
+    runtime: offline
