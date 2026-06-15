@@ -7,10 +7,12 @@ import numpy as np
 
 from assetutilities.common.utilities import add_cwd_to_filename
 from assetutilities.common.data import ReadData
-from digitalmodel.signal_processing.signal_analysis.fatigue import FatigueDamageCalculator
+from digitalmodel.infrastructure.base_solvers.fatigue.fatigue_analysis import (
+    FatigueAnalysis,
+)
 
 read_data = ReadData()
-fatigue_analysis = FatigueDamageCalculator()
+fatigue_analysis = FatigueAnalysis()
 
 
 class ShipFatigueAnalysis:
