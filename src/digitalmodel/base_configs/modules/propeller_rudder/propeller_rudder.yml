@@ -1,0 +1,10 @@
+basename: propeller_rudder
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+propeller_rudder: {}

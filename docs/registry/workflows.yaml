@@ -562,3 +562,13 @@ workflows:
       - examples/workflows/passing-ship/results/input_passing_ship.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[passing-ship]
     runtime: offline
+  - id: propeller-rudder-interaction
+    basename: propeller_rudder
+    title: Soding/Brix propeller-rudder interaction force sweep over rudder deflection
+    input: examples/workflows/propeller-rudder-interaction/input.yml
+    outputs:
+      - examples/workflows/propeller-rudder-interaction/results/input.yml
+      - examples/workflows/propeller-rudder-interaction/results/propeller_rudder/propeller_rudder_sweep.csv
+      - examples/workflows/propeller-rudder-interaction/results/propeller_rudder/propeller_rudder_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[propeller-rudder-interaction]
+    runtime: offline

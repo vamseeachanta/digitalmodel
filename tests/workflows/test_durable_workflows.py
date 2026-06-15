@@ -718,6 +718,39 @@ def test_workflow_registry(workflow):
         assert result["simple_heave_rao"] == pytest.approx(1.267131324)
         assert result["motion_sickness_incidence_pct"] == pytest.approx(8.485281374)
         assert result["significant_motion_m"] == pytest.approx(2.0)
+    elif workflow["id"] == "propeller-rudder-interaction":
+        block = cfg["propeller_rudder"]
+        rows = block["result"]["rows"]
+        assert block["result"]["metadata"]["method"] == "soding"
+        assert len(rows) == 4
+
+        zero = rows[0]
+        assert zero["rudder_angle_deg"] == pytest.approx(0.0)
+        assert zero["F_sway_N"] == pytest.approx(0.0, abs=1e-9)
+        assert zero["F_yaw_Nm"] == pytest.approx(0.0, abs=1e-9)
+
+        full = rows[-1]
+        assert full["method"] == "soding"
+        assert full["ship_speed_kn"] == pytest.approx(12.0)
+        assert full["shaft_speed_rev_s"] == pytest.approx(2.0)
+        assert full["rudder_angle_deg"] == pytest.approx(35.0)
+        assert full["F_surge_N"] == pytest.approx(-23199.667135705)
+        assert full["F_sway_N"] == pytest.approx(-73579.943704159)
+        assert full["F_yaw_Nm"] == pytest.approx(-3678997.185207926)
+        # F_yaw == F_sway * lever arm (x_R = 50 m) for the vertical rudder
+        assert full["F_yaw_Nm"] == pytest.approx(full["F_sway_N"] * 50.0)
+
+        # Force magnitude grows monotonically with rudder deflection.
+        sway_mag = [abs(row["F_sway_N"]) for row in rows]
+        assert sway_mag == sorted(sway_mag)
+
+        sweep_csv = REPO_ROOT / (
+            "examples/workflows/propeller-rudder-interaction/results/"
+            "propeller_rudder/propeller_rudder_sweep.csv"
+        )
+        table = pd.read_csv(sweep_csv)
+        assert len(table) == 4
+        assert table["F_sway_N"].iloc[-1] == pytest.approx(-73579.943704159)
     elif workflow["id"] in {
         "hydro-coefficients",
         "wave-spectra",

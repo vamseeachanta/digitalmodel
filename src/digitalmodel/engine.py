@@ -372,6 +372,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         naval_arch = NavalArchitectureWorkflow()
         cfg_base = naval_arch.router(cfg_base)
+    elif basename == "propeller_rudder":
+        from digitalmodel.hydrodynamics.propeller_rudder_workflow import (
+            PropellerRudderWorkflow,
+        )
+
+        propeller_rudder = PropellerRudderWorkflow()
+        cfg_base = propeller_rudder.router(cfg_base)
     elif basename == "geotechnical":
         from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
 
