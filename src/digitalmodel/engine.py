@@ -185,6 +185,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         orc_install = OrcInstallation()
         if cfg_base["structure"]["flag"]:
             cfg_base = orc_install.create_model_for_water_depth(cfg_base)
+    elif basename == "jumper_installation":
+        from digitalmodel.installation.jumper_installation.workflow import (
+            router as jumper_installation,
+        )
+
+        cfg_base = jumper_installation(cfg_base)
     elif basename == "ship_design":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)

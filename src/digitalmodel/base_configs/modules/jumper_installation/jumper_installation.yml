@@ -1,0 +1,49 @@
+basename: jumper_installation
+
+jumper_installation:
+  vessels:
+    catalog: examples/demos/gtm/data/csv_hlv_vessels.json
+    selected: []
+  jumpers:
+    catalog: examples/demos/gtm/data/rigid_jumpers.json
+    lengths_m: []
+  sweep:
+    depths_m: []
+    hs_m: []
+  constants:
+    daf_liftoff: 1.10
+    daf_splash: 1.30
+    rigging_mass_kg: 5000.0
+    cs_slamming: 3.141592653589793
+    cd_cylinder: 1.2
+    ca_cylinder: 1.0
+    v_lowering: 0.5
+    v_current: 0.5
+    splash_submerged_length_m: 10.0
+    wire_allowable_factor: 0.85
+    bending_allowable: 0.6
+    cable_unit_weight_sub_n_per_m: 50.0
+    tie_in_tolerance_mm: 50.0
+    reference_hs: 2.0
+    tp_coefficient: 4.0
+    go_marginal_threshold: 0.85
+    nogo_utilisation: 1.0
+  physical_constants:
+    seawater_density_kg_m3: 1025.0
+    gravity_m_s2: 9.80665
+  lift_span_model:
+    lift_span_fraction: 0.5
+    lift_span_m: null
+    moment_coeff: 8.0
+  tiein_span_model:
+    tiein_unsupported_span_fraction: 0.28
+    tiein_unsupported_span_m: null
+    include_self_weight: false
+    deflection_coeff: 76.8
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

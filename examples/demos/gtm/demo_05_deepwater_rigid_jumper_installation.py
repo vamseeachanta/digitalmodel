@@ -45,6 +45,8 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from digitalmodel.installation.jumper_installation import calculations as _shared_jumper_calcs
+
 # ---------------------------------------------------------------------------
 # Imports — graceful handling
 # ---------------------------------------------------------------------------
@@ -744,6 +746,21 @@ def run_parametric_sweep(
     df = pd.DataFrame(rows)
     print(f"\n  Sweep complete: {len(all_results)} results collected")
     return all_results, df
+
+
+_cfg = _shared_jumper_calcs._cfg
+calc_phase_1_liftoff = _shared_jumper_calcs.calc_phase_1_liftoff
+calc_phase_2_inair_bending = _shared_jumper_calcs.calc_phase_2_inair_bending
+calc_phase_3_splash = _shared_jumper_calcs.calc_phase_3_splash
+calc_phase_4_lowering = _shared_jumper_calcs.calc_phase_4_lowering
+calc_phase_5_tiein = _shared_jumper_calcs.calc_phase_5_tiein
+governing_phase = _shared_jumper_calcs.governing_phase
+hs_to_tp = _shared_jumper_calcs.hs_to_tp
+load_vessel_data = _shared_jumper_calcs.load_vessel_data
+load_jumper_data = _shared_jumper_calcs.load_jumper_data
+run_parametric_sweep = _shared_jumper_calcs.run_parametric_sweep
+run_single_case = _shared_jumper_calcs.run_single_case
+status_from_utils = _shared_jumper_calcs.status_from_utils
 
 
 # ---------------------------------------------------------------------------

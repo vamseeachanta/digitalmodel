@@ -33,6 +33,16 @@ workflows:
       - examples/workflows/fatigue-analysis/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]
     runtime: offline
+  - id: jumper-installation
+    basename: jumper_installation
+    title: Deepwater rigid-jumper installation screening over a small Hs sweep
+    input: examples/workflows/jumper-installation/input.yml
+    outputs:
+      - examples/workflows/jumper-installation/results/input.yml
+      - examples/workflows/jumper-installation/results/input_jumper_installation_summary.json
+      - examples/workflows/jumper-installation/results/input_jumper_installation_cases.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jumper-installation]
+    runtime: offline
   - id: mooring-fatigue
     basename: mooring_fatigue
     title: Metallic mooring-line fatigue damage from tension-range bins
