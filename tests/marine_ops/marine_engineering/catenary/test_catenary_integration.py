@@ -63,15 +63,16 @@ class TestUnifiedModuleIntegration:
             warnings.filterwarnings('ignore', category=DeprecationWarning)
             result2 = catenaryEquation({'q': 30, 'd': 100, 'F': None, 'w': None, 'X': None})
 
-        # Modern solver uses angle from horizontal; adapter preserves legacy
-        # angle semantics for deprecated dict callers.
+        # Simplified solver and legacy adapter share the same (complementary)
+        # angle convention, so they must agree.
         assert result1.arc_length > 0
         assert result1.horizontal_distance > 0
         assert result1.bend_radius > 0
         assert result2['S'] > 0
         assert result2['X'] > 0
         assert result2['BendRadius'] > 0
-        assert result1.arc_length != pytest.approx(result2['S'], abs=0.01)
+        assert result1.arc_length == pytest.approx(result2['S'], abs=0.01)
+        assert result1.horizontal_distance == pytest.approx(result2['X'], abs=0.01)
 
     def test_simplified_and_adapter_force_contracts(self):
         """Verify modern simplified and legacy adapter force contracts."""
@@ -180,10 +181,11 @@ class TestWorkflowIntegration:
             warnings.filterwarnings('ignore', category=DeprecationWarning)
             result2 = catenaryEquation({'q': 30, 'd': 100, 'F': None, 'w': None, 'X': None})
 
-        # Modern simplified and legacy adapter intentionally differ for q.
+        # Modern simplified and legacy adapter use the same angle convention
+        # and must agree for the same q/d.
         assert result1.arc_length > 0
         assert result2['S'] > 0
-        assert result1.arc_length != pytest.approx(result2['S'], abs=1e-9)
+        assert result1.arc_length == pytest.approx(result2['S'], abs=1e-6)
 
 
 class TestBackwardCompatibility:

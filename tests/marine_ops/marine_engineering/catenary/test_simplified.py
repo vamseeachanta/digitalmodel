@@ -20,12 +20,19 @@ from digitalmodel.marine_ops.marine_analysis.catenary.simplified import (
 
 
 def expected_from_angle(angle_deg, vertical_distance):
-    """Closed-form catenary geometry from fairlead angle and vertical span."""
-    slope = math.tan(math.radians(angle_deg))
-    catenary_parameter = vertical_distance / (math.sqrt(1.0 + slope**2) - 1.0)
+    """Closed-form catenary geometry from fairlead angle and vertical span.
+
+    Complementary-angle convention (q measured from vertical), consistent with
+    the canonical `catenary` workflow (S=173.2050808 for q=30, d=100) and the
+    legacy catenaryEquation adapter.
+    """
+    complementary_rad = math.radians(90.0 - angle_deg)
+    tanqc = math.tan(complementary_rad)
+    cos_comp = math.cos(complementary_rad)
+    catenary_parameter = vertical_distance * cos_comp / (1.0 - cos_comp)
     return {
-        "arc_length": catenary_parameter * slope,
-        "horizontal_distance": catenary_parameter * math.asinh(slope),
+        "arc_length": catenary_parameter * tanqc,
+        "horizontal_distance": catenary_parameter * math.asinh(tanqc),
         "bend_radius": catenary_parameter,
     }
 
