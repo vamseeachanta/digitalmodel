@@ -194,6 +194,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
+    elif basename == "mooring_fatigue":
+        from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
+
+        cfg_base = mooring_fatigue(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)

@@ -33,6 +33,16 @@ workflows:
       - examples/workflows/fatigue-analysis/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]
     runtime: offline
+  - id: mooring-fatigue
+    basename: mooring_fatigue
+    title: Metallic mooring-line fatigue damage from tension-range bins
+    input: examples/workflows/mooring-fatigue/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue/results/input.yml
+      - examples/workflows/mooring-fatigue/results/input_mooring_fatigue.csv
+      - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal
