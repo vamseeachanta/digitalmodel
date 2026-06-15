@@ -257,7 +257,7 @@ class TestPerformanceBenchmarks:
             'min_ms': float(np.min(workflow_times)),
             'max_ms': float(np.max(workflow_times)),
             'std_ms': float(np.std(workflow_times)),
-            'target_met': p95_time < 5000
+            'target_met': bool(p95_time < 5000)
         }
 
         import json
