@@ -76,16 +76,17 @@ class SimplifiedCatenarySolver:
         """Calculate catenary from angle and vertical distance.
 
         This method solves the catenary equation when the departure angle
-        from horizontal (q) and vertical distance (d) are known.
+        (q, measured from vertical) and vertical distance (d) are known.
 
-        Mathematical formulation:
-        - slope = tan(q)
-        - a = d / (sqrt(1 + slope^2) - 1)
-        - S = a * slope
-        - X = a * asinh(slope)
+        Mathematical formulation (complementary-angle convention, consistent
+        with the canonical catenary workflow + legacy adapter):
+        - qc = 90 - q ; tanqc = tan(qc) ; coc = cos(qc)
+        - a (bend radius) = d * coc / (1 - coc)
+        - S = a * tanqc
+        - X = a * asinh(tanqc)
 
         Args:
-            angle_deg: Angle from horizontal at departure point [degrees]
+            angle_deg: Angle from vertical at departure point [degrees]
                       Valid range: 0° < angle_deg < 90°
             vertical_distance: Vertical distance between endpoints [m]
                              Must be positive
@@ -102,7 +103,7 @@ class SimplifiedCatenarySolver:
             >>> solver = SimplifiedCatenarySolver()
             >>> result = solver.solve_from_angle(30.0, 100.0)
             >>> result.arc_length
-            373.205...
+            173.205...
         """
         # Input validation
         if not (0 < angle_deg < 90):
@@ -114,24 +115,27 @@ class SimplifiedCatenarySolver:
                 f"vertical_distance must be positive, got {vertical_distance}"
             )
 
-        angle_rad = math.radians(angle_deg)
-        slope = math.tan(angle_rad)
-        cosh_at_fairlead = math.sqrt(1.0 + slope**2)
+        # Angle convention: complementary (q measured from vertical), kept
+        # consistent with the canonical `catenary` workflow (durable-tested at
+        # S=173.2050808 for q=30, d=100) and the legacy catenaryEquation adapter.
+        complementary_angle_rad = math.radians(90.0 - angle_deg)
+        tanq = math.tan(complementary_angle_rad)
+        cos_comp = math.cos(complementary_angle_rad)
 
-        denominator = cosh_at_fairlead - 1.0
+        denominator = 1.0 - cos_comp
         if abs(denominator) < 1e-12:
             raise ValueError(
                 f"Calculation unstable: angle_deg={angle_deg} gives near-zero sag"
             )
 
         # The bend radius at touchdown is the catenary parameter a.
-        bend_radius = vertical_distance / denominator
+        bend_radius = vertical_distance * cos_comp / denominator
 
         # Calculate arc length
-        arc_length = bend_radius * slope
+        arc_length = bend_radius * tanq
 
         # Calculate horizontal distance
-        horizontal_distance = bend_radius * math.asinh(slope)
+        horizontal_distance = bend_radius * math.asinh(tanq)
 
         return SimplifiedCatenaryResults(
             arc_length=arc_length,
