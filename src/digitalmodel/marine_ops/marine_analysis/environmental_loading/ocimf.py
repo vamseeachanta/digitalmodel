@@ -20,7 +20,11 @@ from typing import Tuple, Optional, Dict, List
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from scipy.interpolate import RBFInterpolator, interp2d, LinearNDInterpolator
+from scipy.interpolate import (
+    LinearNDInterpolator,
+    NearestNDInterpolator,
+    RegularGridInterpolator,
+)
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
@@ -134,6 +138,123 @@ class EnvironmentalForceResults:
     geometry: VesselGeometry  # Geometry used
 
 
+class _CoefficientInterpolator:
+    """Bounded interpolator for heading/displacement coefficient tables."""
+
+    def __init__(self, data: pd.DataFrame, coefficient: str):
+        self._headings = np.sort(data['heading'].unique().astype(float))
+        self._displacements = np.sort(data['displacement'].unique().astype(float))
+        self._mode = ''
+
+        coefficient_data = (
+            data.groupby(['heading', 'displacement'], as_index=False)[coefficient]
+            .mean()
+        )
+
+        if len(self._headings) == 1 and len(self._displacements) == 1:
+            self._constant = float(coefficient_data[coefficient].iloc[0])
+            self._mode = 'constant'
+        elif len(self._displacements) == 1:
+            self._set_axis_interpolator(coefficient_data, coefficient, 'heading')
+        elif len(self._headings) == 1:
+            self._set_axis_interpolator(coefficient_data, coefficient, 'displacement')
+        else:
+            self._set_surface_interpolator(coefficient_data, coefficient)
+
+    def _set_axis_interpolator(
+        self,
+        coefficient_data: pd.DataFrame,
+        coefficient: str,
+        axis: str,
+    ) -> None:
+        axis_data = coefficient_data.sort_values(axis)
+        self._axis_values = axis_data[axis].to_numpy(dtype=float)
+        self._values = axis_data[coefficient].to_numpy(dtype=float)
+        self._mode = axis
+
+    def _set_surface_interpolator(
+        self,
+        coefficient_data: pd.DataFrame,
+        coefficient: str,
+    ) -> None:
+        grid = self._regular_grid(coefficient_data, coefficient)
+        if grid is not None:
+            self._regular = RegularGridInterpolator(
+                (self._headings, self._displacements),
+                grid,
+                bounds_error=False,
+                fill_value=None,
+            )
+            self._mode = 'regular'
+            return
+
+        points = coefficient_data[['heading', 'displacement']].to_numpy(dtype=float)
+        values = coefficient_data[coefficient].to_numpy(dtype=float)
+        self._nearest = NearestNDInterpolator(points, values)
+        try:
+            self._linear = LinearNDInterpolator(points, values)
+            self._mode = 'scattered'
+        except Exception as exc:
+            warnings.warn(
+                f"Linear interpolation failed for {coefficient}, using nearest: {exc}"
+            )
+            self._mode = 'nearest'
+
+    def _regular_grid(
+        self,
+        coefficient_data: pd.DataFrame,
+        coefficient: str,
+    ) -> Optional[np.ndarray]:
+        grid_frame = coefficient_data.pivot(
+            index='heading',
+            columns='displacement',
+            values=coefficient,
+        )
+        grid_frame = grid_frame.reindex(
+            index=self._headings,
+            columns=self._displacements,
+        )
+        if grid_frame.isna().any().any():
+            return None
+        return grid_frame.to_numpy(dtype=float)
+
+    def __call__(self, points: np.ndarray) -> np.ndarray:
+        points_array = np.asarray(points, dtype=float)
+        if points_array.ndim == 1:
+            points_array = points_array.reshape(1, 2)
+
+        result_shape = points_array.shape[:-1]
+        clipped = self._clip_points(points_array.reshape(-1, 2))
+
+        if self._mode == 'constant':
+            values = np.full(len(clipped), self._constant, dtype=float)
+        elif self._mode == 'heading':
+            values = np.interp(clipped[:, 0], self._axis_values, self._values)
+        elif self._mode == 'displacement':
+            values = np.interp(clipped[:, 1], self._axis_values, self._values)
+        elif self._mode == 'regular':
+            values = self._regular(clipped)
+        elif self._mode == 'scattered':
+            values = np.asarray(self._linear(clipped), dtype=float)
+            missing = np.isnan(values)
+            if np.any(missing):
+                values[missing] = self._nearest(clipped[missing])
+        else:
+            values = self._nearest(clipped)
+
+        return np.asarray(values, dtype=float).reshape(result_shape)
+
+    def _clip_points(self, points: np.ndarray) -> np.ndarray:
+        clipped = points.copy()
+        clipped[:, 0] = np.clip(clipped[:, 0], self._headings.min(), self._headings.max())
+        clipped[:, 1] = np.clip(
+            clipped[:, 1],
+            self._displacements.min(),
+            self._displacements.max(),
+        )
+        return clipped
+
+
 class OCIMFDatabase:
     """
     OCIMF coefficient database with 2D interpolation.
@@ -179,22 +300,8 @@ class OCIMFDatabase:
         self.interpolators = {}
         coefficients = ['CXw', 'CYw', 'CMw', 'CXc', 'CYc', 'CMc']
 
-        # Prepare points and values for RBF interpolation
-        points = self.data[['heading', 'displacement']].values
-
         for coef in coefficients:
-            values = self.data[coef].values
-            # Use RBF interpolation for smooth surfaces
-            try:
-                self.interpolators[coef] = RBFInterpolator(
-                    points, values,
-                    kernel='thin_plate_spline',
-                    smoothing=0.0
-                )
-            except Exception as e:
-                warnings.warn(f"RBF interpolation failed for {coef}, using linear: {e}")
-                # Fallback to linear interpolation
-                self.interpolators[coef] = LinearNDInterpolator(points, values)
+            self.interpolators[coef] = _CoefficientInterpolator(self.data, coef)
 
     def get_coefficients(self, heading: float, displacement: float,
                         vessel_type: Optional[str] = None) -> OCIMFCoefficients:

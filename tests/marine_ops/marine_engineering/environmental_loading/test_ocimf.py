@@ -125,9 +125,13 @@ class TestOCIMFDatabase:
         coeffs = ocimf_db.get_coefficients(heading, displacement)
 
         assert isinstance(coeffs, OCIMFCoefficients)
-        assert 0 <= coeffs.CXw <= 1.5
-        assert 0 <= coeffs.CYw <= 1.5
-        assert -0.5 <= coeffs.CMw <= 0.5
+        hdg_rad = np.radians(heading)
+        assert coeffs.CXw == pytest.approx(0.9 * np.cos(hdg_rad) + 0.05)
+        assert coeffs.CYw == pytest.approx(0.95 * np.abs(np.sin(hdg_rad)))
+        assert coeffs.CMw == pytest.approx(0.25 * np.sin(2 * hdg_rad))
+        assert coeffs.CXc == pytest.approx(np.cos(hdg_rad) + 0.05)
+        assert coeffs.CYc == pytest.approx(np.abs(np.sin(hdg_rad)))
+        assert coeffs.CMc == pytest.approx(0.28 * np.sin(2 * hdg_rad))
 
     def test_heading_normalization(self, ocimf_db):
         """Test that headings are normalized to 0-180 range."""
@@ -138,13 +142,18 @@ class TestOCIMFDatabase:
         # Due to symmetry, coefficients should be similar
         assert abs(coeffs_270.CYw - coeffs_90.CYw) < 0.1
 
-    def test_boundary_warnings(self, ocimf_db):
+    def test_boundary_warnings(self, ocimf_db, tmp_path):
         """Test warnings for out-of-bounds values."""
-        with pytest.warns(UserWarning):
-            # Heading outside range
-            ocimf_db.get_coefficients(200, 250000)
+        limited_path = tmp_path / "limited_heading.csv"
+        limited_data = ocimf_db.data[ocimf_db.data["heading"] <= 90]
+        limited_data.to_csv(limited_path, index=False)
+        limited_db = OCIMFDatabase(str(limited_path))
 
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="Heading"):
+            # Heading outside the available normalized table range
+            limited_db.get_coefficients(135, 250000)
+
+        with pytest.warns(UserWarning, match="Displacement"):
             # Displacement outside range
             ocimf_db.get_coefficients(45, 500000)
 
