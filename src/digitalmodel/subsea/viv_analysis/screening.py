@@ -96,7 +96,7 @@ class VIVScreening:
             - status: "safe", "marginal", or "lock-in"
         """
         # Check if in lock-in range
-        in_range = vr_min <= reduced_velocity <= vr_max
+        in_range = bool(vr_min <= reduced_velocity <= vr_max)
 
         if in_range:
             # Inside lock-in range
@@ -108,7 +108,7 @@ class VIVScreening:
 
         elif reduced_velocity < vr_min:
             # Below lock-in range
-            margin = vr_min - reduced_velocity  # Negative (safe)
+            margin = vr_min - reduced_velocity
             if margin < 1.0:
                 status = "marginal"  # Close to lock-in
             else:
@@ -133,7 +133,8 @@ class VIVScreening:
         """
         Calculate safety factor against VIV lock-in.
 
-        SF = min(V_r / V_r_min, V_r_max / V_r)
+        Below the lock-in band, SF = V_r_min / V_r. Above the band,
+        SF = V_r / V_r_max. Inside the band, SF is at or below 1.0.
 
         Args:
             reduced_velocity: Reduced velocity
@@ -146,16 +147,15 @@ class VIVScreening:
         if reduced_velocity <= 0:
             return 0.0
 
-        # Safety factor to reach lower bound
-        sf_lower = vr_min / reduced_velocity
+        if reduced_velocity < vr_min:
+            return vr_min / reduced_velocity
 
-        # Safety factor to reach upper bound
-        sf_upper = reduced_velocity / vr_max
+        if reduced_velocity > vr_max:
+            return reduced_velocity / vr_max
 
-        # Minimum is governing
-        sf = min(sf_lower, sf_upper)
-
-        return sf
+        lower_ratio = reduced_velocity / vr_min
+        upper_ratio = vr_max / reduced_velocity
+        return 1.0 / min(lower_ratio, upper_ratio)
 
     def screen_member(
         self,
@@ -210,7 +210,7 @@ class VIVScreening:
         sf = self.calculate_safety_factor(V_r, vr_min, vr_max)
 
         # Susceptibility
-        is_susceptible = is_lock_in or status == "marginal"
+        is_susceptible = bool(is_lock_in or status == "marginal")
 
         # Recommendation
         if status == "lock-in":

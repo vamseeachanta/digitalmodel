@@ -79,7 +79,7 @@ class VIVFatigueCalculator:
 
         D = member.outer_diameter
         t = member.wall_thickness
-        E = member.material.youngs_modulus
+        E = member.material.youngs_modulus_pa
 
         # Radius to neutral axis
         if location == "crown":
