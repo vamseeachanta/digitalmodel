@@ -324,6 +324,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         al = DynacardWorkflow()
         cfg_base = al.router(cfg_base)
+    elif basename == "artificial_lift_field_health":
+        from digitalmodel.marine_ops.artificial_lift.field_health import (
+            router as artificial_lift_field_health,
+        )
+
+        cfg_base = artificial_lift_field_health(cfg_base)
     elif basename == "digitalmarketing":
         from digitalmodel.specialized.digitalmarketing.digitalmarketing import (
             DigitalMarketing,

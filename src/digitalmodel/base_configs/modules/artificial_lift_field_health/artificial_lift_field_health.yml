@@ -1,0 +1,29 @@
+basename: artificial_lift_field_health
+
+artificial_lift_field_health:
+  solver_method: gibbs
+  output_dir: results
+  worst_wells_limit: 5
+  fail_health_states:
+    - critical
+    - failure
+  well_defaults:
+    rod:
+      diameter: 1.0
+      length: 5000.0
+    pump:
+      diameter: 1.75
+      depth: 5000.0
+    surface_unit:
+      manufacturer: Sim
+      unit_type: Test
+      stroke_length: 144.0
+      gear_box_rating: 640000.0
+    spm: 10.0
+  wells: []
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

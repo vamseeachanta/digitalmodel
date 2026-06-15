@@ -290,6 +290,16 @@ workflows:
       - examples/workflows/dynacard-diagnostics/results/input_diagnostic_report.html
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dynacard-diagnostics]
     runtime: offline
+  - id: artificial-lift-field-health
+    basename: artificial_lift_field_health
+    title: Field-wide artificial-lift dynacard health rollup
+    input: examples/workflows/artificial-lift-field-health/input.yml
+    outputs:
+      - examples/workflows/artificial-lift-field-health/results/input.yml
+      - examples/workflows/artificial-lift-field-health/results/input_field_health_summary.json
+      - examples/workflows/artificial-lift-field-health/results/input_field_health_wells.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[artificial-lift-field-health]
+    runtime: offline
   - id: orcaflex-6dbuoy-dnvrph103
     basename: code_dnvrph103
     title: DNV-RP-H103 6D buoy OrcaFlex YAML model preparation
