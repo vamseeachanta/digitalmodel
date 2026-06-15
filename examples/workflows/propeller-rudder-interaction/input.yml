@@ -1,0 +1,36 @@
+basename: propeller_rudder
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+propeller_rudder:
+  method: soding
+  case:
+    id: registry_propeller_rudder
+    description: Registry preliminary propeller-rudder interaction screen
+  propulsion:
+    D_m: 4.0
+    # K_T(J) ~ 0.35 - 0.30 J (linear fit to a Wageningen-B style open-water curve)
+    kt_coeffs: [0.35, -0.30]
+    thrust_deduction_t: 0.18
+    wake_fraction_w: 0.25
+    rudder_propeller_coeff_C_rp: 0.50
+    rho_kg_m3: 1025.0
+  rudder:
+    area_m2: 18.0
+    aspect_ratio: 1.8
+    x_from_cg_m: 50.0
+    dihedral_deg: 0.0
+  sweep:
+    ship_speeds:
+      units: kn
+      values: [12.0]
+    shaft_speeds_rev_s: [2.0]
+    rudder_angles_deg: [0.0, 10.0, 20.0, 35.0]
+  outputs:
+    directory: results/propeller_rudder
+    tables: [csv, json]
