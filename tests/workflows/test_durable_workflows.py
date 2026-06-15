@@ -477,6 +477,31 @@ def test_workflow_registry(workflow):
             summary_path = REPO_ROOT / summary_path
         summary_json = yaml.safe_load(summary_path.read_text())
         assert summary_json["summary"]["critical_line"]["line_id"] == "ML1"
+    elif workflow["id"] == "fpso-mooring-full":
+        result = cfg["fpso_mooring_full"]
+        summary = result["summary"]
+        lines = result["line_tensions"]
+
+        assert summary["n_lines"] == 8
+        assert result["environmental_forces"]["total_force_N"] > 0.0
+        assert result["environmental_forces"]["wave_drift_force_N"] > 0.0
+        assert result["static_equilibrium"]["offset_m"] > 0.0
+        assert len(lines) == 8
+        assert summary["max_line_tension_N"] == pytest.approx(
+            max(line["top_tension_N"] for line in lines)
+        )
+        assert summary["max_line_tension_N"] > summary["pretension_N"]
+
+        summary_path = Path(cfg["outputs"]["summary_json"])
+        tensions_path = Path(cfg["outputs"]["line_tensions_csv"])
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        if not tensions_path.is_absolute():
+            tensions_path = REPO_ROOT / tensions_path
+        summary_json = yaml.safe_load(summary_path.read_text())
+        tensions = pd.read_csv(tensions_path)
+        assert summary_json["summary"]["n_lines"] == 8
+        assert len(tensions) == 8
     elif workflow["id"] == "wall-thickness-quickcheck":
         result = cfg["wall_thickness"]["quickcheck"]
         selection = result["selection"]["with_arrestors"]

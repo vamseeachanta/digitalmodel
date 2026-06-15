@@ -288,6 +288,16 @@ workflows:
       - examples/workflows/fpso-spread-mooring/results/fpso_spread_mooring_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-spread-mooring]
     runtime: offline
+  - id: fpso-mooring-full
+    basename: fpso_mooring_full
+    title: FPSO spread-mooring environmental load and static equilibrium workflow
+    input: examples/workflows/fpso-mooring-full/input.yml
+    outputs:
+      - examples/workflows/fpso-mooring-full/results/input.yml
+      - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_summary.json
+      - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_line_tensions.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-mooring-full]
+    runtime: offline
   - id: wall-thickness-quickcheck
     basename: wall_thickness
     title: DNV/API wall-thickness quickcheck cached deckhand report
