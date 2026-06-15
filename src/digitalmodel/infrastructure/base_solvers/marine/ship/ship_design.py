@@ -19,5 +19,11 @@ class ShipDesign:
 
         Args:
             cfg: Configuration dictionary with analysis parameters.
+
+        Returns:
+            The (possibly updated) configuration dictionary. The engine assigns
+            ``cfg_base = ship_design.router(cfg_base)``; without a return the
+            config would be nulled (cf. #757 for the rigging router).
         """
-        sfa.router(cfg)
+        cfg = sfa.router(cfg)
+        return cfg
