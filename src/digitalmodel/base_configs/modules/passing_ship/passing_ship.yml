@@ -1,0 +1,28 @@
+basename: passing_ship
+
+passing_ship:
+  moored_vessel:
+    length: 200.0
+    beam: 32.0
+    draft: 12.0
+    block_coefficient: 0.82
+  passing_vessel:
+    length: 250.0
+    beam: 42.0
+    draft: 15.0
+    block_coefficient: 0.78
+  environment:
+    water_depth: null
+    water_density: 1025.0
+  calculation:
+    lateral_separation: 100.0
+    stagger_distance: 50.0
+    passing_velocity: 4.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
