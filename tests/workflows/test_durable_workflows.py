@@ -115,6 +115,38 @@ def test_workflow_registry(workflow):
             results.sort_values("stress_range_MPa")["allowable_cycles"]
             .is_monotonic_decreasing
         )
+    elif workflow["id"] == "synthetic-rope-mooring-fatigue":
+        summary = cfg["synthetic_rope_mooring_fatigue"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        results = pd.read_csv(results_path)
+        line_summary = pd.read_csv(summary_path)
+
+        assert cfg["screening_status"] in {"pass", "fail"}
+        assert cfg["screening_status"] == summary["screening_status"]
+        assert summary["screening_status"] == "fail"
+        assert summary["governing_mechanism"] == "creep"
+        assert summary["governing_line"] == "polyester-02"
+        assert set(line_summary["line_id"]) == {"polyester-01", "polyester-02"}
+        assert (results["damage"] > 0.0).all()
+        assert (results["normalised_range"] > 0.0).all()
+        assert (results["allowable_cycles"] > 0.0).all()
+        by_line = {row["line_id"]: row for _, row in line_summary.iterrows()}
+        assert bool(by_line["polyester-01"]["passes"]) is True
+        assert bool(by_line["polyester-02"]["passes"]) is False
+        assert by_line["polyester-02"]["governing_mechanism"] == "creep"
+        # steeper range -> fewer allowable cycles (monotonic T-N). Checked
+        # per-line: the mean-load knockdown makes a_eff line-specific, so the
+        # T-N curve is only monotonic within a single line, not across lines.
+        for _, group in results.groupby("line_id"):
+            assert (
+                group.sort_values("normalised_range")["allowable_cycles"]
+                .is_monotonic_decreasing
+            )
     elif workflow["id"] == "time-series":
         fft_path = Path(cfg["time_series"]["csv"]["signal_fft"])
         fft = pd.read_csv(fft_path)

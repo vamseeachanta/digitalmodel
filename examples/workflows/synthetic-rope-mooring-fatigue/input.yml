@@ -1,0 +1,47 @@
+basename: synthetic_rope_mooring_fatigue
+
+synthetic_rope_mooring_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  tn_curve:
+    intercept: 1.0e6
+    slope: 10.0
+    mean_load_knockdown: 1.5
+  creep:
+    reference_life_years: 100.0
+    load_ratio_ref: 0.30
+    decades_per_load_ratio: 6.0
+  min_tension:
+    min_ratio_allow: 0.05
+  output_dir: results
+  lines:
+    - id: polyester-01
+      material: POLYESTER
+      MBL_kN: 18000.0
+      mean_tension_kN: 3600.0
+      min_tension_kN: 1500.0
+      tension_range_bins:
+        - tension_range_kN: 900.0
+          n_cycles: 600000
+        - tension_range_kN: 1800.0
+          n_cycles: 250000
+        - tension_range_kN: 2700.0
+          n_cycles: 60000
+    - id: polyester-02
+      material: POLYESTER
+      MBL_kN: 18000.0
+      mean_tension_kN: 9900.0
+      min_tension_kN: 1200.0
+      tension_range_bins:
+        - tension_range_kN: 1080.0
+          n_cycles: 450000
+        - tension_range_kN: 1620.0
+          n_cycles: 180000
+        - tension_range_kN: 2160.0
+          n_cycles: 50000
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

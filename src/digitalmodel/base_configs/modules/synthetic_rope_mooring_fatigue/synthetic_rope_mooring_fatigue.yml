@@ -1,0 +1,23 @@
+basename: synthetic_rope_mooring_fatigue
+
+synthetic_rope_mooring_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  tn_curve:
+    intercept: 1.0e6
+    slope: 10.0
+    mean_load_knockdown: 1.5
+  creep:
+    reference_life_years: 100.0
+    load_ratio_ref: 0.30
+    decades_per_load_ratio: 6.0
+  min_tension:
+    min_ratio_allow: 0.05
+  output_dir: results
+  lines: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

@@ -53,6 +53,16 @@ workflows:
       - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
     runtime: offline
+  - id: synthetic-rope-mooring-fatigue
+    basename: synthetic_rope_mooring_fatigue
+    title: Synthetic fibre-rope mooring service life (T-T fatigue + creep + min-tension)
+    input: examples/workflows/synthetic-rope-mooring-fatigue/input.yml
+    outputs:
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input.yml
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue.csv
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal
