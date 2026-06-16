@@ -2,11 +2,12 @@ basename: synthetic_rope_mooring_fatigue
 
 synthetic_rope_mooring_fatigue:
   design_life_years: 25.0
-  dff: 3.0
-  tn_curve:
-    intercept: 1.0e6
-    slope: 10.0
-    mean_load_knockdown: 1.5
+  dff: 60.0                  # fatigue SF — DNV-OS-E301 F702, polyester
+  creep_safety_factor: 3.0
+  tn_curve:                  # polyester T-N, DNV-OS-E301 Table F3 (N = aD * R^-m)
+    intercept: 0.259        # aD
+    slope: 13.46            # m
+    mean_load_knockdown: 0.0
   creep:
     reference_life_years: 100.0
     load_ratio_ref: 0.30

@@ -21,7 +21,15 @@ def router(cfg: dict) -> dict:
         "design_life_years",
         "synthetic_rope_mooring_fatigue design_life_years",
     )
+    # dff is the FATIGUE (T-N) safety factor — DNV-OS-E301 F702 specifies 60 for
+    # polyester. Creep-rupture carries its own factor (the fatigue factor is
+    # unusually large and must not be applied to the creep limit state).
     dff = _positive_float(settings, "dff", "synthetic_rope_mooring_fatigue dff")
+    creep_safety_factor = _positive_float(
+        settings,
+        "creep_safety_factor",
+        "synthetic_rope_mooring_fatigue creep_safety_factor",
+    )
     config_tn = _tn_curve(settings.get("tn_curve") or {}, "tn_curve")
     config_creep = _creep(settings.get("creep") or {}, "creep")
     min_tension = _min_tension(settings.get("min_tension") or {})
@@ -36,6 +44,7 @@ def router(cfg: dict) -> dict:
             min_tension,
             design_life_years,
             dff,
+            creep_safety_factor,
         )
         rows.extend(line_rows)
         summaries.append(summary)
@@ -93,6 +102,7 @@ def _evaluate_line(
     min_tension: dict[str, float],
     design_life_years: float,
     dff: float,
+    creep_safety_factor: float,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     line_id, material, mbl, lm, min_tension_kn, temperature = _line_inputs(line)
     tn = _tn_curve(line.get("tn_curve") or config_tn, f"{line_id} tn_curve")
@@ -118,6 +128,7 @@ def _evaluate_line(
         min_tension,
         design_life_years,
         dff,
+        creep_safety_factor,
     )
     return rows, summary
 
@@ -192,14 +203,16 @@ def _line_summary(
     min_tension: dict[str, float],
     design_life_years: float,
     dff: float,
+    creep_safety_factor: float,
 ) -> dict[str, Any]:
     fatigue_life_years = design_life_years / total_damage
-    required_years = design_life_years * dff
-    fatigue_margin = fatigue_life_years / required_years
+    fatigue_required_years = design_life_years * dff
+    fatigue_margin = fatigue_life_years / fatigue_required_years
     creep_life_years = creep["reference_life_years"] * 10 ** (
         (creep["load_ratio_ref"] - lm) * creep["decades_per_load_ratio"]
     )
-    creep_margin = creep_life_years / required_years
+    creep_required_years = design_life_years * creep_safety_factor
+    creep_margin = creep_life_years / creep_required_years
     compression_margin = min_ratio / min_tension["min_ratio_allow"]
     margins = {
         "fatigue": fatigue_margin,
