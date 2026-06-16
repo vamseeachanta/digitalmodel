@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 OrcaWave Generic Diffraction Analysis Orchestrator
 Main execution module for automated diffraction analysis workflow

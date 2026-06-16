@@ -11,7 +11,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask_restful import (Api, Resource, fields, marshal, marshal_with,
                            reqparse)
 
-auth=***
+auth = HTTPBasicAuth()
 
 AppName = os.path.basename(__file__).split('.')[0]
 AppBlueprint = Blueprint(AppName, __name__, template_folder='templates')
