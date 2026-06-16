@@ -1,0 +1,29 @@
+basename: cathodic_protection
+
+# FPSO hull (floating offshore structure) — sacrificial-anode CP per
+# ABS Guidance Notes on Cathodic Protection of Offshore Structures (Dec 2018).
+inputs:
+  calculation_type: ABS_gn_offshore_2018
+
+  design_data:
+    design_life: 25.0 # yr
+    seawater_max_temperature: 25.0 # degC (tropical service)
+
+  structure:
+    surface_area_m2: 8000.0   # external submerged hull area
+    water_depth_m: 20.0       # 0-30 m band (near-surface hull)
+    climatic_region: tropical
+    zone: submerged
+
+  anode:
+    material: aluminium
+    utilisation_factor: 0.80
+    physical_properties:
+      net_weight: 180.0 # kg per stand-off hull anode
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

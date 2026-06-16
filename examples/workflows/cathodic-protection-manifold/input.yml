@@ -1,0 +1,35 @@
+basename: cathodic_protection
+
+# Subsea manifold / structure — fully submerged sacrificial-anode CP per DNV-RP-B401 (2021).
+# Single deepwater submerged zone, standard paint, cold bottom water.
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+
+  design_data:
+    design_life: 25.0 # yr
+    structure_type: subsea_manifold
+
+  structure:
+    zones:
+      - zone: submerged
+        area_m2: 850.0
+        coating_category: III    # standard paint system
+
+  environment:
+    seawater_temperature_C: 6.0  # deepwater bottom temperature
+    seawater_resistivity_ohm_m: 0.33
+
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 80.0
+    utilization_factor: 0.85
+    length_m: 0.6
+    radius_m: 0.045
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

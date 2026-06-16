@@ -1,0 +1,41 @@
+basename: cathodic_protection
+
+# Offshore-wind monopile foundation — sacrificial-anode CP per DNV-RP-B401 (2021).
+# Submerged + splash + atmospheric zones, North Sea water, 30-year design life.
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+
+  design_data:
+    design_life: 30.0 # yr (offshore-wind foundation design life)
+    structure_type: monopile
+
+  structure:
+    zones:
+      - zone: submerged
+        area_m2: 1200.0
+        coating_category: I      # high-quality epoxy on external steel
+      - zone: splash
+        area_m2: 180.0
+        coating_category: I
+      - zone: atmospheric
+        area_m2: 120.0
+        coating_category: I
+
+  environment:
+    seawater_temperature_C: 8.0  # North Sea mean
+    seawater_resistivity_ohm_m: 0.28
+
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 150.0
+    utilization_factor: 0.85
+    length_m: 0.9
+    radius_m: 0.06
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
