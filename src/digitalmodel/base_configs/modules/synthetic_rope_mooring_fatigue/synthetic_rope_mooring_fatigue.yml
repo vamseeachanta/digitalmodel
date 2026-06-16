@@ -2,11 +2,20 @@ basename: synthetic_rope_mooring_fatigue
 
 synthetic_rope_mooring_fatigue:
   design_life_years: 25.0
-  dff: 3.0
+  # dff = fatigue (T-N) safety factor. DNV-OS-E301 (Oct 2010) F702 specifies 60
+  # for polyester ropes; deliberately large vs steel (1-10) per its guidance note.
+  dff: 60.0
+  # creep-rupture carries its own factor — the fatigue SF must NOT apply here.
+  creep_safety_factor: 3.0
+  # Polyester tension-tension T-N design curve, DNV-OS-E301 Table F3:
+  #   N = aD * R^(-m),  R = tension range / characteristic strength (~MBL).
+  # The curve is range-only (no mean-load term), so mean_load_knockdown = 0;
+  # mean load enters the creep leg. nylon/HMPE must supply their own validated
+  # tn_curve (see workflow material guard).
   tn_curve:
-    intercept: 1.0e6
-    slope: 10.0
-    mean_load_knockdown: 1.5
+    intercept: 0.259      # aD (DNV-OS-E301 Table F3, polyester)
+    slope: 13.46          # m  (DNV-OS-E301 Table F3, polyester)
+    mean_load_knockdown: 0.0
   creep:
     reference_life_years: 100.0
     load_ratio_ref: 0.30

@@ -1027,3 +1027,68 @@ def test_wave_spectrum_pierson_moskowitz_engine_textbook_check(tmp_path):
     assert spectrum.loc[spectrum["S"].idxmax(), "frequency"] == pytest.approx(
         cfg["wave_spectrum"]["peak_frequency"]
     )
+
+
+def test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3(tmp_path):
+    """AC6 validation gate: the polyester tension-tension T-N leg reproduces the
+    DNV-OS-E301 (Oct 2010) Table F3 design curve  N = aD * R^(-m), with
+    aD = 0.259, m = 13.46 and R = tension range / characteristic strength (MBL).
+    The curve is range-only (mean_load_knockdown = 0), so allowable_cycles must
+    equal aD * R^(-m) exactly for each bin."""
+    a_d, m = 0.259, 13.46
+    mbl = 10000.0
+    ranges = [500.0, 1000.0, 2000.0]  # R = 0.05, 0.10, 0.20
+    input_path = tmp_path / "synthetic_rope.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "synthetic_rope_mooring_fatigue",
+                "synthetic_rope_mooring_fatigue": {
+                    "design_life_years": 20.0,
+                    "dff": 60.0,
+                    "creep_safety_factor": 3.0,
+                    "tn_curve": {
+                        "intercept": a_d,
+                        "slope": m,
+                        "mean_load_knockdown": 0.0,
+                    },
+                    "creep": {
+                        "reference_life_years": 100.0,
+                        "load_ratio_ref": 0.30,
+                        "decades_per_load_ratio": 6.0,
+                    },
+                    "min_tension": {"min_ratio_allow": 0.05},
+                    "output_dir": "results",
+                    "lines": [
+                        {
+                            "id": "polyester-val",
+                            "material": "POLYESTER",
+                            "MBL_kN": mbl,
+                            "mean_tension_kN": 2000.0,
+                            "min_tension_kN": 1000.0,
+                            "tension_range_bins": [
+                                {"tension_range_kN": r, "n_cycles": 1000.0}
+                                for r in ranges
+                            ],
+                        }
+                    ],
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    engine(inputfile=str(input_path))
+    results = pd.read_csv(
+        tmp_path / "results" / "synthetic_rope_synthetic_rope_mooring_fatigue.csv"
+    )
+
+    for _, row in results.iterrows():
+        expected_n = a_d * row["normalised_range"] ** (-m)
+        assert row["allowable_cycles"] == pytest.approx(expected_n, rel=1e-9)
+    # Published anchor: R = 0.10 -> N = 0.259 * 10^13.46
+    anchor = results.loc[results["normalised_range"].round(6) == 0.10].iloc[0]
+    assert anchor["allowable_cycles"] == pytest.approx(a_d * 10 ** 13.46, rel=1e-9)
