@@ -9,6 +9,38 @@ workflows:
       - examples/workflows/cathodic-protection/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection]
     runtime: offline
+  - id: cathodic-protection-jacket
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a fixed steel jacket (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-jacket/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-jacket/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-jacket]
+    runtime: offline
+  - id: cathodic-protection-manifold
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a subsea manifold (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-manifold/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-manifold/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-manifold]
+    runtime: offline
+  - id: cathodic-protection-monopile
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for an offshore-wind monopile (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-monopile/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-monopile/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-monopile]
+    runtime: offline
+  - id: cathodic-protection-fpso
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for an FPSO hull (ABS Offshore 2018)
+    input: examples/workflows/cathodic-protection-fpso/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-fpso/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-fpso]
+    runtime: offline
   - id: catenary
     basename: catenary
     title: Angle-based catenary geometry

@@ -1,0 +1,41 @@
+basename: cathodic_protection
+
+# Fixed steel jacket / offshore platform — sacrificial-anode CP per DNV-RP-B401 (2021).
+# Three exposure zones (submerged / splash / atmospheric) with stand-off anodes.
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+
+  design_data:
+    design_life: 25.0 # yr
+    structure_type: jacket
+
+  structure:
+    zones:
+      - zone: submerged
+        area_m2: 5000.0
+        coating_category: I      # high-quality epoxy >=300 um
+      - zone: splash
+        area_m2: 300.0
+        coating_category: III    # standard paint system
+      - zone: atmospheric
+        area_m2: 200.0
+        coating_category: I
+
+  environment:
+    seawater_temperature_C: 10.0
+    seawater_resistivity_ohm_m: 0.30
+
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 200.0
+    utilization_factor: 0.85
+    length_m: 1.0
+    radius_m: 0.05
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

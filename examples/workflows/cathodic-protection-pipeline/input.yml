@@ -1,0 +1,35 @@
+basename: cathodic_protection
+
+# Subsea export pipeline — external sacrificial-anode CP per DNV-RP-F103 (2010).
+# Coated, on-seabed (non-buried) carbon-steel line with distributed bracelet anodes.
+inputs:
+  calculation_type: DNV_RP_F103_2010
+
+  design_data:
+    design_life: 30 # yr
+
+  environment: {}
+
+  pipeline:
+    outer_diameter_m: 0.3239        # 12.75-inch OD
+    wall_thickness_m: 0.0159        # 15.9 mm WT
+    length_m: 1500.0                # m, flowline section between in-line tees
+    burial_condition: non_buried    # exposed on seabed
+    internal_fluid_temperature_C: 60.0
+    coating_type: FBE               # fusion-bonded epoxy linepipe coating
+    resistivity_ohm_m: 0.2e-6       # CMn steel (DNV-RP-F103 Sec.5.6.10)
+
+  anode:
+    material: aluminium
+    utilization_factor: 0.80
+    individual_anode_mass_kg: 50.0  # half-shell bracelet anode
+    contingency_factor: 1.10
+    min_spacing_m: 5.0
+    max_spacing_m: 300.0
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
