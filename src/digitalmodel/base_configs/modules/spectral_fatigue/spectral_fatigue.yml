@@ -1,0 +1,21 @@
+basename: spectral_fatigue
+
+spectral_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  # Damage estimator: dirlik (default, accurate wide-band) | narrow_band |
+  # wirsching_light | benasciutti_tovo. Reuses digitalmodel.fatigue.spectral_fatigue.
+  method: dirlik
+  # S-N curve: slope m and log10 intercept a (N = a * S^-m). Default is the
+  # DNV-RP-C203 D-curve in air (m = 3.0, log10 a = 12.164).
+  sn_curve:
+    slope: 3.0
+    log_intercept: 12.164
+  output_dir: results
+  locations: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

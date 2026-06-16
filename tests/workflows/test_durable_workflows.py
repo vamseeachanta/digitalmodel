@@ -147,6 +147,42 @@ def test_workflow_registry(workflow):
                 group.sort_values("normalised_range")["allowable_cycles"]
                 .is_monotonic_decreasing
             )
+    elif workflow["id"] == "spectral-fatigue":
+        summary = cfg["spectral_fatigue"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        results = pd.read_csv(results_path)
+        location_summary = pd.read_csv(summary_path)
+
+        assert cfg["screening_status"] == summary["screening_status"]
+        assert summary["screening_status"] == "fail"            # splash zone fails
+        assert summary["method"] == "dirlik"
+        assert summary["governing_location"] == "riser-splash-zone"
+        assert set(location_summary["location_id"]) == {
+            "riser-splash-zone",
+            "riser-keel-joint",
+        }
+        by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
+        assert bool(by_loc["riser-splash-zone"]["passes"]) is False
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        # life = 1 / accumulated annual damage; governing = smallest margin
+        for _, row in location_summary.iterrows():
+            assert row["fatigue_life_years"] == pytest.approx(1.0 / row["annual_damage"])
+        assert summary["governing_margin"] == pytest.approx(
+            location_summary["margin"].min()
+        )
+        # multi-sea-state weighting: splash zone has 2 states, keel 1; each
+        # weighted contribution = full damage * occurrence fraction.
+        assert (results["damage_per_year_full"] > 0.0).all()
+        assert len(results[results["location_id"] == "riser-splash-zone"]) == 2
+        for _, row in results.iterrows():
+            assert row["damage_per_year_weighted"] == pytest.approx(
+                row["damage_per_year_full"] * row["occurrence_fraction"]
+            )
     elif workflow["id"] == "time-series":
         fft_path = Path(cfg["time_series"]["csv"]["signal_fft"])
         fft = pd.read_csv(fft_path)
@@ -1092,3 +1128,62 @@ def test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3(tmp_path):
     # Published anchor: R = 0.10 -> N = 0.259 * 10^13.46
     anchor = results.loc[results["normalised_range"].round(6) == 0.10].iloc[0]
     assert anchor["allowable_cycles"] == pytest.approx(a_d * 10 ** 13.46, rel=1e-9)
+
+
+def test_spectral_fatigue_workflow_matches_narrow_band_closed_form(tmp_path):
+    """AC6 validation gate: the spectral-fatigue workflow faithfully wires the
+    validated digitalmodel.fatigue.spectral_fatigue library — the per-location
+    annual damage equals a direct narrow-band (Rayleigh, Bendat 1964) library
+    call on the same PSD and S-N curve."""
+    from digitalmodel.fatigue.spectral_fatigue import (
+        compute_spectral_moments,
+        narrow_band_damage,
+    )
+
+    frequency = [0.04, 0.08, 0.10, 0.12, 0.20, 0.40]
+    psd = [40.0, 900.0, 1800.0, 1100.0, 120.0, 8.0]
+    sn_slope, sn_log_intercept = 3.0, 12.164
+
+    input_path = tmp_path / "spectral.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "spectral_fatigue",
+                "spectral_fatigue": {
+                    "design_life_years": 20.0,
+                    "dff": 3.0,
+                    "method": "narrow_band",
+                    "sn_curve": {
+                        "slope": sn_slope,
+                        "log_intercept": sn_log_intercept,
+                    },
+                    "output_dir": "results",
+                    "locations": [
+                        {
+                            "id": "detail-a",
+                            "sea_states": [
+                                {
+                                    "occurrence_fraction": 1.0,
+                                    "frequency_Hz": frequency,
+                                    "stress_psd_MPa2_Hz": psd,
+                                }
+                            ],
+                        }
+                    ],
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    cfg = engine(inputfile=str(input_path))
+
+    moments = compute_spectral_moments(frequency, psd)
+    expected = narrow_band_damage(moments, sn_slope, sn_log_intercept).damage_per_year
+
+    location = cfg["spectral_fatigue"]["locations"][0]
+    assert location["annual_damage"] == pytest.approx(expected, rel=1e-9)
+    assert location["fatigue_life_years"] == pytest.approx(1.0 / expected, rel=1e-9)
