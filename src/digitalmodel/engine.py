@@ -204,6 +204,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
 
         cfg_base = mooring_fatigue(cfg_base)
+    elif basename == "synthetic_rope_mooring_fatigue":
+        from digitalmodel.synthetic_rope_mooring_fatigue.workflow import (
+            router as synthetic_rope_mooring_fatigue,
+        )
+
+        cfg_base = synthetic_rope_mooring_fatigue(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
