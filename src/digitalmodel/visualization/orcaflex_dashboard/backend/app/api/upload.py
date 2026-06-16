@@ -83,13 +83,13 @@ class BatchUploadRequest(BaseModel):
 @router.post("/single", response_model=UploadJob)
 @rate_limit(max_calls=50, time_window=300)
 async def upload_single_file(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="File to upload"),
     create_analysis: bool = Form(True, description="Create analysis from file"),
     analysis_name: Optional[str] = Form(None, description="Name for new analysis"),
     analysis_description: Optional[str] = Form(None, description="Analysis description"),
     auto_process: bool = Form(True, description="Start processing automatically"),
     processing_priority: str = Form("normal", regex="^(low|normal|high)$"),
-    background_tasks: BackgroundTasks,
     upload_service: UploadService = Depends(get_upload_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -150,9 +150,9 @@ async def upload_single_file(
 @router.post("/batch", response_model=UploadJob)
 @rate_limit(max_calls=10, time_window=300)
 async def upload_batch_files(
+    background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(..., description="Files to upload"),
     batch_config: BatchUploadRequest = Form(..., description="Batch upload configuration"),
-    background_tasks: BackgroundTasks,
     upload_service: UploadService = Depends(get_upload_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -222,11 +222,11 @@ async def upload_batch_files(
 @router.post("/url", response_model=UploadJob)
 @rate_limit(max_calls=20, time_window=300)
 async def upload_from_url(
+    background_tasks: BackgroundTasks,
     url: str = Form(..., description="URL to download file from"),
     create_analysis: bool = Form(True, description="Create analysis from file"),
     analysis_name: Optional[str] = Form(None, description="Name for new analysis"),
     filename: Optional[str] = Form(None, description="Custom filename"),
-    background_tasks: BackgroundTasks,
     upload_service: UploadService = Depends(get_upload_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):

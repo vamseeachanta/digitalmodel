@@ -5,7 +5,7 @@ Provides a Flask blueprint demonstrating dropdown-based menu selection
 with dynamic content rendering based on user selections.
 """
 
-lask import (Blueprint, abort, jsonify, make_response, render_template,
+from flask import (Blueprint, abort, jsonify, make_response, render_template,
                    request, url_for)
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import (Api, Resource, fields, marshal, marshal_with,

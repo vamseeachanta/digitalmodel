@@ -98,8 +98,8 @@ class ExportJob(BaseModel):
 @router.post("/csv", response_model=ExportJob)
 @rate_limit(max_calls=20, time_window=300)
 async def export_csv(
-    export_request: CSVExportRequest,
     background_tasks: BackgroundTasks,
+    export_request: CSVExportRequest,
     export_service: ExportService = Depends(get_export_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -141,8 +141,8 @@ async def export_csv(
 @router.post("/excel", response_model=ExportJob)
 @rate_limit(max_calls=10, time_window=300)
 async def export_excel(
-    export_request: ExcelExportRequest,
     background_tasks: BackgroundTasks,
+    export_request: ExcelExportRequest,
     export_service: ExportService = Depends(get_export_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -184,8 +184,8 @@ async def export_excel(
 @router.post("/charts", response_model=ExportJob)
 @rate_limit(max_calls=30, time_window=300)
 async def export_charts(
-    export_request: ChartExportRequest,
     background_tasks: BackgroundTasks,
+    export_request: ChartExportRequest,
     export_service: ExportService = Depends(get_export_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -227,12 +227,12 @@ async def export_charts(
 @router.post("/custom", response_model=ExportJob)
 @rate_limit(max_calls=10, time_window=300)
 async def export_custom(
+    background_tasks: BackgroundTasks,
     analysis_ids: List[UUID] = Field(..., min_items=1, max_items=20),
     format: ExportFormat = Field(..., description="Export format"),
     custom_query: Optional[str] = Field(None, description="Custom SQL query"),
     parameters: Optional[Dict[str, Any]] = Field(None, description="Custom parameters"),
     template_id: Optional[str] = Field(None, description="Export template ID"),
-    background_tasks: BackgroundTasks,
     export_service: ExportService = Depends(get_export_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -461,9 +461,9 @@ async def get_export_templates(
 @router.post("/bulk")
 @rate_limit(max_calls=5, time_window=300)
 async def export_bulk(
+    background_tasks: BackgroundTasks,
     export_requests: List[Union[CSVExportRequest, ExcelExportRequest, ChartExportRequest]] = Field(..., min_items=1, max_items=10),
     create_archive: bool = Query(True, description="Create single archive file"),
-    background_tasks: BackgroundTasks,
     export_service: ExportService = Depends(get_export_service),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
