@@ -16,7 +16,7 @@ def test_all_src_py_files_parse() -> None:
     for f in SRC.rglob("*.py"):
         try:
             ast.parse(f.read_text(encoding="utf-8"))
-        except SyntaxError as exc:
+        except (SyntaxError, UnicodeDecodeError) as exc:
             bad.append(f"{f.relative_to(SRC.parent)}: {exc}")
     assert not bad, (
         "Non-parseable .py file(s) under src/ (regression of #788 — fix or rename "
