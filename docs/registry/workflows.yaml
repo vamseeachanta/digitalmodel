@@ -63,6 +63,16 @@ workflows:
       - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]
     runtime: offline
+  - id: spectral-fatigue
+    basename: spectral_fatigue
+    title: Frequency-domain (spectral) fatigue from a stress PSD (Dirlik / DNV-RP-C203)
+    input: examples/workflows/spectral-fatigue/input.yml
+    outputs:
+      - examples/workflows/spectral-fatigue/results/input.yml
+      - examples/workflows/spectral-fatigue/results/input_spectral_fatigue.csv
+      - examples/workflows/spectral-fatigue/results/input_spectral_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal
