@@ -17,6 +17,14 @@ workflows:
       - examples/workflows/cathodic-protection-jacket/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-jacket]
     runtime: offline
+  - id: cathodic-protection-pipeline
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a subsea pipeline (DNV-RP-F103)
+    input: examples/workflows/cathodic-protection-pipeline/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-pipeline/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-pipeline]
+    runtime: offline
   - id: cathodic-protection-manifold
     basename: cathodic_protection
     title: Sacrificial-anode CP for a subsea manifold (DNV-RP-B401)

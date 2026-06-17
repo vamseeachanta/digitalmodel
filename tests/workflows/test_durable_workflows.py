@@ -27,11 +27,15 @@ def _load_registry():
     _load_registry(),
     ids=lambda workflow: workflow["id"],
 )
-def test_workflow_registry(workflow):
+def test_workflow_registry(workflow, monkeypatch):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
     input_path = REPO_ROOT / workflow["input"]
+    if workflow["id"] == "cathodic-protection-pipeline":
+        monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
+        monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+
     cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
@@ -55,6 +59,49 @@ def test_workflow_registry(workflow):
         verification = results["current_output_verification"]
         assert verification["driving_voltage_V"] == pytest.approx(0.25)
         assert verification["recommended_anode_count"] == 109
+    elif workflow["id"] == "cathodic-protection-pipeline":
+        results = cfg["results"]
+        densities = results["current_densities_mA_m2"]
+        coating = results["coating_breakdown_factors"]
+        demand = results["current_demand_A"]
+        anodes = results["anode_requirements"]
+        spacing = results["anode_spacing_m"]
+        attenuation = results["attenuation_analysis"]
+
+        assert densities["mean_current_density_A_m2"] == pytest.approx(0.06)
+        assert densities["temperature_band"] == ">50-80"
+        assert coating["mean_factor"] == pytest.approx(0.0145)
+        assert demand["mean_current_demand_A"] == pytest.approx(1.328)
+        assert demand["final_current_demand_A"] == pytest.approx(1.74)
+        assert anodes["total_anode_mass_kg"] == pytest.approx(218.111)
+        assert anodes["actual_total_mass_kg"] == pytest.approx(250.0)
+        assert anodes["anode_count"] == 10
+        assert spacing["spacing_m"] == pytest.approx(166.667)
+        assert spacing["spacing_valid"] is True
+        assert attenuation["protection_reach_m"] == pytest.approx(96.559)
+        assert attenuation["protection_adequate"] is True
+
+        expected_mass = demand["total_charge_Ah"] / (
+            anodes["anode_capacity_Ah_kg"] * anodes["utilization_factor"]
+        )
+        assert anodes["total_anode_mass_kg"] == pytest.approx(
+            expected_mass, abs=1.0e-3
+        )
+        assert anodes["anode_count"] == math.ceil(
+            anodes["total_anode_mass_kg"]
+            * anodes["contingency_factor"]
+            / anodes["individual_anode_mass_kg"]
+        )
+        citation = results["citations"][0]
+        assert citation["code_id"] == "dnv-rp-f103"
+        assert citation["publisher"] == "DNV"
+        assert citation["revision"] == "2010"
+
+        from digitalmodel.citations.resolver import resolve_wiki_path
+
+        assert resolve_wiki_path(citation["wiki_path"]) == (
+            REPO_ROOT / "knowledge" / citation["wiki_path"]
+        )
     elif workflow["id"] == "cathodic-protection-manifold":
         results = cfg["results"]
         assert results["standard"] == "DNV-RP-B401-2021"
