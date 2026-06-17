@@ -59,6 +59,10 @@ def _resolve_cli(name: str):
 
 
 def main():
+    # Honor a bare -h/--help (no subcommand/input): print usage and exit 0.
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+        print(__doc__)
+        return 0
     # An existing file always wins: `python -m digitalmodel <input.yml>` is
     # the engine contract and must stay unchanged (durable-workflow callers).
     if len(sys.argv) > 1 and not Path(sys.argv[1]).exists():
