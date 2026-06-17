@@ -75,11 +75,11 @@ def test_workflow_registry(workflow, monkeypatch):
         assert demand["final_current_demand_A"] == pytest.approx(1.74)
         assert anodes["total_anode_mass_kg"] == pytest.approx(218.111)
         assert anodes["actual_total_mass_kg"] == pytest.approx(250.0)
-        assert anodes["anode_count"] == 5
-        assert spacing["spacing_m"] == pytest.approx(375.0)
-        assert spacing["spacing_valid"] is False
+        assert anodes["anode_count"] == 10
+        assert spacing["spacing_m"] == pytest.approx(166.667)
+        assert spacing["spacing_valid"] is True
         assert attenuation["protection_reach_m"] == pytest.approx(96.559)
-        assert attenuation["protection_adequate"] is False
+        assert attenuation["protection_adequate"] is True
 
         expected_mass = demand["total_charge_Ah"] / (
             anodes["anode_capacity_Ah_kg"] * anodes["utilization_factor"]

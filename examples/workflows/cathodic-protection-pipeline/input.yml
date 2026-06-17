@@ -22,7 +22,7 @@ inputs:
   anode:
     material: aluminium
     utilization_factor: 0.80
-    individual_anode_mass_kg: 50.0  # half-shell bracelet anode
+    individual_anode_mass_kg: 25.0  # half-shell bracelet anode (closer spacing → protection closes)
     contingency_factor: 1.10
     min_spacing_m: 5.0
     max_spacing_m: 300.0
