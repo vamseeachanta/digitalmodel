@@ -211,17 +211,12 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     return result
 
 
-def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
-    # query is natural in period; the atlas axis is frequency (the workflow's
-    # interpolation space), so convert here.
-    lookup = dict(point)
-    if "frequency_rad_s" not in lookup and "period_s" in lookup:
-        lookup["frequency_rad_s"] = 2.0 * math.pi / float(lookup["period_s"])
-
-    prediction = atlas.predict(lookup)
+def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    """Plain value class: interpolate the response and report it with a band
+    (rao heave, fpso max line tension)."""
+    prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
-
     v = prediction.value
     e = atlas.max_rel_error
     return {
@@ -229,6 +224,43 @@ def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
         "value": v,
         "confidence": {"band": [v * (1 - e), v * (1 + e)],
                        "basis": f"holdout max_rel_error = {e:.4f}"},
+        "in_range": True,
+        "stale": False,
+        "disclaimer": SCREENING_DISCLAIMER,
+        "provenance": _provenance(atlas),
+    }
+
+
+def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    # query is natural in period; the atlas axis is frequency (the workflow's
+    # interpolation space), so convert here, then treat as a plain value.
+    lookup = dict(point)
+    if "frequency_rad_s" not in lookup and "period_s" in lookup:
+        lookup["frequency_rad_s"] = 2.0 * math.pi / float(lookup["period_s"])
+    return _handle_value(atlas, lookup)
+
+
+def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    """Single-sea-state spectral fatigue: atlas predicts annual damage; life =
+    1/annual_damage, margin against design_life*dff (spectral_fatigue)."""
+    prediction = atlas.predict(point)
+    if not prediction.in_range:
+        return _escalation(atlas, prediction.reason)
+    annual = prediction.value
+    design_life = float(point["design_life_years"])
+    dff = float(point["dff"])
+    life = math.inf if annual <= 0 else 1.0 / annual
+    dff_margin = math.inf if math.isinf(life) else life / (design_life * dff)
+    e = atlas.max_rel_error
+    band = ([math.inf, math.inf] if math.isinf(life)
+            else [1.0 / (annual * (1 + e)), 1.0 / (annual * (1 - e))])
+    return {
+        "response": "fatigue_life_years",
+        "value": life,
+        "annual_damage": annual,
+        "dff_margin": dff_margin,
+        "screening_status": "pass" if dff_margin >= 1.0 else "fail",
+        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -244,6 +276,8 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,
+    "spectral_fatigue": _handle_annual_damage,
+    "fpso_mooring_full": _handle_value,
 }
 
 

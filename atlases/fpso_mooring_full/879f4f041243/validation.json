@@ -1,0 +1,86 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.02711946189495973,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 7,
+  "worst_samples": [
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 11.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7686081.577730846,
+      "actual": 7483142.772458611,
+      "rel_error": 0.02711946189495973,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 11.0,
+        "water_depth_m": 750.0
+      },
+      "predicted": 6081793.831002845,
+      "actual": 6036302.906605953,
+      "rel_error": 0.0075362229332640255,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.5,
+        "Tp": 11.0,
+        "water_depth_m": 1000.0
+      },
+      "predicted": 6704652.889640538,
+      "actual": 6702823.5801782245,
+      "rel_error": 0.0002729162479709633,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 3.5,
+        "Tp": 11.0,
+        "water_depth_m": 1000.0
+      },
+      "predicted": 6650500.907937624,
+      "actual": 6648739.46363586,
+      "rel_error": 0.00026492906082385497,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 2.5,
+        "Tp": 11.0,
+        "water_depth_m": 1000.0
+      },
+      "predicted": 6610452.826642523,
+      "actual": 6608751.097157239,
+      "rel_error": 0.0002574963802185872,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 10.0,
+        "water_depth_m": 1000.0
+      },
+      "predicted": 6673986.532596068,
+      "actual": 6673986.532596068,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 12.0,
+        "water_depth_m": 1000.0
+      },
+      "predicted": 6673986.532596068,
+      "actual": 6673986.532596068,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ]
+}

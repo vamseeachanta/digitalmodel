@@ -36,6 +36,9 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
     "anchor_capacity": [{"id": "DNV-RP-E303", "edition": "2005"}],
+    "spectral_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"},
+                         {"id": "DNV-RP-C205", "edition": "2021-09"}],
+    "fpso_mooring_full": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -69,6 +72,13 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
+    "spectral_fatigue": [
+        "src/digitalmodel/fatigue/spectral_fatigue.py",
+        "src/digitalmodel/hydrodynamics/wave_spectra.py",
+    ],
+    "fpso_mooring_full": [
+        "src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py",
+    ],
 }
 
 

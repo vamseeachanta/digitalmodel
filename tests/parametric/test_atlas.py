@@ -240,6 +240,31 @@ def test_fatigue_bins_handler_shared_by_both_ropes(tmp_path):
     assert result["value"] > 0.0
 
 
+def test_spectral_annual_damage_handler(tmp_path):
+    from digitalmodel.parametric.build import build_atlas_from_registry
+    from digitalmodel.parametric.query import _handle_annual_damage
+
+    atlas = build_atlas_from_registry("spectral-fatigue", atlas_root=tmp_path)
+    result = _handle_annual_damage(
+        atlas, {"Hs": 3.5, "Tp": 11.0, "design_life_years": 25.0, "dff": 3.0})
+    assert result["in_range"] is True
+    assert result["response"] == "fatigue_life_years"
+    assert result["value"] > 0.0
+    assert result["annual_damage"] > 0.0
+
+
+def test_fpso_value_atlas(tmp_path):
+    from digitalmodel.parametric.build import build_atlas_from_registry
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = build_atlas_from_registry("fpso-mooring-full", atlas_root=tmp_path)
+    assert atlas.validation["passes"]
+    point = {"Hs": 4.0, "Tp": 11.0, "water_depth_m": 1000.0}
+    pred = atlas.predict(point)
+    truth = RESPONSE_FUNCS["fpso_mooring_full"](point)
+    assert pred.value == pytest.approx(truth, rel=1e-6)  # on a grid knot
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)
