@@ -1,0 +1,49 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 4.668036464356242e-08,
+  "threshold": 0.05,
+  "passes": true,
+  "n_holdout": 4,
+  "worst_samples": [
+    {
+      "point": {
+        "frequency_rad_s": 0.538559,
+        "heading_deg": 90.0
+      },
+      "predicted": 0.7999997483678818,
+      "actual": 0.7999997110236036,
+      "rel_error": 4.668036464356242e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "frequency_rad_s": 0.3989325,
+        "heading_deg": 90.0
+      },
+      "predicted": 0.9399999124329563,
+      "actual": 0.9399999201515621,
+      "rel_error": 8.211283415112425e-09,
+      "in_range": true
+    },
+    {
+      "point": {
+        "frequency_rad_s": 0.628319,
+        "heading_deg": 45.0
+      },
+      "predicted": 0.7249995518686605,
+      "actual": 0.7249995518686604,
+      "rel_error": 1.5313430494730604e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "frequency_rad_s": 0.8377585000000001,
+        "heading_deg": 90.0
+      },
+      "predicted": 0.49999956164649023,
+      "actual": 0.4999995616464903,
+      "rel_error": 1.1102239979663288e-16,
+      "in_range": true
+    }
+  ]
+}

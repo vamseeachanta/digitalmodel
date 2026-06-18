@@ -185,6 +185,26 @@ workflows:
       - examples/workflows/api-rp-2rd-riser/results/input_code_check.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-rp-2rd-riser]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: utilisation
+      response_kwargs: {design_factor: 0.67, smts_ratio: 1.185}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: outer_diameter, scale: linear, grid: [0.20, 0.24, 0.28, 0.32, 0.36]}
+        - {name: wall_thickness, scale: linear, grid: [0.015, 0.020, 0.025, 0.030, 0.035]}
+        - {name: effective_tension_kN, scale: linear, grid: [0, 400, 800, 1200, 1600, 2000]}
+        - {name: bending_moment_kNm, scale: linear, grid: [0, 80, 160, 240, 320, 400]}
+        - {name: smys, values: [359000000.0, 448000000.0, 552000000.0]}
+      atlas: atlases/code_check
+  - id: code-check-atlas-query
+    basename: parametric_query
+    title: Instant interpolated API RP 2RD utilisation from the pre-computed atlas
+    input: examples/workflows/code-check-atlas-query/input.yml
+    outputs:
+      - examples/workflows/code-check-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[code-check-atlas-query]
+    runtime: offline
   - id: dnv-os-f201-riser
     basename: code_check
     title: DNV-OS-F201 riser LRFD combined loading utilisation check
@@ -224,6 +244,23 @@ workflows:
     outputs:
       - examples/workflows/rao-tabulation/results/input_rao.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-tabulation]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: heave_m
+      response_kwargs: {database_path: examples/workflows/rao-tabulation/input.yml}
+      tolerance: {metric: max_rel_error, threshold: 0.05}
+      axes:
+        - {name: frequency_rad_s, scale: linear, grid: [0.349066, 0.448799, 0.628319, 1.047198]}
+        - {name: heading_deg, scale: linear, grid: [0.0, 90.0]}
+      atlas: atlases/rao_tabulation
+  - id: rao-atlas-query
+    basename: parametric_query
+    title: Instant interpolated heave RAO amplitude from the pre-computed atlas
+    input: examples/workflows/rao-atlas-query/input.yml
+    outputs:
+      - examples/workflows/rao-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-atlas-query]
     runtime: offline
   - id: von-mises
     basename: von_mises
