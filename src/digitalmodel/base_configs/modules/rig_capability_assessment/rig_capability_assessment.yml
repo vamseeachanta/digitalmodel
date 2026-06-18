@@ -1,0 +1,9 @@
+basename: rig_capability_assessment
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+rig_capability_assessment: {}
