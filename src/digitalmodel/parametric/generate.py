@@ -11,12 +11,16 @@ from __future__ import annotations
 import hashlib
 import itertools
 import json
+import math
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable
 
 import pandas as pd
 
 from digitalmodel.parametric.atlas import Atlas, Axis
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # response functions keyed by workflow basename -----------------------------
 
@@ -36,8 +40,86 @@ def _mooring_fatigue_damage(point: dict[str, Any], environment: str) -> float:
     return float(df.attrs["total_damage"])
 
 
-RESPONSE_FUNCS: dict[str, Callable[[dict[str, Any], str], float]] = {
+def _code_check_utilisation(
+    point: dict[str, Any],
+    design_factor: float = 0.67,
+    smts_ratio: float = 1.185,
+    temperature_derating: float = 1.0,
+) -> float:
+    """API RP 2RD combined tension+bending utilisation for one (OD, WT, SMYS,
+    tension, moment) point — the continuous quantity the boundary class
+    interpolates before thresholding at 1.0."""
+    import numpy as np
+
+    from digitalmodel.orcaflex.code_check_engine import (
+        APIRP2RDInput,
+        check_api_rp_2rd,
+    )
+
+    smys = float(point["smys"])
+    pipe = APIRP2RDInput(
+        outer_diameter=float(point["outer_diameter"]),
+        wall_thickness=float(point["wall_thickness"]),
+        smys=smys,
+        smts=smys * smts_ratio,
+        design_factor=design_factor,
+        temperature_derating=temperature_derating,
+    )
+    results = check_api_rp_2rd(
+        pipe,
+        np.array([0.0]),
+        np.array([float(point["effective_tension_kN"])]),
+        np.array([float(point["bending_moment_kNm"])]),
+        np.array([0.0]),
+    )
+    return float(results[0].utilisation)
+
+
+@lru_cache(maxsize=4)
+def _rao_interpolator(database_path: str):
+    import numpy as np
+    import yaml
+
+    from digitalmodel.hydrodynamics.interpolator import CoefficientsInterpolator
+    from digitalmodel.hydrodynamics.models import RAOData
+
+    path = Path(database_path)
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    db = yaml.safe_load(path.read_text())["rao_tabulation"]["rao_database"]
+    omega = np.array([2.0 * math.pi / float(p) for p in db["periods_s"]])
+    order = np.argsort(omega)
+    rao = RAOData(
+        frequencies=omega[order],
+        directions=np.array([float(h) for h in db["headings_deg"]]),
+        amplitudes=np.array(db["amplitudes"], dtype=float)[order],
+        phases=np.array(db["phases_deg"], dtype=float)[order],
+        vessel_name=str(db.get("vessel_name", "atlas")),
+    )
+    interp = CoefficientsInterpolator()
+    interp.load_raos(rao)
+    return interp
+
+
+def _rao_heave(point: dict[str, Any], database_path: str) -> float:
+    """Interpolated heave amplitude (DOF index 2) at a single (frequency,
+    heading), reusing the rao_tabulation workflow's own interpolator so the
+    atlas reproduces the workflow exactly."""
+    import numpy as np
+
+    interp = _rao_interpolator(database_path)
+    out = interp.interpolate_all_dofs(
+        np.array([float(point["frequency_rad_s"])]),
+        np.array([float(point["heading_deg"])]),
+        method="linear",
+    )
+    return float(out.amplitudes[0, 0, 2])
+
+
+RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
+    "code_check": _code_check_utilisation,
+    "rao_tabulation": _rao_heave,
 }
 
 

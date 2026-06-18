@@ -81,6 +81,76 @@ def test_unknown_category_escalates():
     assert "sn_curve" in pred.reason
 
 
+def _code_check_atlas(grid_max_tension=2000) -> Atlas:
+    return generate_atlas(
+        basename="code_check",
+        physics="utilization_threshold",
+        response="utilisation",
+        axes=[
+            Axis(name="outer_diameter", scale="linear", grid=[0.20, 0.28, 0.36]),
+            Axis(name="wall_thickness", scale="linear", grid=[0.015, 0.025, 0.035]),
+            Axis(name="effective_tension_kN", scale="linear",
+                 grid=[0, grid_max_tension // 2, grid_max_tension]),
+            Axis(name="bending_moment_kNm", scale="linear", grid=[0, 200, 400]),
+            Axis(name="smys", values=[359e6, 448e6]),
+        ],
+        response_kwargs={"design_factor": 0.67, "smts_ratio": 1.185},
+        tolerance=0.10,
+    )
+
+
+def test_code_check_atlas_accuracy():
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = _code_check_atlas()
+    # on a grid knot the interpolation is exact (denser grids clear the 0.10
+    # publish gate; this 3-knot test grid is deliberately coarse)
+    point = {"outer_diameter": 0.28, "wall_thickness": 0.025,
+             "effective_tension_kN": 1000, "bending_moment_kNm": 200, "smys": 448e6}
+    pred = atlas.predict(point)
+    truth = RESPONSE_FUNCS["code_check"](point, design_factor=0.67, smts_ratio=1.185)
+    assert pred.value == pytest.approx(truth, rel=1e-6)
+
+
+def test_code_check_straddle_escalates():
+    from digitalmodel.parametric.query import _handle_code_check
+
+    atlas = _code_check_atlas()
+    # weak section + load that drives utilisation to ~1.0: band must straddle 1.0
+    result = _handle_code_check(
+        atlas,
+        {"outer_diameter": 0.20, "wall_thickness": 0.015,
+         "effective_tension_kN": 1600, "bending_moment_kNm": 80, "smys": 359e6},
+    )
+    assert result["in_range"] is False
+    assert "straddles" in result["reason"]
+
+
+def test_rao_atlas_is_linear_exact():
+    import math
+
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    db = "examples/workflows/rao-tabulation/input.yml"
+    atlas = generate_atlas(
+        basename="rao_tabulation",
+        physics="linear",
+        response="heave_m",
+        axes=[
+            Axis(name="frequency_rad_s", scale="linear",
+                 grid=[0.349066, 0.448799, 0.628319, 1.047198]),
+            Axis(name="heading_deg", scale="linear", grid=[0.0, 90.0]),
+        ],
+        response_kwargs={"database_path": db},
+        tolerance=0.05,
+    )
+    # linear interpolation of a linear surface reproduces the workflow exactly
+    assert atlas.max_rel_error == pytest.approx(0.0, abs=1e-6)
+    point = {"frequency_rad_s": 2 * math.pi / 8.0, "heading_deg": 45.0}
+    truth = RESPONSE_FUNCS["rao_tabulation"](point, database_path=db)
+    assert atlas.predict(point).value == pytest.approx(truth, rel=1e-6)
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)

@@ -25,6 +25,8 @@ REGISTRY = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
 # Cited standard editions per workflow (the source of the S-N curves).
 STANDARDS = {
     "mooring_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
+    "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
+    "rao_tabulation": [],
 }
 
 

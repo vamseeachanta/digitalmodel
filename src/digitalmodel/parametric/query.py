@@ -1,16 +1,16 @@
 """``parametric_query`` workflow router — serve an interpolated answer from a
 pre-computed atlas, or flag escalation when out of range / low confidence.
 
-Decision 3 of the spec. For mooring_fatigue the atlas holds per-cell *damage*;
-total damage is the additive Miner sum over the queried bins, and fatigue life
-is derived analytically afterwards.
+Decision 3 of the spec. Result *shaping* is per-workflow (a Miner sum for
+fatigue, a verdict for a code check, a direct value for an RAO), but the
+interpolation and the out-of-range rail live in Atlas.predict and are shared.
 """
 
 from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -19,9 +19,13 @@ from digitalmodel.parametric.atlas import Atlas
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ATLAS_ROOT = REPO_ROOT / "atlases"
 
-DISCLAIMER = (
+SCREENING_DISCLAIMER = (
     "Screening estimate from a pre-computed atlas — not a certified deliverable. "
     "A full on-demand run remains the document of record."
+)
+ESCALATE_DISCLAIMER = (
+    "Outside the atlas coverage — routed to a full on-demand run (24h SLA). "
+    "No value is extrapolated."
 )
 
 
@@ -39,24 +43,45 @@ def router(cfg: dict) -> dict:
             "(clamp/extrapolate are not permitted)"
         )
 
+    handler = _HANDLERS.get(basename)
+    if handler is None:
+        raise NotImplementedError(f"no parametric_query handler for atlas {basename!r}")
+
     atlas_root = Path(settings.get("atlas_root", DEFAULT_ATLAS_ROOT))
     atlas = Atlas.load(atlas_root, basename)
 
-    result = _evaluate(atlas, point)
+    result = handler(atlas, point)
     if not result["in_range"] and on_out_of_range == "error":
-        raise ValueError(f"parametric_query out of range: {result['reason']}")
+        raise ValueError(f"parametric_query out of range: {result.get('reason')}")
 
     cfg["parametric_query"] = {**settings, "result": result}
     _write_result(cfg, settings, result)
     return cfg
 
 
-def _evaluate(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
-    if atlas.basename != "mooring_fatigue":
-        raise NotImplementedError(
-            f"parametric_query pilot only wires mooring_fatigue, got {atlas.basename!r}"
-        )
+def _provenance(atlas: Atlas) -> dict[str, Any]:
+    return {
+        "atlas_id": atlas.atlas_id,
+        "code_version": atlas.provenance.get("code_version"),
+        "standards": atlas.provenance.get("standards"),
+    }
 
+
+def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
+    return {
+        "value": None,
+        "in_range": False,
+        "reason": reason,
+        "action": "escalate",
+        "disclaimer": ESCALATE_DISCLAIMER,
+        "provenance": {"atlas_id": atlas.atlas_id},
+    }
+
+
+# -- per-workflow handlers ---------------------------------------------------
+
+
+def _handle_mooring_fatigue(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     shared = {"area_mm2": point.get("area_mm2"), "sn_curve": point.get("sn_curve")}
     bins = point.get("tension_range_bins")
     if bins is None:
@@ -92,28 +117,69 @@ def _evaluate(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
         "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
         "in_range": True,
         "stale": False,
-        "disclaimer": DISCLAIMER,
-        "provenance": {
-            "atlas_id": atlas.atlas_id,
-            "code_version": atlas.provenance.get("code_version"),
-            "standards": atlas.provenance.get("standards"),
-        },
+        "disclaimer": SCREENING_DISCLAIMER,
+        "provenance": _provenance(atlas),
     }
 
 
-def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
+def _handle_code_check(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    prediction = atlas.predict(point)
+    if not prediction.in_range:
+        return _escalation(atlas, prediction.reason)
+
+    u = prediction.value
+    e = atlas.max_rel_error
+    band = [u * (1 - e), u * (1 + e)]
+    # straddle rule: if the confidence band crosses the code limit, the verdict
+    # is not decidable from the atlas -> escalate even though it is in range.
+    if band[0] < 1.0 < band[1]:
+        return _escalation(
+            atlas,
+            f"utilisation {u:.3f} band [{band[0]:.3f}, {band[1]:.3f}] straddles 1.0",
+        )
+
     return {
-        "response": "fatigue_life_years",
-        "value": None,
-        "in_range": False,
-        "reason": reason,
-        "action": "escalate",
-        "disclaimer": (
-            "Outside the atlas coverage — routed to a full on-demand run "
-            "(24h SLA). No value is extrapolated."
-        ),
-        "provenance": {"atlas_id": atlas.atlas_id},
+        "response": "utilisation",
+        "value": u,
+        "screening_status": "pass" if u <= 1.0 else "fail",
+        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "in_range": True,
+        "stale": False,
+        "disclaimer": SCREENING_DISCLAIMER,
+        "provenance": _provenance(atlas),
     }
+
+
+def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    # query is natural in period; the atlas axis is frequency (the workflow's
+    # interpolation space), so convert here.
+    lookup = dict(point)
+    if "frequency_rad_s" not in lookup and "period_s" in lookup:
+        lookup["frequency_rad_s"] = 2.0 * math.pi / float(lookup["period_s"])
+
+    prediction = atlas.predict(lookup)
+    if not prediction.in_range:
+        return _escalation(atlas, prediction.reason)
+
+    v = prediction.value
+    e = atlas.max_rel_error
+    return {
+        "response": atlas.response,
+        "value": v,
+        "confidence": {"band": [v * (1 - e), v * (1 + e)],
+                       "basis": f"holdout max_rel_error = {e:.4f}"},
+        "in_range": True,
+        "stale": False,
+        "disclaimer": SCREENING_DISCLAIMER,
+        "provenance": _provenance(atlas),
+    }
+
+
+_HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
+    "mooring_fatigue": _handle_mooring_fatigue,
+    "code_check": _handle_code_check,
+    "rao_tabulation": _handle_rao,
+}
 
 
 def _write_result(cfg: dict, settings: dict[str, Any], result: dict[str, Any]) -> None:

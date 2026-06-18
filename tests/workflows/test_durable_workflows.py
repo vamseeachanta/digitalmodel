@@ -203,6 +203,24 @@ def test_workflow_registry(workflow, monkeypatch):
         assert lo <= result["value"] <= hi
         assert "screening estimate" in result["disclaimer"].lower()
         assert result["provenance"]["atlas_id"]
+    elif workflow["id"] == "code-check-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # boundary class: interpolated utilisation + derived verdict
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["value"] > 0.0
+        assert result["screening_status"] in {"pass", "fail"}
+        lo, hi = result["confidence"]["band"]
+        # in-range answers must NOT straddle the code limit (else they escalate)
+        assert not (lo < 1.0 < hi)
+    elif workflow["id"] == "rao-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # linear class: direct interpolated response
+        assert result["in_range"] is True
+        assert result["response"] == "heave_m"
+        assert result["value"] > 0.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
     elif workflow["id"] == "synthetic-rope-mooring-fatigue":
         summary = cfg["synthetic_rope_mooring_fatigue"]
         results_path = Path(summary["results_csv"])
