@@ -1,0 +1,41 @@
+{
+  "basename": "diffraction_library",
+  "atlas_id": "e70b23544de6",
+  "physics": "linear",
+  "response": "heave_rao_m_per_m",
+  "axes": [
+    {
+      "name": "case",
+      "values": [
+        "fpso-design-draft",
+        "fpso-ballast-draft",
+        "semisub-operating"
+      ]
+    },
+    {
+      "name": "frequency_rad_s",
+      "scale": "linear",
+      "grid": [
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        1.2
+      ]
+    },
+    {
+      "name": "heading_deg",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        45.0,
+        90.0,
+        135.0,
+        180.0
+      ]
+    }
+  ]
+}

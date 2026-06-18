@@ -238,6 +238,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "diffraction-library-query":
+        result = cfg["parametric_query"]["result"]
+        # licensed-solver sparse library: covered case interpolates within
+        assert result["in_range"] is True
+        assert result["response"] == "heave_rao_m_per_m"
+        assert result["value"] > 0.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly
