@@ -1,0 +1,41 @@
+{
+  "basename": "anchor_capacity",
+  "atlas_id": "c8f67ad7b69c",
+  "physics": "linear",
+  "response": "capacity_kN",
+  "axes": [
+    {
+      "name": "diameter_m",
+      "scale": "linear",
+      "grid": [
+        2.0,
+        3.5,
+        5.0,
+        6.5,
+        8.0
+      ]
+    },
+    {
+      "name": "length_m",
+      "scale": "linear",
+      "grid": [
+        10.0,
+        15.0,
+        20.0,
+        25.0,
+        30.0
+      ]
+    },
+    {
+      "name": "su_kpa",
+      "scale": "linear",
+      "grid": [
+        20.0,
+        40.0,
+        60.0,
+        80.0,
+        100.0
+      ]
+    }
+  ]
+}

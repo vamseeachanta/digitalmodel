@@ -1,0 +1,189 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.018039884293378727,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 16,
+  "worst_samples": [
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 100.0
+      },
+      "predicted": 8284.030014261187,
+      "actual": 8137.235232204218,
+      "rel_error": 0.018039884293378727,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 75.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 10735.411145938871,
+      "actual": 10871.880001767866,
+      "rel_error": 0.012552461562011669,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 0.75,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 5699.045423152734,
+      "actual": 5659.284641130738,
+      "rel_error": 0.007025761124121725,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 200.0
+      },
+      "predicted": 10839.301665147908,
+      "actual": 10914.888039696829,
+      "rel_error": 0.006925070992392881,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 400.0
+      },
+      "predicted": 14065.858841126117,
+      "actual": 14154.83839983051,
+      "rel_error": 0.006286158569317123,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.25,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 9869.509670793184,
+      "actual": 9829.74888877119,
+      "rel_error": 0.0040449438202245945,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 300.0
+      },
+      "predicted": 13005.571320539562,
+      "actual": 13046.256002121438,
+      "rel_error": 0.003118494806115996,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.75,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 14358.0601746096,
+      "actual": 14318.299392587605,
+      "rel_error": 0.002776920703486493,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 105.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 13092.963302147084,
+      "actual": 13122.36698938924,
+      "rel_error": 0.002240730446415075,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 2.25,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 19164.696934601983,
+      "actual": 19124.93615257999,
+      "rel_error": 0.00207900207900192,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 135.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 15112.781599183729,
+      "actual": 15132.899259576647,
+      "rel_error": 0.0013293989504480964,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 25.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 10267.117491013141,
+      "actual": 10267.117491013143,
+      "rel_error": 1.7716651291251187e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 30.0,
+        "Su_kpa": 45.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 7077.419199915256,
+      "actual": 7077.419199915255,
+      "rel_error": 1.2850654681918777e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 15.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 6732.825755724625,
+      "actual": 6732.825755724625,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 1.5,
+        "embedded_length_m": 35.0,
+        "Su_kpa": 90.0,
+        "sigma_v_kpa": 250.0
+      },
+      "predicted": 13801.40922630166,
+      "actual": 13801.40922630166,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ]
+}

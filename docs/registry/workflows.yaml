@@ -361,6 +361,24 @@ workflows:
       - examples/workflows/free-span-f105/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-f105]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: span_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: span_length_m, scale: linear, grid: [10, 20, 30, 40, 50, 60, 70]}
+        - {name: od_m, scale: linear, grid: [0.20, 0.30, 0.40, 0.50, 0.60]}
+        - {name: wt_m, scale: linear, grid: [0.012, 0.018, 0.024, 0.030]}
+        - {name: current_velocity_ms, scale: linear, grid: [0.2, 0.5, 0.8, 1.1, 1.4]}
+      atlas: atlases/free_span
+  - id: free-span-atlas-query
+    basename: parametric_query
+    title: Instant interpolated free-span utilisation from the pre-computed atlas
+    input: examples/workflows/free-span-atlas-query/input.yml
+    outputs:
+      - examples/workflows/free-span-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-atlas-query]
+    runtime: offline
   - id: pipeline-lateral-buckling
     basename: lateral_buckling
     title: HP/HT subsea pipeline lateral buckling screening
@@ -547,6 +565,23 @@ workflows:
       - examples/workflows/anchor-capacity/results/anchor_capacity/anchor_capacity_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[anchor-capacity]
     runtime: offline
+    parametric:
+      physics: linear
+      response: capacity_kN
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: diameter_m, scale: linear, grid: [2.0, 3.5, 5.0, 6.5, 8.0]}
+        - {name: length_m, scale: linear, grid: [10, 15, 20, 25, 30]}
+        - {name: su_kpa, scale: linear, grid: [20, 40, 60, 80, 100]}
+      atlas: atlases/anchor_capacity
+  - id: anchor-capacity-atlas-query
+    basename: parametric_query
+    title: Instant interpolated suction-anchor utilisation from the pre-computed atlas
+    input: examples/workflows/anchor-capacity-atlas-query/input.yml
+    outputs:
+      - examples/workflows/anchor-capacity-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[anchor-capacity-atlas-query]
+    runtime: offline
   - id: pile-capacity
     basename: pile_capacity
     title: API RP 2GEO alpha-method pile capacity in firm clay
@@ -555,6 +590,24 @@ workflows:
       - examples/workflows/pile-capacity/results/input.yml
       - examples/workflows/pile-capacity/results/pile_capacity/pile_capacity_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-capacity]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: capacity_kN
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: diameter_m, scale: linear, grid: [0.5, 1.0, 1.5, 2.0, 2.5]}
+        - {name: embedded_length_m, scale: linear, grid: [10, 20, 30, 40, 50]}
+        - {name: Su_kpa, scale: linear, grid: [30, 60, 90, 120, 150]}
+        - {name: sigma_v_kpa, scale: linear, grid: [50, 150, 250, 350, 450]}
+      atlas: atlases/pile_capacity
+  - id: pile-capacity-atlas-query
+    basename: parametric_query
+    title: Instant interpolated pile-capacity utilisation from the pre-computed atlas
+    input: examples/workflows/pile-capacity-atlas-query/input.yml
+    outputs:
+      - examples/workflows/pile-capacity-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-capacity-atlas-query]
     runtime: offline
   - id: scour-assessment
     basename: scour

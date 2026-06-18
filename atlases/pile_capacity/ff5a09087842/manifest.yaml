@@ -1,0 +1,52 @@
+atlas_id: ff5a09087842
+basename: pile_capacity
+physics: linear
+response: capacity_kN
+axes:
+- name: diameter_m
+  scale: linear
+  grid:
+  - 0.5
+  - 1.0
+  - 1.5
+  - 2.0
+  - 2.5
+- name: embedded_length_m
+  scale: linear
+  grid:
+  - 10.0
+  - 20.0
+  - 30.0
+  - 40.0
+  - 50.0
+- name: Su_kpa
+  scale: linear
+  grid:
+  - 30.0
+  - 60.0
+  - 90.0
+  - 120.0
+  - 150.0
+- name: sigma_v_kpa
+  scale: linear
+  grid:
+  - 50.0
+  - 150.0
+  - 250.0
+  - 350.0
+  - 450.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.018039884293378727
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: pile_capacity
+  code_version: 4750e0d2
+  standards:
+  - id: API-RP-2GEO
+    edition: '2011'
+  response_kwargs: {}
+  workflow_id: pile-capacity
+  content_fingerprint: ff5a09087842643fcfe0f66dfc9c26b5c5d2fb70abbee5aa42544c1fce31835c
+  input_template_sha256: 98927723992d5648c5eb3581f3577a5b7fa555a43fa8c2badccf0a9be9ecb375

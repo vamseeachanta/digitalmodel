@@ -221,6 +221,24 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "free-span-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # boundary class: utilisation predicted directly
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["value"] > 0.0
+        assert result["screening_status"] in {"pass", "fail"}
+        lo, hi = result["confidence"]["band"]
+        assert not (lo < 1.0 < hi)
+    elif workflow["id"] in {"pile-capacity-atlas-query", "anchor-capacity-atlas-query"}:
+        result = cfg["parametric_query"]["result"]
+        # capacity-demand class: atlas predicts capacity, load case applied here
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["capacity_kN"] > 0.0
+        assert result["screening_status"] in {"pass", "fail"}
+        lo, hi = result["confidence"]["band"]
+        assert not (lo < 1.0 < hi)
     elif workflow["id"] == "synthetic-rope-mooring-fatigue":
         summary = cfg["synthetic_rope_mooring_fatigue"]
         results_path = Path(summary["results_csv"])

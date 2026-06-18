@@ -113,11 +113,11 @@ def test_code_check_atlas_accuracy():
 
 
 def test_code_check_straddle_escalates():
-    from digitalmodel.parametric.query import _handle_code_check
+    from digitalmodel.parametric.query import _handle_utilisation
 
     atlas = _code_check_atlas()
     # weak section + load that drives utilisation to ~1.0: band must straddle 1.0
-    result = _handle_code_check(
+    result = _handle_utilisation(
         atlas,
         {"outer_diameter": 0.20, "wall_thickness": 0.015,
          "effective_tension_kN": 1600, "bending_moment_kNm": 80, "smys": 359e6},
@@ -149,6 +149,54 @@ def test_rao_atlas_is_linear_exact():
     point = {"frequency_rad_s": 2 * math.pi / 8.0, "heading_deg": 45.0}
     truth = RESPONSE_FUNCS["rao_tabulation"](point, database_path=db)
     assert atlas.predict(point).value == pytest.approx(truth, rel=1e-6)
+
+
+def test_capacity_demand_handler_applies_load_case():
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+    from digitalmodel.parametric.query import _handle_capacity_demand
+
+    atlas = generate_atlas(
+        basename="pile_capacity",
+        physics="linear",
+        response="capacity_kN",
+        axes=[
+            Axis(name="diameter_m", scale="linear", grid=[0.5, 1.0, 1.5, 2.0, 2.5]),
+            Axis(name="embedded_length_m", scale="linear", grid=[10, 20, 30, 40, 50]),
+            Axis(name="Su_kpa", scale="linear", grid=[30, 60, 90, 120, 150]),
+            Axis(name="sigma_v_kpa", scale="linear", grid=[50, 150, 250, 350, 450]),
+        ],
+        tolerance=0.10,
+    )
+    assert atlas.validation["passes"]
+    point = {"diameter_m": 1.0, "embedded_length_m": 30.0, "Su_kpa": 60.0,
+             "sigma_v_kpa": 150.0, "demand_kN": 2000.0, "factor_of_safety": 2.0}
+    result = _handle_capacity_demand(atlas, point)
+    cap = RESPONSE_FUNCS["pile_capacity"](point)
+    assert result["in_range"] is True
+    assert result["capacity_kN"] == pytest.approx(cap, rel=1e-6)
+    assert result["value"] == pytest.approx(2000.0 * 2.0 / cap, rel=1e-6)
+
+
+def test_free_span_utilisation_atlas():
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = generate_atlas(
+        basename="free_span",
+        physics="utilization_threshold",
+        response="span_utilisation",
+        axes=[
+            Axis(name="span_length_m", scale="linear", grid=[10, 20, 30, 40, 50, 60, 70]),
+            Axis(name="od_m", scale="linear", grid=[0.20, 0.30, 0.40, 0.50, 0.60]),
+            Axis(name="wt_m", scale="linear", grid=[0.012, 0.018, 0.024, 0.030]),
+            Axis(name="current_velocity_ms", scale="linear", grid=[0.2, 0.5, 0.8, 1.1, 1.4]),
+        ],
+        tolerance=0.10,
+    )
+    assert atlas.validation["passes"]
+    point = {"span_length_m": 30.0, "od_m": 0.30, "wt_m": 0.018, "current_velocity_ms": 0.8}
+    pred = atlas.predict(point)
+    truth = RESPONSE_FUNCS["free_span"](point)
+    assert pred.value == pytest.approx(truth, rel=1e-6)
 
 
 def test_save_load_roundtrip(tmp_path):

@@ -1,0 +1,189 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.040825273575313556,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 17,
+  "worst_samples": [
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.25,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 3.446164277147562,
+      "actual": 3.3109921181196214,
+      "rel_error": 0.040825273575313556,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.6319098751939891,
+      "actual": 1.5681174255760353,
+      "rel_error": 0.04068091367234197,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.35,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 2.467674908530676,
+      "actual": 2.4210951040615014,
+      "rel_error": 0.01923914694265208,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.45,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 1.9516073278935466,
+      "actual": 1.930228111258189,
+      "rel_error": 0.011076005219622454,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.55,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 1.6289051338988576,
+      "actual": 1.617331193216453,
+      "rel_error": 0.007156197030607641,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.65
+      },
+      "predicted": 1.92030747841565,
+      "actual": 1.9333981190340537,
+      "rel_error": 0.006770794121256272,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.015,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 2.2801996135701357,
+      "actual": 2.269197944230017,
+      "rel_error": 0.004848263399891182,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.9500000000000001
+      },
+      "predicted": 2.3300228175931714,
+      "actual": 2.3373643514240547,
+      "rel_error": 0.003140945409906008,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.020999999999999998,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 2.1800731136950873,
+      "actual": 2.175293454414207,
+      "rel_error": 0.002197248040801618,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 1.25
+      },
+      "predicted": 2.6762928536545463,
+      "actual": 2.681140790024196,
+      "rel_error": 0.0018081618047390534,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.027,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 2.12391428225186,
+      "actual": 2.1213733974529685,
+      "rel_error": 0.001197754625349038,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 45.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 2.413026711021777,
+      "actual": 2.4130267110217765,
+      "rel_error": 1.8403824865329263e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 65.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 3.4854830270314547,
+      "actual": 3.485483027031455,
+      "rel_error": 1.2741109522151028e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 15.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 0.8043422370072588,
+      "actual": 0.8043422370072588,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 25.0,
+        "od_m": 0.4,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.8
+      },
+      "predicted": 1.3405703950120982,
+      "actual": 1.3405703950120982,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ]
+}

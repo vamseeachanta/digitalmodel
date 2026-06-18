@@ -1,0 +1,53 @@
+{
+  "basename": "free_span",
+  "atlas_id": "eac25055a83d",
+  "physics": "utilization_threshold",
+  "response": "span_utilisation",
+  "axes": [
+    {
+      "name": "span_length_m",
+      "scale": "linear",
+      "grid": [
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0,
+        60.0,
+        70.0
+      ]
+    },
+    {
+      "name": "od_m",
+      "scale": "linear",
+      "grid": [
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6
+      ]
+    },
+    {
+      "name": "wt_m",
+      "scale": "linear",
+      "grid": [
+        0.012,
+        0.018,
+        0.024,
+        0.03
+      ]
+    },
+    {
+      "name": "current_velocity_ms",
+      "scale": "linear",
+      "grid": [
+        0.2,
+        0.5,
+        0.8,
+        1.1,
+        1.4
+      ]
+    }
+  ]
+}
