@@ -192,7 +192,8 @@ def test_workflow_registry(workflow, monkeypatch):
             results.sort_values("stress_range_MPa")["allowable_cycles"]
             .is_monotonic_decreasing
         )
-    elif workflow["id"] in {"mooring-fatigue-atlas-query", "synthetic-rope-atlas-query"}:
+    elif workflow["id"] in {"mooring-fatigue-atlas-query", "synthetic-rope-atlas-query",
+                            "spectral-fatigue-atlas-query"}:
         result = cfg["parametric_query"]["result"]
         # in-range query returns an interpolated screening estimate, not a verdict
         assert result["in_range"] is True
@@ -218,6 +219,14 @@ def test_workflow_registry(workflow, monkeypatch):
         # linear class: direct interpolated response
         assert result["in_range"] is True
         assert result["response"] == "heave_m"
+        assert result["value"] > 0.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+    elif workflow["id"] == "fpso-mooring-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # value class: interpolated max line tension
+        assert result["in_range"] is True
+        assert result["response"] == "max_line_tension_N"
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi

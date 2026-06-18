@@ -151,6 +151,25 @@ workflows:
       - examples/workflows/spectral-fatigue/results/input_spectral_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]
     runtime: offline
+    parametric:
+      physics: log_log
+      response: annual_damage
+      # SCREENING: JONSWAP wave spectrum -> stress PSD via a FIXED quasi-static
+      # stress gain (MPa per m); a project re-bakes its own stress-RAO H(f).
+      response_kwargs: {gamma: 3.3, stress_gain_MPa_per_m: 20.0, sn_slope: 3.0, sn_intercept: 12.164}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: Hs, scale: log, grid: [1.0, 2.0, 3.0, 4.5, 6.0, 8.0]}
+        - {name: Tp, scale: linear, grid: [6, 7, 8, 9, 10, 11, 12, 13, 14, 16]}
+      atlas: atlases/spectral_fatigue
+  - id: spectral-fatigue-atlas-query
+    basename: parametric_query
+    title: Instant interpolated spectral fatigue life for a JONSWAP sea state (screening)
+    input: examples/workflows/spectral-fatigue-atlas-query/input.yml
+    outputs:
+      - examples/workflows/spectral-fatigue-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue-atlas-query]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal
@@ -480,6 +499,26 @@ workflows:
       - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_summary.json
       - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_line_tensions.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-mooring-full]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: max_line_tension_N
+      # reference FPSO (vessel + 8x R4 120mm chain) baked in; axes are the sea
+      # state + water depth. A project re-bakes its own vessel/mooring.
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: Hs, scale: linear, grid: [2.0, 3.0, 4.0, 5.0]}
+        - {name: Tp, scale: linear, grid: [9.0, 11.0, 13.0]}
+        # depth must stay below the reference 2000 m line length (catenary feasibility)
+        - {name: water_depth_m, scale: linear, grid: [500.0, 1000.0, 1500.0]}
+      atlas: atlases/fpso_mooring_full
+  - id: fpso-mooring-atlas-query
+    basename: parametric_query
+    title: Instant interpolated FPSO max mooring line tension from the pre-computed atlas
+    input: examples/workflows/fpso-mooring-atlas-query/input.yml
+    outputs:
+      - examples/workflows/fpso-mooring-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-mooring-atlas-query]
     runtime: offline
   - id: wall-thickness-quickcheck
     basename: wall_thickness

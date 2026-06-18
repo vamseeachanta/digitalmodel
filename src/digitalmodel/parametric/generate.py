@@ -200,9 +200,78 @@ def _suction_anchor_capacity_kn(point: dict[str, Any]) -> float:
     return float(result.total_capacity_kn)
 
 
+def _spectral_fatigue_annual_damage(
+    point: dict[str, Any],
+    gamma: float = 3.3,
+    stress_gain_MPa_per_m: float = 20.0,
+    sn_slope: float = 3.0,
+    sn_intercept: float = 12.164,
+) -> float:
+    """Annual Dirlik fatigue damage for a JONSWAP sea state (Hs, Tp).
+
+    SCREENING MODEL: the wave spectrum is mapped to a stress PSD via a fixed
+    quasi-static stress gain g (MPa per m of wave amplitude),
+    S_stress(f) = g**2 * S_wave(f). A real project replaces this with its own
+    stress-RAO H(f); the gain is a per-location property baked into the atlas,
+    not an axis. (Pattern follows structural/fatigue/scatter_fatigue.py.)"""
+    import numpy as np
+
+    from digitalmodel.fatigue.spectral_fatigue import (
+        compute_spectral_moments,
+        dirlik_damage,
+    )
+    from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+
+    omega, s_omega = WaveSpectra().jonswap(
+        hs=float(point["Hs"]), tp=float(point["Tp"]), gamma=gamma
+    )  # rad/s, m^2*s
+    f_hz = omega / (2.0 * np.pi)
+    s_wave_hz = s_omega * 2.0 * np.pi  # m^2/Hz
+    stress_psd = (stress_gain_MPa_per_m**2) * s_wave_hz  # MPa^2/Hz (quasi-static)
+    moments = compute_spectral_moments(f_hz, stress_psd)
+    result = dirlik_damage(moments, sn_slope=sn_slope, sn_intercept=sn_intercept, duration=1.0)
+    return float(result.damage_per_year)
+
+
+# Reference FPSO configuration baked into the atlas (everything except the
+# three axes Hs / Tp / water_depth). A project re-bakes its own vessel + mooring.
+_FPSO_REF_VESSEL = {"loa": 330.0, "beam": 60.0, "draft": 22.0,
+                    "freeboard": 25.0, "displacement": 320000.0}
+_FPSO_REF_ENV = {"gamma": 3.3, "wave_heading": 45.0, "wind_speed": 20.0,
+                 "wind_heading": 45.0, "current_speed": 1.5, "current_heading": 30.0}
+_FPSO_REF_MOORING = {"n_lines": 8, "chain_diameter": 120.0, "chain_grade": "R4",
+                     "chain_link_type": "Studless", "line_length": 2000.0,
+                     "pretension": 1500000.0}
+
+
+def _fpso_max_line_tension_N(point: dict[str, Any]) -> float:
+    """Max mooring line tension (N) for a reference FPSO under sea state
+    (Hs, Tp) at a given water_depth_m. Calls the workflow compute chain
+    directly (no file side-effects)."""
+    from digitalmodel.marine_ops.marine_engineering.mooring_analysis.fpso_full_workflow import (  # noqa: E501
+        FPSOMooringFullWorkflow,
+    )
+
+    vessel = dict(_FPSO_REF_VESSEL)
+    environment = {**_FPSO_REF_ENV, "Hs": float(point["Hs"]), "Tp": float(point["Tp"])}
+    mooring = {**_FPSO_REF_MOORING, "water_depth": float(point["water_depth_m"])}
+    cfg = {"vessel": vessel, "environment": environment, "mooring": mooring}
+
+    wf = FPSOMooringFullWorkflow()
+    spectrum = wf._wave_spectrum(environment)
+    forces = wf._environmental_forces(cfg, vessel, environment, spectrum)
+    chain = wf._chain_properties(mooring)
+    line_model = wf._line_model(vessel, mooring, chain)
+    equilibrium, line_tensions = wf._static_equilibrium(forces, line_model)
+    result = wf._result(cfg, forces, spectrum, chain, equilibrium, line_tensions)
+    return float(result["summary"]["max_line_tension_N"])
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
+    "spectral_fatigue": _spectral_fatigue_annual_damage,
+    "fpso_mooring_full": _fpso_max_line_tension_N,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,
