@@ -122,6 +122,25 @@ workflows:
       - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]
     runtime: offline
+    parametric:
+      physics: log_log
+      response: damage
+      response_kwargs: {tn_intercept: 0.259, tn_slope: 13.46, mean_load_knockdown: 0.0, load_ratio: 0.30}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      # FATIGUE (T-N) limit state only; creep + min-tension remain full-run checks
+      axes:
+        - {name: tension_range_kN, scale: log, grid: [200, 400, 700, 1200, 2000, 3000]}
+        - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000, 10000000]}
+        - {name: MBL_kN, scale: log, grid: [5000, 10000, 20000, 35000, 50000]}
+      atlas: atlases/synthetic_rope_mooring_fatigue
+  - id: synthetic-rope-atlas-query
+    basename: parametric_query
+    title: Instant interpolated synthetic-rope T-N fatigue life from the pre-computed atlas
+    input: examples/workflows/synthetic-rope-atlas-query/input.yml
+    outputs:
+      - examples/workflows/synthetic-rope-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-atlas-query]
+    runtime: offline
   - id: spectral-fatigue
     basename: spectral_fatigue
     title: Frequency-domain (spectral) fatigue from a stress PSD (Dirlik / DNV-RP-C203)
