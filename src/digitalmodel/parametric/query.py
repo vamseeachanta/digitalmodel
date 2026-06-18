@@ -50,13 +50,39 @@ def router(cfg: dict) -> dict:
     atlas_root = Path(settings.get("atlas_root", DEFAULT_ATLAS_ROOT))
     atlas = Atlas.load(atlas_root, basename)
 
-    result = handler(atlas, point)
+    stale_reason = _staleness(atlas)
+    if stale_reason is not None:
+        result = {**_escalation(atlas, stale_reason), "stale": True}
+    else:
+        result = handler(atlas, point)
     if not result["in_range"] and on_out_of_range == "error":
         raise ValueError(f"parametric_query out of range: {result.get('reason')}")
 
     cfg["parametric_query"] = {**settings, "result": result}
     _write_result(cfg, settings, result)
     return cfg
+
+
+def _staleness(atlas: Atlas) -> str | None:
+    """Return a reason string if the atlas is stale (its build basis has moved
+    since it was generated), else None. Detectable per the refresh contract
+    (#799): a stale atlas must escalate, not serve a superseded answer."""
+    workflow_id = atlas.provenance.get("workflow_id")
+    stored = atlas.provenance.get("content_fingerprint")
+    if not workflow_id or not stored:
+        return None  # atlas predates fingerprinting; nothing to check against
+    from digitalmodel.parametric import refresh
+
+    try:
+        current = refresh.content_fingerprint(workflow_id)
+    except Exception:
+        return None  # cannot recompute (e.g. registry absent) -> do not false-alarm
+    if current != stored:
+        return (
+            "atlas stale: build basis (spec / template / source / standard) "
+            "changed since generation — refresh required"
+        )
+    return None
 
 
 def _provenance(atlas: Atlas) -> dict[str, Any]:

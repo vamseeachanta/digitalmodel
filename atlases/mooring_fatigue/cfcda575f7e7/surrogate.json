@@ -1,6 +1,6 @@
 {
   "basename": "mooring_fatigue",
-  "atlas_id": "7ad0d444e683",
+  "atlas_id": "cfcda575f7e7",
   "physics": "log_log",
   "response": "damage",
   "axes": [
