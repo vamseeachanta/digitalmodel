@@ -32,6 +32,9 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "mooring_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
+    "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
+    "anchor_capacity": [{"id": "DNV-RP-E303", "edition": "2005"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -49,6 +52,17 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/hydrodynamics/interpolator.py",
         "src/digitalmodel/hydrodynamics/models.py",
     ],
+    "free_span": [
+        "src/digitalmodel/subsea/pipeline/free_span/__init__.py",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+    ],
+    "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
+    "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
 }
 
 

@@ -1,0 +1,44 @@
+atlas_id: c8f67ad7b69c
+basename: anchor_capacity
+physics: linear
+response: capacity_kN
+axes:
+- name: diameter_m
+  scale: linear
+  grid:
+  - 2.0
+  - 3.5
+  - 5.0
+  - 6.5
+  - 8.0
+- name: length_m
+  scale: linear
+  grid:
+  - 10.0
+  - 15.0
+  - 20.0
+  - 25.0
+  - 30.0
+- name: su_kpa
+  scale: linear
+  grid:
+  - 20.0
+  - 40.0
+  - 60.0
+  - 80.0
+  - 100.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.014468316173791268
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: anchor_capacity
+  code_version: 4750e0d2
+  standards:
+  - id: DNV-RP-E303
+    edition: '2005'
+  response_kwargs: {}
+  workflow_id: anchor-capacity
+  content_fingerprint: c8f67ad7b69c923ce2176bc60aea59408ed1a1ee53ffa9dbcbe2e17dbb248fd7
+  input_template_sha256: 3b395a57b22dfe2ee3d6413aa17c8f9a4ed7f5f5b44d81b8444fa6b612447af0

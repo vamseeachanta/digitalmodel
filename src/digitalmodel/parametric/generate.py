@@ -116,10 +116,80 @@ def _rao_heave(point: dict[str, Any], database_path: str) -> float:
     return float(out.amplitudes[0, 0, 2])
 
 
+def _free_span_utilisation(point: dict[str, Any]) -> float:
+    """DNV-RP-F105 free-span VIV span utilisation (span/allowable) for one
+    (span_length, od, wt, current) point."""
+    from digitalmodel.subsea.pipeline.free_span import FreespanVIVFatigue
+    from digitalmodel.subsea.pipeline.free_span.models import (
+        BoundaryConditionF105,
+        EnvironmentType,
+        PipeSpanInput,
+    )
+
+    inp = PipeSpanInput(
+        od_m=float(point["od_m"]),
+        wt_m=float(point["wt_m"]),
+        span_length_m=float(point["span_length_m"]),
+        e_modulus_pa=207e9,
+        steel_density_kgm3=7850.0,
+        content_density_kgm3=900.0,
+        water_density_kgm3=1025.0,
+        current_velocity_ms=float(point["current_velocity_ms"]),
+        wave_velocity_ms=0.0,
+        seabed_gap_m=0.5,
+        bc=BoundaryConditionF105("pinned-pinned"),
+        sag_m=0.0,
+        structural_damping=0.005,
+        hydrodynamic_damping=0.010,
+        sn_curve_class="F",
+        environment=EnvironmentType("seawater_cp"),
+        gamma_on_IL=1.1,
+        gamma_on_CF=1.3,
+        gamma_k=1.15,
+    )
+    result = FreespanVIVFatigue(
+        inp, submerged_weight_N_m=850.0, alpha=1.0, KC=30.0
+    ).assess()
+    return float(result.span_utilization)
+
+
+def _pile_capacity_kn(point: dict[str, Any]) -> float:
+    """API RP 2GEO alpha-method axial pile capacity (kN) — geometry/soil only;
+    the load case is applied at query time."""
+    from digitalmodel.geotechnical.pile_capacity import alpha_method_capacity
+
+    result = alpha_method_capacity(
+        D=float(point["diameter_m"]),
+        L=float(point["embedded_length_m"]),
+        Su=float(point["Su_kpa"]),
+        sigma_v=float(point["sigma_v_kpa"]),
+        Nc=float(point.get("Nc", 9.0)),
+    )
+    return float(result.total_capacity_kn)
+
+
+def _suction_anchor_capacity_kn(point: dict[str, Any]) -> float:
+    """DNV-RP-E303 suction-caisson holding capacity (kN) — geometry/soil only."""
+    from digitalmodel.geotechnical.anchors import suction_anchor_capacity
+
+    result = suction_anchor_capacity(
+        diameter_m=float(point["diameter_m"]),
+        length_m=float(point["length_m"]),
+        su_kpa=float(point["su_kpa"]),
+        alpha=float(point.get("alpha", 0.65)),
+        nc=float(point.get("nc", 9.0)),
+        wall_thickness_m=float(point.get("wall_thickness_m", 0.04)),
+    )
+    return float(result.total_capacity_kn)
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
+    "free_span": _free_span_utilisation,
+    "pile_capacity": _pile_capacity_kn,
+    "anchor_capacity": _suction_anchor_capacity_kn,
 }
 
 

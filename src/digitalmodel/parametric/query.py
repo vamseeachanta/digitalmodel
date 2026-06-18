@@ -148,32 +148,58 @@ def _handle_mooring_fatigue(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     }
 
 
-def _handle_code_check(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
-    prediction = atlas.predict(point)
-    if not prediction.in_range:
-        return _escalation(atlas, prediction.reason)
-
-    u = prediction.value
-    e = atlas.max_rel_error
-    band = [u * (1 - e), u * (1 + e)]
-    # straddle rule: if the confidence band crosses the code limit, the verdict
-    # is not decidable from the atlas -> escalate even though it is in range.
+def _utilisation_result(atlas: Atlas, u: float, band: list[float]) -> dict[str, Any]:
+    # straddle rule: if the confidence band crosses the limit, the verdict is
+    # not decidable from the atlas -> escalate even though it is in range.
     if band[0] < 1.0 < band[1]:
         return _escalation(
             atlas,
             f"utilisation {u:.3f} band [{band[0]:.3f}, {band[1]:.3f}] straddles 1.0",
         )
-
     return {
         "response": "utilisation",
         "value": u,
         "screening_status": "pass" if u <= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "confidence": {"band": band, "basis": f"holdout max_rel_error = {atlas.max_rel_error:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
         "provenance": _provenance(atlas),
     }
+
+
+def _handle_utilisation(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    """Boundary class where the atlas predicts the utilisation directly
+    (code_check, free_span): interpolate, then threshold at 1.0."""
+    prediction = atlas.predict(point)
+    if not prediction.in_range:
+        return _escalation(atlas, prediction.reason)
+    u = prediction.value
+    e = atlas.max_rel_error
+    return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)])
+
+
+def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    """Boundary class where the atlas predicts a CAPACITY (pile, anchor) and the
+    load case (demand, factor of safety) is applied at query time:
+    utilisation = demand * FoS / capacity. The atlas axes stay geometry/soil
+    only; the demand is not baked into the grid."""
+    prediction = atlas.predict(point)
+    if not prediction.in_range:
+        return _escalation(atlas, prediction.reason)
+    capacity = prediction.value
+    if capacity <= 0:
+        return _escalation(atlas, "non-positive capacity")
+    demand = float(point["demand_kN"])
+    fos = float(point.get("factor_of_safety", 1.0))
+    e = atlas.max_rel_error
+    u = demand * fos / capacity
+    # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
+    band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
+    result = _utilisation_result(atlas, u, band)
+    if result["in_range"]:
+        result["capacity_kN"] = capacity
+    return result
 
 
 def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
@@ -203,8 +229,11 @@ def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
 
 _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "mooring_fatigue": _handle_mooring_fatigue,
-    "code_check": _handle_code_check,
+    "code_check": _handle_utilisation,
+    "free_span": _handle_utilisation,
     "rao_tabulation": _handle_rao,
+    "pile_capacity": _handle_capacity_demand,
+    "anchor_capacity": _handle_capacity_demand,
 }
 
 
