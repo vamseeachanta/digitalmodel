@@ -278,6 +278,7 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "anchor_capacity": _handle_capacity_demand,
     "spectral_fatigue": _handle_annual_damage,
     "fpso_mooring_full": _handle_value,
+    "viv_analysis": _handle_value,
 }
 
 

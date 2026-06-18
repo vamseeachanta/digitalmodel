@@ -230,6 +230,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "viv-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # value class: interpolated in-line VIV safety factor
+        assert result["in_range"] is True
+        assert result["response"] == "safety_factor_inline"
+        assert result["value"] > 0.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly

@@ -265,6 +265,26 @@ def test_fpso_value_atlas(tmp_path):
     assert pred.value == pytest.approx(truth, rel=1e-6)  # on a grid knot
 
 
+def test_viv_safety_factor_atlas_is_log_log_exact():
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = generate_atlas(
+        basename="viv_analysis",
+        physics="log_log",
+        response="safety_factor_inline",
+        axes=[
+            Axis(name="span_length_ft", scale="log", grid=[40, 60, 80, 100, 120]),
+            Axis(name="current_speed_in_s", scale="log", grid=[12, 24, 36, 48, 72]),
+        ],
+        tolerance=0.10,
+    )
+    # safety factor ~ 1/(L^2 * current) -> a pure power law -> log-log exact
+    assert atlas.max_rel_error == pytest.approx(0.0, abs=1e-6)
+    point = {"span_length_ft": 70.0, "current_speed_in_s": 36.0}
+    truth = RESPONSE_FUNCS["viv_analysis"](point)
+    assert atlas.predict(point).value == pytest.approx(truth, rel=1e-6)
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)
