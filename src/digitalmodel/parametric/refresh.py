@@ -30,6 +30,7 @@ DEFAULT_ATLAS_ROOT = REPO_ROOT / "atlases"
 # / formulae an atlas encodes. Bumping an edition invalidates the atlas.
 STANDARDS: dict[str, list[dict[str, str]]] = {
     "mooring_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
+    "synthetic_rope_mooring_fatigue": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
@@ -44,6 +45,11 @@ SOURCE_FILES: dict[str, list[str]] = {
     "mooring_fatigue": [
         "src/digitalmodel/fatigue/sn_curves.py",
         "src/digitalmodel/fatigue/damage.py",
+    ],
+    # response is a replicated T-N formula; track the workflow so divergence
+    # from the source flags the atlas stale.
+    "synthetic_rope_mooring_fatigue": [
+        "src/digitalmodel/synthetic_rope_mooring_fatigue/workflow.py",
     ],
     "code_check": [
         "src/digitalmodel/orcaflex/code_check_engine.py",

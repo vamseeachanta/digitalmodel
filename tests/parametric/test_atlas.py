@@ -199,6 +199,47 @@ def test_free_span_utilisation_atlas():
     assert pred.value == pytest.approx(truth, rel=1e-6)
 
 
+def test_synthetic_rope_fatigue_atlas_is_log_log_exact():
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = generate_atlas(
+        basename="synthetic_rope_mooring_fatigue",
+        physics="log_log",
+        response="damage",
+        axes=[
+            Axis(name="tension_range_kN", scale="log", grid=[200, 400, 700, 1200, 2000, 3000]),
+            Axis(name="n_cycles", scale="log", grid=[1e4, 1e5, 1e6, 1e7]),
+            Axis(name="MBL_kN", scale="log", grid=[5000, 10000, 20000, 35000, 50000]),
+        ],
+        response_kwargs={"tn_intercept": 0.259, "tn_slope": 13.46,
+                         "mean_load_knockdown": 0.0, "load_ratio": 0.30},
+        tolerance=0.10,
+    )
+    # single power law -> log-log interpolation is exact
+    assert atlas.max_rel_error == pytest.approx(0.0, abs=1e-9)
+    point = {"tension_range_kN": 950, "n_cycles": 3.3e5, "MBL_kN": 18000}
+    truth = RESPONSE_FUNCS["synthetic_rope_mooring_fatigue"](
+        point, tn_intercept=0.259, tn_slope=13.46, mean_load_knockdown=0.0, load_ratio=0.30)
+    assert atlas.predict(point).value == pytest.approx(truth, rel=1e-9)
+
+
+def test_fatigue_bins_handler_shared_by_both_ropes(tmp_path):
+    # the generalized fatigue handler must work for the MBL-slice (synthetic)
+    # shape, Miner-summing per-cell damage into a life
+    from digitalmodel.parametric.build import build_atlas_from_registry
+    from digitalmodel.parametric.query import _handle_fatigue_bins
+
+    atlas = build_atlas_from_registry("synthetic-rope-mooring-fatigue", atlas_root=tmp_path)
+    result = _handle_fatigue_bins(atlas, {
+        "MBL_kN": 18000.0, "dff": 60.0, "design_life_years": 25.0,
+        "tension_range_bins": [{"tension_range_kN": 900.0, "n_cycles": 600000},
+                               {"tension_range_kN": 1800.0, "n_cycles": 250000}],
+    })
+    assert result["in_range"] is True
+    assert result["response"] == "fatigue_life_years"
+    assert result["value"] > 0.0
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)

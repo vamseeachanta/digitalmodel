@@ -1,0 +1,141 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 8.353104168761017e-15,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 12,
+  "worst_samples": [
+    {
+      "point": {
+        "tension_range_kN": 916.515138991168,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 3.6748201535374015e-12,
+      "actual": 3.674820153537371e-12,
+      "rel_error": 8.353104168761017e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1549.1933384829667,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 4.3018786065981216e-09,
+      "actual": 4.30187860659809e-09,
+      "rel_error": 7.306775981266484e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 282.842712474619,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 4.927562105900334e-19,
+      "actual": 4.927562105900311e-19,
+      "rel_error": 4.690181236878435e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 26457.513110645905
+      },
+      "predicted": 3.1986741338686586e-12,
+      "actual": 3.1986741338686643e-12,
+      "rel_error": 1.7677808779430938e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 2449.489742783178,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 2.050191409089693e-06,
+      "actual": 2.05019140908969e-06,
+      "rel_error": 1.446018797194344e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 41833.00132670378
+      },
+      "predicted": 6.711718605863256e-15,
+      "actual": 6.711718605863247e-15,
+      "rel_error": 1.4104183173565278e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 14142.13562373095
+      },
+      "predicted": 1.4673980475959893e-08,
+      "actual": 1.4673980475959913e-08,
+      "rel_error": 1.3528936292232599e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 3162277.6601683795,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 4.371354888085551e-10,
+      "actual": 4.371354888085557e-10,
+      "rel_error": 1.3009391497363966e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 316227.7660168379,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 4.371354888085551e-11,
+      "actual": 4.3713548880855564e-11,
+      "rel_error": 1.1826719543058152e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 7071.067811865475
+      },
+      "predicted": 0.00016535284763237573,
+      "actual": 0.00016535284763237592,
+      "rel_error": 1.1474575908532057e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 1200.0,
+        "n_cycles": 31622.776601683792,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 4.371354888085552e-12,
+      "actual": 4.3713548880855566e-12,
+      "rel_error": 1.1087549571617017e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 529.1502622129182,
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0
+      },
+      "predicted": 2.260528803808123e-15,
+      "actual": 2.2605288038081206e-15,
+      "rel_error": 1.0469155321870948e-15,
+      "in_range": true
+    }
+  ]
+}

@@ -40,6 +40,23 @@ def _mooring_fatigue_damage(point: dict[str, Any], environment: str) -> float:
     return float(df.attrs["total_damage"])
 
 
+def _synthetic_rope_damage(
+    point: dict[str, Any],
+    tn_intercept: float = 0.259,
+    tn_slope: float = 13.46,
+    mean_load_knockdown: float = 0.0,
+    load_ratio: float = 0.30,
+) -> float:
+    """T-N (tension-range) damage for a single (tension_range, n_cycles) cell of
+    a synthetic rope, mirroring synthetic_rope_mooring_fatigue's formula:
+    allowable = a_eff * (range/MBL)^-slope, damage = n / allowable. Covers the
+    FATIGUE limit state only (creep + min-tension stay full-run checks)."""
+    a_eff = tn_intercept * math.exp(-mean_load_knockdown * load_ratio)
+    normalised_range = float(point["tension_range_kN"]) / float(point["MBL_kN"])
+    allowable_cycles = a_eff * normalised_range ** (-tn_slope)
+    return float(point["n_cycles"]) / allowable_cycles
+
+
 def _code_check_utilisation(
     point: dict[str, Any],
     design_factor: float = 0.67,
@@ -185,6 +202,7 @@ def _suction_anchor_capacity_kn(point: dict[str, Any]) -> float:
 
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
+    "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,

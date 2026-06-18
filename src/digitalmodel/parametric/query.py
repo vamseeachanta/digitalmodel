@@ -107,8 +107,17 @@ def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
 # -- per-workflow handlers ---------------------------------------------------
 
 
-def _handle_mooring_fatigue(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
-    shared = {"area_mm2": point.get("area_mm2"), "sn_curve": point.get("sn_curve")}
+_FATIGUE_CONTROL_KEYS = {
+    "tension_range_bins", "design_life_years", "dff", "tension_range_kN", "n_cycles",
+}
+
+
+def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
+    """Per-cell damage atlas, Miner-summed over the queried bins, with fatigue
+    life derived analytically. Shared by mooring_fatigue (area/sn_curve slice)
+    and synthetic_rope_mooring_fatigue (MBL slice) — the slice axes are simply
+    whatever point fields are not bin-level / load-case control keys."""
+    shared = {k: v for k, v in point.items() if k not in _FATIGUE_CONTROL_KEYS}
     bins = point.get("tension_range_bins")
     if bins is None:
         bins = [{"tension_range_kN": point["tension_range_kN"],
@@ -228,7 +237,8 @@ def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
 
 
 _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
-    "mooring_fatigue": _handle_mooring_fatigue,
+    "mooring_fatigue": _handle_fatigue_bins,
+    "synthetic_rope_mooring_fatigue": _handle_fatigue_bins,
     "code_check": _handle_utilisation,
     "free_span": _handle_utilisation,
     "rao_tabulation": _handle_rao,
