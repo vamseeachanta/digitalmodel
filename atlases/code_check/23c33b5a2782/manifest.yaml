@@ -1,4 +1,4 @@
-atlas_id: 2a936f28eec7
+atlas_id: 23c33b5a2782
 basename: code_check
 physics: utilization_threshold
 response: utilisation
@@ -49,11 +49,13 @@ validation:
   passes: true
 provenance:
   basename: code_check
-  code_version: 89cacccb
+  code_version: bb8ce47f
   standards:
   - id: API-RP-2RD
     edition: '2013'
   response_kwargs:
     design_factor: 0.67
     smts_ratio: 1.185
+  workflow_id: api-rp-2rd-riser
+  content_fingerprint: 23c33b5a2782e50ad90abf445b7fbd7cbef4a435d1cddb513f5131e7f18b058c
   input_template_sha256: 8bcbf9e1f6a8bb06c79791b3184a19936c43bafd739397a262edff5469b8da38

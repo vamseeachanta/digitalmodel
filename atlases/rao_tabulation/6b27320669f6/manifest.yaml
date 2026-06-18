@@ -1,4 +1,4 @@
-atlas_id: e8640dff1a01
+atlas_id: 6b27320669f6
 basename: rao_tabulation
 physics: linear
 response: heave_m
@@ -22,8 +22,10 @@ validation:
   passes: true
 provenance:
   basename: rao_tabulation
-  code_version: 89cacccb
+  code_version: bb8ce47f
   standards: []
   response_kwargs:
     database_path: examples/workflows/rao-tabulation/input.yml
+  workflow_id: rao-tabulation
+  content_fingerprint: 6b27320669f6c8ed6652bf3d28dc2c705ee9744a3a25bc71cf0704caadfc1110
   input_template_sha256: a4ef606d3cd305e0c13edeb08c385500d0e4953bfd25505371478c46c3499184

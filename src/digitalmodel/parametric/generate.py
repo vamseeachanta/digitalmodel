@@ -173,6 +173,8 @@ def generate_atlas(
     code_version: str = "unknown",
     standards: list[dict[str, str]] | None = None,
     input_template: Path | None = None,
+    workflow_id: str | None = None,
+    content_fingerprint: str | None = None,
 ) -> Atlas:
     response_kwargs = response_kwargs or {}
     fn = RESPONSE_FUNCS[basename]
@@ -188,6 +190,12 @@ def generate_atlas(
         "standards": standards or [],
         "response_kwargs": response_kwargs,
     }
+    if workflow_id is not None:
+        provenance["workflow_id"] = workflow_id
+    if content_fingerprint is not None:
+        # the fingerprint (refresh.py) is the staleness basis; deriving the id
+        # from it keeps atlas_id stable across unrelated commits.
+        provenance["content_fingerprint"] = content_fingerprint
     if input_template is not None and Path(input_template).exists():
         provenance["input_template_sha256"] = hashlib.sha256(
             Path(input_template).read_bytes()
@@ -198,7 +206,11 @@ def generate_atlas(
         "response": response,
         "axes": [ax.to_dict() for ax in axes],
     }
-    atlas_id = _atlas_id(spec, provenance)
+    atlas_id = (
+        content_fingerprint[:12]
+        if content_fingerprint
+        else _atlas_id(spec, provenance)
+    )
     atlas = Atlas(
         basename=basename,
         atlas_id=atlas_id,
