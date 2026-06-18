@@ -1,0 +1,189 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.04525630660338842,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 224,
+  "worst_samples": [
+    {
+      "point": {
+        "tension_range_kN": 187.08286933869707,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "F"
+      },
+      "predicted": 0.010151614413205437,
+      "actual": 0.010632816412842581,
+      "rel_error": 0.04525630660338842,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 287.22813232690146,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "C1"
+      },
+      "predicted": 0.009319843402007621,
+      "actual": 0.009668934527694295,
+      "rel_error": 0.03610440474974651,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 5744.562646538028,
+        "sn_curve": "C1"
+      },
+      "predicted": 0.00931984340200764,
+      "actual": 0.009668934527694295,
+      "rel_error": 0.03610440474974453,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 237.17082451262846,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "D"
+      },
+      "predicted": 0.010298199639623404,
+      "actual": 0.010634817438328554,
+      "rel_error": 0.03165242851202673,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 262.2022120425379,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "C2"
+      },
+      "predicted": 0.01015260276724423,
+      "actual": 0.010482269049761439,
+      "rel_error": 0.03144989705494263,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 212.13203435596427,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "E"
+      },
+      "predicted": 0.010509380060706518,
+      "actual": 0.010848383250749787,
+      "rel_error": 0.03124919005971127,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 3240.37034920393,
+        "sn_curve": "B2"
+      },
+      "predicted": 0.010398231975113295,
+      "actual": 0.01071401320196356,
+      "rel_error": 0.029473664153446447,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 5244.044240850758,
+        "sn_curve": "C"
+      },
+      "predicted": 0.008615934295716525,
+      "actual": 0.008810456296302695,
+      "rel_error": 0.02207853873218824,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 6244.9979983983985,
+        "sn_curve": "C2"
+      },
+      "predicted": 0.010547604612692744,
+      "actual": 0.010725095573275261,
+      "rel_error": 0.016549126240402744,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 7245.688373094719,
+        "sn_curve": "D"
+      },
+      "predicted": 0.008913136484699335,
+      "actual": 0.009042014739266099,
+      "rel_error": 0.014253267472247526,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 312.2498999199199,
+        "n_cycles": 100000.0,
+        "area_mm2": 6000.0,
+        "sn_curve": "C"
+      },
+      "predicted": 0.008420861220837322,
+      "actual": 0.008480509675806984,
+      "rel_error": 0.007033593174219873,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 7745.966692414834,
+        "sn_curve": "E"
+      },
+      "predicted": 0.010973552508504215,
+      "actual": 0.010984270160210757,
+      "rel_error": 0.0009757272490770463,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 8746.42784226795,
+        "sn_curve": "B2"
+      },
+      "predicted": 7.607813913765473e-05,
+      "actual": 7.607813913765501e-05,
+      "rel_error": 3.740931015182785e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 8746.42784226795,
+        "sn_curve": "B1"
+      },
+      "predicted": 3.9017539729625294e-05,
+      "actual": 3.901753972962542e-05,
+      "rel_error": 3.2997725862478327e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 275.0,
+        "n_cycles": 100000.0,
+        "area_mm2": 4242.640687119285,
+        "sn_curve": "B1"
+      },
+      "predicted": 0.0014528882329364638,
+      "actual": 0.0014528882329364686,
+      "rel_error": 3.2834525401134706e-15,
+      "in_range": true
+    }
+  ]
+}

@@ -252,6 +252,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.workflows.parametric_run import router as parametric_run
 
         cfg_base = parametric_run(cfg_base)
+    elif basename == "parametric_query":
+        from digitalmodel.parametric.query import router as parametric_query
+
+        cfg_base = parametric_query(cfg_base)
     elif basename == "stress_strain":
         from digitalmodel.structural.stress.workflow import router as stress_strain
 

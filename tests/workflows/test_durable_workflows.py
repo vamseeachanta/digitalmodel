@@ -192,6 +192,17 @@ def test_workflow_registry(workflow, monkeypatch):
             results.sort_values("stress_range_MPa")["allowable_cycles"]
             .is_monotonic_decreasing
         )
+    elif workflow["id"] == "mooring-fatigue-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range query returns an interpolated screening estimate, not a verdict
+        assert result["in_range"] is True
+        assert result["response"] == "fatigue_life_years"
+        assert result["value"] > 0.0
+        assert result["screening_status"] in {"pass", "fail"}
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        assert "screening estimate" in result["disclaimer"].lower()
+        assert result["provenance"]["atlas_id"]
     elif workflow["id"] == "synthetic-rope-mooring-fatigue":
         summary = cfg["synthetic_rope_mooring_fatigue"]
         results_path = Path(summary["results_csv"])

@@ -93,6 +93,25 @@ workflows:
       - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
     runtime: offline
+    parametric:
+      physics: log_log
+      response: damage
+      response_kwargs: {environment: seawater_cp}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: tension_range_kN, scale: log, grid: [100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450]}
+        - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000]}
+        - {name: area_mm2, scale: log, grid: [3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]}
+        - {name: sn_curve, values: [B1, B2, C, C1, C2, D, E, F]}
+      atlas: atlases/mooring_fatigue
+  - id: mooring-fatigue-atlas-query
+    basename: parametric_query
+    title: Instant interpolated mooring fatigue life from the pre-computed atlas
+    input: examples/workflows/mooring-fatigue-atlas-query/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue-atlas-query]
+    runtime: offline
   - id: synthetic-rope-mooring-fatigue
     basename: synthetic_rope_mooring_fatigue
     title: Synthetic fibre-rope mooring service life (T-T fatigue + creep + min-tension)
