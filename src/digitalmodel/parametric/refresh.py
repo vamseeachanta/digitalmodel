@@ -39,6 +39,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "spectral_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"},
                          {"id": "DNV-RP-C205", "edition": "2021-09"}],
     "fpso_mooring_full": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
+    "viv_analysis": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -78,6 +79,10 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "fpso_mooring_full": [
         "src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py",
+    ],
+    "viv_analysis": [
+        "src/digitalmodel/subsea/viv_analysis/viv_analysis.py",
+        "src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py",
     ],
 }
 

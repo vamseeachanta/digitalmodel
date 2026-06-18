@@ -267,11 +267,64 @@ def _fpso_max_line_tension_N(point: dict[str, Any]) -> float:
     return float(result["summary"]["max_line_tension_N"])
 
 
+_VIV_REF_CROSSECTION = [{
+    "Nominal_ID": None, "Nominal_OD": 12.75, "Design_WT": 0.5,
+    "Corrosion_Allowance": 0.125, "average_internal_metal_loss_percentage": 0,
+    "external_fluid": {"unit": "lb/inch^3", "density": 0.03721,
+                       "kinematic_viscosity": 1.35e-6,
+                       "pressure": {"unit": "psi", "pressure": None, "reference_depth": 410}},
+    "internal_fluid": {"unit": "lb/inch^3", "density": 0.02218,
+                       "pressure": {"unit": "psi", "pressure": 1095.2,
+                                    "top_side_elevation": 65.62, "reference_water_depth": 410}},
+    "Material": {"name": "steel", "grade": "API 5L X65",
+                 "ThermalExpansionCoefficient": 0.0000117},
+    "WeldFactor": {"Seamless": 1.0},
+    "coatings": [{"material": None, "purpose": "insulation", "thickness": 0, "density": 0},
+                 {"material": None, "purpose": "anti-corrosion", "thickness": 0.122, "density": 0.03396}],
+    "code": ["30 CFR Part 250"],
+    "Manufacturing": {"Coupling Mass Ratio": 0.0},
+}]
+
+
+def _viv_safety_factor_inline(point: dict[str, Any]) -> float:
+    """Min in-line VIV safety factor (natural / vortex-shedding frequency) for a
+    reference 12.75 in tubular at a given (span_length, current_speed). Calls the
+    viv_analysis compute methods directly, skipping the file-writing save_results."""
+    import copy
+
+    from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
+    from digitalmodel.subsea.viv_analysis.viv_tubular_members import VIVTubularMembers
+
+    cross = copy.deepcopy(_VIV_REF_CROSSECTION)
+    cross[0]["Nominal_OD"] = float(point.get("od_in", 12.75))
+    cross[0]["Design_WT"] = float(point.get("wt_in", 0.5))
+    cfg = {
+        "calculation": {"name": "tubular_member_viv"},
+        "inputs": {"seawater_density": 1025},
+        "pipeline": {"length": 1000, "span_length": [float(point["span_length_ft"])],
+                     "crossection": cross},
+        "viv": {"st": 0.2},
+        "environment": {"current": [{"label": "design_current",
+                        "data": [{"depth": 0, "speed": float(point["current_speed_in_s"])}]}]},
+        "modes": {"analysis": {"simply_supported": True, "clamped_clamped": False,
+                               "free_free": False},
+                  "eigen_values": {"clamped": [4.730, 7.853, 10.996]}},
+        "default": {"config": {"generate_plots": False}},
+    }
+    cfg = VIVAnalysis().get_pipe_properties(cfg)
+    tm = VIVTubularMembers()
+    nat = tm.get_natural_frequencies(cfg)
+    vs = tm.get_vs_frequencies(cfg)
+    sf = tm.get_safety_factors(cfg, nat, vs)
+    return float(sf["safety_factor_inline"].min())
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
     "spectral_fatigue": _spectral_fatigue_annual_damage,
     "fpso_mooring_full": _fpso_max_line_tension_N,
+    "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,

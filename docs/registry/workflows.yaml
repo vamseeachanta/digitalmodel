@@ -190,6 +190,24 @@ workflows:
       - examples/workflows/viv-analysis/results/input_safety_factors.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]
     runtime: offline
+    parametric:
+      physics: log_log
+      response: safety_factor_inline
+      # in-line VIV safety factor = natural / vortex-shedding frequency
+      # (>1 = natural above shedding). Reference 12.75in tubular baked in.
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: span_length_ft, scale: log, grid: [40, 60, 80, 100, 120]}
+        - {name: current_speed_in_s, scale: log, grid: [12, 24, 36, 48, 72]}
+      atlas: atlases/viv_analysis
+  - id: viv-atlas-query
+    basename: parametric_query
+    title: Instant interpolated in-line VIV safety factor from the pre-computed atlas
+    input: examples/workflows/viv-atlas-query/input.yml
+    outputs:
+      - examples/workflows/viv-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-atlas-query]
+    runtime: offline
   - id: viv-parametric
     basename: parametric_run
     title: Six-case VIV parametric sweep over span length and wall thickness

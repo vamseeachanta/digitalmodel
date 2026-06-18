@@ -1,0 +1,89 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 9.525861692540246e-16,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 8,
+  "worst_samples": [
+    {
+      "point": {
+        "span_length_ft": 109.54451150103323,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 1.1654830402320213,
+      "actual": 1.1654830402320224,
+      "rel_error": 9.525861692540246e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 48.98979485566356,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 5.827415201160116,
+      "actual": 5.827415201160111,
+      "rel_error": 9.144827224838638e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 16.97056274847714
+      },
+      "predicted": 4.6356804062211205,
+      "actual": 4.635680406221119,
+      "rel_error": 3.8319225739038567e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 89.44271909999159,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 1.7482245603480324,
+      "actual": 1.748224560348033,
+      "rel_error": 3.8103446770161e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 41.569219381653056
+      },
+      "predicted": 1.8925086009765977,
+      "actual": 1.892508600976598,
+      "rel_error": 1.1732818799896012e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 69.2820323027551,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 2.913707600580056,
+      "actual": 2.913707600580056,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 29.393876913398138
+      },
+      "predicted": 2.6764113304088366,
+      "actual": 2.6764113304088366,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 58.787753826796276
+      },
+      "predicted": 1.3382056652044183,
+      "actual": 1.3382056652044183,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ]
+}
