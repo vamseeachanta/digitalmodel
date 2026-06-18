@@ -1,0 +1,22 @@
+basename: parametric_query
+
+parametric_query:
+  atlas: mooring_fatigue
+  point:
+    area_mm2: 8000.0
+    sn_curve: D
+    dff: 3.0
+    design_life_years: 25.0
+    tension_range_bins:
+      - {tension_range_kN: 275.0, n_cycles: 120000}
+      - {tension_range_kN: 330.0, n_cycles: 45000}
+  policy:
+    on_out_of_range: escalate
+    confidence: required
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
