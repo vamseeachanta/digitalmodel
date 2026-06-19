@@ -347,3 +347,38 @@ def load_crane_curves(base: Optional[Path] = None) -> dict[str, Any]:
         c = np.array([p[1] for p in pts], dtype=float)
         out[rec.name] = CraneCurve(radii_m=r, capacities_te=c, max_hook_load_te=float(max_swl))
     return out
+
+
+def installation_vessels(base: Optional[Path] = None) -> dict[str, dict]:
+    """Real installation vessels with crane curve + deck metadata, for go/no-go.
+
+    Returns ``{vessel_name: {...}}`` where each value carries the installation
+    ``CraneCurve`` plus published deck/DP context. Only vessels with a usable
+    crane SWL are included. All numbers trace to the cited ``crane_deck`` records.
+    """
+    curves = load_crane_curves(base)
+    out: dict[str, dict] = {}
+    for rec in iter_records("install", "crane_deck", base):
+        if rec.name not in curves:
+            continue
+        f = rec.raw_fields
+
+        def _num(*names):
+            for n in names:
+                if n in f:
+                    val, marker = parse_value(f[n])
+                    if marker == "number":
+                        return val
+            return None
+
+        out[rec.name] = {
+            "vessel_type": rec.vessel_type,
+            "owner_operator": rec.owner_operator,
+            "crane_curve": curves[rec.name],
+            "tandem_swl_te": _num("tandem_swl_t", "tandem_swl_te", "combined_swl_t"),
+            "deck_area_m2": _num("deck_area_m2", "free_deck_area_m2"),
+            "deck_strength_t_per_m2": _num("deck_strength_t_per_m2", "deck_load_t_per_m2"),
+            "dp_class": f.get("dp_class", ""),
+            "n_citations": len(rec.citations),
+        }
+    return out
