@@ -285,6 +285,44 @@ def test_viv_safety_factor_atlas_is_log_log_exact():
     assert atlas.predict(point).value == pytest.approx(truth, rel=1e-6)
 
 
+def test_adaptive_densifies_a_coarse_seed_to_pass():
+    from digitalmodel.parametric.generate import generate_atlas_adaptive
+
+    atlas = generate_atlas_adaptive(
+        basename="mooring_fatigue", physics="log_log", response="damage",
+        axes=[
+            Axis(name="tension_range_kN", scale="log", grid=[100, 250, 450]),
+            Axis(name="n_cycles", scale="log", grid=[1e4, 1e6]),
+            Axis(name="area_mm2", scale="log", grid=[3000, 9000]),
+            Axis(name="sn_curve", values=["D"]),
+        ],
+        response_kwargs={"environment": "seawater_cp"}, tolerance=0.10, max_rounds=15,
+    )
+    assert atlas.validation["passes"]
+    log = atlas.validation["densification_log"]
+    assert log  # the coarse seed required densification
+    # refinement targets the offending axes (the S-N knee bends tension + area),
+    # never the exactly-log-linear n_cycles axis
+    assert all(step["axis"] in {"tension_range_kN", "area_mm2"} for step in log)
+
+
+def test_adaptive_is_a_noop_on_an_already_passing_seed():
+    from digitalmodel.parametric.generate import generate_atlas_adaptive
+
+    atlas = generate_atlas_adaptive(
+        basename="rao_tabulation", physics="linear", response="heave_m",
+        axes=[
+            Axis(name="frequency_rad_s", scale="linear",
+                 grid=[0.349066, 0.448799, 0.628319, 1.047198]),
+            Axis(name="heading_deg", scale="linear", grid=[0.0, 90.0]),
+        ],
+        response_kwargs={"database_path": "examples/workflows/rao-tabulation/input.yml"},
+        tolerance=0.05,
+    )
+    assert atlas.validation["passes"]
+    assert atlas.validation["densification_log"] == []  # nothing to densify
+
+
 def test_derived_axis_collapses_raw_inputs():
     # mooring damage depends on (tension,area) only via stress; a derived stress
     # axis lets the query pass raw tension+area and look up on stress (#830)

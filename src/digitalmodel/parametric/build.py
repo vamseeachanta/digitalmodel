@@ -13,7 +13,7 @@ import yaml
 
 from digitalmodel.parametric import refresh
 from digitalmodel.parametric.atlas import Atlas, Axis
-from digitalmodel.parametric.generate import generate_atlas
+from digitalmodel.parametric.generate import generate_atlas_adaptive
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
@@ -45,7 +45,7 @@ def build_atlas_from_registry(
     if not block:
         raise ValueError(f"{workflow_id} has no parametric: block")
     basename = row["basename"]
-    atlas = generate_atlas(
+    atlas = generate_atlas_adaptive(
         basename=basename,
         physics=block["physics"],
         response=block["response"],

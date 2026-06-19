@@ -458,3 +458,53 @@ def generate_atlas(
         "worst_samples": worst_samples,
     }
     return atlas
+
+
+def _refine_axis(axes: list[Axis], worst_point: dict[str, Any]):
+    """Find the continuous axis whose worst-holdout value lies between knots and
+    return (axis_name, new_knot, new_axes) with that midpoint inserted. Holdout
+    points vary one axis at a time, so exactly one axis is off-knot."""
+    import dataclasses
+
+    for i, ax in enumerate(axes):
+        if ax.is_categorical:
+            continue
+        val = worst_point.get(ax.name)
+        if val is None:
+            continue
+        if not any(abs(val - k) <= 1e-9 * max(1.0, abs(k)) for k in ax.grid):
+            new_grid = sorted(set(ax.grid) | {float(val)})
+            new_axes = list(axes)
+            new_axes[i] = dataclasses.replace(ax, grid=new_grid)  # preserves scale/derived
+            return ax.name, float(val), new_axes
+    return None, None, axes
+
+
+def generate_atlas_adaptive(
+    basename: str,
+    physics: str,
+    response: str,
+    axes: list[Axis],
+    *,
+    max_rounds: int = 8,
+    **kwargs: Any,
+) -> Atlas:
+    """Generate an atlas, then while it misses the tolerance gate, insert a knot
+    at the worst held-out interval and re-validate (#829). Deterministic given
+    the seed grid + source, so a refresh reproduces the same densified atlas.
+    The densification log is recorded so coverage is never silently changed."""
+    log: list[dict[str, Any]] = []
+    atlas = generate_atlas(basename, physics, response, axes, **kwargs)
+    rounds = 0
+    while not atlas.validation["passes"] and rounds < max_rounds:
+        name, knot, axes = _refine_axis(axes, atlas.validation["worst_samples"][0]["point"])
+        if name is None:
+            break  # nothing left to refine (e.g. categorical-only error)
+        log.append({
+            "round": rounds + 1, "axis": name, "added_knot": knot,
+            "max_rel_error_before": atlas.validation["max_rel_error"],
+        })
+        atlas = generate_atlas(basename, physics, response, axes, **kwargs)
+        rounds += 1
+    atlas.validation["densification_log"] = log
+    return atlas

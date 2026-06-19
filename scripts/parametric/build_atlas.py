@@ -21,8 +21,13 @@ def main(workflow_id: str) -> None:
     print(f"atlas_id={atlas.atlas_id}  rows={len(atlas.grid)}")
     print(f"holdout n={v['n_holdout']}  max_rel_error={v['max_rel_error']:.5f}  "
           f"threshold={v['threshold']}  passes={v['passes']}")
+    for step in v.get("densification_log", []):
+        print(f"  densified: round {step['round']} +knot {step['added_knot']:g} on "
+              f"{step['axis']} (was {step['max_rel_error_before']:.5f})")
     if not v["passes"]:
-        raise SystemExit("validation FAILED — densify the grid before publishing")
+        raise SystemExit(
+            "validation FAILED after adaptive densification — raise max_rounds "
+            "or revisit the seed grid/tolerance")
 
 
 if __name__ == "__main__":
