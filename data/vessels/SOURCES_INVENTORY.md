@@ -40,7 +40,11 @@ folded into WED.
   long period, head seas). digitalmodel#852.
 - ⬜ Ingest off-repo brochure-digitized heavy-lift + pipelay fleet (~350) into WED — worldenergydata#504.
 - ⬜ Ingest off-repo MSIV brochure dataset (~30) into WED — worldenergydata#505.
-- ⬜ Diffraction-setup consumer (particulars + gyradii → mass/inertia → OrcaWave/AQWA) — digitalmodel#853.
+- ✅ Diffraction-setup consumer `marine_ops.vessel_db.mass_properties` (particulars +
+  gyradii → mass/CoG/inertia → OrcaWave body block) + `examples/demos/diffraction/`.
+  digitalmodel#853 (feeds diffraction epic #622).
+- ⬜ Unified per-field confidence tiers (measured>cited>brochure>estimated>generic>gap)
+  + `vessel_capability_score()` across stores — digitalmodel#593 (assessed 2026-06-19).
 - ⬜ Retire/redirect the synthetic GTM JSONs + orcaflex template CSVs to the consolidated store.
 
 > Confidentiality: real RAOs and brochure-digitized fleets are project data and
