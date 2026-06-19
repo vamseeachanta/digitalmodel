@@ -32,7 +32,12 @@ def _mooring_fatigue_damage(point: dict[str, Any], environment: str) -> float:
     from digitalmodel.fatigue.sn_curves import get_sn_curve
 
     sn_curve = get_sn_curve(str(point["sn_curve"]), environment)
-    stress_range = float(point["tension_range_kN"]) * 1000.0 / float(point["area_mm2"])
+    # the atlas may grid directly on the derived stress axis (#830), else derive
+    # stress from the raw tension/area pair.
+    if "stress_MPa" in point:
+        stress_range = float(point["stress_MPa"])
+    else:
+        stress_range = float(point["tension_range_kN"]) * 1000.0 / float(point["area_mm2"])
     df = miner_damage(
         pd.DataFrame([{"stress_range": stress_range, "cycles": float(point["n_cycles"])}]),
         sn_curve,

@@ -98,10 +98,16 @@ workflows:
       response: damage
       response_kwargs: {environment: seawater_cp}
       tolerance: {metric: max_rel_error, threshold: 0.10}
+      # damage depends on (tension,area) only through stress = T*1000/A, so the
+      # atlas grids on a DERIVED stress axis (#830) — collapses the old
+      # tension x area grid (~16x fewer cells). The query supplies raw
+      # tension_range_kN + area_mm2 and the stress is derived at lookup.
       axes:
-        - {name: tension_range_kN, scale: log, grid: [100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450]}
+        - name: stress_MPa
+          scale: log
+          grid: [11, 14, 18, 22, 27, 33, 40, 50, 62, 78, 98, 122, 150]
+          derived: {fn: stress_from_tension_area, inputs: [tension_range_kN, area_mm2]}
         - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000]}
-        - {name: area_mm2, scale: log, grid: [3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]}
         - {name: sn_curve, values: [B1, B2, C, C1, C2, D, E, F]}
       atlas: atlases/mooring_fatigue
   - id: mooring-fatigue-atlas-query
