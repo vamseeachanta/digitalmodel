@@ -125,6 +125,48 @@ wave_1:
     likes: 11
     hotness: 37
 
-# wave_2+: remaining 150 problems. Add as we march (or re-scrape hotness).
-# Next batch by hotness (captured): 1/12 (36), 3/6 (36), 4/24 (36), 6/17 (36),
-# 2/12 (35), 3/27 (29: 7c/11L) ... full re-scrape lives in scripts when needed.
+# Second wave — next tier by hotness (all conceptual; concepts -> llm-wiki).
+wave_2:
+  - id: pe-2026-01-12
+    date: "2026-01-12"
+    slug: pe-problem-of-the-day-1-12-2026
+    topic: "Acid job above fracture pressure (acid fracturing)"
+    issue: 859
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/production-engineering/wiki/concepts/acid-fracturing.md  # NEW
+  - id: pe-2026-03-06
+    date: "2026-03-06"
+    slug: pe-problem-of-the-day-3-6-2026
+    topic: "Drive mechanism in unconventional wells (depletion)"
+    issue: 860
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/reservoir-drive-mechanisms.md  # unconventional section
+  - id: pe-2026-04-24
+    date: "2026-04-24"
+    slug: pe-problem-of-the-day-4-24-2026
+    topic: "What an SP log actually measures (a voltage)"
+    issue: 861
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/spontaneous-potential-log.md  # NEW
+  - id: pe-2026-06-17
+    date: "2026-06-17"
+    slug: pe-problem-of-the-day-6-17-2026
+    topic: "Depositional environment (fluvial channel-levee)"
+    issue: 862
+    type: multiple-choice
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/depositional-environments.md  # NEW
+  - id: pe-2026-02-12
+    date: "2026-02-12"
+    slug: pe-problem-of-the-day-2-12-2026
+    topic: "Components of a conventional petroleum system"
+    issue: 863
+    type: free-response
+    hotness: 35
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/petroleum-system-elements.md  # NEW
+
+# wave_3+: remaining ~145 problems. Next by hotness after 2/12 (35): 3/27 (29, 7c/11L)
+# and down the tail. Re-scrape engagement when resuming (browser; auth-gated).
