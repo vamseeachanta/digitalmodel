@@ -39,6 +39,12 @@ from digitalmodel.marine_ops.installation.splash_zone import (
     splash_zone_assessment,
     varying_buoyancy_force,
 )
+from digitalmodel.marine_ops.installation.suitability_report import (
+    SuitabilityReport,
+    build_report,
+    to_html,
+    to_markdown,
+)
 from digitalmodel.marine_ops.installation.vessel_screening import (
     VesselScreeningResult,
     screen_vessels,
@@ -84,4 +90,9 @@ __all__ = [
     "rank_fleet",
     "assess_vessel",
     "assess_named",
+    # Suitability report
+    "SuitabilityReport",
+    "build_report",
+    "to_markdown",
+    "to_html",
 ]
