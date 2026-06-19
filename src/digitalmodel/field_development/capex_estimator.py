@@ -73,6 +73,7 @@ _BASE_CAPEX: dict[HostType, tuple[float, float, float]] = {
     HostType.SEMI:           (4.0,  7.0, 10.0),
     HostType.FPSO:           (5.0,  8.5, 12.0),
     HostType.SUBSEA_TIEBACK: (0.20, 0.45, 1.2),   # overridden by distance logic
+    HostType.DRY_TREE_UNIT:  (3.5,  6.0,  8.0),    # dry-tree FPU; between Spar and Semi
 }
 
 _REF_CAPACITY_BOPD = 100_000.0

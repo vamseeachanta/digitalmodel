@@ -444,13 +444,22 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = rig_capability(cfg_base)
-    elif basename in ["capex_estimate", "opex_estimate", "concept_selection"]:
+    elif basename in [
+        "capex_estimate",
+        "opex_estimate",
+        "concept_selection",
+        "concept_screening",
+    ]:
         from digitalmodel.field_development.registry_workflows import (
             FieldDevelopmentRegistryWorkflow,
         )
 
         field_development = FieldDevelopmentRegistryWorkflow()
         cfg_base = field_development.router(cfg_base)
+    elif basename == "well_access":
+        from digitalmodel.well_access.router import router as well_access_router
+
+        cfg_base = well_access_router(cfg_base)
     elif basename == "production":
         from digitalmodel.production_engineering.workflow import (
             ProductionEngineeringWorkflow,

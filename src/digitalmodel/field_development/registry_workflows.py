@@ -76,6 +76,8 @@ class FieldDevelopmentRegistryWorkflow:
             return self._run_opex_estimate(cfg)
         if basename == "concept_selection":
             return self._run_concept_selection(cfg)
+        if basename == "concept_screening":
+            return self._run_concept_screening(cfg)
         raise ValueError(f"Unsupported field-development workflow: {basename}")
 
     def _run_capex_estimate(self, cfg: dict[str, Any]) -> dict[str, Any]:
@@ -129,4 +131,102 @@ class FieldDevelopmentRegistryWorkflow:
             _write_summary(cfg, params.get("outputs", {}), summary)
         )
         cfg["concept_selection"] = {**params, **summary}
+        return cfg
+
+    def _run_concept_screening(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        from digitalmodel.field_development.concept_comparison_note import (
+            build_comparison_note,
+            render_comparison_note,
+            weight_sensitivity_sweep,
+        )
+        from digitalmodel.field_development.concept_screening import (
+            ProspectSpec,
+            screen_concepts,
+        )
+
+        params = cfg["concept_screening"]
+        prospect = params["prospect"]
+        spec = ProspectSpec(
+            name=str(prospect["name"]),
+            water_depth_m=float(prospect["water_depth_m"]),
+            well_count=int(prospect["well_count"]),
+            reservoir_size_mmbbl=float(prospect["reservoir_size_mmbbl"]),
+            production_capacity_bopd=float(prospect["production_capacity_bopd"]),
+            fluid_type=str(prospect.get("fluid_type", "oil")),
+            distance_to_infra_km=prospect.get("distance_to_infra_km"),
+            workover_frequency_per_well_decade=prospect.get(
+                "workover_frequency_per_well_decade"
+            ),
+        )
+
+        # Resolve an optional private-overlay params file relative to the config dir.
+        params_path = params.get("params_path")
+        if params_path:
+            params_path = str(_resolve_dir(cfg, params_path))
+
+        weights = params.get("weights")
+        candidates = None
+        if params.get("candidates"):
+            candidates = [_host_type(c) for c in params["candidates"]]
+        bsee_benchmark = params.get("bsee_per_well_rig_days")
+
+        result, note_md = build_comparison_note(
+            spec,
+            weights=weights,
+            params_path=params_path,
+            bsee_benchmark=bsee_benchmark,
+            with_sensitivity=True,
+        )
+        # candidates restriction is applied in build via screen_concepts default;
+        # re-run with candidates when supplied (keeps build_comparison_note simple).
+        if candidates is not None:
+            result = screen_concepts(
+                spec,
+                weights=weights,
+                params_path=params_path,
+                candidates=candidates,
+                bsee_benchmark=bsee_benchmark,
+            )
+            sweep = weight_sensitivity_sweep(
+                spec, params_path=params_path, bsee_benchmark=bsee_benchmark
+            )
+            note_md = render_comparison_note(result, sweep)
+
+        output_cfg = params.get("outputs", {})
+        directory = _resolve_dir(cfg, output_cfg.get("directory", "results"))
+        directory.mkdir(parents=True, exist_ok=True)
+        note_name = output_cfg.get("note_md", "concept_comparison_note.md")
+        note_path = directory / note_name
+        note_path.write_text(note_md, encoding="utf-8")
+
+        summary = {
+            "calculation": "concept_screening",
+            "selected_host": result.selected.value,
+            "governing_axis": result.governing_axis,
+            "params_basis": result.params_basis,
+            "rig_day_source": result.rig_day_source,
+            "weights": result.weights,
+            "ranked": [
+                {
+                    "rank": i,
+                    "host_type": r.host_type.value,
+                    "composite": r.composite,
+                    "suitability": r.suitability,
+                    "gated": r.gated,
+                    "weighted_axis_score": r.weighted_axis_score,
+                    "schedule_weeks": r.axes.schedule_weeks,
+                    "rig_days": r.axes.rig_days,
+                    "capex_total_usd_bn": r.axes.capex_base_usd_bn,
+                    "intervention_index": r.axes.intervention_index,
+                    "normalised": r.axes.norm,
+                    "capex_line_items_usd_bn": r.axes.capex_line_items_usd_bn,
+                }
+                for i, r in enumerate(result.ranked, start=1)
+            ],
+            "note_md": str(note_path),
+        }
+        summary["summary_json"] = str(
+            _write_summary(cfg, output_cfg, summary)
+        )
+        cfg["concept_screening"] = {**params, **summary}
         return cfg

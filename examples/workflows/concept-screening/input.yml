@@ -1,0 +1,46 @@
+# ABOUTME: W6 concept-screening example — neutral deepwater GoM-analogue prospect.
+# ABOUTME: PUBLIC. No client names. Run: uv run python -m digitalmodel input.yml
+#
+# Neutral GoM-analogue prospect ("Lower Tertiary analogue"): a generic Wilcox-trend
+# deepwater oil development at ~1500 m water depth, ~300 MMbbl recoverable, 8 wells,
+# ~120,000 bopd, ~80 km from existing host infrastructure. These are GENERIC,
+# publicly-typical Lower Tertiary GoM development parameters — NOT a specific field.
+
+basename: concept_screening
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+concept_screening:
+  case:
+    id: gom_lower_tertiary_analogue
+    description: Neutral deepwater GoM Lower-Tertiary-analogue concept screen
+  prospect:
+    name: GoM Lower Tertiary Analogue
+    water_depth_m: 1500.0
+    well_count: 8
+    reservoir_size_mmbbl: 300.0
+    production_capacity_bopd: 120000.0
+    fluid_type: oil
+    distance_to_infra_km: 80.0
+    workover_frequency_per_well_decade: 1.5
+  # Decision-axis weights (omit to use DEFAULT_WEIGHTS = capex .35 / schedule .25 /
+  # rig_days .15 / intervention .25).
+  weights:
+    capex: 0.35
+    schedule: 0.25
+    rig_days: 0.15
+    intervention: 0.25
+  # Optional private-overlay parameter file (client calibration). Omitted here —
+  # the generic data/concept_params.yml is used. Keep client calibration private.
+  # params_path: /private/overlay/concept_params_client.yml
+  #
+  # Optional real BSEE per-well rig-days benchmark (worldenergydata well_rig_days).
+  # Omitted -> generic GoM default. bsee_per_well_rig_days: 95.0
+  outputs:
+    directory: results/concept_screening
+    summary_json: concept_screening_summary.json
+    note_md: concept_comparison_note.md

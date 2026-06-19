@@ -232,6 +232,7 @@ digitalmodel = [
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
     "naval_architecture/data/*.yml",
+    "field_development/data/*.yml",
 ]
 
 [tool.black]

@@ -76,6 +76,7 @@ _BASE_OPEX_MM_YR: dict[HostType, tuple[float, float, float]] = {
     HostType.SEMI:           (110.0, 210.0,  360.0),
     HostType.FPSO:           (140.0, 270.0,  480.0),
     HostType.SUBSEA_TIEBACK: (20.0,  50.0,   90.0),
+    HostType.DRY_TREE_UNIT:  (95.0,  185.0,  300.0),  # dry-tree FPU; between Spar and Semi
 }
 
 _REF_CAPACITY_BOPD = 100_000.0
