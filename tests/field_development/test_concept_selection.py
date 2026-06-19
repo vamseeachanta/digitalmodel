@@ -47,7 +47,28 @@ def _top(result: ConceptSelectionResult) -> str:
 class TestHostTypeEnum:
     def test_all_types_defined(self):
         values = {h.value for h in HostType}
-        assert values == {"TLP", "Spar", "Semi", "FPSO", "Subsea_Tieback"}
+        # The 5 legacy core host types plus the screening-only DRY_TREE_UNIT (W6).
+        assert values == {
+            "TLP",
+            "Spar",
+            "Semi",
+            "FPSO",
+            "Subsea_Tieback",
+            "Dry_Tree_Unit",
+        }
+
+    def test_legacy_core_host_types(self):
+        # concept_selection() ranks only the 5 legacy core types (DRY_TREE_UNIT is
+        # screening-only and excluded from the legacy ranker contract).
+        from digitalmodel.field_development.concept_selection import LEGACY_HOST_TYPES
+
+        assert {h.value for h in LEGACY_HOST_TYPES} == {
+            "TLP",
+            "Spar",
+            "Semi",
+            "FPSO",
+            "Subsea_Tieback",
+        }
 
     def test_enum_accessible_by_value(self):
         assert HostType("TLP") is HostType.TLP
@@ -554,8 +575,10 @@ class TestConceptSelectionWithBenchmarks:
             fluid_type="oil",
             benchmark_projects=bench_projects,
         )
+        from digitalmodel.field_development.concept_selection import LEGACY_HOST_TYPES
+
         host_types = {o.host_type for o in result.ranked_options}
-        assert len(host_types) == len(HostType)
+        assert len(host_types) == len(LEGACY_HOST_TYPES)
 
     def test_empirical_note_in_summary(self, bench_projects):
         result = concept_selection_with_benchmarks(

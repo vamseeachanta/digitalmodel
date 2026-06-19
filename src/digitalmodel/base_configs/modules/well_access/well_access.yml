@@ -1,0 +1,10 @@
+basename: well_access
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+well_access: {}

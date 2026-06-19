@@ -1,0 +1,65 @@
+# ABOUTME: W7 well-access calibration — DOCUMENTED real-anchored generic GoM profile.
+# ABOUTME: Empirical BSEE rate extraction is the worldenergydata-side input (cross-repo).
+#
+# calibration.yml
+# ===============
+# Age-banded intervention DEMAND rates, durations, and resource mapping for the
+# well-access engine. THIS IS THE REAL-DATA CALIBRATION INTERFACE the engine reads.
+#
+# DATA-DEPENDENCY FLAG (load-bearing, cross-repo):
+#   The empirical rates below are a DOCUMENTED, real-anchored GENERIC GoM deepwater
+#   profile — order-of-magnitude consistent with public BSEE Well Activity Report
+#   (WAR) intervention frequencies for deepwater development wells. The AUTHORITATIVE
+#   per-play/per-vintage extraction (events / well-exposure-years by age band) is
+#   produced on the worldenergydata side:
+#       worldenergydata/bsee/analysis/well_access_calibration/ -> calibration.yml
+#   using derive_war_operations / detect_reentries / build_operations_timeline and
+#   DAYS_ON_PROD for the uptime anchor. Swap this file for that extract to calibrate
+#   against live BSEE history. The engine is deterministic given whichever it reads.
+#
+# CIRCULARITY GUARD: these are DEMAND rates calibrated conceptually from DRY-TREE-
+# CAPABLE analogs (continuous access => observed ~ demanded). Subsea access
+# suppression is applied separately via access_multiplier (see input.yml), never
+# baked into the rates here.
+#
+# CONFIDENCE: deepwater LT intervention data is sparse; sparse types are flagged
+# low_confidence and should be read as indicative only.
+
+meta:
+  basis: documented_real_anchored_generic_gom_deepwater
+  source_note: >-
+    Order-of-magnitude consistent with public BSEE WAR deepwater development-well
+    intervention frequencies; authoritative extraction is worldenergydata-side.
+  units:
+    rate_per_well_year: events per well per year (within age band)
+    duration_days: resource-days per event/campaign
+
+base_rates:
+  # Light well intervention (slickline/coil/wireline): frequent, short, vessel/MODU.
+  light_well_intervention:
+    duration_days: 8.0
+    resource_class: lwi_vessel
+    low_confidence: false
+    age_curve:
+      - {age_min_yr: 0,  age_max_yr: 3,  rate_per_well_year: 0.12}
+      - {age_min_yr: 3,  age_max_yr: 10, rate_per_well_year: 0.18}
+      - {age_min_yr: 10, age_max_yr: 30, rate_per_well_year: 0.26}
+
+  # Major workover (tubing/completion pull): infrequent, long, MODU.
+  workover:
+    duration_days: 45.0
+    resource_class: modu
+    low_confidence: false
+    age_curve:
+      - {age_min_yr: 0,  age_max_yr: 5,  rate_per_well_year: 0.015}
+      - {age_min_yr: 5,  age_max_yr: 15, rate_per_well_year: 0.035}
+      - {age_min_yr: 15, age_max_yr: 30, rate_per_well_year: 0.055}
+
+  # Well recompletion / sidetrack re-entry: rare, very long, MODU. Sparse data.
+  recompletion:
+    duration_days: 60.0
+    resource_class: modu
+    low_confidence: true
+    age_curve:
+      - {age_min_yr: 0,  age_max_yr: 10, rate_per_well_year: 0.008}
+      - {age_min_yr: 10, age_max_yr: 30, rate_per_well_year: 0.020}
