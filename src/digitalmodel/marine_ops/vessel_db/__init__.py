@@ -32,6 +32,13 @@ from digitalmodel.marine_ops.vessel_db.wed_adapter import (
     fleet_summary,
     resolve_wed_curated_dir,
 )
+from digitalmodel.marine_ops.vessel_db.hulls_adapter import (
+    library_summary,
+    parse_heading_block_rao,
+    read_rao_workbook,
+    real_rao_datasets,
+    resolve_rao_library_dir,
+)
 
 __all__ = [
     "GyradiiEstimate",
@@ -53,4 +60,10 @@ __all__ = [
     "drilling_rigs",
     "fleet_summary",
     "resolve_wed_curated_dir",
+    # off-repo real-RAO library adapter (diffraction layer)
+    "library_summary",
+    "parse_heading_block_rao",
+    "read_rao_workbook",
+    "real_rao_datasets",
+    "resolve_rao_library_dir",
 ]

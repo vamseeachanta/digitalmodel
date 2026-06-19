@@ -31,8 +31,18 @@ folded into WED.
 
 ## Consolidation status
 
-- ✅ digitalmodel now consumes WED curated fleet via `marine_ops.vessel_db.wed_adapter`
+- ✅ digitalmodel consumes the WED curated fleet via `marine_ops.vessel_db.wed_adapter`
   (installation crane vessels merged into `installation_vessels()`, WED preferred).
-- ⬜ Ingest ace-share Frontier Deepwater (~350) + ACMA B1535 (30+) into WED `vessel_fleet`.
-- ⬜ Promote ACMA `_hulls` real RAOs (Q4000/Uncle John) into the RAO layer.
+- ✅ Off-repo real-RAO adapter `marine_ops.vessel_db.hulls_adapter`
+  (`VESSEL_RAO_LIBRARY_PATH`): parses real model-test/computed RAO workbooks into
+  `RAOData` at runtime — **data stays off-repo** (project-confidential), nothing
+  committed. Validated against a real semisubmersible workbook (heave RAO≈1.0 at
+  long period, head seas). digitalmodel#852.
+- ⬜ Ingest off-repo brochure-digitized heavy-lift + pipelay fleet (~350) into WED — worldenergydata#504.
+- ⬜ Ingest off-repo MSIV brochure dataset (~30) into WED — worldenergydata#505.
+- ⬜ Diffraction-setup consumer (particulars + gyradii → mass/inertia → OrcaWave/AQWA) — digitalmodel#853.
 - ⬜ Retire/redirect the synthetic GTM JSONs + orcaflex template CSVs to the consolidated store.
+
+> Confidentiality: real RAOs and brochure-digitized fleets are project data and
+> are **not** committed to this public repo. Adapters resolve them off-repo via
+> env vars (`VESSEL_RAO_LIBRARY_PATH`, `WED_VESSEL_FLEET_PATH`/`WORLDENERGYDATA_ROOT`).
