@@ -348,24 +348,24 @@ def _grid_points(axes: list[Axis]) -> list[dict[str, Any]]:
 
 
 def _holdout_points(axes: list[Axis]) -> list[dict[str, Any]]:
-    """Interior test points: geometric/arithmetic midpoints between every pair
-    of adjacent knots on each continuous axis, at the first value of the other
-    axes. Catches grid-too-coarse error the publish gate enforces against."""
+    """Interior test entries: each is a midpoint between adjacent knots on one
+    continuous axis (others at their median), tagged with the slice / axis /
+    interval it measures so generation can build a per-interval error map.
+    Catches grid-too-coarse error the publish gate enforces against."""
     cont = [ax for ax in axes if not ax.is_categorical]
     cats = [ax for ax in axes if ax.is_categorical]
     base = {ax.name: ax.grid[len(ax.grid) // 2] for ax in cont}
-    points: list[dict[str, Any]] = []
-    cat_combos = list(
-        itertools.product(*[ax.values for ax in cats])
-    ) or [()]
+    entries: list[dict[str, Any]] = []
+    cat_combos = list(itertools.product(*[ax.values for ax in cats])) or [()]
     for cat_combo in cat_combos:
         cat_part = {ax.name: v for ax, v in zip(cats, cat_combo)}
+        cat_key = "|".join(str(v) for v in cat_combo)  # "" when no categorical axis
         for ax in cont:
-            for a, b in zip(ax.grid, ax.grid[1:]):
+            for i, (a, b) in enumerate(zip(ax.grid, ax.grid[1:])):
                 mid = (a * b) ** 0.5 if ax.scale == "log" else (a + b) / 2.0
-                pt = {**base, **cat_part, ax.name: mid}
-                points.append(pt)
-    return points
+                entries.append({"point": {**base, **cat_part, ax.name: mid},
+                                "cat_key": cat_key, "axis": ax.name, "interval": i})
+    return entries
 
 
 def _atlas_id(spec: dict[str, Any], provenance: dict[str, Any]) -> str:
@@ -439,7 +439,10 @@ def generate_atlas(
     # held-out validation -------------------------------------------------
     worst = 0.0
     samples = []
-    for point in _holdout_points(axes):
+    # local_error_map[cat_key][axis] = [rel_error per interval] (#828)
+    local_error_map: dict[str, dict[str, list[float]]] = {}
+    for entry in _holdout_points(axes):
+        point = entry["point"]
         predicted = atlas.predict(point)
         actual = fn(point, **response_kwargs)
         rel = abs(predicted.value - actual) / actual if actual else 0.0
@@ -448,6 +451,9 @@ def generate_atlas(
             {"point": point, "predicted": predicted.value, "actual": actual,
              "rel_error": rel, "in_range": predicted.in_range}
         )
+        per_axis = local_error_map.setdefault(entry["cat_key"], {}).setdefault(
+            entry["axis"], [])
+        per_axis.append(rel)  # intervals arrive in ascending order
     worst_samples = sorted(samples, key=lambda s: -s["rel_error"])[:15]
     atlas.validation = {
         "metric": "max_rel_error",
@@ -456,6 +462,7 @@ def generate_atlas(
         "passes": worst <= tolerance,
         "n_holdout": len(samples),
         "worst_samples": worst_samples,
+        "local_error_map": local_error_map,
     }
     return atlas
 

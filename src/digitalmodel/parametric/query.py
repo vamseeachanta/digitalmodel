@@ -148,7 +148,9 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     required_life = design_life * dff
     dff_margin = math.inf if math.isinf(life) else life / required_life
 
-    e = atlas.max_rel_error
+    # local error of the worst bin (#828) — tighter than the global figure
+    e = max((atlas.local_error({**shared, **b}) for b in bins),
+            default=atlas.max_rel_error)
     if math.isinf(life):
         band = [math.inf, math.inf]
     else:
@@ -161,7 +163,7 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
         "total_damage": total_damage,
         "dff_margin": dff_margin,
         "screening_status": "pass" if dff_margin >= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -169,7 +171,7 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _utilisation_result(atlas: Atlas, u: float, band: list[float]) -> dict[str, Any]:
+def _utilisation_result(atlas: Atlas, u: float, band: list[float], e: float) -> dict[str, Any]:
     # straddle rule: if the confidence band crosses the limit, the verdict is
     # not decidable from the atlas -> escalate even though it is in range.
     if band[0] < 1.0 < band[1]:
@@ -181,7 +183,7 @@ def _utilisation_result(atlas: Atlas, u: float, band: list[float]) -> dict[str, 
         "response": "utilisation",
         "value": u,
         "screening_status": "pass" if u <= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {atlas.max_rel_error:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -196,8 +198,8 @@ def _handle_utilisation(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
     u = prediction.value
-    e = atlas.max_rel_error
-    return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)])
+    e = atlas.local_error(point)
+    return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)], e)
 
 
 def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
@@ -213,11 +215,11 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
         return _escalation(atlas, "non-positive capacity")
     demand = float(point["demand_kN"])
     fos = float(point.get("factor_of_safety", 1.0))
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     u = demand * fos / capacity
     # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
     band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
-    result = _utilisation_result(atlas, u, band)
+    result = _utilisation_result(atlas, u, band, e)
     if result["in_range"]:
         result["capacity_kN"] = capacity
     return result
@@ -230,12 +232,12 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
     v = prediction.value
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     return {
         "response": atlas.response,
         "value": v,
         "confidence": {"band": [v * (1 - e), v * (1 + e)],
-                       "basis": f"holdout max_rel_error = {e:.4f}"},
+                       "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -263,7 +265,7 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
     dff = float(point["dff"])
     life = math.inf if annual <= 0 else 1.0 / annual
     dff_margin = math.inf if math.isinf(life) else life / (design_life * dff)
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     band = ([math.inf, math.inf] if math.isinf(life)
             else [1.0 / (annual * (1 + e)), 1.0 / (annual * (1 - e))])
     return {
@@ -272,7 +274,7 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
         "annual_damage": annual,
         "dff_margin": dff_margin,
         "screening_status": "pass" if dff_margin >= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,

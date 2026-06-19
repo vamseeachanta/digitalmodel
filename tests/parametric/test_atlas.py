@@ -356,6 +356,36 @@ def test_derived_axis_collapses_raw_inputs():
     assert oor.in_range is False and "stress_MPa" in oor.reason
 
 
+def test_local_error_map_is_present_and_tighter_than_global():
+    from digitalmodel.parametric import refresh
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "code_check")
+    m = atlas.validation.get("local_error_map")
+    assert m, "regenerated atlas should carry a local_error_map (#828)"
+    all_errs = [e for slc in m.values() for per in slc.values() for e in per]
+    assert all_errs
+    g = atlas.max_rel_error
+    # the global figure is exactly the worst per-interval error...
+    assert max(all_errs) == pytest.approx(g, rel=1e-9)
+    # ...but most regions are strictly tighter than that worst case
+    assert min(all_errs) < g
+
+
+def test_query_band_uses_local_not_global_error():
+    from digitalmodel.parametric import refresh
+    from digitalmodel.parametric.query import _handle_value
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "fpso_mooring_full")
+    point = {"Hs": 3.5, "Tp": 11.0, "water_depth_m": 1000.0}
+    local = atlas.local_error(point)
+    assert local <= atlas.max_rel_error + 1e-12
+    result = _handle_value(atlas, point)
+    v, (lo, hi) = result["value"], result["confidence"]["band"]
+    # band half-width reflects the LOCAL error at this point
+    assert hi - v == pytest.approx(v * local, rel=1e-6)
+    assert "local interp error" in result["confidence"]["basis"]
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)

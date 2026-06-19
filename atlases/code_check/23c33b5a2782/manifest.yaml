@@ -49,7 +49,7 @@ validation:
   passes: true
 provenance:
   basename: code_check
-  code_version: bb8ce47f
+  code_version: a3a67b4b
   standards:
   - id: API-RP-2RD
     edition: '2013'
