@@ -27,8 +27,11 @@ Example (`--lift-te 5000 --radius-m 35`):
   [NO_GO]    Seven Borealis                    5000    1.000   1.300
 ```
 
-Crane SWLs are cited public values (`data/vessels/raw/install__crane_deck.json`,
-`COVERAGE.md`). Most operators publish only a **headline SWL** (no radius curve);
-those vessels are flagged `*` and the radius is not applied. Vessels that publish
-radius points (e.g. BokaLift 2) have their curve interpolated at the lift radius.
-This honours the database "flag, don't fake" contract — see `data/vessels/README.md`.
+The crane fleet is sourced primarily from **worldenergydata** (the source of
+truth — real IMO numbers + published crane reach), merged with the in-repo
+web-research curated records and deduped by normalized name (worldenergydata
+wins). worldenergydata vessels (e.g. Sleipnir 10,000 t @ 48 m, Saipem 7000 @
+40/48 m) carry a real reach, so the radius is applied; vessels with only a
+headline SWL are flagged `*`. If worldenergydata is not checked out, the demo
+falls back to the curated records alone. This honours the database "flag, don't
+fake" contract — see `data/vessels/README.md`.

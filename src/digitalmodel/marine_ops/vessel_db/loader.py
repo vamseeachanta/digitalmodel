@@ -349,36 +349,75 @@ def load_crane_curves(base: Optional[Path] = None) -> dict[str, Any]:
     return out
 
 
-def installation_vessels(base: Optional[Path] = None) -> dict[str, dict]:
-    """Real installation vessels with crane curve + deck metadata, for go/no-go.
+def normalize_vessel_name(name: str) -> str:
+    """Collapse a vessel name to a dedup key across data sources.
 
-    Returns ``{vessel_name: {...}}`` where each value carries the installation
-    ``CraneCurve`` plus published deck/DP context. Only vessels with a usable
-    crane SWL are included. All numbers trace to the cited ``crane_deck`` records.
+    Strips common type prefixes (SSCV/DCV/DLV/MV…) and non-alphanumerics so
+    ``SSCV Sleipnir``, ``Sleipnir`` and ``SLEIPNIR`` collide.
     """
-    curves = load_crane_curves(base)
-    out: dict[str, dict] = {}
-    for rec in iter_records("install", "crane_deck", base):
-        if rec.name not in curves:
-            continue
-        f = rec.raw_fields
+    n = name.upper()
+    n = re.sub(r"\b(SSCV|SS CV|DCV|DLV|DSV|HLV|CSV|MV|M/V|MS|SS)\b", "", n)
+    n = re.sub(r"[^A-Z0-9]+", "", n)
+    return n
 
-        def _num(*names):
-            for n in names:
-                if n in f:
-                    val, marker = parse_value(f[n])
-                    if marker == "number":
-                        return val
-            return None
 
-        out[rec.name] = {
-            "vessel_type": rec.vessel_type,
-            "owner_operator": rec.owner_operator,
-            "crane_curve": curves[rec.name],
-            "tandem_swl_te": _num("tandem_swl_t", "tandem_swl_te", "combined_swl_t"),
-            "deck_area_m2": _num("deck_area_m2", "free_deck_area_m2"),
-            "deck_strength_t_per_m2": _num("deck_strength_t_per_m2", "deck_load_t_per_m2"),
-            "dp_class": f.get("dp_class", ""),
-            "n_citations": len(rec.citations),
-        }
-    return out
+def installation_vessels(
+    base: Optional[Path] = None,
+    *,
+    include_wed: bool = True,
+    include_curated: bool = True,
+) -> dict[str, dict]:
+    """Real installation crane vessels with crane curve + deck metadata.
+
+    Unions two sources, deduped by :func:`normalize_vessel_name`:
+    - **worldenergydata** construction vessels (source of truth — real IMO,
+      published crane reach), via the WED adapter (skipped if WED not checked
+      out), and
+    - the in-repo web-research curated ``install/crane_deck`` records.
+
+    worldenergydata wins on a name collision. Returns ``{display_name: {...}}``
+    with an installation ``CraneCurve`` plus deck/DP context.
+    """
+    merged: dict[str, dict] = {}  # norm_name -> entry (entry carries display name)
+
+    if include_curated:
+        curves = load_crane_curves(base)
+        for rec in iter_records("install", "crane_deck", base):
+            if rec.name not in curves:
+                continue
+            f = rec.raw_fields
+
+            def _num(*names):
+                for n in names:
+                    if n in f:
+                        val, marker = parse_value(f[n])
+                        if marker == "number":
+                            return val
+                return None
+
+            merged[normalize_vessel_name(rec.name)] = {
+                "_display": rec.name,
+                "vessel_type": rec.vessel_type,
+                "owner_operator": rec.owner_operator,
+                "crane_curve": curves[rec.name],
+                "tandem_swl_te": _num("tandem_swl_t", "tandem_swl_te", "combined_swl_t"),
+                "deck_area_m2": _num("deck_area_m2", "free_deck_area_m2"),
+                "deck_strength_t_per_m2": _num("deck_strength_t_per_m2", "deck_load_t_per_m2"),
+                "dp_class": f.get("dp_class", ""),
+                "source": "curated",
+                "n_citations": len(rec.citations),
+            }
+
+    if include_wed:
+        try:
+            from digitalmodel.marine_ops.vessel_db.wed_adapter import (
+                construction_crane_vessels,
+            )
+            for name, info in construction_crane_vessels().items():
+                entry = dict(info)
+                entry["_display"] = name
+                merged[normalize_vessel_name(name)] = entry  # WED wins on collision
+        except Exception:  # pragma: no cover - WED optional / import-safe
+            pass
+
+    return {v.pop("_display"): v for v in merged.values()}

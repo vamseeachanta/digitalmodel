@@ -20,9 +20,17 @@ from digitalmodel.marine_ops.vessel_db.loader import (
     iter_records,
     load_crane_curves,
     load_dataset,
+    normalize_vessel_name,
     parse_value,
     validate_provenance,
     vessels_dir,
+)
+from digitalmodel.marine_ops.vessel_db.wed_adapter import (
+    construction_crane_vessels,
+    construction_vessels,
+    drilling_rigs,
+    fleet_summary,
+    resolve_wed_curated_dir,
 )
 
 __all__ = [
@@ -35,7 +43,14 @@ __all__ = [
     "iter_records",
     "load_crane_curves",
     "load_dataset",
+    "normalize_vessel_name",
     "parse_value",
     "validate_provenance",
     "vessels_dir",
+    # worldenergydata adapter (source of truth for collection)
+    "construction_crane_vessels",
+    "construction_vessels",
+    "drilling_rigs",
+    "fleet_summary",
+    "resolve_wed_curated_dir",
 ]

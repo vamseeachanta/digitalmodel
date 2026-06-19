@@ -6,6 +6,23 @@ Public-sourced vessel data to feed **diffraction analysis** (OrcaWave/AQWA) and
 Supersedes the never-executed Phase-1 outputs proposed in
 `docs/domains/data/DATA_PROCUREMENT_STRATEGY.md`.
 
+## Source of truth — worldenergydata owns vessel collection
+
+**worldenergydata is the single source of truth for the vessel fleet.** Its
+`vessel_fleet` module runs the collection/curation pipeline (BSEE ingest, web
+scrapers, PDF spec parser, XLS ingest, Equasis/ABS/DNV enrichment, IMO dedup)
+and curates ~2,268 drilling rigs + construction vessels at
+`worldenergydata/data/modules/vessel_fleet/curated/`.
+
+digitalmodel **consumes** that fleet via `marine_ops.vessel_db.wed_adapter`
+(path resolved from `WED_VESSEL_FLEET_PATH` / `WORLDENERGYDATA_ROOT`, with local
+fallbacks; degrades to empty if worldenergydata is not checked out). This
+`data/vessels/` directory holds only the **engineering layers worldenergydata
+does not carry**: RAO proxy datasets, gyradii estimation inputs, OCIMF
+coefficients, and the web-research crane/particulars records that supplement the
+fleet. On a name collision, worldenergydata wins (real IMO + published crane
+reach).
+
 ## Hard rule — flag, don't fake
 
 These are engineering inputs. **Never fabricate a numeric value.** If a field
