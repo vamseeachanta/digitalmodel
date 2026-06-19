@@ -47,7 +47,7 @@ validation:
   passes: true
 provenance:
   basename: mooring_fatigue
-  code_version: fe6f4579
+  code_version: a3a67b4b
   standards:
   - id: DNV-RP-C203
     edition: 2021-09

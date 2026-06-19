@@ -29,7 +29,7 @@ validation:
   passes: true
 provenance:
   basename: fpso_mooring_full
-  code_version: 1c01a6ac
+  code_version: a3a67b4b
   standards:
   - id: DNV-OS-E301
     edition: 2018-07
