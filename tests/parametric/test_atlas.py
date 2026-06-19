@@ -323,6 +323,39 @@ def test_adaptive_is_a_noop_on_an_already_passing_seed():
     assert atlas.validation["densification_log"] == []  # nothing to densify
 
 
+def test_derived_axis_collapses_raw_inputs():
+    # mooring damage depends on (tension,area) only via stress; a derived stress
+    # axis lets the query pass raw tension+area and look up on stress (#830)
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = generate_atlas(
+        basename="mooring_fatigue",
+        physics="log_log",
+        response="damage",
+        axes=[
+            Axis(name="stress_MPa", scale="log",
+                 grid=[11, 18, 27, 40, 62, 98, 150],
+                 derived={"fn": "stress_from_tension_area",
+                          "inputs": ["tension_range_kN", "area_mm2"]}),
+            Axis(name="n_cycles", scale="log", grid=[1e4, 1e5, 1e6]),
+            Axis(name="sn_curve", values=["D", "F"]),
+        ],
+        response_kwargs={"environment": "seawater_cp"},
+        tolerance=0.10,
+    )
+    # (gate density is exercised by the committed 13-knot atlas; here the point
+    # is on a knot so interpolation is exact regardless)
+    # query in RAW terms: stress = 320*1000/8000 = 40 MPa (a grid knot) -> exact
+    raw = {"tension_range_kN": 320.0, "area_mm2": 8000.0, "n_cycles": 1e5, "sn_curve": "D"}
+    truth = RESPONSE_FUNCS["mooring_fatigue"]({"stress_MPa": 40.0, "n_cycles": 1e5,
+                                               "sn_curve": "D"}, environment="seawater_cp")
+    assert atlas.predict(raw).value == pytest.approx(truth, rel=1e-9)
+    # out-of-range reported on the DERIVED axis (tiny area -> huge stress)
+    oor = atlas.predict({"tension_range_kN": 320.0, "area_mm2": 1000.0,
+                         "n_cycles": 1e5, "sn_curve": "D"})
+    assert oor.in_range is False and "stress_MPa" in oor.reason
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)

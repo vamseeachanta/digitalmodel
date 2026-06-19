@@ -1,0 +1,248 @@
+{
+  "scope": "install",
+  "sources": [
+    {
+      "name": "Heerema Marine Contractors \u2014 Fleet & Equipment Folders",
+      "url": "https://www.heerema.com/heerema-marine-contractors/fleet",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "brochure-pdf",
+      "format": "HTML fleet pages + downloadable PDF equipment folders",
+      "freshness": "Current (operator-maintained, Sleipnir/Thialf/Balder)",
+      "reliability": "high",
+      "notes": "Authoritative first-party. HMC Equipment Folder PDF (https://www.heerema.com/hubfs/HMC%20Equipment%20Folder_20211108.pdf) and per-vessel folder (e.g. Balder https://f.hubspotusercontent40.net/hubfs/8565747/HMC%20Equipment%20Folder%20-%20Balder.pdf) give principal dimensions, draft range, displacement, deck area/loading, crane tandem capacities. No RAOs or mass-property tables (radii of gyration) published."
+    },
+    {
+      "name": "Saipem \u2014 Fleet & Yards vessel datasheets",
+      "url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "brochure-pdf",
+      "format": "HTML fleet pages + PDF spec sheets",
+      "freshness": "Current (2023 datasheets observed)",
+      "reliability": "high",
+      "notes": "First-party PDFs: Saipem 7000 (https://www.saipem.com/sites/default/files/2023-01/Saipem_7000.pdf), Saipem FDS (https://www.saipem.com/sites/default/files/2023-01/Saipem_FDS.pdf). Cover dims, displacement, dual 7000t cranes/tandem 14000t, J-lay tensioner capacity, pipe diameter range, DP. No RAO/mass-property data."
+    },
+    {
+      "name": "Allseas \u2014 Our Fleet vessel pages",
+      "url": "https://www.allseas.com/en/who-we-are/our-fleet",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML fleet pages (per-vessel)",
+      "freshness": "Current (operator-maintained)",
+      "reliability": "high",
+      "notes": "Pioneering Spirit, Solitaire, Audacia, Lorelay, Fortitude. Gives LOA/beam/depth, S-lay tension capacity, topside/jacket lift capacity (Pioneering Spirit 48,000t/25,000t), pipe hold capacity. Per-vessel pages are HTML; downloadable detailed spec sheets are limited. No RAO/mass props."
+    },
+    {
+      "name": "Boskalis \u2014 Heavy Lift Vessels equipment sheets",
+      "url": "https://boskalis.com/about-us/fleet-and-equipment/offshore-vessels/heavy-lift-vessels",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "brochure-pdf",
+      "format": "HTML + per-vessel equipment-sheet PDFs",
+      "freshness": "Current",
+      "reliability": "high",
+      "notes": "Bokalift 1 (https://boskalis.com/media/5rbfb1cp/bokalift_1_03.pdf) and Bokalift 2 (https://boskalis.com/media/cafdcmsf/bokalift-2.pdf) equipment sheets: dims, draft, crane capacity vs radius (e.g. 4000t @ 28m), lift height, deck area + deck loading (t/m2), accommodation, DP. Among the better public sources for deck-loading data."
+    },
+    {
+      "name": "Subsea7 \u2014 Vessel datasheets",
+      "url": "https://www.subsea7.com/en/our-fleet.html",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "brochure-pdf",
+      "format": "PDF datasheets (downloadasset)",
+      "freshness": "2023 updates observed",
+      "reliability": "high",
+      "notes": "Per-vessel PDFs e.g. Seven Oceanic (construction/vertical-flex-lay) and Seven Merlin under /content/dam/subsea7-corporate2018/Datasheets/Vessel/. Cover dims, lay system (flex/reel/J), crane SWL, deck area, A&R, DP. Reel-lay scope well represented. No RAOs."
+    },
+    {
+      "name": "McDermott \u2014 DLV 2000 / fleet (via Ship-Technology project page)",
+      "url": "https://www.ship-technology.com/projects/mcdermott-dlv-2000/",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML editorial spec page",
+      "freshness": "Static (vessel delivered 2016; page not actively updated)",
+      "reliability": "medium",
+      "notes": "McDermott's own site has limited public spec PDFs, so Ship-Technology is the most complete public consolidation for DLV 2000: LOA 184m, beam 38.6m, draft 5.5-7.7m, 2200t revolving crane + 600t aux, S-lay 4.5-60in to 10,000ft, optional 500t flex-lay, DP3, 33MW, ~4000m2 deck, 400 POB. Secondary source; cross-check against McDermott press releases."
+    },
+    {
+      "name": "Ship-Technology / Offshore-Energy / OEDigital / gCaptain (trade press)",
+      "url": "https://www.ship-technology.com/projects/pioneering-spirit-heavy-lift-construction-vessel/",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML editorial articles + project spec pages",
+      "freshness": "Mixed (delivery-era; not updated for refits)",
+      "reliability": "medium",
+      "notes": "Good gap-filler for vessels lacking detailed first-party PDFs and for SWZ Maritime engineering write-ups (e.g. Sleipnir crane internals https://swzmaritime.nl/news/2020/04/02/this-is-what-makes-the-cranes-of-the-sleipnir-special/). Editorial \u2014 verify numbers against operator sources."
+    },
+    {
+      "name": "Cranepedia \u2014 Crane Vessel Load Charts",
+      "url": "https://cranepedia.com/spec/crane-vessel/",
+      "layers_covered": [
+        "crane capacity curves & deck data",
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML + free load-chart PDF downloads",
+      "freshness": "Maintained (site active since 2009)",
+      "reliability": "medium",
+      "notes": "One of the few public sources with actual crane LOAD CHARTS (capacity vs radius) for vessels, not just headline SWL \u2014 e.g. Heerema Sleipnir, Pacific Osprey/Orca (WTIV). Source provenance per chart varies; treat as indicative and validate against operator data for engineering use."
+    },
+    {
+      "name": "FreeCraneSpecs.com",
+      "url": "https://www.freecranespecs.com/",
+      "layers_covered": [
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML database + load-chart PDFs",
+      "freshness": "Maintained (7,400+ specs)",
+      "reliability": "medium",
+      "notes": "Largest public crane load-chart DB. Primarily land/crawler/mobile cranes (the crane modules mounted on vessels, e.g. Huisman/Liebherr/NMF units) rather than vessels themselves \u2014 useful for the crane-unit capacity curves behind a vessel's deck crane. Less coverage of integrated lift vessels."
+    },
+    {
+      "name": "Wikipedia \u2014 vessel & RAO articles",
+      "url": "https://en.wikipedia.org/wiki/SSCV_Sleipnir",
+      "layers_covered": [
+        "principal particulars",
+        "mass properties",
+        "motion RAOs"
+      ],
+      "access": "public",
+      "format": "HTML encyclopedia",
+      "freshness": "Continuously edited",
+      "reliability": "medium",
+      "notes": "Quick consolidated principal particulars (displacement, dims, draft range) for SSCV Thialf/Sleipnir, Saipem 7000, Pioneering Spirit, plus the Response Amplitude Operator concept article (https://en.wikipedia.org/wiki/Response_amplitude_operator). Good index/cross-check, not a primary engineering source; cite underlying refs."
+    },
+    {
+      "name": "DNV \u2014 DNV-RP-C205 Environmental Conditions and Environmental Loads",
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/",
+      "layers_covered": [
+        "metocean criteria",
+        "motion RAOs"
+      ],
+      "access": "registration",
+      "format": "PDF standard (free download after DNV registration)",
+      "freshness": "Current (latest edition maintained by DNV)",
+      "reliability": "high",
+      "notes": "Authoritative methodology for wind/wave/current/sea-level statistical models, spectra (JONSWAP/Pierson-Moskowitz), short- and long-term metocean climate, and load/RAO calc guidance. DNV publishes its RPs/STs as free PDFs from dnv.com (registration). The de-facto basis for metocean design criteria and motion analysis inputs."
+    },
+    {
+      "name": "DNV \u2014 DNV-ST-N001 Marine Operations and Marine Warranty",
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "registration",
+      "format": "PDF standard (free from DNV)",
+      "freshness": "Major revision Dec 2023",
+      "reliability": "high",
+      "notes": "Governs operational metocean/weather-window criteria, alpha factors, operational vs design limits for transport, lift, and installation. Directly relevant to defining metocean acceptance criteria for installation-vessel operations. Free PDF via DNV."
+    },
+    {
+      "name": "NOAA NDBC \u2014 National Data Buoy Center",
+      "url": "https://www.ndbc.noaa.gov/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "Real-time + historical data (web, text, NetCDF via THREDDS)",
+      "freshness": "Real-time + multi-decade archive",
+      "reliability": "high",
+      "notes": "Free measured significant wave height, period, wind, direction at buoy stations. Primary observational source for site metocean and for validating hindcasts. US/Gulf of Mexico coverage strongest; global gaps. Point measurements (not gridded)."
+    },
+    {
+      "name": "ECMWF \u2014 ERA5 Reanalysis (Copernicus Climate Data Store)",
+      "url": "https://cds.climate.copernicus.eu/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "registration",
+      "format": "Gridded reanalysis (NetCDF/GRIB) via free CDS account + API",
+      "freshness": "Continuous (1940-present, ~5-day latency)",
+      "reliability": "high",
+      "notes": "Predominant free global wind+wave hindcast for deriving 50/100-yr extreme metocean design criteria via extreme-value analysis. Free with registration; coarse resolution near coast \u2014 combine with NDBC for calibration. Hourly global coverage."
+    },
+    {
+      "name": "BOEM \u2014 Metocean Characterization Recommended Practices for US Offshore Wind",
+      "url": "https://www.boem.gov/sites/default/files/environmental-stewardship/Environmental-Studies/Renewable-Energy/Metocean-Recommended-Practices.pdf",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "PDF guidance document",
+      "freshness": "Recent (US federal RP)",
+      "reliability": "high",
+      "notes": "Free government methodology for metocean data collection/characterization for offshore projects; useful framework for installation-support metocean criteria even though oriented to wind. Complements NREL technical reports (e.g. docs.nrel.gov)."
+    },
+    {
+      "name": "TU Delft Repository \u2014 RAO identification/calibration theses & papers",
+      "url": "https://repository.tudelft.nl/",
+      "layers_covered": [
+        "motion RAOs"
+      ],
+      "access": "public",
+      "format": "Open-access PDF theses/papers",
+      "freshness": "Static academic publications",
+      "reliability": "medium",
+      "notes": "Closest public material to vessel motion RAOs: methodology for identifying/calibrating RAOs from full-scale measurements and directional wave spectra. Methodology and example data, NOT vessel-specific RAO libraries for the named fleet. Real RAOs for these vessels are proprietary to operators/warranty surveyors."
+    },
+    {
+      "name": "VesselFinder / MarineTraffic (AIS)",
+      "url": "https://www.vesselfinder.com/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "mixed",
+      "format": "HTML AIS vessel pages (free tier) + paid API/history",
+      "freshness": "Real-time position; static particulars",
+      "reliability": "medium",
+      "notes": "Free IMO/flag/GT/LOA/beam and live position for identifying/confirming a specific hull (e.g. Saipem 7000 IMO 8501567). Particulars are coarse (no draft range, deck loading, crane curves). Good for hull ID and cross-referencing IMO numbers; deep history/API is paid."
+    }
+  ],
+  "paywalled_gaps": [
+    "Clarksons Research \u2014 World Fleet Register / Offshore Intelligence Network (clarksons.net/oin): comprehensive offshore vessel fleet data, owners, specs, contracts \u2014 subscription only; the most complete commercial fleet register.",
+    "S&P Global / IHS Markit \u2014 Petrodata (formerly ODS-Petrodata, IHS RigPoint/Offshore Rig & vessel intelligence): paid offshore rig and vessel databases; no free spec access.",
+    "Enverus (formerly Drillinginfo) \u2014 offshore vessel/rig and project intelligence: paid subscription; not publicly browsable.",
+    "ABS / DNV / Lloyd's Register class registers (full vessel records, stability/loading data): class society detailed records are restricted to owners and authorized parties \u2014 only headline particulars are public.",
+    "Vendor crane load-capacity charts at engineering fidelity (Huisman, Liebherr Maritime, NOV/NMF) \u2014 full as-built capacity envelopes and dynamic-amplification curves are delivered to operators, not published; public versions are marketing summaries.",
+    "Vessel-specific motion RAO datasets and mass-property tables (displacement vs draft, KG, radii of gyration, hydrostatics) for the named fleet \u2014 held as proprietary class/warranty/operator data; not publicly available in any source found.",
+    "Site-specific commercial metocean hindcasts (Fugro/Oceanweather GOMOS/NEXTRA, BMT ARGOSS/Metocean-on-Demand, DHI) \u2014 calibrated regional design-criteria databases are paid; free ERA5/NDBC are the public substitutes."
+  ],
+  "recommended_priority": [
+    "Heerema Marine Contractors \u2014 Fleet & Equipment Folders",
+    "Saipem \u2014 Fleet & Yards vessel datasheets",
+    "Allseas \u2014 Our Fleet vessel pages",
+    "Boskalis \u2014 Heavy Lift Vessels equipment sheets",
+    "Subsea7 \u2014 Vessel datasheets",
+    "DNV \u2014 DNV-RP-C205 Environmental Conditions and Environmental Loads",
+    "DNV \u2014 DNV-ST-N001 Marine Operations and Marine Warranty",
+    "ECMWF \u2014 ERA5 Reanalysis (Copernicus Climate Data Store)",
+    "NOAA NDBC \u2014 National Data Buoy Center",
+    "Cranepedia \u2014 Crane Vessel Load Charts",
+    "McDermott \u2014 DLV 2000 / fleet (via Ship-Technology project page)",
+    "Ship-Technology / Offshore-Energy / OEDigital / gCaptain (trade press)",
+    "Wikipedia \u2014 vessel & RAO articles",
+    "BOEM \u2014 Metocean Characterization Recommended Practices for US Offshore Wind",
+    "FreeCraneSpecs.com",
+    "TU Delft Repository \u2014 RAO identification/calibration theses & papers",
+    "VesselFinder / MarineTraffic (AIS)"
+  ]
+}

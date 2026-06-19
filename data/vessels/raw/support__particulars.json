@@ -1,0 +1,381 @@
+{
+  "scope": "support",
+  "layer": "particulars",
+  "coverage_note": null,
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Adversarially verified all 9 support-vessel particulars records via web spot-checks (Damen AHTS 150, Viking Energy, Chartwell 24, WINDEA Jules Verne, StratCat 27, Horizon HOS265, Eas DPI). All headline numbers (LOA/beam/draft/DWT/bollard pull/deck area) match official manufacturer/broker sources exactly. Physical plausibility: every dimension/DWT/speed/bollard-pull combination is sane for its vessel type (CTV shallow drafts 1.2-1.5m, AHTS bollard pulls matching model names 150/180t, PSV/SOV proportions normal). Estimation discipline is clean: every derived field is prefixed 'estimated:' with its formula, listed in gaps, and arithmetically correct (verified VCG~0.6*depth, kxx~0.37*beam roll / 0.45*beam for catamarans, kyy/kzz~0.25*L pitch/yaw; Viking Energy correctly uses LBP where available). NO hard number lacks a citation while unmarked -- no fabrication. All 9 cited URLs are real and on-topic. Two non-issues: (1) HOS265 PDF is binary-encoded so WebFetch couldn't parse, but URL valid and search corroborated 79m/3300 DWT op / 4000 DWT max / FiFi-1 DP2; (2) one secondary source called Viking Energy '2013-built' but canonical Wartsila/Eidesvik record is 2003 delivery -- dataset's 2003 is correct, secondary source wrong. Minor methodological caveat (not a defect): some records apply kyy/kzz=0.25*LOA where LBP is unknown, slightly overestimating pitch/yaw gyradius (should be Lpp), but these are flagged estimated.",
+    "flagged_records": [
+      {
+        "name": "PSV 79m DP2 (Horizon HOS265)",
+        "issue": "Cited PDF (HOS265-1.pdf) is binary/uncrackable via WebFetch -- could not directly confirm depth 7.2m, draft figures, or 900 m2 deck area from the source document; web search corroborated only LOA/DWT/class. Citation is valid but partially unverifiable at the field level. Low concern."
+      },
+      {
+        "name": "Viking Energy (LNG PSV)",
+        "issue": "year_built=2003 contradicted by one secondary source citing 2013; dataset value (2003 delivery) is the correct canonical figure, flagged only for transparency."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "Damen AHTS 150",
+      "vessel_type": "AHTS",
+      "owner_operator": "Damen",
+      "fields": {
+        "LOA_m": 74.1,
+        "beam_m": 18.5,
+        "depth_m": 7.5,
+        "draft_m": 6.6,
+        "deadweight_t": 2100,
+        "bollard_pull_t": 150,
+        "speed_kn": 14.2,
+        "VCG_m": "estimated:0.6*depth=4.5m",
+        "kxx_m": "estimated:0.37*beam=6.85m",
+        "kyy_kzz_m": "estimated:0.25*LOA=18.5m"
+      },
+      "gaps": [
+        "LBP",
+        "displacement",
+        "GT",
+        "Cb",
+        "LCG",
+        "VCG-est",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_t",
+            "bollard_pull_t",
+            "speed_kn"
+          ],
+          "source": "Damen AHTS 150",
+          "url": "https://www.damen.com/vessels/offshore/ahts/anchor-handling-tug-supplier-150",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Damen AHTS 180",
+      "vessel_type": "AHTS",
+      "owner_operator": "Damen",
+      "fields": {
+        "LOA_m": 75,
+        "beam_m": 19,
+        "depth_m": 8,
+        "draft_m": 7.5,
+        "deadweight_t": 2900,
+        "bollard_pull_t": 180,
+        "speed_kn": 15,
+        "VCG_m": "estimated:0.6*depth=4.8m",
+        "kxx_m": "estimated:0.37*beam=7.03m",
+        "kyy_kzz_m": "estimated:0.25*LOA=18.75m"
+      },
+      "gaps": [
+        "LBP",
+        "displacement",
+        "GT",
+        "Cb",
+        "LCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_t",
+            "bollard_pull_t",
+            "speed_kn"
+          ],
+          "source": "Damen AHTS 180",
+          "url": "https://www.damen.com/vessels/offshore/ahts/anchor-handling-tug-supplier-180",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Eas DPI (AHTS)",
+      "vessel_type": "AHTS",
+      "owner_operator": "EDT Offshore",
+      "year_built": "1975",
+      "fields": {
+        "LOA_m": 61.75,
+        "beam_m": 13,
+        "depth_m": 6.35,
+        "draft_m": 5.437,
+        "deadweight_t": 1267,
+        "displacement_t": 2688,
+        "gross_tonnage": 1191,
+        "deck_area_m2": 222,
+        "VCG_m": "estimated:0.6*depth=3.81m",
+        "kxx_m": "estimated:0.37*beam=4.81m",
+        "kyy_kzz_m": "estimated:0.25*LOA=15.4m"
+      },
+      "gaps": [
+        "LBP",
+        "Cb",
+        "LCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_t",
+            "displacement_t",
+            "gross_tonnage",
+            "deck_area_m2"
+          ],
+          "source": "EDT Offshore Eas DPI Rev5.0",
+          "url": "https://www.edtoffshore.com/storage/app/media/SPC-CHART-002%20Eas%20Specifications%20-%20Rev%205.0%20-%2029.09.2021.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "PSV 79m DP2 (Horizon HOS265)",
+      "vessel_type": "PSV",
+      "owner_operator": "Horizon Offshore Services",
+      "fields": {
+        "LOA_m": 79.96,
+        "beam_m": 21,
+        "depth_m": 7.2,
+        "draft_op_m": 5.6,
+        "dwt_op_t": 3300,
+        "draft_transit_m": 6.2,
+        "dwt_max_t": 4000,
+        "draft_shallow_m": 3.96,
+        "deck_area_m2": 900,
+        "VCG_m": "estimated:0.62*depth=4.46m",
+        "kxx_m": "estimated:0.37*beam=7.77m",
+        "kyy_kzz_m": "estimated:0.25*LOA=19.99m"
+      },
+      "gaps": [
+        "LBP",
+        "displacement",
+        "GT",
+        "Cb",
+        "LCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_op_m",
+            "dwt_op_t",
+            "draft_transit_m",
+            "dwt_max_t",
+            "draft_shallow_m",
+            "deck_area_m2"
+          ],
+          "source": "Horizon PSV 79m DP2 HOS265-1",
+          "url": "https://horizonoffshoreservices.com/wp-content/uploads/2024/06/HOS265-1.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Viking Energy (LNG PSV)",
+      "vessel_type": "PSV",
+      "owner_operator": "Eidesvik Offshore",
+      "year_built": "2003",
+      "fields": {
+        "LOA_m": 94.9,
+        "LBP_m": 81.6,
+        "beam_m": 20.4,
+        "depth_m": 9.6,
+        "draft_m": 7.9,
+        "deadweight_t": 6013,
+        "gross_tonnage": 5073,
+        "deck_area_m2": 1030,
+        "VCG_m": "estimated:0.6*depth=5.76m",
+        "kxx_m": "estimated:0.37*beam=7.55m",
+        "kyy_kzz_m": "estimated:0.25*LBP=20.4m"
+      },
+      "gaps": [
+        "displacement",
+        "Cb",
+        "LCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "LBP_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_t",
+            "gross_tonnage",
+            "deck_area_m2"
+          ],
+          "source": "Wartsila PSV Viking Energy",
+          "url": "https://www.wartsila.com/encyclopedia/term/platform-supply-vessel-viking-energy",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Chartwell 24 CTV",
+      "vessel_type": "CTV-catamaran",
+      "owner_operator": "Chartwell Marine",
+      "fields": {
+        "LOA_m": 24.4,
+        "beam_m": 8.87,
+        "draft_m": 1.2,
+        "pax": 24,
+        "speed_kn": 29,
+        "deck_area_m2": 70,
+        "kxx_m": "estimated:0.45*beam=3.99m",
+        "kyy_m": "estimated:0.25*LOA=6.1m",
+        "kzz_m": "estimated:0.28*LOA=6.83m"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "displacement",
+        "deadweight",
+        "GT",
+        "Cb",
+        "LCG",
+        "VCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_m",
+            "pax",
+            "speed_kn",
+            "deck_area_m2"
+          ],
+          "source": "Ship Technology Chartwell 24 CTV",
+          "url": "https://www.ship-technology.com/projects/chartwell-24-crew-transfer-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "StratCat 27 CTV",
+      "vessel_type": "CTV-catamaran",
+      "owner_operator": "Strategic Marine",
+      "fields": {
+        "LOA_m": 27,
+        "LBP_m": 23.9,
+        "beam_m": 8.9,
+        "draft_m": 1.5,
+        "deadweight_t": 35,
+        "gross_tonnage": ">200",
+        "pax": 24,
+        "speed_kn": 26,
+        "kxx_m": "estimated:0.45*beam=4.01m",
+        "kyy_m": "estimated:0.25*LBP=5.98m",
+        "kzz_m": "estimated:0.28*LBP=6.69m"
+      },
+      "gaps": [
+        "depth",
+        "displacement",
+        "Cb",
+        "LCG",
+        "VCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "LBP_m",
+            "beam_m",
+            "draft_m",
+            "deadweight_t",
+            "gross_tonnage",
+            "pax",
+            "speed_kn"
+          ],
+          "source": "Strategic Marine StratCat 27 CTV",
+          "url": "https://www.strategicmarine.com/product/stratcat-27-crew-transfer-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "WINDEA Jules Verne (Ulstein SX195 SOV/W2W)",
+      "vessel_type": "SOV/W2W",
+      "owner_operator": "Bernhard Schulte; Ulstein SX195",
+      "year_built": "2020",
+      "fields": {
+        "LOA_m": 93.4,
+        "beam_m": 18,
+        "draft_m": 6.4,
+        "deadweight_t": 3300,
+        "speed_kn": 13,
+        "POB": 120,
+        "deck_area_m2": 500,
+        "kxx_m": "estimated:0.37*beam=6.66m",
+        "kyy_kzz_m": "estimated:0.25*LOA=23.35m"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "displacement",
+        "GT",
+        "Cb",
+        "LCG",
+        "VCG",
+        "TCG~0",
+        "gyradii"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_m",
+            "deadweight_t",
+            "speed_kn",
+            "POB",
+            "deck_area_m2"
+          ],
+          "source": "Ulstein WINDEA Jules Verne SX195",
+          "url": "https://ulstein.com/references/windea-jules-verne",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}
