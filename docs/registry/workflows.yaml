@@ -471,6 +471,17 @@ workflows:
       - examples/workflows/aqwa-diffraction-deck-prep/results/prepared/registry_ship_diffraction.dat
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[aqwa-diffraction-deck-prep]
     runtime: offline
+  - id: diffraction-library-query
+    basename: parametric_query
+    title: Instant heave RAO from the sparse diffraction library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#801): built by scripts/parametric/build_diffraction_library.py
+    # from licensed OrcaWave/AQWA runs (ships a STUB). Exact-match the vessel/draft
+    # case, interpolate freq x heading within; an uncovered case escalates.
+    input: examples/workflows/diffraction-library-query/input.yml
+    outputs:
+      - examples/workflows/diffraction-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[diffraction-library-query]
+    runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
     title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
