@@ -176,5 +176,13 @@ wave_3:
   - {id: pe-2026-03-26, date: "2026-03-26", slug: pe-problem-of-the-day-3-26-2026, issue: 867, hotness: 34, topic: "Sidetracking", wiki_concept: wikis/drilling-engineering/wiki/concepts/sidetracking.md}
   - {id: pe-2026-04-03, date: "2026-04-03", slug: pe-problem-of-the-day-4-3-2026, issue: 868, hotness: 34, topic: "Naphtha (downstream)", wiki_concept: "n/a (downstream/refining, outside wiki scope)"}
 
-# wave_4+: remaining ~140. Next by hotness: 4/16, 4/17 (34); 3/25, 4/4, 6/15 (33);
-# 2/10 (32); 2/26, 2/4 (31); then tail. Re-scrape engagement when resuming (browser, auth-gated).
+# Fourth wave — ranks 21-25 by hotness (all conceptual).
+wave_4:
+  - {id: pe-2026-04-16, date: "2026-04-16", slug: pe-problem-of-the-day-4-16-2026, issue: 872, hotness: 34, topic: "Horner plot / pressure-transient analysis", wiki_concept: wikis/reservoir-engineering/wiki/concepts/pressure-transient-analysis.md}
+  - {id: pe-2026-04-17, date: "2026-04-17", slug: pe-problem-of-the-day-4-17-2026, issue: 873, hotness: 34, topic: "Streamline simulation", wiki_concept: wikis/reservoir-engineering/wiki/concepts/streamline-simulation.md}
+  - {id: pe-2026-03-25, date: "2026-03-25", slug: pe-problem-of-the-day-3-25-2026, issue: 874, hotness: 33, topic: "Managed Pressure Drilling (MPD)", wiki_concept: wikis/drilling-engineering/wiki/concepts/managed-pressure-drilling.md}
+  - {id: pe-2026-04-04, date: "2026-04-04", slug: pe-problem-of-the-day-4-4-2026, issue: 875, hotness: 33, topic: "Workover rig (well intervention)", wiki_concept: wikis/drilling-engineering/wiki/concepts/well-intervention-methods.md}
+  - {id: pe-2026-06-15, date: "2026-06-15", slug: pe-problem-of-the-day-6-15-2026, issue: 876, hotness: 33, topic: "Reactive-shale wellbore instability", wiki_concept: wikis/drilling-engineering/wiki/concepts/wellbore-stability.md}
+
+# wave_5+: remaining ~135. Next by hotness: 4/16/4/17 done; next 2/10 (32); 2/26, 2/4 (31);
+# then tail below ~31. Re-scrape engagement when resuming (browser, auth-gated).
