@@ -1,0 +1,588 @@
+{
+  "scope": "floating",
+  "layer": "particulars",
+  "coverage_note": "11 real named floating units captured across all required sub-types: 3 FPSOs (Terra Nova, SeaRose, Noble Seillean), 1 FDPSO (Azurite), 3 drillships (Yavuz, Fatih, Deepwater Conqueror), 1 production semisubmersible (Thunder Horse PDQ), 2 spars (Perdido, Genesis), 1 FSRU (Independence). LAYER-1 principal particulars (LOA, beam, often depth + one draft + displacement/tonnage) are well-sourced from public Wikipedia infoboxes and one OEM brochure. CRITICAL DATA-AVAILABILITY REALITY: (1) LBP is essentially never published in public sources for these units \u2014 universally a gap, which in turn blocks computed block coefficient. (2) Transit/tow draft published only for Deepwater Conqueror. (3) LAYER-2 mass properties \u2014 LCG, VCG, TCG, and radii of gyration kxx/kyy/kzz \u2014 are NOT publicly published for any of these vessels; these are proprietary class/loading-manual data behind operator NDAs. Every mass-property and radius-of-gyration field is therefore either 'gap' or 'estimated:<relation>' with the empirical relation named (ship-shaped: kxx=0.34*beam, kyy=kzz\u22480.25-0.26*LOA since LBP unavailable; drillships use kxx=0.40*beam to reflect derrick-raised VCG; semisub uses column-stabilized 0.30-0.40*footprint rule; spar uses slender-cylinder kxx\u22480.27*draft and small kzz\u22480.5*radius). NO bare invented numbers were used. SOURCE-QUALITY CAVEATS: Deepwater Conqueror figures come from a brochure PDF whose binary was not directly parseable, so values are relayed via the search engine's read of that PDF (flagged brochure-pdf). Perdido and Genesis spar dimensions (height/diameter/draft) come from secondary trade-press summaries (Offshore Magazine/OGJ) rather than a primary datasheet; their Wikipedia pages give only weights/water-depth. FDPSO Azurite's displacement is unit-ambiguous in the source (long tons vs short tons conflict) and is flagged. Block coefficient is marked n/a for spars and semisubs (not monohulls). Radii-of-gyration relations are standard offshore-engineering rules of thumb for first-pass hydrodynamic modelling and must be replaced with class-approved loading-manual values for any design-grade RAO/mooring analysis.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Spot-checked 5 of 8 records via web search (Terra Nova, SeaRose, Azurite, Yavuz, Thunder Horse PDQ, plus Deepwater Conqueror partial). All HARD dimensions match their cited sources exactly: Terra Nova 292.2x45.5 m / 193,000 t; SeaRose 258x46 m / 190,102 t / 18.043 m draught; Azurite 322.22x56 m / 19.667 m; Yavuz 229.19x36 m / 14.7 m / 51,283 GT; Thunder Horse 136x112x30 m / 130,000 t / 59,500 t. Cited Wikipedia/brochure URLs are real and on-topic. No invented hard numbers dressed as facts. Every estimated value carries an explicit 'estimated:' prefix with a stated formula; every missing value is marked 'gap'. Radii-of-gyration estimates use defensible, transparent conventions (kxx=0.34*B tanker rule; 0.40*B elevated for derrick-heavy drillships; column-stabilized rule for the semisub instead of the ship rule), and the LBP-missing -> LOA-proxy substitution is disclosed (slightly overstates kyy/kzz, but flagged). Methodology is honest and conservative. Only nits: (1) Azurite displacement_t shows raw '291199' which is short tons not tonnes, though the embedded note correctly reconciles to ~264,000 t (259,999 long tons = 264,177 t = 291,199 short tons, internally consistent); (2) Terra Nova IMO (actually 9183532) and SeaRose GT/NT are publicly available but conservatively left as gap/omitted -- under-claiming, not fabrication.",
+    "flagged_records": [
+      {
+        "name": "FDPSO Azurite",
+        "issue": "displacement_t field literal value '291199' is in SHORT TONS, not tonnes; correct metric displacement is ~264,177 t. The embedded note flags the ambiguity and reconciles correctly, but the headline number is unit-mislabeled and could mislead a downstream consumer reading only the field value."
+      },
+      {
+        "name": "Deepwater Conqueror (drillship)",
+        "issue": "Only brochure-PDF source (binary, not directly parsed); hull dimensions could not be independently re-confirmed via search excerpts (URL is real and live). year_built correctly left as gap (actual: 2016, IMO 9730804). Thinnest citation of the set but not fabricated."
+      },
+      {
+        "name": "Terra Nova FPSO",
+        "issue": "IMO listed as gap but is publicly known (9183532); under-claim only, no integrity issue."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "Terra Nova FPSO",
+      "vessel_type": "FPSO (ship-shaped)",
+      "owner_operator": "Suncor Energy (operator)",
+      "year_built": "1999 (in service 2002)",
+      "vessel_id": "Builder: Daewoo Shipbuilding & Marine Engineering, Okpo, South Korea",
+      "fields": {
+        "LOA_m": "292.2",
+        "LBP_m": "gap",
+        "beam_m": "45.5",
+        "depth_m": "27.94",
+        "draft_operating_m": "gap",
+        "draft_transit_m": "gap",
+        "displacement_t": "193000",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); cannot compute without LBP and operating draft -> gap until those published",
+        "LCG_m": "estimated:typical ship-shaped FPSO LCG near midships, ~0.48-0.50*LBP from AP; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.40-0.50*depth at operating/storage condition; no published value -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry, even ballast)",
+        "kxx_roll_m": "estimated:kxx=0.34*beam=0.34*45.5=15.5",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*292.2=73.1 (LBP not published; LOA used as proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*292.2=76.0 (LBP not published; LOA used as proxy)",
+        "loading_condition": "displacement quoted is full/operating; specific condition not stated"
+      },
+      "gaps": [
+        "LBP",
+        "operating draft",
+        "transit draft",
+        "block coefficient (LBP & T missing)",
+        "LCG",
+        "VCG",
+        "loading condition definition",
+        "IMO number"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "displacement_t",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 Terra Nova FPSO",
+          "url": "https://en.wikipedia.org/wiki/Terra_Nova_FPSO",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "SeaRose FPSO",
+      "vessel_type": "FPSO (ship-shaped, converted/newbuild Suezmax-class)",
+      "owner_operator": "Cenovus Energy (operator); owners Cenovus, Suncor, Nalcor",
+      "year_built": "2004",
+      "vessel_id": "IMO 9274501; Builder: Samsung Heavy Industries, Geoje, South Korea",
+      "fields": {
+        "LOA_m": "258",
+        "LBP_m": "gap",
+        "beam_m": "46",
+        "depth_m": "gap",
+        "draft_operating_m": "18.043",
+        "draft_transit_m": "gap",
+        "displacement_t": "190102",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); LBP not published -> gap",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP for ship-shaped FPSO; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.40-0.50*depth; depth not published -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.34*beam=0.34*46=15.6",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*258=64.5 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*258=67.1 (LBP not published; LOA proxy)",
+        "loading_condition": "displacement is full-load/operating (laden); draught 18.043 m corresponds to laden condition"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "transit draft",
+        "block coefficient (LBP missing)",
+        "LCG",
+        "VCG"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_operating_m",
+            "displacement_t",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 SeaRose FPSO",
+          "url": "https://en.wikipedia.org/wiki/SeaRose_FPSO",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "FPSO Noble Seillean",
+      "vessel_type": "FPSO / dynamically-positioned oil processing tanker (converted)",
+      "owner_operator": "Noble Corporation",
+      "year_built": "1988 (scrapped 2015)",
+      "vessel_id": "IMO 8413863; Builder: Harland & Wolff; Lloyd's Register 100A1 Oil Processing Tanker",
+      "fields": {
+        "LOA_m": "249.7",
+        "LBP_m": "gap",
+        "beam_m": "37",
+        "depth_m": "19.8",
+        "draft_operating_m": "11.54",
+        "draft_transit_m": "gap",
+        "displacement_t": "79600",
+        "GT": "50928",
+        "NT": "15278",
+        "DWT": "56177",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); LBP not published -> gap",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.40-0.50*depth=~7.9-9.9 m at laden draught; no published value -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.34*beam=0.34*37=12.6",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*249.7=62.4 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*249.7=64.9 (LBP not published; LOA proxy)",
+        "loading_condition": "draught 11.54 m and displacement 79,600 t represent quoted operating condition"
+      },
+      "gaps": [
+        "LBP",
+        "transit draft",
+        "block coefficient (LBP missing)",
+        "LCG",
+        "VCG"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_operating_m",
+            "displacement_t",
+            "GT",
+            "NT",
+            "DWT",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 FPSO Noble Seillean",
+          "url": "https://en.wikipedia.org/wiki/FPSO_Noble_Seillean",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "FDPSO Azurite",
+      "vessel_type": "FDPSO (floating drilling, production, storage & offloading; VLCC conversion)",
+      "owner_operator": "Prosafe Production (operator); owner Prosafe FPSO",
+      "year_built": "1988 (converted 2007-2009 at Keppel Shipyard)",
+      "vessel_id": "IMO 8611831; Builder: Hyundai Heavy Industries",
+      "fields": {
+        "LOA_m": "322.22",
+        "LBP_m": "gap",
+        "beam_m": "56",
+        "depth_m": "29.5",
+        "draft_operating_m": "19.667",
+        "draft_transit_m": "gap",
+        "displacement_t": "291199 (note: source states 259,999 long tons = 264,177 t; also lists 291,199 short tons = 264,177 t \u2014 value ambiguous, treat as ~264,000 t)",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); LBP not published -> gap (VLCC hulls typ. Cb~0.80-0.84)",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP for VLCC hull; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.45-0.52*depth at laden draught; no published value -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.34*beam=0.34*56=19.0",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*322.22=80.6 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*322.22=83.8 (LBP not published; LOA proxy)",
+        "loading_condition": "draught/displacement quoted as laden; exact condition definition not stated"
+      },
+      "gaps": [
+        "LBP",
+        "transit draft",
+        "block coefficient (LBP missing)",
+        "LCG",
+        "VCG",
+        "displacement value is unit-ambiguous in source"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_operating_m",
+            "displacement_t",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 FDPSO Azurite",
+          "url": "https://en.wikipedia.org/wiki/FDPSO_Azurite",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Yavuz (drillship)",
+      "vessel_type": "Drillship (GustoMSC P10000 design, ultra-deepwater)",
+      "owner_operator": "T\u00fcrkiye Petrolleri A.O. (TPAO)",
+      "year_built": "2011",
+      "vessel_id": "IMO 9503768; MMSI 538008234; Builder: Hyundai Heavy Industries, Ulsan; Designer: GustoMSC",
+      "fields": {
+        "LOA_m": "229.19",
+        "LBP_m": "gap",
+        "beam_m": "36",
+        "depth_m": "gap",
+        "draft_operating_m": "14.7",
+        "draft_transit_m": "gap",
+        "displacement_t": "gap",
+        "GT": "51283",
+        "DWT": "38000",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); displacement & LBP not published -> gap (drillship box-form Cb typ. ~0.78-0.85)",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP; no published value -> gap",
+        "VCG_m": "estimated:drillship VCG raised by derrick; VCG~0.55-0.65*depth; depth not published -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.40*beam=0.40*36=14.4 (drillship kxx elevated by high VCG / derrick mass vs 0.34*B tanker rule)",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*229.19=57.3 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*229.19=59.6 (LBP not published; LOA proxy)",
+        "loading_condition": "draught 14.7 m is operating; transit/survival drafts not published"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "transit draft",
+        "displacement (tonnes)",
+        "block coefficient",
+        "LCG",
+        "VCG"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_operating_m",
+            "GT",
+            "DWT",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 Yavuz (drillship)",
+          "url": "https://en.wikipedia.org/wiki/Yavuz_(drillship)",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Fatih (drillship)",
+      "vessel_type": "Drillship (ultra-deepwater)",
+      "owner_operator": "T\u00fcrkiye Petrolleri A.O. (TPAO) (acquired 2017, commissioned 2018)",
+      "year_built": "2011",
+      "vessel_id": "IMO 9503770; Builder: Hyundai Heavy Industries, Ulsan",
+      "fields": {
+        "LOA_m": "229.19",
+        "LBP_m": "gap",
+        "beam_m": "36",
+        "depth_m": "gap",
+        "draft_operating_m": "16.1",
+        "draft_transit_m": "gap",
+        "displacement_t": "gap",
+        "GT": "51283",
+        "DWT": "34256",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); displacement & LBP not published -> gap",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.55-0.65*depth (derrick-raised); depth not published -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.40*beam=0.40*36=14.4 (drillship rule, derrick-elevated)",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*229.19=57.3 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*229.19=59.6 (LBP not published; LOA proxy)",
+        "loading_condition": "draught 16.1 m is operating; transit draft not published"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "transit draft",
+        "displacement (tonnes)",
+        "block coefficient",
+        "LCG",
+        "VCG"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_operating_m",
+            "GT",
+            "DWT",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 Fatih (drillship)",
+          "url": "https://en.wikipedia.org/wiki/Fatih_(drillship)",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Deepwater Conqueror (drillship)",
+      "vessel_type": "Drillship (DSME 12000 ultra-deepwater)",
+      "owner_operator": "Transocean (owner/operator)",
+      "year_built": "gap",
+      "vessel_id": "Builder: Daewoo Shipbuilding & Marine Engineering (DSME)",
+      "fields": {
+        "LOA_m": "238 (781 ft)",
+        "LBP_m": "gap",
+        "beam_m": "42 (138 ft)",
+        "depth_m": "19 (62 ft)",
+        "draft_operating_m": "12 (39 ft)",
+        "draft_transit_m": "9 (29 ft)",
+        "displacement_t": "103500 (operating displacement, ~114,089 short tons)",
+        "block_coefficient": "estimated:Cb=disp/(rho*LBP*B*T); LBP not published -> gap",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.55-0.65*depth=~10.5-12.4 m (derrick-raised); no published value -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.40*beam=0.40*42=16.8 (drillship rule)",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*238=59.5 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*238=61.9 (LBP not published; LOA proxy)",
+        "loading_condition": "operating displacement quoted at 12 m operating draft; transit draft 9 m"
+      },
+      "gaps": [
+        "LBP",
+        "block coefficient",
+        "LCG",
+        "VCG",
+        "year built (values from brochure PDF not machine-readable; figures from search summary)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_operating_m",
+            "draft_transit_m",
+            "displacement_t"
+          ],
+          "source": "Transocean / Deepwater rig spec sheet 'Deepwater Conqueror' (PDF brochure); figures relayed via web search summary \u2014 PDF binary not directly parseable",
+          "url": "https://www.deepwater.com/documents/RigSpecs/Deepwater%20Conqueror.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Thunder Horse PDQ",
+      "vessel_type": "Production semisubmersible (Production-Drilling-Quarters, ring-pontoon)",
+      "owner_operator": "BP plc (operator, 75%); ExxonMobil 25%",
+      "year_built": "first oil June 2008 (launched 2006)",
+      "vessel_id": "Builder: Daewoo Shipbuilding & Marine Engineering, Okpo; water depth 1,840 m, Gulf of Mexico",
+      "fields": {
+        "length_m": "136",
+        "beam_width_m": "112",
+        "draft_operating_m": "30",
+        "draft_transit_m": "gap",
+        "displacement_t": "130000",
+        "topsides_hull_weight_t": "59500",
+        "block_coefficient": "n/a \u2014 semisubmersible (column-stabilized, no monohull block coefficient)",
+        "LCG_m": "estimated:near geometric centre of square column footprint by symmetry; no published value -> gap",
+        "VCG_m": "estimated:semisub VCG typically near or just below operating waterline / deck base; no published value -> gap",
+        "TCG_m": "estimated:0 (4-column symmetry, ballast trimmed)",
+        "kxx_roll_m": "estimated:semisub kxx~kyy~0.30-0.40*column-spacing; with ~78 m diagonal footprint kxx~0.35*112=39 (column-stabilized rule, NOT the 0.34*beam ship rule)",
+        "kyy_pitch_m": "estimated:kyy~kxx for near-square semisub footprint ~0.35*136=48 (column-stabilized)",
+        "kzz_yaw_m": "estimated:kzz~0.40*max horizontal extent~0.40*136=54 (column-stabilized)",
+        "loading_condition": "operating/survival draft 30 m, full displacement 130,000 t"
+      },
+      "gaps": [
+        "transit/tow draft",
+        "exact column dimensions & spacing",
+        "LCG",
+        "VCG",
+        "radii of gyration (no published values \u2014 semisub-specific estimates only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "length_m",
+            "beam_width_m",
+            "draft_operating_m",
+            "displacement_t",
+            "topsides_hull_weight_t",
+            "owner_operator",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 Thunder Horse PDQ",
+          "url": "https://en.wikipedia.org/wiki/Thunder_Horse_PDQ",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Perdido spar",
+      "vessel_type": "Spar (truss spar production platform)",
+      "owner_operator": "Shell (operator, 35%); Chevron 37.5%; BP 27.5%",
+      "year_built": "2009 (production began 2010)",
+      "vessel_id": "Hull builder: Technip, Pori, Finland; Topsides: Kiewit Offshore Services, Corpus Christi; water depth 2,450 m, Gulf of Mexico",
+      "fields": {
+        "overall_height_m": "169 (555 ft) \u2014 figure from web search summary; not on Wikipedia page",
+        "hull_diameter_m": "36 (118 ft, hard tank) \u2014 from web search summary; not on Wikipedia page",
+        "draft_operating_m": "154 (505 ft) \u2014 from web search summary; not on Wikipedia page",
+        "displacement_t": "gap (Wikipedia gives spar hull weight 22,000 t and topsides 9,500 t, which are weights not buoyant displacement)",
+        "spar_hull_weight_t": "22000",
+        "topsides_weight_t": "9500",
+        "block_coefficient": "n/a \u2014 spar (vertical cylinder, no block coefficient)",
+        "LCG_m": "estimated:on vertical centreline by axial symmetry; horizontal LCG~0 relative to hull axis",
+        "VCG_m": "estimated:spar designed for deep VCG below centre of buoyancy for stability; specific value not published -> gap",
+        "TCG_m": "estimated:0 (axisymmetric cylinder)",
+        "kxx_roll_m": "estimated:spar pitch/roll radius dominated by deep draft; kxx~kyy~0.25-0.30*draft~0.27*154=42 (slender-cylinder estimate)",
+        "kyy_pitch_m": "estimated:kyy~kxx~0.27*draft~42 (axisymmetric)",
+        "kzz_yaw_m": "estimated:kzz~0.5*hull_radius~0.5*18=9 (small; yaw inertia of slender cylinder dominated by radius)",
+        "loading_condition": "operating (on-station, ballasted) condition"
+      },
+      "gaps": [
+        "buoyant displacement",
+        "VCG",
+        "radii of gyration (estimates only; no published values)",
+        "height/diameter/draft are from secondary web summaries, not the primary Wikipedia infobox"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "spar_hull_weight_t",
+            "topsides_weight_t",
+            "owner_operator",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 Perdido (oil platform)",
+          "url": "https://en.wikipedia.org/wiki/Perdido_(oil_platform)",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "overall_height_m",
+            "hull_diameter_m",
+            "draft_operating_m"
+          ],
+          "source": "Web search summary citing Offshore Magazine / OGJ / Green Car Congress coverage of Perdido spar (505 ft draft, 555 ft height, 118 ft hard-tank diameter)",
+          "url": "https://www.offshore-mag.com/field-development/article/16763670/perdido-advances-deepwater-gom-production-possibilities",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Genesis spar",
+      "vessel_type": "Spar (classic/cylindrical production & drilling spar)",
+      "owner_operator": "Chevron (operator); now Genesis field GoM",
+      "year_built": "1998-1999 (installed)",
+      "vessel_id": "Builder: hull fabricated for Chevron Genesis project; Gulf of Mexico ~2,600 ft (800 m) water depth",
+      "fields": {
+        "hull_length_m": "215 (705 ft) \u2014 from web search summary (Offshore Magazine)",
+        "hull_diameter_m": "37.2 (122 ft) \u2014 from web search summary",
+        "draft_operating_m": "198 (about 650 ft) \u2014 from web search summary",
+        "displacement_t": "gap",
+        "block_coefficient": "n/a \u2014 spar (vertical cylinder)",
+        "LCG_m": "estimated:on vertical centreline by axisymmetry; horizontal LCG~0",
+        "VCG_m": "estimated:deep VCG below CB for stability; specific value not published -> gap",
+        "TCG_m": "estimated:0 (axisymmetric)",
+        "kxx_roll_m": "estimated:kxx~kyy~0.27*draft~0.27*198=53 (slender-cylinder estimate)",
+        "kyy_pitch_m": "estimated:kyy~kxx~53 (axisymmetric)",
+        "kzz_yaw_m": "estimated:kzz~0.5*hull_radius~0.5*18.6=9.3",
+        "loading_condition": "operating on-station condition"
+      },
+      "gaps": [
+        "displacement",
+        "VCG",
+        "radii of gyration (estimates only)",
+        "moonpool/well details",
+        "all dimensions are from secondary web summaries (Offshore Magazine), not a primary datasheet"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "hull_length_m",
+            "hull_diameter_m",
+            "draft_operating_m",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Web search summary citing Offshore Magazine 'Genesis Spar assembled, positioned offshore' and OGJ 'Chevron plans spar installation in U.S. gulf'",
+          "url": "https://www.offshore-mag.com/field-development/article/16756200/genesis-spar-assembled-positioned-offshore",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "FSRU Independence",
+      "vessel_type": "FSRU (Floating Storage & Regasification Unit, ship-shaped LNG)",
+      "owner_operator": "KN Energies (Klaip\u0117da, Lithuania) \u2014 owner since Dec 2024",
+      "year_built": "2014",
+      "vessel_id": "IMO 9629536; Builder: Hyundai Heavy Industries (yard no. 2549)",
+      "fields": {
+        "LOA_m": "294",
+        "LBP_m": "gap",
+        "beam_m": "46",
+        "depth_m": "gap",
+        "draft_operating_m": "12.6",
+        "draft_transit_m": "gap",
+        "displacement_t": "gap",
+        "GT": "109793",
+        "DWT": "82028",
+        "LNG_storage_m3": "170000",
+        "block_coefficient": "estimated:LNG-carrier hull Cb~0.75-0.80; cannot compute (disp & LBP missing) -> gap",
+        "LCG_m": "estimated:~0.48-0.50*LBP from AP for LNG-carrier hull; no published value -> gap",
+        "VCG_m": "estimated:VCG~0.55-0.65*depth (high due to membrane tanks/deck); depth not published -> gap",
+        "TCG_m": "estimated:0 (transverse symmetry)",
+        "kxx_roll_m": "estimated:kxx=0.35*beam=0.35*46=16.1 (LNG carrier kxx slightly above 0.34*B tanker rule due to raised VCG)",
+        "kyy_pitch_m": "estimated:kyy=0.25*LOA=0.25*294=73.5 (LBP not published; LOA proxy)",
+        "kzz_yaw_m": "estimated:kzz=0.26*LOA=0.26*294=76.4 (LBP not published; LOA proxy)",
+        "loading_condition": "draught 12.6 m representative; specific (laden/ballast) condition not stated"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "transit draft",
+        "displacement (tonnes)",
+        "block coefficient",
+        "LCG",
+        "VCG"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_operating_m",
+            "GT",
+            "DWT",
+            "LNG_storage_m3",
+            "year_built",
+            "owner_operator",
+            "vessel_id"
+          ],
+          "source": "Wikipedia \u2014 FSRU Independence",
+          "url": "https://en.wikipedia.org/wiki/FSRU_Independence",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

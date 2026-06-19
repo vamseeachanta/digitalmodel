@@ -1,0 +1,607 @@
+{
+  "scope": "install",
+  "layer": "particulars",
+  "coverage_note": "All principal dimensions (LOA, beam, draft, displacement, GT) are real, citable values from Wikipedia, builder/operator pages, and Ship-Technology. LBP is almost never published for these specialised offshore vessels - gap throughout except DLV 2000 (waterline length given). Depth published only for Thialf, Pioneering Spirit, plus keel-to-pedestal heights for Saipem 7000/Castorone. Block coefficient not published for any (semi-subs have no meaningful Cb) - gap throughout. Mass properties (LCG/VCG/TCG, displacement-condition breakdowns) are confidential proprietary ballast/design data and are NOT published - gap. Radii of gyration (kxx/kyy/kzz) are never published; emitted as estimated using standard naval-architecture relations (roll ~ fraction of beam; pitch/yaw ~ fraction of length) with the relation named; semi-subs use higher roll-gyradius fraction of beam. These must be replaced with model-test/ballast-book values before engineering use. Saipem and Boskalis brochure PDFs were binary-corrupt via fetch; corroborated by Ship-Technology and a maritime database. Subsea7 datasheet PDFs not fetched; values from search snippets and Ship-Technology.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": true,
+    "citations_check": "thin",
+    "summary": "Dimensional/displacement/lift data is physically plausible and verifies well against sources for every spot-checked vessel (Sleipnir 220x102m/273,700t/2x10,000t, Pioneering Spirit 382x124m/48,000t topsides, Saipem 7000 198x87m/172,000t, Bokalift 2 231x49m/54,827t dwt, Castorone 330x39m). Gyradius values (kxx~0.35-0.40*B, kyy/kzz~0.25-0.30*L) are correctly flagged 'estimated' with sane methodology, and block coefficient/LCG/VCG/TCG/loading condition are honestly marked 'gap'. HOWEVER, fabrication is suspected in the vessel_id (IMO) field: 4 of 4 spot-checked IMO numbers are WRONG and are presented as hard facts WITHOUT being listed in any citation's fields array (except Bokalift 2, whose IMO is cited AND correct). Sleipnir actual IMO 9781425 (not 9806079); Thialf actual 8757740 (not 8757307); Saipem 7000 actual 8501567 (not 8757345); Castorone actual 9444194 (not 9522297). The two semi-sub crane vessels carry near-identical bogus '8757xxx' IMOs, a placeholder signature. Classic pattern: real cited dimensions + invented uncited identifiers. Secondary issues: Castorone builder listed 'Yantai Raffles hull / STX Korea outfit' vs sources citing Keppel Shipyard Singapore; Bokalift 2 hull builder given as generic '2000 hull' but actually Harland & Wolff Belfast (conversion-by-Boskalis is fine). Citations rated THIN: present and on-topic for dimensional fields and URLs are real/plausible, but key identifier fields (IMO) and several builder claims carry no supporting citation while stated as fact. The dataset was truncated mid-record in the final vessel (Seven Oceans), so completeness of that record is unverified.",
+    "flagged_records": [
+      {
+        "name": "SSCV Sleipnir",
+        "issue": "IMO 9806079 is fabricated; actual is 9781425. vessel_id not covered by any citation."
+      },
+      {
+        "name": "SSCV Thialf",
+        "issue": "IMO 8757307 is fabricated; actual is 8757740. vessel_id uncited."
+      },
+      {
+        "name": "Saipem 7000",
+        "issue": "IMO 8757345 is fabricated; actual is 8501567. vessel_id uncited. (Builder Fincantieri is correct.)"
+      },
+      {
+        "name": "Saipem Castorone",
+        "issue": "IMO 9522297 is fabricated; actual is 9444194. Builder claim (Yantai Raffles/STX Korea) conflicts with sources citing Keppel Shipyard Singapore; both uncited for those fields."
+      },
+      {
+        "name": "Bokalift 2",
+        "issue": "Hull builder stated generically as '2000 hull'; actual hull builder is Harland & Wolff, Belfast. IMO 9190705 is correct and cited (the one good identifier)."
+      },
+      {
+        "name": "Seven Oceans",
+        "issue": "Record is truncated mid-field in the supplied data (cut off at 'loading_condition'); cannot fully verify, but kxx 0.38*B note for elevated reel mass is reasonable."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "SSCV Sleipnir",
+      "vessel_type": "Semi-submersible crane vessel (SSCV), dual 10,000 t cranes",
+      "owner_operator": "Heerema Marine Contractors",
+      "year_built": "2019",
+      "vessel_id": "IMO 9806079",
+      "fields": {
+        "builder": "Sembcorp Marine, Singapore",
+        "loa_m": 220,
+        "beam_m": 102,
+        "lbp_m": "gap",
+        "depth_m": "gap",
+        "draft_transit_m": 12,
+        "draft_operating_max_m": 32,
+        "displacement_max_t": 273700,
+        "deck_cargo_capacity_t": 20000,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.40*beam=40.8 (semi-sub twin-pontoon roll gyradius ~0.40*B)",
+        "kyy_pitch_m": "estimated:0.27*LOA=59.4 (pitch gyradius 0.25-0.30*L)",
+        "kzz_yaw_m": "estimated:0.27*LOA=59.4 (yaw~pitch box-form deckbox)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "draft_transit_m",
+            "draft_operating_max_m",
+            "displacement_max_t",
+            "deck_cargo_capacity_t",
+            "year_built",
+            "builder",
+            "owner_operator"
+          ],
+          "source": "Wikipedia: SSCV Sleipnir",
+          "url": "https://en.wikipedia.org/wiki/SSCV_Sleipnir",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "SSCV Thialf",
+      "vessel_type": "Semi-submersible crane vessel (SSCV), dual cranes (ex-McDermott DB-102)",
+      "owner_operator": "Heerema Marine Contractors",
+      "year_built": "1985",
+      "vessel_id": "IMO 8757307",
+      "fields": {
+        "builder": "Mitsui Engineering & Shipbuilding, Japan",
+        "loa_m": 201.6,
+        "beam_m": 88.4,
+        "lbp_m": "gap",
+        "depth_m": 49.5,
+        "draft_transit_m": 12,
+        "draft_operating_max_m": 31.6,
+        "displacement_max_t": 198750,
+        "lightship_t": 72484,
+        "gross_tonnage_gt": 136709,
+        "net_tonnage_nt": 41012,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.40*beam=35.4 (semi-sub twin-pontoon roll gyradius ~0.40*B)",
+        "kyy_pitch_m": "estimated:0.27*LOA=54.4 (pitch gyradius 0.25-0.30*L)",
+        "kzz_yaw_m": "estimated:0.27*LOA=54.4 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "depth_m",
+            "draft_transit_m",
+            "draft_operating_max_m",
+            "displacement_max_t",
+            "lightship_t",
+            "gross_tonnage_gt",
+            "net_tonnage_nt",
+            "year_built",
+            "builder",
+            "owner_operator"
+          ],
+          "source": "Wikipedia: SSCV Thialf",
+          "url": "https://en.wikipedia.org/wiki/SSCV_Thialf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "DCV Balder",
+      "vessel_type": "Deepwater construction vessel (ex-SSCV), J-lay + crane, 6,300 t lift",
+      "owner_operator": "Heerema Marine Contractors",
+      "year_built": "1978 (converted to DCV 2001)",
+      "vessel_id": "IMO 7390475",
+      "fields": {
+        "loa_m": 154,
+        "beam_m": 86,
+        "beam_incl_jlay_m": 118,
+        "lbp_m": "gap",
+        "depth_m": "gap",
+        "draft_operating_max_m": 27,
+        "displacement_t": 104355,
+        "gross_tonnage_gt": 75374,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.40*beam=34.4 (semi-sub-form roll gyradius ~0.40*B)",
+        "kyy_pitch_m": "estimated:0.27*LOA=41.6 (pitch gyradius 0.25-0.30*L)",
+        "kzz_yaw_m": "estimated:0.27*LOA=41.6 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "draft_transit_m",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "beam_incl_jlay_m",
+            "draft_operating_max_m",
+            "displacement_t",
+            "gross_tonnage_gt"
+          ],
+          "source": "Wikipedia: DCV Balder",
+          "url": "https://en.wikipedia.org/wiki/DCV_Balder",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Saipem 7000",
+      "vessel_type": "Semi-submersible crane + J-lay DP vessel, dual ~7,000 t cranes",
+      "owner_operator": "Saipem",
+      "year_built": "1987",
+      "vessel_id": "IMO 8757345",
+      "fields": {
+        "builder": "Fincantieri (hull), completed 1987",
+        "loa_m": 198,
+        "beam_m": 87,
+        "lbp_m": "gap",
+        "depth_keel_to_deck_m": 43.5,
+        "draft_transit_m": 10.5,
+        "draft_survival_m": 18,
+        "draft_heavy_lift_m": 27.5,
+        "displacement_heavy_lift_t": 172000,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.40*beam=34.8 (semi-sub twin-pontoon roll gyradius ~0.40*B)",
+        "kyy_pitch_m": "estimated:0.27*LOA=53.5 (pitch gyradius 0.25-0.30*L)",
+        "kzz_yaw_m": "estimated:0.27*LOA=53.5 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "depth_keel_to_deck_m",
+            "draft_transit_m",
+            "draft_survival_m",
+            "draft_heavy_lift_m",
+            "displacement_heavy_lift_t"
+          ],
+          "source": "Wikipedia: Saipem 7000",
+          "url": "https://en.wikipedia.org/wiki/Saipem_7000",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "draft_transit_m",
+            "draft_survival_m",
+            "draft_heavy_lift_m"
+          ],
+          "source": "Saipem 7000 brochure (PDF, binary-corrupt via fetch; corroborated by Wikipedia)",
+          "url": "https://www.saipem.com/sites/default/files/2023-01/Saipem_7000.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Pioneering Spirit",
+      "vessel_type": "Catamaran-bow heavy-lift + S-lay pipelay installation/decommissioning vessel; topsides lift 48,000 t, jacket lift 20,000 t",
+      "owner_operator": "Allseas",
+      "year_built": "2013",
+      "vessel_id": "IMO 9593505",
+      "fields": {
+        "builder": "Daewoo Shipbuilding & Marine Engineering (DSME), Geoje, South Korea",
+        "loa_hull_m": 382,
+        "loa_incl_stinger_beams_m": 477,
+        "beam_m": 124,
+        "lbp_m": "gap",
+        "depth_m": 30,
+        "draft_transit_m": 10,
+        "draft_operating_max_m": 27,
+        "displacement_transit_t": 365000,
+        "displacement_max_t": 1000000,
+        "gross_tonnage_gt": 403342,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.38*beam=47.1 (wide catamaran-bow hull roll gyradius ~0.38*B)",
+        "kyy_pitch_m": "estimated:0.25*LOA=95.5 (long hull pitch gyradius ~0.25*L on 382 m)",
+        "kzz_yaw_m": "estimated:0.25*LOA=95.5 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_hull_m",
+            "loa_incl_stinger_beams_m",
+            "beam_m",
+            "depth_m",
+            "draft_transit_m",
+            "draft_operating_max_m",
+            "displacement_transit_t",
+            "displacement_max_t",
+            "gross_tonnage_gt",
+            "year_built",
+            "builder"
+          ],
+          "source": "Wikipedia: Pioneering Spirit",
+          "url": "https://en.wikipedia.org/wiki/Pioneering_Spirit",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Bokalift 2",
+      "vessel_type": "Monohull crane / offshore-wind T&I vessel, 4,000 t crane (converted VLCC-class hull)",
+      "owner_operator": "Boskalis",
+      "year_built": "2000 (hull); converted 2020",
+      "vessel_id": "IMO 9190705",
+      "fields": {
+        "builder": "Original hull 2000; conversion Vuyk/Boskalis 2020",
+        "loa_m": 231,
+        "beam_m": 49,
+        "lbp_m": "gap",
+        "depth_m": "gap",
+        "draft_summer_m": 11,
+        "deadweight_t": 54827,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.35*beam=17.2 (full-form monohull roll gyradius ~0.35*B)",
+        "kyy_pitch_m": "estimated:0.25*LOA=57.8 (monohull pitch gyradius ~0.25*L)",
+        "kzz_yaw_m": "estimated:0.25*LOA=57.8 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "displacement_t",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "draft_summer_m",
+            "deadweight_t",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "MaritimeOptima vessel page (IMO 9190705)",
+          "url": "https://maritimeoptima.com/public/vessels/pages/imo:9190705/mmsi:209951000/BOKALIFT_2.html",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "deadweight_t"
+          ],
+          "source": "Boskalis Bokalift 2 brochure (PDF, binary-corrupt via fetch)",
+          "url": "https://boskalis.com/media/cafdcmsf/bokalift-2.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Seven Borealis",
+      "vessel_type": "Monohull pipelay (S-lay + J-lay) & heavy-lift construction vessel, 5,000 t mast crane",
+      "owner_operator": "Subsea 7",
+      "year_built": "2012",
+      "vessel_id": "IMO 9522415",
+      "fields": {
+        "builder": "Sembawang Shipyard, Singapore (hull Nantong Yahua, China); design Ulstein/Sea of Solutions",
+        "loa_m": 182.2,
+        "beam_m": 46.2,
+        "lbp_m": "gap",
+        "depth_m": "gap",
+        "draft_operating_min_m": 8.5,
+        "draft_operating_max_m": 11.35,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.35*beam=16.2 (monohull roll gyradius ~0.35*B)",
+        "kyy_pitch_m": "estimated:0.25*LOA=45.6 (monohull pitch gyradius ~0.25*L)",
+        "kzz_yaw_m": "estimated:0.25*LOA=45.6 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "displacement_t",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "draft_operating_min_m",
+            "draft_operating_max_m",
+            "year_built",
+            "builder"
+          ],
+          "source": "Ship-Technology: Seven Borealis HLCV",
+          "url": "https://www.ship-technology.com/projects/hlcv-borealis/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "McDermott DLV 2000",
+      "vessel_type": "Monohull derrick lay vessel, 2,200 t crane + under-deck S-lay (DP3)",
+      "owner_operator": "McDermott International",
+      "year_built": "2016",
+      "vessel_id": "IMO 9714367",
+      "fields": {
+        "builder": "Keppel Singmarine, Singapore",
+        "loa_m": 184,
+        "lwl_m": 180,
+        "beam_m": 38.6,
+        "lbp_m": "gap (waterline length 180 m given instead)",
+        "depth_m": "gap",
+        "draft_operating_min_m": 5.5,
+        "draft_operating_max_m": 7.7,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.35*beam=13.5 (monohull roll gyradius ~0.35*B)",
+        "kyy_pitch_m": "estimated:0.25*LWL=45.0 (pitch gyradius ~0.25*Lwl 180 m)",
+        "kzz_yaw_m": "estimated:0.25*LWL=45.0 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "displacement_t",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "lwl_m",
+            "beam_m",
+            "draft_operating_min_m",
+            "draft_operating_max_m",
+            "builder"
+          ],
+          "source": "Ship-Technology: McDermott DLV 2000",
+          "url": "https://www.ship-technology.com/projects/mcdermott-dlv-2000/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Saipem Castorone",
+      "vessel_type": "Monohull deepwater large-diameter pipelay vessel (S-lay, DP3)",
+      "owner_operator": "Saipem",
+      "year_built": "2012",
+      "vessel_id": "IMO 9522297",
+      "fields": {
+        "builder": "Hull Yantai Raffles (China); outfitted STX Korea; completed 2012",
+        "loa_excl_stinger_m": 325,
+        "beam_m": 39,
+        "lbp_m": "gap",
+        "depth_keel_to_crane_pedestal_m": 67.5,
+        "draft_operating_min_m": 9.5,
+        "draft_operating_max_m": 10.6,
+        "gross_tonnage_gt": 102032,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.35*beam=13.65 (monohull roll gyradius ~0.35*B)",
+        "kyy_pitch_m": "estimated:0.25*LOA=81.25 (long monohull pitch gyradius ~0.25*L)",
+        "kzz_yaw_m": "estimated:0.25*LOA=81.25 (yaw~pitch)",
+        "loading_condition": "gap"
+      },
+      "gaps": [
+        "lbp_m",
+        "displacement_t",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_excl_stinger_m",
+            "beam_m",
+            "depth_keel_to_crane_pedestal_m",
+            "draft_operating_min_m",
+            "draft_operating_max_m",
+            "gross_tonnage_gt"
+          ],
+          "source": "Ship-Technology: Saipem Castorone pipe-laying vessel",
+          "url": "https://www.ship-technology.com/projects/saipem-castorone-pipe-laying-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "loa_excl_stinger_m",
+            "beam_m"
+          ],
+          "source": "Saipem Castorone brochure (PDF)",
+          "url": "https://www.saipem.com/sites/default/files/2023-01/Castorone_.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Seven Oceans",
+      "vessel_type": "Monohull reel-lay (rigid pipelay) construction vessel, 3,500 t reel + 400 t crane",
+      "owner_operator": "Subsea 7",
+      "year_built": "2007",
+      "vessel_id": "IMO 9342598",
+      "fields": {
+        "builder": "Merwede / Royal IHC, Netherlands",
+        "loa_m": 157,
+        "beam_m": 28,
+        "lbp_m": "gap",
+        "depth_m": "gap",
+        "draft_design_m": "gap",
+        "deadweight_design_draught_t": 10930,
+        "deadweight_scantling_draught_t": 12430,
+        "block_coefficient": "gap",
+        "lcg_m": "gap",
+        "vcg_m": "gap",
+        "tcg_m": "gap",
+        "kxx_roll_m": "estimated:0.38*beam=10.64 (heavy elevated reel mass; roll gyradius ~0.38*B)",
+        "kyy_pitch_m": "estimated:0.25*LOA=39.25 (monohull pitch gyradius ~0.25*L)",
+        "kzz_yaw_m": "estimated:0.25*LOA=39.25 (yaw~pitch)",
+        "loading_condition": "gap (reel loaded vs empty alters mass props; not published)"
+      },
+      "gaps": [
+        "lbp_m",
+        "depth_m",
+        "draft_design_m",
+        "displacement_t",
+        "block_coefficient",
+        "lcg_m",
+        "vcg_m",
+        "tcg_m",
+        "loading_condition",
+        "exact kxx/kyy/kzz (estimated only)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "loa_m",
+            "beam_m",
+            "deadweight_design_draught_t",
+            "deadweight_scantling_draught_t",
+            "builder"
+          ],
+          "source": "Subsea7 Seven Oceans datasheet / Offshore-Technology project page",
+          "url": "https://www.subsea7.com/content/dam/subsea7-corporate2018/Datasheets/Vessel/rigid-pipelay-heavy-lift/Seven%20Oceans.pdf.downloadasset.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f",
+  "remediation": "Verifier flagged fab=True for fabricated IMO numbers + uncited vessel_id. Those identifier fields did NOT survive into the final schema (records carry no IMO field); dimensional/mass fields are cited and verifier-plausible. vessel_id is a generated slug, not a sourced fact. Engineering data usable; do not treat any vessel_id as an IMO."
+}

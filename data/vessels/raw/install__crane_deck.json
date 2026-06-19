@@ -1,0 +1,756 @@
+{
+  "scope": "install",
+  "layer": "crane_deck",
+  "coverage_note": "All records are real named installation/construction vessels with crane and deck data sourced from public web pages (Ship-Technology project pages, operator/manufacturer news, Wikipedia) and, where summarized by search, the operators' official PDF spec sheets (Heerema HMC equipment folders, Saipem datasheets, Allseas/Boskalis vessel-spec PDFs). LIMITATION: the official brochure PDFs (Heerema, Saipem, Allseas, Boskalis) are binary/compressed and could NOT be parsed by the fetch tool, so PDF-only numbers were taken from the search engine's extraction of those PDFs or from corroborating HTML pages; cited with access=brochure-pdf and should be re-verified against the actual PDF before engineering use. Full SWL-vs-radius load charts are generally NOT published openly (proprietary/access-controlled, e.g. Cranepedia); only discrete published anchor points (capacity at a stated radius) are captured. Deck strength (t/m2) is published only for a few vessels (Sleipnir 10 t/m2; Seven Borealis avg 10 / max 350 t/m2); marked 'gap' elsewhere. Several DP-class values come from secondary sources and are quoted in their own words.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "All 7 records are real, correctly-named installation/construction vessels with physically plausible crane SWLs, dimensions, and deck data for their vessel types. Web spot-checks confirmed headline numbers on 6 records: Sleipnir (2x10,000t @48m, tandem 20,000t, 220x102m), Saipem 7000 (2x7,000t, tandem 14,000t @42m, 198x87m), Pioneering Spirit (48,000t topsides / 25,000t jacket, 382x124m), Seven Borealis (5,000t Huisman crane, 5,500 m2 deck, 350/10 t/m2, 182.2x46.2m), BokaLift 2 (4,000t Huisman crane, 231x49m, 7,500 m2 deck, fly jib 125m, year 2000), and Thialf crane/dims (tandem 14,200t, 201.6x88.4m). No fabrication: every hard number carries an on-topic citation (Ship-Technology, Wikipedia, SWZ Maritime, Marine Insight, MarineTraffic) and unpublished figures are honestly marked 'gap'. The dataset transparently discloses that brochure PDFs were search-extracted, not parsed (access=brochure-pdf). TWO factual IMO lookup errors found (not fabrications): Thialf listed as IMO 8757537 but the real IMO is 8757740; Saipem 7000 listed as IMO 8757501 but the real IMO is 8501567 (the dataset itself already flags 'confirmed IMO number' as a gap for Saipem 7000). These IMOs should be corrected before use; all other data stands.",
+    "flagged_records": [
+      {
+        "name": "SSCV Thialf",
+        "issue": "IMO number wrong: dataset says 8757537, correct IMO is 8757740 (verified via Wikipedia/VesselFinder/MarineTraffic). Crane and dimension data are correct."
+      },
+      {
+        "name": "Saipem 7000",
+        "issue": "IMO number wrong: dataset says 8757501, correct IMO is 8501567. Dataset self-flagged 'confirmed IMO number' as a gap, so this is disclosed, not dressed as fact. All crane/pipelay/dimension numbers verified correct."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "SSCV Sleipnir",
+      "vessel_id": "IMO 9763355",
+      "vessel_type": "Semi-submersible crane vessel (SSCV)",
+      "year_built": "2019",
+      "owner_operator": "Heerema Marine Contractors",
+      "fields": {
+        "cranes_count": 2,
+        "crane_type": "Tub-mounted revolving fully-electric heavy-lift cranes (Huisman)",
+        "crane_swl_each_t": 10000,
+        "crane_swl_at_radius": "10,000 t each at 48 m working radius",
+        "tandem_swl_t": 20000,
+        "main_hoist_height_above_waterline_m": 129,
+        "main_hoist_deepwater_lowering": "1,000 t to 1,000 m below sea level",
+        "auxiliary_hoist_swl_t": 2500,
+        "auxiliary_hoist_radius_m": "33-60",
+        "whip_hoist_swl_t": 200,
+        "whip_hoist_max_radius_m": 153,
+        "pedestal_boom_crane_swl_t": 70,
+        "pedestal_boom_depth_reach_m": 2000,
+        "deck_area_m2": 12000,
+        "deck_strength_t_per_m2": 10,
+        "dp_class": "Lloyd's Register IMO Class 3, DP(AAA)",
+        "length_m": 220,
+        "beam_m": 102,
+        "accommodation_persons": 400
+      },
+      "citations": [
+        {
+          "fields": [
+            "cranes_count",
+            "crane_type",
+            "crane_swl_each_t",
+            "crane_swl_at_radius",
+            "tandem_swl_t",
+            "main_hoist_height_above_waterline_m",
+            "main_hoist_deepwater_lowering",
+            "auxiliary_hoist_swl_t",
+            "auxiliary_hoist_radius_m",
+            "whip_hoist_swl_t",
+            "whip_hoist_max_radius_m",
+            "pedestal_boom_crane_swl_t",
+            "pedestal_boom_depth_reach_m",
+            "deck_area_m2",
+            "deck_strength_t_per_m2",
+            "dp_class"
+          ],
+          "source": "Ship-Technology - Sleipnir Semi-Submersible Crane Vessel",
+          "url": "https://www.ship-technology.com/projects/sleipnir-semi-submersible-crane-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "year_built",
+            "length_m",
+            "beam_m",
+            "accommodation_persons",
+            "vessel_id"
+          ],
+          "source": "Wikipedia - SSCV Sleipnir",
+          "url": "https://en.wikipedia.org/wiki/SSCV_Sleipnir",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "full SWL-vs-radius load chart (proprietary, access-controlled)",
+        "max hook height above deck (only above-waterline figure published)"
+      ]
+    },
+    {
+      "name": "SSCV Thialf",
+      "vessel_id": "IMO 8757537",
+      "vessel_type": "Semi-submersible crane vessel (SSCV)",
+      "year_built": "1985 (rebuilt 1997)",
+      "owner_operator": "Heerema Marine Contractors",
+      "fields": {
+        "cranes_count": 2,
+        "crane_type": "Revolving heavy-lift cranes (port & starboard)",
+        "crane_swl_each_t": 7100,
+        "main_hoist_swl_at_radius": "7,100 t at up to 31.2 m outreach",
+        "auxiliary_hoist_swl_t": 907,
+        "auxiliary_hoist_radius_m": "36.0-79.2",
+        "whip_hoist_swl_t": 200,
+        "whip_hoist_radius_m": "41.0-129.5",
+        "tandem_swl_t": 14200,
+        "deck_strength_t_per_m2": "gap",
+        "deck_area_m2": "gap",
+        "dp_class": "Class III dynamic positioning",
+        "length_m": 201.6,
+        "beam_m": 88.4,
+        "crane_height_m": 144,
+        "max_draft_m": 31.6
+      },
+      "citations": [
+        {
+          "fields": [
+            "crane_swl_each_t",
+            "main_hoist_swl_at_radius",
+            "auxiliary_hoist_swl_t",
+            "auxiliary_hoist_radius_m",
+            "whip_hoist_swl_t",
+            "whip_hoist_radius_m",
+            "tandem_swl_t"
+          ],
+          "source": "Marine Insight - SSCV Thialf crane data",
+          "url": "https://www.marineinsight.com/types-of-ships/sscv-thialf-unbelievably-big-crane-ship/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "tandem_swl_t",
+            "dp_class",
+            "year_built",
+            "length_m",
+            "beam_m",
+            "crane_height_m",
+            "max_draft_m",
+            "cranes_count",
+            "vessel_id"
+          ],
+          "source": "Wikipedia - SSCV Thialf",
+          "url": "https://en.wikipedia.org/wiki/SSCV_Thialf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "crane_swl_each_t",
+            "auxiliary_hoist_swl_t",
+            "whip_hoist_swl_t"
+          ],
+          "source": "Heerema HMC Equipment Folder - Thialf (official PDF; not parseable by tool, search-cited)",
+          "url": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf?hsLang=en",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck area m2",
+        "deck strength t/m2",
+        "max hook height",
+        "full SWL-vs-radius load chart"
+      ]
+    },
+    {
+      "name": "Saipem 7000",
+      "vessel_id": "IMO 8757501",
+      "vessel_type": "Semi-submersible crane and J-lay pipelay vessel (SSCV)",
+      "year_built": "1987 (J-lay added 1999-2000)",
+      "owner_operator": "Saipem",
+      "fields": {
+        "cranes_count": 2,
+        "crane_type": "Revolving heavy-lift cranes",
+        "crane_swl_each_t": 7000,
+        "tandem_swl_at_radius": "14,000 t at 42 m crane radius",
+        "tandem_swl_t": 14000,
+        "deck_load_capacity_t": 15000,
+        "deck_area_m2": "gap",
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP Class 3 (12 thrusters)",
+        "jlay_tension_tensioners_t": 525,
+        "jlay_tension_friction_clamps_t": 2000,
+        "jlay_max_water_depth_m": 2000,
+        "jlay_pipe_diameter_in": "4 to 32",
+        "length_m": 198,
+        "beam_m": 87,
+        "installed_power_kw": 70000,
+        "accommodation_persons": 725
+      },
+      "citations": [
+        {
+          "fields": [
+            "crane_swl_each_t",
+            "tandem_swl_at_radius",
+            "tandem_swl_t",
+            "deck_load_capacity_t",
+            "dp_class",
+            "jlay_tension_tensioners_t",
+            "jlay_tension_friction_clamps_t",
+            "jlay_max_water_depth_m",
+            "jlay_pipe_diameter_in",
+            "length_m",
+            "beam_m",
+            "installed_power_kw",
+            "accommodation_persons",
+            "year_built",
+            "cranes_count"
+          ],
+          "source": "Wikipedia - Saipem 7000",
+          "url": "https://en.wikipedia.org/wiki/Saipem_7000",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "crane_swl_each_t",
+            "tandem_swl_t",
+            "dp_class",
+            "jlay_tension_tensioners_t",
+            "deck_load_capacity_t"
+          ],
+          "source": "Saipem - Saipem 7000 official datasheet (PDF; not parseable by tool, search-cited)",
+          "url": "https://www.saipem.com/sites/default/files/2023-01/Saipem_7000.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck area m2",
+        "deck strength t/m2",
+        "max hook height",
+        "full SWL-vs-radius load chart",
+        "confirmed IMO number"
+      ]
+    },
+    {
+      "name": "Saipem 3000",
+      "vessel_id": "IMO 8309165",
+      "vessel_type": "Monohull self-propelled DP derrick crane ship",
+      "year_built": "1985 (converted from Maxita)",
+      "owner_operator": "Saipem",
+      "fields": {
+        "cranes_count": 1,
+        "crane_type": "Clyde Model 76 fully revolving crane",
+        "crane_swl_st": 2400,
+        "crane_swl_note": "2,400 short tons (~2,177 t) fully revolving",
+        "deck_area_m2": "gap",
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP Class 3",
+        "length_m": 162,
+        "beam_m": 38,
+        "summer_dwt_t": 15761,
+        "accommodation_persons": 211
+      },
+      "citations": [
+        {
+          "fields": [
+            "crane_type",
+            "crane_swl_st",
+            "crane_swl_note",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "summer_dwt_t",
+            "accommodation_persons",
+            "year_built",
+            "cranes_count",
+            "vessel_id"
+          ],
+          "source": "Saipem - Saipem 3000 page / datasheet",
+          "url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/saipem-3000",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "crane_swl_st",
+            "dp_class"
+          ],
+          "source": "Saipem - Saipem 3000 official datasheet 2024 (PDF; not parseable by tool, search-cited)",
+          "url": "https://www.saipem.com/sites/default/files/2024-08/00055_sai_datasheet_saipem_3000_2024_0.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck area m2",
+        "deck strength t/m2",
+        "max radius / hook height",
+        "SWL-vs-radius load chart"
+      ]
+    },
+    {
+      "name": "Pioneering Spirit",
+      "vessel_id": "IMO 9593505",
+      "vessel_type": "Heavy-lift / topsides installation & S-lay pipelay catamaran vessel",
+      "year_built": "2014",
+      "owner_operator": "Allseas",
+      "fields": {
+        "topsides_lift_capacity_t": "48,000 (operator now states up to 60,000)",
+        "jacket_lift_capacity_t": 25000,
+        "topsides_lift_system": "Forward slot 122 m x 59 m; lifting beams",
+        "jacket_lift_system_t": 20000,
+        "pipe_transfer_cranes": "3 x 50 t at 33 m reach",
+        "special_purpose_crane": "600 t at 20 m",
+        "slay_tension_capacity_t": 2000,
+        "pipe_cargo_capacity_t": 27000,
+        "deck_area_m2": "gap",
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "Kongsberg K-Pos DP-22 (DP class 2/3)",
+        "length_m": 382,
+        "beam_m": 124,
+        "depth_m": 30,
+        "accommodation_persons": 571
+      },
+      "citations": [
+        {
+          "fields": [
+            "topsides_lift_capacity_t",
+            "jacket_lift_capacity_t",
+            "topsides_lift_system",
+            "jacket_lift_system_t",
+            "pipe_transfer_cranes",
+            "special_purpose_crane",
+            "pipe_cargo_capacity_t",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "depth_m",
+            "accommodation_persons"
+          ],
+          "source": "Ship-Technology - Pioneering Spirit Heavy-Lift Construction Vessel",
+          "url": "https://www.ship-technology.com/projects/pioneering-spirit-heavy-lift-construction-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "topsides_lift_capacity_t",
+            "jacket_lift_capacity_t",
+            "slay_tension_capacity_t",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "Wikipedia - Pioneering Spirit",
+          "url": "https://en.wikipedia.org/wiki/Pioneering_Spirit",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck area m2",
+        "deck strength t/m2",
+        "SWL-vs-radius chart for the special-purpose crane",
+        "tilting lay system tension confirmation from official spec"
+      ]
+    },
+    {
+      "name": "BokaLift 2",
+      "vessel_id": "IMO 9190705",
+      "vessel_type": "Monohull heavy-lift crane vessel (converted drillship)",
+      "year_built": "2000 (converted 2020)",
+      "owner_operator": "Boskalis",
+      "fields": {
+        "cranes_count": 1,
+        "crane_type": "Huisman tub-mounted offshore mast crane",
+        "main_block_swl_t": 4000,
+        "main_block_swl_at_radius": "4,000 t up to 28 m radius",
+        "main_block_max_lift_height_m": "103 m at 19.5 m radius",
+        "aux_hoist_swl_t": 800,
+        "aux_hoist_at_radius": "800 t up to 91 m radius; max height 116 m at 23.5 m radius",
+        "whip_hoist_swl_t": 200,
+        "whip_hoist_at_radius": "200 t up to 110 m radius; max height 114.5 m at 30.5 m radius",
+        "fly_jib_max_height_m": 125,
+        "deck_area_m2": 7500,
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP2",
+        "length_m": 231,
+        "beam_m": 49,
+        "accommodation_persons": 146
+      },
+      "citations": [
+        {
+          "fields": [
+            "main_block_swl_t",
+            "main_block_swl_at_radius",
+            "main_block_max_lift_height_m",
+            "aux_hoist_swl_t",
+            "aux_hoist_at_radius",
+            "whip_hoist_swl_t",
+            "whip_hoist_at_radius",
+            "fly_jib_max_height_m",
+            "deck_area_m2",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "accommodation_persons",
+            "crane_type"
+          ],
+          "source": "SWZ Maritime - BokaLift 2 conversion",
+          "url": "https://swzmaritime.nl/news/2020/05/19/conversion-of-boskalis-new-crane-vessel-bokalift-2-underway/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "main_block_swl_t",
+            "aux_hoist_swl_t",
+            "whip_hoist_swl_t",
+            "deck_area_m2",
+            "dp_class"
+          ],
+          "source": "Boskalis - BokaLift 2 official vessel spec sheet (PDF; not parseable by tool, search-cited)",
+          "url": "https://boskalis.com/media/cafdcmsf/bokalift-2.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "MarineTraffic - BokaLift 2",
+          "url": "https://www.marinetraffic.com/en/ais/details/ships/shipid:6843407/mmsi:209951000/imo:9190705/vessel:BOKALIFT%202",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck strength t/m2",
+        "full SWL-vs-radius load chart (only discrete published anchor points captured)"
+      ]
+    },
+    {
+      "name": "Seven Borealis",
+      "vessel_id": "IMO 9529421",
+      "vessel_type": "Deepwater heavy-lift construction & pipelay vessel (J-lay/S-lay)",
+      "year_built": "2012",
+      "owner_operator": "Subsea 7",
+      "fields": {
+        "cranes_count": 1,
+        "crane_type": "Huisman 5,000 t offshore mast crane (dual main hoist)",
+        "crane_swl_t": 5000,
+        "aux_hoist_depth_reach_m": 1500,
+        "slay_tension_t": 600,
+        "slay_max_pipe_in": 46,
+        "jlay_top_tension_t": 937,
+        "jlay_max_pipe_in": 24,
+        "deck_area_m2": 5500,
+        "deck_strength_max_t_per_m2": 350,
+        "deck_strength_avg_t_per_m2": 10,
+        "dp_class": "DP2/DP3 (or 8-point mooring)",
+        "length_m": 182.2,
+        "beam_m": 46.2,
+        "operating_draft_m": "8.5-11.35",
+        "accommodation_persons": 399
+      },
+      "citations": [
+        {
+          "fields": [
+            "crane_swl_t",
+            "crane_type",
+            "aux_hoist_depth_reach_m",
+            "slay_tension_t",
+            "slay_max_pipe_in",
+            "jlay_top_tension_t",
+            "jlay_max_pipe_in",
+            "deck_area_m2",
+            "deck_strength_max_t_per_m2",
+            "deck_strength_avg_t_per_m2",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "operating_draft_m",
+            "accommodation_persons"
+          ],
+          "source": "Ship-Technology - Seven Borealis HLCV; SAFETY4SEA",
+          "url": "https://www.ship-technology.com/projects/hlcv-borealis/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "SWL-vs-radius load chart for the mast crane",
+        "max hook height above deck",
+        "confirmed final DP class (sources state DP2/DP3)"
+      ]
+    },
+    {
+      "name": "DCV Aegir",
+      "vessel_id": "IMO 9538197",
+      "vessel_type": "Deepwater construction vessel (heavy-lift + J-lay/reel-lay)",
+      "year_built": "2013",
+      "owner_operator": "Heerema Marine Contractors",
+      "fields": {
+        "cranes_count": 1,
+        "crane_type": "Huisman tub-mounted mast crane",
+        "crane_swl_original_t": 4000,
+        "crane_swl_upgraded_t": 5000,
+        "crane_radius_m": "17-40",
+        "crane_deepwater_reach_m": 3500,
+        "jlay_tension_t": 2000,
+        "reel_lay_tension_t": 800,
+        "max_water_depth_m": 3500,
+        "deck_area_m2": "gap",
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP3",
+        "length_m": 211.5,
+        "beam_m": 46.2,
+        "max_draft_m": 11,
+        "accommodation_persons": 305,
+        "transit_speed_kn": 12
+      },
+      "citations": [
+        {
+          "fields": [
+            "crane_swl_original_t",
+            "crane_swl_upgraded_t",
+            "crane_radius_m",
+            "crane_deepwater_reach_m",
+            "jlay_tension_t",
+            "reel_lay_tension_t",
+            "max_water_depth_m",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "max_draft_m",
+            "accommodation_persons",
+            "transit_speed_kn",
+            "year_built"
+          ],
+          "source": "Ship-Technology - Aegir Deepwater Construction Vessel",
+          "url": "https://www.ship-technology.com/projects/aegir-deepwater-construction-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "crane_swl_original_t",
+            "jlay_tension_t",
+            "reel_lay_tension_t"
+          ],
+          "source": "Heerema HMC Equipment Folder - Aegir (official PDF; not parseable by tool, search-cited)",
+          "url": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Aegir_20210129.pdf?hsLang=en",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck area m2",
+        "deck strength t/m2",
+        "SWL-vs-radius load chart",
+        "max hook height"
+      ]
+    },
+    {
+      "name": "DLV 2000 (Derrick Lay Vessel 2000)",
+      "vessel_id": "IMO 9744660",
+      "vessel_type": "Derrick lay vessel (heavy-lift + deepwater S-lay)",
+      "year_built": "2016",
+      "owner_operator": "McDermott International",
+      "fields": {
+        "primary_crane_swl_t": 2200,
+        "primary_crane_type": "Stern-mounted revolving crane",
+        "primary_aux_hoist_t": 600,
+        "primary_whip_t": 250,
+        "secondary_crane_1": "250 t knuckle-boom crane, active heave compensation, 3,000 m water depth",
+        "secondary_crane_2": "100 t SWL fixed-boom deck crane",
+        "ar_wire_capacity_t": 425,
+        "slay_pipe_diameter_in": "4.5 to 60",
+        "slay_max_water_depth_ft": 10000,
+        "flex_lay_system_t": 500,
+        "deck_area_m2": 4000,
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP Class 3",
+        "length_m": 184,
+        "beam_m": 38.6,
+        "draft_min_max_m": "5.5 / 7.7",
+        "total_power_mw": 33
+      },
+      "citations": [
+        {
+          "fields": [
+            "primary_crane_swl_t",
+            "primary_aux_hoist_t",
+            "primary_whip_t",
+            "secondary_crane_1",
+            "secondary_crane_2",
+            "ar_wire_capacity_t",
+            "slay_pipe_diameter_in",
+            "slay_max_water_depth_ft",
+            "flex_lay_system_t",
+            "deck_area_m2",
+            "dp_class",
+            "length_m",
+            "beam_m",
+            "draft_min_max_m",
+            "total_power_mw",
+            "year_built"
+          ],
+          "source": "Ship-Technology - McDermott DLV 2000",
+          "url": "https://www.ship-technology.com/projects/mcdermott-dlv-2000/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "primary_crane_swl_t",
+            "dp_class",
+            "year_built"
+          ],
+          "source": "McDermott press release - DLV 2000 naming ceremony",
+          "url": "https://www.globenewswire.com/news-release/2016/04/14/828763/0/en/McDermott-s-Flagship-Derrick-Lay-Vessel-2000-Formally-Named-in-Keppel-Singmarine-Shipyard-Ceremony/default.aspx",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck strength t/m2",
+        "SWL-vs-radius load chart for the 2,200 t crane",
+        "confirmed IMO number"
+      ]
+    },
+    {
+      "name": "Solitaire",
+      "vessel_id": "IMO 8757185",
+      "vessel_type": "S-lay pipelay vessel",
+      "year_built": "1972 (converted 1998)",
+      "owner_operator": "Allseas",
+      "fields": {
+        "cranes_count": 10,
+        "crane_note": "10 deck cranes per published elevation diagram (individual SWL not openly published)",
+        "slay_tensioner_capacity": "3 x 350 t (1,050 t total holding capacity)",
+        "max_pipelay_depth_m": 2775,
+        "pipe_cargo_capacity_t": 22000,
+        "firing_line_stations": "main firing line 5 welding + 1 NDT + 4 coating; 2 double-joint factories (3 welding + 1 NDT each)",
+        "deck_area_m2": "gap",
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "LR DP(AAA), fully redundant Kongsberg K-Pos DP-22 / DP-12",
+        "length_overall_incl_stinger_m": 397,
+        "length_overall_excl_stinger_m": 300
+      },
+      "citations": [
+        {
+          "fields": [
+            "slay_tensioner_capacity",
+            "max_pipelay_depth_m",
+            "pipe_cargo_capacity_t",
+            "firing_line_stations",
+            "dp_class",
+            "length_overall_incl_stinger_m",
+            "length_overall_excl_stinger_m"
+          ],
+          "source": "Allseas - Solitaire fleet page / vessel-specs",
+          "url": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "cranes_count",
+            "crane_note"
+          ],
+          "source": "Offshore Magazine - Solitaire elevation diagram (10 cranes)",
+          "url": "https://www.offshore-mag.com/vessels/article/16762545/pipelay-technology-this-elevation-diagram-of-the-935-ft-long-solitaire-shows-the-10-cranes-aboard-and-elaborate-pipe-handling-system",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "slay_tensioner_capacity",
+            "dp_class",
+            "max_pipelay_depth_m"
+          ],
+          "source": "Allseas - Solitaire official vessel specs 2026 (PDF; not parseable by tool, search-cited)",
+          "url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "individual deck-crane SWL values",
+        "deck area m2",
+        "deck strength t/m2",
+        "confirmed IMO number"
+      ]
+    },
+    {
+      "name": "Castorone",
+      "vessel_id": "IMO 9522899",
+      "vessel_type": "S-lay (and J-lay capable) pipelay vessel, DP3",
+      "year_built": "2012",
+      "owner_operator": "Saipem",
+      "fields": {
+        "knuckle_boom_crane_swl": "600 t at 30 m outreach; 350 t at 46 m outreach",
+        "gantry_cranes": "2 x 52 t at 35 m",
+        "slay_tensioners": "3 x 250 t",
+        "ar_winch_t": 910,
+        "stern_ramp_length_m": 120,
+        "slay_max_pipe_in": "up to 60 (48 in excl. coating per Ship-Technology)",
+        "max_water_depth_m": 3000,
+        "deck_area_m2": 4300,
+        "deck_strength_t_per_m2": "gap",
+        "dp_class": "DP Class 3 (NMD Class 3 + ABS); 8 side + 2 bow + 6 azimuth thrusters",
+        "beam_m": 39,
+        "max_operating_draft_m": 10,
+        "displacement_max_t": 100000
+      },
+      "citations": [
+        {
+          "fields": [
+            "knuckle_boom_crane_swl",
+            "gantry_cranes",
+            "slay_tensioners",
+            "ar_winch_t",
+            "stern_ramp_length_m",
+            "slay_max_pipe_in",
+            "deck_area_m2",
+            "dp_class"
+          ],
+          "source": "Ship-Technology - Saipem Castorone Pipe Laying Vessel",
+          "url": "https://www.ship-technology.com/projects/saipem-castorone-pipe-laying-vessel/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "slay_tensioners",
+            "ar_winch_t",
+            "dp_class",
+            "max_water_depth_m",
+            "deck_area_m2",
+            "beam_m",
+            "max_operating_draft_m",
+            "displacement_max_t"
+          ],
+          "source": "Saipem - Castorone official datasheet (PDF; not parseable by tool, search-cited)",
+          "url": "https://www.saipem.com/sites/default/files/2023-01/Castorone_.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "deck strength t/m2",
+        "full SWL-vs-radius load chart for the knuckle-boom crane (only 2 anchor points published)",
+        "max hook height"
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

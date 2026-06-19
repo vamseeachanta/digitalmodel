@@ -1,0 +1,122 @@
+# Vessel DB — Provenance & Estimation Report
+
+- particulars rows: 41
+- crane summary rows: 11
+- RAO datasets: 26
+- metocean regions: 7
+- gyradii estimated: 105
+- provenance violations: 0
+
+## Provenance integrity
+
+✅ No un-cited hard numbers. Every numeric field is cited, `estimated:<basis>`, or `gap`.
+
+## Estimated radii of gyration
+
+Gyradii are rarely public; these were filled from documented relations (see `gyradii.py`). Cited values were kept as-is.
+
+- Terra Nova FPSO: kxx <- estimated:kxx=0.35*beam
+- Terra Nova FPSO: kyy <- estimated:kyy=0.25*length_bp
+- Terra Nova FPSO: kzz <- estimated:kzz=0.26*length_bp
+- SeaRose FPSO: kxx <- estimated:kxx=0.35*beam
+- SeaRose FPSO: kyy <- estimated:kyy=0.25*length_bp
+- SeaRose FPSO: kzz <- estimated:kzz=0.26*length_bp
+- FPSO Noble Seillean: kxx <- estimated:kxx=0.35*beam
+- FPSO Noble Seillean: kyy <- estimated:kyy=0.25*length_bp
+- FPSO Noble Seillean: kzz <- estimated:kzz=0.26*length_bp
+- FDPSO Azurite: kxx <- estimated:kxx=0.35*beam
+- FDPSO Azurite: kyy <- estimated:kyy=0.25*length_bp
+- FDPSO Azurite: kzz <- estimated:kzz=0.26*length_bp
+- Yavuz (drillship): kxx <- estimated:kxx=0.35*beam
+- Yavuz (drillship): kyy <- estimated:kyy=0.25*length_bp
+- Yavuz (drillship): kzz <- estimated:kzz=0.26*length_bp
+- Fatih (drillship): kxx <- estimated:kxx=0.35*beam
+- Fatih (drillship): kyy <- estimated:kyy=0.25*length_bp
+- Fatih (drillship): kzz <- estimated:kzz=0.26*length_bp
+- Thunder Horse PDQ: kyy <- estimated:kyy=0.25*length_bp
+- Thunder Horse PDQ: kzz <- estimated:kzz=0.26*length_bp
+- FSRU Independence: kxx <- estimated:kxx=0.35*beam
+- FSRU Independence: kyy <- estimated:kyy=0.25*length_bp
+- FSRU Independence: kzz <- estimated:kzz=0.26*length_bp
+- SSCV Sleipnir: kxx <- estimated:kxx=0.35*beam
+- SSCV Sleipnir: kyy <- estimated:kyy=0.25*length_bp
+- SSCV Sleipnir: kzz <- estimated:kzz=0.26*length_bp
+- SSCV Thialf: kxx <- estimated:kxx=0.35*beam
+- SSCV Thialf: kyy <- estimated:kyy=0.25*length_bp
+- SSCV Thialf: kzz <- estimated:kzz=0.26*length_bp
+- DCV Balder: kxx <- estimated:kxx=0.35*beam
+- DCV Balder: kyy <- estimated:kyy=0.25*length_bp
+- DCV Balder: kzz <- estimated:kzz=0.26*length_bp
+- Saipem 7000: kxx <- estimated:kxx=0.35*beam
+- Saipem 7000: kyy <- estimated:kyy=0.25*length_bp
+- Saipem 7000: kzz <- estimated:kzz=0.26*length_bp
+- Pioneering Spirit: kxx <- estimated:kxx=0.35*beam
+- Bokalift 2: kxx <- estimated:kxx=0.35*beam
+- Bokalift 2: kyy <- estimated:kyy=0.25*length_bp
+- Bokalift 2: kzz <- estimated:kzz=0.26*length_bp
+- Seven Borealis: kxx <- estimated:kxx=0.35*beam
+- Seven Borealis: kyy <- estimated:kyy=0.25*length_bp
+- Seven Borealis: kzz <- estimated:kzz=0.26*length_bp
+- McDermott DLV 2000: kxx <- estimated:kxx=0.35*beam
+- McDermott DLV 2000: kyy <- estimated:kyy=0.25*length_bp
+- McDermott DLV 2000: kzz <- estimated:kzz=0.26*length_bp
+- Saipem Castorone: kxx <- estimated:kxx=0.35*beam
+- Seven Oceans: kxx <- estimated:kxx=0.35*beam
+- Seven Oceans: kyy <- estimated:kyy=0.25*length_bp
+- Seven Oceans: kzz <- estimated:kzz=0.26*length_bp
+- Damen AHTS 150: kxx <- estimated:kxx=0.35*beam
+- Damen AHTS 150: kyy <- estimated:kyy=0.25*length_bp
+- Damen AHTS 150: kzz <- estimated:kzz=0.26*length_bp
+- Damen AHTS 180: kxx <- estimated:kxx=0.35*beam
+- Damen AHTS 180: kyy <- estimated:kyy=0.25*length_bp
+- Damen AHTS 180: kzz <- estimated:kzz=0.26*length_bp
+- Eas DPI (AHTS): kxx <- estimated:kxx=0.35*beam
+- Eas DPI (AHTS): kyy <- estimated:kyy=0.25*length_bp
+- Eas DPI (AHTS): kzz <- estimated:kzz=0.26*length_bp
+- PSV 79m DP2 (Horizon HOS265): kxx <- estimated:kxx=0.35*beam
+- PSV 79m DP2 (Horizon HOS265): kyy <- estimated:kyy=0.25*length_bp
+- PSV 79m DP2 (Horizon HOS265): kzz <- estimated:kzz=0.26*length_bp
+- Viking Energy (LNG PSV): kxx <- estimated:kxx=0.35*beam
+- Viking Energy (LNG PSV): kyy <- estimated:kyy=0.25*length_bp
+- Viking Energy (LNG PSV): kzz <- estimated:kzz=0.26*length_bp
+- Chartwell 24 CTV: kxx <- estimated:kxx=0.35*beam
+- Chartwell 24 CTV: kyy <- estimated:kyy=0.25*length_bp
+- Chartwell 24 CTV: kzz <- estimated:kzz=0.26*length_bp
+- StratCat 27 CTV: kxx <- estimated:kxx=0.35*beam
+- StratCat 27 CTV: kyy <- estimated:kyy=0.25*length_bp
+- StratCat 27 CTV: kzz <- estimated:kzz=0.26*length_bp
+- WINDEA Jules Verne (Ulstein SX195 SOV/W2W): kxx <- estimated:kxx=0.35*beam
+- WINDEA Jules Verne (Ulstein SX195 SOV/W2W): kyy <- estimated:kyy=0.25*length_bp
+- WINDEA Jules Verne (Ulstein SX195 SOV/W2W): kzz <- estimated:kzz=0.26*length_bp
+- Almi VLCC (320,000 DWT class, DSME-built, e.g. IMO 9583720/9583732): kxx <- estimated:kxx=0.35*beam
+- Almi VLCC (320,000 DWT class, DSME-built, e.g. IMO 9583720/9583732): kyy <- estimated:kyy=0.25*length_bp
+- Almi VLCC (320,000 DWT class, DSME-built, e.g. IMO 9583720/9583732): kzz <- estimated:kzz=0.26*length_bp
+- Almi VLCC (315,500 DWT class, Hyundai Samho HSHI-built, IMO 9816323/9816335): kxx <- estimated:kxx=0.35*beam
+- Almi VLCC (315,500 DWT class, Hyundai Samho HSHI-built, IMO 9816323/9816335): kyy <- estimated:kyy=0.25*length_bp
+- Almi VLCC (315,500 DWT class, Hyundai Samho HSHI-built, IMO 9816323/9816335): kzz <- estimated:kzz=0.26*length_bp
+- Alaskan Frontier (Alaska-class VLCC; sisters Explorer/Navigator/Legend): kxx <- estimated:kxx=0.35*beam
+- Alaskan Frontier (Alaska-class VLCC; sisters Explorer/Navigator/Legend): kyy <- estimated:kyy=0.25*length_bp
+- Alaskan Frontier (Alaska-class VLCC; sisters Explorer/Navigator/Legend): kzz <- estimated:kzz=0.26*length_bp
+- Almi Suezmax (158,000 DWT class, DSME-built): kxx <- estimated:kxx=0.35*beam
+- Almi Suezmax (158,000 DWT class, DSME-built): kyy <- estimated:kyy=0.25*length_bp
+- Almi Suezmax (158,000 DWT class, DSME-built): kzz <- estimated:kzz=0.26*length_bp
+- Greenway (CSSC 158,000 DWT LNG dual-fuel Suezmax, first GSI Suezmax): kyy <- estimated:kyy=0.25*length_bp
+- Greenway (CSSC 158,000 DWT LNG dual-fuel Suezmax, first GSI Suezmax): kzz <- estimated:kzz=0.26*length_bp
+- Almi Aframax (115,000 DWT class, DSME-built 2005): kxx <- estimated:kxx=0.35*beam
+- Almi Aframax (115,000 DWT class, DSME-built 2005): kyy <- estimated:kyy=0.25*length_bp
+- Almi Aframax (115,000 DWT class, DSME-built 2005): kzz <- estimated:kzz=0.26*length_bp
+- MV Prestige (Aframax, 81,589 DWT, single-hull, Hitachi 1976): kxx <- estimated:kxx=0.35*beam
+- MV Prestige (Aframax, 81,589 DWT, single-hull, Hitachi 1976): kyy <- estimated:kyy=0.25*length_bp
+- MV Prestige (Aframax, 81,589 DWT, single-hull, Hitachi 1976): kzz <- estimated:kzz=0.26*length_bp
+- Mozah (Q-Max LNG carrier, 266,000 m3): kxx <- estimated:kxx=0.35*beam
+- Mozah (Q-Max LNG carrier, 266,000 m3): kyy <- estimated:kyy=0.25*length_bp
+- Mozah (Q-Max LNG carrier, 266,000 m3): kzz <- estimated:kzz=0.26*length_bp
+- Hoegh Esperanza (174k-class LNG carrier / FSRU, GTT Mark III): kxx <- estimated:kxx=0.35*beam
+- Hoegh Esperanza (174k-class LNG carrier / FSRU, GTT Mark III): kyy <- estimated:kyy=0.25*length_bp
+- Hoegh Esperanza (174k-class LNG carrier / FSRU, GTT Mark III): kzz <- estimated:kzz=0.26*length_bp
+- LPGC Ayame (VLGC, 83,000 m3, Mitsubishi 2010): kxx <- estimated:kxx=0.35*beam
+- LPGC Ayame (VLGC, 83,000 m3, Mitsubishi 2010): kyy <- estimated:kyy=0.25*length_bp
+- LPGC Ayame (VLGC, 83,000 m3, Mitsubishi 2010): kzz <- estimated:kzz=0.26*length_bp
+- Standard 84,000 m3 VLGC (LPG dual-fuel, Jiangnan-class): kxx <- estimated:kxx=0.35*beam
+- Standard 84,000 m3 VLGC (LPG dual-fuel, Jiangnan-class): kyy <- estimated:kyy=0.25*length_bp
+- Standard 84,000 m3 VLGC (LPG dual-fuel, Jiangnan-class): kzz <- estimated:kzz=0.26*length_bp
