@@ -1,0 +1,237 @@
+{
+  "scope": "install",
+  "layer": "rao",
+  "collected": "2026-06-18",
+  "method": "re-collection (Agent a82e20ed) after first attempt failed verification (plausible=False, fab=True, 3 records, geometry contradicted cited sources)",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Re-collected with strict geometry-vs-primary-source cross-checks; explicitly rejected the wrong scaled-up 10MW OC4 numbers that broke attempt 1. Named-vessel crane RAOs confirmed not public; collected benchmark/proxy hulls instead."
+  },
+  "coverage_note": "RAOs for named commercial crane/installation vessels (Sleipnir, Thialf, Saipem 7000, derrick/pipelay barges) are proprietary and NOT public. Collected proxies instead: NREL OC4-DeepCwind semi (best SSCV-topology proxy) + OC3-Hywind spar (geometry confirmed against NREL-maintained OpenFAST input files since docs.nrel.gov PDFs were unfetchable); turn-key OrcaWave L02 (OC4 semi) and L01 (generic monohull) open RAO datasets; monohull seakeeping benchmarks DTMB 5415/5512, S175, KCS, KVLCC2, Wigley; one open-access box-form pipelay lay-barge AQWA study (closest barge proxy); Capytaine/NEMOH BEM example geometries for tool validation.",
+  "records": [
+    {
+      "name": "OC4-DeepCwind semisubmersible (NREL 5MW reference)",
+      "vessel_type": "Semisubmersible — proxy for SSCV hull form (three-column ring-pontoon semi with heave-plate base columns; Thialf/Sleipnir/Saipem 7000 topology)",
+      "fields": {
+        "kind": "computed (BEM); platform also model-tested in DeepCwind 1:50 MARIN campaign",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "headings_deg": "0-180 at 22.5 spacing (9 headings, per Orcina OrcaWave dataset)",
+        "water_depth_m": 200,
+        "main_central_column_diameter_m": 6.5,
+        "upper_offset_column_diameter_m": 12.0,
+        "base_column_heave_plate_diameter_m": 24.0,
+        "total_draft_m": 20.0,
+        "offset_column_radial_distance_m": 28.868,
+        "platform_mass_te": 13473,
+        "displaced_volume_m3": 13986.8,
+        "cm_below_swl_m": 14.4
+      },
+      "citations": [
+        {"fields": ["geometry"], "source": "NREL/TP-5000-60601 Robertson et al. (2014) 'Definition of the Semisubmersible Floating System for Phase II of OC4'", "url": "https://www.osti.gov/biblio/1155123", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["main_central_column_diameter_m","upper_offset_column_diameter_m","base_column_heave_plate_diameter_m","total_draft_m","offset_column_radial_distance_m"], "source": "OpenFAST r-test canonical input NRELOffshrBsline5MW_OC4DeepCwindSemi_HydroDyn.dat (NREL-maintained)", "url": "https://raw.githubusercontent.com/OpenFAST/r-test/main/glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_HydroDyn.dat", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["docs.nrel.gov PDF unfetchable live; diameters confirmed via NREL OpenFAST input file + 2 cross-checks", "adjacent-column spacing ~50m derived from radial offset, not quoted verbatim"]
+    },
+    {
+      "name": "OrcaWave L02 OC4 Semi-sub diffraction example (Orcina)",
+      "vessel_type": "Semisubmersible — ready-to-run open OrcaWave RAO dataset for the OC4 SSCV proxy",
+      "fields": {
+        "kind": "computed (OrcaWave 3D panel; downloadable sample)",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "headings_deg": "0-180 at 22.5 (9 headings)",
+        "water_depth_m": 200,
+        "platform_mass_te": 13473,
+        "wave_periods": "32 periods 3.75-30 s",
+        "outputs": "6-DOF displacement RAOs, load RAOs, Newman QTFs, added mass/damping, hydrostatic stiffness"
+      },
+      "citations": [
+        {"fields": ["all"], "source": "Orcina 'L Diffraction: L02 OC4 Semi-sub' OrcaWave example", "url": "https://www.orcina.com/wp-content/uploads/examples/l/l02/L02%20OC4%20Semi-sub.pdf", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["mesh displaced volume 13917 m3 vs OC4 definition 13986.8 m3 (cross members modelled as Morison, excluded from panel mesh — documented choice)"]
+    },
+    {
+      "name": "OC3-Hywind spar buoy (NREL 5MW reference)",
+      "vessel_type": "Deep-draft spar — proxy for spar-form / deep-draft cylindrical hulls; low-heave benchmark",
+      "fields": {
+        "kind": "computed (BEM); Hywind concept also model-tested",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "headings_deg": "gap",
+        "water_depth_m": 320,
+        "diameter_above_taper_m": 6.5,
+        "diameter_below_taper_m": 9.4,
+        "taper_top_below_swl_m": 4.0,
+        "taper_bottom_below_swl_m": 12.0,
+        "total_draft_m": 120.0,
+        "cm_below_swl_m": 89.92
+      },
+      "citations": [
+        {"fields": ["geometry"], "source": "NREL/TP-500-47535 Jonkman (2010) 'Definition of the Floating System for Phase IV of OC3'", "url": "https://docs.nrel.gov/docs/fy10osti/47535.pdf", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["diameter_above_taper_m","diameter_below_taper_m","taper_top_below_swl_m","taper_bottom_below_swl_m","total_draft_m"], "source": "OpenFAST r-test canonical input NRELOffshrBsline5MW_OC3Hywind_HydroDyn.dat (NREL-maintained)", "url": "https://raw.githubusercontent.com/OpenFAST/r-test/main/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/NRELOffshrBsline5MW_OC3Hywind_HydroDyn.dat", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["definition-report PDF not directly fetched; water depth + CM from sources citing the report; no canonical RAO heading set quoted"]
+    },
+    {
+      "name": "OrcaWave L01 Default vessel diffraction example (Orcina)",
+      "vessel_type": "Generic ship-form monohull — proxy for monohull construction/support/transport vessels",
+      "fields": {
+        "kind": "computed (OrcaWave; recreates OrcaFlex default vessel; downloadable)",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "headings_deg": "9 headings",
+        "water_depth_m": "400 (also re-run at 100)",
+        "length_m": 103,
+        "panels": 216,
+        "wave_periods": 24,
+        "validated_against": "WAMIT"
+      },
+      "citations": [
+        {"fields": ["length_m","panels","water_depth_m","wave_periods"], "source": "Orcina 'L Diffraction: L01 Default vessel' OrcaWave example", "url": "https://www.orcina.com/wp-content/uploads/examples/l/l01/L01%20Default%20vessel.pdf", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["beam, draft, displacement live in the binary .owd/.gdf files — not numerically verified; only length/depth/panel/period/heading counts stated"]
+    },
+    {
+      "name": "DTMB 5512 / DTMB 5415 surface combatant (IIHR open EFD)",
+      "vessel_type": "Slender monohull — proxy for fast monohull construction/support vessels; head-sea RAO benchmark",
+      "fields": {
+        "kind": "model_test (towing-tank EFD with uncertainty; CFD validation benchmark)",
+        "dof_covered": ["heave","pitch"],
+        "headings_deg": "180 (head seas)",
+        "model_5512_length_m": 3.048,
+        "model_5512_scale": "1:46.6",
+        "model_5415_length_m": 5.72,
+        "model_5415_scale": "1:24.8",
+        "froude_number": 0.28,
+        "appendages": "unappended"
+      },
+      "citations": [
+        {"fields": ["all"], "source": "IIHR University of Iowa Ship Hydrodynamics '5512 Pitch and Heave' open EFD dataset", "url": "https://www2.iihr.uiowa.edu/shiphydro/efd-data/5512-pitch-and-heave/", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["live page refused during run; confirmed via search index + Stern Lab mirror", "finite towing-tank water depth not stated"]
+    },
+    {
+      "name": "S175 containership (ITTC seakeeping benchmark)",
+      "vessel_type": "Monohull containership — classic ITTC seakeeping reference",
+      "fields": {
+        "kind": "benchmark (ITTC; experimental + numerical RAOs)",
+        "dof_covered": ["heave","pitch","(roll/sway/yaw in oblique variants)"],
+        "headings_deg": "180 (head); oblique variants 30-150",
+        "lpp_m": 175.0,
+        "beam_m": 25.4,
+        "draught_m": 9.5,
+        "depth_m": 15.4,
+        "displacement_t": 24668,
+        "cb": 0.5716,
+        "kyy_pitch_m": 43.75
+      },
+      "citations": [
+        {"fields": ["lpp_m","beam_m","draught_m","depth_m","displacement_t","kyy_pitch_m"], "source": "Hizir, Kim & Incecik NAV2016 (Strathprints) Table 1", "url": "https://strathprints.strath.ac.uk/54293/1/Hizir_etal_NAV2016_effect_forward_speed_nonlinear_ship_motion_responses.pdf", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["heave_pitch_RAOs"], "source": "25th ITTC Seakeeping Committee Report", "url": "https://ittc.info/media/3463/volume1_7seakeepingcommittee.pdf", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["cb"], "source": "ResearchGate figure-table (secondary; cross-checked arithmetically)", "url": "https://www.researchgate.net/figure/Main-particulars-of-S175-containership_tbl1_317970756", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["Cb from secondary table", "no open doc with full 6-DOF oblique RAO curves retrieved", "deep water assumed"]
+    },
+    {
+      "name": "KCS — KRISO Container Ship (Tokyo CFD Workshop benchmark)",
+      "vessel_type": "Monohull containership — open seakeeping/added-resistance benchmark",
+      "fields": {
+        "kind": "benchmark (Tokyo 2015 / SIMMAN; heave/pitch + added resistance)",
+        "dof_covered": ["heave","pitch"],
+        "headings_deg": "180 (head)",
+        "lpp_m": 230.0,
+        "beam_wl_m": 32.2,
+        "draft_m": 10.8,
+        "displaced_volume_m3": 52030,
+        "wetted_surface_m2": 9539,
+        "design_fr": 0.26,
+        "cb": "estimated:~0.651 = 52030/(230*32.2*10.8); not quoted verbatim"
+      },
+      "citations": [
+        {"fields": ["lpp_m","beam_wl_m","draft_m","displaced_volume_m3","wetted_surface_m2"], "source": "Yu Anzheng et al. 'V&V for the Resistance of a KRISO Container Ship' (SJTU) Table 1", "url": "https://dcwan.sjtu.edu.cn/userfiles/19DCW-25Yu%20Anzheng.pdf", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["design_fr","geometry"], "source": "NMRI Tokyo 2015 CFD Workshop KCS", "url": "https://t2015.nmri.go.jp/kcs.html", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["Cb derived, not quoted", "head-wave RAO numeric table / lambda-L list not extracted", "deep water"]
+    },
+    {
+      "name": "KVLCC2 — KRISO VLCC (SIMMAN / CFD Workshop benchmark)",
+      "vessel_type": "Full-form monohull tanker — large bluff-monohull motion proxy",
+      "fields": {
+        "kind": "benchmark (SIMMAN 2008/2014/2020, Tokyo 2015, SHOPERA; heave/pitch + added resistance)",
+        "dof_covered": ["heave","pitch"],
+        "headings_deg": "180 (head)",
+        "lpp_m": 320.0,
+        "lwl_m": 325.5,
+        "beam_wl_m": 58.0,
+        "depth_m": 30.0,
+        "draft_m": 20.8,
+        "displaced_volume_m3": 312622,
+        "cb": 0.8098,
+        "cm": 0.9980,
+        "wetted_surface_m2": 27194
+      },
+      "citations": [
+        {"fields": ["lpp_m","lwl_m","beam_wl_m","depth_m","draft_m","displaced_volume_m3","cb","cm","wetted_surface_m2"], "source": "SIMMAN 2008 KVLCC2 geometry (FORCE Technology)", "url": "http://www.simman2008.dk/KVLCC/KVLCC2/kvlcc2_geometry.html", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["cb","cm"], "source": "NMRI Tokyo CFD Workshop KVLCC (cross-check)", "url": "https://www.nmri.go.jp/study/research_organization/fluid_performance/cfd/cfdws05/Detail/KVLCC/tanker.html", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["seakeeping RAO numeric tables in workshop/SHOPERA proceedings (some paywalled); strongest open KVLCC2 data is manoeuvring", "design speed/Fr secondary"]
+    },
+    {
+      "name": "Wigley hull (Wigley I mathematical hull)",
+      "vessel_type": "Mathematical slender monohull — seakeeping METHOD-validation benchmark (not a barge-shape proxy)",
+      "fields": {
+        "kind": "benchmark (analytical hull; strip-theory + Journee 1992 model tests)",
+        "dof_covered": ["heave","pitch"],
+        "headings_deg": "180 (head)",
+        "hull_equation": "y=(B/2)[1-(2x/L)^2][1-(z/T)^2]",
+        "length_m": 3.0,
+        "beam_m": 0.3,
+        "draft_m": 0.1875,
+        "cb": 0.48,
+        "cm": 0.6667,
+        "froude_numbers": [0.2,0.3,0.4]
+      },
+      "citations": [
+        {"fields": ["all"], "source": "Ghassemi, Majdfar & Gill (2015) JOMAse Vol.22 — Wigley I geometry + RAOs vs Journee 1992", "url": "https://www.isomase.org/JOMAse/Vol.22%20Aug%202015/22-1.pdf", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["Journee 1992 TU Delft primary experiments cited but not fetched", "deep water implied", "slender form validates method, not barge geometry"]
+    },
+    {
+      "name": "Pipelay lay-barge (J-Lay/S-Lay) AQWA diffraction study",
+      "vessel_type": "Box-form pipelay/lay barge — closest open derrick/lift/pipelay-barge motion proxy found",
+      "fields": {
+        "kind": "computed (ANSYS AQWA 3D panel, ~12586 panels; validated 5-10% diffraction-dominated)",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "headings_deg": "0 (head, main drive)",
+        "water_depth_m": 1000,
+        "loa_m": 150,
+        "beam_m": 30,
+        "draft_m": 8,
+        "depth_m": 15,
+        "displacement_t": "~27000",
+        "peak_heave_rao_slay_m_per_m": 0.90,
+        "peak_pitch_rao_slay_deg_per_m": 1.17,
+        "sea_state": "JONSWAP Hs=2.5 m Tp=11.5 s gamma=2.8"
+      },
+      "citations": [
+        {"fields": ["all"], "source": "Orji, Ugbeta & Umuteme (2025) 'Dynamic Displacement Analysis of J-Lay and S-Lay Pipe Strings under Lay-Barge Wave Diffraction in 1000m Water Depth' IJAEM 7(12) 547-561", "url": "https://ijaem.net/issue_dcp/Dynamic%20Displacement%20Analysis%20of%20J%20Lay%20and%20S%20Lay%20Pipe%20Strings%20under%20Lay%20Barge%20Wave%20Diffraction%20in%201000m%20Water%20Depth.pdf", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["only peak RAO values tabulated; full curves are figures; mesh/offsets not published", "single deepwater head-sea case"]
+    },
+    {
+      "name": "Capytaine & NEMOH BEM example geometries",
+      "vessel_type": "Canonical bodies (sphere/cylinder/cube) — generic computed hydrodynamic proxies + BEM tool-validation",
+      "fields": {
+        "kind": "computed (open-source BEM, frequency domain; freely runnable)",
+        "dof_covered": ["surge","sway","heave","roll","pitch","yaw"],
+        "water_depth": "selectable incl. infinite + finite (Capytaine cookbook 2-100 m)",
+        "capytaine_sphere": "radius 1.0 m at (0,0,-2), heave added mass ~2208.93 kg @ omega 1.0",
+        "capytaine_A6_vertical_cylinder": "radius 12.5 m, draught 37.5 m"
+      },
+      "citations": [
+        {"fields": ["capytaine_sphere","capytaine_A6_vertical_cylinder"], "source": "Capytaine documentation tutorial + cookbook", "url": "https://capytaine.org/stable/user_manual/tutorial.html", "access_date": "2026-06-18", "access": "public"},
+        {"fields": ["nemoh_examples"], "source": "NEMOH (LHEEA / Ecole Centrale Nantes) examples", "url": "https://lheea.ec-nantes.fr/research-impact/software-and-patents/eng-nemoh-examples", "access_date": "2026-06-18", "access": "public"}
+      ],
+      "gaps": ["NEMOH example exact dimensions not on rendered page; v3 paper/HAL PDF 403 — NEMOH geometry unverified", "Capytaine ships no official rectangular-barge example"]
+    }
+  ]
+}
