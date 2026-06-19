@@ -1,0 +1,174 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.07426632932863315,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 112,
+  "worst_samples": [
+    {
+      "point": {
+        "stress_MPa": 29.8496231131986,
+        "n_cycles": 100000.0,
+        "sn_curve": "F"
+      },
+      "predicted": 0.008244803703796943,
+      "actual": 0.00890623725268369,
+      "rel_error": 0.07426632932863315,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 55.67764362830022,
+        "n_cycles": 100000.0,
+        "sn_curve": "C"
+      },
+      "predicted": 0.010312070617454192,
+      "actual": 0.01109283468360945,
+      "rel_error": 0.07038453996875113,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 44.721359549995796,
+        "n_cycles": 100000.0,
+        "sn_curve": "C2"
+      },
+      "predicted": 0.010445718505561917,
+      "actual": 0.011234273522393333,
+      "rel_error": 0.07019190117274479,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 36.3318042491699,
+        "n_cycles": 100000.0,
+        "sn_curve": "E"
+      },
+      "predicted": 0.011290369882259423,
+      "actual": 0.011772288503363624,
+      "rel_error": 0.04093669815911367,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 44.721359549995796,
+        "n_cycles": 100000.0,
+        "sn_curve": "C1"
+      },
+      "predicted": 0.006631396333441702,
+      "actual": 0.006879786945929561,
+      "rel_error": 0.03610440474974593,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 87.42997197757758,
+        "n_cycles": 100000.0,
+        "sn_curve": "B2"
+      },
+      "predicted": 0.011669806584703952,
+      "actual": 0.012068168262380385,
+      "rel_error": 0.03300929097236991,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 36.3318042491699,
+        "n_cycles": 100000.0,
+        "sn_curve": "D"
+      },
+      "predicted": 0.007036793988849022,
+      "actual": 0.007268333194840661,
+      "rel_error": 0.031855887695956785,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 87.42997197757758,
+        "n_cycles": 100000.0,
+        "sn_curve": "B1"
+      },
+      "predicted": 0.006398286135474888,
+      "actual": 0.0064871164791605335,
+      "rel_error": 0.0136933480339081,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 15.874507866387544,
+        "n_cycles": 100000.0,
+        "sn_curve": "C1"
+      },
+      "predicted": 3.877049554296922e-05,
+      "actual": 3.877049554296911e-05,
+      "rel_error": 2.7964619933317325e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 15.874507866387544,
+        "n_cycles": 100000.0,
+        "sn_curve": "C"
+      },
+      "predicted": 2.239587416229744e-05,
+      "actual": 2.2395874162297397e-05,
+      "rel_error": 1.966688727487713e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 12.409673645990857,
+        "n_cycles": 100000.0,
+        "sn_curve": "C"
+      },
+      "predicted": 6.538354576249655e-06,
+      "actual": 6.538354576249643e-06,
+      "rel_error": 1.813676686277565e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 109.34349546269316,
+        "n_cycles": 100000.0,
+        "sn_curve": "B2"
+      },
+      "predicted": 0.029523769956816204,
+      "actual": 0.02952376995681616,
+      "rel_error": 1.5276778826473714e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 15.874507866387544,
+        "n_cycles": 100000.0,
+        "sn_curve": "B2"
+      },
+      "predicted": 2.4960389146244304e-06,
+      "actual": 2.4960389146244266e-06,
+      "rel_error": 1.5270788609551313e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 15.874507866387544,
+        "n_cycles": 100000.0,
+        "sn_curve": "B1"
+      },
+      "predicted": 1.280121972250592e-06,
+      "actual": 1.2801219722505902e-06,
+      "rel_error": 1.488783235219012e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "stress_MPa": 15.874507866387544,
+        "n_cycles": 100000.0,
+        "sn_curve": "E"
+      },
+      "predicted": 0.0002090104588207237,
+      "actual": 0.0002090104588207234,
+      "rel_error": 1.4265104201759285e-15,
+      "in_range": true
+    }
+  ]
+}
