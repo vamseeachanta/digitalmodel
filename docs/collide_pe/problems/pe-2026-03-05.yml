@@ -18,3 +18,6 @@ solution:
   answer: "Partial (weak) water drive."
   confidence: high
   solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/reservoir-drive-mechanisms.md  # partial water drive

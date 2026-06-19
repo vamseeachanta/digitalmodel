@@ -46,8 +46,21 @@ flywheel — not a dead-end script.
 
 If the right domain function is missing, **add it** (small pure function + a case in that
 domain's test suite, e.g. `tests/production_engineering/test_ipr_models.py`) rather than
-inlining the math. Conceptual/definition problems (viscosity, corrosion, LWD) have no calc —
-brief only.
+inlining the math.
+
+## Concepts connect to llm-wiki (the knowledge-base dot)
+
+Conceptual/definition problems (viscosity, corrosion, LWD, …) have no calc — but the *concept*
+is knowledge, and knowledge lives in **llm-wiki** (`wikis/<discipline>/wiki/concepts/<x>.md`),
+which is where Deckhand's `wells-subsurface` pack sources its concept pages. So each conceptual
+problem YAML carries a `wiki_concept:` pointer to its llm-wiki page (existing or newly authored)
+— the same "connect the dot" move as `domain_function:`, but into the wiki instead of code.
+
+First wave: 6 mapped to existing pages (LWD→`mwd-lwd-overview`, drilling fluid→`drilling-fluid-types`,
+underbalanced→`underbalanced-drilling`, corrosion→`corrosion-management`, standing valve &
+horsehead→`sucker-rod-pumping-overview`); 3 were missing and were authored in
+`reservoir-engineering/wiki/concepts/` (`fluid-viscosity`, `reservoir-drive-mechanisms`,
+`thermal-recovery-eor`) on llm-wiki branch `feat/collide-pe-concepts`.
 
 ## Two epics
 

@@ -18,3 +18,6 @@ solution:
   answer: "Any three of: a rotating control device (RCD) for continuous surface containment; choke/backpressure (surface or downhole MPD) management; dedicated surface separation/flaring of returns; continuous influx/flow-out monitoring; a downhole deployment/isolation valve."
   confidence: high
   solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/underbalanced-drilling.md
