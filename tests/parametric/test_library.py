@@ -81,3 +81,39 @@ def test_out_of_solved_range_escalates():
                           "frequency_rad_s": 3.0, "heading_deg": 90.0})
     assert pred.in_range is False
     assert "outside" in pred.reason
+
+
+# -- staleness (#831) --------------------------------------------------------
+
+def test_committed_library_matches_its_expectation():
+    from digitalmodel.parametric import refresh
+
+    status = refresh.library_status("diffraction_library")
+    assert status["stale"] is False
+
+
+def test_advancing_the_expectation_makes_a_query_escalate(monkeypatch):
+    from digitalmodel.parametric import refresh
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import _staleness
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "diffraction_library")
+    assert _staleness(atlas) is None  # stub matches the (stub) expectation
+
+    # operator now requires a real OrcaWave run instead of the stub
+    monkeypatch.setitem(
+        refresh.LIBRARY_EXPECTATIONS, "diffraction_library",
+        {**refresh.LIBRARY_EXPECTATIONS["diffraction_library"], "solver_version": "11.0"})
+
+    reason = _staleness(atlas)
+    assert reason is not None and "library stale" in reason
+
+
+def test_missing_case_is_drift():
+    from digitalmodel.parametric import refresh
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "diffraction_library")
+    atlas.provenance["coverage"]["covered_cases"] = ["fpso-design-draft"]  # dropped 2
+    reasons = refresh.library_drift(atlas)
+    assert any("covered cases" in r for r in reasons)

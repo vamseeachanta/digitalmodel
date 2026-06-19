@@ -86,6 +86,20 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
 }
 
+# Expected state of each licensed-solver library (#801/#831). A library is NOT
+# code-computable, so its staleness is judged against what the operator declares
+# as current here — not a re-run. Stale = the committed library's recorded
+# solver name/version or covered case set no longer matches this expectation
+# (e.g. bump `version` once real OrcaWave runs replace the stub, and the stub
+# library immediately reads stale -> escalate -> prompts a real run).
+LIBRARY_EXPECTATIONS: dict[str, dict[str, Any]] = {
+    "diffraction_library": {
+        "solver_name": "OrcaWave/AQWA",
+        "solver_version": "STUB",
+        "cases": ["fpso-design-draft", "fpso-ballast-draft", "semisub-operating"],
+    },
+}
+
 
 def _registry_rows() -> list[dict[str, Any]]:
     return yaml.safe_load(REGISTRY.read_text())["workflows"]
@@ -160,6 +174,49 @@ def refresh_status(
     }
 
 
+def library_drift(atlas: Any) -> list[str]:
+    """Reasons the given library atlas no longer matches its declared
+    expectation (solver name/version, covered case set), or [] if current."""
+    expected = LIBRARY_EXPECTATIONS.get(atlas.basename)
+    if expected is None:
+        return []
+    solver = atlas.provenance.get("solver", {})
+    cases = (atlas.provenance.get("coverage", {}) or {}).get("covered_cases", [])
+    reasons = []
+    if solver.get("name") != expected["solver_name"]:
+        reasons.append(f"solver name {solver.get('name')!r} != {expected['solver_name']!r}")
+    if solver.get("version") != expected["solver_version"]:
+        reasons.append(
+            f"solver version {solver.get('version')!r} != {expected['solver_version']!r}")
+    if set(cases) != set(expected["cases"]):
+        reasons.append(f"covered cases {sorted(cases)} != {sorted(expected['cases'])}")
+    return reasons
+
+
+def library_status(
+    basename: str, atlas_root: Path = DEFAULT_ATLAS_ROOT
+) -> dict[str, Any]:
+    """Staleness of a licensed-solver library vs LIBRARY_EXPECTATIONS. Not
+    code-recomputable, so a stale library is reported for an operator run, never
+    auto-regenerated."""
+    from digitalmodel.parametric.atlas import Atlas
+
+    try:
+        atlas = Atlas.load(atlas_root, basename)
+    except FileNotFoundError:
+        return {"basename": basename, "kind": "library", "stale": True,
+                "reason": "no library built"}
+    reasons = library_drift(atlas)
+    stub = atlas.provenance.get("solver", {}).get("licensed") is False
+    return {
+        "basename": basename,
+        "kind": "library",
+        "stale": bool(reasons),
+        "reason": "; ".join(reasons) if reasons else ("current (STUB)" if stub else "current"),
+        "atlas_id": atlas.atlas_id,
+    }
+
+
 def _git_sha(repo_root: Path) -> str:
     try:
         return subprocess.check_output(
@@ -180,11 +237,26 @@ def main(argv: list[str]) -> int:
         if status["stale"]:
             stale_ids.append(wid)
 
-    if not stale_ids:
+    # licensed-solver libraries: report-only (operator runs them; never auto-build)
+    stale_libs = []
+    for basename in LIBRARY_EXPECTATIONS:
+        status = library_status(basename)
+        flag = "STALE" if status["stale"] else "ok"
+        print(f"[{flag:5}] {basename} (library)  ({status['reason']})")
+        if status["stale"]:
+            stale_libs.append(basename)
+
+    if not stale_ids and not stale_libs:
         print("all atlases current")
         return 0
+
+    if stale_libs:
+        print(f"\n{len(stale_libs)} stale library(ies) — need a licensed run "
+              f"(operator); not auto-regenerated: {stale_libs}")
+    if not stale_ids:
+        return 1  # only libraries stale: report, nothing to auto-build
     if not apply:
-        print(f"\n{len(stale_ids)} stale atlas(es); run with --apply to regenerate")
+        print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
         return 1
 
     from digitalmodel.parametric.build import build_atlas_from_registry
@@ -194,7 +266,7 @@ def main(argv: list[str]) -> int:
         atlas = build_atlas_from_registry(wid)
         if not atlas.validation["passes"]:
             print(f"  WARNING: {wid} regenerated but failed validation gate")
-    return 0
+    return 1 if stale_libs else 0
 
 
 if __name__ == "__main__":
