@@ -1,0 +1,130 @@
+# Collide "PE Problem of the Day" — solve backlog
+# Source: https://app.collide.io  (Energy Infrastructure Community)
+# Hotness = 2*comments + likes  (comments weighted: discussion > passive like)
+# Captured 2026-06-19. Series total at capture: 161 posts, 1050 comments, 1530 likes.
+# "march progressively": work top-of-list first; append new problems as they post.
+
+meta:
+  community: Energy Infrastructure Community (collide.io)
+  series: PE Problem of the Day
+  author_of_problems: Yogashri Pradhan
+  captured: "2026-06-19"
+  series_size_at_capture: 161
+  hotness_formula: "2*comments + likes"
+
+# First wave — the 10 hottest engineering challenges + today's (user-flagged) problem.
+wave_1:
+  - id: pe-2026-06-19
+    date: "2026-06-19"
+    slug: pe-problem-of-the-day-6-19-2026
+    topic: "Productivity index — current & post-modification oil rate"
+    tags: [production, upstream, reservoir-engineering]
+    type: quantitative
+    comments: 0
+    likes: 1
+    hotness: 1
+    note: "User-flagged worked example; the template problem for this program."
+
+  - id: pe-2026-04-20
+    date: "2026-04-20"
+    slug: pe-problem-of-the-day-4-20-2026
+    topic: "Tertiary thermal EOR — steam to mobilize heavy crude"
+    tags: [production, upstream, eor]
+    type: conceptual
+    comments: 20
+    likes: 13
+    hotness: 53
+
+  - id: pe-2026-01-15
+    date: "2026-01-15"
+    slug: pe-problem-of-the-day-1-15-2026
+    topic: "Purpose of a standing valve in a gas-lift configuration"
+    tags: [production, upstream, artificial-lift]
+    type: conceptual
+    comments: 19
+    likes: 11
+    hotness: 49
+
+  - id: pe-2026-03-05
+    date: "2026-03-05"
+    slug: pe-problem-of-the-day-3-5-2026
+    topic: "Depletion drive with limited aquifer support"
+    tags: [production, upstream, reservoir-engineering]
+    type: conceptual
+    comments: 15
+    likes: 18
+    hotness: 48
+
+  - id: pe-2026-05-21
+    date: "2026-05-21"
+    slug: pe-problem-of-the-day-5-21-2026
+    topic: "OOIP volumetrics + primary/secondary recoverable volumes"
+    tags: [production, upstream, reservoir-engineering, volumetrics]
+    type: quantitative
+    comments: 15
+    likes: 14
+    hotness: 44
+
+  - id: pe-2026-05-19
+    date: "2026-05-19"
+    slug: pe-problem-of-the-day-5-19-2026
+    topic: "Fluid's internal resistance to flow"
+    tags: [upstream, chemicals, fluids]
+    type: conceptual
+    comments: 13
+    likes: 16
+    hotness: 42
+
+  - id: pe-2026-05-08
+    date: "2026-05-08"
+    slug: pe-problem-of-the-day-5-8-2026
+    topic: "Curved component at the front of the walking beam (rod pump)"
+    tags: [production, upstream, equipment, field-service]
+    type: conceptual
+    comments: 13
+    likes: 16
+    hotness: 42
+
+  - id: pe-2026-06-03
+    date: "2026-06-03"
+    slug: pe-problem-of-the-day-6-3-2026
+    topic: "Main purpose of drilling fluid (multiple choice)"
+    tags: [drilling, upstream, equipment, field-service]
+    type: multiple-choice
+    comments: 13
+    likes: 13
+    hotness: 39
+
+  - id: pe-2026-04-13
+    date: "2026-04-13"
+    slug: pe-problem-of-the-day-4-13-2026
+    topic: "Real-time formation measurement from the drill string"
+    tags: [drilling, upstream]
+    type: conceptual
+    comments: 14
+    likes: 10
+    hotness: 38
+
+  - id: pe-2026-01-04
+    date: "2026-01-04"
+    slug: pe-problem-of-the-day-1-4-2026
+    topic: "Well control during underbalanced drilling (give 3)"
+    tags: [drilling, upstream, well-control]
+    type: free-response
+    comments: 13
+    likes: 11
+    hotness: 37
+
+  - id: pe-2026-04-23
+    date: "2026-04-23"
+    slug: pe-problem-of-the-day-4-23-2026
+    topic: "Electrochemical/chemical degradation of metal infrastructure"
+    tags: [production, upstream, integrity]
+    type: conceptual
+    comments: 13
+    likes: 11
+    hotness: 37
+
+# wave_2+: remaining 150 problems. Add as we march (or re-scrape hotness).
+# Next batch by hotness (captured): 1/12 (36), 3/6 (36), 4/24 (36), 6/17 (36),
+# 2/12 (35), 3/27 (29: 7c/11L) ... full re-scrape lives in scripts when needed.

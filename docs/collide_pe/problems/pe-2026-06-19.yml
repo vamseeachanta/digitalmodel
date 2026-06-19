@@ -1,0 +1,46 @@
+id: pe-2026-06-19
+date: "2026-06-19"
+slug: pe-problem-of-the-day-6-19-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-6-19-2026
+title: "PE Problem of the Day 6/19/2026 — Productivity Index"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, reservoir-engineering, productivity-index]
+type: quantitative
+
+statement: >
+  A vertical oil well is producing from a sandstone reservoir. The well has a
+  productivity index (PI) of 1.5 BBL/PSI-D. The reservoir pressure is 2,800 psi
+  and the current flowing bottomhole pressure (FBHP) is 1,600 psi.
+
+  Q1: What is the current oil production rate?
+  Later, a small tubing modification reduces FBHP to 1,400 psi.
+  Q2: What is the new oil rate after the modification?
+
+given:
+  productivity_index_bbl_per_psi_d: 1.5
+  reservoir_pressure_psi: 2800
+  fbhp_initial_psi: 1600
+  fbhp_after_mod_psi: 1400
+
+find:
+  - "Q1: current oil production rate (STB/d)"
+  - "Q2: oil rate after FBHP drops to 1,400 psi (STB/d)"
+
+# Solution recorded by the solver (see solve.py). This is the authoritative answer.
+solution:
+  method: "Straight-line IPR (Productivity Index): q = PI x (Pr - Pwf), valid above the bubble point."
+  steps:
+    - "Drawdown_1 = Pr - Pwf_1 = 2800 - 1600 = 1200 psi"
+    - "Q1 = PI x drawdown_1 = 1.5 x 1200 = 1800 BBL/d"
+    - "Drawdown_2 = Pr - Pwf_2 = 2800 - 1400 = 1400 psi"
+    - "Q2 = PI x drawdown_2 = 1.5 x 1400 = 2100 BBL/d"
+  answer:
+    q1_bbl_per_day: 1800
+    q2_bbl_per_day: 2100
+    delta_bbl_per_day: 300
+  caveats: >
+    The linear PI model assumes single-phase flow above the bubble point and a
+    constant PI. If FBHP falls below the bubble point, use Vogel's IPR instead —
+    rate gains taper off rather than staying linear.
+  confidence: high
+  solved_by: "deterministic (q = PI x dP); independently confirmed by Claude API solver (claude-opus-4-8)"
