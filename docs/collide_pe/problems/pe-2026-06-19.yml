@@ -43,4 +43,7 @@ solution:
     constant PI. If FBHP falls below the bubble point, use Vogel's IPR instead —
     rate gains taper off rather than staying linear.
   confidence: high
-  solved_by: "deterministic (q = PI x dP); independently confirmed by Claude API solver (claude-opus-4-8)"
+  # Connect the dot: this calc is NOT re-derived here — it is the domain function.
+  domain_function: "digitalmodel.production_engineering.ipr_models.LinearIpr"
+  domain_check: "LinearIpr(ReservoirConditions(2800, 0, 1.5), 1.5).flow_rate(1600)=1800.0; .flow_rate(1400)=2100.0 (verified 2026-06-19)"
+  solved_by: "digitalmodel production_engineering LinearIpr (q = PI x dP); confirmed by Claude API solver (claude-opus-4-8)"

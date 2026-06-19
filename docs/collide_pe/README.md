@@ -31,6 +31,24 @@ uv run docs/collide_pe/render_brief.py docs/collide_pe/problems/pe-2026-06-19.ym
 `render_brief.py` has no API dependency — it works on whatever solution is in the YAML
 (deterministic, hand-checked, or Claude-recorded).
 
+## Calculations connect to digitalmodel domains (dots → workflows → flywheel)
+
+Quantitative problems do **not** re-derive their math in the brief. The calc lives as a
+reusable function in the matching `src/digitalmodel/<domain>/` module; the problem YAML
+records `domain_function:` pointing at it, and the brief shows the worked steps that call it.
+This way each small problem is a *dot* that snaps into the domain's workflows and the GTM
+flywheel — not a dead-end script.
+
+| Problem | Domain function it connects to |
+|---|---|
+| 6/19 productivity index | `production_engineering.ipr_models.LinearIpr` (`q = PI·(Pr−Pwf)`) — verified Q1=1800, Q2=2100 BBL/d |
+| 5/21 OOIP volumetrics | reservoir volumetrics (`reservoir/` — add if absent) |
+
+If the right domain function is missing, **add it** (small pure function + a case in that
+domain's test suite, e.g. `tests/production_engineering/test_ipr_models.py`) rather than
+inlining the math. Conceptual/definition problems (viscosity, corrosion, LWD) have no calc —
+brief only.
+
 ## Two epics
 
 - **Epic A — Solve the series.** This directory. One GitHub issue per problem,
