@@ -8,7 +8,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PE Problem of the Day 6/19/2026 — Productivity Index — Deckhand</title>
+  <title>PE Problem of the Day 5/19/2026 — internal resistance to flow — Deckhand</title>
   <style>
     :root {
       --bg: #0e1116; --panel: #161b22; --line: #2a3038;
@@ -60,38 +60,36 @@
       <span class="lh-tag">Engineering Brief</span>
     </header>
     <div class="meta">
-      Problem ID <span class="badge">pe-2026-06-19</span> &nbsp;·&nbsp; 2026-06-19
-      &nbsp;·&nbsp; Source: <a href="https://app.collide.io/posts/pe-problem-of-the-day-6-19-2026">Collide — PE Problem of the Day</a>
+      Problem ID <span class="badge">pe-2026-05-19</span> &nbsp;·&nbsp; 2026-05-19
+      &nbsp;·&nbsp; Source: <a href="https://app.collide.io/posts/pe-problem-of-the-day-5-19-2026">Collide — PE Problem of the Day</a>
     </div>
 
-    <h1>PE Problem of the Day 6/19/2026 — Productivity Index</h1>
-    <div><span class="chip">production</span><span class="chip">upstream</span><span class="chip">reservoir-engineering</span><span class="chip">productivity-index</span></div>
+    <h1>PE Problem of the Day 5/19/2026 — internal resistance to flow</h1>
+    <div><span class="chip">upstream</span><span class="chip">chemicals</span><span class="chip">fluids</span></div>
 
     <h2>Problem</h2>
-    <div class="panel statement">A vertical oil well is producing from a sandstone reservoir. The well has a productivity index (PI) of 1.5 BBL/PSI-D. The reservoir pressure is 2,800 psi and the current flowing bottomhole pressure (FBHP) is 1,600 psi.
-Q1: What is the current oil production rate? Later, a small tubing modification reduces FBHP to 1,400 psi. Q2: What is the new oil rate after the modification?</div>
+    <div class="panel statement">What is a fluid&#x27;s internal resistance to flow, often described as its thickness or fluid friction?</div>
 
     <h2>Given</h2>
-    <div class="panel"><table class="given"><tr><td>productivity index bbl per psi d</td><td>1.5</td></tr><tr><td>reservoir pressure psi</td><td>2800</td></tr><tr><td>fbhp initial psi</td><td>1600</td></tr><tr><td>fbhp after mod psi</td><td>1400</td></tr></table></div>
+    <div class="panel"><em>None stated.</em></div>
 
     <h2>Find</h2>
-    <div class="panel"><ul><li>Q1: current oil production rate (STB/d)</li><li>Q2: oil rate after FBHP drops to 1,400 psi (STB/d)</li></ul></div>
+    <div class="panel"><ul><li>Name the property</li></ul></div>
 
     <h2>Method</h2>
-    <div class="panel">Straight-line IPR (Productivity Index): q = PI x (Pr - Pwf), valid above the bubble point.</div>
+    <div class="panel">Petroleum-engineering concept recall (no calculation).</div>
 
     <h2>Worked Solution</h2>
-    <div class="panel"><ol class="steps"><li>Drawdown_1 = Pr - Pwf_1 = 2800 - 1600 = 1200 psi</li><li>Q1 = PI x drawdown_1 = 1.5 x 1200 = 1800 BBL/d</li><li>Drawdown_2 = Pr - Pwf_2 = 2800 - 1400 = 1400 psi</li><li>Q2 = PI x drawdown_2 = 1.5 x 1400 = 2100 BBL/d</li></ol></div>
+    <div class="panel"><ol class="steps"><li>Pending solver run.</li></ol></div>
 
     <h2>Answer</h2>
-    <div class="panel answer"><div class="big">q1 bbl per day: 1800</div><div class="big">q2 bbl per day: 2100</div><div class="big">delta bbl per day: 300</div></div>
+    <div class="panel answer"><div class="big">Viscosity.</div></div>
 
     <h2>Engineer's Note</h2>
-    <div class="panel caveat">The linear PI model assumes single-phase flow above the bubble point and a constant PI. If FBHP falls below the bubble point, use Vogel&#x27;s IPR instead — rate gains taper off rather than staying linear.
-</div>
+    <div class="panel caveat"></div>
 
     <footer class="lh">
-      Prepared on Deckhand · solved by digitalmodel production_engineering LinearIpr (q = PI x dP); confirmed by Claude API solver (claude-opus-4-8) · confidence: high<br />
+      Prepared on Deckhand · solved by petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver) · confidence: high<br />
       Generated 2026-06-19 09:42 — for engineering discussion; verify against project-specific assumptions before use.
     </footer>
   </div>

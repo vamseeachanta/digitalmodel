@@ -1,0 +1,20 @@
+id: pe-2026-01-04
+date: "2026-01-04"
+slug: pe-problem-of-the-day-1-4-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-1-4-2026
+title: "PE Problem of the Day 1/4/2026 — underbalanced drilling well control"
+posted_by: Yogashri Pradhan
+tags: [drilling, upstream, well-control]
+type: free-response
+
+statement: >
+  What aspects keep a well under control during underbalanced drilling? Give three (free response).
+
+find:
+  - "Give any three"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Any three of: a rotating control device (RCD) for continuous surface containment; choke/backpressure (surface or downhole MPD) management; dedicated surface separation/flaring of returns; continuous influx/flow-out monitoring; a downhole deployment/isolation valve."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"

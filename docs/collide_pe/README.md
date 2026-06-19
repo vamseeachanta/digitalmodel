@@ -42,7 +42,7 @@ flywheel — not a dead-end script.
 | Problem | Domain function it connects to |
 |---|---|
 | 6/19 productivity index | `production_engineering.ipr_models.LinearIpr` (`q = PI·(Pr−Pwf)`) — verified Q1=1800, Q2=2100 BBL/d |
-| 5/21 OOIP volumetrics | reservoir volumetrics (`reservoir/` — add if absent) |
+| 5/21 OOIP volumetrics | `reservoir.volumetrics` (`ooip_stb`, `recoverable_stb`, `incremental_recovery_stb`) — added 2026-06-19; verified 42.9 MMSTB / 9.44 MM / +3.43 MM |
 
 If the right domain function is missing, **add it** (small pure function + a case in that
 domain's test suite, e.g. `tests/production_engineering/test_ipr_models.py`) rather than

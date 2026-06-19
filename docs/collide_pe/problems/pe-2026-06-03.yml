@@ -1,0 +1,20 @@
+id: pe-2026-06-03
+date: "2026-06-03"
+slug: pe-problem-of-the-day-6-3-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-6-3-2026
+title: "PE Problem of the Day 6/3/2026 — purpose of drilling fluid"
+posted_by: Yogashri Pradhan
+tags: [drilling, upstream, equipment, field-service]
+type: multiple-choice
+
+statement: >
+  What is the main purpose of drilling fluid? A) cooling and lubricating the bit  B) increasing reservoir pressure  C) producing more oil  D) cementing the casing
+
+find:
+  - "Choose A/B/C/D"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "A — cooling and lubricating the bit. (Mud also carries cuttings and maintains well control, but among the choices A is correct.)"
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"

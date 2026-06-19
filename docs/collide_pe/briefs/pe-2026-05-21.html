@@ -8,7 +8,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PE Problem of the Day 6/19/2026 — Productivity Index — Deckhand</title>
+  <title>PE Problem of the Day 5/21/2026 — OOIP volumetrics &amp; recovery — Deckhand</title>
   <style>
     :root {
       --bg: #0e1116; --panel: #161b22; --line: #2a3038;
@@ -60,38 +60,39 @@
       <span class="lh-tag">Engineering Brief</span>
     </header>
     <div class="meta">
-      Problem ID <span class="badge">pe-2026-06-19</span> &nbsp;·&nbsp; 2026-06-19
-      &nbsp;·&nbsp; Source: <a href="https://app.collide.io/posts/pe-problem-of-the-day-6-19-2026">Collide — PE Problem of the Day</a>
+      Problem ID <span class="badge">pe-2026-05-21</span> &nbsp;·&nbsp; 2026-05-21
+      &nbsp;·&nbsp; Source: <a href="https://app.collide.io/posts/pe-problem-of-the-day-5-21-2026">Collide — PE Problem of the Day</a>
     </div>
 
-    <h1>PE Problem of the Day 6/19/2026 — Productivity Index</h1>
-    <div><span class="chip">production</span><span class="chip">upstream</span><span class="chip">reservoir-engineering</span><span class="chip">productivity-index</span></div>
+    <h1>PE Problem of the Day 5/21/2026 — OOIP volumetrics &amp; recovery</h1>
+    <div><span class="chip">production</span><span class="chip">upstream</span><span class="chip">reservoir-engineering</span><span class="chip">volumetrics</span></div>
 
     <h2>Problem</h2>
-    <div class="panel statement">A vertical oil well is producing from a sandstone reservoir. The well has a productivity index (PI) of 1.5 BBL/PSI-D. The reservoir pressure is 2,800 psi and the current flowing bottomhole pressure (FBHP) is 1,600 psi.
-Q1: What is the current oil production rate? Later, a small tubing modification reduces FBHP to 1,400 psi. Q2: What is the new oil rate after the modification?</div>
+    <div class="panel statement">A sandstone oil reservoir: areal extent 1,200 acres; net pay 40 ft; average porosity 18%; initial oil saturation 80%; oil formation volume factor 1.25; planned primary recovery factor 22% of OOIP. Assume uniform saturation, fully drained within the area and net pay.
+(a) Estimate OOIP in stock-tank barrels (STB). (b) Estimate primary recoverable oil (STB). (c) If a secondary project raises the recovery factor to 30%, how many extra
+    STB does that represent vs. primary alone?</div>
 
     <h2>Given</h2>
-    <div class="panel"><table class="given"><tr><td>productivity index bbl per psi d</td><td>1.5</td></tr><tr><td>reservoir pressure psi</td><td>2800</td></tr><tr><td>fbhp initial psi</td><td>1600</td></tr><tr><td>fbhp after mod psi</td><td>1400</td></tr></table></div>
+    <div class="panel"><table class="given"><tr><td>area acres</td><td>1200</td></tr><tr><td>net pay ft</td><td>40</td></tr><tr><td>porosity</td><td>0.18</td></tr><tr><td>oil saturation</td><td>0.8</td></tr><tr><td>formation volume factor boi</td><td>1.25</td></tr><tr><td>primary recovery factor</td><td>0.22</td></tr><tr><td>secondary recovery factor</td><td>0.3</td></tr></table></div>
 
     <h2>Find</h2>
-    <div class="panel"><ul><li>Q1: current oil production rate (STB/d)</li><li>Q2: oil rate after FBHP drops to 1,400 psi (STB/d)</li></ul></div>
+    <div class="panel"><ul><li>(a) OOIP in STB</li><li>(b) primary recoverable STB at RF 22%</li><li>(c) incremental STB from RF 22% -&gt; 30%</li></ul></div>
 
     <h2>Method</h2>
-    <div class="panel">Straight-line IPR (Productivity Index): q = PI x (Pr - Pwf), valid above the bubble point.</div>
+    <div class="panel">Volumetric OOIP = 7758*A*h*phi*So/Boi; recoverable = OOIP*RF; uplift = OOIP*(RF2-RF1).</div>
 
     <h2>Worked Solution</h2>
-    <div class="panel"><ol class="steps"><li>Drawdown_1 = Pr - Pwf_1 = 2800 - 1600 = 1200 psi</li><li>Q1 = PI x drawdown_1 = 1.5 x 1200 = 1800 BBL/d</li><li>Drawdown_2 = Pr - Pwf_2 = 2800 - 1400 = 1400 psi</li><li>Q2 = PI x drawdown_2 = 1.5 x 1400 = 2100 BBL/d</li></ol></div>
+    <div class="panel"><ol class="steps"><li>OOIP = 7758 * 1200 * 40 * 0.18 * 0.80 / 1.25 = 42,898,636.8 STB (~42.9 MMSTB)</li><li>(b) primary = 42,898,636.8 * 0.22 = 9,437,700 STB (~9.44 MMSTB)</li><li>(c) uplift = 42,898,636.8 * (0.30 - 0.22) = 3,431,891 STB (~3.43 MMSTB)</li></ol></div>
 
     <h2>Answer</h2>
-    <div class="panel answer"><div class="big">q1 bbl per day: 1800</div><div class="big">q2 bbl per day: 2100</div><div class="big">delta bbl per day: 300</div></div>
+    <div class="panel answer"><div class="big">a ooip stb: 42898636.8</div><div class="big">b primary recoverable stb: 9437700.1</div><div class="big">c secondary uplift stb: 3431891.0</div></div>
 
     <h2>Engineer's Note</h2>
-    <div class="panel caveat">The linear PI model assumes single-phase flow above the bubble point and a constant PI. If FBHP falls below the bubble point, use Vogel&#x27;s IPR instead — rate gains taper off rather than staying linear.
+    <div class="panel caveat">Volumetric estimate assumes uniform saturation and full areal/vertical drainage; real recovery depends on drive mechanism, sweep efficiency, and well placement. 7758 = bbl per acre-ft.
 </div>
 
     <footer class="lh">
-      Prepared on Deckhand · solved by digitalmodel production_engineering LinearIpr (q = PI x dP); confirmed by Claude API solver (claude-opus-4-8) · confidence: high<br />
+      Prepared on Deckhand · solved by digitalmodel reservoir.volumetrics; confirmed by hand-check · confidence: high<br />
       Generated 2026-06-19 09:42 — for engineering discussion; verify against project-specific assumptions before use.
     </footer>
   </div>

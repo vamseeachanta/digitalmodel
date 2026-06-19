@@ -1,0 +1,20 @@
+id: pe-2026-04-20
+date: "2026-04-20"
+slug: pe-problem-of-the-day-4-20-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-20-2026
+title: "PE Problem of the Day 4/20/2026 — tertiary thermal EOR"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, eor]
+type: conceptual
+
+statement: >
+  Name the general term for a tertiary production method that injects heat (usually steam) into a reservoir to reduce the viscosity of heavy, viscous crude so it flows more easily to production wells.
+
+find:
+  - "Name the general term"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Thermal recovery / thermal EOR (steam injection — e.g. steamflood, cyclic steam stimulation, SAGD)."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"

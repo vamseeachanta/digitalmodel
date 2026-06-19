@@ -1,0 +1,20 @@
+id: pe-2026-05-19
+date: "2026-05-19"
+slug: pe-problem-of-the-day-5-19-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-5-19-2026
+title: "PE Problem of the Day 5/19/2026 — internal resistance to flow"
+posted_by: Yogashri Pradhan
+tags: [upstream, chemicals, fluids]
+type: conceptual
+
+statement: >
+  What is a fluid's internal resistance to flow, often described as its thickness or fluid friction?
+
+find:
+  - "Name the property"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Viscosity."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
