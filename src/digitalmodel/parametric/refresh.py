@@ -227,46 +227,46 @@ def _git_sha(repo_root: Path) -> str:
 
 
 def main(argv: list[str]) -> int:
+    """CI drift gate (#833). Exit non-zero when a COMPUTED atlas is stale — a
+    code/standard/template change that wasn't regenerated. Libraries (#801) are
+    reported but do NOT fail the build (CI can't run a licensed solve) unless
+    --strict-libraries is given. --apply regenerates stale computed atlases."""
     apply = "--apply" in argv
-    ids = parametric_workflow_ids()
+    strict_libraries = "--strict-libraries" in argv
+
     stale_ids = []
-    for wid in ids:
+    for wid in parametric_workflow_ids():
         status = refresh_status(wid)
-        flag = "STALE" if status["stale"] else "ok"
-        print(f"[{flag:5}] {wid}  ({status['reason']})")
+        print(f"[{'STALE' if status['stale'] else 'ok':5}] {wid}  ({status['reason']})")
         if status["stale"]:
             stale_ids.append(wid)
 
-    # licensed-solver libraries: report-only (operator runs them; never auto-build)
     stale_libs = []
     for basename in LIBRARY_EXPECTATIONS:
         status = library_status(basename)
-        flag = "STALE" if status["stale"] else "ok"
-        print(f"[{flag:5}] {basename} (library)  ({status['reason']})")
+        print(f"[{'STALE' if status['stale'] else 'ok':5}] {basename} (library)  ({status['reason']})")
         if status["stale"]:
             stale_libs.append(basename)
-
-    if not stale_ids and not stale_libs:
-        print("all atlases current")
-        return 0
 
     if stale_libs:
         print(f"\n{len(stale_libs)} stale library(ies) — need a licensed run "
               f"(operator); not auto-regenerated: {stale_libs}")
-    if not stale_ids:
-        return 1  # only libraries stale: report, nothing to auto-build
-    if not apply:
+
+    if apply and stale_ids:
+        from digitalmodel.parametric.build import build_atlas_from_registry
+        for wid in stale_ids:
+            print(f"refreshing {wid} ...")
+            atlas = build_atlas_from_registry(wid)
+            if not atlas.validation["passes"]:
+                print(f"  WARNING: {wid} regenerated but failed validation gate")
+        stale_ids = []  # regenerated; commit the result
+
+    if not stale_ids and not stale_libs:
+        print("all atlases current")
+    fail = bool(stale_ids) or (strict_libraries and bool(stale_libs))
+    if stale_ids and not apply:
         print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
-        return 1
-
-    from digitalmodel.parametric.build import build_atlas_from_registry
-
-    for wid in stale_ids:
-        print(f"refreshing {wid} ...")
-        atlas = build_atlas_from_registry(wid)
-        if not atlas.validation["passes"]:
-            print(f"  WARNING: {wid} regenerated but failed validation gate")
-    return 1 if stale_libs else 0
+    return 1 if fail else 0
 
 
 if __name__ == "__main__":
