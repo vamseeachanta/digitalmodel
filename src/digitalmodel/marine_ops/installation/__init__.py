@@ -9,8 +9,14 @@ References:
     DNV-ST-N001 (2021) -- Marine Operations and Marine Warranty
     DNV-RP-C205 (2021) -- Environmental Conditions and Environmental Loads
 """
+
 from __future__ import annotations
 
+from digitalmodel.marine_ops.installation.crane_tip_motion import (
+    crane_tip_raos,
+    crane_tip_significant_motion,
+    crane_tip_significant_velocity,
+)
 from digitalmodel.marine_ops.installation.models import (
     CraneCurve,
     CraneTipConfig,
@@ -23,24 +29,26 @@ from digitalmodel.marine_ops.installation.models import (
     Structure,
     Vessel,
 )
-from digitalmodel.marine_ops.installation.crane_tip_motion import (
-    crane_tip_raos,
-    crane_tip_significant_motion,
-    crane_tip_significant_velocity,
+from digitalmodel.marine_ops.installation.operability import (
+    compute_operability,
+    hs_limit_for_criterion,
+    weather_window_operability,
 )
 from digitalmodel.marine_ops.installation.splash_zone import (
     slamming_force,
     splash_zone_assessment,
     varying_buoyancy_force,
 )
-from digitalmodel.marine_ops.installation.operability import (
-    compute_operability,
-    hs_limit_for_criterion,
-    weather_window_operability,
-)
 from digitalmodel.marine_ops.installation.vessel_screening import (
     VesselScreeningResult,
     screen_vessels,
+)
+from digitalmodel.marine_ops.installation.vessel_suitability import (
+    LiftRequirement,
+    SuitabilityResult,
+    assess_named,
+    assess_vessel,
+    rank_fleet,
 )
 
 __all__ = [
@@ -70,4 +78,10 @@ __all__ = [
     "weather_window_operability",
     # Vessel screening
     "screen_vessels",
+    # Confidence-weighted suitability (over the vessel DB fleet)
+    "LiftRequirement",
+    "SuitabilityResult",
+    "rank_fleet",
+    "assess_vessel",
+    "assess_named",
 ]

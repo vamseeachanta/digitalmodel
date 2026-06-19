@@ -1,75 +1,79 @@
 #!/usr/bin/env python3
 # ABOUTME: Confidence-weighted vessel capability/suitability score for a lift.
-# ABOUTME: Wires vessel_db crane curves + confidence tiers -> capability_score (#591/#592/#857).
+# ABOUTME: Thin CLI over marine_ops.installation.vessel_suitability (#881/#591/#592).
 """
 Vessel capability score (confidence-weighted) for a crane lift
 ==============================================================
 
 Ranks the installation fleet for a lift by **capability margin weighted by data
-confidence**, and flags whether each ranking is *defensible* (backed by at least
-estimated-grade data on every scored field). Unlike a raw go/no-go, this surfaces
-WHERE the data is weak — the gap #593 identified for client-facing GTM claims.
+confidence**, flagging whether each ranking is *defensible* (>= estimated-grade
+data on every scored field) — the gap #593 identified for client-facing claims.
 
-Crane SWL comes from the merged vessel DB (worldenergydata source of truth +
-curated). Confidence is derived from the data source: worldenergydata records
-(real IMO + published reach) -> cited; curated brochure records -> brochure.
+Thin wrapper over the reusable API
+``marine_ops.installation.vessel_suitability`` (rank_fleet / LiftRequirement),
+which scores over the merged vessel DB fleet (worldenergydata source of truth +
+curated).
 
 Usage:
     cd digitalmodel
     uv run python examples/demos/installation/vessel_capability_score.py --lift-te 3000 --radius-m 35
+    uv run python examples/demos/installation/vessel_capability_score.py --lift-te 4000 --radius-m 40 --min-dp 2
 """
 
 from __future__ import annotations
 
 import argparse
 
-from digitalmodel.marine_ops.vessel_db.confidence import (
-    ConfidenceTier,
-    capability_score,
+from digitalmodel.marine_ops.installation.vessel_suitability import (
+    LiftRequirement,
+    rank_fleet,
 )
-from digitalmodel.marine_ops.vessel_db.loader import installation_vessels
-
-_SOURCE_TIER = {
-    "worldenergydata": ConfidenceTier.CITED,   # real IMO + published reach
-    "curated": ConfidenceTier.BROCHURE,        # operator brochure / web research
-}
 
 
-def score_fleet(lift_te: float, radius_m: float):
-    rows = []
-    for name, info in installation_vessels().items():
-        curve = info["crane_curve"]
-        swl = curve.capacity_at_radius(radius_m)
-        margin = swl / lift_te if lift_te > 0 else 0.0
-        tier = _SOURCE_TIER.get(info.get("source", ""), ConfidenceTier.GENERIC)
-        # headline-only SWL (no published radius curve) is weaker evidence.
-        if len(curve.radii_m) <= 1 or float(curve.radii_m.max()) == 0.0:
-            tier = ConfidenceTier.ESTIMATED if tier.score > ConfidenceTier.ESTIMATED.score else tier
-        cs = capability_score("heavy_lift", {"crane_swl": margin}, {"crane_swl": tier})
-        rows.append((name, swl, margin, cs))
-    rows.sort(key=lambda r: r[3].score, reverse=True)
-    return rows
+def score_fleet(lift_te: float, radius_m: float, min_dp=None, deck_area=None):
+    """Ranked SuitabilityResult list for a lift (kept for demo/test convenience)."""
+    return rank_fleet(
+        LiftRequirement(
+            weight_te=lift_te,
+            radius_m=radius_m,
+            min_dp_class=min_dp,
+            deck_area_m2=deck_area,
+        )
+    )
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__,
-                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--lift-te", type=float, default=3000.0)
     p.add_argument("--radius-m", type=float, default=35.0)
+    p.add_argument("--min-dp", type=int, default=None, help="required DP class (2/3)")
+    p.add_argument(
+        "--deck-area", type=float, default=None, help="required deck area m2"
+    )
     args = p.parse_args()
 
-    rows = score_fleet(args.lift_te, args.radius_m)
+    rows = score_fleet(args.lift_te, args.radius_m, args.min_dp, args.deck_area)
     print("=" * 80)
-    print(f"  VESSEL CAPABILITY SCORE (confidence-weighted) — lift {args.lift_te:.0f} te @ {args.radius_m:.0f} m")
+    print(
+        f"  VESSEL CAPABILITY SCORE (confidence-weighted) — lift {args.lift_te:.0f} te @ {args.radius_m:.0f} m"
+    )
     print("=" * 80)
-    print(f"  {'score':>5} {'defensible':>10} {'confidence':>10}  {'SWL@R':>7} {'margin':>6}  vessel")
+    print(
+        f"  {'score':>5} {'defensible':>10} {'confidence':>10}  {'SWL@R':>7} {'margin':>6}  vessel"
+    )
     print("-" * 80)
-    for name, swl, margin, cs in rows:
-        print(f"  {cs.score:>5.0f} {('yes' if cs.defensible else 'no'):>10} "
-              f"{cs.confidence.value:>10}  {swl:>7.0f} {margin:>6.2f}  {name[:30]}")
+    for r in rows:
+        print(
+            f"  {r.score:>5.0f} {('yes' if r.defensible else 'no'):>10} "
+            f"{r.confidence.value:>10}  {r.swl_at_radius_te:>7.0f} {r.margin:>6.2f}  {r.vessel[:30]}"
+        )
     print("-" * 80)
-    n_def = sum(1 for *_, cs in rows if cs.defensible)
-    print(f"  {n_def}/{len(rows)} vessels meet the lift with defensible (>= estimated) data")
+    n_def = sum(1 for r in rows if r.defensible)
+    print(
+        f"  {n_def}/{len(rows)} vessels meet the lift with defensible (>= estimated) data"
+    )
 
 
 if __name__ == "__main__":
