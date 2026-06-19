@@ -67,11 +67,23 @@ def _staleness(atlas: Atlas) -> str | None:
     """Return a reason string if the atlas is stale (its build basis has moved
     since it was generated), else None. Detectable per the refresh contract
     (#799): a stale atlas must escalate, not serve a superseded answer."""
+    from digitalmodel.parametric import refresh
+
+    # licensed-solver libraries (#831): staleness judged vs the declared
+    # operator expectation, not a recompute.
+    if atlas.provenance.get("kind") == "library":
+        try:
+            reasons = refresh.library_drift(atlas)  # checks THIS atlas, no re-load
+        except Exception:
+            return None
+        if reasons:
+            return f"library stale: {'; '.join(reasons)} — licensed run required"
+        return None
+
     workflow_id = atlas.provenance.get("workflow_id")
     stored = atlas.provenance.get("content_fingerprint")
     if not workflow_id or not stored:
         return None  # atlas predates fingerprinting; nothing to check against
-    from digitalmodel.parametric import refresh
 
     try:
         current = refresh.content_fingerprint(workflow_id)

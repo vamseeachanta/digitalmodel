@@ -60,9 +60,20 @@ Extending the map = adding a case (one licensed run) here. OrcaFlex follows the
 same model (canonical sea-state × heading cases for a reference model) once the
 diffraction library is proven.
 
-## Not wired into `refresh`
+## Staleness (#831)
 
-Library atlases are not in the `refresh` content-fingerprint iteration: they are
-not code-computable, so `refresh --apply` cannot regenerate them. They refresh
-when the operator re-runs the solver. (A follow-up could fingerprint a library
-against its solver version + case set so a stale library is detectable.)
+Library atlases are not code-computable, so `refresh --apply` never regenerates
+them. Instead their staleness is judged against an operator-declared
+expectation in `refresh.LIBRARY_EXPECTATIONS` (solver name + version + covered
+case set):
+
+- `refresh --check` **reports** each library (`[ok]` / `[STALE]`) and exits 1 if
+  any library is stale, but never auto-builds it ("licensed run required").
+- A query against a stale library **escalates** (the staleness gate in
+  `query._staleness`), exactly like a stale computed atlas.
+
+The shipped library is a STUB; its expectation also says `version: STUB`, so it
+reads current. When the operator runs real diffraction and bumps the expected
+`solver_version`, the stub library immediately reads **stale** → queries
+escalate → which prompts populating the real library. Extending coverage = add
+the case to both the builder and the expectation.
