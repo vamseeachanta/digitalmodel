@@ -296,6 +296,7 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     # licensed-solver sparse library (#801): exact-match the case key, then
     # interpolate freq x heading within it; an uncovered case escalates.
     "diffraction_library": _handle_value,
+    "orcaflex_library": _handle_value,
 }
 
 

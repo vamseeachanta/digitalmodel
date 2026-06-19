@@ -246,6 +246,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "orcaflex-library-query":
+        result = cfg["parametric_query"]["result"]
+        # licensed-solver sparse library: covered load case interpolates heading
+        assert result["in_range"] is True
+        assert result["response"] == "max_effective_tension_N"
+        assert result["value"] > 0.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly

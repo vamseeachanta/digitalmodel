@@ -50,15 +50,21 @@ a hydrodynamic result.
 
 ## Coverage map (current canonical cases — for sign-off)
 
-Diffraction, scoped first per the #801 decision:
+Diffraction (#801), key = vessel/draft, interpolate freq × heading within:
 
 - `fpso-design-draft`
 - `fpso-ballast-draft`
 - `semisub-operating`
 
-Extending the map = adding a case (one licensed run) here. OrcaFlex follows the
-same model (canonical sea-state × heading cases for a reference model) once the
-diffraction library is proven.
+OrcaFlex (#832), key = load case, interpolate heading within; response = max
+effective line tension (`scripts/parametric/build_orcaflex_library.py`):
+
+- `operating-hs2`
+- `storm-hs5`
+- `extreme-hs8`
+
+Extending a map = adding a case (one licensed run) to both the builder and the
+matching `refresh.LIBRARY_EXPECTATIONS` entry.
 
 ## Staleness (#831)
 

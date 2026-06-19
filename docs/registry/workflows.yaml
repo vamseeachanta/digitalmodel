@@ -488,6 +488,17 @@ workflows:
       - examples/workflows/diffraction-library-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[diffraction-library-query]
     runtime: offline
+  - id: orcaflex-library-query
+    basename: parametric_query
+    title: Instant max mooring tension from the sparse OrcaFlex library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#832): built by scripts/parametric/build_orcaflex_library.py
+    # from licensed OrcaFlex/OrcFxAPI runs (ships a STUB). Exact-match the load-case
+    # key, interpolate heading within; an uncovered case escalates.
+    input: examples/workflows/orcaflex-library-query/input.yml
+    outputs:
+      - examples/workflows/orcaflex-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-library-query]
+    runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
     title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
