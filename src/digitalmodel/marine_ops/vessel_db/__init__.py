@@ -39,6 +39,10 @@ from digitalmodel.marine_ops.vessel_db.hulls_adapter import (
     real_rao_datasets,
     resolve_rao_library_dir,
 )
+from digitalmodel.marine_ops.vessel_db.mass_properties import (
+    MassProperties,
+    from_record,
+)
 
 __all__ = [
     "GyradiiEstimate",
@@ -66,4 +70,7 @@ __all__ = [
     "read_rao_workbook",
     "real_rao_datasets",
     "resolve_rao_library_dir",
+    # diffraction-setup consumer (mass properties -> OrcaWave/AQWA)
+    "MassProperties",
+    "from_record",
 ]
