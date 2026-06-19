@@ -1,0 +1,23 @@
+id: pe-2026-04-15
+date: "2026-04-15"
+slug: pe-problem-of-the-day-4-15-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-15-2026
+title: "PE Problem of the Day 4/15/2026 — high potassium on spectral gamma"
+posted_by: Yogashri Pradhan
+tags: [upstream, reservoir-engineering, petrophysics, well-logging]
+type: conceptual
+
+statement: >
+  High gamma but high potassium on the spectral gamma ray could indicate WHAT MINERAL in the rock? (one answer)
+
+find:
+  - "Name the mineral"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Potassium feldspar (K-feldspar; orthoclase/microcline) - or another K-bearing mineral such as mica, glauconite, or illite clay. A high-GR signal driven by the K channel (not U/Th) can flag arkosic/micaceous sand rather than shale."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/gamma-ray-log-interpretation.md

@@ -1,0 +1,23 @@
+id: pe-2026-03-26
+date: "2026-03-26"
+slug: pe-problem-of-the-day-3-26-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-3-26-2026
+title: "PE Problem of the Day 3/26/2026 — new wellbore branching off an existing one"
+posted_by: Yogashri Pradhan
+tags: [drilling, upstream]
+type: conceptual
+
+statement: >
+  What is the technique of creating a new wellbore from an existing one, branching off at an angle to bypass obstacles (e.g. stuck tools) or to reach a new geological target?
+
+find:
+  - "Name the technique"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Sidetracking (drilling a sidetrack) - branching a new wellbore off an existing one via a whipstock or cement plug to bypass an obstruction or reach a new target."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/sidetracking.md
