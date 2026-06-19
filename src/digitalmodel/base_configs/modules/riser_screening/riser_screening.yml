@@ -1,0 +1,10 @@
+basename: riser_screening
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  fe_folder: null
