@@ -12,6 +12,14 @@ from digitalmodel.marine_ops.vessel_db.gyradii import (
     GyradiiEstimate,
     estimate_gyradii,
 )
+from digitalmodel.marine_ops.vessel_db.confidence import (
+    CapabilityScore,
+    ConfidenceTier,
+    RecordConfidence,
+    capability_score,
+    field_confidence,
+    record_confidence,
+)
 from digitalmodel.marine_ops.vessel_db.loader import (
     ProvenanceViolation,
     Record,
@@ -47,6 +55,13 @@ from digitalmodel.marine_ops.vessel_db.mass_properties import (
 __all__ = [
     "GyradiiEstimate",
     "estimate_gyradii",
+    # unified confidence tiers + capability scoring
+    "ConfidenceTier",
+    "RecordConfidence",
+    "CapabilityScore",
+    "field_confidence",
+    "record_confidence",
+    "capability_score",
     "Record",
     "ProvenanceViolation",
     "datasets",
