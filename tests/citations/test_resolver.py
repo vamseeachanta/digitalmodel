@@ -369,3 +369,182 @@ def test_validate_clone_rejects_empty_dir(tmp_path):
 def test_validate_clone_rejects_nonexistent(tmp_path):
     """_validate_clone() returns None for a path that doesn't exist."""
     assert _validate_clone(tmp_path / "ghost") is None
+
+
+# ---------------------------------------------------------------------------
+# 11. Symlink / traversal hardening (#618 finding a)
+# ---------------------------------------------------------------------------
+
+
+def test_validate_clone_rejects_wikis_symlink_escaping_base(tmp_path):
+    """A `wikis/` symlink whose target lives OUTSIDE the base is rejected.
+
+    Without `.resolve(strict=True)` + containment, such a base would validate and
+    later read citation files through the escaping symlink (TOCTOU/symlink escape).
+    """
+    # Real wiki tree lives in an unrelated location outside the candidate base.
+    outside = tmp_path / "outside"
+    (outside / "wikis" / "engineering").mkdir(parents=True)
+
+    base = tmp_path / "base"
+    base.mkdir()
+    # base/wikis -> outside/wikis (escapes base)
+    (base / "wikis").symlink_to(outside / "wikis", target_is_directory=True)
+
+    assert _validate_clone(base) is None
+
+
+def test_validate_clone_accepts_wikis_symlink_contained_in_base(tmp_path):
+    """A `wikis/` symlink whose resolved target stays UNDER the base still validates."""
+    base = tmp_path / "base"
+    real = base / "_real_wikis" / "engineering"
+    real.mkdir(parents=True)
+    (base / "wikis").symlink_to(base / "_real_wikis", target_is_directory=True)
+
+    # _real_wikis resolves under base, so containment holds.
+    assert _validate_clone(base) == base.resolve()
+
+
+def test_resolver_rejects_symlink_escaping_base_via_env(tmp_path, monkeypatch, isolated_known_clones):
+    """End-to-end: LLM_WIKI_PATH base with an escaping `wikis/` symlink fails closed."""
+    outside = tmp_path / "outside"
+    (outside / "wikis").mkdir(parents=True)
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "wikis").symlink_to(outside / "wikis", target_is_directory=True)
+    monkeypatch.setenv("LLM_WIKI_PATH", str(base))
+    # parent walk must not rescue it
+    from digitalmodel.citations import resolver
+    fake_file = tmp_path / "nowhere" / "x.py"
+    fake_file.parent.mkdir(parents=True)
+    fake_file.write_text("# x")
+    monkeypatch.setattr(resolver, "__file__", str(fake_file))
+
+    with pytest.raises(CitationResolutionError) as exc:
+        resolve_wiki_base()
+    assert exc.value.reason.startswith("llm_wiki_path_stale_clone:")
+
+
+def test_resolver_resolves_dotdot_traversal_path(tmp_path, monkeypatch):
+    """A base reached via `..` segments is collapsed to its real path and validates."""
+    standalone = _make_standalone_clone(tmp_path / "real")
+    indirect = tmp_path / "real" / "sub" / ".." / "."
+    (tmp_path / "real" / "sub").mkdir()
+    monkeypatch.setenv("LLM_WIKI_PATH", str(indirect))
+
+    resolved = resolve_wiki_base()
+    assert resolved == standalone.resolve()
+
+
+# ---------------------------------------------------------------------------
+# 12. Log-path redaction (#618 finding b)
+# ---------------------------------------------------------------------------
+
+
+def test_resolver_redacts_home_prefix_in_logs_by_default(tmp_path, monkeypatch, caplog):
+    """Resolved base path is logged with the home-dir prefix collapsed to `~`."""
+    standalone = _make_standalone_clone(tmp_path / "redact")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(standalone))
+    # Pretend the clone lives under the user's home directory.
+    from digitalmodel.citations import resolver
+    monkeypatch.setattr(resolver.Path, "home", classmethod(lambda cls: tmp_path))
+
+    with caplog.at_level(logging.INFO, logger="digitalmodel.citations.resolver"):
+        resolve_wiki_base()
+    msgs = [r.getMessage() for r in caplog.records if r.levelno == logging.INFO]
+    assert msgs, "expected an INFO log"
+    # Absolute home path must NOT appear; the redacted `~/...` form must.
+    assert not any(str(standalone) in m for m in msgs)
+    assert any(m.endswith("~/redact") for m in msgs)
+
+
+def test_resolver_quiet_optout_suppresses_logs(tmp_path, monkeypatch, caplog):
+    """DIGITALMODEL_QUIET_RESOLVER=1 suppresses resolver INFO/ERROR logs (opt-out)."""
+    standalone = _make_standalone_clone(tmp_path / "quiet")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(standalone))
+    monkeypatch.setenv("DIGITALMODEL_QUIET_RESOLVER", "1")
+
+    with caplog.at_level(logging.INFO, logger="digitalmodel.citations.resolver"):
+        resolve_wiki_base()
+    resolver_records = [
+        r for r in caplog.records if r.name == "digitalmodel.citations.resolver"
+    ]
+    assert resolver_records == [], "expected no resolver logs when quiet opt-out is set"
+
+
+def test_resolver_quiet_optout_suppresses_error_logs(tmp_path, monkeypatch, caplog, isolated_known_clones):
+    """Opt-out also silences the ERROR-level fail-closed log (still raises)."""
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path / "ghost"))
+    monkeypatch.setenv("DIGITALMODEL_QUIET_RESOLVER", "1")
+
+    with caplog.at_level(logging.ERROR, logger="digitalmodel.citations.resolver"):
+        with pytest.raises(CitationResolutionError):
+            resolve_wiki_base()
+    error_records = [
+        r for r in caplog.records
+        if r.name == "digitalmodel.citations.resolver" and r.levelno == logging.ERROR
+    ]
+    assert error_records == []
+
+
+# ---------------------------------------------------------------------------
+# 13. conftest cache-isolation fixture (#618 finding c)
+# ---------------------------------------------------------------------------
+
+
+def test_conftest_cache_fixture_starts_clean():
+    """The autouse conftest fixture hands each test a fresh resolver cache."""
+    assert "deprecation_warned" not in _RESOLUTION_CACHE
+
+
+def test_conftest_cache_fixture_isolates_after_pollution(tmp_path, monkeypatch):
+    """Even after a test pollutes the cache, the next test sees it cleared.
+
+    This test deliberately sets the deprecation flag; the companion test below
+    asserts the conftest fixture wiped it (order-independent via sorted names).
+    """
+    overlay = _make_workspace_hub_overlay(tmp_path / "wsh")
+    monkeypatch.setenv("DIGITALMODEL_REPO_ROOT", str(overlay))
+    with pytest.warns(DeprecationWarning):
+        resolve_wiki_base()
+    assert _RESOLUTION_CACHE.get("deprecation_warned") is True
+
+
+def test_conftest_cache_fixture_zzz_sees_clean_after_pollution():
+    """Runs after the pollution test (alpha order) and must still see a clean cache."""
+    assert "deprecation_warned" not in _RESOLUTION_CACHE
+
+
+# ---------------------------------------------------------------------------
+# 14. Standalone-layout coverage for validate_citation (#618 finding d)
+# ---------------------------------------------------------------------------
+
+
+def test_validate_citation_standalone_layout(tmp_path):
+    """validate_citation(repo_root=...) resolves a standalone (non-nested) clone.
+
+    Exercises the `_join_with_layout_detection` standalone branch — previously only
+    the workspace-hub overlay layout had fixture coverage (#618 finding d).
+    """
+    from digitalmodel.citations import Citation, validate_citation
+
+    standalone = _make_standalone_clone(tmp_path / "sa-direct")
+    citation = Citation(
+        code_id="DNV-OS-E301",
+        publisher="DNV",
+        revision="2021-07",
+        section="Section 2.2.3",
+        wiki_path="wikis/engineering/wiki/standards/dnv-os-e301.md",
+    )
+    # repo_root points directly at the standalone base (no knowledge/ prefix).
+    validate_citation(citation, repo_root=standalone)
+
+
+def test_resolve_wiki_path_standalone_layout_direct(tmp_path, monkeypatch):
+    """resolve_wiki_path() finds the file in the standalone branch via the resolver."""
+    standalone = _make_standalone_clone(tmp_path / "sa-resolver")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(standalone))
+
+    resolved = resolve_wiki_path("wikis/engineering/wiki/standards/dnv-os-e301.md")
+    assert resolved.is_file()
+    assert resolved == standalone.resolve() / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md"
