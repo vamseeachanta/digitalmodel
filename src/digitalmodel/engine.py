@@ -228,6 +228,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = vessel_seakeeping(cfg_base)
+    elif basename == "lifting_lug":
+        from digitalmodel.lifting_lug.workflow import router as lifting_lug
+
+        cfg_base = lifting_lug(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)

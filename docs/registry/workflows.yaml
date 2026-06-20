@@ -931,3 +931,12 @@ workflows:
       - examples/workflows/rigging/results/rigging/rigging_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rigging]
     runtime: offline
+  - id: lifting-lug-design
+    basename: lifting_lug
+    title: Lifting lug / padeye strength screening (bearing, net tension, shear tear-out; AISC / DNV-ST-0378)
+    input: examples/workflows/lifting-lug-design/input.yml
+    outputs:
+      - examples/workflows/lifting-lug-design/results/input.yml
+      - examples/workflows/lifting-lug-design/results/lifting_lug/lifting_lug_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-design]
+    runtime: offline
