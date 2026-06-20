@@ -931,6 +931,15 @@ workflows:
       - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
     runtime: offline
+  - id: esp-pump-hydraulics
+    basename: esp_pump_hydraulics
+    title: ESP hydraulics — total dynamic head, stage count and motor sizing
+    input: examples/workflows/esp-pump-hydraulics/input.yml
+    outputs:
+      - examples/workflows/esp-pump-hydraulics/results/input.yml
+      - examples/workflows/esp-pump-hydraulics/results/esp_pump_hydraulics/esp_pump_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-hydraulics]
+    runtime: offline
   - id: rigging
     basename: rigging
     title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)
