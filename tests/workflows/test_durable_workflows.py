@@ -11,7 +11,6 @@ from tests.workflows.field_dev_production_assertions import (
     assert_field_dev_production_workflow,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
 
@@ -84,9 +83,7 @@ def test_workflow_registry(workflow, monkeypatch):
         expected_mass = demand["total_charge_Ah"] / (
             anodes["anode_capacity_Ah_kg"] * anodes["utilization_factor"]
         )
-        assert anodes["total_anode_mass_kg"] == pytest.approx(
-            expected_mass, abs=1.0e-3
-        )
+        assert anodes["total_anode_mass_kg"] == pytest.approx(expected_mass, abs=1.0e-3)
         assert anodes["anode_count"] == math.ceil(
             anodes["total_anode_mass_kg"]
             * anodes["contingency_factor"]
@@ -156,7 +153,9 @@ def test_workflow_registry(workflow, monkeypatch):
         assert summary["screening_status"] in {"pass", "fail"}
         assert summary["screening_status"] == "pass"
         assert summary["governing_phase"] == "splash_zone"
-        assert summary["max_utilisation"] == pytest.approx(cases["max_utilisation"].max())
+        assert summary["max_utilisation"] == pytest.approx(
+            cases["max_utilisation"].max()
+        )
         assert len(cases) == 3
         assert cases["hs_m"].tolist() == [1.0, 2.0, 3.0]
         assert cases["max_utilisation"].is_monotonic_increasing
@@ -188,12 +187,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert set(line_summary["line_id"]) == {"chain-01", "wire-01"}
         assert (results["stress_range_MPa"] > 0.0).all()
         assert (results["damage"] > 0.0).all()
-        assert (
-            results.sort_values("stress_range_MPa")["allowable_cycles"]
-            .is_monotonic_decreasing
-        )
-    elif workflow["id"] in {"mooring-fatigue-atlas-query", "synthetic-rope-atlas-query",
-                            "spectral-fatigue-atlas-query"}:
+        assert results.sort_values("stress_range_MPa")[
+            "allowable_cycles"
+        ].is_monotonic_decreasing
+    elif workflow["id"] in {
+        "mooring-fatigue-atlas-query",
+        "synthetic-rope-atlas-query",
+        "spectral-fatigue-atlas-query",
+    }:
         result = cfg["parametric_query"]["result"]
         # in-range query returns an interpolated screening estimate, not a verdict
         assert result["in_range"] is True
@@ -300,10 +301,9 @@ def test_workflow_registry(workflow, monkeypatch):
         # per-line: the mean-load knockdown makes a_eff line-specific, so the
         # T-N curve is only monotonic within a single line, not across lines.
         for _, group in results.groupby("line_id"):
-            assert (
-                group.sort_values("normalised_range")["allowable_cycles"]
-                .is_monotonic_decreasing
-            )
+            assert group.sort_values("normalised_range")[
+                "allowable_cycles"
+            ].is_monotonic_decreasing
     elif workflow["id"] == "spectral-fatigue":
         summary = cfg["spectral_fatigue"]
         results_path = Path(summary["results_csv"])
@@ -316,7 +316,7 @@ def test_workflow_registry(workflow, monkeypatch):
         location_summary = pd.read_csv(summary_path)
 
         assert cfg["screening_status"] == summary["screening_status"]
-        assert summary["screening_status"] == "fail"            # splash zone fails
+        assert summary["screening_status"] == "fail"  # splash zone fails
         assert summary["method"] == "dirlik"
         assert summary["governing_location"] == "riser-splash-zone"
         assert set(location_summary["location_id"]) == {
@@ -328,7 +328,9 @@ def test_workflow_registry(workflow, monkeypatch):
         assert bool(by_loc["riser-keel-joint"]["passes"]) is True
         # life = 1 / accumulated annual damage; governing = smallest margin
         for _, row in location_summary.iterrows():
-            assert row["fatigue_life_years"] == pytest.approx(1.0 / row["annual_damage"])
+            assert row["fatigue_life_years"] == pytest.approx(
+                1.0 / row["annual_damage"]
+            )
         assert summary["governing_margin"] == pytest.approx(
             location_summary["margin"].min()
         )
@@ -340,6 +342,35 @@ def test_workflow_registry(workflow, monkeypatch):
             assert row["damage_per_year_weighted"] == pytest.approx(
                 row["damage_per_year_full"] * row["occurrence_fraction"]
             )
+    elif workflow["id"] == "rao-spectral-fatigue":
+        summary = cfg["rao_spectral_fatigue"]
+        # the RAO -> stress-PSD transfer is recorded on the result
+        assert (
+            summary["wave_to_stress_transfer"] == "S_stress(f) = |H(f)|**2 * S_wave(f)"
+        )
+        summary_path = Path(summary["summary_csv"])
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        location_summary = pd.read_csv(summary_path)
+
+        assert cfg["screening_status"] == summary["screening_status"]
+        assert summary["screening_status"] == "fail"  # splash zone fails
+        assert summary["method"] == "dirlik"
+        assert summary["governing_location"] == "riser-splash-zone"
+        assert set(location_summary["location_id"]) == {
+            "riser-splash-zone",
+            "riser-keel-joint",
+        }
+        by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
+        assert bool(by_loc["riser-splash-zone"]["passes"]) is False
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        for _, row in location_summary.iterrows():
+            assert row["fatigue_life_years"] == pytest.approx(
+                1.0 / row["annual_damage"]
+            )
+        assert summary["governing_margin"] == pytest.approx(
+            location_summary["margin"].min()
+        )
     elif workflow["id"] == "time-series":
         fft_path = Path(cfg["time_series"]["csv"]["signal_fft"])
         fft = pd.read_csv(fft_path)
@@ -1284,7 +1315,7 @@ def test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3(tmp_path):
         assert row["allowable_cycles"] == pytest.approx(expected_n, rel=1e-9)
     # Published anchor: R = 0.10 -> N = 0.259 * 10^13.46
     anchor = results.loc[results["normalised_range"].round(6) == 0.10].iloc[0]
-    assert anchor["allowable_cycles"] == pytest.approx(a_d * 10 ** 13.46, rel=1e-9)
+    assert anchor["allowable_cycles"] == pytest.approx(a_d * 10**13.46, rel=1e-9)
 
 
 def test_spectral_fatigue_workflow_matches_narrow_band_closed_form(tmp_path):
@@ -1344,3 +1375,73 @@ def test_spectral_fatigue_workflow_matches_narrow_band_closed_form(tmp_path):
     location = cfg["spectral_fatigue"]["locations"][0]
     assert location["annual_damage"] == pytest.approx(expected, rel=1e-9)
     assert location["fatigue_life_years"] == pytest.approx(1.0 / expected, rel=1e-9)
+
+
+def test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening(tmp_path):
+    """AC6 validation gate for rao-spectral-fatigue: a *constant* stress RAO
+    H(f) = g must reduce the RAO transfer S_stress(f) = |H(f)|^2 * S_wave(f) to
+    the validated fixed-gain atlas screening model
+    parametric.generate._spectral_fatigue_annual_damage (constant
+    stress_gain_MPa_per_m). The generalisation must agree exactly with the
+    special case it generalises."""
+    from digitalmodel.parametric.generate import _spectral_fatigue_annual_damage
+
+    gain = 18.0  # MPa per m of wave amplitude (constant RAO)
+    hs, tp, gamma = 3.5, 10.0, 3.3
+    sn_slope, sn_log_intercept = 3.0, 12.164
+
+    input_path = tmp_path / "rao_spectral.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "rao_spectral_fatigue",
+                "rao_spectral_fatigue": {
+                    "design_life_years": 25.0,
+                    "dff": 3.0,
+                    "method": "dirlik",
+                    "sn_curve": {"slope": sn_slope, "log_intercept": sn_log_intercept},
+                    "output_dir": "results",
+                    "locations": [
+                        {
+                            "id": "detail-a",
+                            # constant RAO -> H(f) = gain everywhere
+                            "rao_frequency_Hz": [0.0, 0.1, 0.2, 0.4],
+                            "rao_stress_MPa_per_m": [gain, gain, gain, gain],
+                            "sea_states": [
+                                {
+                                    "occurrence_fraction": 1.0,
+                                    "wave_spectrum": {
+                                        "type": "jonswap",
+                                        "Hs": hs,
+                                        "Tp": tp,
+                                        "gamma": gamma,
+                                    },
+                                }
+                            ],
+                        }
+                    ],
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    cfg = engine(inputfile=str(input_path))
+
+    expected = _spectral_fatigue_annual_damage(
+        {"Hs": hs, "Tp": tp},
+        gamma=gamma,
+        stress_gain_MPa_per_m=gain,
+        sn_slope=sn_slope,
+        sn_intercept=sn_log_intercept,
+    )
+
+    location = cfg["rao_spectral_fatigue"]["locations"][0]
+    assert location["annual_damage"] == pytest.approx(expected, rel=1e-9)
+    assert location["fatigue_life_years"] == pytest.approx(1.0 / expected, rel=1e-9)
+    assert cfg["rao_spectral_fatigue"]["wave_to_stress_transfer"] == (
+        "S_stress(f) = |H(f)|**2 * S_wave(f)"
+    )

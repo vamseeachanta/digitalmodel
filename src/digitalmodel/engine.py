@@ -216,6 +216,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = spectral_fatigue(cfg_base)
+    elif basename == "rao_spectral_fatigue":
+        from digitalmodel.rao_spectral_fatigue.workflow import (
+            router as rao_spectral_fatigue,
+        )
+
+        cfg_base = rao_spectral_fatigue(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
