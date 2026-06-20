@@ -8,9 +8,12 @@ See data/vessels/README.md for the "flag, don't fake" provenance contract.
 
 from __future__ import annotations
 
-from digitalmodel.marine_ops.vessel_db.gyradii import (
-    GyradiiEstimate,
-    estimate_gyradii,
+from digitalmodel.marine_ops.vessel_db.audit import (
+    AuditReport,
+    Conflict,
+    audit_cross_source_conflicts,
+    build_audit_report,
+    run_audit,
 )
 from digitalmodel.marine_ops.vessel_db.confidence import (
     CapabilityScore,
@@ -19,6 +22,14 @@ from digitalmodel.marine_ops.vessel_db.confidence import (
     capability_score,
     field_confidence,
     record_confidence,
+)
+from digitalmodel.marine_ops.vessel_db.gyradii import GyradiiEstimate, estimate_gyradii
+from digitalmodel.marine_ops.vessel_db.hulls_adapter import (
+    library_summary,
+    parse_heading_block_rao,
+    read_rao_workbook,
+    real_rao_datasets,
+    resolve_rao_library_dir,
 )
 from digitalmodel.marine_ops.vessel_db.loader import (
     ProvenanceViolation,
@@ -33,23 +44,16 @@ from digitalmodel.marine_ops.vessel_db.loader import (
     validate_provenance,
     vessels_dir,
 )
+from digitalmodel.marine_ops.vessel_db.mass_properties import (
+    MassProperties,
+    from_record,
+)
 from digitalmodel.marine_ops.vessel_db.wed_adapter import (
     construction_crane_vessels,
     construction_vessels,
     drilling_rigs,
     fleet_summary,
     resolve_wed_curated_dir,
-)
-from digitalmodel.marine_ops.vessel_db.hulls_adapter import (
-    library_summary,
-    parse_heading_block_rao,
-    read_rao_workbook,
-    real_rao_datasets,
-    resolve_rao_library_dir,
-)
-from digitalmodel.marine_ops.vessel_db.mass_properties import (
-    MassProperties,
-    from_record,
 )
 
 __all__ = [
@@ -62,6 +66,12 @@ __all__ = [
     "field_confidence",
     "record_confidence",
     "capability_score",
+    # cross-store audit
+    "AuditReport",
+    "Conflict",
+    "audit_cross_source_conflicts",
+    "build_audit_report",
+    "run_audit",
     "Record",
     "ProvenanceViolation",
     "datasets",
