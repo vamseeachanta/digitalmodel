@@ -232,6 +232,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.lifting_lug.workflow import router as lifting_lug
 
         cfg_base = lifting_lug(cfg_base)
+    elif basename == "weather_window":
+        from digitalmodel.weather_window.workflow import router as weather_window
+
+        cfg_base = weather_window(cfg_base)
     elif basename == "span_rectification":
         from digitalmodel.subsea.pipeline.span_rectification import (
             router as span_rectification,

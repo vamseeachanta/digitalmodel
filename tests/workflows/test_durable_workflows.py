@@ -1227,6 +1227,21 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["n_supports"] == expected_subspans - 1
         assert result["resulting_sub_span_m"] == pytest.approx(60.0 / expected_subspans)
         assert result["resulting_sub_span_m"] <= allowable + 1e-9
+    elif workflow["id"] == "weather-window":
+        result = cfg["weather_window"]["result"]
+        # 56 steps x 3 h = 168 h record; 41 steps below the 2.0 m limit
+        assert result["record_hours"] == pytest.approx(168.0)
+        assert result["workability_pct"] == pytest.approx(100.0 * 41.0 / 56.0)
+        # four windows: 36, 30, 24, 33 h -> longest 36 h, mean 30.8 h
+        assert result["longest_window_hours"] == pytest.approx(36.0)
+        assert result["num_windows"] == 4
+        # operation needs 48 h; longest window is 36 h -> no fit, fails
+        assert result["operation_fits_window"] is False
+        assert result["num_viable_windows"] == 0
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+        # workability (73%) clears the 50% requirement -> the fail is window-fit
+        assert result["workability_pct"] >= result["required_workability_pct"]
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
@@ -1641,3 +1656,45 @@ def test_span_rectification_support_count_closed_form():
     assert r3["rectification_required"] is False
     assert r3["n_supports"] == 0
     assert r3["resulting_sub_span_m"] == pytest.approx(10.0)
+
+
+def test_weather_window_persistence_and_fit_closed_form():
+    """AC6 validation gate for weather-window: window extraction, workability and
+    the window-fit verdict match a direct hand computation, and the workflow
+    reuses the tested analyse_persistence for the window statistics."""
+    import numpy as np
+
+    from digitalmodel.orcaflex.weather_window import analyse_persistence
+    from digitalmodel.weather_window.workflow import (
+        assess_weather_window,
+        window_lengths_hours,
+    )
+
+    dt = 3.0
+    limit = 2.0
+    # below-limit runs of 3 and 2 steps separated by an above-limit step
+    series = [1.0, 1.0, 1.0, 3.0, 1.5, 1.5, 3.0]
+    windows = window_lengths_hours(series, limit, dt)
+    assert windows == [9.0, 6.0]  # 3*3 h and 2*3 h
+
+    res = assess_weather_window(
+        series, hs_limit=limit, required_duration_hours=9.0, time_step_hours=dt
+    )
+    # workability = 5 below-limit steps / 7 total
+    assert res["workability_pct"] == pytest.approx(100.0 * 5.0 / 7.0)
+    assert res["longest_window_hours"] == pytest.approx(9.0)
+    assert res["num_viable_windows"] == 1  # only the 9 h window meets 9 h
+    assert res["operation_fits_window"] is True
+    assert res["screening_status"] == "pass"
+
+    # reuses analyse_persistence: window stats agree with a direct library call
+    persistence = analyse_persistence(np.asarray(series, dtype=float), limit, dt)
+    assert res["longest_window_hours"] == pytest.approx(persistence.max_window_hours)
+    assert res["num_windows"] == persistence.num_windows
+
+    # a longer required duration than any window -> fail
+    res2 = assess_weather_window(
+        series, hs_limit=limit, required_duration_hours=12.0, time_step_hours=dt
+    )
+    assert res2["operation_fits_window"] is False
+    assert res2["screening_status"] == "fail"
