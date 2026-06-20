@@ -176,6 +176,16 @@ workflows:
       - examples/workflows/spectral-fatigue-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue-atlas-query]
     runtime: offline
+  - id: rao-spectral-fatigue
+    basename: rao_spectral_fatigue
+    title: Spectral fatigue from a stress RAO and a wave spectrum (S_stress=|H|^2 S_wave, DNV-RP-C203)
+    input: examples/workflows/rao-spectral-fatigue/input.yml
+    outputs:
+      - examples/workflows/rao-spectral-fatigue/results/input.yml
+      - examples/workflows/rao-spectral-fatigue/results/input_spectral_fatigue.csv
+      - examples/workflows/rao-spectral-fatigue/results/input_spectral_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-spectral-fatigue]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal
