@@ -1,0 +1,19 @@
+# Unified riser input schema (#809) - Steel Lazy-Wave Riser example
+riser_type: SLWR
+name: slwr_1500m_example
+geometry:
+  water_depth: 1500.0
+  hang_off_elevation: -10.0
+material:
+  outer_diameter: 0.2731
+  wall_thickness: 0.0254
+  grade: X65
+environment:
+  surface_current: 1.0
+analysis:
+  run_statics: true
+buoyancy_od: 0.65
+buoyancy_density: 450.0
+hog_bend_depth: 800.0
+sag_bend_clearance: 50.0
+hang_off_angle_deg: 8.0
