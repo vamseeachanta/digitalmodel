@@ -1193,6 +1193,26 @@ def test_workflow_registry(workflow, monkeypatch):
             summary_path = REPO_ROOT / summary_path
         summary = yaml.safe_load(summary_path.read_text())
         assert summary["groups"][0]["label"] == "uta1_clump_weight"
+    elif workflow["id"] == "lifting-lug-design":
+        block = cfg["lifting_lug"]
+        # P = static * DAF * skew = 420 * 2.0 * 1.1
+        assert block["design_load_kN"] == pytest.approx(924.0)
+        checks = {c["name"]: c for c in block["checks"]}
+        assert set(checks) == {"pin_bearing", "net_tension", "shear_tearout"}
+        # shear tear-out governs (0.40 Fy allowable) and fails
+        assert block["governing_check"] == "shear_tearout"
+        assert checks["shear_tearout"]["utilization"] == pytest.approx(
+            1.16197183, rel=1e-6
+        )
+        assert checks["shear_tearout"]["passes"] is False
+        assert bool(checks["pin_bearing"]["passes"]) is True
+        assert bool(checks["net_tension"]["passes"]) is True
+        # shear demand equals tension demand (same area), lower allowable
+        assert checks["shear_tearout"]["demand_mpa"] == pytest.approx(
+            checks["net_tension"]["demand_mpa"]
+        )
+        assert block["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
@@ -1545,3 +1565,36 @@ def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
     assert cfg["vessel_seakeeping"]["response_transfer"] == (
         "S_response(w) = |RAO(w)|^2 * S_wave(w)"
     )
+
+
+def test_lifting_lug_checks_match_closed_form():
+    """AC6 validation gate for lifting-lug-design: the bearing, net-tension and
+    shear tear-out demands equal the closed-form AISC padeye expressions, and
+    the allowables are the AISC factors on yield (0.90 / 0.60 / 0.40 Fy)."""
+    from digitalmodel.lifting_lug.workflow import design_load_kn, lug_checks
+
+    fy = 355.0
+    t = 40.0
+    d_pin, d_hole, r_outer = 75.0, 80.0, 110.0
+    p = design_load_kn(420.0, 2.0, 1.1)
+    assert p == pytest.approx(924.0)
+
+    checks = {c.name: c for c in lug_checks(p, t, d_pin, d_hole, r_outer, fy)}
+    p_n = p * 1.0e3
+    ligament = r_outer - d_hole / 2.0
+
+    assert checks["pin_bearing"].demand_mpa == pytest.approx(
+        p_n / (d_pin * t), rel=1e-12
+    )
+    assert checks["pin_bearing"].allowable_mpa == pytest.approx(0.90 * fy, rel=1e-12)
+    assert checks["net_tension"].demand_mpa == pytest.approx(
+        p_n / (2.0 * t * ligament), rel=1e-12
+    )
+    assert checks["net_tension"].allowable_mpa == pytest.approx(0.60 * fy, rel=1e-12)
+    assert checks["shear_tearout"].demand_mpa == pytest.approx(
+        p_n / (2.0 * t * ligament), rel=1e-12
+    )
+    assert checks["shear_tearout"].allowable_mpa == pytest.approx(0.40 * fy, rel=1e-12)
+    # utilisation = demand / allowable
+    for c in checks.values():
+        assert c.utilization == pytest.approx(c.demand_mpa / c.allowable_mpa, rel=1e-12)
