@@ -1,0 +1,19 @@
+basename: vessel_seakeeping
+
+vessel_seakeeping:
+  vessel: vessel
+  spectrum_type: jonswap          # jonswap | pm | bretschneider
+  gamma: 3.3                      # JONSWAP peakedness
+  required_operability_pct: 95.0  # a DOF passes if its operable-weighted % >= this
+  output_dir: results
+  # Shared RAO frequency grid (rad/s); each DOF supplies its motion RAO amplitude
+  # on this grid plus an operability criterion (max allowable significant amplitude).
+  rao_frequency_rad_s: []
+  sea_states: []                  # scatter: list of {hs, tp, probability}
+  dofs: []                        # list of {name, rao_amplitude, criterion, unit}
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

@@ -186,6 +186,16 @@ workflows:
       - examples/workflows/rao-spectral-fatigue/results/input_spectral_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-spectral-fatigue]
     runtime: offline
+  - id: vessel-seakeeping
+    basename: vessel_seakeeping
+    title: Vessel seakeeping operability from motion RAOs and a sea state (S_response=|RAO|^2 S_wave)
+    input: examples/workflows/vessel-seakeeping/input.yml
+    outputs:
+      - examples/workflows/vessel-seakeeping/results/input.yml
+      - examples/workflows/vessel-seakeeping/results/input_vessel_seakeeping.csv
+      - examples/workflows/vessel-seakeeping/results/input_vessel_seakeeping_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[vessel-seakeeping]
+    runtime: offline
   - id: time-series
     basename: time_series
     title: FFT spectrum from a deterministic synthetic signal

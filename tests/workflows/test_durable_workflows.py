@@ -371,6 +371,29 @@ def test_workflow_registry(workflow, monkeypatch):
         assert summary["governing_margin"] == pytest.approx(
             location_summary["margin"].min()
         )
+    elif workflow["id"] == "vessel-seakeeping":
+        summary = cfg["vessel_seakeeping"]
+        assert summary["response_transfer"] == "S_response(w) = |RAO(w)|^2 * S_wave(w)"
+        summary_path = Path(summary["summary_csv"])
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        dof_summary = pd.read_csv(summary_path)
+
+        assert cfg["screening_status"] == summary["screening_status"]
+        assert summary["screening_status"] == "fail"  # roll resonance fails operability
+        assert summary["governing_dof"] == "roll"
+        assert set(dof_summary["dof"]) == {"heave", "roll", "pitch"}
+        by_dof = {row["dof"]: row for _, row in dof_summary.iterrows()}
+        assert bool(by_dof["heave"]["passes"]) is True
+        assert bool(by_dof["pitch"]["passes"]) is True
+        assert bool(by_dof["roll"]["passes"]) is False
+        # governing DOF carries the lowest operability percentage
+        assert summary["governing_operability_pct"] == pytest.approx(
+            dof_summary["operability_pct"].min()
+        )
+        # operability percentage is bounded [0, 100]
+        for _, row in dof_summary.iterrows():
+            assert 0.0 <= row["operability_pct"] <= 100.0
     elif workflow["id"] == "time-series":
         fft_path = Path(cfg["time_series"]["csv"]["signal_fft"])
         fft = pd.read_csv(fft_path)
@@ -1444,4 +1467,81 @@ def test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening(tmp_path
     assert location["fatigue_life_years"] == pytest.approx(1.0 / expected, rel=1e-9)
     assert cfg["rao_spectral_fatigue"]["wave_to_stress_transfer"] == (
         "S_stress(f) = |H(f)|**2 * S_wave(f)"
+    )
+
+
+def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
+    """AC6 validation gate for vessel-seakeeping: the workflow's per-sea-state
+    significant motion amplitude must equal an independent computation through
+    the validated digitalmodel.hydrodynamics.seakeeping primitives
+    (compute_response_spectrum -> spectral_moments -> significant_amplitude) on
+    the same RAO and JONSWAP spectrum -- i.e. the workflow faithfully wires the
+    tested library, not a re-implementation."""
+    import numpy as np
+
+    from digitalmodel.hydrodynamics.seakeeping import (
+        compute_response_spectrum,
+        significant_amplitude,
+        spectral_moments,
+    )
+    from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+
+    freqs = [0.3, 0.5, 0.7, 0.9, 1.1]
+    rao = [1.0, 0.8, 0.5, 0.25, 0.1]
+    hs, tp, gamma = 3.0, 11.0, 3.3
+
+    input_path = tmp_path / "vessel_seakeeping.yml"
+    input_path.write_text(
+        yaml.safe_dump(
+            {
+                "basename": "vessel_seakeeping",
+                "vessel_seakeeping": {
+                    "vessel": "unit-test",
+                    "spectrum_type": "jonswap",
+                    "gamma": gamma,
+                    "required_operability_pct": 95.0,
+                    "output_dir": "results",
+                    "rao_frequency_rad_s": freqs,
+                    "sea_states": [{"hs": hs, "tp": tp, "probability": 1.0}],
+                    "dofs": [
+                        {
+                            "name": "heave",
+                            "unit": "m",
+                            "rao_amplitude": rao,
+                            "criterion": 2.0,
+                        }
+                    ],
+                },
+                "default": {
+                    "log_level": "INFO",
+                    "config": {"overwrite": {"output": True}},
+                },
+            }
+        )
+    )
+
+    cfg = engine(inputfile=str(input_path))
+
+    # independent recomputation through the library primitives
+    rao_freqs = np.asarray(freqs, dtype=float)
+    omega, s_wave = WaveSpectra().jonswap(
+        hs=hs,
+        tp=tp,
+        gamma=gamma,
+        freq_min=float(rao_freqs[0]),
+        freq_max=float(rao_freqs[-1]),
+        n_points=len(rao_freqs),
+    )
+    s_resp = compute_response_spectrum(np.asarray(rao, dtype=float), s_wave)
+    m0 = spectral_moments(omega, s_resp, orders=[0])[0]
+    expected_sig = significant_amplitude(m0)
+
+    results_path = Path(cfg["vessel_seakeeping"]["results_csv"])
+    if not results_path.is_absolute():
+        results_path = REPO_ROOT / results_path
+    results = pd.read_csv(results_path)
+    heave_row = results[results["dof"] == "heave"].iloc[0]
+    assert heave_row["significant_amplitude"] == pytest.approx(expected_sig, rel=1e-9)
+    assert cfg["vessel_seakeeping"]["response_transfer"] == (
+        "S_response(w) = |RAO(w)|^2 * S_wave(w)"
     )
