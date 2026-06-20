@@ -222,6 +222,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = rao_spectral_fatigue(cfg_base)
+    elif basename == "vessel_seakeeping":
+        from digitalmodel.vessel_seakeeping.workflow import (
+            router as vessel_seakeeping,
+        )
+
+        cfg_base = vessel_seakeeping(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
