@@ -209,14 +209,73 @@ def estimate_rig_days(
     return round(spec.well_count * per_well * factor, 1)
 
 
-def capex_line_items(host: HostType, spec: ProspectSpec, params: dict) -> dict[str, float]:
-    """Driver-level CAPEX breakdown (USD bn) off the existing estimate_capex base.
+def _override_for_host(
+    host: HostType, capex_override: Optional[dict[Any, float]]
+) -> Optional[float]:
+    """Return the absolute-CAPEX total (USD bn) supplied for ``host``, or None.
 
-    The base P50 CAPEX comes from the GoM-benchmarked :func:`estimate_capex`
-    (reused, not duplicated); the params file only supplies the line-item split
-    and the eng/PM + contingency uplifts.
+    The override map is keyed by either a :class:`HostType` member or its string
+    value (``host.value``), so callers may use whichever is convenient.
+    """
+    if not capex_override:
+        return None
+    if host in capex_override:
+        return capex_override[host]
+    return capex_override.get(_host_key(host))
+
+
+def capex_line_items(
+    host: HostType,
+    spec: ProspectSpec,
+    params: dict,
+    capex_override: Optional[dict[Any, float]] = None,
+) -> dict[str, float]:
+    """Driver-level CAPEX breakdown (USD bn).
+
+    Two paths, in precedence order:
+
+    1. **Absolute-CAPEX override** — when ``capex_override`` supplies an absolute
+       total CAPEX (USD bn) for ``host`` (keyed by the :class:`HostType` member or
+       its string value), that value is used **directly** as the concept total,
+       bypassing the generic fraction-of-base derivation and the eng/PM +
+       contingency uplifts entirely. Use this when a calibration provides absolute
+       line-item totals per concept so the screened CAPEX magnitudes match the
+       supplied totals rather than being re-derived from the generic base.
+    2. **Generic fraction default** (``capex_override`` is None / has no entry for
+       this host) — the base P50 CAPEX comes from the GoM-benchmarked
+       :func:`estimate_capex` (reused, not duplicated); the params file supplies the
+       line-item split and the eng/PM + contingency uplifts. This is unchanged,
+       backward-compatible behaviour.
+
+    Parameters
+    ----------
+    capex_override : dict, optional
+        Map of ``HostType`` (or ``host.value`` string) -> absolute total CAPEX in
+        USD bn. Entries must be > 0. A host absent from the map falls back to the
+        generic fraction path, so a partial override is allowed.
+
+    Raises
+    ------
+    ValueError
+        If an override total supplied for ``host`` is <= 0.
     """
     cap = params["capex"]
+
+    override_total = _override_for_host(host, capex_override)
+    if override_total is not None:
+        override_total = float(override_total)
+        if override_total <= 0:
+            raise ValueError(
+                f"capex_override for {host.value!r} must be > 0, got {override_total!r} "
+                "(absolute CAPEX total in USD bn)."
+            )
+        # Absolute override: the supplied total IS the concept CAPEX. No fraction
+        # scaling, no uplifts — the caller's calibration already encodes them.
+        return {
+            "total": round(override_total, 4),
+            "source": "absolute_override",
+        }
+
     # tieback needs a distance; default to spec distance or a nominal 15 km.
     tieback_km = None
     if host is HostType.SUBSEA_TIEBACK:
@@ -283,6 +342,7 @@ def screen_concepts(
     params_path: Optional[str | Path] = None,
     candidates: Optional[list[HostType]] = None,
     bsee_benchmark: Optional[float] = None,
+    capex_override: Optional[dict[Any, float]] = None,
 ) -> ScreeningResult:
     """Screen candidate concepts for a prospect across four parameter-based axes.
 
@@ -299,6 +359,13 @@ def screen_concepts(
         Subset of host types to screen; defaults to all.
     bsee_benchmark : float, optional
         Per-well rig-days from a real BSEE benchmark (worldenergydata). Optional.
+    capex_override : dict, optional
+        Absolute-CAPEX override: map of ``HostType`` (or ``host.value`` string) ->
+        absolute total CAPEX in USD bn. When an entry exists for a screened host,
+        that absolute total is used **directly** for the CAPEX axis, bypassing the
+        generic fraction-of-base derivation (see :func:`capex_line_items`). Hosts
+        absent from the map keep the generic derived behaviour, so a partial
+        override is allowed. When None (default), behaviour is unchanged.
 
     Returns
     -------
@@ -314,7 +381,7 @@ def screen_concepts(
     raw: dict[HostType, AxisScores] = {}
     suit: dict[HostType, float] = {}
     for host in hosts:
-        items = capex_line_items(host, spec, params)
+        items = capex_line_items(host, spec, params, capex_override)
         raw[host] = AxisScores(
             schedule_weeks=estimate_schedule_weeks(host, spec, params),
             rig_days=estimate_rig_days(host, spec, params, bsee_benchmark),
