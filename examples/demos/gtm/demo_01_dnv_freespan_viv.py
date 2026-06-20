@@ -418,6 +418,91 @@ def screen_viv(v_r: float, e_over_d: float = 1.0) -> Tuple[str, float]:
     return status, a_over_d
 
 
+# Status notes for calc_max_allowable_span_status (#653).
+MAX_SPAN_STATUS_OK = "ok"
+MAX_SPAN_STATUS_NO_CURRENT = "no_current"
+MAX_SPAN_STATUS_NO_ONSET = "no_cf_onset_in_range"
+
+# Default upper bound (metres) for the max-allowable-span bisection search.
+MAX_SPAN_SEARCH_CEILING_M = 500.0
+
+
+def calc_max_allowable_span_status(
+    od_m: float,
+    wt_m: float,
+    v_current: float,
+    e_over_d: float = 1.0,
+    content_density: float = CONTENT_DENSITY,
+    coating_thickness_m: float = 0.003,
+    c_n: float = C_N_DEFAULT,
+    l_hi: float = MAX_SPAN_SEARCH_CEILING_M,
+) -> Dict[str, Any]:
+    """Find max span before cross-flow VIV onset, with an explicit status (#653).
+
+    Iteratively solves ``V_R(L) = V_R_onset_CF`` for span length ``L`` via bisection
+    over ``[1 m, l_hi]``. Because ``f_n ~ 1/L^2`` ⇒ ``V_R ~ L^2`` is monotonically
+    increasing in ``L``, cross-flow onset (if it occurs in range) is cleanly bracketed.
+
+    Distinguishes three cases instead of silently saturating at the ceiling:
+
+    - ``v_current <= 0``  -> ``span_m=None``, status ``no_current`` (no VIV ever).
+    - onset never reached within ``[1, l_hi]`` (even at ``L=l_hi`` the reduced velocity
+      stays below the target) -> ``span_m=None``, status ``no_cf_onset_in_range``.
+      Previously this branch returned ``≈ l_hi`` (500.0), indistinguishable from a
+      genuine ~500 m limit or the no-current early return.
+    - a real onset is bracketed -> ``span_m=<bisection result>``, status ``ok``.
+
+    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
+    ``boundary_condition`` label). For the Baseline it equals C_N_PINNED == C_N_DEFAULT,
+    so the ``ok``-case span is byte-identical to the pre-yaml run.
+
+    Returns a dict ``{"span_m": float|None, "status": str, "search_ceiling_m": float}``.
+    """
+    if v_current <= 0:
+        # No current => no VIV ever; there is no finite onset span.
+        return {
+            "span_m": None,
+            "status": MAX_SPAN_STATUS_NO_CURRENT,
+            "search_ceiling_m": l_hi,
+        }
+
+    proximity = calc_gap_ratio_correction(e_over_d)
+    v_r_target = VR_ONSET_CF * proximity
+
+    def _v_r_at(span: float) -> float:
+        f_n = calc_natural_frequency(
+            od_m, wt_m, span,
+            content_density=content_density,
+            coating_thickness_m=coating_thickness_m,
+            c_n=c_n,
+        )
+        return calc_reduced_velocity(v_current, f_n, od_m)
+
+    # No-onset detection: V_R is monotonically increasing in span, so if even the
+    # ceiling span does not reach the onset target, onset never occurs in range.
+    if _v_r_at(l_hi) < v_r_target:
+        return {
+            "span_m": None,
+            "status": MAX_SPAN_STATUS_NO_ONSET,
+            "search_ceiling_m": l_hi,
+        }
+
+    # Onset is bracketed in [l_lo, l_hi]; bisect for the crossing span.
+    l_lo, hi = 1.0, l_hi
+    for _ in range(60):  # 60 iterations => ~1e-18 m precision
+        l_mid = (l_lo + hi) / 2.0
+        if _v_r_at(l_mid) < v_r_target:
+            l_lo = l_mid  # Span too short, VIV not yet onset
+        else:
+            hi = l_mid  # Span too long, VIV onset
+
+    return {
+        "span_m": (l_lo + hi) / 2.0,
+        "status": MAX_SPAN_STATUS_OK,
+        "search_ceiling_m": l_hi,
+    }
+
+
 def calc_max_allowable_span(
     od_m: float,
     wt_m: float,
@@ -426,43 +511,24 @@ def calc_max_allowable_span(
     content_density: float = CONTENT_DENSITY,
     coating_thickness_m: float = 0.003,
     c_n: float = C_N_DEFAULT,
-) -> float:
-    """Find max span length before cross-flow VIV onset.
+    l_hi: float = MAX_SPAN_SEARCH_CEILING_M,
+) -> Optional[float]:
+    """Find max span length before cross-flow VIV onset (#653).
 
-    Iteratively solves: V_R(L) = V_R_onset_CF for span length L.
-    Uses bisection on span length from 1 m to 500 m.
-
-    ``c_n`` is the beam boundary-condition coefficient (resolved from the Sweep Config's
-    ``boundary_condition`` label). For the Baseline it equals C_N_PINNED == C_N_DEFAULT,
-    so behaviour is byte-identical to the pre-yaml run.
-
-    Returns max allowable span in metres.
+    Thin numeric wrapper over :func:`calc_max_allowable_span_status`. Returns the max
+    allowable span in metres for a genuine onset, or ``None`` when there is no onset in
+    range (no current, or onset never reached within ``[1, l_hi]``). ``None`` replaces
+    the previous silent ``500.0`` saturation so a clipped/no-onset artifact is no longer
+    indistinguishable from a genuine ~500 m limit.
     """
-    if v_current <= 0:
-        return 500.0  # No current => no VIV
-
-    proximity = calc_gap_ratio_correction(e_over_d)
-    v_r_target = VR_ONSET_CF * proximity
-
-    # Bisection search
-    l_lo, l_hi = 1.0, 500.0
-
-    for _ in range(60):  # 60 iterations => ~1e-18 m precision
-        l_mid = (l_lo + l_hi) / 2.0
-        f_n = calc_natural_frequency(
-            od_m, wt_m, l_mid,
-            content_density=content_density,
-            coating_thickness_m=coating_thickness_m,
-            c_n=c_n,
-        )
-        v_r = calc_reduced_velocity(v_current, f_n, od_m)
-
-        if v_r < v_r_target:
-            l_lo = l_mid  # Span too short, VIV not yet onset
-        else:
-            l_hi = l_mid  # Span too long, VIV onset
-
-    return (l_lo + l_hi) / 2.0
+    return calc_max_allowable_span_status(
+        od_m, wt_m, v_current,
+        e_over_d=e_over_d,
+        content_density=content_density,
+        coating_thickness_m=coating_thickness_m,
+        c_n=c_n,
+        l_hi=l_hi,
+    )["span_m"]
 
 
 # ---------------------------------------------------------------------------
@@ -503,6 +569,8 @@ def run_single_case(
         coating_thickness_m=coating_thickness_m,
         c_n=c_n,
     )
+    # #653: no onset in range (or no current) => None sentinel, not a fake 500 m.
+    max_span_out = None if max_span is None else round(max_span, 1)
 
     # Effective mass for reference
     masses = calc_mass_per_meter(
@@ -523,7 +591,7 @@ def run_single_case(
         "v_r": round(v_r, 3),
         "a_over_d": round(a_over_d, 4),
         "status": status,
-        "max_allowable_span_m": round(max_span, 1),
+        "max_allowable_span_m": max_span_out,
         "m_eff_kg_per_m": round(masses["m_eff"], 2),
     }
 
@@ -880,8 +948,9 @@ def build_chart_3_max_span_heatmap(
             max_span = calc_max_allowable_span(
                 od_m, wt_m, v_curr, e_over_d, CONTENT_DENSITY, coating_t,
             )
-            z[row_i, col_j] = max_span
-            text_matrix[row_i][col_j] = f"{max_span:.1f} m"
+            # #653: no onset in range => NaN cell + "n/a" label, not a fake 500 m.
+            z[row_i, col_j] = np.nan if max_span is None else max_span
+            text_matrix[row_i][col_j] = "n/a" if max_span is None else f"{max_span:.1f} m"
 
     # Jumper row
     row_j = len(PIPELINE_SIZES)
@@ -892,8 +961,9 @@ def build_chart_3_max_span_heatmap(
         max_span = calc_max_allowable_span(
             od_j, wt_j, v_curr, e_over_d, CONTENT_DENSITY, coat_j,
         )
-        z[row_j, col_j] = max_span
-        text_matrix[row_j][col_j] = f"{max_span:.1f} m"
+        # #653: no onset in range => NaN cell + "n/a" label, not a fake 500 m.
+        z[row_j, col_j] = np.nan if max_span is None else max_span
+        text_matrix[row_j][col_j] = "n/a" if max_span is None else f"{max_span:.1f} m"
 
     fig = go.Figure(data=go.Heatmap(
         z=z,

@@ -16,6 +16,14 @@ from .models import (
 )
 from .case_builder import OpenFOAMCaseBuilder
 from .domain_builder import DomainBuilder
+from .spectral_analysis import (
+    SpectralPeak,
+    SpectrumResult,
+    compute_fft_spectrum,
+    compute_welch_spectrum,
+    extract_natural_frequency,
+    prismatic_tank_natural_frequency,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -28,4 +36,10 @@ __all__ = [
     "SolverConfig",
     "TurbulenceModel",
     "TurbulenceType",
+    "SpectralPeak",
+    "SpectrumResult",
+    "compute_fft_spectrum",
+    "compute_welch_spectrum",
+    "extract_natural_frequency",
+    "prismatic_tank_natural_frequency",
 ]

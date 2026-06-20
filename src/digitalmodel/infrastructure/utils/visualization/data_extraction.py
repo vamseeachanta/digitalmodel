@@ -53,7 +53,7 @@ class ReadDataFromSystemFiles():
         import yaml
         if os.path.isfile(filename):
             with open(filename, 'r') as fp:
-                data = yaml.load(fp, Loader=yaml.Loader)
+                data = yaml.safe_load(fp)
         else:
             data = None
 

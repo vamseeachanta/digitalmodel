@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class DesignCode(Enum):
     DNV_ST_F101 = "DNV-ST-F101"
+    DNV_ST_F201 = "DNV-ST-F201"
     API_RP_1111 = "API-RP-1111"
     API_RP_2RD = "API-RP-2RD"
     API_STD_2RD = "API-STD-2RD"
