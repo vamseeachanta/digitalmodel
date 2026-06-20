@@ -552,6 +552,68 @@ class TestCatenaryPerformance:
             )
 
 
+class TestCatenaryBracketRegression:
+    """Regression guards for issue #554 (bracketing + sinh overflow).
+
+    Pins the inputs that previously produced a non-converged solve
+    (H_solution = 793941.6, "Failed to converge after 100 iterations") and an
+    ``overflow encountered in sinh`` warning. The production solver must now
+    bracket the physical root (sign change on the length-error) and return a
+    finite, converged solution rather than crashing or diverging.
+    """
+
+    @pytest.fixture
+    def solver(self):
+        return CatenarySolver(tolerance=1e-8, max_iterations=100)
+
+    def test_excel_reference_brackets_and_converges(self, solver):
+        """The Excel reference case must bracket and converge (no overflow)."""
+        params = CatenaryInput(
+            length=1000,
+            horizontal_span=800,
+            vertical_span=100,
+            weight_per_length=1962,
+            ea_stiffness=64e9,
+        )
+
+        # Sanity: the length-error function changes sign across the physical
+        # bracket, so a sign-guarded solve has a valid root to find.
+        f_low = solver._length_error_for_a(256.0, params)
+        f_high = solver._length_error_for_a(512.0, params)
+        assert np.isfinite(f_low) and np.isfinite(f_high)
+        assert f_low * f_high < 0, "Bracket endpoints must straddle the root"
+
+        results = solver.solve(params)
+
+        assert results.converged, "Solver must converge on the reference case"
+        # Previously-divergent value was ~793,941 N; the correct physical root
+        # is ~671,495 N (a = H/w = 342.24 m).
+        assert np.isfinite(results.horizontal_tension)
+        assert abs(results.horizontal_tension - 671_494.5846) / 671_494.5846 < 0.01
+        assert results.catenary_parameter == pytest.approx(342.24, rel=1e-2)
+
+    def test_small_catenary_parameter_no_sinh_overflow(self, solver):
+        """A small a = H/w (long shallow line) must not overflow sinh."""
+        # Large horizontal span relative to length drives a small catenary
+        # parameter, the regime that previously triggered
+        # ``overflow encountered in sinh``.
+        params = CatenaryInput(
+            length=1100,
+            horizontal_span=1000,
+            vertical_span=50,
+            weight_per_length=1500,
+            ea_stiffness=60e9,
+        )
+
+        with np.errstate(over="raise"):
+            results = solver.solve(params)
+
+        assert results.converged
+        assert np.isfinite(results.horizontal_tension)
+        assert results.horizontal_tension > 0
+        assert np.all(np.isfinite(results.tension_distribution))
+
+
 if __name__ == "__main__":
     # Run tests with verbose output
     pytest.main([__file__, "-v", "--tb=short"])
