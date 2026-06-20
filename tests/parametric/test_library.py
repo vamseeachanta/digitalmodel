@@ -117,3 +117,26 @@ def test_missing_case_is_drift():
     atlas.provenance["coverage"]["covered_cases"] = ["fpso-design-draft"]  # dropped 2
     reasons = refresh.library_drift(atlas)
     assert any("covered cases" in r for r in reasons)
+
+
+# -- OrcaFlex library (#832) -------------------------------------------------
+
+def test_orcaflex_library_is_current_and_enforces_coverage():
+    from digitalmodel.parametric import refresh
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import _handle_value
+
+    status = refresh.library_status("orcaflex_library")
+    assert status["stale"] is False
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "orcaflex_library")
+    assert atlas.provenance["coverage"]["covered_cases"] == [
+        "operating-hs2", "storm-hs5", "extreme-hs8"]
+    # covered load case interpolates heading within
+    covered = _handle_value(atlas, {"case": "storm-hs5", "heading_deg": 60.0})
+    assert covered["in_range"] is True
+    assert covered["value"] > 0.0
+    # an uncovered load case escalates
+    uncovered = _handle_value(atlas, {"case": "survival-hs12", "heading_deg": 60.0})
+    assert uncovered["in_range"] is False
+    assert "survival-hs12" in uncovered["reason"]
