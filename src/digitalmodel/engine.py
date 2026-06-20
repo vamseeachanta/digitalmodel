@@ -450,6 +450,13 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         scour = ScourWorkflow()
         cfg_base = scour.router(cfg_base)
+    elif basename == "mudmat_bearing_capacity":
+        from digitalmodel.geotechnical.cfg_workflows import (
+            MudmatBearingCapacityWorkflow,
+        )
+
+        mudmat = MudmatBearingCapacityWorkflow()
+        cfg_base = mudmat.router(cfg_base)
     elif basename == "rig_capability_assessment":
         from digitalmodel.field_development.rig_capability import (
             router as rig_capability,
