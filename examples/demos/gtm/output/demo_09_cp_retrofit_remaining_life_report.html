@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP Retrofit & Remaining-Life Assessment — Aging Offshore Structures — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>CP Retrofit & Remaining-Life Assessment — Aging Offshore Structures</h1>
+    <div class="subtitle">144 parametric in-service cases across 3 structure types, 4 ages, 4 measured potentials, and 3 coating-breakdown conditions</div>
+    <div class="case-badge">144 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-06-20 05:25 UTC · demo_09</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This analysis provides <strong>in-service decision support</strong> for
+    aging offshore structures: given years in service, original installed anode
+    mass, the most recent measured protection potential, and present
+    coating-breakdown condition, it estimates the <strong>remaining anode
+    life</strong> and the <strong>retrofit anode mass</strong> required to extend
+    protection to a 40-year target design life.
+    Every engineering quantity is computed by the <strong>digitalmodel
+    <code>cathodic_protection</code></strong> modules implementing
+    <strong>DNV-RP-B401</strong> — this report is the screening / presentation
+    layer over those modules.</p>
+
+    <h3>Present Current Demand</h3>
+    <p>The aged structure's present mean current demand is computed by
+    <code>marine_structure_cp.marine_structure_current_demand</code> from the
+    DNV-RP-B401 Table 10-1 design current densities, scaled by each exposure
+    zone's surface area and its <em>present</em> coating-breakdown factor.</p>
+
+    <h3>Remaining Life (consumed-vs-capacity)</h3>
+    <p>Mass consumed to date is
+    M<sub>consumed</sub> = I<sub>mean</sub> &times; t &times; 8760 &divide;
+    (capacity &times; utilisation); the remaining usable mass drives the
+    remaining anode life,
+    life<sub>rem</sub> = M<sub>rem</sub> &times; capacity &times; utilisation
+    &divide; (I<sub>mean</sub> &times; 8760), with capacity =
+    2000 A&middot;h/kg (Al-Zn-In), utilisation =
+    0.90. This is computed by
+    <code>anode_depletion.calculate_remaining_life</code> and
+    <code>marine_structure_cp.retrofit_assessment</code>.</p>
+
+    <h3>Retrofit Sizing &amp; Triggers</h3>
+    <p><code>retrofit_assessment</code> compares remaining anode life against
+    the remaining design life to the target and sizes the additional anode mass
+    for any shortfall, and flags an <em>urgent</em> retrofit when the measured
+    potential is above the protection threshold
+    (-0.800 V vs Ag/AgCl).</p>
+
+    <h3>Depletion Profile &amp; Inspection</h3>
+    <p><code>anode_depletion.generate_depletion_profile</code> projects remaining
+    mass year-by-year to end-of-life, and
+    <code>recommend_inspection_interval</code> sets the inspection interval, type
+    and urgency from the depletion percentage.</p>
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>DNV-RP-B401 (2017) — Cathodic Protection Design (current densities Table 10-1; anode sizing/retrofit §7.7, §10.8)</li><li>ISO 15589-2 (2004) — Cathodic Protection of Pipeline Systems, anode mass requirements §8.5</li><li>NACE SP0176 — Corrosion Control of Submerged Areas of Offshore Steel Structures</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Summary: Retrofit Assessment at -0.95 V, moderate coating</h2>
+            <p>Depletion, remaining life, retrofit anodes/mass, and the recommended action per structure and age.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Structure</th>
+      <th>Age (yr)</th>
+      <th>Coating</th>
+      <th>Potential (V)</th>
+      <th>Depletion (%)</th>
+      <th>Remaining Life (yr)</th>
+      <th>Retrofit Anodes</th>
+      <th>Retrofit Mass (kg)</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>4-leg jacket</td>
+      <td>10</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>33.5</td>
+      <td>19.9</td>
+      <td>51</td>
+      <td>10164.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>4-leg jacket</td>
+      <td>18</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>60.2</td>
+      <td>11.9</td>
+      <td>51</td>
+      <td>10164.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>4-leg jacket</td>
+      <td>25</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>83.7</td>
+      <td>4.9</td>
+      <td>51</td>
+      <td>10164.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>4-leg jacket</td>
+      <td>32</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>100.0</td>
+      <td>0.0</td>
+      <td>41</td>
+      <td>8033.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>monopile</td>
+      <td>10</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>33.5</td>
+      <td>19.8</td>
+      <td>19</td>
+      <td>3752.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>monopile</td>
+      <td>18</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>60.3</td>
+      <td>11.8</td>
+      <td>19</td>
+      <td>3752.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>monopile</td>
+      <td>25</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>83.8</td>
+      <td>4.8</td>
+      <td>19</td>
+      <td>3752.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>monopile</td>
+      <td>32</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>100.0</td>
+      <td>0.0</td>
+      <td>15</td>
+      <td>2950.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>subsea PLET frame</td>
+      <td>10</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>33.3</td>
+      <td>20.0</td>
+      <td>7</td>
+      <td>1261.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>subsea PLET frame</td>
+      <td>18</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>59.9</td>
+      <td>12.0</td>
+      <td>7</td>
+      <td>1261.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>subsea PLET frame</td>
+      <td>25</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>83.2</td>
+      <td>5.0</td>
+      <td>7</td>
+      <td>1261.0</td>
+      <td>RETROFIT</td>
+    </tr>
+    <tr>
+      <td>subsea PLET frame</td>
+      <td>32</td>
+      <td>moderate</td>
+      <td>-0.95</td>
+      <td>100.0</td>
+      <td>0.0</td>
+      <td>6</td>
+      <td>1012.0</td>
+      <td>RETROFIT</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, this CP retrofit & remaining-life screening
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>All engineering computed by digitalmodel.cathodic_protection (DNV-RP-B401 (May 2021)); this demo does not reimplement DNV-RP-B401 math</li><li>Present mean current demand from marine_structure_cp.marine_structure_current_demand (DNV-RP-B401 Table 10-1 densities x area x present coating-breakdown factor)</li><li>Remaining anode life and retrofit sizing from retrofit_assessment + anode_depletion.calculate_remaining_life (consumed-vs-capacity over the 40-yr target design life)</li><li>Original installed anode mass per structure is a representative screening value (jacket 30000 kg, monopile 11000 kg, PLET 3800 kg), not a project takeoff</li><li>Anode electrochemical capacity = 2000 A-h/kg (Al-Zn-In), utilisation factor = 0.90, retrofit anode net mass = 200 kg</li><li>Protection criterion = -0.800 V vs Ag/AgCl; a measured potential above this is treated as under-protected and trips an urgent retrofit</li><li>Consumption is driven by the mean-current draw over the elapsed years assuming constant demand; measured remaining anode mass (where available from inspection) would override this</li><li>Inspection intervals follow general industry depletion-band guidance (routine / priority / urgent / critical), not an operator-specific RBI scheme</li><li>All outputs are preliminary screening estimates requiring review by a qualified CP / integrity engineer</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Remaining Anode Life vs Age in Service</div>
+                <div class='chart-subtitle'>Remaining anode life falls as the structure ages; where it drops below the dashed remaining-to-40-yr line, a retrofit is needed.</div>
+                <div>                            <div id="chart-remaining_life_vs_age" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-remaining_life_vs_age")) {                    Plotly.newPlot(                        "chart-remaining_life_vs_age",                        [{"hovertemplate":"4-leg jacket\u003cbr\u003eAge: %{x} yr\u003cbr\u003eRemaining life: %{y:.1f} yr\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":10},"mode":"lines+markers","name":"4-leg jacket","x":[10.0,18.0,25.0,32.0],"y":[19.88,11.88,4.88,0.0],"type":"scatter"},{"hovertemplate":"monopile\u003cbr\u003eAge: %{x} yr\u003cbr\u003eRemaining life: %{y:.1f} yr\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":10},"mode":"lines+markers","name":"monopile","x":[10.0,18.0,25.0,32.0],"y":[19.83,11.83,4.83,0.0],"type":"scatter"},{"hovertemplate":"subsea PLET frame\u003cbr\u003eAge: %{x} yr\u003cbr\u003eRemaining life: %{y:.1f} yr\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","width":3},"marker":{"size":10},"mode":"lines+markers","name":"subsea PLET frame","x":[10.0,18.0,25.0,32.0],"y":[20.03,12.03,5.03,0.0],"type":"scatter"},{"hovertemplate":"Age: %{x} yr\u003cbr\u003eNeeded: %{y:.0f} yr\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#718096","dash":"dash","width":2},"mode":"lines","name":"Remaining to 40-yr target","x":[10.0,18.0,25.0,32.0],"y":[30.0,22.0,15.0,8.0],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Remaining Anode Life vs Age in Service (moderate coating, -0.95 V)"},"xaxis":{"title":{"text":"Years in Service"}},"yaxis":{"title":{"text":"Remaining Anode Life (years)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_09_remaining_life_vs_age", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Anode Depletion Profile</div>
+                <div class='chart-subtitle'>Year-by-year remaining mass and depletion percentage for the reference aged jacket, with present age and end-of-life marked.</div>
+                <div>                            <div id="chart-depletion_profile" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-depletion_profile")) {                    Plotly.newPlot(                        "chart-depletion_profile",                        [{"hovertemplate":"Year %{x}\u003cbr\u003eRemaining: %{y:.0f} kg\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":7},"mode":"lines+markers","name":"Remaining mass (kg)","x":[0.0,2.0,4.0,6.0,8.0,10.0,12.0,14.0,16.0,18.0,20.0,22.0,24.0,26.0,28.0,30.0,32.0,34.0,36.0,38.0,40.0],"y":[30000.0,27991.82,25983.64,23975.46,21967.27,19959.09,17950.91,15942.73,13934.55,11926.37,9918.19,7910.01,5901.82,3893.64,1885.46,0.0,0.0,0.0,0.0,0.0,0.0],"type":"scatter"},{"hovertemplate":"Year %{x}\u003cbr\u003eDepletion: %{y:.0f}%\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","dash":"dot","width":2},"mode":"lines","name":"Depletion (%)","x":[0.0,2.0,4.0,6.0,8.0,10.0,12.0,14.0,16.0,18.0,20.0,22.0,24.0,26.0,28.0,30.0,32.0,34.0,36.0,38.0,40.0],"y":[0.0,6.7,13.4,20.1,26.8,33.5,40.2,46.9,53.6,60.2,66.9,73.6,80.3,87.0,93.7,100.0,100.0,100.0,100.0,100.0,100.0],"yaxis":"y2","type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#718096","dash":"dash"},"type":"line","x0":18.0,"x1":18.0,"xref":"x","y0":0,"y1":1,"yref":"y domain"},{"line":{"color":"#c0392b","dash":"dash"},"type":"line","x0":26.89,"x1":26.89,"xref":"x","y0":0,"y1":1,"yref":"y domain"}],"annotations":[{"showarrow":false,"text":"now (18 yr)","x":18.0,"xanchor":"left","xref":"x","y":1,"yanchor":"top","yref":"y domain"},{"showarrow":false,"text":"EoL (27 yr)","x":26.89,"xanchor":"left","xref":"x","y":1,"yanchor":"top","yref":"y domain"}],"yaxis2":{"title":{"text":"Depletion (%)"},"overlaying":"y","side":"right","range":[0,100]},"title":{"font":{"size":18},"text":"Anode Depletion Profile \u2014 4-leg jacket (moderate, -0.95 V)"},"xaxis":{"title":{"text":"Years in Service"}},"yaxis":{"title":{"text":"Remaining Anode Mass (kg)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_09_depletion_profile", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: Retrofit-Trigger Map (Potential x Age)</div>
+                <div class='chart-subtitle'>Retrofit anode mass by measured potential and age. Under-protected potentials (above the threshold) trip an urgent retrofit at any age.</div>
+                <div>                            <div id="chart-retrofit_trigger_map" class="plotly-graph-div" style="height:460px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-retrofit_trigger_map")) {                    Plotly.newPlot(                        "chart-retrofit_trigger_map",                        [{"colorbar":{"title":{"text":"Retrofit\u003cbr\u003emass (kg)"}},"colorscale":[[0.0,"rgb(255,247,236)"],[0.125,"rgb(254,232,200)"],[0.25,"rgb(253,212,158)"],[0.375,"rgb(253,187,132)"],[0.5,"rgb(252,141,89)"],[0.625,"rgb(239,101,72)"],[0.75,"rgb(215,48,31)"],[0.875,"rgb(179,0,0)"],[1.0,"rgb(127,0,0)"]],"hovertemplate":"Age: %{x}\u003cbr\u003ePotential: %{y}\u003cbr\u003eRetrofit mass: %{z:.0f} kg\u003cextra\u003e\u003c\u002fextra\u003e","text":[["10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","8033 kg\u003cbr\u003eRETROFIT"],["10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","8033 kg\u003cbr\u003eRETROFIT"],["10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","8033 kg\u003cbr\u003eRETROFIT"],["10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","10164 kg\u003cbr\u003eRETROFIT","8033 kg\u003cbr\u003eRETROFIT"]],"textfont":{"size":11},"texttemplate":"%{text}","x":["10 yr","18 yr","25 yr","32 yr"],"y":["-1.05 V","-0.95 V","-0.85 V","-0.78 V"],"z":[[10163.6,10163.6,10163.6,8032.7],[10163.6,10163.6,10163.6,8032.7],[10163.6,10163.6,10163.6,8032.7],[10163.6,10163.6,10163.6,8032.7]],"type":"heatmap"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Retrofit-Trigger Map \u2014 4-leg jacket (moderate coating)"},"xaxis":{"title":{"text":"Years in Service"}},"yaxis":{"title":{"text":"Measured Potential (V vs Ag\u002fAgCl)"}},"height":460,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_09_retrofit_trigger_map", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 4: Recommended Inspection Interval</div>
+                <div class='chart-subtitle'>Inspection interval and urgency tighten as depletion advances with age.</div>
+                <div>                            <div id="chart-inspection_heatmap" class="plotly-graph-div" style="height:440px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-inspection_heatmap")) {                    Plotly.newPlot(                        "chart-inspection_heatmap",                        [{"colorbar":{"title":{"text":"Next\u003cbr\u003einspection (yr)"}},"colorscale":[[0.0,"rgb(165,0,38)"],[0.1,"rgb(215,48,39)"],[0.2,"rgb(244,109,67)"],[0.3,"rgb(253,174,97)"],[0.4,"rgb(254,224,139)"],[0.5,"rgb(255,255,191)"],[0.6,"rgb(217,239,139)"],[0.7,"rgb(166,217,106)"],[0.8,"rgb(102,189,99)"],[0.9,"rgb(26,152,80)"],[1.0,"rgb(0,104,55)"]],"hovertemplate":"Structure: %{y}\u003cbr\u003eAge: %{x}\u003cbr\u003eNext inspection: %{z:.1f} yr\u003cextra\u003e\u003c\u002fextra\u003e","text":[["5.0 yr\u003cbr\u003eroutine","3.0 yr\u003cbr\u003epriority","1.0 yr\u003cbr\u003eurgent","0.0 yr\u003cbr\u003ecritical"],["5.0 yr\u003cbr\u003eroutine","3.0 yr\u003cbr\u003epriority","1.0 yr\u003cbr\u003eurgent","0.0 yr\u003cbr\u003ecritical"],["5.0 yr\u003cbr\u003eroutine","3.0 yr\u003cbr\u003epriority","1.0 yr\u003cbr\u003eurgent","0.0 yr\u003cbr\u003ecritical"]],"textfont":{"size":11},"texttemplate":"%{text}","x":["10 yr","18 yr","25 yr","32 yr"],"y":["4-leg jacket","monopile","subsea PLET frame"],"z":[[5.0,3.0,1.0,0.0],[5.0,3.0,1.0,0.0],[5.0,3.0,1.0,0.0]],"type":"heatmap"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Recommended Inspection Interval (moderate coating, -0.95 V)"},"xaxis":{"title":{"text":"Years in Service"}},"yaxis":{"title":{"text":"Structure"}},"height":440,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_09_inspection_heatmap", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> DNV-RP-B401 (2017) — Cathodic Protection Design (current densities Table 10-1; anode sizing/retrofit §7.7, §10.8) · ISO 15589-2 (2004) — Cathodic Protection of Pipeline Systems, anode mass requirements §8.5 · NACE SP0176 — Corrosion Control of Submerged Areas of Offshore Steel Structures</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>
