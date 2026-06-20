@@ -267,12 +267,19 @@ class Database():
         df = pd.read_sql_query(query, self.conn)
         return df
 
-    def get_df_from_query(self, query):
+    def get_df_from_query(self, query, params=None):
         import logging
 
         import pandas as pd
         logging.debug(query)
-        df = pd.read_sql_query(query, self.conn)
+        if params is not None:
+            # Parameterized path (security: avoids SQL injection via string
+            # interpolation). Wrap in sqlalchemy.text so named (:name) bind
+            # params are honored by both SQLAlchemy and pandas.
+            from sqlalchemy.sql import text
+            df = pd.read_sql_query(text(query), self.conn, params=params)
+        else:
+            df = pd.read_sql_query(query, self.conn)
         return df
 
     def get_db_table_analysis_outputs(self):
@@ -611,8 +618,21 @@ class Database():
             # self.conn.execute(query)
             print("Command skipped: ", e)
 
-    def executeNoDataQuery(self, query, arg_array=[]):
+    def executeNoDataQuery(self, query, arg_array=[], params=None):
         from sqlalchemy.sql import text
+        from sqlalchemy.orm import scoped_session, sessionmaker
+        Session = scoped_session(sessionmaker(bind=self.engine))
+        s = Session()
+        if params is not None:
+            # Parameterized path (security: avoids SQL injection). Named
+            # (:name) bind params are passed to the driver, not interpolated.
+            try:
+                print("     .....Executing parameterized query")
+                s.execute(text(query), params)
+                s.commit()
+            except Exception as e:
+                print("Command skipped: ", e)
+            return
         sql = query
         if len(arg_array) == 1:
             sql = sql.format(arg_array[0])
@@ -626,10 +646,7 @@ class Database():
             sql = sql.format(arg_array[0], arg_array[1], arg_array[2], arg_array[3], arg_array[4])
         try:
             print("     .....Executing query: {}".format(sql))
-            from sqlalchemy.orm import scoped_session, sessionmaker
-            Session = scoped_session(sessionmaker(bind=self.engine))
-            s = Session()
-            s.execute(sql)
+            s.execute(text(sql))
             s.commit()
         except Exception as e:
             print("Command skipped: ", e)
