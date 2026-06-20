@@ -41,7 +41,7 @@ from digitalmodel.signal_processing.time_series.time_series_analysis import (
 )
 from digitalmodel.infrastructure.transformation.transformation import Transformation
 
-# from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import (
     PlateBuckling,
@@ -88,8 +88,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
             cfg["_config_file_path"] = os.path.abspath(inputfile)
             cfg["_config_dir_path"] = os.path.dirname(os.path.abspath(inputfile))
         logger.info(f"Engine set config dir: {cfg.get('_config_dir_path')}")
-        if cfg is None:
-            raise ValueError("cfg is None")
 
     if "basename" in cfg:
         basename = cfg["basename"]

@@ -149,9 +149,21 @@ class Database():
                     print("Connection to Server: {0} Successful by user {1} to database {2}!".format(
                         self.server, self.user, self.database))
                 else:
-                    connection_string = "postgresql+psycopg2://{0}:{1}@{2}:{4}/{3}".format(
-                        self.user, self.password, self.server, self.database, self.port)
-                    self.engine = create_engine(connection_string)
+                    # Build the URL via SQLAlchemy's URL.create so credentials
+                    # containing reserved characters (':', '@', '/', '?', '#')
+                    # are escaped rather than corrupting or leaking into adjacent
+                    # URI fields. Never f-string/.format() credentials into a URI.
+                    from sqlalchemy.engine import URL
+
+                    connection_url = URL.create(
+                        "postgresql+psycopg2",
+                        username=self.user,
+                        password=self.password,
+                        host=self.server,
+                        port=self.port,
+                        database=self.database,
+                    )
+                    self.engine = create_engine(connection_url)
                     self.conn = self.engine.connect()
                     print("Connection to Server: {0} Successful by user {1} to database {2}!".format(
                         self.server, self.user, self.database))
@@ -173,9 +185,19 @@ class Database():
                 # Issue the serverStatus command and print the results
                 serverStatusResult = db.command("serverStatus")
 
-                connection_string = "postgresql+psycopg2://{0}:{1}@{2}:{4}/{3}".format(
-                    self.user, self.password, self.server, self.database, self.port)
-                self.engine = create_engine(connection_string)
+                # SECURITY: build via URL.create so credentials with reserved
+                # characters are escaped rather than corrupting the URI.
+                from sqlalchemy.engine import URL
+
+                connection_url = URL.create(
+                    "postgresql+psycopg2",
+                    username=self.user,
+                    password=self.password,
+                    host=self.server,
+                    port=self.port,
+                    database=self.database,
+                )
+                self.engine = create_engine(connection_url)
                 self.conn = self.engine.connect()
             except (Exception, psycopg2.Error) as error:
                 print("Error while connecting to PostgreSQL", error)
