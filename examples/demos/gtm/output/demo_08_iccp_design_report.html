@@ -1,0 +1,2877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICCP Rectifier & Ground-Bed Sizing — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>ICCP Rectifier & Ground-Bed Sizing</h1>
+    <div class="subtitle">144 parametric cases across 4 structures, 3 current-density demands, 3 anode materials, and 4 cable runs</div>
+    <div class="case-badge">144 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-06-20 04:38 UTC · demo_08</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This analysis screens <strong>impressed current cathodic protection
+    (ICCP)</strong> system sizing across a parametric matrix of structures,
+    coating-breakdown current demands, anode materials, and cable runs. Each
+    case chains the three <code>digitalmodel.cathodic_protection.iccp_design</code>
+    routines (the demo reuses the module physics, it does not reimplement it):</p>
+
+    <h3>Step 1: Total Current Demand</h3>
+    <p>Total protection current = structure surface area &times; design current
+    density. The current-density demand spans a well-coated mean
+    (0.02 A/m&sup2;) through aged-coating final
+    (0.06 A/m&sup2;) to bare/damaged steel
+    (0.11 A/m&sup2;), a DNV-RP-B401 style range.</p>
+
+    <h3>Step 2: Anode Ground-Bed Design (<code>anode_bed_design</code>)</h3>
+    <p>Sizes the number of anodes from the per-anode current capacity and the
+    consumption/life constraint, then computes the bed resistance via the Dwight
+    single-anode equation with a parallel/interference adjustment (deep-well beds
+    get a depth resistance reduction). Anode life is checked against the
+    25-year design life.</p>
+
+    <h3>Step 3: Cable Sizing (<code>cable_sizing</code>)</h3>
+    <p>Selects the minimum standard copper cross-section so the round-trip
+    voltage drop stays within 2 V over the one-way cable run,
+    returning the resulting cable resistance fed into the rectifier circuit.</p>
+
+    <h3>Step 4: Rectifier Sizing (<code>rectifier_sizing</code>)</h3>
+    <p>V<sub>dc</sub> = I &times; (R<sub>bed</sub> + R<sub>structure</sub> +
+    R<sub>cable</sub>) + V<sub>back-emf</sub>, with a 1.25 safety
+    factor, rounded up to the nearest standard transformer-rectifier (TR) rating.
+    The structure/return resistance is taken as
+    0.5 &ohm;.</p>
+
+    <h3>Status Classification</h3>
+    <ul>
+        <li><strong>OK:</strong> demand fits a standard TR rating with headroom
+        (rating utilisation &lt; 0.85)</li>
+        <li><strong>MARGINAL:</strong> demand fits but with little headroom
+        (utilisation in [0.85, 1.0])</li>
+        <li><strong>NO_FIT:</strong> demand exceeds the largest standard TR
+        rating (utilisation &gt; 1.0) &mdash; split into multiple units</li>
+    </ul>
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>NACE SP0169 (2013) — Control of External Corrosion on Submerged Metallic Piping</li><li>API RP 1632 (1996) §7 — Impressed Current Systems</li><li>DNV-RP-B401 (2021) — Cathodic Protection Design (current-density demand)</li><li>NACE TM0497 — Measurement Techniques for CP Criteria</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Headline: Sizing at Reference Anode (MMO) and 150 m Cable Run</h2>
+            <p>One row per structure x current-density demand at reference anode/cable.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Structure</th>
+      <th>Area (m2)</th>
+      <th>Demand</th>
+      <th>I (A)</th>
+      <th>Anodes</th>
+      <th>Bed R (ohm)</th>
+      <th>DC V</th>
+      <th>TR Rating</th>
+      <th>Power (W)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>30.0</td>
+      <td>4</td>
+      <td>0.0609</td>
+      <td>25.61</td>
+      <td>36V / 40A</td>
+      <td>768.23</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>90.0</td>
+      <td>12</td>
+      <td>0.0213</td>
+      <td>66.07</td>
+      <td>72V / 100A</td>
+      <td>5946.64</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>165.0</td>
+      <td>22</td>
+      <td>0.0119</td>
+      <td>117.11</td>
+      <td>120V / 200A</td>
+      <td>19323.67</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>120.0</td>
+      <td>16</td>
+      <td>0.0162</td>
+      <td>86.50</td>
+      <td>96V / 150A</td>
+      <td>10380.00</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>360.0</td>
+      <td>46</td>
+      <td>0.0059</td>
+      <td>249.87</td>
+      <td>120V / 200A</td>
+      <td>89951.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>660.0</td>
+      <td>85</td>
+      <td>0.0033</td>
+      <td>453.86</td>
+      <td>120V / 200A</td>
+      <td>299545.95</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>300.0</td>
+      <td>39</td>
+      <td>0.0058</td>
+      <td>208.60</td>
+      <td>120V / 200A</td>
+      <td>62580.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>900.0</td>
+      <td>115</td>
+      <td>0.0020</td>
+      <td>616.52</td>
+      <td>120V / 200A</td>
+      <td>554872.50</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>1650.0</td>
+      <td>211</td>
+      <td>0.0011</td>
+      <td>1126.36</td>
+      <td>120V / 200A</td>
+      <td>1858487.81</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>560.0</td>
+      <td>72</td>
+      <td>0.0032</td>
+      <td>385.40</td>
+      <td>120V / 200A</td>
+      <td>215824.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>1680.0</td>
+      <td>214</td>
+      <td>0.0011</td>
+      <td>1146.79</td>
+      <td>120V / 200A</td>
+      <td>1926607.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>3080.0</td>
+      <td>393</td>
+      <td>0.0006</td>
+      <td>2098.44</td>
+      <td>120V / 200A</td>
+      <td>6463195.20</td>
+      <td>NO_FIT</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="section">
+            <h2>Full Parametric Results</h2>
+            <p>All 144 ICCP design cases.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Structure</th>
+      <th>Area (m2)</th>
+      <th>Demand</th>
+      <th>Anode</th>
+      <th>Cable (m)</th>
+      <th>I (A)</th>
+      <th>Anodes</th>
+      <th>Bed R (ohm)</th>
+      <th>Life (yr)</th>
+      <th>Cable (mm2)</th>
+      <th>DC V</th>
+      <th>TR Rating</th>
+      <th>Power (W)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>30.0</td>
+      <td>4</td>
+      <td>0.0609</td>
+      <td>471.2</td>
+      <td>35.0</td>
+      <td>25.41</td>
+      <td>36V / 40A</td>
+      <td>762.26</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>30.0</td>
+      <td>4</td>
+      <td>0.0609</td>
+      <td>471.2</td>
+      <td>95.0</td>
+      <td>25.61</td>
+      <td>36V / 40A</td>
+      <td>768.23</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>30.0</td>
+      <td>4</td>
+      <td>0.0609</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>26.81</td>
+      <td>36V / 40A</td>
+      <td>804.45</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>30.0</td>
+      <td>4</td>
+      <td>0.0609</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>29.00</td>
+      <td>36V / 40A</td>
+      <td>870.04</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>30.0</td>
+      <td>9</td>
+      <td>0.0096</td>
+      <td>57.3</td>
+      <td>35.0</td>
+      <td>23.49</td>
+      <td>24V / 40A</td>
+      <td>704.55</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>30.0</td>
+      <td>9</td>
+      <td>0.0096</td>
+      <td>57.3</td>
+      <td>95.0</td>
+      <td>23.68</td>
+      <td>24V / 40A</td>
+      <td>710.51</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>30.0</td>
+      <td>9</td>
+      <td>0.0096</td>
+      <td>57.3</td>
+      <td>120.0</td>
+      <td>24.89</td>
+      <td>36V / 40A</td>
+      <td>746.74</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>30.0</td>
+      <td>9</td>
+      <td>0.0096</td>
+      <td>57.3</td>
+      <td>120.0</td>
+      <td>27.08</td>
+      <td>36V / 40A</td>
+      <td>812.33</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>30.0</td>
+      <td>1</td>
+      <td>0.1970</td>
+      <td>23561.9</td>
+      <td>35.0</td>
+      <td>30.51</td>
+      <td>36V / 40A</td>
+      <td>915.38</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>30.0</td>
+      <td>1</td>
+      <td>0.1970</td>
+      <td>23561.9</td>
+      <td>95.0</td>
+      <td>30.71</td>
+      <td>36V / 40A</td>
+      <td>921.34</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>30.0</td>
+      <td>1</td>
+      <td>0.1970</td>
+      <td>23561.9</td>
+      <td>120.0</td>
+      <td>31.92</td>
+      <td>36V / 40A</td>
+      <td>957.56</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>30.0</td>
+      <td>1</td>
+      <td>0.1970</td>
+      <td>23561.9</td>
+      <td>120.0</td>
+      <td>34.11</td>
+      <td>36V / 40A</td>
+      <td>1023.15</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>90.0</td>
+      <td>12</td>
+      <td>0.0213</td>
+      <td>471.2</td>
+      <td>95.0</td>
+      <td>63.22</td>
+      <td>72V / 100A</td>
+      <td>5689.46</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>90.0</td>
+      <td>12</td>
+      <td>0.0213</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>66.07</td>
+      <td>72V / 100A</td>
+      <td>5946.64</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>90.0</td>
+      <td>12</td>
+      <td>0.0213</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>70.99</td>
+      <td>72V / 100A</td>
+      <td>6389.10</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>90.0</td>
+      <td>12</td>
+      <td>0.0213</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>77.55</td>
+      <td>96V / 100A</td>
+      <td>6979.39</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>90.0</td>
+      <td>26</td>
+      <td>0.0035</td>
+      <td>55.1</td>
+      <td>95.0</td>
+      <td>61.21</td>
+      <td>72V / 100A</td>
+      <td>5509.24</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>90.0</td>
+      <td>26</td>
+      <td>0.0035</td>
+      <td>55.1</td>
+      <td>120.0</td>
+      <td>64.07</td>
+      <td>72V / 100A</td>
+      <td>5766.41</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>90.0</td>
+      <td>26</td>
+      <td>0.0035</td>
+      <td>55.1</td>
+      <td>120.0</td>
+      <td>68.99</td>
+      <td>72V / 100A</td>
+      <td>6208.88</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>90.0</td>
+      <td>26</td>
+      <td>0.0035</td>
+      <td>55.1</td>
+      <td>120.0</td>
+      <td>75.55</td>
+      <td>96V / 100A</td>
+      <td>6799.16</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>90.0</td>
+      <td>2</td>
+      <td>0.1019</td>
+      <td>15708.0</td>
+      <td>95.0</td>
+      <td>72.28</td>
+      <td>96V / 100A</td>
+      <td>6505.54</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>90.0</td>
+      <td>2</td>
+      <td>0.1019</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>75.14</td>
+      <td>96V / 100A</td>
+      <td>6762.71</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>90.0</td>
+      <td>2</td>
+      <td>0.1019</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>80.06</td>
+      <td>96V / 100A</td>
+      <td>7205.17</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>90.0</td>
+      <td>2</td>
+      <td>0.1019</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>86.62</td>
+      <td>96V / 100A</td>
+      <td>7795.46</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>165.0</td>
+      <td>22</td>
+      <td>0.0119</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>111.09</td>
+      <td>120V / 200A</td>
+      <td>18329.95</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>165.0</td>
+      <td>22</td>
+      <td>0.0119</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>117.11</td>
+      <td>120V / 200A</td>
+      <td>19323.67</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>165.0</td>
+      <td>22</td>
+      <td>0.0119</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>126.13</td>
+      <td>120V / 200A</td>
+      <td>20810.83</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>165.0</td>
+      <td>22</td>
+      <td>0.0119</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>138.15</td>
+      <td>120V / 200A</td>
+      <td>22794.85</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>165.0</td>
+      <td>47</td>
+      <td>0.0020</td>
+      <td>54.4</td>
+      <td>120.0</td>
+      <td>109.05</td>
+      <td>120V / 200A</td>
+      <td>17993.04</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>165.0</td>
+      <td>47</td>
+      <td>0.0020</td>
+      <td>54.4</td>
+      <td>120.0</td>
+      <td>115.07</td>
+      <td>120V / 200A</td>
+      <td>18986.76</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>165.0</td>
+      <td>47</td>
+      <td>0.0020</td>
+      <td>54.4</td>
+      <td>120.0</td>
+      <td>124.08</td>
+      <td>120V / 200A</td>
+      <td>20473.92</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>165.0</td>
+      <td>47</td>
+      <td>0.0020</td>
+      <td>54.4</td>
+      <td>120.0</td>
+      <td>136.11</td>
+      <td>120V / 200A</td>
+      <td>22457.94</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>165.0</td>
+      <td>4</td>
+      <td>0.0527</td>
+      <td>17136.0</td>
+      <td>120.0</td>
+      <td>119.51</td>
+      <td>120V / 200A</td>
+      <td>19718.43</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>165.0</td>
+      <td>4</td>
+      <td>0.0527</td>
+      <td>17136.0</td>
+      <td>120.0</td>
+      <td>125.53</td>
+      <td>120V / 200A</td>
+      <td>20712.14</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>165.0</td>
+      <td>4</td>
+      <td>0.0527</td>
+      <td>17136.0</td>
+      <td>120.0</td>
+      <td>134.54</td>
+      <td>120V / 200A</td>
+      <td>22199.31</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Small jacket (shallow)</td>
+      <td>1500.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>165.0</td>
+      <td>4</td>
+      <td>0.0527</td>
+      <td>17136.0</td>
+      <td>120.0</td>
+      <td>146.57</td>
+      <td>120V / 200A</td>
+      <td>24183.33</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>120.0</td>
+      <td>16</td>
+      <td>0.0162</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>82.12</td>
+      <td>96V / 150A</td>
+      <td>9854.40</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>120.0</td>
+      <td>16</td>
+      <td>0.0162</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>86.50</td>
+      <td>96V / 150A</td>
+      <td>10380.00</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>120.0</td>
+      <td>16</td>
+      <td>0.0162</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>93.06</td>
+      <td>96V / 150A</td>
+      <td>11166.60</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>120.0</td>
+      <td>16</td>
+      <td>0.0162</td>
+      <td>471.2</td>
+      <td>120.0</td>
+      <td>101.80</td>
+      <td>120V / 150A</td>
+      <td>12216.00</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>120.0</td>
+      <td>34</td>
+      <td>0.0027</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>80.09</td>
+      <td>96V / 150A</td>
+      <td>9611.40</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>120.0</td>
+      <td>34</td>
+      <td>0.0027</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>84.47</td>
+      <td>96V / 150A</td>
+      <td>10137.00</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>120.0</td>
+      <td>34</td>
+      <td>0.0027</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>91.03</td>
+      <td>96V / 150A</td>
+      <td>10923.60</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>120.0</td>
+      <td>34</td>
+      <td>0.0027</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>99.78</td>
+      <td>120V / 150A</td>
+      <td>11973.00</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>120.0</td>
+      <td>3</td>
+      <td>0.0693</td>
+      <td>17671.5</td>
+      <td>120.0</td>
+      <td>90.08</td>
+      <td>96V / 150A</td>
+      <td>10810.20</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>120.0</td>
+      <td>3</td>
+      <td>0.0693</td>
+      <td>17671.5</td>
+      <td>120.0</td>
+      <td>94.47</td>
+      <td>96V / 150A</td>
+      <td>11335.80</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>120.0</td>
+      <td>3</td>
+      <td>0.0693</td>
+      <td>17671.5</td>
+      <td>120.0</td>
+      <td>101.02</td>
+      <td>120V / 150A</td>
+      <td>12122.40</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>120.0</td>
+      <td>3</td>
+      <td>0.0693</td>
+      <td>17671.5</td>
+      <td>120.0</td>
+      <td>109.77</td>
+      <td>120V / 150A</td>
+      <td>13171.80</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>360.0</td>
+      <td>46</td>
+      <td>0.0059</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>236.72</td>
+      <td>120V / 200A</td>
+      <td>85221.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>360.0</td>
+      <td>46</td>
+      <td>0.0059</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>249.87</td>
+      <td>120V / 200A</td>
+      <td>89951.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>360.0</td>
+      <td>46</td>
+      <td>0.0059</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>269.53</td>
+      <td>120V / 200A</td>
+      <td>97030.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>360.0</td>
+      <td>46</td>
+      <td>0.0059</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>295.77</td>
+      <td>120V / 200A</td>
+      <td>106475.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>360.0</td>
+      <td>102</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>234.47</td>
+      <td>120V / 200A</td>
+      <td>84411.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>360.0</td>
+      <td>102</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>247.61</td>
+      <td>120V / 200A</td>
+      <td>89141.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>360.0</td>
+      <td>102</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>267.28</td>
+      <td>120V / 200A</td>
+      <td>96220.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>360.0</td>
+      <td>102</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>293.51</td>
+      <td>120V / 200A</td>
+      <td>105665.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>360.0</td>
+      <td>8</td>
+      <td>0.0272</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>246.31</td>
+      <td>120V / 200A</td>
+      <td>88671.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>360.0</td>
+      <td>8</td>
+      <td>0.0272</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>259.45</td>
+      <td>120V / 200A</td>
+      <td>93402.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>360.0</td>
+      <td>8</td>
+      <td>0.0272</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>279.12</td>
+      <td>120V / 200A</td>
+      <td>100481.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>360.0</td>
+      <td>8</td>
+      <td>0.0272</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>305.35</td>
+      <td>120V / 200A</td>
+      <td>109926.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>660.0</td>
+      <td>85</td>
+      <td>0.0033</td>
+      <td>455.2</td>
+      <td>120.0</td>
+      <td>429.77</td>
+      <td>120V / 200A</td>
+      <td>283646.55</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>660.0</td>
+      <td>85</td>
+      <td>0.0033</td>
+      <td>455.2</td>
+      <td>120.0</td>
+      <td>453.86</td>
+      <td>120V / 200A</td>
+      <td>299545.95</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>660.0</td>
+      <td>85</td>
+      <td>0.0033</td>
+      <td>455.2</td>
+      <td>120.0</td>
+      <td>489.91</td>
+      <td>120V / 200A</td>
+      <td>323340.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>660.0</td>
+      <td>85</td>
+      <td>0.0033</td>
+      <td>455.2</td>
+      <td>120.0</td>
+      <td>538.01</td>
+      <td>120V / 200A</td>
+      <td>355084.95</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>660.0</td>
+      <td>187</td>
+      <td>0.0005</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>427.46</td>
+      <td>120V / 200A</td>
+      <td>282121.95</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>660.0</td>
+      <td>187</td>
+      <td>0.0005</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>451.55</td>
+      <td>120V / 200A</td>
+      <td>298021.35</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>660.0</td>
+      <td>187</td>
+      <td>0.0005</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>487.60</td>
+      <td>120V / 200A</td>
+      <td>321816.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>660.0</td>
+      <td>187</td>
+      <td>0.0005</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>535.70</td>
+      <td>120V / 200A</td>
+      <td>353560.35</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>660.0</td>
+      <td>15</td>
+      <td>0.0149</td>
+      <td>16065.0</td>
+      <td>120.0</td>
+      <td>439.34</td>
+      <td>120V / 200A</td>
+      <td>289962.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>660.0</td>
+      <td>15</td>
+      <td>0.0149</td>
+      <td>16065.0</td>
+      <td>120.0</td>
+      <td>463.43</td>
+      <td>120V / 200A</td>
+      <td>305862.15</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>660.0</td>
+      <td>15</td>
+      <td>0.0149</td>
+      <td>16065.0</td>
+      <td>120.0</td>
+      <td>499.48</td>
+      <td>120V / 200A</td>
+      <td>329656.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Medium jacket</td>
+      <td>6000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>660.0</td>
+      <td>15</td>
+      <td>0.0149</td>
+      <td>16065.0</td>
+      <td>120.0</td>
+      <td>547.58</td>
+      <td>120V / 200A</td>
+      <td>361401.15</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>300.0</td>
+      <td>39</td>
+      <td>0.0058</td>
+      <td>459.5</td>
+      <td>120.0</td>
+      <td>197.65</td>
+      <td>120V / 200A</td>
+      <td>59295.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>300.0</td>
+      <td>39</td>
+      <td>0.0058</td>
+      <td>459.5</td>
+      <td>120.0</td>
+      <td>208.60</td>
+      <td>120V / 200A</td>
+      <td>62580.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>300.0</td>
+      <td>39</td>
+      <td>0.0058</td>
+      <td>459.5</td>
+      <td>120.0</td>
+      <td>224.99</td>
+      <td>120V / 200A</td>
+      <td>67496.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>300.0</td>
+      <td>39</td>
+      <td>0.0058</td>
+      <td>459.5</td>
+      <td>120.0</td>
+      <td>246.85</td>
+      <td>120V / 200A</td>
+      <td>74055.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>300.0</td>
+      <td>85</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>195.81</td>
+      <td>120V / 200A</td>
+      <td>58743.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>300.0</td>
+      <td>85</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>206.76</td>
+      <td>120V / 200A</td>
+      <td>62028.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>300.0</td>
+      <td>85</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>223.15</td>
+      <td>120V / 200A</td>
+      <td>66945.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>300.0</td>
+      <td>85</td>
+      <td>0.0009</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>245.01</td>
+      <td>120V / 200A</td>
+      <td>73503.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>300.0</td>
+      <td>7</td>
+      <td>0.0257</td>
+      <td>16493.4</td>
+      <td>120.0</td>
+      <td>205.11</td>
+      <td>120V / 200A</td>
+      <td>61533.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>300.0</td>
+      <td>7</td>
+      <td>0.0257</td>
+      <td>16493.4</td>
+      <td>120.0</td>
+      <td>216.06</td>
+      <td>120V / 200A</td>
+      <td>64818.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>300.0</td>
+      <td>7</td>
+      <td>0.0257</td>
+      <td>16493.4</td>
+      <td>120.0</td>
+      <td>232.45</td>
+      <td>120V / 200A</td>
+      <td>69735.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>300.0</td>
+      <td>7</td>
+      <td>0.0257</td>
+      <td>16493.4</td>
+      <td>120.0</td>
+      <td>254.31</td>
+      <td>120V / 200A</td>
+      <td>76293.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>900.0</td>
+      <td>115</td>
+      <td>0.0020</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>583.67</td>
+      <td>120V / 200A</td>
+      <td>525307.50</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>900.0</td>
+      <td>115</td>
+      <td>0.0020</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>616.52</td>
+      <td>120V / 200A</td>
+      <td>554872.50</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>900.0</td>
+      <td>115</td>
+      <td>0.0020</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>665.69</td>
+      <td>120V / 200A</td>
+      <td>599118.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>900.0</td>
+      <td>115</td>
+      <td>0.0020</td>
+      <td>451.6</td>
+      <td>120.0</td>
+      <td>731.27</td>
+      <td>120V / 200A</td>
+      <td>658147.50</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>900.0</td>
+      <td>255</td>
+      <td>0.0003</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>581.76</td>
+      <td>120V / 200A</td>
+      <td>523586.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>900.0</td>
+      <td>255</td>
+      <td>0.0003</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>614.61</td>
+      <td>120V / 200A</td>
+      <td>553151.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>900.0</td>
+      <td>255</td>
+      <td>0.0003</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>663.77</td>
+      <td>120V / 200A</td>
+      <td>597397.50</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>900.0</td>
+      <td>255</td>
+      <td>0.0003</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>729.36</td>
+      <td>120V / 200A</td>
+      <td>656426.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>900.0</td>
+      <td>20</td>
+      <td>0.0094</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>592.00</td>
+      <td>120V / 200A</td>
+      <td>532800.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>900.0</td>
+      <td>20</td>
+      <td>0.0094</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>624.85</td>
+      <td>120V / 200A</td>
+      <td>562365.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>900.0</td>
+      <td>20</td>
+      <td>0.0094</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>674.01</td>
+      <td>120V / 200A</td>
+      <td>606611.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>900.0</td>
+      <td>20</td>
+      <td>0.0094</td>
+      <td>15708.0</td>
+      <td>120.0</td>
+      <td>739.60</td>
+      <td>120V / 200A</td>
+      <td>665640.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>1650.0</td>
+      <td>211</td>
+      <td>0.0011</td>
+      <td>452.0</td>
+      <td>120.0</td>
+      <td>1066.13</td>
+      <td>120V / 200A</td>
+      <td>1759116.56</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>1650.0</td>
+      <td>211</td>
+      <td>0.0011</td>
+      <td>452.0</td>
+      <td>120.0</td>
+      <td>1126.36</td>
+      <td>120V / 200A</td>
+      <td>1858487.81</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>1650.0</td>
+      <td>211</td>
+      <td>0.0011</td>
+      <td>452.0</td>
+      <td>120.0</td>
+      <td>1216.49</td>
+      <td>120V / 200A</td>
+      <td>2007204.38</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>1650.0</td>
+      <td>211</td>
+      <td>0.0011</td>
+      <td>452.0</td>
+      <td>120.0</td>
+      <td>1336.73</td>
+      <td>120V / 200A</td>
+      <td>2205606.56</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>1650.0</td>
+      <td>467</td>
+      <td>0.0002</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>1064.27</td>
+      <td>120V / 200A</td>
+      <td>1756053.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>1650.0</td>
+      <td>467</td>
+      <td>0.0002</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>1124.50</td>
+      <td>120V / 200A</td>
+      <td>1855425.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>1650.0</td>
+      <td>467</td>
+      <td>0.0002</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>1214.63</td>
+      <td>120V / 200A</td>
+      <td>2004141.56</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>1650.0</td>
+      <td>467</td>
+      <td>0.0002</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>1334.88</td>
+      <td>120V / 200A</td>
+      <td>2202543.75</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>1650.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15422.4</td>
+      <td>120.0</td>
+      <td>1075.00</td>
+      <td>120V / 200A</td>
+      <td>1773750.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>1650.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15422.4</td>
+      <td>120.0</td>
+      <td>1135.22</td>
+      <td>120V / 200A</td>
+      <td>1873121.25</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>1650.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15422.4</td>
+      <td>120.0</td>
+      <td>1225.36</td>
+      <td>120V / 200A</td>
+      <td>2021837.81</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>Large platform</td>
+      <td>15000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>1650.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15422.4</td>
+      <td>120.0</td>
+      <td>1345.60</td>
+      <td>120V / 200A</td>
+      <td>2220240.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>560.0</td>
+      <td>72</td>
+      <td>0.0032</td>
+      <td>454.4</td>
+      <td>120.0</td>
+      <td>364.96</td>
+      <td>120V / 200A</td>
+      <td>204377.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>560.0</td>
+      <td>72</td>
+      <td>0.0032</td>
+      <td>454.4</td>
+      <td>120.0</td>
+      <td>385.40</td>
+      <td>120V / 200A</td>
+      <td>215824.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>560.0</td>
+      <td>72</td>
+      <td>0.0032</td>
+      <td>454.4</td>
+      <td>120.0</td>
+      <td>415.99</td>
+      <td>120V / 200A</td>
+      <td>232954.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>560.0</td>
+      <td>72</td>
+      <td>0.0032</td>
+      <td>454.4</td>
+      <td>120.0</td>
+      <td>456.80</td>
+      <td>120V / 200A</td>
+      <td>255808.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>560.0</td>
+      <td>159</td>
+      <td>0.0005</td>
+      <td>54.2</td>
+      <td>120.0</td>
+      <td>363.07</td>
+      <td>120V / 200A</td>
+      <td>203319.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>560.0</td>
+      <td>159</td>
+      <td>0.0005</td>
+      <td>54.2</td>
+      <td>120.0</td>
+      <td>383.51</td>
+      <td>120V / 200A</td>
+      <td>214765.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>560.0</td>
+      <td>159</td>
+      <td>0.0005</td>
+      <td>54.2</td>
+      <td>120.0</td>
+      <td>414.10</td>
+      <td>120V / 200A</td>
+      <td>231896.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>560.0</td>
+      <td>159</td>
+      <td>0.0005</td>
+      <td>54.2</td>
+      <td>120.0</td>
+      <td>454.91</td>
+      <td>120V / 200A</td>
+      <td>254749.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>560.0</td>
+      <td>12</td>
+      <td>0.0154</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>373.50</td>
+      <td>120V / 200A</td>
+      <td>209160.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>560.0</td>
+      <td>12</td>
+      <td>0.0154</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>393.94</td>
+      <td>120V / 200A</td>
+      <td>220606.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>560.0</td>
+      <td>12</td>
+      <td>0.0154</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>424.53</td>
+      <td>120V / 200A</td>
+      <td>237736.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Well-coated (mean)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>560.0</td>
+      <td>12</td>
+      <td>0.0154</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>465.34</td>
+      <td>120V / 200A</td>
+      <td>260590.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>1680.0</td>
+      <td>214</td>
+      <td>0.0011</td>
+      <td>450.2</td>
+      <td>120.0</td>
+      <td>1085.47</td>
+      <td>120V / 200A</td>
+      <td>1823589.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>1680.0</td>
+      <td>214</td>
+      <td>0.0011</td>
+      <td>450.2</td>
+      <td>120.0</td>
+      <td>1146.79</td>
+      <td>120V / 200A</td>
+      <td>1926607.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>1680.0</td>
+      <td>214</td>
+      <td>0.0011</td>
+      <td>450.2</td>
+      <td>120.0</td>
+      <td>1238.56</td>
+      <td>120V / 200A</td>
+      <td>2080780.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>1680.0</td>
+      <td>214</td>
+      <td>0.0011</td>
+      <td>450.2</td>
+      <td>120.0</td>
+      <td>1360.99</td>
+      <td>120V / 200A</td>
+      <td>2286463.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>1680.0</td>
+      <td>476</td>
+      <td>0.0002</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>1083.58</td>
+      <td>120V / 200A</td>
+      <td>1820414.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>1680.0</td>
+      <td>476</td>
+      <td>0.0002</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>1144.90</td>
+      <td>120V / 200A</td>
+      <td>1923432.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>1680.0</td>
+      <td>476</td>
+      <td>0.0002</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>1236.67</td>
+      <td>120V / 200A</td>
+      <td>2077605.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>1680.0</td>
+      <td>476</td>
+      <td>0.0002</td>
+      <td>54.1</td>
+      <td>120.0</td>
+      <td>1359.10</td>
+      <td>120V / 200A</td>
+      <td>2283288.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>1680.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>1094.50</td>
+      <td>120V / 200A</td>
+      <td>1838760.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>1680.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>1155.82</td>
+      <td>120V / 200A</td>
+      <td>1941777.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>1680.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>1247.59</td>
+      <td>120V / 200A</td>
+      <td>2095951.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Aged coating (final)</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>1680.0</td>
+      <td>36</td>
+      <td>0.0054</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>1370.02</td>
+      <td>120V / 200A</td>
+      <td>2301633.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>50.0</td>
+      <td>3080.0</td>
+      <td>393</td>
+      <td>0.0006</td>
+      <td>451.0</td>
+      <td>120.0</td>
+      <td>1986.02</td>
+      <td>120V / 200A</td>
+      <td>6116941.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>150.0</td>
+      <td>3080.0</td>
+      <td>393</td>
+      <td>0.0006</td>
+      <td>451.0</td>
+      <td>120.0</td>
+      <td>2098.44</td>
+      <td>120V / 200A</td>
+      <td>6463195.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>300.0</td>
+      <td>3080.0</td>
+      <td>393</td>
+      <td>0.0006</td>
+      <td>451.0</td>
+      <td>120.0</td>
+      <td>2266.69</td>
+      <td>120V / 200A</td>
+      <td>6981389.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>MMO (distributed)</td>
+      <td>500.0</td>
+      <td>3080.0</td>
+      <td>393</td>
+      <td>0.0006</td>
+      <td>451.0</td>
+      <td>120.0</td>
+      <td>2491.14</td>
+      <td>120V / 200A</td>
+      <td>7672711.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>50.0</td>
+      <td>3080.0</td>
+      <td>872</td>
+      <td>0.0001</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>1984.09</td>
+      <td>120V / 200A</td>
+      <td>6111012.60</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>150.0</td>
+      <td>3080.0</td>
+      <td>872</td>
+      <td>0.0001</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>2096.51</td>
+      <td>120V / 200A</td>
+      <td>6457266.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>300.0</td>
+      <td>3080.0</td>
+      <td>872</td>
+      <td>0.0001</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>2264.76</td>
+      <td>120V / 200A</td>
+      <td>6975460.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Si-Fe (deep well)</td>
+      <td>500.0</td>
+      <td>3080.0</td>
+      <td>872</td>
+      <td>0.0001</td>
+      <td>54.0</td>
+      <td>120.0</td>
+      <td>2489.22</td>
+      <td>120V / 200A</td>
+      <td>7666782.20</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>50.0</td>
+      <td>3080.0</td>
+      <td>66</td>
+      <td>0.0030</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>1995.26</td>
+      <td>120V / 200A</td>
+      <td>6145400.80</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>150.0</td>
+      <td>3080.0</td>
+      <td>66</td>
+      <td>0.0030</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>2107.68</td>
+      <td>120V / 200A</td>
+      <td>6491654.40</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>300.0</td>
+      <td>3080.0</td>
+      <td>66</td>
+      <td>0.0030</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>2275.93</td>
+      <td>120V / 200A</td>
+      <td>7009849.00</td>
+      <td>NO_FIT</td>
+    </tr>
+    <tr>
+      <td>FPSO hull</td>
+      <td>28000.0</td>
+      <td>Bare / damaged</td>
+      <td>Pt-Ti (shallow)</td>
+      <td>500.0</td>
+      <td>3080.0</td>
+      <td>66</td>
+      <td>0.0030</td>
+      <td>15147.0</td>
+      <td>120.0</td>
+      <td>2500.38</td>
+      <td>120V / 200A</td>
+      <td>7701170.40</td>
+      <td>NO_FIT</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, ICCP rectifier and ground-bed sizing
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>ICCP physics reused verbatim from digitalmodel.cathodic_protection.iccp_design (rectifier_sizing, anode_bed_design, cable_sizing) — the demo is a sweep/report layer</li><li>Total current demand = surface area x design current density; demand profiles (0.02 / 0.06 / 0.11 A/m2) bracket well-coated mean to bare-steel final per DNV-RP-B401</li><li>Anode design life = 25 years; bed resistance via the Dwight equation with a parallel/interference factor (deep-well beds get a depth reduction)</li><li>Cable sized for a max round-trip voltage drop of 2 V over the one-way run length, copper resistivity at 20 C</li><li>Rectifier driving voltage uses a 1.25 safety factor and a 0.5 ohm structure/return resistance plus the module's default 2 V back-EMF; rounded up to standard TR voltage/current ratings</li><li>Seawater resistivity 0.25-0.30 ohm-m (warm marine immersion); soil_resistivity argument of anode_bed_design carries the seawater resistivity for the immersed beds modelled here</li><li>Standard TR ratings capped at 120 V / 200 A (module's standard-size list); NO_FIT cases indicate the demand should be split across multiple rectifier units</li><li>Screening-level sizing: no detailed anode placement, current distribution / attenuation modelling, reference-electrode layout, or AC-supply / transformer thermal design</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Rectifier Current Rating vs Surface Area</div>
+                <div class='chart-subtitle'>MMO anode, 150 m cable run. One curve per current-density demand.</div>
+                <div>                            <div id="chart-rect_vs_area" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-rect_vs_area")) {                    Plotly.newPlot(                        "chart-rect_vs_area",                        [{"hovertemplate":"Area: %{x:.0f} m2\u003cbr\u003eTR current: %{y:.0f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Well-coated (mean)","x":[1500.0,6000.0,15000.0,28000.0],"y":[40.0,150.0,200.0,200.0],"type":"scatter"},{"hovertemplate":"Area: %{x:.0f} m2\u003cbr\u003eTR current: %{y:.0f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Aged coating (final)","x":[1500.0,6000.0,15000.0,28000.0],"y":[100.0,200.0,200.0,200.0],"type":"scatter"},{"hovertemplate":"Area: %{x:.0f} m2\u003cbr\u003eTR current: %{y:.0f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Bare \u002f damaged","x":[1500.0,6000.0,15000.0,28000.0],"y":[200.0,200.0,200.0,200.0],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Rectifier Current Rating vs Structure Surface Area"},"xaxis":{"title":{"text":"Surface Area (m2)"}},"yaxis":{"title":{"text":"Recommended TR Current Rating (A)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_08_rect_vs_area", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Ground-Bed Resistance by Anode Material</div>
+                <div class='chart-subtitle'>Aged-coating demand, 150 m cable run. Grouped by structure.</div>
+                <div>                            <div id="chart-bed_resistance" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-bed_resistance")) {                    Plotly.newPlot(                        "chart-bed_resistance",                        [{"hovertemplate":"%{x}\u003cbr\u003eBed R: %{y:.3f} ohm\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2c5282"},"name":"MMO (distributed)","x":["Small jacket (shallow)","Medium jacket","Large platform","FPSO hull"],"y":[0.0213,0.0059,0.002,0.0011],"type":"bar"},{"hovertemplate":"%{x}\u003cbr\u003eBed R: %{y:.3f} ohm\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#ed8936"},"name":"Si-Fe (deep well)","x":["Small jacket (shallow)","Medium jacket","Large platform","FPSO hull"],"y":[0.0035,0.0009,0.0003,0.0002],"type":"bar"},{"hovertemplate":"%{x}\u003cbr\u003eBed R: %{y:.3f} ohm\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#38a169"},"name":"Pt-Ti (shallow)","x":["Small jacket (shallow)","Medium jacket","Large platform","FPSO hull"],"y":[0.1019,0.0272,0.0094,0.0054],"type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Ground-Bed Resistance by Anode Material"},"xaxis":{"title":{"text":"Structure"}},"yaxis":{"title":{"text":"Anode Bed Resistance (ohm)"}},"barmode":"group","height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_08_bed_resistance", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: System Power-Demand Envelope</div>
+                <div class='chart-subtitle'>All cases at 150 m cable run, colored by sizing status.</div>
+                <div>                            <div id="chart-power_envelope" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-power_envelope")) {                    Plotly.newPlot(                        "chart-power_envelope",                        [{"hovertemplate":"%{text}\u003cbr\u003eI: %{x:.0f} A\u003cbr\u003ePower: %{y:.0f} W\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#38a169","line":{"color":"white","width":1},"size":11},"mode":"markers","name":"OK","text":["Small jacket (shallow) | MMO (distributed)"],"x":[30.0],"y":[768.23],"type":"scatter"},{"hovertemplate":"%{text}\u003cbr\u003eI: %{x:.0f} A\u003cbr\u003ePower: %{y:.0f} W\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#d69e2e","line":{"color":"white","width":1},"size":11},"mode":"markers","name":"MARGINAL","text":["Small jacket (shallow) | Si-Fe (deep well)","Small jacket (shallow) | Pt-Ti (shallow)","Small jacket (shallow) | MMO (distributed)","Small jacket (shallow) | Si-Fe (deep well)","Small jacket (shallow) | Pt-Ti (shallow)","Small jacket (shallow) | MMO (distributed)","Small jacket (shallow) | Si-Fe (deep well)","Medium jacket | MMO (distributed)","Medium jacket | Si-Fe (deep well)","Medium jacket | Pt-Ti (shallow)"],"x":[30.0,30.0,90.0,90.0,90.0,165.0,165.0,120.0,120.0,120.0],"y":[710.51,921.34,5946.64,5766.41,6762.71,19323.67,18986.76,10380.0,10137.0,11335.8],"type":"scatter"},{"hovertemplate":"%{text}\u003cbr\u003eI: %{x:.0f} A\u003cbr\u003ePower: %{y:.0f} W\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#e53e3e","line":{"color":"white","width":1},"size":11},"mode":"markers","name":"NO_FIT","text":["Small jacket (shallow) | Pt-Ti (shallow)","Medium jacket | MMO (distributed)","Medium jacket | Si-Fe (deep well)","Medium jacket | Pt-Ti (shallow)","Medium jacket | MMO (distributed)","Medium jacket | Si-Fe (deep well)","Medium jacket | Pt-Ti (shallow)","Large platform | MMO (distributed)","Large platform | Si-Fe (deep well)","Large platform | Pt-Ti (shallow)","Large platform | MMO (distributed)","Large platform | Si-Fe (deep well)","Large platform | Pt-Ti (shallow)","Large platform | MMO (distributed)","Large platform | Si-Fe (deep well)","Large platform | Pt-Ti (shallow)","FPSO hull | MMO (distributed)","FPSO hull | Si-Fe (deep well)","FPSO hull | Pt-Ti (shallow)","FPSO hull | MMO (distributed)","FPSO hull | Si-Fe (deep well)","FPSO hull | Pt-Ti (shallow)","FPSO hull | MMO (distributed)","FPSO hull | Si-Fe (deep well)","FPSO hull | Pt-Ti (shallow)"],"x":[165.0,360.0,360.0,360.0,660.0,660.0,660.0,300.0,300.0,300.0,900.0,900.0,900.0,1650.0,1650.0,1650.0,560.0,560.0,560.0,1680.0,1680.0,1680.0,3080.0,3080.0,3080.0],"y":[20712.14,89951.4,89141.4,93402.0,299545.95,298021.35,305862.15,62580.0,62028.75,64818.75,554872.5,553151.25,562365.0,1858487.81,1855425.0,1873121.25,215824.0,214765.6,220606.4,1926607.2,1923432.0,1941777.6,6463195.2,6457266.2,6491654.4],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"ICCP System Power-Demand Envelope"},"xaxis":{"title":{"text":"Total Protection Current (A)"}},"yaxis":{"title":{"text":"Rectifier Power (W)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_08_power_envelope", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 4: Cable Voltage Drop vs Run Length</div>
+                <div class='chart-subtitle'>Large platform, MMO anode. Red dashed = 2 V limit.</div>
+                <div>                            <div id="chart-cable_vdrop" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-cable_vdrop")) {                    Plotly.newPlot(                        "chart-cable_vdrop",                        [{"hovertemplate":"Run: %{x:.0f} m\u003cbr\u003eV-drop: %{y:.3f} V\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Well-coated (mean)","x":[50.0,150.0,300.0,500.0],"y":[4.375,13.125,26.25,43.75],"type":"scatter"},{"hovertemplate":"Run: %{x:.0f} m\u003cbr\u003eV-drop: %{y:.3f} V\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Aged coating (final)","x":[50.0,150.0,300.0,500.0],"y":[13.125,39.375,78.75,131.25],"type":"scatter"},{"hovertemplate":"Run: %{x:.0f} m\u003cbr\u003eV-drop: %{y:.3f} V\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Bare \u002f damaged","x":[50.0,150.0,300.0,500.0],"y":[24.063,72.188,144.375,240.625],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#e53e3e","dash":"dash","width":2},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":2.0,"y1":2.0,"yref":"y"}],"annotations":[{"showarrow":false,"text":"V-drop limit = 2 V","x":0,"xanchor":"left","xref":"x domain","y":2.0,"yanchor":"bottom","yref":"y"}],"title":{"font":{"size":18},"text":"Cable Voltage Drop vs Run Length (Large Platform)"},"xaxis":{"title":{"text":"Cable Run Length, one-way (m)"}},"yaxis":{"title":{"text":"Voltage Drop (V)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_08_cable_vdrop", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> NACE SP0169 (2013) — Control of External Corrosion on Submerged Metallic Piping · API RP 1632 (1996) §7 — Impressed Current Systems · DNV-RP-B401 (2021) — Cathodic Protection Design (current-density demand) · NACE TM0497 — Measurement Techniques for CP Criteria</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>
