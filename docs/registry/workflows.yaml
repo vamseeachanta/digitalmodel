@@ -468,6 +468,14 @@ workflows:
       - examples/workflows/orcawave-input-prep/results/prepared/RegistryShip.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-input-prep]
     runtime: offline
+  - id: orcawave-diffraction-solve
+    basename: diffraction
+    title: OrcaWave diffraction solve (RAOs) from a canonical spec — needs OrcaWave license
+    input: examples/workflows/orcawave-diffraction-solve/input.yml
+    outputs:
+      - examples/workflows/orcawave-diffraction-solve/results/UnitBoxRAO.owr
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-diffraction-solve]
+    runtime: requires-license
   - id: aqwa-diffraction-deck-prep
     basename: diffraction
     title: AQWA diffraction deck preparation from a canonical spec

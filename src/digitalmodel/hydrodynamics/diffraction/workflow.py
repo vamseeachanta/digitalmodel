@@ -5,19 +5,31 @@ from typing import Any
 
 from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
 
+_SUPPORTED_OPERATIONS = ("convert_spec", "run_orcawave")
+
 
 class DiffractionWorkflow:
-    """Engine router for offline diffraction-domain preparation workflows."""
+    """Engine router for diffraction-domain workflows.
+
+    ``convert_spec`` (default, offline) converts a canonical spec into solver
+    input decks. ``run_orcawave`` (requires an OrcaWave license) converts and
+    solves end-to-end from a single input file, so the licensed-run lane's fixed
+    ``python -m digitalmodel <input>`` command can drive a solve (issue #900).
+    """
 
     def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
         settings = cfg.setdefault("diffraction", {})
         operation = settings.get("operation", "convert_spec")
-        if operation != "convert_spec":
-            raise ValueError(
-                f"Unsupported diffraction operation: {operation!r}. "
-                "Supported operations: convert_spec"
-            )
+        if operation == "convert_spec":
+            return self._convert_spec(cfg, settings)
+        if operation == "run_orcawave":
+            return self._run_orcawave(cfg, settings)
+        raise ValueError(
+            f"Unsupported diffraction operation: {operation!r}. "
+            f"Supported operations: {', '.join(_SUPPORTED_OPERATIONS)}"
+        )
 
+    def _convert_spec(self, cfg: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
         spec_path = self._resolve_spec_path(cfg, settings)
         output_dir = self._resolve_output_dir(cfg, settings)
         solver = settings.get("solver", "all").lower()
@@ -36,6 +48,46 @@ class DiffractionWorkflow:
             name: str(path) for name, path in sorted(outputs.items())
         }
         settings["validation_issues"] = issues
+        return cfg
+
+    def _run_orcawave(self, cfg: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
+        # Lazy import: only pull the OrcFxAPI-adjacent runner when a solve is asked for.
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+        from digitalmodel.hydrodynamics.diffraction.orcawave_runner import run_orcawave
+
+        spec_path = self._resolve_spec_path(cfg, settings)
+        output_dir = self._resolve_output_dir(cfg, settings)
+        requested_dry_run = bool(settings.get("dry_run", False))
+
+        spec = DiffractionSpec.from_yaml(spec_path)
+        result = run_orcawave(
+            spec,
+            output_dir=output_dir,
+            dry_run=requested_dry_run,
+            timeout_seconds=int(settings.get("timeout_seconds", 7200)),
+            spec_path=spec_path,
+        )
+
+        status = str(getattr(result.status, "value", result.status)).lower()
+        settings["spec_path"] = str(spec_path)
+        settings["output_directory"] = str(getattr(result, "output_dir", output_dir))
+        settings["run_status"] = status
+        settings["outputs"] = {
+            "input_file": str(getattr(result, "input_file", "") or ""),
+            "modular_files": [str(p) for p in getattr(result, "modular_files", []) or []],
+            "mesh_files": [str(p) for p in getattr(result, "mesh_files", []) or []],
+        }
+        if status == "failed":
+            raise RuntimeError(
+                f"OrcaWave solve failed: {getattr(result, 'error_message', None) or 'unknown error'}"
+            )
+        # A silent dry-run fallback (no executable/license) must NOT read as success
+        # for a real solve request — the licensed-run lane would record a false finish.
+        if status == "dry_run" and not requested_dry_run:
+            raise RuntimeError(
+                "OrcaWave solver unavailable: run fell back to dry-run "
+                "(no OrcaWave executable/license found). Run on a licensed host."
+            )
         return cfg
 
     @staticmethod
