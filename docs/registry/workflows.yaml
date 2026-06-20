@@ -1,4 +1,12 @@
-schema_version: 1
+# schema_version 2 (deckhand versioned routing): a workflow row MAY carry an
+# algorithm-version triple — all optional; absence means v1 / stable / latest:
+#   version: <int >= 1>   algorithm revision; bump when the method or curve changes
+#   status:  stable | deprecated | experimental | retired   (default: stable)
+#   latest:  true         the latest-stable resolution target for this id
+# Multiple rows may share one `id`, differing by `version` (each with its own
+# input/outputs/test). Deckhand resolves an unpinned `<repo>:<id>` to the latest
+# stable version; a pinned `<repo>:<id>@N` resolves that exact version.
+schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
   - id: cathodic-protection
