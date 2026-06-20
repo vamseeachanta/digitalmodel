@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAD Geometry-Verification — Plate-Buckling Capacity — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>CAD Geometry-Verification — Plate-Buckling Capacity</h1>
+    <div class="subtitle">96 parametric plate-geometry cases verified for elastic buckling across panel footprints, thicknesses, boundary conditions, and materials</div>
+    <div class="case-badge">96 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-06-20 05:31 UTC · demo_10</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This demo packages the digitalmodel plate-buckling capability behind a
+    CAD-firm story: <strong>geometry &rarr; structural check &rarr; report</strong>.
+    A parametric set of rectangular plate panels (the midsurface geometry a CAD
+    package exports as STEP/IGES) is screened for elastic plate buckling. Every
+    capacity number is computed by the <strong><code>digitalmodel.infrastructure.calculations.plate_buckling</code></strong>
+    module (<code>ElasticBucklingCalculator</code>) — this report is the
+    verification / presentation layer and does not reimplement the buckling math.</p>
+
+    <h3>Buckling Capacity</h3>
+    <p>The critical (elastic) buckling stress for a rectangular plate under
+    uniaxial longitudinal compression is
+    sigma_cr = k &middot; pi&sup2; E / (12 (1 - nu&sup2;)) &middot; (t/b)&sup2;,
+    where k is the boundary-condition coefficient (4.0 simply supported, 7.0
+    clamped), E Young's modulus, nu Poisson's ratio, t thickness and b the
+    loaded short edge. Usage = sigma_applied / sigma_cr; a panel passes when
+    usage &le; 1.0.</p>
+
+    <h3>Geometry Hygiene</h3>
+    <p>Each panel is sanity-checked for analysis readiness without a CAD
+    kernel: positive closed footprint, aspect ratio a/b within range, and plate
+    slenderness beta = (b/t) sqrt(fy/E) classified stocky / normal / slender.</p>
+
+    <h3>Outcome</h3>
+    <p><strong>52/96</strong> cases PASS, <strong>44</strong>
+    FAIL — thin, slender, simply-supported panels in higher-strength steel are
+    the buckling-critical ones.</p>
+
+    <h3>Imported Geometry Render</h3><p>Lightweight 3D render of the distinct plate footprints that feed the buckling check (matplotlib, headless). Green = PASS, red = FAIL.</p><img src="demo_10_geometry_render.png" alt="plate geometry render" style="max-width:100%;border:1px solid #ddd;border-radius:4px;" />
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>DNV-RP-C201 (2010) — Buckling Strength of Plated Structures (elastic reference stress)</li><li>Classical elastic plate buckling — Timoshenko & Gere, Theory of Elastic Stability</li><li>Buckling coefficient k: 4.0 (simply supported), 7.0 (clamped) for uniaxial longitudinal compression</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Summary: Plate Verification (Steel S355, simply-supported)</h2>
+            <p>Critical stress, applied stress, usage, slenderness class, and verdict per geometry and thickness.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Geometry</th>
+      <th>a x b (mm)</th>
+      <th>t (mm)</th>
+      <th>Boundary</th>
+      <th>Material</th>
+      <th>sigma_cr (MPa)</th>
+      <th>sigma_applied (MPa)</th>
+      <th>Usage</th>
+      <th>Class</th>
+      <th>Verdict</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>small panel</td>
+      <td>800 x 400</td>
+      <td>8</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>303.7</td>
+      <td>213.0</td>
+      <td>0.701</td>
+      <td>slender</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>small panel</td>
+      <td>800 x 400</td>
+      <td>12</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>683.3</td>
+      <td>213.0</td>
+      <td>0.312</td>
+      <td>normal</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>small panel</td>
+      <td>800 x 400</td>
+      <td>18</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>1537.4</td>
+      <td>213.0</td>
+      <td>0.139</td>
+      <td>stocky</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>small panel</td>
+      <td>800 x 400</td>
+      <td>25</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>2965.6</td>
+      <td>213.0</td>
+      <td>0.072</td>
+      <td>stocky</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>deck panel</td>
+      <td>2400 x 1200</td>
+      <td>8</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>33.7</td>
+      <td>213.0</td>
+      <td>6.313</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>deck panel</td>
+      <td>2400 x 1200</td>
+      <td>12</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>75.9</td>
+      <td>213.0</td>
+      <td>2.806</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>deck panel</td>
+      <td>2400 x 1200</td>
+      <td>18</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>170.8</td>
+      <td>213.0</td>
+      <td>1.247</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>deck panel</td>
+      <td>2400 x 1200</td>
+      <td>25</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>329.5</td>
+      <td>213.0</td>
+      <td>0.646</td>
+      <td>normal</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>bulkhead bay</td>
+      <td>3000 x 1000</td>
+      <td>8</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>48.6</td>
+      <td>213.0</td>
+      <td>4.384</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>bulkhead bay</td>
+      <td>3000 x 1000</td>
+      <td>12</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>109.3</td>
+      <td>213.0</td>
+      <td>1.948</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>bulkhead bay</td>
+      <td>3000 x 1000</td>
+      <td>18</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>246.0</td>
+      <td>213.0</td>
+      <td>0.866</td>
+      <td>slender</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>bulkhead bay</td>
+      <td>3000 x 1000</td>
+      <td>25</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>474.5</td>
+      <td>213.0</td>
+      <td>0.449</td>
+      <td>normal</td>
+      <td class="status-pass">PASS</td>
+    </tr>
+    <tr>
+      <td>wide panel</td>
+      <td>2000 x 1600</td>
+      <td>8</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>19.0</td>
+      <td>213.0</td>
+      <td>11.222</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>wide panel</td>
+      <td>2000 x 1600</td>
+      <td>12</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>42.7</td>
+      <td>213.0</td>
+      <td>4.988</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>wide panel</td>
+      <td>2000 x 1600</td>
+      <td>18</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>96.1</td>
+      <td>213.0</td>
+      <td>2.217</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+    <tr>
+      <td>wide panel</td>
+      <td>2000 x 1600</td>
+      <td>25</td>
+      <td>simply-supported</td>
+      <td>Steel S355</td>
+      <td>185.4</td>
+      <td>213.0</td>
+      <td>1.149</td>
+      <td>slender</td>
+      <td class="status-fail">FAIL</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, this plate-buckling verification
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>All buckling capacity computed by digitalmodel.infrastructure.calculations.plate_buckling.ElasticBucklingCalculator (DNV-RP-C201 (2010) / classical elastic plate buckling); this demo does not reimplement the buckling math</li><li>sigma_cr = k pi^2 E / (12(1-nu^2)) (t/b)^2 for uniaxial longitudinal compression; k = 4.0 (simply supported), 7.0 (clamped) per classical plate theory</li><li>Applied longitudinal stress = design-utilisation target x yield strength (0.60 fy for steel, 0.50 fy for aluminium) — a representative demand, not a project load case</li><li>Elastic buckling only — no post-buckling reserve, plasticity reduction, residual stress, initial imperfection knock-down, or combined biaxial/shear interaction (those add to the full DNV-RP-C201 usage and would lower allowable stress)</li><li>Geometry hygiene (watertight / aspect ratio / slenderness) is a cheap analysis-readiness screen, not a CAD-kernel STEP/IGES topology validation</li><li>Plate footprints, gauges, and materials are representative screening values, not project takeoffs</li><li>All outputs are preliminary screening estimates requiring review by a qualified structural engineer</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Usage Factor vs Plate Slenderness</div>
+                <div class='chart-subtitle'>Usage rises with slenderness; points above the dashed line (usage>1) fail the buckling check.</div>
+                <div>                            <div id="chart-usage_vs_slenderness" class="plotly-graph-div" style="height:480px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-usage_vs_slenderness")) {                    Plotly.newPlot(                        "chart-usage_vs_slenderness",                        [{"hovertemplate":"%{text}\u003cbr\u003ebeta=%{x:.2f}\u003cbr\u003eusage=%{y:.2f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#1a9850","opacity":0.75,"size":7},"mode":"markers","name":"PASS","text":["small panel | t=8mm | simply-supported | Steel S235","small panel | t=8mm | simply-supported | Steel S355","small panel | t=8mm | simply-supported | Al 5083-H116","small panel | t=8mm | clamped | Steel S235","small panel | t=8mm | clamped | Steel S355","small panel | t=8mm | clamped | Al 5083-H116","small panel | t=12mm | simply-supported | Steel S235","small panel | t=12mm | simply-supported | Steel S355","small panel | t=12mm | simply-supported | Al 5083-H116","small panel | t=12mm | clamped | Steel S235","small panel | t=12mm | clamped | Steel S355","small panel | t=12mm | clamped | Al 5083-H116","small panel | t=18mm | simply-supported | Steel S235","small panel | t=18mm | simply-supported | Steel S355","small panel | t=18mm | simply-supported | Al 5083-H116","small panel | t=18mm | clamped | Steel S235","small panel | t=18mm | clamped | Steel S355","small panel | t=18mm | clamped | Al 5083-H116","small panel | t=25mm | simply-supported | Steel S235","small panel | t=25mm | simply-supported | Steel S355","small panel | t=25mm | simply-supported | Al 5083-H116","small panel | t=25mm | clamped | Steel S235","small panel | t=25mm | clamped | Steel S355","small panel | t=25mm | clamped | Al 5083-H116","deck panel | t=18mm | simply-supported | Steel S235","deck panel | t=18mm | clamped | Steel S235","deck panel | t=18mm | clamped | Steel S355","deck panel | t=18mm | clamped | Al 5083-H116","deck panel | t=25mm | simply-supported | Steel S235","deck panel | t=25mm | simply-supported | Steel S355","deck panel | t=25mm | simply-supported | Al 5083-H116","deck panel | t=25mm | clamped | Steel S235","deck panel | t=25mm | clamped | Steel S355","deck panel | t=25mm | clamped | Al 5083-H116","bulkhead bay | t=12mm | clamped | Steel S235","bulkhead bay | t=18mm | simply-supported | Steel S235","bulkhead bay | t=18mm | simply-supported | Steel S355","bulkhead bay | t=18mm | simply-supported | Al 5083-H116","bulkhead bay | t=18mm | clamped | Steel S235","bulkhead bay | t=18mm | clamped | Steel S355","bulkhead bay | t=18mm | clamped | Al 5083-H116","bulkhead bay | t=25mm | simply-supported | Steel S235","bulkhead bay | t=25mm | simply-supported | Steel S355","bulkhead bay | t=25mm | simply-supported | Al 5083-H116","bulkhead bay | t=25mm | clamped | Steel S235","bulkhead bay | t=25mm | clamped | Steel S355","bulkhead bay | t=25mm | clamped | Al 5083-H116","wide panel | t=18mm | clamped | Steel S235","wide panel | t=25mm | simply-supported | Steel S235","wide panel | t=25mm | clamped | Steel S235","wide panel | t=25mm | clamped | Steel S355","wide panel | t=25mm | clamped | Al 5083-H116"],"x":[1.6726084561603314,2.0557700445795186,2.275647474581999,1.6726084561603314,2.0557700445795186,2.275647474581999,1.1150723041068877,1.3705133630530126,1.5170983163879992,1.1150723041068877,1.3705133630530126,1.5170983163879992,0.7433815360712586,0.913675575368675,1.0113988775919995,0.7433815360712586,0.913675575368675,1.0113988775919995,0.5352347059713061,0.657846414265446,0.7282071918662396,0.5352347059713061,0.657846414265446,0.7282071918662396,2.2301446082137755,2.2301446082137755,2.7410267261060253,3.0341966327759984,1.605704117913918,1.9735392427963376,2.1846215755987184,1.605704117913918,1.9735392427963376,2.1846215755987184,2.787680760267219,1.858453840178146,2.2841889384216874,2.5284971939799985,1.858453840178146,2.2841889384216874,2.5284971939799985,1.3380867649282653,1.644616035663615,1.820517979665599,1.3380867649282653,1.644616035663615,1.820517979665599,2.9735261442850343,2.1409388238852243,2.1409388238852243,2.631385657061784,2.9128287674649584],"y":[0.46430432404101285,0.7013958937640833,0.7013389005982845,0.26531675659486453,0.40079765357947617,0.40076508605616257,0.2063574773515613,0.3117315083395926,0.311706178043682,0.11791855848660646,0.1781322904797672,0.17811781602496116,0.09171443437847174,0.138547337039819,0.1385360791305254,0.052408248216269555,0.07916990687989657,0.07916347378887166,0.04754476278179972,0.07182293952144213,0.07181710342126434,0.027168435875314124,0.041041679726538355,0.04103834481215105,0.8254299094062452,0.4716742339464258,0.7125291619190688,0.7124712640998446,0.42790286503619734,0.6464064556929789,0.6463539307913789,0.24451592287782709,0.36937511753884517,0.3693451033093593,0.7369909905412904,0.573215214865448,0.8659208564988684,0.8658504945657836,0.3275515513516846,0.4948119179993533,0.49477171118044777,0.2971547673862482,0.4488933720090132,0.448856896382902,0.16980272422071324,0.2565104982908647,0.256489655075944,0.8385319714603129,0.7607162045087955,0.434694974005026,0.6566668756246137,0.6566135169944168],"type":"scatter"},{"hovertemplate":"%{text}\u003cbr\u003ebeta=%{x:.2f}\u003cbr\u003eusage=%{y:.2f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#d73027","opacity":0.75,"size":7},"mode":"markers","name":"FAIL","text":["deck panel | t=8mm | simply-supported | Steel S235","deck panel | t=8mm | simply-supported | Steel S355","deck panel | t=8mm | simply-supported | Al 5083-H116","deck panel | t=8mm | clamped | Steel S235","deck panel | t=8mm | clamped | Steel S355","deck panel | t=8mm | clamped | Al 5083-H116","deck panel | t=12mm | simply-supported | Steel S235","deck panel | t=12mm | simply-supported | Steel S355","deck panel | t=12mm | simply-supported | Al 5083-H116","deck panel | t=12mm | clamped | Steel S235","deck panel | t=12mm | clamped | Steel S355","deck panel | t=12mm | clamped | Al 5083-H116","deck panel | t=18mm | simply-supported | Steel S355","deck panel | t=18mm | simply-supported | Al 5083-H116","bulkhead bay | t=8mm | simply-supported | Steel S235","bulkhead bay | t=8mm | simply-supported | Steel S355","bulkhead bay | t=8mm | simply-supported | Al 5083-H116","bulkhead bay | t=8mm | clamped | Steel S235","bulkhead bay | t=8mm | clamped | Steel S355","bulkhead bay | t=8mm | clamped | Al 5083-H116","bulkhead bay | t=12mm | simply-supported | Steel S235","bulkhead bay | t=12mm | simply-supported | Steel S355","bulkhead bay | t=12mm | simply-supported | Al 5083-H116","bulkhead bay | t=12mm | clamped | Steel S355","bulkhead bay | t=12mm | clamped | Al 5083-H116","wide panel | t=8mm | simply-supported | Steel S235","wide panel | t=8mm | simply-supported | Steel S355","wide panel | t=8mm | simply-supported | Al 5083-H116","wide panel | t=8mm | clamped | Steel S235","wide panel | t=8mm | clamped | Steel S355","wide panel | t=8mm | clamped | Al 5083-H116","wide panel | t=12mm | simply-supported | Steel S235","wide panel | t=12mm | simply-supported | Steel S355","wide panel | t=12mm | simply-supported | Al 5083-H116","wide panel | t=12mm | clamped | Steel S235","wide panel | t=12mm | clamped | Steel S355","wide panel | t=12mm | clamped | Al 5083-H116","wide panel | t=18mm | simply-supported | Steel S235","wide panel | t=18mm | simply-supported | Steel S355","wide panel | t=18mm | simply-supported | Al 5083-H116","wide panel | t=18mm | clamped | Steel S355","wide panel | t=18mm | clamped | Al 5083-H116","wide panel | t=25mm | simply-supported | Steel S355","wide panel | t=25mm | simply-supported | Al 5083-H116"],"x":[5.017825368480994,6.167310133738556,6.826942423745996,5.017825368480994,6.167310133738556,6.826942423745996,3.3452169123206628,4.111540089159037,4.551294949163998,3.3452169123206628,4.111540089159037,4.551294949163998,2.7410267261060253,3.0341966327759984,4.181521140400829,5.139425111448797,5.6891186864549965,4.181521140400829,5.139425111448797,5.6891186864549965,2.787680760267219,3.426283407632531,3.792745790969998,3.426283407632531,3.792745790969998,6.6904338246413255,8.223080178318074,9.102589898327995,6.6904338246413255,8.223080178318074,9.102589898327995,4.460289216427551,5.4820534522120505,6.068393265551997,4.460289216427551,5.4820534522120505,6.068393265551997,2.9735261442850343,3.6547023014747,4.045595510367998,3.6547023014747,4.045595510367998,2.631385657061784,2.9128287674649584],"y":[4.178738916369115,6.312563043876748,6.31205010538456,2.3878508093537802,3.607178882215285,3.6068857745054625,1.8572172961640514,2.805583575056333,2.805355602393138,1.0612670263794581,1.6031906143179047,1.6030603442246503,1.2469260333583705,1.246824712174728,2.9019020252563306,4.38372433602552,4.383368128739279,1.658229728717903,2.504985334871726,2.5047817878510164,1.289734233447258,1.9483219271224534,1.9481636127730126,1.113326815498545,1.1132363501560074,7.428869184656206,11.222334300225333,11.221422409572552,4.2450681055178325,6.412762457271619,6.412241376898601,3.3017196376249807,4.987704133433482,4.987298848698912,1.8866969357857033,2.850116647676275,2.8498850563993785,1.4674309500555478,2.216757392637104,2.2165772660884064,1.2667185100783451,1.2666155806219466,1.149167032343074,1.1490736547402294],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#555","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":1.0,"y1":1.0,"yref":"y"}],"annotations":[{"showarrow":false,"text":"usage = 1.0 (capacity limit)","x":1,"xanchor":"right","xref":"x domain","y":1.0,"yanchor":"bottom","yref":"y"}],"title":{"text":"Usage Factor vs Plate Slenderness"},"xaxis":{"title":{"text":"Plate slenderness  beta = (b\u002ft) sqrt(fy\u002fE)"}},"yaxis":{"title":{"text":"Usage = sigma_applied \u002f sigma_cr"}},"height":480,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_10_usage_vs_slenderness", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Critical Buckling Stress vs Thickness Ratio</div>
+                <div class='chart-subtitle'>sigma_cr scales with (t/b)^2; clamped edges (k=7) carry ~1.75x the simply-supported (k=4) capacity.</div>
+                <div>                            <div id="chart-sigmacr_vs_tb" class="plotly-graph-div" style="height:480px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-sigmacr_vs_tb")) {                    Plotly.newPlot(                        "chart-sigmacr_vs_tb",                        [{"hovertemplate":"%{text}\u003cbr\u003et\u002fb=%{x:.4f}\u003cbr\u003esigma_cr=%{y:.0f} MPa\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"size":7},"mode":"markers","name":"simply-supported (k=4)","text":["wide panel | t=8mm | simply-supported | Steel S355","deck panel | t=8mm | simply-supported | Steel S355","wide panel | t=12mm | simply-supported | Steel S355","bulkhead bay | t=8mm | simply-supported | Steel S355","deck panel | t=12mm | simply-supported | Steel S355","wide panel | t=18mm | simply-supported | Steel S355","bulkhead bay | t=12mm | simply-supported | Steel S355","deck panel | t=18mm | simply-supported | Steel S355","wide panel | t=25mm | simply-supported | Steel S355","bulkhead bay | t=18mm | simply-supported | Steel S355","small panel | t=8mm | simply-supported | Steel S355","deck panel | t=25mm | simply-supported | Steel S355","bulkhead bay | t=25mm | simply-supported | Steel S355","small panel | t=12mm | simply-supported | Steel S355","small panel | t=18mm | simply-supported | Steel S355","small panel | t=25mm | simply-supported | Steel S355"],"x":[0.005,0.006666666666666667,0.0075,0.008,0.01,0.011249999999999998,0.012,0.015,0.015625,0.018,0.02,0.020833333333333336,0.025,0.03,0.04499999999999999,0.0625],"y":[18.980008463633382,33.74223726868157,42.7050190431751,48.58882166690145,75.92003385453353,96.08629284714394,109.32484875052828,170.8200761727004,185.35164515266973,245.98090968868857,303.6801354181341,329.5140358269685,474.5002115908346,683.2803046908016,1537.380685554303,2965.6263224427157],"type":"scatter"},{"hovertemplate":"%{text}\u003cbr\u003et\u002fb=%{x:.4f}\u003cbr\u003esigma_cr=%{y:.0f} MPa\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"size":7},"mode":"markers","name":"clamped (k=7)","text":["wide panel | t=8mm | clamped | Steel S355","deck panel | t=8mm | clamped | Steel S355","wide panel | t=12mm | clamped | Steel S355","bulkhead bay | t=8mm | clamped | Steel S355","deck panel | t=12mm | clamped | Steel S355","wide panel | t=18mm | clamped | Steel S355","bulkhead bay | t=12mm | clamped | Steel S355","deck panel | t=18mm | clamped | Steel S355","wide panel | t=25mm | clamped | Steel S355","bulkhead bay | t=18mm | clamped | Steel S355","small panel | t=8mm | clamped | Steel S355","deck panel | t=25mm | clamped | Steel S355","bulkhead bay | t=25mm | clamped | Steel S355","small panel | t=12mm | clamped | Steel S355","small panel | t=18mm | clamped | Steel S355","small panel | t=25mm | clamped | Steel S355"],"x":[0.005,0.006666666666666667,0.0075,0.008,0.01,0.011249999999999998,0.012,0.015,0.015625,0.018,0.02,0.020833333333333336,0.025,0.03,0.04499999999999999,0.0625],"y":[33.215014811358415,59.04891522019275,74.73378332555643,85.03043791707753,132.86005924543366,168.1510124825019,191.31848531342447,298.9351333022257,324.365379017172,430.46659195520505,531.4402369817346,576.6495626971948,830.3753702839606,1195.740533208903,2690.4161997200304,5189.846064274752],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"text":"Critical Buckling Stress vs Thickness Ratio (Steel S355)"},"xaxis":{"title":{"text":"t \u002f b"}},"yaxis":{"title":{"text":"sigma_cr (MPa)"}},"height":480,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_10_sigmacr_vs_tb", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: Verification Outcomes by Panel Footprint</div>
+                <div class='chart-subtitle'>Pass/fail tally per panel footprint across all thicknesses, boundaries, and materials.</div>
+                <div>                            <div id="chart-passfail_by_geometry" class="plotly-graph-div" style="height:480px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-passfail_by_geometry")) {                    Plotly.newPlot(                        "chart-passfail_by_geometry",                        [{"marker":{"color":"#1a9850"},"name":"PASS","x":["small panel","deck panel","bulkhead bay","wide panel"],"y":[24,10,13,5],"type":"bar"},{"marker":{"color":"#d73027"},"name":"FAIL","x":["small panel","deck panel","bulkhead bay","wide panel"],"y":[0,14,11,19],"type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"text":"Verification Outcomes by Panel Footprint"},"xaxis":{"title":{"text":"Geometry"}},"yaxis":{"title":{"text":"Number of cases"}},"barmode":"stack","height":480,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_10_passfail_by_geometry", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> DNV-RP-C201 (2010) — Buckling Strength of Plated Structures (elastic reference stress) · Classical elastic plate buckling — Timoshenko & Gere, Theory of Elastic Stability · Buckling coefficient k: 4.0 (simply supported), 7.0 (clamped) for uniaxial longitudinal compression</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>
