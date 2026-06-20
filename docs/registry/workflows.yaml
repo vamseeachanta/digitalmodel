@@ -479,6 +479,15 @@ workflows:
       - examples/workflows/pipeline-upheaval-buckling/results/input_upheaval_buckling.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-upheaval-buckling]
     runtime: offline
+  - id: span-rectification
+    basename: span_rectification
+    title: Free-span rectification — intermediate supports for an over-long span (DNV-RP-F105)
+    input: examples/workflows/span-rectification/input.yml
+    outputs:
+      - examples/workflows/span-rectification/results/input.yml
+      - examples/workflows/span-rectification/results/span_rectification/span_rectification_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec

@@ -232,6 +232,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.lifting_lug.workflow import router as lifting_lug
 
         cfg_base = lifting_lug(cfg_base)
+    elif basename == "span_rectification":
+        from digitalmodel.subsea.pipeline.span_rectification import (
+            router as span_rectification,
+        )
+
+        cfg_base = span_rectification(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)

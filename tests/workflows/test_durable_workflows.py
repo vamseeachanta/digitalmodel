@@ -1213,6 +1213,20 @@ def test_workflow_registry(workflow, monkeypatch):
         )
         assert block["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "span-rectification":
+        result = cfg["span_rectification"]["result"]
+        allowable = result["allowable_span_m"]
+        # as-built 60 m span exceeds the ~12.4 m allowable -> rectification required
+        assert result["actual_span_m"] == pytest.approx(60.0)
+        assert result["rectification_required"] is True
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+        # n_supports = ceil(L_a / L_allow) - 1; equal sub-spans within allowable
+        expected_subspans = math.ceil(60.0 / allowable)
+        assert result["sub_span_count"] == expected_subspans
+        assert result["n_supports"] == expected_subspans - 1
+        assert result["resulting_sub_span_m"] == pytest.approx(60.0 / expected_subspans)
+        assert result["resulting_sub_span_m"] <= allowable + 1e-9
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
@@ -1598,3 +1612,32 @@ def test_lifting_lug_checks_match_closed_form():
     # utilisation = demand / allowable
     for c in checks.values():
         assert c.utilization == pytest.approx(c.demand_mpa / c.allowable_mpa, rel=1e-12)
+
+
+def test_span_rectification_support_count_closed_form():
+    """AC6 validation gate for span-rectification: the equal-sub-span support
+    count reproduces the closed-form rule n_supports = ceil(L_a/L_allow) - 1,
+    every resulting sub-span is within the allowable, and L_a <= L_allow needs
+    no rectification."""
+    from digitalmodel.subsea.pipeline.span_rectification import design_rectification
+
+    # over-long span: 60 m vs 12.378 m allowable -> 5 sub-spans, 4 supports
+    allowable = 12.378282602855869
+    r = design_rectification(60.0, allowable)
+    assert r["rectification_required"] is True
+    assert r["sub_span_count"] == math.ceil(60.0 / allowable)  # = 5
+    assert r["n_supports"] == r["sub_span_count"] - 1  # = 4
+    assert r["resulting_sub_span_m"] == pytest.approx(60.0 / r["sub_span_count"])
+    assert r["resulting_sub_span_m"] <= allowable + 1e-9
+
+    # exact multiple: 24 m vs 12 m -> 2 sub-spans, 1 support, sub-span == allowable
+    r2 = design_rectification(24.0, 12.0)
+    assert r2["sub_span_count"] == 2
+    assert r2["n_supports"] == 1
+    assert r2["resulting_sub_span_m"] == pytest.approx(12.0)
+
+    # within allowable: no rectification
+    r3 = design_rectification(10.0, 12.0)
+    assert r3["rectification_required"] is False
+    assert r3["n_supports"] == 0
+    assert r3["resulting_sub_span_m"] == pytest.approx(10.0)
