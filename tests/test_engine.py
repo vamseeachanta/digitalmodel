@@ -563,7 +563,10 @@ class TestAllModuleBasenames:
         ("pipe_capacity", "PipeCapacity"),
         ("viv_analysis", "VIVAnalysis"),
         ("time_series", "TimeSeriesAnalysis"),
-        ("gis", "TimeSeriesAnalysis"),  # Note: uses TimeSeriesAnalysis
+        # NOTE: "gis" deliberately omitted here — it routes to GISModule via a
+        # lazy import inside the engine branch, not to TimeSeriesAnalysis. It has
+        # its own dedicated test (TestRegistryRoutingRegression) pinning the
+        # correct handler. See issue #743.
         ("plate_buckling", "PlateBuckling"),
     ])
     def test_module_routing_parametrized(self, basename, expected_module):
@@ -604,6 +607,58 @@ class TestAllModuleBasenames:
                 with patch('digitalmodel.engine.logger'):
                     result = engine(cfg=cfg, config_flag=False)
                     mock_module.assert_called_once()
+
+
+class TestRegistryRoutingRegression:
+    """Regression tests for issue #743 — config/registry routing bugs.
+
+    Two pre-existing routing bugs (originally fixed for #711) are pinned here so
+    they cannot silently regress:
+      1. A ``gis`` basename was dispatched to ``TimeSeriesAnalysis`` instead of
+         the real ``GISModule`` handler.
+      2. The ``rigging`` base config declared ``basename: mooring``, so a rigging
+         workflow resolved the mooring config (wrong handler).
+    """
+
+    def test_gis_basename_routes_to_gis_module_not_time_series(self):
+        """`gis` must reach GISModule.router, NOT TimeSeriesAnalysis (the old bug)."""
+        cfg = {"basename": "gis"}
+
+        # GISModule is lazily imported inside the engine branch, so patch it at
+        # its source module. TimeSeriesAnalysis is patched too to prove the
+        # dispatch does NOT fall through to it.
+        with patch('digitalmodel.specialized.gis.GISModule') as mock_gis, \
+             patch('digitalmodel.engine.TimeSeriesAnalysis') as mock_tsa:
+            mock_gis_instance = MagicMock()
+            mock_gis_instance.router.return_value = cfg
+            mock_gis.return_value = mock_gis_instance
+
+            with patch('digitalmodel.engine.app_manager') as mock_app_manager:
+                mock_app_manager.save_cfg = MagicMock()
+                with patch('digitalmodel.engine.logger'):
+                    engine(cfg=cfg, config_flag=False)
+
+            # Correct handler invoked...
+            mock_gis.assert_called_once()
+            mock_gis_instance.router.assert_called_once_with(cfg)
+            # ...and the mis-route target was NOT touched.
+            mock_tsa.assert_not_called()
+
+    def test_rigging_base_config_basename_is_rigging_not_mooring(self):
+        """The rigging base config must self-declare `basename: rigging`."""
+        rigging_cfg_path = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "digitalmodel" / "base_configs" / "modules"
+            / "rigging" / "rigging.yml"
+        )
+        assert rigging_cfg_path.exists(), f"missing base config: {rigging_cfg_path}"
+        with open(rigging_cfg_path) as fh:
+            rigging_cfg = yaml.safe_load(fh)
+        # The bug declared `basename: mooring` here, which routed a rigging
+        # workflow to the mooring handler.
+        assert rigging_cfg["basename"] == "rigging", (
+            f"rigging base config mis-keyed to {rigging_cfg['basename']!r}"
+        )
 
 
 class TestErrorHandling:
