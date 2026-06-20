@@ -1,0 +1,52 @@
+[
+  {
+    "form_label": "FPSO",
+    "vessel": "SeaRose FPSO",
+    "form": "box",
+    "deck_dir": "floating_searose_fpso",
+    "deck": "SeaRose FPSO.yml",
+    "mesh_kind": "parametric",
+    "n_panels": 852,
+    "mass_basis": "explicit"
+  },
+  {
+    "form_label": "drillship",
+    "vessel": "Yavuz (drillship)",
+    "form": "ship",
+    "deck_dir": "floating_yavuz_drillship",
+    "deck": "Yavuz.yml",
+    "mesh_kind": "parametric",
+    "n_panels": 930,
+    "mass_basis": "free_floating"
+  },
+  {
+    "form_label": "tanker / gas carrier",
+    "vessel": "Alaskan Frontier (Alaska-class VLCC; sisters Explorer/Navigator/Legend)",
+    "form": "full",
+    "deck_dir": "tanker_alaskan_frontier_alaska_class_vlcc_sisters_explorer_navigator_legend",
+    "deck": "Alaskan Frontier.yml",
+    "mesh_kind": "parametric",
+    "n_panels": 912,
+    "mass_basis": "free_floating"
+  },
+  {
+    "form_label": "semisubmersible",
+    "vessel": "SSCV Sleipnir",
+    "form": "placeholder",
+    "deck_dir": "install_sscv_sleipnir",
+    "deck": "SSCV Sleipnir.yml",
+    "mesh_kind": "placeholder",
+    "n_panels": null,
+    "mass_basis": "explicit"
+  },
+  {
+    "form_label": "monohull crane / construction",
+    "vessel": "DCV Balder",
+    "form": "ship",
+    "deck_dir": "install_dcv_balder",
+    "deck": "DCV Balder.yml",
+    "mesh_kind": "parametric",
+    "n_panels": 819,
+    "mass_basis": "explicit"
+  }
+]

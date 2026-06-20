@@ -1,0 +1,47 @@
+{
+  "vessel": "SeaRose FPSO",
+  "vessel_id": "floating_searose_fpso",
+  "vessel_type": "FPSO (ship-shaped, converted/newbuild Suezmax-class)",
+  "form": "box",
+  "mesh": {
+    "kind": "parametric",
+    "file": "hull.gdf",
+    "n_panels": 852,
+    "swap": "replace hull.gdf with a real mesh and re-run; no other change needed"
+  },
+  "particulars": {
+    "loa": 258.0,
+    "beam": 46.0,
+    "draft": 18.043,
+    "depth": 28.87
+  },
+  "mass_basis": "explicit",
+  "water_depth": "infinite",
+  "periods_s": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0,
+    25.0
+  ],
+  "headings_deg": [
+    0.0,
+    45.0,
+    90.0,
+    135.0,
+    180.0
+  ],
+  "deck": "SeaRose FPSO.yml",
+  "notes": [
+    "parametric wall-sided mesh (first-pass screening; swap in a faired hull for design)",
+    "VCG unknown (CoG z defaulted to keel datum) \u2014 set before running"
+  ],
+  "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine"
+}
