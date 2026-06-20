@@ -3,6 +3,7 @@
 
 from .base import CODE_REGISTRY, CodeStrategy, register_code
 from .dnv_st_f101 import DnvStF101Strategy
+from .dnv_st_f201 import DnvStF201Strategy
 from .api_rp_1111 import ApiRp1111Strategy
 from .api_rp_2rd import ApiRp2rdStrategy
 from .api_std_2rd import ApiStd2rdStrategy
