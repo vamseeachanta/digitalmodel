@@ -1,0 +1,10 @@
+basename: inspection_planning
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+inspection_planning: {}

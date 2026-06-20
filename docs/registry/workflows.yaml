@@ -621,6 +621,15 @@ workflows:
       - examples/workflows/api579-pipe-ffs-b318/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b318]
     runtime: offline
+  - id: inspection-planning
+    basename: inspection_planning
+    title: Inspection planning — remaining life + next-inspection interval (API 510/570/653)
+    input: examples/workflows/inspection-planning/input.yml
+    outputs:
+      - examples/workflows/inspection-planning/results/input.yml
+      - examples/workflows/inspection-planning/results/inspection_planning/inspection_planning_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning]
+    runtime: offline
   - id: jacket-member-joint-checks
     basename: jacket_checks
     title: API RP 2A-WSD tubular member and joint unity checks

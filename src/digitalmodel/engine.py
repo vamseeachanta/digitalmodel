@@ -232,6 +232,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.lifting_lug.workflow import router as lifting_lug
 
         cfg_base = lifting_lug(cfg_base)
+    elif basename == "inspection_planning":
+        from digitalmodel.asset_integrity.inspection_planning import (
+            router as inspection_planning,
+        )
+
+        cfg_base = inspection_planning(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
