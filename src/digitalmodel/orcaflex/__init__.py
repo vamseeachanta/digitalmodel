@@ -76,6 +76,21 @@ from .riser_config import (
     calculate_weight_in_water,
     estimate_scr_hang_off_angle,
 )
+from .riser_input_schema import (
+    UnifiedRiserType,
+    GeometryBlock,
+    MaterialBlock,
+    EnvironmentBlock,
+    AnalysisBlock,
+    SCRInput,
+    SLWRInput,
+    TTRInput,
+    DrillingInput,
+    FlexibleInput,
+    RiserInput,
+    validate_riser_input,
+    load_riser_input,
+)
 from .pipelay_analysis import (
     SLayConfig,
     JLayConfig,
@@ -186,6 +201,20 @@ __all__ = [
     # Riser config
     "RiserPipeProperties",
     "SCRDesignInput",
+    # Unified riser input schema (#809)
+    "UnifiedRiserType",
+    "GeometryBlock",
+    "MaterialBlock",
+    "EnvironmentBlock",
+    "AnalysisBlock",
+    "SCRInput",
+    "SLWRInput",
+    "TTRInput",
+    "DrillingInput",
+    "FlexibleInput",
+    "RiserInput",
+    "validate_riser_input",
+    "load_riser_input",
     "LazyWaveDesignInput",
     "TTRDesignInput",
     "calculate_weight_in_water",

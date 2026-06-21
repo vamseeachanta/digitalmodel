@@ -22,6 +22,10 @@ from assetutilities.common.update_deep import update_deep_dictionary
 from digitalmodel.solvers.orcaflex.opp_linkedstatistics import OPPLinkedStatistics
 from digitalmodel.solvers.orcaflex.opp_range_graph import OPPRangeGraph
 from digitalmodel.solvers.orcaflex.opp_summary import OPPSummary
+from digitalmodel.solvers.orcaflex.opp_config_expansion import (
+    expand_high_level_postprocess,
+    get_object_names_from_model,
+)
 from digitalmodel.solvers.orcaflex.opp_time_series import OPPTimeSeries
 from digitalmodel.solvers.orcaflex.opp_visualization import OPPVisualization
 from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
@@ -202,6 +206,13 @@ class OrcaFlexPostProcess:
         return cfg
 
     def get_cfg_with_master_data(self, cfg):
+        # Expand high-level summary/RangeGraph flags (the generic strength-post
+        # template form) into concrete per-Line config BEFORE the master-data
+        # merge runs, so a template that supplies only flags + VarNames works as
+        # written (see issue #885). Detailed inputs that already carry explicit
+        # summary_settings/RangeGraph blocks are left untouched.
+        self.get_cfg_with_expanded_postprocess(cfg)
+
         self.get_cfg_with_summary_master_data(cfg)
 
         self.get_cfg_with_time_series_master_data(cfg)
@@ -209,6 +220,53 @@ class OrcaFlexPostProcess:
         self.get_cfg_with_linked_statistics_master_data(cfg)
 
         return cfg
+
+    def get_cfg_with_expanded_postprocess(self, cfg, object_names=None):
+        """Derive summary_settings / RangeGraph from high-level flags + VarNames.
+
+        ``object_names`` (Line names) are normally read from the loaded OrcFxAPI
+        model; pass them explicitly (e.g. from a mock) to drive the expansion
+        offline. The actual expansion logic is pure (see
+        ``opp_config_expansion.expand_high_level_postprocess``).
+        """
+        needs_expansion = (
+            cfg.get("orcaflex", {}).get("postprocess", {}).get("summary", {}).get("flag", False)
+            or cfg.get("orcaflex", {}).get("postprocess", {}).get("RangeGraph", {}).get("flag", False)
+        )
+        if not needs_expansion:
+            return cfg
+
+        already_expanded = bool(cfg.get("summary_settings", {}).get("groups")) or bool(
+            isinstance(cfg.get("RangeGraph"), list) and cfg.get("RangeGraph")
+        )
+        if already_expanded:
+            return cfg
+
+        if object_names is None:
+            object_names = self._discover_line_names(cfg)
+
+        if not object_names:
+            # Offline / no license / no Lines discoverable: leave cfg as-is so
+            # detailed inputs and the existing behaviour are unaffected.
+            return cfg
+
+        return expand_high_level_postprocess(cfg, object_names, object_type="Line")
+
+    def _discover_line_names(self, cfg):
+        """Load the first available .sim and return its Line names (license-dep)."""
+        try:
+            sim_files = cfg.file_management["input_files"]["sim"]
+        except Exception:
+            return []
+        for file_name in sim_files or []:
+            try:
+                model = ou.get_model_and_metadata(file_name=file_name)["model"]
+            except Exception:
+                model = None
+            line_names = get_object_names_from_model(model, of_objects, "Line")
+            if line_names:
+                return line_names
+        return []
 
     def _update_load_matrix(self, load_matrix, updates):
         """Update load matrix with processing results."""

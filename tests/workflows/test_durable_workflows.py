@@ -997,6 +997,42 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
         assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
         assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+    elif workflow["id"] == "mudmat-bearing-capacity":
+        block = cfg["mudmat_bearing_capacity"]
+        result = block["result"]
+        design = block["design"]
+        # undrained: Nc = 2 + pi (= 5.14), Nq = 1, Ngamma = 0
+        assert result["Nc"] == pytest.approx(2.0 + math.pi)
+        assert result["Nq"] == pytest.approx(1.0)
+        assert result["Ngamma"] == pytest.approx(0.0)
+        # q_ult = su*Nc*sc*dc + gamma'*D  (Nq=1, Ngamma=0)
+        sc, dc = result["shape_factors"]["sc"], result["depth_factors"]["dc"]
+        expected_qult = 15.0 * (2.0 + math.pi) * sc * dc + 6.0 * 0.5
+        assert result["q_ult_kpa"] == pytest.approx(expected_qult, rel=1e-9)
+        assert result["vertical_capacity_kn"] == pytest.approx(
+            expected_qult * result["effective_area_m2"], rel=1e-9
+        )
+        # bearing governs and the screen fails (utilisation ~ 1.10)
+        assert design["governing_check"] == "bearing"
+        assert design["bearing_utilization"] == pytest.approx(1.1005587885, rel=1e-6)
+        assert design["sliding_utilization"] < 1.0
+        assert design["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "liquefaction-triggering":
+        result = cfg["liquefaction"]["result"]
+        layers = {round(L["depth_m"]): L for L in result["layers"]}
+        # shallow loose sand (N=8) liquefies; deep dense sand (N=28) does not
+        assert layers[3]["liquefies"] is True
+        assert layers[9]["liquefies"] is False
+        assert layers[3]["factor_of_safety"] == pytest.approx(0.454, abs=0.01)
+        assert layers[9]["factor_of_safety"] == pytest.approx(1.503, abs=0.01)
+        # governing = the lowest-FS (shallow) layer; overall fails
+        assert result["governing_depth_m"] == pytest.approx(3.0)
+        assert result["governing_factor_of_safety"] == pytest.approx(
+            min(L["factor_of_safety"] for L in result["layers"])
+        )
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] == "well-bore-design":
         block = cfg["well_bore_design"]
         summary = block["summary"]
@@ -1224,6 +1260,60 @@ def test_workflow_registry(workflow, monkeypatch):
         # half-life (2.5) < code max (10) -> governs
         assert result["next_inspection_interval_years"] == pytest.approx(2.5)
         # 5.0 yr remaining < 10 yr required -> fail
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "span-rectification":
+        result = cfg["span_rectification"]["result"]
+        allowable = result["allowable_span_m"]
+        # as-built 60 m span exceeds the ~12.4 m allowable -> rectification required
+        assert result["actual_span_m"] == pytest.approx(60.0)
+        assert result["rectification_required"] is True
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+        # n_supports = ceil(L_a / L_allow) - 1; equal sub-spans within allowable
+        expected_subspans = math.ceil(60.0 / allowable)
+        assert result["sub_span_count"] == expected_subspans
+        assert result["n_supports"] == expected_subspans - 1
+        assert result["resulting_sub_span_m"] == pytest.approx(60.0 / expected_subspans)
+        assert result["resulting_sub_span_m"] <= allowable + 1e-9
+    elif workflow["id"] == "weather-window":
+        result = cfg["weather_window"]["result"]
+        # 56 steps x 3 h = 168 h record; 41 steps below the 2.0 m limit
+        assert result["record_hours"] == pytest.approx(168.0)
+        assert result["workability_pct"] == pytest.approx(100.0 * 41.0 / 56.0)
+        # four windows: 36, 30, 24, 33 h -> longest 36 h, mean 30.8 h
+        assert result["longest_window_hours"] == pytest.approx(36.0)
+        assert result["num_windows"] == 4
+        # operation needs 48 h; longest window is 36 h -> no fit, fails
+        assert result["operation_fits_window"] is False
+        assert result["num_viable_windows"] == 0
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
+        # workability (73%) clears the 50% requirement -> the fail is window-fit
+        assert result["workability_pct"] >= result["required_workability_pct"]
+    elif workflow["id"] == "esp-pump-hydraulics":
+        result = cfg["esp_pump_hydraulics"]["result"]
+        # TDH = net lift + friction + discharge head
+        assert result["net_lift_m"] == pytest.approx(1800.0)
+        assert result["total_dynamic_head_m"] == pytest.approx(
+            result["net_lift_m"]
+            + result["friction_head_m"]
+            + result["discharge_head_m"],
+            rel=1e-12,
+        )
+        # stages = ceil(TDH / head_per_stage) = ceil(2425.4 / 6.0) = 405
+        assert result["stages_required"] == math.ceil(
+            result["total_dynamic_head_m"] / 6.0
+        )
+        assert result["stages_required"] == 405
+        # brake power = stages * bhp_per_stage * SG
+        assert result["brake_power_hp"] == pytest.approx(405 * 0.5 * 0.85)
+        # stages exceed the 400 housing -> governing fail; motor + rate pass
+        checks = {c["name"]: c for c in result["checks"]}
+        assert checks["pump_stages"]["passes"] is False
+        assert checks["motor_power"]["passes"] is True
+        assert checks["rate_within_range"]["passes"] is True
+        assert result["governing_check"] == "pump_stages"
         assert result["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
@@ -1580,6 +1670,54 @@ def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
     )
 
 
+def test_mudmat_bearing_capacity_factors_match_brinch_hansen():
+    """AC6 validation gate for mudmat-bearing-capacity: the bearing-capacity
+    factors reproduce the closed-form Brinch Hansen / DNV-RP-C212 expressions,
+    and a drained strip-footing q_ult equals a direct hand computation through
+    those factors and the general bearing-capacity equation."""
+    from digitalmodel.geotechnical.mudmat import (
+        bearing_capacity_factors,
+        mudmat_bearing_capacity,
+    )
+
+    # undrained limit: Nc = 2 + pi, Nq = 1, Ngamma = 0
+    nc0, nq0, ng0 = bearing_capacity_factors(0.0)
+    assert nc0 == pytest.approx(2.0 + math.pi)
+    assert nq0 == pytest.approx(1.0)
+    assert ng0 == pytest.approx(0.0)
+
+    # drained: closed-form factors at phi = 30 deg
+    phi = 30.0
+    nc, nq, ng = bearing_capacity_factors(phi)
+    phir = math.radians(phi)
+    exp_nq = math.exp(math.pi * math.tan(phir)) * math.tan(math.pi / 4 + phir / 2) ** 2
+    assert nq == pytest.approx(exp_nq, rel=1e-12)
+    assert nc == pytest.approx((exp_nq - 1.0) / math.tan(phir), rel=1e-12)
+    assert ng == pytest.approx(1.5 * (exp_nq - 1.0) * math.tan(phir), rel=1e-12)
+
+    # drained square footing, cohesionless: q_ult reproduced by hand from the
+    # general equation with the workflow's own shape/depth factors.
+    res = mudmat_bearing_capacity(
+        width_b_m=5.0,
+        length_l_m=5.0,
+        embedment_depth_m=1.0,
+        condition="drained",
+        submerged_unit_weight_kn_m3=9.0,
+        vertical_load_kn=1000.0,
+        friction_angle_deg=phi,
+        effective_cohesion_kpa=0.0,
+    )
+    sc, sq, sg = (res.shape_factors[k] for k in ("sc", "sq", "sgamma"))
+    dc, dq, dg = (res.depth_factors[k] for k in ("dc", "dq", "dgamma"))
+    p0 = 9.0 * 1.0
+    expected = (
+        0.0 * nc * sc * dc
+        + p0 * nq * sq * dq
+        + 0.5 * 9.0 * res.effective_width_m * ng * sg * dg
+    )
+    assert res.q_ult_kpa == pytest.approx(expected, rel=1e-12)
+
+
 def test_lifting_lug_checks_match_closed_form():
     """AC6 validation gate for lifting-lug-design: the bearing, net-tension and
     shear tear-out demands equal the closed-form AISC padeye expressions, and
@@ -1660,3 +1798,167 @@ def test_inspection_planning_half_life_rule_closed_form():
     )
     assert p3.next_inspection_interval_years == 0.0
     assert p3.screening_status == "fail"
+
+
+def test_span_rectification_support_count_closed_form():
+    """AC6 validation gate for span-rectification: the equal-sub-span support
+    count reproduces the closed-form rule n_supports = ceil(L_a/L_allow) - 1,
+    every resulting sub-span is within the allowable, and L_a <= L_allow needs
+    no rectification."""
+    from digitalmodel.subsea.pipeline.span_rectification import design_rectification
+
+    # over-long span: 60 m vs 12.378 m allowable -> 5 sub-spans, 4 supports
+    allowable = 12.378282602855869
+    r = design_rectification(60.0, allowable)
+    assert r["rectification_required"] is True
+    assert r["sub_span_count"] == math.ceil(60.0 / allowable)  # = 5
+    assert r["n_supports"] == r["sub_span_count"] - 1  # = 4
+    assert r["resulting_sub_span_m"] == pytest.approx(60.0 / r["sub_span_count"])
+    assert r["resulting_sub_span_m"] <= allowable + 1e-9
+
+    # exact multiple: 24 m vs 12 m -> 2 sub-spans, 1 support, sub-span == allowable
+    r2 = design_rectification(24.0, 12.0)
+    assert r2["sub_span_count"] == 2
+    assert r2["n_supports"] == 1
+    assert r2["resulting_sub_span_m"] == pytest.approx(12.0)
+
+    # within allowable: no rectification
+    r3 = design_rectification(10.0, 12.0)
+    assert r3["rectification_required"] is False
+    assert r3["n_supports"] == 0
+    assert r3["resulting_sub_span_m"] == pytest.approx(10.0)
+
+
+def test_liquefaction_seed_idriss_closed_form():
+    """AC6 validation gate for liquefaction-triggering: rd, MSF, CSR, CRR7.5 and
+    the factor of safety reproduce the closed-form Seed-Idriss / Youd 2001
+    expressions, and (N1)60cs >= 30 is treated as non-liquefiable."""
+    from digitalmodel.geotechnical.liquefaction import (
+        assess_liquefaction,
+        cyclic_resistance_ratio_75,
+        cyclic_stress_ratio,
+        magnitude_scaling_factor,
+        stress_reduction_factor,
+    )
+
+    # rd piecewise (Liao & Whitman 1986)
+    assert stress_reduction_factor(3.0) == pytest.approx(1.0 - 0.00765 * 3.0)
+    assert stress_reduction_factor(15.0) == pytest.approx(1.174 - 0.0267 * 15.0)
+    # MSF = 174 / Mw^2.56
+    assert magnitude_scaling_factor(7.0) == pytest.approx(174.0 / 7.0**2.56)
+    # CSR closed form
+    rd = stress_reduction_factor(3.0)
+    assert cyclic_stress_ratio(0.25, 54.0, 34.0, rd) == pytest.approx(
+        0.65 * 0.25 * (54.0 / 34.0) * rd
+    )
+    # CRR7.5 closed form for N=8
+    n = 8.0
+    expected_crr = (
+        1.0 / (34.0 - n) + n / 135.0 + 50.0 / (10.0 * n + 45.0) ** 2 - 1.0 / 200.0
+    )
+    assert cyclic_resistance_ratio_75(n) == pytest.approx(expected_crr)
+    # (N1)60cs >= 30 -> non-liquefiable cap
+    assert cyclic_resistance_ratio_75(35.0) == pytest.approx(2.0)
+
+    # full layer FS = (CRR/CSR) * MSF
+    res = assess_liquefaction(
+        pga_g=0.25,
+        magnitude=7.0,
+        layers=[
+            {
+                "depth_m": 3.0,
+                "sigma_v_kpa": 54.0,
+                "sigma_v_eff_kpa": 34.0,
+                "N1_60cs": 8.0,
+            }
+        ],
+        required_factor_of_safety=1.2,
+    )
+    layer = res.layers[0]
+    expected_fs = (expected_crr / layer.csr) * magnitude_scaling_factor(7.0)
+    assert layer.factor_of_safety == pytest.approx(expected_fs, rel=1e-12)
+    assert layer.liquefies is True
+    assert res.screening_status == "fail"
+
+
+def test_weather_window_persistence_and_fit_closed_form():
+    """AC6 validation gate for weather-window: window extraction, workability and
+    the window-fit verdict match a direct hand computation, and the workflow
+    reuses the tested analyse_persistence for the window statistics."""
+    import numpy as np
+
+    from digitalmodel.orcaflex.weather_window import analyse_persistence
+    from digitalmodel.weather_window.workflow import (
+        assess_weather_window,
+        window_lengths_hours,
+    )
+
+    dt = 3.0
+    limit = 2.0
+    # below-limit runs of 3 and 2 steps separated by an above-limit step
+    series = [1.0, 1.0, 1.0, 3.0, 1.5, 1.5, 3.0]
+    windows = window_lengths_hours(series, limit, dt)
+    assert windows == [9.0, 6.0]  # 3*3 h and 2*3 h
+
+    res = assess_weather_window(
+        series, hs_limit=limit, required_duration_hours=9.0, time_step_hours=dt
+    )
+    # workability = 5 below-limit steps / 7 total
+    assert res["workability_pct"] == pytest.approx(100.0 * 5.0 / 7.0)
+    assert res["longest_window_hours"] == pytest.approx(9.0)
+    assert res["num_viable_windows"] == 1  # only the 9 h window meets 9 h
+    assert res["operation_fits_window"] is True
+    assert res["screening_status"] == "pass"
+
+    # reuses analyse_persistence: window stats agree with a direct library call
+    persistence = analyse_persistence(np.asarray(series, dtype=float), limit, dt)
+    assert res["longest_window_hours"] == pytest.approx(persistence.max_window_hours)
+    assert res["num_windows"] == persistence.num_windows
+
+    # a longer required duration than any window -> fail
+    res2 = assess_weather_window(
+        series, hs_limit=limit, required_duration_hours=12.0, time_step_hours=dt
+    )
+    assert res2["operation_fits_window"] is False
+    assert res2["screening_status"] == "fail"
+
+
+def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
+    """AC6 validation gate for esp-pump-hydraulics: the Hazen-Williams friction
+    head, the total dynamic head decomposition, the stage count (ceil rule) and
+    the brake power reproduce their closed-form expressions."""
+    from digitalmodel.production_engineering.esp_pump_hydraulics import (
+        hazen_williams_head_m,
+        size_esp,
+    )
+
+    # Hazen-Williams closed form: hf = 10.67 L Q^1.852 / (C^1.852 d^4.87)
+    q = 1200.0 / 86400.0
+    expected_hf = 10.67 * 2500.0 * q**1.852 / (120.0**1.852 * 0.076**4.87)
+    assert hazen_williams_head_m(1200.0, 2500.0, 0.076, 120.0) == pytest.approx(
+        expected_hf, rel=1e-12
+    )
+
+    r = size_esp(
+        flow_rate_m3_per_day=1200.0,
+        dynamic_fluid_level_m=1800.0,
+        pump_setting_depth_m=2500.0,
+        wellhead_pressure_kpa=2000.0,
+        specific_gravity=0.85,
+        tubing_inner_diameter_m=0.076,
+        head_per_stage_m=6.0,
+        bhp_per_stage_hp=0.5,
+        max_stages=400,
+        motor_rating_hp=250.0,
+        min_rate_m3_per_day=600.0,
+        max_rate_m3_per_day=2000.0,
+        hazen_williams_c=120.0,
+    )
+    expected_discharge = 2000.0 * 1.0e3 / (0.85 * 1000.0 * 9.81)
+    expected_tdh = 1800.0 + expected_hf + expected_discharge
+    assert r.friction_head_m == pytest.approx(expected_hf, rel=1e-12)
+    assert r.discharge_head_m == pytest.approx(expected_discharge, rel=1e-12)
+    assert r.total_dynamic_head_m == pytest.approx(expected_tdh, rel=1e-12)
+    assert r.stages_required == math.ceil(expected_tdh / 6.0)
+    assert r.brake_power_hp == pytest.approx(r.stages_required * 0.5 * 0.85, rel=1e-12)
+    assert r.screening_status == "fail"  # 405 stages > 400 housing

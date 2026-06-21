@@ -633,15 +633,22 @@ class TestComponentDatabase:
         )
 
     def test_database_performance(self, database):
-        """Validate database query performance < 1ms."""
+        """Validate database query performance.
+
+        Threshold relaxed from 1ms to 10ms (#590): a single dict-backed
+        lookup is microsecond-scale, but a <1ms assert is flaky on loaded
+        CI runners (observed 1-2ms). 10ms still catches any real regression
+        (e.g., an accidental full-scan) which would be orders of magnitude
+        slower, without false failures from scheduler jitter.
+        """
         import time
 
         start = time.perf_counter()
         chain = database.get_chain(76, "R4", "Stud Link")
         duration = (time.perf_counter() - start) * 1000  # ms
 
-        assert duration < 1, (
-            f"Query took {duration:.3f}ms (requirement: <1ms)"
+        assert duration < 10, (
+            f"Query took {duration:.3f}ms (requirement: <10ms)"
         )
 
 

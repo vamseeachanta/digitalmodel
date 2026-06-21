@@ -169,7 +169,7 @@ class WorkingWithYAML():
         library_yaml_filename = cfg['filename']
         if os.path.isfile(library_yaml_filename):
             with open(library_yaml_filename, 'r') as ymlfile:
-                library_yaml = yaml.load(ymlfile, Loader=yaml.Loader)
+                library_yaml = yaml.safe_load(ymlfile)
         else:
             data = pkgutil.get_data(library_name, cfg['filename'])
             library_yaml = yaml.safe_load(data)

@@ -41,7 +41,7 @@ from digitalmodel.signal_processing.time_series.time_series_analysis import (
 )
 from digitalmodel.infrastructure.transformation.transformation import Transformation
 
-# from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import (
     PlateBuckling,
@@ -88,8 +88,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
             cfg["_config_file_path"] = os.path.abspath(inputfile)
             cfg["_config_dir_path"] = os.path.dirname(os.path.abspath(inputfile))
         logger.info(f"Engine set config dir: {cfg.get('_config_dir_path')}")
-        if cfg is None:
-            raise ValueError("cfg is None")
 
     if "basename" in cfg:
         basename = cfg["basename"]
@@ -238,6 +236,22 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = inspection_planning(cfg_base)
+    elif basename == "weather_window":
+        from digitalmodel.weather_window.workflow import router as weather_window
+
+        cfg_base = weather_window(cfg_base)
+    elif basename == "esp_pump_hydraulics":
+        from digitalmodel.production_engineering.esp_pump_hydraulics import (
+            router as esp_pump_hydraulics,
+        )
+
+        cfg_base = esp_pump_hydraulics(cfg_base)
+    elif basename == "span_rectification":
+        from digitalmodel.subsea.pipeline.span_rectification import (
+            router as span_rectification,
+        )
+
+        cfg_base = span_rectification(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
@@ -460,6 +474,18 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         scour = ScourWorkflow()
         cfg_base = scour.router(cfg_base)
+    elif basename == "mudmat_bearing_capacity":
+        from digitalmodel.geotechnical.cfg_workflows import (
+            MudmatBearingCapacityWorkflow,
+        )
+
+        mudmat = MudmatBearingCapacityWorkflow()
+        cfg_base = mudmat.router(cfg_base)
+    elif basename == "liquefaction":
+        from digitalmodel.geotechnical.cfg_workflows import LiquefactionWorkflow
+
+        liquefaction = LiquefactionWorkflow()
+        cfg_base = liquefaction.router(cfg_base)
     elif basename == "rig_capability_assessment":
         from digitalmodel.field_development.rig_capability import (
             router as rig_capability,

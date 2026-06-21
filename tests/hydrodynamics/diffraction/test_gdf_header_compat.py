@@ -79,6 +79,44 @@ class TestFixtureMeshesAreOrcaWaveValid:
         assert len(mesh.vertices) >= 8
 
 
+class TestFixtureMeshOrientation:
+    """Mesh-orientation regression guard (#898).
+
+    The committed ``unit_box.gdf`` once carried inverted panel normals
+    (pointing inward), which produced a *negative* heave hydrostatic
+    stiffness K33 = -rho*g*Awp under a license-free Capytaine solve. Outward
+    normals are required for a correct (positive) K33. These tests load the
+    fixtures into Capytaine and assert K33 > 0 so an inverted mesh fails loudly.
+    """
+
+    @pytest.mark.parametrize(
+        "mesh_path", FIXTURE_MESHES, ids=["acceptance_610", "unit_box_rao"]
+    )
+    def test_heave_hydrostatic_stiffness_positive(self, mesh_path):
+        cpt = pytest.importorskip("capytaine")
+        from capytaine.io.mesh_loaders import load_GDF
+
+        mesh = load_GDF(str(mesh_path))
+        body = cpt.FloatingBody(
+            mesh=mesh, center_of_mass=(0.5, 0.5, -0.5)
+        )
+        body.add_all_rigid_body_dofs()
+        hs = body.compute_hydrostatic_stiffness(rho=1025.0, g=9.81)
+        k33 = float(
+            hs.sel(influenced_dof="Heave", radiating_dof="Heave").values
+        )
+        # K33 must be POSITIVE (outward normals); magnitude = rho*g*Awp.
+        assert k33 > 0, (
+            f"{mesh_path.name}: heave hydrostatic stiffness K33={k33:.1f} <= 0 "
+            "-> panel normals are inverted (pointing inward). Flip the GDF "
+            "panel vertex winding so normals point outward."
+        )
+        expected = 1025.0 * 9.81 * 1.0  # rho * g * waterplane_area (1 m^2)
+        assert k33 == pytest.approx(expected, rel=1e-3), (
+            f"{mesh_path.name}: K33={k33:.1f} != rho*g*Awp={expected:.1f}"
+        )
+
+
 class TestGdfStructuralPreflight:
     def test_multi_comment_header_blocks(self, tmp_path):
         bad = tmp_path / "bad.gdf"

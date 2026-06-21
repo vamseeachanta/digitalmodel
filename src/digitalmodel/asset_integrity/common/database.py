@@ -149,9 +149,21 @@ class Database():
                     print("Connection to Server: {0} Successful by user {1} to database {2}!".format(
                         self.server, self.user, self.database))
                 else:
-                    connection_string = "postgresql+psycopg2://{0}:{1}@{2}:{4}/{3}".format(
-                        self.user, self.password, self.server, self.database, self.port)
-                    self.engine = create_engine(connection_string)
+                    # Build the URL via SQLAlchemy's URL.create so credentials
+                    # containing reserved characters (':', '@', '/', '?', '#')
+                    # are escaped rather than corrupting or leaking into adjacent
+                    # URI fields. Never f-string/.format() credentials into a URI.
+                    from sqlalchemy.engine import URL
+
+                    connection_url = URL.create(
+                        "postgresql+psycopg2",
+                        username=self.user,
+                        password=self.password,
+                        host=self.server,
+                        port=self.port,
+                        database=self.database,
+                    )
+                    self.engine = create_engine(connection_url)
                     self.conn = self.engine.connect()
                     print("Connection to Server: {0} Successful by user {1} to database {2}!".format(
                         self.server, self.user, self.database))
@@ -173,9 +185,19 @@ class Database():
                 # Issue the serverStatus command and print the results
                 serverStatusResult = db.command("serverStatus")
 
-                connection_string = "postgresql+psycopg2://{0}:{1}@{2}:{4}/{3}".format(
-                    self.user, self.password, self.server, self.database, self.port)
-                self.engine = create_engine(connection_string)
+                # SECURITY: build via URL.create so credentials with reserved
+                # characters are escaped rather than corrupting the URI.
+                from sqlalchemy.engine import URL
+
+                connection_url = URL.create(
+                    "postgresql+psycopg2",
+                    username=self.user,
+                    password=self.password,
+                    host=self.server,
+                    port=self.port,
+                    database=self.database,
+                )
+                self.engine = create_engine(connection_url)
                 self.conn = self.engine.connect()
             except (Exception, psycopg2.Error) as error:
                 print("Error while connecting to PostgreSQL", error)
@@ -267,12 +289,19 @@ class Database():
         df = pd.read_sql_query(query, self.conn)
         return df
 
-    def get_df_from_query(self, query):
+    def get_df_from_query(self, query, params=None):
         import logging
 
         import pandas as pd
         logging.debug(query)
-        df = pd.read_sql_query(query, self.conn)
+        if params is not None:
+            # Parameterized path (security: avoids SQL injection via string
+            # interpolation). Wrap in sqlalchemy.text so named (:name) bind
+            # params are honored by both SQLAlchemy and pandas.
+            from sqlalchemy.sql import text
+            df = pd.read_sql_query(text(query), self.conn, params=params)
+        else:
+            df = pd.read_sql_query(query, self.conn)
         return df
 
     def get_db_table_analysis_outputs(self):
@@ -611,8 +640,21 @@ class Database():
             # self.conn.execute(query)
             print("Command skipped: ", e)
 
-    def executeNoDataQuery(self, query, arg_array=[]):
+    def executeNoDataQuery(self, query, arg_array=[], params=None):
         from sqlalchemy.sql import text
+        from sqlalchemy.orm import scoped_session, sessionmaker
+        Session = scoped_session(sessionmaker(bind=self.engine))
+        s = Session()
+        if params is not None:
+            # Parameterized path (security: avoids SQL injection). Named
+            # (:name) bind params are passed to the driver, not interpolated.
+            try:
+                print("     .....Executing parameterized query")
+                s.execute(text(query), params)
+                s.commit()
+            except Exception as e:
+                print("Command skipped: ", e)
+            return
         sql = query
         if len(arg_array) == 1:
             sql = sql.format(arg_array[0])
@@ -626,10 +668,7 @@ class Database():
             sql = sql.format(arg_array[0], arg_array[1], arg_array[2], arg_array[3], arg_array[4])
         try:
             print("     .....Executing query: {}".format(sql))
-            from sqlalchemy.orm import scoped_session, sessionmaker
-            Session = scoped_session(sessionmaker(bind=self.engine))
-            s = Session()
-            s.execute(sql)
+            s.execute(text(sql))
             s.commit()
         except Exception as e:
             print("Command skipped: ", e)

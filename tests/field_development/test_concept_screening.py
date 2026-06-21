@@ -150,3 +150,73 @@ class TestDeterminism:
         # Determinism within each call is what we assert; ordering may differ.
         assert base.ranked[0].composite >= base.ranked[-1].composite
         assert sched.ranked[0].composite >= sched.ranked[-1].composite
+
+
+class TestAbsoluteCapexOverride:
+    """Issue #877 — absolute-CAPEX override bypasses the fraction-of-base derivation."""
+
+    def test_override_used_exactly(self, spec, params):
+        # Override supplies the absolute total directly; no scaling, no uplifts.
+        items = capex_line_items(
+            HostType.TLP, spec, params, capex_override={HostType.TLP: 4.2}
+        )
+        assert items["total"] == pytest.approx(4.2)
+        assert items["source"] == "absolute_override"
+
+    def test_override_accepts_string_key(self, spec, params):
+        # Map keyed by HostType.value string works too.
+        items = capex_line_items(
+            HostType.FPSO, spec, params, capex_override={"FPSO": 9.0}
+        )
+        assert items["total"] == pytest.approx(9.0)
+
+    def test_override_differs_from_derived(self, spec, params):
+        derived = capex_line_items(HostType.SEMI, spec, params)["total"]
+        forced = derived + 5.0
+        overridden = capex_line_items(
+            HostType.SEMI, spec, params, capex_override={HostType.SEMI: forced}
+        )["total"]
+        assert overridden == pytest.approx(forced)
+        assert overridden != pytest.approx(derived)
+
+    def test_none_override_unchanged(self, spec, params):
+        # Backward-compat: None override == omitting the argument == derived path.
+        baseline = capex_line_items(HostType.TLP, spec, params)
+        with_none = capex_line_items(HostType.TLP, spec, params, capex_override=None)
+        assert with_none == baseline
+        assert with_none["source"] != "absolute_override" if "source" in with_none else True
+
+    def test_partial_override_falls_back_for_unlisted_host(self, spec, params):
+        # Only TLP overridden; FPSO must keep its generic derived total.
+        override = {HostType.TLP: 4.2}
+        tlp = capex_line_items(HostType.TLP, spec, params, capex_override=override)
+        fpso = capex_line_items(HostType.FPSO, spec, params, capex_override=override)
+        assert tlp["total"] == pytest.approx(4.2)
+        derived_fpso = capex_line_items(HostType.FPSO, spec, params)["total"]
+        assert fpso["total"] == pytest.approx(derived_fpso)
+
+    @pytest.mark.parametrize("bad", [0.0, -1.0, -3.5])
+    def test_nonpositive_override_rejected(self, spec, params, bad):
+        with pytest.raises(ValueError):
+            capex_line_items(
+                HostType.TLP, spec, params, capex_override={HostType.TLP: bad}
+            )
+
+    def test_screen_concepts_threads_override(self, spec):
+        # End-to-end: an absolute override large enough to dominate the CAPEX axis
+        # changes that concept's normalised CAPEX score versus the generic run.
+        base = screen_concepts(spec)
+        forced = screen_concepts(spec, capex_override={HostType.FPSO: 30.0})
+        base_fpso = next(r for r in base.ranked if r.host_type is HostType.FPSO)
+        forced_fpso = next(r for r in forced.ranked if r.host_type is HostType.FPSO)
+        # 30 USD bn is far above any derived total -> worst (lowest) CAPEX norm.
+        assert forced_fpso.axes.capex_base_usd_bn == pytest.approx(30.0)
+        assert forced_fpso.axes.norm["capex"] <= base_fpso.axes.norm["capex"]
+
+    def test_screen_concepts_no_override_unchanged(self, spec):
+        # Backward-compat at the orchestrator level.
+        a = screen_concepts(spec)
+        b = screen_concepts(spec, capex_override=None)
+        assert [(r.host_type, r.composite) for r in a.ranked] == [
+            (r.host_type, r.composite) for r in b.ranked
+        ]

@@ -426,14 +426,20 @@ def _apply_overrides(
 
     if "environment" in combo and matrix.environments:
         env_name = combo["environment"]
-        env_var = next(e for e in matrix.environments if e.name == env_name)
+        # #534: direct callers can hand-build a combo whose name doesn't match
+        # any matrix entry; raise a helpful ValueError instead of StopIteration.
+        env_var = next((e for e in matrix.environments if e.name == env_name), None)
+        if env_var is None:
+            raise ValueError(f"environment {env_name!r} not in matrix.environments")
         spec.environment.waves = env_var.waves
         spec.environment.current = env_var.current
         spec.environment.wind = env_var.wind
 
     if "soil" in combo and matrix.soils:
         soil_name = combo["soil"]
-        soil_var = next(s for s in matrix.soils if s.name == soil_name)
+        soil_var = next((s for s in matrix.soils if s.name == soil_name), None)
+        if soil_var is None:
+            raise ValueError(f"soil {soil_name!r} not in matrix.soils")
         spec.environment.seabed.stiffness = soil_var.stiffness
         spec.environment.seabed.friction_coefficient = soil_var.friction_coefficient
         if soil_var.slope is not None:

@@ -131,7 +131,7 @@ class CompareTools():
         dataDF = pd.DataFrame(columns=cfg['dataFrame']['columns'])
         for file in fileList:
             with open(file, 'r') as ymlfile:
-                FileData = yaml.load(ymlfile, Loader=yaml.Loader)
+                FileData = yaml.safe_load(ymlfile)
             columns = cfg['dataFrame']['data']
             newDFRow = []
             newDFRow.append(file)
@@ -174,7 +174,7 @@ class CompareTools():
         dataDF_SCR = pd.DataFrame(columns=cfg['plot']['columns']['SCR'])
         for file_index in range(0, len(fileList)):
             with open(fileList[file_index], 'r') as ymlfile:
-                FileData = yaml.load(ymlfile, Loader=yaml.Loader)
+                FileData = yaml.safe_load(ymlfile)
 
             columns = cfg['plot']['data'][cfg['ymlFiles'][file_index]['riser_type']]
             newDFRow = []
