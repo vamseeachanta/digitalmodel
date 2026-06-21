@@ -997,6 +997,27 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
         assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
         assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+    elif workflow["id"] == "mudmat-bearing-capacity":
+        block = cfg["mudmat_bearing_capacity"]
+        result = block["result"]
+        design = block["design"]
+        # undrained: Nc = 2 + pi (= 5.14), Nq = 1, Ngamma = 0
+        assert result["Nc"] == pytest.approx(2.0 + math.pi)
+        assert result["Nq"] == pytest.approx(1.0)
+        assert result["Ngamma"] == pytest.approx(0.0)
+        # q_ult = su*Nc*sc*dc + gamma'*D  (Nq=1, Ngamma=0)
+        sc, dc = result["shape_factors"]["sc"], result["depth_factors"]["dc"]
+        expected_qult = 15.0 * (2.0 + math.pi) * sc * dc + 6.0 * 0.5
+        assert result["q_ult_kpa"] == pytest.approx(expected_qult, rel=1e-9)
+        assert result["vertical_capacity_kn"] == pytest.approx(
+            expected_qult * result["effective_area_m2"], rel=1e-9
+        )
+        # bearing governs and the screen fails (utilisation ~ 1.10)
+        assert design["governing_check"] == "bearing"
+        assert design["bearing_utilization"] == pytest.approx(1.1005587885, rel=1e-6)
+        assert design["sliding_utilization"] < 1.0
+        assert design["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] == "liquefaction-triggering":
         result = cfg["liquefaction"]["result"]
         layers = {round(L["depth_m"]): L for L in result["layers"]}
@@ -1634,6 +1655,54 @@ def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
     assert cfg["vessel_seakeeping"]["response_transfer"] == (
         "S_response(w) = |RAO(w)|^2 * S_wave(w)"
     )
+
+
+def test_mudmat_bearing_capacity_factors_match_brinch_hansen():
+    """AC6 validation gate for mudmat-bearing-capacity: the bearing-capacity
+    factors reproduce the closed-form Brinch Hansen / DNV-RP-C212 expressions,
+    and a drained strip-footing q_ult equals a direct hand computation through
+    those factors and the general bearing-capacity equation."""
+    from digitalmodel.geotechnical.mudmat import (
+        bearing_capacity_factors,
+        mudmat_bearing_capacity,
+    )
+
+    # undrained limit: Nc = 2 + pi, Nq = 1, Ngamma = 0
+    nc0, nq0, ng0 = bearing_capacity_factors(0.0)
+    assert nc0 == pytest.approx(2.0 + math.pi)
+    assert nq0 == pytest.approx(1.0)
+    assert ng0 == pytest.approx(0.0)
+
+    # drained: closed-form factors at phi = 30 deg
+    phi = 30.0
+    nc, nq, ng = bearing_capacity_factors(phi)
+    phir = math.radians(phi)
+    exp_nq = math.exp(math.pi * math.tan(phir)) * math.tan(math.pi / 4 + phir / 2) ** 2
+    assert nq == pytest.approx(exp_nq, rel=1e-12)
+    assert nc == pytest.approx((exp_nq - 1.0) / math.tan(phir), rel=1e-12)
+    assert ng == pytest.approx(1.5 * (exp_nq - 1.0) * math.tan(phir), rel=1e-12)
+
+    # drained square footing, cohesionless: q_ult reproduced by hand from the
+    # general equation with the workflow's own shape/depth factors.
+    res = mudmat_bearing_capacity(
+        width_b_m=5.0,
+        length_l_m=5.0,
+        embedment_depth_m=1.0,
+        condition="drained",
+        submerged_unit_weight_kn_m3=9.0,
+        vertical_load_kn=1000.0,
+        friction_angle_deg=phi,
+        effective_cohesion_kpa=0.0,
+    )
+    sc, sq, sg = (res.shape_factors[k] for k in ("sc", "sq", "sgamma"))
+    dc, dq, dg = (res.depth_factors[k] for k in ("dc", "dq", "dgamma"))
+    p0 = 9.0 * 1.0
+    expected = (
+        0.0 * nc * sc * dc
+        + p0 * nq * sq * dq
+        + 0.5 * 9.0 * res.effective_width_m * ng * sg * dg
+    )
+    assert res.q_ult_kpa == pytest.approx(expected, rel=1e-12)
 
 
 def test_lifting_lug_checks_match_closed_form():

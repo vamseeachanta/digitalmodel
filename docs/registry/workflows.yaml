@@ -767,6 +767,15 @@ workflows:
       - examples/workflows/scour-assessment/results/scour/scour_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]
     runtime: offline
+  - id: mudmat-bearing-capacity
+    basename: mudmat_bearing_capacity
+    title: Mudmat (shallow foundation) bearing-capacity screening (DNV-RP-C212 / Brinch Hansen)
+    input: examples/workflows/mudmat-bearing-capacity/input.yml
+    outputs:
+      - examples/workflows/mudmat-bearing-capacity/results/input.yml
+      - examples/workflows/mudmat-bearing-capacity/results/mudmat_bearing_capacity/mudmat_bearing_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]
+    runtime: offline
   - id: liquefaction-triggering
     basename: liquefaction
     title: Seed-Idriss simplified liquefaction-triggering screening (CSR vs CRR, Youd 2001)
