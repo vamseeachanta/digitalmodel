@@ -421,6 +421,38 @@ class OrcaFlexConverterEnhanced:
 
         return results
 
+    def _convert_file_collect_stats(
+        self, file: Path
+    ) -> Tuple[Tuple[bool, Optional[Path], Optional[str]], Dict[str, Any]]:
+        """Worker entry point for parallel conversion.
+
+        Runs in a child process where this instance is a pickled copy, so any
+        ``self.stats`` mutations made by ``convert_file`` are confined to the
+        child and lost when it exits. Returns both the conversion result and the
+        per-file stats accumulated in the child so the parent can aggregate them
+        (see #529 — without this the parent's ``self.stats`` stayed at zero in
+        the parallel path).
+        """
+        result = self.convert_file(file)
+        return result, self.stats
+
+    def _merge_worker_stats(self, worker_stats: Dict[str, Any]) -> None:
+        """Fold a worker's per-file stats into the parent's ``self.stats``.
+
+        Each worker starts from a zeroed copy of ``self.stats`` (set in
+        ``__init__``) and mutates only the keys relevant to its single file, so
+        the worker dict is effectively a per-file delta we can sum.
+        """
+        for key in ('successful', 'failed', 'skipped', 'validation_failed'):
+            self.stats[key] += worker_stats.get(key, 0)
+
+        for key in ('files_by_input_type', 'files_by_output_type'):
+            for ext, count in worker_stats.get(key, {}).items():
+                if ext in self.stats[key]:
+                    self.stats[key][ext] += count
+
+        self.stats['errors'].extend(worker_stats.get('errors', []))
+
     def _convert_parallel(self, files: List[Path]) -> List[Dict]:
         """Convert files in parallel using ProcessPoolExecutor."""
         results = []
@@ -428,7 +460,7 @@ class OrcaFlexConverterEnhanced:
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit all conversion tasks
             future_to_file = {
-                executor.submit(self.convert_file, f): f
+                executor.submit(self._convert_file_collect_stats, f): f
                 for f in files
             }
 
@@ -438,7 +470,12 @@ class OrcaFlexConverterEnhanced:
                     file = future_to_file[future]
 
                     try:
-                        success, output_path, error = future.result()
+                        (success, output_path, error), worker_stats = future.result()
+
+                        # Worker mutated its own pickled copy of self.stats; roll
+                        # those per-file deltas back into the parent for parity
+                        # with the serial path (#529).
+                        self._merge_worker_stats(worker_stats)
 
                         results.append({
                             'input': str(file),
@@ -453,6 +490,12 @@ class OrcaFlexConverterEnhanced:
 
                     except Exception as e:
                         logger.error(f"Parallel conversion error: {file.name} - {e}")
+                        self.stats['failed'] += 1
+                        self.stats['errors'].append({
+                            'file': str(file),
+                            'error': str(e),
+                            'attempts': 0
+                        })
                         results.append({
                             'input': str(file),
                             'output': None,

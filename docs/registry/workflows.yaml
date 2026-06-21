@@ -1,4 +1,12 @@
-schema_version: 1
+# schema_version 2 (deckhand versioned routing): a workflow row MAY carry an
+# algorithm-version triple — all optional; absence means v1 / stable / latest:
+#   version: <int >= 1>   algorithm revision; bump when the method or curve changes
+#   status:  stable | deprecated | experimental | retired   (default: stable)
+#   latest:  true         the latest-stable resolution target for this id
+# Multiple rows may share one `id`, differing by `version` (each with its own
+# input/outputs/test). Deckhand resolves an unpinned `<repo>:<id>` to the latest
+# stable version; a pinned `<repo>:<id>@N` resolves that exact version.
+schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
   - id: cathodic-protection
@@ -479,6 +487,15 @@ workflows:
       - examples/workflows/pipeline-upheaval-buckling/results/input_upheaval_buckling.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-upheaval-buckling]
     runtime: offline
+  - id: span-rectification
+    basename: span_rectification
+    title: Free-span rectification — intermediate supports for an over-long span (DNV-RP-F105)
+    input: examples/workflows/span-rectification/input.yml
+    outputs:
+      - examples/workflows/span-rectification/results/input.yml
+      - examples/workflows/span-rectification/results/span_rectification/span_rectification_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec
@@ -759,6 +776,15 @@ workflows:
       - examples/workflows/mudmat-bearing-capacity/results/mudmat_bearing_capacity/mudmat_bearing_capacity_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]
     runtime: offline
+  - id: liquefaction-triggering
+    basename: liquefaction
+    title: Seed-Idriss simplified liquefaction-triggering screening (CSR vs CRR, Youd 2001)
+    input: examples/workflows/liquefaction/input.yml
+    outputs:
+      - examples/workflows/liquefaction/results/input.yml
+      - examples/workflows/liquefaction/results/liquefaction/liquefaction_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]
+    runtime: offline
   - id: well-bore-design
     basename: well_bore_design
     title: Standard offshore wellbore casing/cost/risk screen
@@ -931,6 +957,15 @@ workflows:
       - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
     runtime: offline
+  - id: esp-pump-hydraulics
+    basename: esp_pump_hydraulics
+    title: ESP hydraulics — total dynamic head, stage count and motor sizing
+    input: examples/workflows/esp-pump-hydraulics/input.yml
+    outputs:
+      - examples/workflows/esp-pump-hydraulics/results/input.yml
+      - examples/workflows/esp-pump-hydraulics/results/esp_pump_hydraulics/esp_pump_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-hydraulics]
+    runtime: offline
   - id: rigging
     basename: rigging
     title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)
@@ -939,4 +974,22 @@ workflows:
       - examples/workflows/rigging/results/input.yml
       - examples/workflows/rigging/results/rigging/rigging_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rigging]
+    runtime: offline
+  - id: lifting-lug-design
+    basename: lifting_lug
+    title: Lifting lug / padeye strength screening (bearing, net tension, shear tear-out; AISC / DNV-ST-0378)
+    input: examples/workflows/lifting-lug-design/input.yml
+    outputs:
+      - examples/workflows/lifting-lug-design/results/input.yml
+      - examples/workflows/lifting-lug-design/results/lifting_lug/lifting_lug_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-design]
+    runtime: offline
+  - id: weather-window
+    basename: weather_window
+    title: Weather-window (workability) screening — persistence of Hs vs an operational limit (DNV-OS-H101)
+    input: examples/workflows/weather-window/input.yml
+    outputs:
+      - examples/workflows/weather-window/results/input.yml
+      - examples/workflows/weather-window/results/weather_window/weather_window_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]
     runtime: offline

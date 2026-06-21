@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import ValidationError
+
 from .root import ProjectInputSpec
 
 
@@ -50,4 +52,12 @@ def apply_dotted_override(
 ) -> ProjectInputSpec:
     d = spec.model_dump()
     _set_nested_safe(d, dotted, value)
-    return ProjectInputSpec.model_validate(d)
+    try:
+        return ProjectInputSpec.model_validate(d)
+    except ValidationError as exc:
+        # Surface the offending sweep parameter so multi-sweep campaign debugging
+        # points at the dotted path + value, not just an opaque Pydantic trace
+        # (#535). Original ValidationError stays accessible via __cause__.
+        raise ValueError(
+            f"Sweep parameter {dotted!r} produced invalid spec for value {value!r}"
+        ) from exc

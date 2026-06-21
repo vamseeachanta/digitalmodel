@@ -1,0 +1,3068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsea Pipeline CP — Bracelet-Anode Design — digitalmodel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+:root {
+    --clr-primary: #1a365d;
+    --clr-secondary: #2c5282;
+    --clr-accent: #ed8936;
+    --clr-success: #38a169;
+    --clr-warning: #d69e2e;
+    --clr-danger: #e53e3e;
+    --clr-bg: #f7fafc;
+    --clr-text: #2d3748;
+    --clr-muted: #718096;
+    --clr-border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--clr-text);
+    background: var(--clr-bg);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.report-header {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%);
+    color: white;
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+}
+.report-header .brand {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+.report-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.report-header .subtitle {
+    font-size: 1.05rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+.report-header .case-badge {
+    display: inline-block;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+.report-header .meta {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+.report-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+.section h2 {
+    font-size: 1.3rem;
+    color: var(--clr-primary);
+    border-bottom: 2px solid var(--clr-accent);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+}
+.section h3 {
+    font-size: 1.05rem;
+    color: var(--clr-secondary);
+    margin: 1rem 0 0.5rem;
+}
+.section p, .section li {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+.section ul { padding-left: 1.5rem; }
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart-container {
+    background: white;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-primary);
+    margin-bottom: 0.3rem;
+}
+.chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--clr-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+.data-table th {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.data-table td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--clr-border);
+}
+.data-table tr:nth-child(even) { background: rgba(247,250,252,0.5); }
+.data-table tr:hover { background: rgba(44,82,130,0.04); }
+
+.status-pass { color: var(--clr-success); font-weight: 700; }
+.status-fail { color: var(--clr-danger); font-weight: 700; }
+.status-marginal { color: var(--clr-warning); font-weight: 700; }
+
+/* ── Live Mode Teaser ───────────────────────────────────────── */
+.live-mode-teaser {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.live-mode-teaser::before {
+    content: 'LIVE';
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    background: var(--clr-danger);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: pulse-live 2s infinite;
+}
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.live-mode-teaser h3 {
+    color: var(--clr-accent);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+.live-mode-teaser p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.live-mode-teaser .cta {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--clr-accent);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Funding Badge ──────────────────────────────────────────── */
+.funding-badge {
+    background: rgba(237,137,54,0.1);
+    border: 1px solid var(--clr-accent);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--clr-text);
+}
+.funding-badge strong { color: var(--clr-accent); }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.report-footer {
+    border-top: 2px solid var(--clr-border);
+    padding: 1.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.8rem;
+    color: var(--clr-muted);
+}
+.report-footer .disclaimer {
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Print / PDF ────────────────────────────────────────────── */
+@media print {
+    body { background: white; font-size: 12px; }
+    .report-header { padding: 1.5rem 2rem; }
+    .report-body { padding: 1rem 2rem; }
+    .chart-container { break-inside: avoid; page-break-inside: avoid; }
+    .live-mode-teaser { break-inside: avoid; }
+    .no-print { display: none !important; }
+    @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <div class="brand">digitalmodel — Engineering Intelligence</div>
+    <h1>Subsea Pipeline CP — Bracelet-Anode Design</h1>
+    <div class="subtitle">162 parametric cases across 6 diameters, 3 coating systems, 3 environments, and 3 seawater resistivities</div>
+    <div class="case-badge">162 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-06-20 05:23 UTC · demo_07</div>
+</div>
+
+<div class="report-body">
+    
+        <div class="section">
+            <h2>Methodology</h2>
+            
+    <p>This analysis screens <strong>galvanic (bracelet-anode) cathodic
+    protection</strong> for subsea pipelines across a parametric matrix of
+    diameters, coating systems, environments, and seawater resistivities. Each
+    case chains the
+    <code>digitalmodel.cathodic_protection.iso_15589_2</code> routines plus the
+    DNV-RP-B401 anode-count / protected-length helpers (the demo reuses the
+    module physics, it does not reimplement it):</p>
+
+    <h3>Step 1: Design Current Density (<code>initial_current_density</code>)</h3>
+    <p>Temperature-interpolated initial current density per ISO 15589-2 Table 1
+    (150 mA/m&sup2; warm to 200 mA/m&sup2; cold), reduced by a burial
+    factor for partially-/fully-buried sections (lower oxygen availability).</p>
+
+    <h3>Step 2: Coating Breakdown (<code>coating_breakdown_factor</code>)</h3>
+    <p>Linear breakdown f<sub>c</sub>(t) = f<sub>ci</sub> +
+    (f<sub>cf</sub> &minus; f<sub>ci</sub>)&middot;(t / T<sub>design</sub>),
+    evaluated at the mean (t = T/2) and final (t = T) over a
+    30-year design life. FBE / 3LPP / CWC carry distinct
+    initial/final factors.</p>
+
+    <h3>Step 3: Current Demand (<code>pipeline_current_demand</code>)</h3>
+    <p>I<sub>c</sub> = &pi; &middot; D &middot; L &middot; f<sub>c</sub> &middot;
+    i<sub>c</sub> over a 10 km design section. The mean
+    demand sizes the anode mass; the final demand sizes the anode output and
+    count.</p>
+
+    <h3>Step 4: Bracelet Output &amp; Mass
+    (<code>anode_resistance</code>, <code>anode_output_current</code>,
+    <code>anode_mass_requirement</code>)</h3>
+    <p>Slender-anode resistance feeds the per-bracelet output current
+    (driving potential |E<sub>anode</sub> &minus; E<sub>struct</sub>|). Total
+    Al-Zn-In anode mass M<sub>a</sub> = I<sub>mean</sub> &middot; T &middot; 8760
+    / (&epsilon; &middot; u<sub>f</sub>), with capacity &epsilon; =
+    2000 A&middot;h/kg and utilisation u<sub>f</sub> =
+    0.9.</p>
+
+    <h3>Step 5: Anode Count &amp; Protected Length
+    (<code>number_of_anodes</code>, <code>protected_length</code>)</h3>
+    <p>The number of 90 kg bracelets is the larger of the
+    mass-governed and final-current/output-governed counts; spacing = L / n.
+    DNV-RP-F103 Eq. 14 gives the protected length per bracelet (attenuation
+    envelope), and the in-service potential is checked against the
+    &minus;0.80 / &minus;1.10 V (Ag/AgCl) window.</p>
+
+    <h3>Status Classification</h3>
+    <ul>
+        <li><strong>OK:</strong> protected length &ge; anode spacing and the
+        potential criterion passes, with anode-mass headroom (utilisation
+        &lt; 0.85)</li>
+        <li><strong>MARGINAL:</strong> protected and criterion passes but
+        anode-mass margin is thin (utilisation &ge; 0.85)</li>
+        <li><strong>NO_FIT:</strong> protected length &lt; spacing (CP gaps) or
+        the potential criterion fails &mdash; tighten spacing / re-size</li>
+    </ul>
+    
+            <h3>Applicable Codes & Standards</h3><ul><li>ISO 15589-2 (2004) — CP of Pipeline Systems, Part 2: Offshore Pipelines</li><li>DNV-RP-F103 (2010) — CP of Submarine Pipelines by Galvanic Anodes</li><li>DNV-RP-B401 (2021) — Cathodic Protection Design (anode count, protected length)</li></ul>
+        </div>
+        
+
+        <div class="section">
+            <h2>Headline: Sizing at Exposed Seawater (0.30 ohm-m)</h2>
+            <p>One row per diameter x coating at the reference environment/resistivity.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>NPS</th>
+      <th>Coating</th>
+      <th>ic (mA/m2)</th>
+      <th>I mean (A)</th>
+      <th>Anode mass (kg)</th>
+      <th>Anodes</th>
+      <th>Spacing (m)</th>
+      <th>Prot. len (m)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>92.20</td>
+      <td>13460.8</td>
+      <td>150</td>
+      <td>66.7</td>
+      <td>1216.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>35.85</td>
+      <td>5234.8</td>
+      <td>59</td>
+      <td>169.5</td>
+      <td>3042.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>128.05</td>
+      <td>18695.6</td>
+      <td>208</td>
+      <td>48.1</td>
+      <td>912.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>120.03</td>
+      <td>17523.8</td>
+      <td>195</td>
+      <td>51.3</td>
+      <td>1299.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>46.68</td>
+      <td>6814.8</td>
+      <td>76</td>
+      <td>131.6</td>
+      <td>3248.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>166.70</td>
+      <td>24338.7</td>
+      <td>271</td>
+      <td>36.9</td>
+      <td>974.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>149.61</td>
+      <td>21842.8</td>
+      <td>243</td>
+      <td>41.2</td>
+      <td>1399.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>58.18</td>
+      <td>8494.4</td>
+      <td>95</td>
+      <td>105.3</td>
+      <td>3498.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>207.79</td>
+      <td>30337.2</td>
+      <td>338</td>
+      <td>29.6</td>
+      <td>1049.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>177.44</td>
+      <td>25905.9</td>
+      <td>288</td>
+      <td>34.7</td>
+      <td>1448.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>69.00</td>
+      <td>10074.5</td>
+      <td>112</td>
+      <td>89.3</td>
+      <td>3622.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>246.44</td>
+      <td>35980.4</td>
+      <td>400</td>
+      <td>25.0</td>
+      <td>1086.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>222.63</td>
+      <td>32504.3</td>
+      <td>362</td>
+      <td>27.6</td>
+      <td>1540.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>86.58</td>
+      <td>12640.6</td>
+      <td>141</td>
+      <td>70.9</td>
+      <td>3851.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>309.21</td>
+      <td>45144.8</td>
+      <td>502</td>
+      <td>19.9</td>
+      <td>1155.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>FBE (single-layer)</td>
+      <td>193.75</td>
+      <td>278.29</td>
+      <td>40630.4</td>
+      <td>452</td>
+      <td>22.1</td>
+      <td>1627.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>3-layer PP</td>
+      <td>193.75</td>
+      <td>108.22</td>
+      <td>15800.7</td>
+      <td>176</td>
+      <td>56.8</td>
+      <td>4069.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>Concrete-weight coat</td>
+      <td>193.75</td>
+      <td>386.51</td>
+      <td>56431.1</td>
+      <td>628</td>
+      <td>15.9</td>
+      <td>1220.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="section">
+            <h2>Full Parametric Results</h2>
+            <p>All 162 pipeline CP design cases.</p>
+            <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>NPS</th>
+      <th>OD (m)</th>
+      <th>Coating</th>
+      <th>Environment</th>
+      <th>rho (ohm-m)</th>
+      <th>ic (mA/m2)</th>
+      <th>I mean (A)</th>
+      <th>I final (A)</th>
+      <th>Anode mass (kg)</th>
+      <th>Anodes</th>
+      <th>Spacing (m)</th>
+      <th>Prot. len (m)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>92.20</td>
+      <td>153.66</td>
+      <td>13460.8</td>
+      <td>150</td>
+      <td>66.7</td>
+      <td>1216.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>92.20</td>
+      <td>153.66</td>
+      <td>13460.8</td>
+      <td>150</td>
+      <td>66.7</td>
+      <td>1216.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>92.20</td>
+      <td>153.66</td>
+      <td>13460.8</td>
+      <td>362</td>
+      <td>27.6</td>
+      <td>1216.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>60.23</td>
+      <td>100.38</td>
+      <td>8792.9</td>
+      <td>98</td>
+      <td>102.0</td>
+      <td>1505.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>60.23</td>
+      <td>100.38</td>
+      <td>8792.9</td>
+      <td>98</td>
+      <td>102.0</td>
+      <td>1505.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>60.23</td>
+      <td>100.38</td>
+      <td>8792.9</td>
+      <td>237</td>
+      <td>42.2</td>
+      <td>1505.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>35.69</td>
+      <td>59.48</td>
+      <td>5210.6</td>
+      <td>58</td>
+      <td>172.4</td>
+      <td>1956.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>35.69</td>
+      <td>59.48</td>
+      <td>5210.6</td>
+      <td>58</td>
+      <td>172.4</td>
+      <td>1956.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>35.69</td>
+      <td>59.48</td>
+      <td>5210.6</td>
+      <td>141</td>
+      <td>70.9</td>
+      <td>1956.0</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>35.85</td>
+      <td>61.46</td>
+      <td>5234.8</td>
+      <td>59</td>
+      <td>169.5</td>
+      <td>3042.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>35.85</td>
+      <td>61.46</td>
+      <td>5234.8</td>
+      <td>59</td>
+      <td>169.5</td>
+      <td>3042.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>35.85</td>
+      <td>61.46</td>
+      <td>5234.8</td>
+      <td>145</td>
+      <td>69.0</td>
+      <td>3042.3</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>23.42</td>
+      <td>40.15</td>
+      <td>3419.5</td>
+      <td>38</td>
+      <td>263.2</td>
+      <td>3764.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>23.42</td>
+      <td>40.15</td>
+      <td>3419.5</td>
+      <td>38</td>
+      <td>263.2</td>
+      <td>3764.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>23.42</td>
+      <td>40.15</td>
+      <td>3419.5</td>
+      <td>95</td>
+      <td>105.3</td>
+      <td>3764.2</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>13.88</td>
+      <td>23.79</td>
+      <td>2026.4</td>
+      <td>23</td>
+      <td>434.8</td>
+      <td>4889.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>13.88</td>
+      <td>23.79</td>
+      <td>2026.4</td>
+      <td>23</td>
+      <td>434.8</td>
+      <td>4889.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>13.88</td>
+      <td>23.79</td>
+      <td>2026.4</td>
+      <td>57</td>
+      <td>175.4</td>
+      <td>4889.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>128.05</td>
+      <td>204.88</td>
+      <td>18695.6</td>
+      <td>208</td>
+      <td>48.1</td>
+      <td>912.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>128.05</td>
+      <td>204.88</td>
+      <td>18695.6</td>
+      <td>208</td>
+      <td>48.1</td>
+      <td>912.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>128.05</td>
+      <td>204.88</td>
+      <td>18695.6</td>
+      <td>483</td>
+      <td>20.7</td>
+      <td>912.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>83.65</td>
+      <td>133.83</td>
+      <td>12212.4</td>
+      <td>136</td>
+      <td>73.5</td>
+      <td>1129.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>83.65</td>
+      <td>133.83</td>
+      <td>12212.4</td>
+      <td>136</td>
+      <td>73.5</td>
+      <td>1129.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>83.65</td>
+      <td>133.83</td>
+      <td>12212.4</td>
+      <td>316</td>
+      <td>31.6</td>
+      <td>1129.3</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>49.57</td>
+      <td>79.31</td>
+      <td>7237.0</td>
+      <td>81</td>
+      <td>123.5</td>
+      <td>1467.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>49.57</td>
+      <td>79.31</td>
+      <td>7237.0</td>
+      <td>81</td>
+      <td>123.5</td>
+      <td>1467.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>6"</td>
+      <td>0.1683</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>49.57</td>
+      <td>79.31</td>
+      <td>7237.0</td>
+      <td>187</td>
+      <td>53.5</td>
+      <td>1467.0</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>120.03</td>
+      <td>200.04</td>
+      <td>17523.8</td>
+      <td>195</td>
+      <td>51.3</td>
+      <td>1299.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>120.03</td>
+      <td>200.04</td>
+      <td>17523.8</td>
+      <td>195</td>
+      <td>51.3</td>
+      <td>1299.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>120.03</td>
+      <td>200.04</td>
+      <td>17523.8</td>
+      <td>471</td>
+      <td>21.2</td>
+      <td>1299.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>78.40</td>
+      <td>130.67</td>
+      <td>11447.0</td>
+      <td>128</td>
+      <td>78.1</td>
+      <td>1607.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>78.40</td>
+      <td>130.67</td>
+      <td>11447.0</td>
+      <td>128</td>
+      <td>78.1</td>
+      <td>1607.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>78.40</td>
+      <td>130.67</td>
+      <td>11447.0</td>
+      <td>308</td>
+      <td>32.5</td>
+      <td>1607.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>46.46</td>
+      <td>77.44</td>
+      <td>6783.4</td>
+      <td>76</td>
+      <td>131.6</td>
+      <td>2088.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>46.46</td>
+      <td>77.44</td>
+      <td>6783.4</td>
+      <td>76</td>
+      <td>131.6</td>
+      <td>2088.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>46.46</td>
+      <td>77.44</td>
+      <td>6783.4</td>
+      <td>183</td>
+      <td>54.6</td>
+      <td>2088.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>46.68</td>
+      <td>80.02</td>
+      <td>6814.8</td>
+      <td>76</td>
+      <td>131.6</td>
+      <td>3248.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>46.68</td>
+      <td>80.02</td>
+      <td>6814.8</td>
+      <td>76</td>
+      <td>131.6</td>
+      <td>3248.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>46.68</td>
+      <td>80.02</td>
+      <td>6814.8</td>
+      <td>189</td>
+      <td>52.9</td>
+      <td>3248.8</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>30.49</td>
+      <td>52.27</td>
+      <td>4451.6</td>
+      <td>50</td>
+      <td>200.0</td>
+      <td>4019.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>30.49</td>
+      <td>52.27</td>
+      <td>4451.6</td>
+      <td>50</td>
+      <td>200.0</td>
+      <td>4019.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>30.49</td>
+      <td>52.27</td>
+      <td>4451.6</td>
+      <td>124</td>
+      <td>80.6</td>
+      <td>4019.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>18.07</td>
+      <td>30.97</td>
+      <td>2638.0</td>
+      <td>30</td>
+      <td>333.3</td>
+      <td>5221.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>18.07</td>
+      <td>30.97</td>
+      <td>2638.0</td>
+      <td>30</td>
+      <td>333.3</td>
+      <td>5221.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>18.07</td>
+      <td>30.97</td>
+      <td>2638.0</td>
+      <td>73</td>
+      <td>137.0</td>
+      <td>5221.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>166.70</td>
+      <td>266.73</td>
+      <td>24338.7</td>
+      <td>271</td>
+      <td>36.9</td>
+      <td>974.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>166.70</td>
+      <td>266.73</td>
+      <td>24338.7</td>
+      <td>271</td>
+      <td>36.9</td>
+      <td>974.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>166.70</td>
+      <td>266.73</td>
+      <td>24338.7</td>
+      <td>628</td>
+      <td>15.9</td>
+      <td>974.6</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>108.89</td>
+      <td>174.23</td>
+      <td>15898.6</td>
+      <td>177</td>
+      <td>56.5</td>
+      <td>1205.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>108.89</td>
+      <td>174.23</td>
+      <td>15898.6</td>
+      <td>177</td>
+      <td>56.5</td>
+      <td>1205.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>108.89</td>
+      <td>174.23</td>
+      <td>15898.6</td>
+      <td>411</td>
+      <td>24.3</td>
+      <td>1205.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>64.53</td>
+      <td>103.25</td>
+      <td>9421.4</td>
+      <td>105</td>
+      <td>95.2</td>
+      <td>1566.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>64.53</td>
+      <td>103.25</td>
+      <td>9421.4</td>
+      <td>105</td>
+      <td>95.2</td>
+      <td>1566.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>8"</td>
+      <td>0.2191</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>64.53</td>
+      <td>103.25</td>
+      <td>9421.4</td>
+      <td>244</td>
+      <td>41.0</td>
+      <td>1566.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>149.61</td>
+      <td>249.35</td>
+      <td>21842.8</td>
+      <td>243</td>
+      <td>41.2</td>
+      <td>1399.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>149.61</td>
+      <td>249.35</td>
+      <td>21842.8</td>
+      <td>243</td>
+      <td>41.2</td>
+      <td>1399.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>149.61</td>
+      <td>249.35</td>
+      <td>21842.8</td>
+      <td>588</td>
+      <td>17.0</td>
+      <td>1399.3</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>97.73</td>
+      <td>162.88</td>
+      <td>14268.3</td>
+      <td>159</td>
+      <td>62.9</td>
+      <td>1731.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>97.73</td>
+      <td>162.88</td>
+      <td>14268.3</td>
+      <td>159</td>
+      <td>62.9</td>
+      <td>1731.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>97.73</td>
+      <td>162.88</td>
+      <td>14268.3</td>
+      <td>384</td>
+      <td>26.0</td>
+      <td>1731.4</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>57.91</td>
+      <td>96.52</td>
+      <td>8455.3</td>
+      <td>94</td>
+      <td>106.4</td>
+      <td>2249.1</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>57.91</td>
+      <td>96.52</td>
+      <td>8455.3</td>
+      <td>94</td>
+      <td>106.4</td>
+      <td>2249.1</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>57.91</td>
+      <td>96.52</td>
+      <td>8455.3</td>
+      <td>228</td>
+      <td>43.9</td>
+      <td>2249.1</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>58.18</td>
+      <td>99.74</td>
+      <td>8494.4</td>
+      <td>95</td>
+      <td>105.3</td>
+      <td>3498.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>58.18</td>
+      <td>99.74</td>
+      <td>8494.4</td>
+      <td>95</td>
+      <td>105.3</td>
+      <td>3498.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>58.18</td>
+      <td>99.74</td>
+      <td>8494.4</td>
+      <td>235</td>
+      <td>42.6</td>
+      <td>3498.3</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>38.01</td>
+      <td>65.15</td>
+      <td>5548.8</td>
+      <td>62</td>
+      <td>161.3</td>
+      <td>4328.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>38.01</td>
+      <td>65.15</td>
+      <td>5548.8</td>
+      <td>62</td>
+      <td>161.3</td>
+      <td>4328.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>38.01</td>
+      <td>65.15</td>
+      <td>5548.8</td>
+      <td>154</td>
+      <td>64.9</td>
+      <td>4328.4</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>22.52</td>
+      <td>38.61</td>
+      <td>3288.2</td>
+      <td>37</td>
+      <td>270.3</td>
+      <td>5622.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>22.52</td>
+      <td>38.61</td>
+      <td>3288.2</td>
+      <td>37</td>
+      <td>270.3</td>
+      <td>5622.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>22.52</td>
+      <td>38.61</td>
+      <td>3288.2</td>
+      <td>91</td>
+      <td>109.9</td>
+      <td>5622.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>207.79</td>
+      <td>332.46</td>
+      <td>30337.2</td>
+      <td>338</td>
+      <td>29.6</td>
+      <td>1049.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>207.79</td>
+      <td>332.46</td>
+      <td>30337.2</td>
+      <td>338</td>
+      <td>29.6</td>
+      <td>1049.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>207.79</td>
+      <td>332.46</td>
+      <td>30337.2</td>
+      <td>783</td>
+      <td>12.8</td>
+      <td>1049.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>135.73</td>
+      <td>217.17</td>
+      <td>19817.1</td>
+      <td>221</td>
+      <td>45.2</td>
+      <td>1298.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>135.73</td>
+      <td>217.17</td>
+      <td>19817.1</td>
+      <td>221</td>
+      <td>45.2</td>
+      <td>1298.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>135.73</td>
+      <td>217.17</td>
+      <td>19817.1</td>
+      <td>512</td>
+      <td>19.5</td>
+      <td>1298.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>80.43</td>
+      <td>128.70</td>
+      <td>11743.5</td>
+      <td>131</td>
+      <td>76.3</td>
+      <td>1686.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>80.43</td>
+      <td>128.70</td>
+      <td>11743.5</td>
+      <td>131</td>
+      <td>76.3</td>
+      <td>1686.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>10"</td>
+      <td>0.2731</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>80.43</td>
+      <td>128.70</td>
+      <td>11743.5</td>
+      <td>303</td>
+      <td>33.0</td>
+      <td>1686.8</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>177.44</td>
+      <td>295.73</td>
+      <td>25905.9</td>
+      <td>288</td>
+      <td>34.7</td>
+      <td>1448.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>177.44</td>
+      <td>295.73</td>
+      <td>25905.9</td>
+      <td>288</td>
+      <td>34.7</td>
+      <td>1448.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>177.44</td>
+      <td>295.73</td>
+      <td>25905.9</td>
+      <td>697</td>
+      <td>14.3</td>
+      <td>1448.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>115.91</td>
+      <td>193.18</td>
+      <td>16922.4</td>
+      <td>189</td>
+      <td>52.9</td>
+      <td>1792.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>115.91</td>
+      <td>193.18</td>
+      <td>16922.4</td>
+      <td>189</td>
+      <td>52.9</td>
+      <td>1792.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>115.91</td>
+      <td>193.18</td>
+      <td>16922.4</td>
+      <td>455</td>
+      <td>22.0</td>
+      <td>1792.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>68.69</td>
+      <td>114.48</td>
+      <td>10028.1</td>
+      <td>112</td>
+      <td>89.3</td>
+      <td>2328.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>68.69</td>
+      <td>114.48</td>
+      <td>10028.1</td>
+      <td>112</td>
+      <td>89.3</td>
+      <td>2328.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>68.69</td>
+      <td>114.48</td>
+      <td>10028.1</td>
+      <td>270</td>
+      <td>37.0</td>
+      <td>2328.8</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>69.00</td>
+      <td>118.29</td>
+      <td>10074.5</td>
+      <td>112</td>
+      <td>89.3</td>
+      <td>3622.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>69.00</td>
+      <td>118.29</td>
+      <td>10074.5</td>
+      <td>112</td>
+      <td>89.3</td>
+      <td>3622.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>69.00</td>
+      <td>118.29</td>
+      <td>10074.5</td>
+      <td>279</td>
+      <td>35.8</td>
+      <td>3622.2</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>45.07</td>
+      <td>77.27</td>
+      <td>6580.9</td>
+      <td>74</td>
+      <td>135.1</td>
+      <td>4481.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>45.07</td>
+      <td>77.27</td>
+      <td>6580.9</td>
+      <td>74</td>
+      <td>135.1</td>
+      <td>4481.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>45.07</td>
+      <td>77.27</td>
+      <td>6580.9</td>
+      <td>182</td>
+      <td>54.9</td>
+      <td>4481.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>26.71</td>
+      <td>45.79</td>
+      <td>3899.8</td>
+      <td>44</td>
+      <td>227.3</td>
+      <td>5821.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>26.71</td>
+      <td>45.79</td>
+      <td>3899.8</td>
+      <td>44</td>
+      <td>227.3</td>
+      <td>5821.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>26.71</td>
+      <td>45.79</td>
+      <td>3899.8</td>
+      <td>108</td>
+      <td>92.6</td>
+      <td>5821.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>246.44</td>
+      <td>394.31</td>
+      <td>35980.4</td>
+      <td>400</td>
+      <td>25.0</td>
+      <td>1086.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>246.44</td>
+      <td>394.31</td>
+      <td>35980.4</td>
+      <td>400</td>
+      <td>25.0</td>
+      <td>1086.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>246.44</td>
+      <td>394.31</td>
+      <td>35980.4</td>
+      <td>929</td>
+      <td>10.8</td>
+      <td>1086.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>160.98</td>
+      <td>257.57</td>
+      <td>23503.3</td>
+      <td>262</td>
+      <td>38.2</td>
+      <td>1344.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>160.98</td>
+      <td>257.57</td>
+      <td>23503.3</td>
+      <td>262</td>
+      <td>38.2</td>
+      <td>1344.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>160.98</td>
+      <td>257.57</td>
+      <td>23503.3</td>
+      <td>607</td>
+      <td>16.5</td>
+      <td>1344.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>95.40</td>
+      <td>152.63</td>
+      <td>13927.9</td>
+      <td>155</td>
+      <td>64.5</td>
+      <td>1746.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>95.40</td>
+      <td>152.63</td>
+      <td>13927.9</td>
+      <td>155</td>
+      <td>64.5</td>
+      <td>1746.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>12"</td>
+      <td>0.3239</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>95.40</td>
+      <td>152.63</td>
+      <td>13927.9</td>
+      <td>360</td>
+      <td>27.8</td>
+      <td>1746.6</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>222.63</td>
+      <td>371.05</td>
+      <td>32504.3</td>
+      <td>362</td>
+      <td>27.6</td>
+      <td>1540.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>222.63</td>
+      <td>371.05</td>
+      <td>32504.3</td>
+      <td>362</td>
+      <td>27.6</td>
+      <td>1540.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>222.63</td>
+      <td>371.05</td>
+      <td>32504.3</td>
+      <td>874</td>
+      <td>11.4</td>
+      <td>1540.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>145.43</td>
+      <td>242.38</td>
+      <td>21232.6</td>
+      <td>236</td>
+      <td>42.4</td>
+      <td>1906.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>145.43</td>
+      <td>242.38</td>
+      <td>21232.6</td>
+      <td>236</td>
+      <td>42.4</td>
+      <td>1906.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>145.43</td>
+      <td>242.38</td>
+      <td>21232.6</td>
+      <td>571</td>
+      <td>17.5</td>
+      <td>1906.2</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>86.18</td>
+      <td>143.63</td>
+      <td>12582.3</td>
+      <td>140</td>
+      <td>71.4</td>
+      <td>2476.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>86.18</td>
+      <td>143.63</td>
+      <td>12582.3</td>
+      <td>140</td>
+      <td>71.4</td>
+      <td>2476.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>86.18</td>
+      <td>143.63</td>
+      <td>12582.3</td>
+      <td>339</td>
+      <td>29.5</td>
+      <td>2476.3</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>86.58</td>
+      <td>148.42</td>
+      <td>12640.6</td>
+      <td>141</td>
+      <td>70.9</td>
+      <td>3851.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>86.58</td>
+      <td>148.42</td>
+      <td>12640.6</td>
+      <td>141</td>
+      <td>70.9</td>
+      <td>3851.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>86.58</td>
+      <td>148.42</td>
+      <td>12640.6</td>
+      <td>350</td>
+      <td>28.6</td>
+      <td>3851.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>56.56</td>
+      <td>96.95</td>
+      <td>8257.1</td>
+      <td>92</td>
+      <td>108.7</td>
+      <td>4765.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>56.56</td>
+      <td>96.95</td>
+      <td>8257.1</td>
+      <td>92</td>
+      <td>108.7</td>
+      <td>4765.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>56.56</td>
+      <td>96.95</td>
+      <td>8257.1</td>
+      <td>229</td>
+      <td>43.7</td>
+      <td>4765.6</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>33.51</td>
+      <td>57.45</td>
+      <td>4893.1</td>
+      <td>55</td>
+      <td>181.8</td>
+      <td>6190.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>33.51</td>
+      <td>57.45</td>
+      <td>4893.1</td>
+      <td>55</td>
+      <td>181.8</td>
+      <td>6190.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>33.51</td>
+      <td>57.45</td>
+      <td>4893.1</td>
+      <td>136</td>
+      <td>73.5</td>
+      <td>6190.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>309.21</td>
+      <td>494.74</td>
+      <td>45144.8</td>
+      <td>502</td>
+      <td>19.9</td>
+      <td>1155.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>309.21</td>
+      <td>494.74</td>
+      <td>45144.8</td>
+      <td>502</td>
+      <td>19.9</td>
+      <td>1155.5</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>309.21</td>
+      <td>494.74</td>
+      <td>45144.8</td>
+      <td>1165</td>
+      <td>8.6</td>
+      <td>1155.5</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>201.98</td>
+      <td>323.18</td>
+      <td>29489.8</td>
+      <td>328</td>
+      <td>30.5</td>
+      <td>1429.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>201.98</td>
+      <td>323.18</td>
+      <td>29489.8</td>
+      <td>328</td>
+      <td>30.5</td>
+      <td>1429.7</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>201.98</td>
+      <td>323.18</td>
+      <td>29489.8</td>
+      <td>761</td>
+      <td>13.1</td>
+      <td>1429.7</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>119.69</td>
+      <td>191.51</td>
+      <td>17475.4</td>
+      <td>195</td>
+      <td>51.3</td>
+      <td>1857.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>119.69</td>
+      <td>191.51</td>
+      <td>17475.4</td>
+      <td>195</td>
+      <td>51.3</td>
+      <td>1857.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>16"</td>
+      <td>0.4064</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>119.69</td>
+      <td>191.51</td>
+      <td>17475.4</td>
+      <td>451</td>
+      <td>22.2</td>
+      <td>1857.2</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>278.29</td>
+      <td>463.82</td>
+      <td>40630.4</td>
+      <td>452</td>
+      <td>22.1</td>
+      <td>1627.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>278.29</td>
+      <td>463.82</td>
+      <td>40630.4</td>
+      <td>452</td>
+      <td>22.1</td>
+      <td>1627.8</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>278.29</td>
+      <td>463.82</td>
+      <td>40630.4</td>
+      <td>1092</td>
+      <td>9.2</td>
+      <td>1627.8</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>181.79</td>
+      <td>302.98</td>
+      <td>26540.8</td>
+      <td>295</td>
+      <td>33.9</td>
+      <td>2014.1</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>181.79</td>
+      <td>302.98</td>
+      <td>26540.8</td>
+      <td>295</td>
+      <td>33.9</td>
+      <td>2014.1</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>181.79</td>
+      <td>302.98</td>
+      <td>26540.8</td>
+      <td>714</td>
+      <td>14.0</td>
+      <td>2014.1</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>107.73</td>
+      <td>179.54</td>
+      <td>15727.9</td>
+      <td>175</td>
+      <td>57.1</td>
+      <td>2616.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>107.73</td>
+      <td>179.54</td>
+      <td>15727.9</td>
+      <td>175</td>
+      <td>57.1</td>
+      <td>2616.4</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>FBE (single-layer)</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>107.73</td>
+      <td>179.54</td>
+      <td>15727.9</td>
+      <td>423</td>
+      <td>23.6</td>
+      <td>2616.4</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>108.22</td>
+      <td>185.53</td>
+      <td>15800.7</td>
+      <td>176</td>
+      <td>56.8</td>
+      <td>4069.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>108.22</td>
+      <td>185.53</td>
+      <td>15800.7</td>
+      <td>176</td>
+      <td>56.8</td>
+      <td>4069.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>108.22</td>
+      <td>185.53</td>
+      <td>15800.7</td>
+      <td>437</td>
+      <td>22.9</td>
+      <td>4069.6</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>70.69</td>
+      <td>121.19</td>
+      <td>10321.4</td>
+      <td>115</td>
+      <td>87.0</td>
+      <td>5035.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>70.69</td>
+      <td>121.19</td>
+      <td>10321.4</td>
+      <td>115</td>
+      <td>87.0</td>
+      <td>5035.2</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>70.69</td>
+      <td>121.19</td>
+      <td>10321.4</td>
+      <td>286</td>
+      <td>35.0</td>
+      <td>5035.2</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>41.89</td>
+      <td>71.82</td>
+      <td>6116.4</td>
+      <td>68</td>
+      <td>147.1</td>
+      <td>6541.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>41.89</td>
+      <td>71.82</td>
+      <td>6116.4</td>
+      <td>68</td>
+      <td>147.1</td>
+      <td>6541.0</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>3-layer PP</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>41.89</td>
+      <td>71.82</td>
+      <td>6116.4</td>
+      <td>170</td>
+      <td>58.8</td>
+      <td>6541.0</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.2</td>
+      <td>193.75</td>
+      <td>386.51</td>
+      <td>618.42</td>
+      <td>56431.1</td>
+      <td>628</td>
+      <td>15.9</td>
+      <td>1220.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>0.3</td>
+      <td>193.75</td>
+      <td>386.51</td>
+      <td>618.42</td>
+      <td>56431.1</td>
+      <td>628</td>
+      <td>15.9</td>
+      <td>1220.9</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Exposed seawater</td>
+      <td>1.0</td>
+      <td>193.75</td>
+      <td>386.51</td>
+      <td>618.42</td>
+      <td>56431.1</td>
+      <td>1456</td>
+      <td>6.9</td>
+      <td>1220.9</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.2</td>
+      <td>126.56</td>
+      <td>252.48</td>
+      <td>403.97</td>
+      <td>36862.2</td>
+      <td>410</td>
+      <td>24.4</td>
+      <td>1510.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>0.3</td>
+      <td>126.56</td>
+      <td>252.48</td>
+      <td>403.97</td>
+      <td>36862.2</td>
+      <td>410</td>
+      <td>24.4</td>
+      <td>1510.6</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Partially-buried</td>
+      <td>1.0</td>
+      <td>126.56</td>
+      <td>252.48</td>
+      <td>403.97</td>
+      <td>36862.2</td>
+      <td>952</td>
+      <td>10.5</td>
+      <td>1510.6</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.2</td>
+      <td>75.00</td>
+      <td>149.62</td>
+      <td>239.39</td>
+      <td>21844.3</td>
+      <td>243</td>
+      <td>41.2</td>
+      <td>1962.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>0.3</td>
+      <td>75.00</td>
+      <td>149.62</td>
+      <td>239.39</td>
+      <td>21844.3</td>
+      <td>243</td>
+      <td>41.2</td>
+      <td>1962.3</td>
+      <td class="status-marginal">MARGINAL</td>
+    </tr>
+    <tr>
+      <td>20"</td>
+      <td>0.5080</td>
+      <td>Concrete-weight coat</td>
+      <td>Buried (trenched)</td>
+      <td>1.0</td>
+      <td>75.00</td>
+      <td>149.62</td>
+      <td>239.39</td>
+      <td>21844.3</td>
+      <td>564</td>
+      <td>17.7</td>
+      <td>1962.3</td>
+      <td>OK</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+        
+
+        <div class="live-mode-teaser">
+            <h3>Take This Analysis Live During Operations</h3>
+            <p>
+                This report used <strong>design sea states</strong> to screen
+                parametric cases overnight. During the actual operation,
+                <strong>digitalmodel</strong> can feed your vessel's measured
+                motion data — VMMS, IMMS, MRU — directly into the same
+                engineering models for <strong>real-time go/no-go decisions</strong>.
+            </p>
+            <p>
+                Instead of relying on forecasted Hs limits, subsea pipeline bracelet-anode CP design
+                updates continuously with actual crane tip motions, hook loads,
+                and dynamic amplification factors measured on your vessel.
+            </p>
+            <div class="funding-badge">
+                <strong>$500K VC-funded</strong> — we are building overnight
+                engineering and real-time operations support exclusively for
+                marine installation contractors. Early adopters get priority
+                onboarding and custom model calibration for their fleet.
+            </div>
+            <a class="cta" href="mailto:info@aceengineer.com?subject=digitalmodel%20Demo%20Inquiry">
+                Schedule a Technical Demo →
+            </a>
+        </div>
+        
+
+        <div class="section">
+            <h2>Assumptions & Limitations</h2>
+            <ul><li>Pipeline CP physics reused verbatim from digitalmodel.cathodic_protection.iso_15589_2 (current density, coating breakdown, current demand, anode resistance/output, anode mass) plus dnv_rp_b401 (number_of_anodes, protected_length) — the demo is a sweep/report layer</li><li>Galvanic Al-Zn-In bracelet anodes: capacity 2000 A-h/kg, utilisation 0.9, net mass 90 kg each (length 0.3 m, equivalent radius 0.12 m)</li><li>Design life 30 years over a 10 km design section; mean demand (t = T/2) sizes mass, final demand (t = T) sizes output/count</li><li>Current density temperature-interpolated per ISO 15589-2 Table 1 (150 mA/m2 warm to 200 mA/m2 cold); buried/partially-buried sections apply a 0.50 / 0.75 reduction factor for reduced oxygen availability</li><li>Coating breakdown factors (FBE 0.03->0.15, 3LPP 0.01->0.06, CWC 0.05->0.20) are representative ISO 15589-2 / DNV-RP-F103 initial->final values, not project-specific</li><li>Protected length per DNV-RP-F103 Eq. 14 with steel resistivity 2e-07 ohm-m and metallic voltage drop 0.15 V; anode count is the larger of mass- and final-current-governed counts</li><li>In-service potential assumed -0.95 V vs Ag/AgCl for the criteria check (-0.80 to -1.10 V protection window); NO_FIT marks CP gaps or a failed criterion</li><li>Screening-level sizing: no detailed bracelet placement, current attenuation along the full line, field-joint / CWC current-drain detail, or interference/stray-current modelling</li></ul>
+        </div>
+        
+    
+            <div class="chart-container">
+                <div class='chart-title'>Chart 1: Bracelet-Anode Spacing vs Pipeline Diameter</div>
+                <div class='chart-subtitle'>Exposed seawater, 0.30 ohm-m. One curve per coating system.</div>
+                <div>                            <div id="chart-spacing_vs_diameter" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-spacing_vs_diameter")) {                    Plotly.newPlot(                        "chart-spacing_vs_diameter",                        [{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eSpacing: %{y:.0f} m\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":9},"mode":"lines+markers","name":"FBE (single-layer)","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[66.7,51.3,41.2,34.7,27.6,22.1],"type":"scatter"},{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eSpacing: %{y:.0f} m\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":9},"mode":"lines+markers","name":"3-layer PP","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[169.5,131.6,105.3,89.3,70.9,56.8],"type":"scatter"},{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eSpacing: %{y:.0f} m\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Concrete-weight coat","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[48.1,36.9,29.6,25.0,19.9,15.9],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Bracelet-Anode Spacing vs Pipeline Diameter"},"xaxis":{"title":{"text":"Pipeline Outer Diameter (m)"}},"yaxis":{"title":{"text":"Anode Spacing (m)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_07_spacing_vs_diameter", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 2: Total Anode Mass by Coating System</div>
+                <div class='chart-subtitle'>Exposed seawater, 0.30 ohm-m. Grouped by pipeline diameter.</div>
+                <div>                            <div id="chart-mass_by_coating" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-mass_by_coating")) {                    Plotly.newPlot(                        "chart-mass_by_coating",                        [{"hovertemplate":"%{x}\u003cbr\u003eAnode mass: %{y:.0f} kg\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2c5282"},"name":"FBE (single-layer)","x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":[13460.8,17523.8,21842.8,25905.9,32504.3,40630.4],"type":"bar"},{"hovertemplate":"%{x}\u003cbr\u003eAnode mass: %{y:.0f} kg\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#ed8936"},"name":"3-layer PP","x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":[5234.8,6814.8,8494.4,10074.5,12640.6,15800.7],"type":"bar"},{"hovertemplate":"%{x}\u003cbr\u003eAnode mass: %{y:.0f} kg\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#38a169"},"name":"Concrete-weight coat","x":["6\"","8\"","10\"","12\"","16\"","20\""],"y":[18695.6,24338.7,30337.2,35980.4,45144.8,56431.1],"type":"bar"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Total Bracelet-Anode Mass by Coating System"},"xaxis":{"title":{"text":"Pipeline NPS"}},"yaxis":{"title":{"text":"Total Anode Mass (kg)"}},"barmode":"group","height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_07_mass_by_coating", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 3: Protected-Length Envelope vs Anode Spacing</div>
+                <div class='chart-subtitle'>0.30 ohm-m. Points above the dashed y=x line are protected.</div>
+                <div>                            <div id="chart-protected_length" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-protected_length")) {                    Plotly.newPlot(                        "chart-protected_length",                        [{"hovertemplate":"%{text}\u003cbr\u003eSpacing: %{x:.0f} m\u003cbr\u003eProt. len: %{y:.0f} m\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#d69e2e","line":{"color":"white","width":1},"size":11},"mode":"markers","name":"MARGINAL","text":["6\" FBE | Exposed seawater","6\" FBE | Partially-buried","6\" FBE | Buried (trenched)","6\" 3LPP | Exposed seawater","6\" 3LPP | Partially-buried","6\" 3LPP | Buried (trenched)","6\" CWC | Exposed seawater","6\" CWC | Partially-buried","6\" CWC | Buried (trenched)","8\" FBE | Exposed seawater","8\" FBE | Partially-buried","8\" FBE | Buried (trenched)","8\" 3LPP | Exposed seawater","8\" 3LPP | Partially-buried","8\" 3LPP | Buried (trenched)","8\" CWC | Exposed seawater","8\" CWC | Partially-buried","8\" CWC | Buried (trenched)","10\" FBE | Exposed seawater","10\" FBE | Partially-buried","10\" FBE | Buried (trenched)","10\" 3LPP | Exposed seawater","10\" 3LPP | Partially-buried","10\" 3LPP | Buried (trenched)","10\" CWC | Exposed seawater","10\" CWC | Partially-buried","10\" CWC | Buried (trenched)","12\" FBE | Exposed seawater","12\" FBE | Partially-buried","12\" FBE | Buried (trenched)","12\" 3LPP | Exposed seawater","12\" 3LPP | Partially-buried","12\" 3LPP | Buried (trenched)","12\" CWC | Exposed seawater","12\" CWC | Partially-buried","12\" CWC | Buried (trenched)","16\" FBE | Exposed seawater","16\" FBE | Partially-buried","16\" FBE | Buried (trenched)","16\" 3LPP | Exposed seawater","16\" 3LPP | Partially-buried","16\" 3LPP | Buried (trenched)","16\" CWC | Exposed seawater","16\" CWC | Partially-buried","16\" CWC | Buried (trenched)","20\" FBE | Exposed seawater","20\" FBE | Partially-buried","20\" FBE | Buried (trenched)","20\" 3LPP | Exposed seawater","20\" 3LPP | Partially-buried","20\" 3LPP | Buried (trenched)","20\" CWC | Exposed seawater","20\" CWC | Partially-buried","20\" CWC | Buried (trenched)"],"x":[66.7,102.0,172.4,169.5,263.2,434.8,48.1,73.5,123.5,51.3,78.1,131.6,131.6,200.0,333.3,36.9,56.5,95.2,41.2,62.9,106.4,105.3,161.3,270.3,29.6,45.2,76.3,34.7,52.9,89.3,89.3,135.1,227.3,25.0,38.2,64.5,27.6,42.4,71.4,70.9,108.7,181.8,19.9,30.5,51.3,22.1,33.9,57.1,56.8,87.0,147.1,15.9,24.4,41.2],"y":[1216.9,1505.7,1956.0,3042.3,3764.2,4889.9,912.7,1129.3,1467.0,1299.5,1607.9,2088.7,3248.8,4019.7,5221.7,974.6,1205.9,1566.5,1399.3,1731.4,2249.1,3498.3,4328.4,5622.7,1049.5,1298.5,1686.8,1448.9,1792.7,2328.8,3622.2,4481.7,5821.9,1086.7,1344.5,1746.6,1540.7,1906.2,2476.3,3851.7,4765.6,6190.7,1155.5,1429.7,1857.2,1627.8,2014.1,2616.4,4069.6,5035.2,6541.0,1220.9,1510.6,1962.3],"type":"scatter"},{"hoverinfo":"skip","line":{"color":"gray","dash":"dash","width":2},"mode":"lines","name":"PL = spacing","x":[15.9,434.8],"y":[15.9,434.8],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Protected-Length Envelope vs Anode Spacing"},"xaxis":{"title":{"text":"Anode Spacing (m)"}},"yaxis":{"title":{"text":"Protected Length per Bracelet (m)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_07_protected_length", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class='chart-title'>Chart 4: Mean Current Demand (Coating/Temperature Sensitivity)</div>
+                <div class='chart-subtitle'>FBE coating, 0.30 ohm-m. One curve per environment/temperature.</div>
+                <div>                            <div id="chart-current_sensitivity" class="plotly-graph-div" style="height:500px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("chart-current_sensitivity")) {                    Plotly.newPlot(                        "chart-current_sensitivity",                        [{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eI mean: %{y:.1f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#2c5282","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Exposed seawater (8 C)","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[92.2,120.03,149.61,177.44,222.63,278.29],"type":"scatter"},{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eI mean: %{y:.1f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#ed8936","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Partially-buried (12 C)","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[60.23,78.4,97.73,115.91,145.43,181.79],"type":"scatter"},{"hovertemplate":"OD: %{x:.3f} m\u003cbr\u003eI mean: %{y:.1f} A\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"#38a169","width":3},"marker":{"size":9},"mode":"lines+markers","name":"Buried (trenched) (20 C)","x":[0.1683,0.2191,0.2731,0.3239,0.4064,0.508],"y":[35.69,46.46,57.91,68.69,86.18,107.73],"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"title":{"font":{"size":18},"text":"Mean Current Demand vs Diameter (Coating\u002fTemperature)"},"xaxis":{"title":{"text":"Pipeline Outer Diameter (m)"}},"yaxis":{"title":{"text":"Mean Current Demand (A)"}},"height":500,"font":{"family":"Inter, sans-serif","size":13,"color":"#2d3748"},"margin":{"l":60,"r":30,"t":40,"b":60},"hoverlabel":{"font":{"size":12,"family":"Inter, sans-serif"},"bgcolor":"white"},"paper_bgcolor":"#ffffff","plot_bgcolor":"#ffffff"},                        {"displayModeBar": true, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "displaylogo": false, "toImageButtonOptions": {"format": "png", "filename": "demo_07_current_sensitivity", "height": 600, "width": 1000, "scale": 2}, "responsive": true}                    )                };                            </script>        </div>
+            </div>
+            
+</div>
+
+<div class="report-footer">
+    <p class="disclaimer">
+        These results are preliminary engineering estimates generated by automated
+        parametric analysis. All outputs require review by a qualified engineer
+        before use in design or operational decisions.
+    </p>
+    <p><strong>References:</strong> ISO 15589-2 (2004) — CP of Pipeline Systems, Part 2: Offshore Pipelines · DNV-RP-F103 (2010) — CP of Submarine Pipelines by Galvanic Anodes · DNV-RP-B401 (2021) — Cathodic Protection Design (anode count, protected length)</p>
+    <p>© 2026 digitalmodel · aceengineer.com</p>
+</div>
+
+</body>
+</html>

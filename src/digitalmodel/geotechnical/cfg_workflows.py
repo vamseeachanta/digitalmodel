@@ -285,3 +285,43 @@ class MudmatBearingCapacityWorkflow:
         cfg["mudmat_bearing_capacity"] = payload
         cfg["screening_status"] = design["screening_status"]
         return cfg
+
+
+class LiquefactionWorkflow:
+    """Run Seed-Idriss simplified liquefaction-triggering screening from cfg."""
+
+    def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        from digitalmodel.geotechnical.liquefaction import assess_liquefaction
+
+        workflow_cfg = cfg.get("liquefaction", {})
+        seismic = workflow_cfg["seismic"]
+        design = workflow_cfg.get("design", {})
+
+        result = assess_liquefaction(
+            pga_g=float(seismic["pga_g"]),
+            magnitude=float(seismic["magnitude"]),
+            layers=workflow_cfg["layers"],
+            required_factor_of_safety=float(
+                design.get("required_factor_of_safety", 1.2)
+            ),
+            k_sigma=float(design.get("k_sigma", 1.0)),
+        )
+
+        payload = {
+            **workflow_cfg,
+            "standard": result.standard,
+            "result": asdict(result),
+            "screening_status": result.screening_status,
+        }
+        payload["summary_json"] = str(
+            _write_summary(
+                cfg,
+                workflow_cfg.get("outputs", {}),
+                "results/liquefaction",
+                "liquefaction_summary.json",
+                payload,
+            )
+        )
+        cfg["liquefaction"] = payload
+        cfg["screening_status"] = result.screening_status
+        return cfg

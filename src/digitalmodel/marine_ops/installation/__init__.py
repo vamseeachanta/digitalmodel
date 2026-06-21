@@ -17,6 +17,14 @@ from digitalmodel.marine_ops.installation.crane_tip_motion import (
     crane_tip_significant_motion,
     crane_tip_significant_velocity,
 )
+from digitalmodel.marine_ops.installation.jumper_installation_schema import (
+    CraneSpec,
+    JumperEnvironmentSpec,
+    JumperGeometrySpec,
+    JumperInstallationSpec,
+    JumperMetadata,
+    PipeSpec,
+)
 from digitalmodel.marine_ops.installation.models import (
     CraneCurve,
     CraneTipConfig,
@@ -70,6 +78,13 @@ __all__ = [
     "Structure",
     "Vessel",
     "VesselScreeningResult",
+    # Jumper installation spec schema (issue #506)
+    "JumperInstallationSpec",
+    "JumperMetadata",
+    "JumperEnvironmentSpec",
+    "JumperGeometrySpec",
+    "PipeSpec",
+    "CraneSpec",
     # Crane tip motion
     "crane_tip_raos",
     "crane_tip_significant_motion",
