@@ -966,3 +966,12 @@ workflows:
       - examples/workflows/lifting-lug-design/results/lifting_lug/lifting_lug_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-design]
     runtime: offline
+  - id: weather-window
+    basename: weather_window
+    title: Weather-window (workability) screening — persistence of Hs vs an operational limit (DNV-OS-H101)
+    input: examples/workflows/weather-window/input.yml
+    outputs:
+      - examples/workflows/weather-window/results/input.yml
+      - examples/workflows/weather-window/results/weather_window/weather_window_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]
+    runtime: offline
