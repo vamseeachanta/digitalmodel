@@ -1249,6 +1249,19 @@ def test_workflow_registry(workflow, monkeypatch):
         )
         assert block["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "inspection-planning":
+        result = cfg["inspection_planning"]["result"]
+        # CR = (11.0 - 8.5)/5 = 0.5 mm/yr; allowance = 8.5 - 6.0 = 2.5 mm
+        assert result["corrosion_rate_mm_yr"] == pytest.approx(0.5)
+        assert result["corrosion_allowance_remaining_mm"] == pytest.approx(2.5)
+        # remaining life = 2.5 / 0.5 = 5.0 yr; half-life interval = 2.5 yr
+        assert result["remaining_life_years"] == pytest.approx(5.0)
+        assert result["half_life_interval_years"] == pytest.approx(2.5)
+        # half-life (2.5) < code max (10) -> governs
+        assert result["next_inspection_interval_years"] == pytest.approx(2.5)
+        # 5.0 yr remaining < 10 yr required -> fail
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] == "span-rectification":
         result = cfg["span_rectification"]["result"]
         allowable = result["allowable_span_m"]
@@ -1736,6 +1749,55 @@ def test_lifting_lug_checks_match_closed_form():
     # utilisation = demand / allowable
     for c in checks.values():
         assert c.utilization == pytest.approx(c.demand_mpa / c.allowable_mpa, rel=1e-12)
+
+
+def test_inspection_planning_half_life_rule_closed_form():
+    """AC6 validation gate for inspection-planning: remaining life and the
+    next-inspection interval reproduce the closed-form API 510/570/653 rules,
+    including the half-life cap and the t<=t_min repair flag."""
+    from digitalmodel.asset_integrity.inspection_planning import (
+        corrosion_rate_mm_yr,
+        plan_inspection,
+    )
+
+    # corrosion rate from two readings
+    assert corrosion_rate_mm_yr(11.0, 8.5, 5.0) == pytest.approx(0.5)
+
+    # half-life governs (remaining life / 2 < code max)
+    p = plan_inspection(
+        current_mm=8.5,
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        previous_mm=11.0,
+        years_between=5.0,
+    )
+    assert p.corrosion_rate_mm_yr == pytest.approx(0.5)
+    assert p.remaining_life_years == pytest.approx((8.5 - 6.0) / 0.5)
+    assert p.half_life_interval_years == pytest.approx(p.remaining_life_years / 2.0)
+    assert p.next_inspection_interval_years == pytest.approx(
+        min(p.remaining_life_years / 2.0, 10.0)
+    )
+
+    # code maximum governs when half the remaining life exceeds it
+    p2 = plan_inspection(
+        current_mm=20.0,
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        corrosion_rate=0.1,
+    )
+    assert p2.remaining_life_years == pytest.approx(140.0)
+    assert p2.next_inspection_interval_years == pytest.approx(10.0)  # capped
+    assert p2.screening_status == "pass"
+
+    # already below t_min -> immediate repair flag
+    p3 = plan_inspection(
+        current_mm=5.5,
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        corrosion_rate=0.2,
+    )
+    assert p3.next_inspection_interval_years == 0.0
+    assert p3.screening_status == "fail"
 
 
 def test_span_rectification_support_count_closed_form():
