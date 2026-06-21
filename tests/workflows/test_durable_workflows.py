@@ -997,6 +997,21 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
         assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
         assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+    elif workflow["id"] == "liquefaction-triggering":
+        result = cfg["liquefaction"]["result"]
+        layers = {round(L["depth_m"]): L for L in result["layers"]}
+        # shallow loose sand (N=8) liquefies; deep dense sand (N=28) does not
+        assert layers[3]["liquefies"] is True
+        assert layers[9]["liquefies"] is False
+        assert layers[3]["factor_of_safety"] == pytest.approx(0.454, abs=0.01)
+        assert layers[9]["factor_of_safety"] == pytest.approx(1.503, abs=0.01)
+        # governing = the lowest-FS (shallow) layer; overall fails
+        assert result["governing_depth_m"] == pytest.approx(3.0)
+        assert result["governing_factor_of_safety"] == pytest.approx(
+            min(L["factor_of_safety"] for L in result["layers"])
+        )
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] == "well-bore-design":
         block = cfg["well_bore_design"]
         summary = block["summary"]
@@ -1641,3 +1656,55 @@ def test_span_rectification_support_count_closed_form():
     assert r3["rectification_required"] is False
     assert r3["n_supports"] == 0
     assert r3["resulting_sub_span_m"] == pytest.approx(10.0)
+
+
+def test_liquefaction_seed_idriss_closed_form():
+    """AC6 validation gate for liquefaction-triggering: rd, MSF, CSR, CRR7.5 and
+    the factor of safety reproduce the closed-form Seed-Idriss / Youd 2001
+    expressions, and (N1)60cs >= 30 is treated as non-liquefiable."""
+    from digitalmodel.geotechnical.liquefaction import (
+        assess_liquefaction,
+        cyclic_resistance_ratio_75,
+        cyclic_stress_ratio,
+        magnitude_scaling_factor,
+        stress_reduction_factor,
+    )
+
+    # rd piecewise (Liao & Whitman 1986)
+    assert stress_reduction_factor(3.0) == pytest.approx(1.0 - 0.00765 * 3.0)
+    assert stress_reduction_factor(15.0) == pytest.approx(1.174 - 0.0267 * 15.0)
+    # MSF = 174 / Mw^2.56
+    assert magnitude_scaling_factor(7.0) == pytest.approx(174.0 / 7.0**2.56)
+    # CSR closed form
+    rd = stress_reduction_factor(3.0)
+    assert cyclic_stress_ratio(0.25, 54.0, 34.0, rd) == pytest.approx(
+        0.65 * 0.25 * (54.0 / 34.0) * rd
+    )
+    # CRR7.5 closed form for N=8
+    n = 8.0
+    expected_crr = (
+        1.0 / (34.0 - n) + n / 135.0 + 50.0 / (10.0 * n + 45.0) ** 2 - 1.0 / 200.0
+    )
+    assert cyclic_resistance_ratio_75(n) == pytest.approx(expected_crr)
+    # (N1)60cs >= 30 -> non-liquefiable cap
+    assert cyclic_resistance_ratio_75(35.0) == pytest.approx(2.0)
+
+    # full layer FS = (CRR/CSR) * MSF
+    res = assess_liquefaction(
+        pga_g=0.25,
+        magnitude=7.0,
+        layers=[
+            {
+                "depth_m": 3.0,
+                "sigma_v_kpa": 54.0,
+                "sigma_v_eff_kpa": 34.0,
+                "N1_60cs": 8.0,
+            }
+        ],
+        required_factor_of_safety=1.2,
+    )
+    layer = res.layers[0]
+    expected_fs = (expected_crr / layer.csr) * magnitude_scaling_factor(7.0)
+    assert layer.factor_of_safety == pytest.approx(expected_fs, rel=1e-12)
+    assert layer.liquefies is True
+    assert res.screening_status == "fail"

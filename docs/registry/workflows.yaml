@@ -767,6 +767,15 @@ workflows:
       - examples/workflows/scour-assessment/results/scour/scour_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]
     runtime: offline
+  - id: liquefaction-triggering
+    basename: liquefaction
+    title: Seed-Idriss simplified liquefaction-triggering screening (CSR vs CRR, Youd 2001)
+    input: examples/workflows/liquefaction/input.yml
+    outputs:
+      - examples/workflows/liquefaction/results/input.yml
+      - examples/workflows/liquefaction/results/liquefaction/liquefaction_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]
+    runtime: offline
   - id: well-bore-design
     basename: well_bore_design
     title: Standard offshore wellbore casing/cost/risk screen
