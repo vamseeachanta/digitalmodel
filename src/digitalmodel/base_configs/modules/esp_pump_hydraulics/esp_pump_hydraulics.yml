@@ -1,0 +1,10 @@
+basename: esp_pump_hydraulics
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+esp_pump_hydraulics: {}
