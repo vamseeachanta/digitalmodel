@@ -1227,6 +1227,31 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["n_supports"] == expected_subspans - 1
         assert result["resulting_sub_span_m"] == pytest.approx(60.0 / expected_subspans)
         assert result["resulting_sub_span_m"] <= allowable + 1e-9
+    elif workflow["id"] == "esp-pump-hydraulics":
+        result = cfg["esp_pump_hydraulics"]["result"]
+        # TDH = net lift + friction + discharge head
+        assert result["net_lift_m"] == pytest.approx(1800.0)
+        assert result["total_dynamic_head_m"] == pytest.approx(
+            result["net_lift_m"]
+            + result["friction_head_m"]
+            + result["discharge_head_m"],
+            rel=1e-12,
+        )
+        # stages = ceil(TDH / head_per_stage) = ceil(2425.4 / 6.0) = 405
+        assert result["stages_required"] == math.ceil(
+            result["total_dynamic_head_m"] / 6.0
+        )
+        assert result["stages_required"] == 405
+        # brake power = stages * bhp_per_stage * SG
+        assert result["brake_power_hp"] == pytest.approx(405 * 0.5 * 0.85)
+        # stages exceed the 400 housing -> governing fail; motor + rate pass
+        checks = {c["name"]: c for c in result["checks"]}
+        assert checks["pump_stages"]["passes"] is False
+        assert checks["motor_power"]["passes"] is True
+        assert checks["rate_within_range"]["passes"] is True
+        assert result["governing_check"] == "pump_stages"
+        assert result["screening_status"] == "fail"
+        assert cfg["screening_status"] == "fail"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
@@ -1641,3 +1666,44 @@ def test_span_rectification_support_count_closed_form():
     assert r3["rectification_required"] is False
     assert r3["n_supports"] == 0
     assert r3["resulting_sub_span_m"] == pytest.approx(10.0)
+
+
+def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
+    """AC6 validation gate for esp-pump-hydraulics: the Hazen-Williams friction
+    head, the total dynamic head decomposition, the stage count (ceil rule) and
+    the brake power reproduce their closed-form expressions."""
+    from digitalmodel.production_engineering.esp_pump_hydraulics import (
+        hazen_williams_head_m,
+        size_esp,
+    )
+
+    # Hazen-Williams closed form: hf = 10.67 L Q^1.852 / (C^1.852 d^4.87)
+    q = 1200.0 / 86400.0
+    expected_hf = 10.67 * 2500.0 * q**1.852 / (120.0**1.852 * 0.076**4.87)
+    assert hazen_williams_head_m(1200.0, 2500.0, 0.076, 120.0) == pytest.approx(
+        expected_hf, rel=1e-12
+    )
+
+    r = size_esp(
+        flow_rate_m3_per_day=1200.0,
+        dynamic_fluid_level_m=1800.0,
+        pump_setting_depth_m=2500.0,
+        wellhead_pressure_kpa=2000.0,
+        specific_gravity=0.85,
+        tubing_inner_diameter_m=0.076,
+        head_per_stage_m=6.0,
+        bhp_per_stage_hp=0.5,
+        max_stages=400,
+        motor_rating_hp=250.0,
+        min_rate_m3_per_day=600.0,
+        max_rate_m3_per_day=2000.0,
+        hazen_williams_c=120.0,
+    )
+    expected_discharge = 2000.0 * 1.0e3 / (0.85 * 1000.0 * 9.81)
+    expected_tdh = 1800.0 + expected_hf + expected_discharge
+    assert r.friction_head_m == pytest.approx(expected_hf, rel=1e-12)
+    assert r.discharge_head_m == pytest.approx(expected_discharge, rel=1e-12)
+    assert r.total_dynamic_head_m == pytest.approx(expected_tdh, rel=1e-12)
+    assert r.stages_required == math.ceil(expected_tdh / 6.0)
+    assert r.brake_power_hp == pytest.approx(r.stages_required * 0.5 * 0.85, rel=1e-12)
+    assert r.screening_status == "fail"  # 405 stages > 400 housing
