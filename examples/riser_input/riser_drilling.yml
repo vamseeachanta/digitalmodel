@@ -1,0 +1,19 @@
+# Unified riser input schema (#809) - Drilling Riser example
+riser_type: drilling
+name: drilling_riser_example
+geometry:
+  water_depth: 2500.0
+material:
+  outer_diameter: 0.5334   # 21 in
+  wall_thickness: 0.0222   # 0.875 in
+  grade: X80
+  contents_density: 1500.0
+analysis:
+  run_statics: true
+  safety_factor: 1.25
+vessel_heave_amplitude: 4.0
+vessel_pitch_amplitude_deg: 6.0
+tensioner_offset: 15.0
+overpull_pct: 30.0
+mud_density: 1500.0
+dynamic_factor: 1.25

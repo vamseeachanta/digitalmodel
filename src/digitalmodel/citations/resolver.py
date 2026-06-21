@@ -17,6 +17,22 @@ Canonical citation `wiki_path` form is `wikis/<domain>/...` (no `knowledge/`
 prefix) post-2026-05-20 privacy flip per the codes-standards-data-routing rule.
 
 Per `feedback_path_parent_infinite_loop`: parent walk is hard-capped at 8 levels.
+
+Trust boundary (#618):
+  Env-var-supplied paths (LLM_WIKI_PATH, DIGITALMODEL_REPO_ROOT) and explicit
+  overrides are treated as untrusted input. `_validate_clone` resolves them with
+  `Path.resolve(strict=True)` so that symlinks and `..` segments are collapsed to a
+  real on-disk path BEFORE the `wikis/` / `knowledge/wikis/` containment check. The
+  containment subdirectory is itself resolved and required to live under the resolved
+  base, so a `wikis/` symlink that escapes the base is rejected. This closes the
+  TOCTOU/symlink-escape gap where a base passing validation could later read a
+  citation file through a symlink pointing outside the intended tree.
+
+Log hygiene (#618):
+  Resolved/base paths in INFO/ERROR logs are redacted by default (home-directory
+  prefix collapsed to `~`) so resolver logs shipped to centralized aggregators do
+  not leak local filesystem layout. Set `DIGITALMODEL_QUIET_RESOLVER=1` to suppress
+  resolver INFO/ERROR logging entirely (opt-out for noise-sensitive environments).
 """
 from __future__ import annotations
 
@@ -70,7 +86,7 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
     if override is not None:
         validated = _validate_clone(Path(override))
         if validated is not None:
-            _LOGGER.info("citation-resolver: resolved via explicit override → %s", validated)
+            _emit_info_log("citation-resolver: resolved via explicit override → %s", validated)
             return validated
         raise CitationResolutionError(
             code_id="<resolver>",
@@ -93,7 +109,7 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
             )
         validated = _validate_clone(env_path)
         if validated is not None:
-            _LOGGER.info("citation-resolver: resolved via LLM_WIKI_PATH → %s", validated)
+            _emit_info_log("citation-resolver: resolved via LLM_WIKI_PATH → %s", validated)
             return validated
         _emit_error_log("LLM_WIKI_PATH set but path is not a valid wiki clone: %s", env_path)
         raise CitationResolutionError(
@@ -119,7 +135,7 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
                     stacklevel=3,
                 )
                 _RESOLUTION_CACHE["deprecation_warned"] = True
-            _LOGGER.info(
+            _emit_info_log(
                 "citation-resolver: resolved via DIGITALMODEL_REPO_ROOT (legacy) → %s",
                 validated,
             )
@@ -147,14 +163,14 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
     for parent in [here, *here.parents][:_WALK_HARD_CAP]:
         validated = _validate_clone(parent)
         if validated is not None:
-            _LOGGER.info("citation-resolver: resolved via parent-walk → %s", validated)
+            _emit_info_log("citation-resolver: resolved via parent-walk → %s", validated)
             return validated
 
     # 5. Known local-clone fallbacks
     for candidate in _KNOWN_LOCAL_CLONES:
         validated = _validate_clone(candidate)
         if validated is not None:
-            _LOGGER.info(
+            _emit_info_log(
                 "citation-resolver: resolved via known-local-clone fallback → %s",
                 validated,
             )
@@ -205,21 +221,76 @@ def resolve_wiki_path(citation_wiki_path: str, *, override: Optional[Path] = Non
 # ---------------------------------------------------------------------------
 
 
+def _is_contained(child: Path, base: Path) -> bool:
+    """True if `child` (already resolved) is `base` or lives under `base`."""
+    try:
+        child.relative_to(base)
+        return True
+    except ValueError:
+        return False
+
+
 def _validate_clone(base: Path) -> Optional[Path]:
-    """Return base if it looks like a real wiki clone; else None.
+    """Return the resolved base if it looks like a real wiki clone; else None.
 
     A valid clone contains either `<base>/wikis/` (standalone llm-wiki layout)
     or `<base>/knowledge/wikis/` (workspace-hub overlay layout).
+
+    Hardening (#618): the base is resolved with `Path.resolve(strict=True)` so a
+    symlinked or `..`-laden input is collapsed to its real on-disk path before the
+    structure check. The matched `wikis/` subdirectory is itself resolved and must
+    remain contained under the resolved base — a `wikis/` symlink whose target
+    escapes the base is rejected (returns None) rather than silently followed.
+    Returns the *resolved* path so downstream joins operate on the canonical tree.
     """
-    if not base.is_dir():
+    try:
+        resolved_base = base.resolve(strict=True)
+    except (OSError, RuntimeError):
+        # strict=True raises FileNotFoundError for missing paths; RuntimeError on
+        # symlink loops. Either way the base is not a usable clone.
         return None
-    if (base / "wikis").is_dir():
-        return base
-    if (base / "knowledge" / "wikis").is_dir():
-        return base
+    if not resolved_base.is_dir():
+        return None
+    for sub in (resolved_base / "wikis", resolved_base / "knowledge" / "wikis"):
+        try:
+            resolved_sub = sub.resolve(strict=True)
+        except (OSError, RuntimeError):
+            continue
+        if resolved_sub.is_dir() and _is_contained(resolved_sub, resolved_base):
+            return resolved_base
     return None
 
 
+def _quiet() -> bool:
+    """True when resolver logging is opted out via DIGITALMODEL_QUIET_RESOLVER=1."""
+    return os.environ.get("DIGITALMODEL_QUIET_RESOLVER") == "1"
+
+
+def _redact(value: object) -> str:
+    """Redact a path/value for logging: collapse the home-dir prefix to `~`.
+
+    Keeps the trailing path segments (useful for diagnosis) while not shipping the
+    user's absolute home-directory layout to centralized log aggregators (#618).
+    """
+    text = str(value)
+    try:
+        home = str(Path.home())
+    except (RuntimeError, OSError):
+        return text
+    if home and text.startswith(home):
+        return "~" + text[len(home):]
+    return text
+
+
+def _emit_info_log(fmt: str, *args) -> None:
+    """INFO-level log helper with default path redaction + opt-out."""
+    if _quiet():
+        return
+    _LOGGER.info(fmt, *(_redact(a) for a in args))
+
+
 def _emit_error_log(fmt: str, *args) -> None:
-    """ERROR-level log helper. Wrapper for symmetric INFO/ERROR coverage."""
-    _LOGGER.error(fmt, *args)
+    """ERROR-level log helper with default path redaction + opt-out."""
+    if _quiet():
+        return
+    _LOGGER.error(fmt, *(_redact(a) for a in args))

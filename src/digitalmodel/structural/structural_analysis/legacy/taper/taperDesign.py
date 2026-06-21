@@ -3,7 +3,7 @@
 import yaml
 
 with open("taper.yml", 'r') as ymlfile:
-    cfg = yaml.load(ymlfile)
+    cfg = yaml.safe_load(ymlfile)
 
 print(cfg)
 

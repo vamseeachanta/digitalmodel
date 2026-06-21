@@ -15,7 +15,7 @@ def _read_data(path: Path) -> dict[str, Any]:
     if path.suffix.lower() == ".json":
         return json.loads(path.read_text())
     yaml = YAML(typ="safe")
-    data = yaml.load(path.read_text())
+    data = yaml.safe_load(path.read_text())
     if not isinstance(data, dict):
         raise ValueError(f"fixture {path} must contain a mapping")
     return data

@@ -32,6 +32,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 ORCAFLEX_SPEC_DIR = Path(__file__).parent.parent / "docs/domains/orcaflex"
 ORCAWAVE_SPEC_DIR = Path(__file__).parent.parent / "docs/domains/orcawave"
 
+# model_type labels for specs that use a non-ProjectInputSpec schema (#506)
+ALT_SCHEMA_TYPES = {"passing_ship", "jumper_installation"}
+
 
 def _is_different_schema(data: dict) -> str | None:
     """Detect specs that use a different schema than ProjectInputSpec.
@@ -49,6 +52,34 @@ def _is_different_schema(data: dict) -> str | None:
     if "pipe" in data or "jumper" in data:
         return "jumper_installation"
     return None
+
+
+def _validate_alt_schema(alt_schema: str, data: dict) -> tuple[str, list[str]]:
+    """Validate a non-ProjectInputSpec spec against its own Pydantic schema.
+
+    Returns ``(status, errors)`` where status is "pass" or "fail". For an
+    unrecognised alt-schema label, status is "skip" (no schema available).
+    See issue #506: passing_ship and jumper_installation specs now validate
+    against PassingShipSpec / JumperInstallationSpec respectively.
+    """
+    try:
+        if alt_schema == "passing_ship":
+            from digitalmodel.hydrodynamics.passing_ship.input_schemas import (
+                PassingShipSpec,
+            )
+
+            PassingShipSpec.from_dict(data)
+            return "pass", []
+        if alt_schema == "jumper_installation":
+            from digitalmodel.marine_ops.installation.jumper_installation_schema import (
+                JumperInstallationSpec,
+            )
+
+            JumperInstallationSpec.from_dict(data)
+            return "pass", []
+    except Exception as e:  # noqa: BLE001 - report any validation error
+        return "fail", [f"{alt_schema} schema: {str(e)[:200]}"]
+    return "skip", []
 
 
 def audit_orcaflex_spec(spec_path: Path) -> dict:
@@ -83,8 +114,18 @@ def audit_orcaflex_spec(spec_path: Path) -> dict:
     # Stage 1b: Detect non-ProjectInputSpec schemas
     alt_schema = _is_different_schema(data)
     if alt_schema:
-        result["schema_valid"] = "different_schema"
         result["model_type"] = alt_schema
+        # Validate against the spec's own schema (issue #506) rather than
+        # silently skipping. Generation/strict/post stages have no OrcaFlex
+        # backend for these specs, so they remain "different_schema".
+        status, errors = _validate_alt_schema(alt_schema, data)
+        if status == "pass":
+            result["schema_valid"] = "pass"
+        elif status == "fail":
+            result["schema_valid"] = "fail"
+            result["errors"].extend(errors)
+        else:
+            result["schema_valid"] = "different_schema"
         result["generation"] = "different_schema"
         result["yaml_strict"] = "different_schema"
         result["post_validation"] = "different_schema"
@@ -301,13 +342,20 @@ def main():
 
     ofx_results = _run_audits(audit_orcaflex_spec, orcaflex_specs, args.workers)
     for i, r in enumerate(ofx_results, 1):
-        is_alt = r["schema_valid"] == "different_schema"
-        all_pass = is_alt or all(
-            v == "pass"
-            for k, v in r.items()
-            if k not in ("path", "model_type", "errors")
-        )
-        status = "SKIP" if is_alt else ("PASS" if all_pass else "FAIL")
+        is_alt = r["model_type"] in ALT_SCHEMA_TYPES
+        if is_alt:
+            # Alt-schema specs (#506): judged only on their own schema; the
+            # gen/strict/post stages are intentionally "different_schema".
+            status = "PASS" if r["schema_valid"] == "pass" else (
+                "FAIL" if r["schema_valid"] == "fail" else "SKIP"
+            )
+        else:
+            all_pass = all(
+                v == "pass"
+                for k, v in r.items()
+                if k not in ("path", "model_type", "errors")
+            )
+            status = "PASS" if all_pass else "FAIL"
         short_path = r["path"].replace("docs/domains/orcaflex/", "")
         print(
             f"  [{i:3d}] {status:4s} | {r['model_type']:18s} | "
@@ -347,8 +395,8 @@ def main():
     total_ow = len(ow_results)
 
     # Separate different-schema specs from standard ProjectInputSpec specs
-    ofx_standard = [r for r in ofx_results if r["schema_valid"] != "different_schema"]
-    ofx_alt = [r for r in ofx_results if r["schema_valid"] == "different_schema"]
+    ofx_standard = [r for r in ofx_results if r["model_type"] not in ALT_SCHEMA_TYPES]
+    ofx_alt = [r for r in ofx_results if r["model_type"] in ALT_SCHEMA_TYPES]
     total_std = len(ofx_standard)
 
     ofx_yaml_pass = sum(1 for r in ofx_standard if r["yaml_load"] == "pass")
@@ -390,7 +438,12 @@ def main():
         for r in ofx_alt:
             t = r["model_type"]
             alt_types[t] = alt_types.get(t, 0) + 1
-        print(f"  Different schemas: {alt_types}")
+        alt_schema_pass = sum(1 for r in ofx_alt if r["schema_valid"] == "pass")
+        print(f"  Non-ProjectInputSpec specs: {alt_types}")
+        print(
+            f"  Alt-schema validation: {alt_schema_pass}/{len(ofx_alt)} "
+            f"({pct(alt_schema_pass, len(ofx_alt))})"
+        )
 
     print(f"\nOrcaWave ({total_ow} specs):")
     print(f"  YAML parseable:    {ow_yaml_pass}/{total_ow} ({pct(ow_yaml_pass, total_ow)})")

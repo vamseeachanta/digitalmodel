@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Weld-Fatigue Quick-Check — F</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;margin:2rem;color:#1f2328}
+ .badge{display:inline-block;padding:.3rem .9rem;border-radius:.4rem;
+   color:#fff;font-weight:700;background:#1a7f37}
+ table{border-collapse:collapse;margin-top:1rem}
+ th,td{border:1px solid #d0d7de;padding:.35rem .6rem;text-align:right}
+ th{background:#f6f8fa}
+ .meta td{text-align:left;border:none;padding:.15rem .6rem}
+</style></head><body>
+<h1>Weld-Fatigue S-N Quick-Check</h1>
+<p class="badge">PASS</p>
+<table class="meta">
+ <tr><td><b>Standard</b></td><td>DNV-RP-C203</td></tr>
+ <tr><td><b>Weld class</b></td><td>F</td></tr>
+ <tr><td><b>Environment</b></td><td>seawater_cp</td></tr>
+ <tr><td><b>Thickness</b></td><td>40.0 mm
+     (t_ref 25.0 mm, k=0.25)</td></tr>
+ <tr><td><b>Design life</b></td><td>25.0 yr
+     (block 1.0 yr)</td></tr>
+ <tr><td><b>Total Miner damage</b></td>
+     <td>0.4511 / 1.00 allowable</td></tr>
+ <tr><td><b>Life factor</b></td><td>2.217</td></tr>
+</table>
+<h2>Per-bin breakdown</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>nominal_stress_range</th>
+      <th>applied_stress_range</th>
+      <th>cycles</th>
+      <th>allowable_cycles</th>
+      <th>damage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>28.000</td>
+      <td>31.491</td>
+      <td>100,000.000</td>
+      <td>9,129,267</td>
+      <td>0.011</td>
+    </tr>
+    <tr>
+      <td>16.000</td>
+      <td>17.995</td>
+      <td>1,000,000</td>
+      <td>141,010,064</td>
+      <td>0.007</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Notes</h2><ul><li>thickness correction applied: t=40.0 mm > t_ref=25.0 mm, k=0.25, factor=1.1247</li></ul>
+<p style="color:#57606a;font-size:.85rem">
+ S-N class parameters: DNV-RP-C203 Table 2-1 (air) / Table 2-2
+ (seawater with cathodic protection). N = a·S<sup>-m</sup>.</p>
+</body></html>

@@ -218,7 +218,13 @@ class CacheClient:
                 value = self.redis.get(key)
                 if value is not None:
                     self.stats.hits += 1
-                    return pickle.loads(value)
+                    # SECURITY: pickle.loads of untrusted bytes allows arbitrary
+                    # code execution. This is acceptable ONLY because the Redis
+                    # backend is a trusted-internal cache that this process
+                    # populates itself via pickle.dumps in set(); the values are
+                    # never operator/network-supplied. If Redis is ever exposed
+                    # to untrusted writers, switch to a signed/JSON serializer.
+                    return pickle.loads(value)  # nosec B301 - trusted-internal cache
                 else:
                     self.stats.misses += 1
                     return None
