@@ -101,6 +101,9 @@ workflows:
       - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
     runtime: offline
+    version: 1
+    status: stable
+    latest: true
     parametric:
       physics: log_log
       response: damage
@@ -118,6 +121,24 @@ workflows:
         - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000]}
         - {name: sn_curve, values: [B1, B2, C, C1, C2, D, E, F]}
       atlas: atlases/mooring_fatigue
+  # Versioned-routing canary (schema v2): a second algorithm version of the same
+  # id. v2 assesses against the DNV-RP-C203 free-corrosion S-N basis (single
+  # slope, no endurance limit, no cathodic-protection credit) — more conservative
+  # than v1's seawater-CP bilinear curve. Shipped `experimental` so unpinned
+  # routing stays on v1 (latest-stable); pin `digitalmodel:mooring-fatigue@2`
+  # to opt in.
+  - id: mooring-fatigue
+    version: 2
+    status: experimental
+    basename: mooring_fatigue
+    title: Metallic mooring-line fatigue — conservative free-corrosion S-N basis
+    input: examples/workflows/mooring-fatigue-v2/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue-v2/results/input.yml
+      - examples/workflows/mooring-fatigue-v2/results/input_mooring_fatigue.csv
+      - examples/workflows/mooring-fatigue-v2/results/input_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
+    runtime: offline
   - id: mooring-fatigue-atlas-query
     basename: parametric_query
     title: Instant interpolated mooring fatigue life from the pre-computed atlas
