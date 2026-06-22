@@ -1048,6 +1048,22 @@ workflows:
       - examples/workflows/lifting-lug-design/results/lifting_lug/lifting_lug_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-design]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: static_load_kN, scale: linear, grid: [200, 300, 400, 500, 600]}
+        - {name: plate_thickness_mm, scale: linear, grid: [30, 40, 50, 60, 70]}
+      atlas: atlases/lifting_lug
+  - id: lifting-lug-atlas-query
+    basename: parametric_query
+    title: Instant interpolated lifting-lug utilisation from the pre-computed atlas
+    input: examples/workflows/lifting-lug-atlas-query/input.yml
+    outputs:
+      - examples/workflows/lifting-lug-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-atlas-query]
+    runtime: offline
   - id: weather-window
     basename: weather_window
     title: Weather-window (workability) screening — persistence of Hs vs an operational limit (DNV-OS-H101)
