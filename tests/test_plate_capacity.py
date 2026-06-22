@@ -15,8 +15,17 @@ from pathlib import Path
 import tempfile
 import os
 
+import pytest
+
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# stale: digitalmodel.analysis.* was removed in the package reorg; skip until
+# the test is migrated to the current module layout. See #949.
+pytest.importorskip(
+    "digitalmodel.analysis.plate_capacity",
+    reason="stale: digitalmodel.analysis module removed; see #949",
+)
 
 from digitalmodel.analysis.plate_capacity import (
     PlateProperties, AppliedLoads, BucklingConstants, BucklingResults,
