@@ -128,9 +128,12 @@ def orcawave_depth_sweep(
 def orcaflex_fowt_watch_circle_sweep(
     *,
     watch_circle_radii_m=(15.0, 25.0, 35.0),
+    mbr_limits_m=(4.5,),
     cable=None,
 ):
-    """Sweep FOWT watch-circle radius -> closed-form MBR check per case (offline)."""
+    """Sweep FOWT watch-circle radius x cable MBR limit -> closed-form MBR check
+    per case (offline). A single ``mbr_limits_m`` value gives a 1-D sweep; several
+    give a 2-D response grid (atlas-ready, P2)."""
     from digitalmodel.orcaflex.fowt_mooring_workflow import FOWTMooringWorkflow
 
     base_cable = cable or {
@@ -146,7 +149,8 @@ def orcaflex_fowt_watch_circle_sweep(
         parameters=[
             ParameterSweep(
                 name="watch_circle_radius", values=list(watch_circle_radii_m), unit="m"
-            )
+            ),
+            ParameterSweep(name="mbr_limit_m", values=list(mbr_limits_m), unit="m"),
         ],
     )
 
@@ -154,7 +158,7 @@ def orcaflex_fowt_watch_circle_sweep(
         wf_cfg = {
             "fowt_mooring": {
                 "watch_circle_radius": cfg["watch_circle_radius"],
-                "cable": dict(base_cable),
+                "cable": {**base_cable, "mbr_limit_m": cfg["mbr_limit_m"]},
             }
         }
         out = FOWTMooringWorkflow().router(wf_cfg)
@@ -163,7 +167,10 @@ def orcaflex_fowt_watch_circle_sweep(
         limit = float(r["mbr_limit_m"])
         return CaseResult(
             case_id=cfg["case_id"],
-            parameters={"watch_circle_radius": cfg["watch_circle_radius"]},
+            parameters={
+                "watch_circle_radius": cfg["watch_circle_radius"],
+                "mbr_limit_m": cfg["mbr_limit_m"],
+            },
             status="completed",
             min_clearance_m=round(float(r["margin_m"]), 3),
             max_utilisation=round(limit / governing, 4) if governing else None,
