@@ -324,6 +324,47 @@ def _viv_safety_factor_inline(point: dict[str, Any]) -> float:
     return float(sf["safety_factor_inline"].min())
 
 
+def _span_rectification_utilisation(point: dict[str, Any]) -> float:
+    """DNV-RP-F105 free-span screening utilisation (as-surveyed span / allowable
+    span) for one (actual_span_length_m, current_velocity_ms) point, at a fixed
+    reference pipe + soil. UC <= 1 passes (span within allowable, no
+    rectification); UC > 1 fails and triggers the equal-sub-span support layout.
+    The allowable span is the SpanAllowableLength the span_rectification workflow
+    calls; the response is the raw screen ratio that crosses 1.0."""
+    from digitalmodel.subsea.pipeline.free_span.models import (
+        BoundaryConditionF105,
+        EnvironmentType,
+        PipeSpanInput,
+    )
+    from digitalmodel.subsea.pipeline.free_span.span_allowable_length import (
+        SpanAllowableLength,
+    )
+
+    inp = PipeSpanInput(
+        od_m=0.2731,
+        wt_m=0.0127,
+        span_length_m=34.0,
+        e_modulus_pa=207e9,
+        steel_density_kgm3=7850.0,
+        content_density_kgm3=900.0,
+        water_density_kgm3=1025.0,
+        current_velocity_ms=float(point["current_velocity_ms"]),
+        wave_velocity_ms=0.0,
+        seabed_gap_m=0.5,
+        bc=BoundaryConditionF105("pinned-pinned"),
+        sag_m=0.0,
+        structural_damping=0.005,
+        hydrodynamic_damping=0.010,
+        sn_curve_class="F",
+        environment=EnvironmentType("seawater_cp"),
+        gamma_on_IL=1.1,
+        gamma_on_CF=1.3,
+        gamma_k=1.15,
+    )
+    allowable = SpanAllowableLength(inp, submerged_weight_N_m=850.0).max_span_m()
+    return float(point["actual_span_length_m"]) / allowable
+
+
 def _fowt_mbr_utilisation(point: dict[str, Any]) -> float:
     """FOWT watch-circle vs dynamic-cable MBR utilisation (mbr_limit / governing
     bend radius) for one (watch_circle_radius, mbr_limit_m) point, at a fixed
@@ -397,6 +438,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,
+    "span_rectification": _span_rectification_utilisation,
     "pile_capacity": _pile_capacity_kn,
     "anchor_capacity": _suction_anchor_capacity_kn,
 }

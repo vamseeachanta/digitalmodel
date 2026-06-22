@@ -551,6 +551,22 @@ workflows:
       - examples/workflows/span-rectification/results/span_rectification/span_rectification_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: actual_span_length_m, scale: linear, grid: [8, 10.5, 13, 15.5, 18]}
+        - {name: current_velocity_ms, scale: linear, grid: [0.4, 0.6, 0.8, 1.0, 1.2]}
+      atlas: atlases/span_rectification
+  - id: span-rectification-atlas-query
+    basename: parametric_query
+    title: Instant interpolated free-span screening utilisation from the pre-computed atlas
+    input: examples/workflows/span-rectification-atlas-query/input.yml
+    outputs:
+      - examples/workflows/span-rectification-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification-atlas-query]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec
