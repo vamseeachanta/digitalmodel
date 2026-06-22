@@ -147,6 +147,11 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
+    elif basename in ["ansys"]:
+        # Licensed ANSYS/MAPDL solve via a prepared APDL script (#940).
+        from digitalmodel.ansys.workflow import AnsysWorkflow
+
+        cfg_base = AnsysWorkflow().router(cfg_base)
     elif basename == "modal_analysis":
         oma = OrcModalAnalysis()
         cfg_base = oma.run_modal_analysis(cfg_base)
