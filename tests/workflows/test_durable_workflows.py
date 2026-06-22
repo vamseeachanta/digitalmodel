@@ -190,6 +190,34 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results.sort_values("stress_range_MPa")[
             "allowable_cycles"
         ].is_monotonic_decreasing
+    elif workflow["id"] == "riser-fatigue":
+        summary = cfg["riser_fatigue"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+
+        results = pd.read_csv(results_path)
+        seg_summary = pd.read_csv(summary_path)
+
+        assert summary["governing_segment"] == "TDZ-sandwave"
+        assert 0.0 < summary["governing_damage"] < 1.0
+        assert summary["governing_wave_damage"] > 0.0
+        assert summary["governing_viv_damage"] > 0.0
+        assert summary["governing_damage"] == pytest.approx(
+            summary["governing_wave_damage"] + summary["governing_viv_damage"]
+        )
+        assert summary["governing_fatigue_life_years"] == pytest.approx(
+            summary["design_life_years"] / summary["governing_damage"]
+        )
+        assert summary["screening_status"] == (
+            "pass" if summary["governing_dff_margin"] >= 1.0 else "fail"
+        )
+        assert set(seg_summary["segment_id"]) == {"TDZ-sandwave", "hangoff"}
+        assert set(results["contribution"]) == {"wave", "viv"}
+        assert (results["stress_range_MPa"] > 0.0).all()
     elif workflow["id"] in {
         "mooring-fatigue-atlas-query",
         "synthetic-rope-atlas-query",

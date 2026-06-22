@@ -207,6 +207,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
 
         cfg_base = mooring_fatigue(cfg_base)
+    elif basename == "riser_fatigue":
+        from digitalmodel.riser_fatigue.workflow import router as riser_fatigue
+
+        cfg_base = riser_fatigue(cfg_base)
     elif basename == "synthetic_rope_mooring_fatigue":
         from digitalmodel.synthetic_rope_mooring_fatigue.workflow import (
             router as synthetic_rope_mooring_fatigue,
