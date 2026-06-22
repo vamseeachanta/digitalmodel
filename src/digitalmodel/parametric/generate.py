@@ -426,6 +426,55 @@ def _esp_pump_utilisation(point: dict[str, Any]) -> float:
     return float(max(c["utilization"] for c in result.checks))
 
 
+# Fixed reference hindcast baked into the weather-window atlas: a deterministic
+# one-year (3 h step) Hs record with a seasonal mean + synoptic (~weekly) and
+# fast modulation. A real screen replaces this with the site hindcast; the
+# record is a per-location property of the atlas, not an axis (mirrors the way
+# spectral_fatigue bakes its stress gain). No RNG -> reproducible across numpy
+# versions, so a refresh rebuilds an identical atlas.
+_WEATHER_WINDOW_TIME_STEP_HOURS = 3.0
+
+
+@lru_cache(maxsize=1)
+def _weather_window_reference_hs():
+    import numpy as np
+
+    n = 2920  # 365 d at 3 h steps
+    t = np.arange(n)
+    seasonal = 2.2 + 1.0 * np.sin(2.0 * math.pi * (t / n))  # winter-high mean
+    synoptic = 0.8 * np.sin(2.0 * math.pi * t / 56.0 + 0.7)  # ~weekly systems
+    fast = 0.4 * np.sin(2.0 * math.pi * t / 9.0 + 1.3)
+    hs = seasonal + synoptic + fast + 0.6 * np.abs(np.sin(0.013 * t + 0.2))
+    return np.clip(hs, 0.2, None)
+
+
+def _weather_window_operability_pct(point: dict[str, Any]) -> float:
+    """Planned-operability percentage for a marine operation needing a
+    continuous below-limit window of ``required_window_hours`` at an operational
+    ``hs_limit_m``, against a FIXED reference hindcast baked into the atlas.
+
+    operability = workability * P(window >= required), where workability is the
+    fraction of time Hs <= the limit and window durations are taken exponential
+    with the persistence mean window, so P(W >= D) = exp(-D / mean_window)
+    (DNV-RP-H103 / Noble Denton 0027 persistence). Both factors rise with the Hs
+    limit and the required-window factor falls with duration, so the surface is
+    smooth and monotone in both axes — atlas-able from two scalar axes with the
+    hindcast held fixed (an Hs time series is never an atlas axis)."""
+    from digitalmodel.orcaflex.weather_window import analyse_persistence
+
+    hs = _weather_window_reference_hs()
+    ts = _WEATHER_WINDOW_TIME_STEP_HOURS
+    persistence = analyse_persistence(hs, float(point["hs_limit_m"]), ts)
+    total_hours = len(hs) * ts
+    workability = persistence.total_hours_below / total_hours
+    mean_window = persistence.mean_window_hours
+    if mean_window <= 0.0:
+        return 0.0
+    return 100.0 * workability * math.exp(
+        -float(point["required_window_hours"]) / mean_window
+    )
+
+
 def _mudmat_bearing_utilisation(point: dict[str, Any]) -> float:
     """Mudmat governing screening utilisation (max of bearing + sliding) for one
     (vertical_load_kN, undrained_shear_strength_kpa) point, at a fixed reference
@@ -478,6 +527,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "fowt_mooring": _fowt_mbr_utilisation,
     "lifting_lug": _lifting_lug_utilisation,
     "esp_pump_hydraulics": _esp_pump_utilisation,
+    "weather_window": _weather_window_operability_pct,
     "mudmat_bearing_capacity": _mudmat_bearing_utilisation,
     "inspection_planning": _inspection_remaining_life_years,
     "viv_analysis": _viv_safety_factor_inline,

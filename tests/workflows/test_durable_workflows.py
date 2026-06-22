@@ -1374,6 +1374,17 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["response"] == "utilisation"
         assert result["screening_status"] == "pass"
         assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "weather-window-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # value class: interpolated planned-operability percentage, no verdict
+        assert result["in_range"] is True
+        assert result["response"] == "operability_pct"
+        # operability is a percentage in (0, 100)
+        assert 0.0 < result["value"] < 100.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        assert "screening estimate" in result["disclaimer"].lower()
+        assert result["provenance"]["atlas_id"]
     elif workflow["id"] == "span-rectification-atlas-query":
         result = cfg["parametric_query"]["result"]
         # in-range short-span / moderate-current point -> span within allowable,
