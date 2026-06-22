@@ -1344,6 +1344,22 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["governing_check"] == "pump_stages"
         assert result["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "fowt-mooring":
+        result = cfg["fowt_mooring"]["result"]
+        assert result["mbr_limit_m"] == pytest.approx(4.5)
+        # governing bend radius comfortably exceeds the MBR limit -> passes
+        assert result["governing_bend_radius_m"] > result["mbr_limit_m"]
+        assert result["passes"] is True
+        assert result["margin_m"] == pytest.approx(
+            result["governing_bend_radius_m"] - result["mbr_limit_m"]
+        )
+    elif workflow["id"] == "fowt-mooring-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range point -> served interpolated utilisation, no escalation
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:

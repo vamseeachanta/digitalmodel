@@ -500,6 +500,30 @@ workflows:
       - examples/workflows/free-span-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-atlas-query]
     runtime: offline
+  - id: fowt-mooring
+    basename: fowt_mooring
+    title: FOWT watch-circle vs dynamic-cable MBR feasibility screen
+    input: examples/workflows/fowt-mooring/input.yml
+    outputs:
+      - examples/workflows/fowt-mooring/results/fowt_mooring_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fowt-mooring]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: mbr_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: watch_circle_radius, scale: linear, grid: [5, 10, 15, 20, 25, 30]}
+        - {name: mbr_limit_m, scale: linear, grid: [4.0, 5.0, 6.0]}
+      atlas: atlases/fowt_mooring
+  - id: fowt-mooring-atlas-query
+    basename: parametric_query
+    title: Instant interpolated FOWT MBR utilisation from the pre-computed atlas
+    input: examples/workflows/fowt-mooring-atlas-query/input.yml
+    outputs:
+      - examples/workflows/fowt-mooring-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fowt-mooring-atlas-query]
+    runtime: offline
   - id: pipeline-lateral-buckling
     basename: lateral_buckling
     title: HP/HT subsea pipeline lateral buckling screening
