@@ -1,63 +1,59 @@
-"""Reduced-order structural utilization model for DNV 2.7-1 offshore containers.
+"""DNV 2.7-1 / DNV-ST-E271 offshore-container structural utilization model.
 
-This module implements a **transparent, analytical screening model** of the
-governing *offshore lift* load case for offshore containers (CCUs) per
-DNV 2.7-1 / DNV-ST-E271 ("Offshore containers"). It is intended for early
-sizing and for generating *utilization curves* across a container's
-dimensions and member shapes -- it is **not** a substitute for the certified
-finite-element analysis the standard ultimately requires.
+Reduced-order screening of the governing *offshore lift* load case for offshore
+containers (CCUs) per **DNVGL-ST-E271 (2.7-1), Edition August 2017**. Generates
+utilization curves across a container's dimensions and member shapes for early
+sizing. It is **not** a substitute for the certified FEA + prototype tests the
+standard ultimately requires (§4.2, §4.6).
 
-What is modelled
-----------------
-A four-point top lift to a single master link. The standard requires lifting
-points (and their supporting primary structure) to be designed for the case
-where the load is shared by the **two diagonally opposite slings** (the skew
-case), so that is taken as governing here.
+Design basis (clause-traced)
+----------------------------
+- **Primary structure design load** ``FL = 2.5 · R · g`` (§4.2.3.1); the internal
+  (floor) load is ``Fi = (2.5·R − T)·g``.
+- **Pad eyes** carry a total vertical ``Fp = 3 · R · g`` (§4.2.3.1), distributed
+  over ``(n − 1)`` pad eyes with ``n`` capped to [2, 4]; single pad eye
+  ``Fp = 5 · R · g``. The resulting sling load per pad eye accounts for the sling
+  angle ``v`` to the **vertical** (45° default unless a smaller angle is specified).
+- **Allowable stress** (§4.2.1): Von Mises ``σe ≤ 0.85 · C``; for steel ``C = Re``
+  (yield) → allowable = ``0.85 · Re`` (usage factor 0.85, no separate material factor).
 
-Primary structure is idealised as a peripheral frame of square hollow sections
-(SHS):
+The factors live on :class:`DesignFactors`; their authoritative source is the
+DNVGL-ST-E271 wiki page (``code_id: dnvgl-st-e271``) — call
+:func:`factor_citations` to emit calc-citation sidecars (per the calc-citation
+contract), which degrade gracefully when the wiki clone is unavailable.
 
-* **Top side rails** carry the inward *horizontal* component of the sling
-  forces in axial compression.
-* **Bottom side rails / floor beams** carry the payload as a uniformly
-  distributed load and span between the bottom corner posts in bending.
+R = rating / maximum gross mass [kg] (permanent equipment + cargo, excluding the
+lifting set, §1.6). T = tare mass; P = payload.
 
-Utilization is ``demand stress / allowable stress`` with the allowable derived
-from yield via a material factor and usage factor. Combined axial+bending
-action uses a simple linear interaction.
-
-All factors (DAF, gamma_f, gamma_M, eta) are exposed as named, documented
-constants on :class:`DesignFactors` so the assumptions are explicit and
-auditable.
-
-References
-----------
-DNV-ST-E271 (formerly DNV 2.7-1), "Offshore containers" -- lifting design
-load cases, skew/two-sling lifting-point requirement, dynamic amplification.
+References: DNVGL-ST-E271 §1.6, §4.2.1, §4.2.3.1, §4.6.
 """
 
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
 
 G = 9.80665  # m/s^2, standard gravity
 
 
 @dataclass(frozen=True)
 class DesignFactors:
-    """Named, documented design factors for the screening check.
+    """DNVGL-ST-E271 design factors (clause references in the module docstring).
 
-    Defaults are representative values for an offshore-lift check of a
-    welded steel CCU; tune them to the applicable edition/annex of
-    DNV-ST-E271 for a specific project.
+    Numeric values are the source of truth for the calculation; the same values
+    are citation-backed via :func:`factor_citations` against the wiki page
+    ``code_id: dnvgl-st-e271``.
     """
 
-    daf: float = 1.3          # dynamic amplification factor (offshore hoisting)
-    gamma_f: float = 1.0      # load factor (kept in DAF here; separate if desired)
-    gamma_m: float = 1.15     # material factor
-    eta: float = 0.85         # usage factor on yield
-    tare_fraction: float = 0.25  # tare mass / rating R (payload = (1 - tare)*R)
+    structure_load_factor: float = 2.5    # FL = 2.5 R g  (§4.2.3.1)
+    padeye_load_factor: float = 3.0       # Fp = 3 R g    (§4.2.3.1)
+    single_padeye_load_factor: float = 5.0  # single pad eye (§4.2.3.1)
+    usage_factor: float = 0.85            # sigma_e <= 0.85*Re  (§4.2.1)
+    default_sling_angle_to_vertical_deg: float = 45.0  # v (§4.2.3.1)
+    tare_fraction: float = 0.25           # T / R (for internal load Fi)
 
 
 @dataclass(frozen=True)
@@ -89,99 +85,122 @@ class SHS:
         return f"SHS{self.b*1000:.0f}x{self.t*1000:.0f}"
 
 
-def sling_angle(length: float, width: float, lift_height: float) -> float:
-    """Sling angle from horizontal [rad] for a 4-point lift.
+def sling_angle_to_vertical(length: float, width: float, lift_height: float) -> float:
+    """Sling angle from the **vertical** [rad] for a 4-point lift.
 
-    Slings of equal length run from the top corners to a master link at
-    ``lift_height`` above the top frame, centred over the plan centroid.
+    Slings run from the top corners to a master link at ``lift_height`` above the
+    top frame, centred over the plan centroid. Per §4.2.3.1 the design angle is
+    45° unless a smaller angle is specified; a taller ``lift_height`` reduces the
+    angle (and the inward horizontal pull).
     """
     half_diag = 0.5 * math.hypot(length, width)
-    return math.atan2(lift_height, half_diag)
-
-
-@dataclass(frozen=True)
-class SlingForces:
-    vertical_total: float   # total design vertical force [N] (R * g * DAF)
-    axial_per_sling: float  # axial force in each *loaded* sling [N] (skew case)
-    horizontal_per_corner: float  # inward horizontal component at a corner [N]
-
-
-def sling_forces(rating_kg: float, beta: float, factors: DesignFactors,
-                 skew: bool = True) -> SlingForces:
-    """Design sling forces for the offshore lift.
-
-    Parameters
-    ----------
-    rating_kg : gross mass R (tare + payload) being lifted [kg].
-    beta : sling angle from horizontal [rad].
-    skew : if True (default, governing per DNV 2.7-1) the load is carried by
-        the two diagonally opposite slings; if False, shared by all four.
-    """
-    vertical = rating_kg * G * factors.daf * factors.gamma_f
-    n_loaded = 2 if skew else 4
-    axial = vertical / (n_loaded * math.sin(beta))
-    horizontal = vertical / (n_loaded * math.tan(beta))
-    return SlingForces(vertical_total=vertical,
-                       axial_per_sling=axial,
-                       horizontal_per_corner=horizontal)
+    return math.atan2(half_diag, lift_height)
 
 
 def allowable_stress(fy: float, factors: DesignFactors) -> float:
-    """Allowable stress [Pa] = fy * eta / gamma_m."""
-    return fy * factors.eta / factors.gamma_m
+    """Allowable Von Mises stress [Pa] = usage_factor * fy  (§4.2.1: 0.85*Re)."""
+    return factors.usage_factor * fy
 
 
 @dataclass(frozen=True)
 class Utilization:
-    top_rail: float        # axial utilization of top side rail
-    bottom_rail: float     # bending utilization of bottom floor beam
-    governing: float       # max of the member checks
-    beta_deg: float        # sling angle used [deg]
-    sling: SlingForces
+    top_rail: float          # axial utilization of top side rail (inward sling pull)
+    floor: float             # bending utilization of bottom floor beam (Fi)
+    pad_eye: float           # axial-stress utilization of a pad eye (RSL)
+    governing: float         # max of the member checks
+    sling_angle_to_vertical_deg: float
+    rsl_kN: float            # resulting sling load per pad eye
+    FL_kN: float             # primary-structure design load (2.5 R g)
 
 
 def utilization(length: float, width: float, lift_height: float,
                 rating_kg: float, section: SHS, fy: float = 355e6,
-                factors: DesignFactors | None = None) -> Utilization:
-    """Governing primary-structure utilization for the offshore lift.
+                factors: DesignFactors | None = None, n_padeyes: int = 4,
+                padeye_area_m2: float = 0.002) -> Utilization:
+    """Governing primary-structure utilization for the DNV 2.7-1 offshore lift.
 
     Parameters
     ----------
     length, width : container plan dimensions [m].
     lift_height : master-link height above top frame [m] (sets sling angle).
-    rating_kg : gross mass R [kg].
+    rating_kg : gross mass R [kg] (excludes lifting set, §1.6).
     section : SHS used for the peripheral frame members.
-    fy : yield strength [Pa] (default S355).
+    fy : yield strength Re [Pa] (default S355).
+    n_padeyes : number of pad eyes; clamped to [2, 4] per §4.2.3.1.
+    padeye_area_m2 : representative pad-eye main-plate net area [m^2].
     """
     factors = factors or DesignFactors()
-    beta = sling_angle(length, width, lift_height)
-    sf = sling_forces(rating_kg, beta, factors)
+    v = sling_angle_to_vertical(length, width, lift_height)
     sigma_allow = allowable_stress(fy, factors)
 
-    # Top side rail: inward horizontal sling component carried as axial
-    # compression along the top frame.
-    n_top = sf.horizontal_per_corner
-    util_top = (n_top / section.area) / sigma_allow
+    # Pad-eye load: Fp = 3 R g over (n-1) pad eyes; resolve by sling angle v.
+    n = max(2, min(4, n_padeyes))
+    fp_total = factors.padeye_load_factor * rating_kg * G
+    fp_per = fp_total / (n - 1)
+    rsl = fp_per / math.cos(v)                 # resulting sling load per pad eye
+    horizontal_per = fp_per * math.tan(v)      # inward pull into top frame
 
-    # Bottom side rail: payload as UDL, simply supported span ~ length.
-    payload = rating_kg * (1.0 - factors.tare_fraction)
-    floor_force = payload * G * factors.daf  # design floor load [N]
-    # half goes to each of the two long side rails, spread over the length
-    w_line = (floor_force / 2.0) / length          # [N/m]
-    moment = w_line * length ** 2 / 8.0            # simply supported [N.m]
-    util_bot = (moment / section.modulus) / sigma_allow
+    # Top side rail: inward horizontal sling component carried as axial.
+    util_top = (horizontal_per / section.area) / sigma_allow
 
-    governing = max(util_top, util_bot)
-    return Utilization(top_rail=util_top, bottom_rail=util_bot,
-                       governing=governing, beta_deg=math.degrees(beta),
-                       sling=sf)
+    # Pad eye: axial stress over its net area.
+    util_padeye = (rsl / padeye_area_m2) / sigma_allow
+
+    # Bottom floor beam: internal load Fi = (2.5R - T) g as a UDL, simply
+    # supported over the length; half to each long side rail.
+    tare = factors.tare_fraction * rating_kg
+    fi = (factors.structure_load_factor * rating_kg - tare) * G
+    w_line = (fi / 2.0) / length
+    moment = w_line * length ** 2 / 8.0
+    util_floor = (moment / section.modulus) / sigma_allow
+
+    fl = factors.structure_load_factor * rating_kg * G
+    governing = max(util_top, util_floor, util_padeye)
+    return Utilization(top_rail=util_top, floor=util_floor, pad_eye=util_padeye,
+                       governing=governing,
+                       sling_angle_to_vertical_deg=math.degrees(v),
+                       rsl_kN=rsl / 1e3, FL_kN=fl / 1e3)
+
+
+_CITATION_WARNED = False
+
+
+def factor_citations(repo_root: Optional[Path] = None) -> dict:
+    """Return ``{factor_name: CitedValue}`` for the DNV-ST-E271 design factors.
+
+    Validates each citation against the wiki page (``code_id: dnvgl-st-e271``).
+    In standalone mode (no resolvable llm-wiki clone) it degrades gracefully:
+    emits a one-shot warning and returns ``{}`` rather than failing the calc —
+    mirroring the calc-citation pilot. Where the wiki resolves, a missing or
+    mismatched page fails closed (raises).
+    """
+    global _CITATION_WARNED
+    from digitalmodel.citations.registry import get_offshore_container_factor
+    from digitalmodel.citations.schema import CitationResolutionError
+
+    names = ("primary_structure_load", "padeye_load", "single_padeye_load",
+             "allowable_usage_factor", "default_sling_angle_to_vertical_deg")
+    out: dict = {}
+    for name in names:
+        try:
+            out[name] = get_offshore_container_factor(name, repo_root=repo_root)
+        except CitationResolutionError as exc:
+            if not _CITATION_WARNED:
+                warnings.warn(
+                    "DNV-ST-E271 citations unavailable (standalone mode): "
+                    f"{exc}. Configure LLM_WIKI_PATH to enable calc citations.",
+                    RuntimeWarning, stacklevel=2,
+                )
+                _CITATION_WARNED = True
+            return {}
+    return out
 
 
 # Convenience: a small catalogue of representative SHS frame members.
 SECTION_CATALOGUE: dict[str, SHS] = {
-    "SHS100x6": SHS.from_mm(100, 6),
-    "SHS120x8": SHS.from_mm(120, 8),
     "SHS150x8": SHS.from_mm(150, 8),
     "SHS150x10": SHS.from_mm(150, 10),
     "SHS200x10": SHS.from_mm(200, 10),
+    "SHS200x12": SHS.from_mm(200, 12),
+    "SHS250x12": SHS.from_mm(250, 12),
 }

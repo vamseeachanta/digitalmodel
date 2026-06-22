@@ -4,11 +4,10 @@ from digitalmodel.structural.offshore_container.dnv_2_7_1 import (
     DesignFactors,
     SHS,
     SECTION_CATALOGUE,
-    SlingForces,
     Utilization,
     allowable_stress,
-    sling_angle,
-    sling_forces,
+    factor_citations,
+    sling_angle_to_vertical,
     utilization,
 )
 
@@ -16,10 +15,9 @@ __all__ = [
     "DesignFactors",
     "SHS",
     "SECTION_CATALOGUE",
-    "SlingForces",
     "Utilization",
     "allowable_stress",
-    "sling_angle",
-    "sling_forces",
+    "factor_citations",
+    "sling_angle_to_vertical",
     "utilization",
 ]
