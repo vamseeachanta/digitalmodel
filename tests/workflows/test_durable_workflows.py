@@ -1367,6 +1367,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["response"] == "utilisation"
         assert result["screening_status"] == "pass"
         assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "esp-pump-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range moderate-rate / shallow-lift point -> served utilisation, passes
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:

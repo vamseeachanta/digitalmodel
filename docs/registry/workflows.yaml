@@ -1030,6 +1030,22 @@ workflows:
       - examples/workflows/esp-pump-hydraulics/results/esp_pump_hydraulics/esp_pump_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-hydraulics]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: flow_rate_m3_per_day, scale: linear, grid: [700, 1000, 1300, 1600, 1900]}
+        - {name: dynamic_fluid_level_m, scale: linear, grid: [1200, 1500, 1800, 2100, 2400]}
+      atlas: atlases/esp_pump_hydraulics
+  - id: esp-pump-atlas-query
+    basename: parametric_query
+    title: Instant interpolated ESP screening utilisation from the pre-computed atlas
+    input: examples/workflows/esp-pump-atlas-query/input.yml
+    outputs:
+      - examples/workflows/esp-pump-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-atlas-query]
+    runtime: offline
   - id: rigging
     basename: rigging
     title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)

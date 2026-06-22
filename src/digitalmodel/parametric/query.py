@@ -292,6 +292,8 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "fowt_mooring": _handle_utilisation,
     # AISC lifting-lug / padeye governing utilisation atlas (#979 pattern).
     "lifting_lug": _handle_utilisation,
+    # ESP pump-hydraulics governing screening utilisation atlas (#979 pattern).
+    "esp_pump_hydraulics": _handle_utilisation,
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,
