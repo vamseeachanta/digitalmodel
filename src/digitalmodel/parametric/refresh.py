@@ -34,6 +34,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "fowt_mooring": [{"id": "DNV-RP-0360", "edition": "2021-09"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
     "anchor_capacity": [{"id": "DNV-RP-E303", "edition": "2005"}],
     "spectral_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"},
@@ -70,6 +71,9 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+    ],
+    "fowt_mooring": [
+        "src/digitalmodel/orcaflex/mooring_design_fowt.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],

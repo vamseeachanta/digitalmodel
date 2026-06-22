@@ -324,11 +324,31 @@ def _viv_safety_factor_inline(point: dict[str, Any]) -> float:
     return float(sf["safety_factor_inline"].min())
 
 
+def _fowt_mbr_utilisation(point: dict[str, Any]) -> float:
+    """FOWT watch-circle vs dynamic-cable MBR utilisation (mbr_limit / governing
+    bend radius) for one (watch_circle_radius, mbr_limit_m) point, at a fixed
+    reference cable geometry. UC <= 1 passes (governing radius >= MBR limit)."""
+    from digitalmodel.orcaflex.mooring_design_fowt import (
+        DynamicCableConfig,
+        check_watch_circle_vs_cable,
+    )
+
+    cable = DynamicCableConfig(
+        suspended_length=320.0,
+        hang_off_elevation=90.0,
+        nominal_horizontal_span=260.0,
+        mbr_limit_m=float(point["mbr_limit_m"]),
+    )
+    result = check_watch_circle_vs_cable(float(point["watch_circle_radius"]), cable)
+    return float(result.mbr_limit_m / result.governing_bend_radius_m)
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
     "spectral_fatigue": _spectral_fatigue_annual_damage,
     "fpso_mooring_full": _fpso_max_line_tension_N,
+    "fowt_mooring": _fowt_mbr_utilisation,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
