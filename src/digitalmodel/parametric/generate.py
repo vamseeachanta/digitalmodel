@@ -519,6 +519,41 @@ def _inspection_remaining_life_years(point: dict[str, Any]) -> float:
     return float(plan.remaining_life_years)
 
 
+def _riser_fatigue_annual_damage(point: dict[str, Any]) -> float:
+    """Combined wave + VIV annual fatigue damage (DNV-RP-C203) for the governing
+    touchdown-zone segment, for one (scf, viv_stress_scale) point. The reference
+    stress histogram + VIV cases are baked fixed (a per-riser property, like the
+    spectral_fatigue stress gain); scf scales the wave stress and viv_stress_scale
+    scales the VIV amplitudes. Evaluated at a 1-year basis -> annual damage rate
+    (design_life / dff are applied at query time by the annual-damage handler)."""
+    from digitalmodel.riser_fatigue.workflow import _evaluate_segment
+
+    viv_scale = float(point["viv_stress_scale"])
+    segment = {
+        "id": "TDZ-sandwave",
+        "material": "API 5L X65",
+        "outer_diameter_mm": 273.1,
+        "wall_thickness_mm": 22.2,
+        "wave": {
+            "scf": float(point["scf"]),
+            "histogram_period_years": 1.0,
+            "stress_ranges_MPa": [6.0, 10.0, 16.0, 24.0, 36.0],
+            "cycles": [4.0e6, 6.0e5, 45000.0, 2500.0, 90.0],
+        },
+        "viv_cases": [
+            {"stress_range_MPa": 9.0 * viv_scale, "frequency_hz": 0.42,
+             "exposure_fraction": 0.02},
+            {"stress_range_MPa": 12.0 * viv_scale, "frequency_hz": 0.55,
+             "exposure_hours_per_year": 40.0},
+        ],
+    }
+    _, summary = _evaluate_segment(
+        segment, design_life_years=1.0, dff=10.0,
+        default_curve="F1", default_env="seawater_cp",
+    )
+    return float(summary["total_damage"])
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
@@ -530,6 +565,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "weather_window": _weather_window_operability_pct,
     "mudmat_bearing_capacity": _mudmat_bearing_utilisation,
     "inspection_planning": _inspection_remaining_life_years,
+    "riser_fatigue": _riser_fatigue_annual_damage,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,

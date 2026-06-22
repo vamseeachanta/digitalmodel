@@ -49,6 +49,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "inspection_planning": [{"id": "API-510", "edition": "2014"},
                             {"id": "API-570", "edition": "2016"},
                             {"id": "API-653", "edition": "2014"}],
+    "riser_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -106,6 +107,9 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "inspection_planning": [
         "src/digitalmodel/asset_integrity/inspection_planning.py",
+    ],
+    "riser_fatigue": [
+        "src/digitalmodel/riser_fatigue/workflow.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],

@@ -1,0 +1,106 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.010168175307818926,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 8,
+  "worst_samples": [
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.2999999999999998
+      },
+      "predicted": 0.0036242466373657264,
+      "actual": 0.0035877656077032364,
+      "rel_error": 0.010168175307818926,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.5
+      },
+      "predicted": 0.004566507863431516,
+      "actual": 0.004526280218753055,
+      "rel_error": 0.008887572738380617,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.1
+      },
+      "predicted": 0.003106441411594727,
+      "actual": 0.0030793287596754073,
+      "rel_error": 0.008804727924594136,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 0.9
+      },
+      "predicted": 0.0028492321452144283,
+      "actual": 0.0028326531412331615,
+      "rel_error": 0.005852818243058629,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.15,
+        "viv_stress_scale": 1.2
+      },
+      "predicted": 0.0027943956836277055,
+      "actual": 0.0028001829539815795,
+      "rel_error": 0.002066747226514279,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.05,
+        "viv_stress_scale": 1.2
+      },
+      "predicted": 0.002011024990755337,
+      "actual": 0.002007018914397408,
+      "rel_error": 0.001996033185931316,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.35,
+        "viv_stress_scale": 1.2
+      },
+      "predicted": 0.005315824711803312,
+      "actual": 0.0053217164723929995,
+      "rel_error": 0.0011071165892154928,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.25,
+        "viv_stress_scale": 1.2
+      },
+      "predicted": 0.003866223165150925,
+      "actual": 0.0038683344052966324,
+      "rel_error": 0.0005457749833666801,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "scf": [
+        0.001996033185931316,
+        0.002066747226514279,
+        0.0005457749833666801,
+        0.0011071165892154928
+      ],
+      "viv_stress_scale": [
+        0.005852818243058629,
+        0.008804727924594136,
+        0.010168175307818926,
+        0.008887572738380617
+      ]
+    }
+  },
+  "densification_log": []
+}
