@@ -91,6 +91,16 @@ workflows:
       - examples/workflows/jumper-installation/results/input_jumper_installation_cases.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jumper-installation]
     runtime: offline
+  - id: riser-fatigue
+    basename: riser_fatigue
+    title: Combined wave + VIV riser fatigue damage (DNV-RP-C203)
+    input: examples/workflows/riser-fatigue/input.yml
+    outputs:
+      - examples/workflows/riser-fatigue/results/input.yml
+      - examples/workflows/riser-fatigue/results/input_riser_fatigue.csv
+      - examples/workflows/riser-fatigue/results/input_riser_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-fatigue]
+    runtime: offline
   - id: mooring-fatigue
     basename: mooring_fatigue
     title: Metallic mooring-line fatigue damage from tension-range bins
