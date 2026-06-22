@@ -63,28 +63,28 @@ usecases:
     solver: orcawave
     basename: diffraction
     operation: run_orcawave
-    template: null
+    template: examples/workflows/orcawave-mean-drift/spec.yml
     analysis: [diffraction, mean_drift]
-    readiness: partial
-    notes: solve_type=mean_drift + control surface; schema complete, no committed standalone template (#942).
+    readiness: ready
+    notes: solve_type=mean_drift; converts offline via SpecConverter (#955).
   - id: orcawave-field-points
     domain: hydrodynamics/diffraction
     solver: orcawave
     basename: diffraction
     operation: run_orcawave
-    template: null
+    template: examples/workflows/orcawave-field-points/spec.yml
     analysis: [diffraction, field_points]
-    readiness: partial
-    notes: airgap/splash field points; tested, no committed template (#942).
+    readiness: ready
+    notes: airgap/splash field points; converts offline via SpecConverter (#955).
   - id: orcawave-control-surface-irreg-freq
     domain: hydrodynamics/diffraction
     solver: orcawave
     basename: diffraction
     operation: run_orcawave
-    template: null
+    template: examples/workflows/orcawave-control-surface/spec.yml
     analysis: [diffraction]
-    readiness: partial
-    notes: irregular_frequency_method=control_surface; tested, no committed template (#942).
+    readiness: ready
+    notes: irregular_frequency_method=control_surface; converts offline via SpecConverter (#955).
   - id: orcawave-tandem-multibody
     domain: hydrodynamics/diffraction
     solver: orcawave
@@ -263,48 +263,48 @@ usecases:
   - id: jlay-pipelay
     domain: orcaflex/installation
     solver: orcaflex
-    basename: orcaflex
+    basename: pipelay
     operation: null
-    template: null
+    template: examples/workflows/jlay-pipelay/input.yml
     analysis: [static, dynamic]
-    readiness: partial
-    notes: J-lay; pipelay_analysis code exists, no committed template (#941).
+    readiness: ready
+    notes: J-lay; offline `pipelay` workflow, no license (#965).
   - id: reel-lay-pipelay
     domain: orcaflex/installation
     solver: orcaflex
-    basename: orcaflex
+    basename: pipelay
     operation: null
-    template: null
+    template: examples/workflows/reel-lay-pipelay/input.yml
     analysis: [static, dynamic]
-    readiness: planned
-    notes: Reel-lay; code exists, no example (#941).
+    readiness: ready
+    notes: Reel-lay reeling-strain/residual-curvature screen; offline `pipelay` workflow (#965).
   - id: fowt-mooring
     domain: orcaflex/mooring
     solver: orcaflex
-    basename: orcaflex
+    basename: fowt_mooring
     operation: null
-    template: null
+    template: examples/workflows/fowt-mooring/input.yml
     analysis: [dynamic]
-    readiness: partial
-    notes: Floating wind dynamic cable; mooring_design_fowt exists, not wired to a template (#941).
+    readiness: ready
+    notes: FOWT watch-circle screen; offline `fowt_mooring` workflow, no license (#964).
   - id: riser-fatigue
     domain: orcaflex/riser
     solver: orcaflex
-    basename: orcaflex
+    basename: riser_fatigue
     operation: null
-    template: null
+    template: examples/workflows/riser-fatigue/input.yml
     analysis: [fatigue, viv]
-    readiness: partial
-    notes: Wave+VIV riser fatigue; partial workflow (#941).
+    readiness: ready
+    notes: Wave+VIV riser fatigue, Palmgren-Miner + DNV-RP-C203; offline `riser_fatigue` workflow (#966).
   - id: extreme-value-post
     domain: orcaflex
     solver: orcaflex
     basename: orcaflex_post_process
     operation: null
-    template: null
+    template: examples/workflows/extreme-value-post/input.yml
     analysis: [extreme]
-    readiness: partial
-    notes: Gumbel/Weibull extreme-value; postprocessor exists, no demo (#941).
+    readiness: ready
+    notes: Gumbel/Weibull return-period extremes; offline run.py demo + test over committed maxima; `python -m digitalmodel` router entry is a follow-on (#963).
 
   # --- ANSYS (Mechanical APDL, structural FE) ------------------------------
   - id: ansys-padeye
@@ -312,25 +312,25 @@ usecases:
     solver: ansys
     basename: ansys
     operation: run_ansys
-    template: null
+    template: examples/ansys/padeye/input.yml
     analysis: [static_structural]
-    readiness: planned
-    notes: Padeye / lifting-lug FE; runner ready (#940), APDL template to build.
+    readiness: ready
+    notes: Padeye / lifting-lug screening FE (PLANE182 plate+pin-hole); generator + dispatchable template (#950).
   - id: ansys-pressure-vessel
     domain: ansys/structural
     solver: ansys
     basename: ansys
     operation: run_ansys
-    template: null
+    template: examples/ansys/pressure-vessel/input.yml
     analysis: [static_structural]
-    readiness: partial
-    notes: Pressure vessel FE; pressure_vessel.py offline generator exists; emit APDL + template (#940).
+    readiness: ready
+    notes: Pressure vessel FE; pressure_vessel.py generator (rewritten runnable) + dispatchable template (#956).
   - id: ansys-mudmat
     domain: ansys/structural
     solver: ansys
     basename: ansys
     operation: run_ansys
-    template: null
+    template: examples/ansys/mudmat/input.yml
     analysis: [static_structural]
-    readiness: planned
-    notes: Mudmat / foundation FE; runner ready (#940), APDL template to build.
+    readiness: ready
+    notes: Mudmat / foundation screening FE (SHELL181 on Winkler EFS soil); generator + dispatchable template (#954).
