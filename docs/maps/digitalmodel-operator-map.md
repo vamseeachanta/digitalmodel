@@ -47,6 +47,23 @@ of duplicating its detailed issue history.
 | `web` | `src/digitalmodel/web/` | `tests/web/` | `docs/domains/README.md` | Web-facing calculator and app support | web framework assets |
 | `well` | `src/digitalmodel/well/` | `tests/well/` | `docs/domains/README.md` | Well engineering, drilling hydraulics, tubular design | API well standards |
 | `workflows` | `src/digitalmodel/workflows/` | `tests/workflows/` | `docs/domains/workflows/` | Multi-step issue workflows and agent/solver orchestration | repo workflow conventions |
+| `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
+| `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
+| `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
+| `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
+| `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |
+| `mooring_fatigue` | `src/digitalmodel/mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Mooring-line fatigue analysis and parametric atlases | fatigue standards, NumPy |
+| `parametric` | `src/digitalmodel/parametric/` | `tests/parametric/` | `docs/domains/README.md` | Parametric atlas build and query (sweep-built surrogate serving) | NumPy, pandas |
+| `parametrics` | `src/digitalmodel/parametrics/` | `tests/parametrics/` | `docs/domains/README.md` | Parametric sweep bridging into atlases and query handlers | NumPy, pandas |
+| `pipelay` | `src/digitalmodel/pipelay/` | `tests/pipelay/` | `docs/domains/README.md` | Pipelay analysis, lay tension and configuration checks | marine/subsea standards |
+| `rao_spectral_fatigue` | `src/digitalmodel/rao_spectral_fatigue/` | `tests/` | `docs/domains/README.md` | RAO-driven spectral fatigue workflow (closed-form) | fatigue/hydrodynamics standards |
+| `riser_fatigue` | `src/digitalmodel/riser_fatigue/` | `tests/riser_fatigue/` | `docs/domains/README.md` | Riser fatigue analysis and automation | fatigue standards, NumPy |
+| `spectral_fatigue` | `src/digitalmodel/spectral_fatigue/` | `tests/` | `docs/domains/README.md` | Spectral (frequency-domain) fatigue calculation | fatigue standards, SciPy |
+| `synthetic_rope_mooring_fatigue` | `src/digitalmodel/synthetic_rope_mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Synthetic-rope mooring fatigue analysis | fatigue standards, NumPy |
+| `usecase_registry` | `src/digitalmodel/usecase_registry/` | `tests/test_usecase_registry.py` | `docs/domains/README.md` | Registry of runnable use cases and routing metadata | PyYAML |
+| `vessel_seakeeping` | `src/digitalmodel/vessel_seakeeping/` | `tests/` | `docs/domains/README.md` | Vessel seakeeping response and operability analysis | hydrodynamics standards |
+| `weather_window` | `src/digitalmodel/weather_window/` | `tests/` | `docs/domains/README.md` | Weather-window/operability assessment for marine operations | metocean data, statistics |
+| `well_access` | `src/digitalmodel/well_access/` | `tests/well_access/` | `docs/domains/README.md` | Well-access/intervention analysis and operability | well engineering standards |
 
 ## Common Routing Rules
 
