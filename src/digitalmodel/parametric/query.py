@@ -306,6 +306,9 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,
     "spectral_fatigue": _handle_annual_damage,
+    # Combined wave+VIV riser fatigue annual-damage atlas (#979 pattern): the
+    # atlas predicts annual damage; the handler derives life + DFF margin.
+    "riser_fatigue": _handle_annual_damage,
     "fpso_mooring_full": _handle_value,
     "viv_analysis": _handle_value,
     # weather-window planned-operability % atlas (#979 pattern): a plain value,

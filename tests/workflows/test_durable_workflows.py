@@ -1410,6 +1410,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert math.isfinite(result["value"]) and result["value"] > 0.0
         band = result["confidence"]["band"]
         assert band[0] <= result["value"] <= band[1]
+    elif workflow["id"] == "riser-fatigue-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # annual-damage class: interpolate annual damage -> life + DFF margin.
+        assert result["in_range"] is True
+        assert result["response"] == "fatigue_life_years"
+        assert result["annual_damage"] > 0.0
+        assert result["value"] > 0.0  # fatigue life (years)
+        assert result["screening_status"] in {"pass", "fail"}
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
