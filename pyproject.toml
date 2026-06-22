@@ -233,6 +233,7 @@ digitalmodel = [
     "subsea/cross_sections/fixtures/*.yml",
     "naval_architecture/data/*.yml",
     "field_development/data/*.yml",
+    "usecase_registry/*.yaml",
 ]
 
 [tool.black]
