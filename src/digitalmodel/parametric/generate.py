@@ -385,6 +385,33 @@ def _esp_pump_utilisation(point: dict[str, Any]) -> float:
     return float(max(c["utilization"] for c in result.checks))
 
 
+def _mudmat_bearing_utilisation(point: dict[str, Any]) -> float:
+    """Mudmat governing screening utilisation (max of bearing + sliding) for one
+    (vertical_load_kN, undrained_shear_strength_kpa) point, at a fixed reference
+    foundation geometry / soil weight / horizontal load (the example values).
+    UC <= 1 passes (allowable capacity, with FoS, covers the applied load)."""
+    from digitalmodel.geotechnical.mudmat import mudmat_bearing_capacity
+
+    fos = 2.0
+    applied_v = float(point["vertical_load_kN"])
+    applied_h = 200.0
+    result = mudmat_bearing_capacity(
+        width_b_m=6.0,
+        length_l_m=8.0,
+        embedment_depth_m=0.5,
+        condition="undrained",
+        submerged_unit_weight_kn_m3=6.0,
+        vertical_load_kn=applied_v,
+        moment_knm=0.0,
+        undrained_shear_strength_kpa=float(point["undrained_shear_strength_kpa"]),
+    )
+    allowable_v = result.vertical_capacity_kn / fos
+    allowable_h = result.sliding_capacity_kn / fos
+    bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
+    sliding_util = (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+    return float(max(bearing_util, sliding_util))
+
+
 def _inspection_remaining_life_years(point: dict[str, Any]) -> float:
     """API 510/570/653 remaining life (yr) = corrosion_allowance / corrosion_rate
     for one (corrosion_rate_mm_yr, current_wall_thickness_mm) point, at a fixed
@@ -410,6 +437,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "fowt_mooring": _fowt_mbr_utilisation,
     "lifting_lug": _lifting_lug_utilisation,
     "esp_pump_hydraulics": _esp_pump_utilisation,
+    "mudmat_bearing_capacity": _mudmat_bearing_utilisation,
     "inspection_planning": _inspection_remaining_life_years,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,

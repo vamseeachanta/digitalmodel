@@ -856,6 +856,22 @@ workflows:
       - examples/workflows/mudmat-bearing-capacity/results/mudmat_bearing_capacity/mudmat_bearing_capacity_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: vertical_load_kN, scale: linear, grid: [1500, 2000, 2500, 3000, 3500]}
+        - {name: undrained_shear_strength_kpa, scale: linear, grid: [12, 16, 20, 24, 28]}
+      atlas: atlases/mudmat_bearing_capacity
+  - id: mudmat-bearing-atlas-query
+    basename: parametric_query
+    title: Instant interpolated mudmat bearing-capacity utilisation from the pre-computed atlas
+    input: examples/workflows/mudmat-bearing-atlas-query/input.yml
+    outputs:
+      - examples/workflows/mudmat-bearing-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-atlas-query]
+    runtime: offline
   - id: liquefaction-triggering
     basename: liquefaction
     title: Seed-Idriss simplified liquefaction-triggering screening (CSR vs CRR, Youd 2001)
