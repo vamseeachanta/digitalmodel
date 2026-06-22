@@ -7,7 +7,8 @@ vessel_record:
   vessel_id: str            # stable slug, e.g. hlv_sleipnir
   name: str                 # as published
   scope: enum[install, floating, support, tanker]
-  vessel_type: str          # e.g. semisub-crane-vessel, fpso-turret, ahts
+  vessel_type: str          # controlled vocab — see vessel_type_vocabulary below;
+                            # e.g. ahts, psv, mpsv, dsv, csv, sov, semisub-crane-vessel, fpso-turret
   owner_operator: str|gap
   builder: str|gap
   year_built: int|gap
@@ -73,3 +74,17 @@ vessel_record:
       access_date: str        # YYYY-MM-DD
       access: enum[public, paywalled, brochure-pdf, estimated]
   gaps: list                  # field paths with no public source
+
+# --- vessel_type controlled vocabulary ---
+# Recognised offshore-support-vessel (OSV) classes. Prefer one of these slugs for
+# vessel_type so the free-text field stays groupable; fall back to a descriptive
+# slug (e.g. semisub-crane-vessel, fpso-turret, drillship) for non-OSV hulls.
+# `scope` is the analysis bucket (install/floating/support/tanker); `vessel_type`
+# is the finer class within it. See README.md "Vessel type taxonomy (OSV classes)".
+vessel_type_vocabulary:
+  ahts:  { name: "Anchor Handling Tug Supply",   scope: support,          role: "tow MODUs, position floating facilities, set/recover heavy mooring anchors in deep water" }
+  psv:   { name: "Platform Supply Vessel",        scope: support,          role: "open-deck cargo, drilling muds/fluids, equipment and personnel to platforms" }
+  mpsv:  { name: "Multipurpose Support Vessel",    scope: [support, install], role: "flexible logistics + modular equipment spaces, cranes, helideck for varied subsea ops" }
+  dsv:   { name: "Diving Support Vessel",          scope: [support, install], role: "saturation diving systems for deep subsea maintenance, repair, pipeline tie-ins" }
+  csv:   { name: "Construction Support Vessel",    scope: install,          role: "high-capacity cranes, A-frames, moonpools for subsea construction, well intervention, deepwater deployment" }
+  sov:   { name: "Service Operation Vessel",       scope: support,          role: "offshore-wind floating accommodation + storage for turbine technicians (walk-to-work)" }
