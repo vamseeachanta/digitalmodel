@@ -49,7 +49,7 @@ def catenaryEquation(data):
         return data
 
     elif data["X"] != None:
-        raise ("Not implemented yet")
+        raise NotImplementedError("Not implemented yet")
 
     elif data["q"] != None:
         tanq = math.tan(math.radians(90 - data["q"]))
