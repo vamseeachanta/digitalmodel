@@ -1,0 +1,40 @@
+basename: pipelay
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# Reel-lay pipelay screening (offline, analytical -- no OrcaFlex license).
+# The pipe is spooled onto a reel and plastically bent, then straightened.
+# Screens reeling strain vs the plastic-strain limit and reports the residual
+# curvature / out-of-straightness after the straightener.
+pipelay:
+  case:
+    id: registry_reel_lay_pipelay
+    description: Reel-lay reeling-strain and residual-curvature screening
+  method: Reel-Lay
+  config:
+    reel_core_radius_m: 8.0                  # reel hub radius
+    allowable_reeling_strain: 0.02           # 2% plastic strain limit
+    straightener_efficiency: 0.95            # fraction of reel curvature removed
+    residual_out_of_straightness_span_m: 12.0
+    allowable_overbend_strain: 0.002
+  pipe:
+    outer_diameter: 0.2731                   # 10.75 in (reelable size)
+    wall_thickness: 0.0191
+    youngs_modulus: 207.0e9
+    smys: 448.0e6
+    coating_thickness: 0.0                   # reeled pipe: no concrete coating
+    coating_density: 0.0
+    seawater_density: 1025.0
+  operability:
+    max_hs_lay: 4.0
+    max_hs_welding: 3.0
+    max_hs_aband_recovery: 4.5
+    lay_rate_calm: 6.0
+    lay_rate_degradation: 0.8
+  outputs:
+    directory: results
+    summary_json: reel_lay_pipelay_summary.json

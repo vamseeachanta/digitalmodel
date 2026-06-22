@@ -1,0 +1,38 @@
+basename: pipelay
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# Deepwater J-lay pipelay screening (offline, analytical -- no OrcaFlex license).
+# Near-vertical departure: the sagbend is the governing stress concern.
+pipelay:
+  case:
+    id: registry_jlay_pipelay
+    description: J-lay sagbend screening for a deepwater rigid pipeline
+  method: J-Lay
+  config:
+    water_depth_m: 1500.0
+    tower_angle_deg: 3.0           # tower angle from vertical (deg)
+    top_tension_kN: 3000.0         # top tension at the J-lay tower
+    allowable_sagbend_strain: 0.003
+    allowable_overbend_strain: 0.002
+  pipe:
+    outer_diameter: 0.3238         # 12.75 in
+    wall_thickness: 0.0206
+    youngs_modulus: 207.0e9
+    smys: 448.0e6
+    coating_thickness: 0.06
+    coating_density: 2400.0
+    seawater_density: 1025.0
+  operability:
+    max_hs_lay: 3.0
+    max_hs_welding: 2.5
+    max_hs_aband_recovery: 4.0
+    lay_rate_calm: 3.0
+    lay_rate_degradation: 0.5
+  outputs:
+    directory: results
+    summary_json: jlay_pipelay_summary.json

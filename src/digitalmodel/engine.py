@@ -257,6 +257,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = span_rectification(cfg_base)
+    elif basename == "pipelay":
+        from digitalmodel.pipelay.workflow import router as pipelay
+
+        cfg_base = pipelay(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
