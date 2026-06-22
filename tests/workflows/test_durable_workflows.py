@@ -1374,6 +1374,14 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["response"] == "utilisation"
         assert result["screening_status"] == "pass"
         assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "span-rectification-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range short-span / moderate-current point -> span within allowable,
+        # served utilisation < 1 -> screen passes (no rectification needed)
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
     elif workflow["id"] == "mudmat-bearing-atlas-query":
         result = cfg["parametric_query"]["result"]
         # in-range moderate-load / firm-clay point -> served utilisation, passes

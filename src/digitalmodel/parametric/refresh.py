@@ -34,6 +34,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "span_rectification": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "fowt_mooring": [{"id": "DNV-RP-0360", "edition": "2021-09"}],
     "lifting_lug": [{"id": "AISC-360-ASD", "edition": "2016"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
@@ -76,6 +77,13 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+    ],
+    # response is the as-surveyed/allowable screen ratio; track the allowable-
+    # length engine the workflow calls plus the workflow module itself.
+    "span_rectification": [
+        "src/digitalmodel/subsea/pipeline/span_rectification.py",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
     ],
     "fowt_mooring": [
         "src/digitalmodel/orcaflex/mooring_design_fowt.py",
