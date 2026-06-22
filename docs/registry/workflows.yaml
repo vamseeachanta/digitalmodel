@@ -702,6 +702,22 @@ workflows:
       - examples/workflows/inspection-planning/results/inspection_planning/inspection_planning_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning]
     runtime: offline
+    parametric:
+      physics: linear
+      response: remaining_life_years
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: corrosion_rate_mm_yr, scale: linear, grid: [0.1, 0.3, 0.5, 0.7, 0.9]}
+        - {name: current_wall_thickness_mm, scale: linear, grid: [8, 10, 12, 14, 16]}
+      atlas: atlases/inspection_planning
+  - id: inspection-planning-atlas-query
+    basename: parametric_query
+    title: Instant interpolated remaining-life (yr) from the pre-computed inspection-planning atlas
+    input: examples/workflows/inspection-planning-atlas-query/input.yml
+    outputs:
+      - examples/workflows/inspection-planning-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning-atlas-query]
+    runtime: offline
   - id: jacket-member-joint-checks
     basename: jacket_checks
     title: API RP 2A-WSD tubular member and joint unity checks

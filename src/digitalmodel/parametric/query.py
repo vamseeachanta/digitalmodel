@@ -294,6 +294,9 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "lifting_lug": _handle_utilisation,
     # ESP pump-hydraulics governing screening utilisation atlas (#979 pattern).
     "esp_pump_hydraulics": _handle_utilisation,
+    # API 510/570/653 remaining-life (yr) plain-value atlas (#979 pattern):
+    # interpolate the scalar remaining life directly, report it with a band.
+    "inspection_planning": _handle_value,
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,

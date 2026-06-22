@@ -385,6 +385,23 @@ def _esp_pump_utilisation(point: dict[str, Any]) -> float:
     return float(max(c["utilization"] for c in result.checks))
 
 
+def _inspection_remaining_life_years(point: dict[str, Any]) -> float:
+    """API 510/570/653 remaining life (yr) = corrosion_allowance / corrosion_rate
+    for one (corrosion_rate_mm_yr, current_wall_thickness_mm) point, at a fixed
+    reference t_min and code-max interval. Plain positive scalar served directly
+    (life from rate + allowance); the half-life / code-cap decision is applied at
+    query time, not baked into the grid."""
+    from digitalmodel.asset_integrity.inspection_planning import plan_inspection
+
+    plan = plan_inspection(
+        current_mm=float(point["current_wall_thickness_mm"]),
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        corrosion_rate=float(point["corrosion_rate_mm_yr"]),
+    )
+    return float(plan.remaining_life_years)
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
@@ -393,6 +410,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "fowt_mooring": _fowt_mbr_utilisation,
     "lifting_lug": _lifting_lug_utilisation,
     "esp_pump_hydraulics": _esp_pump_utilisation,
+    "inspection_planning": _inspection_remaining_life_years,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
