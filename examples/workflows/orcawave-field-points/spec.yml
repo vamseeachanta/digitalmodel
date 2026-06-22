@@ -1,0 +1,60 @@
+# OrcaWave field-points use-case template (issue #953, epic #942/#938).
+#
+# Exercises outputs.field_points: a named "airgap_splash" point group emits the
+# combined OrcaWave key "FieldPointX, FieldPointY, FieldPointZ" plus the
+# DetectAndSkipFieldPointsInsideBodies switch. Self-contained: reuses the
+# committed 5-panel WAMIT GDF unit box so the spec converts offline (no license).
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBoxFieldPoints"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1025.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  solve_type: potential_and_source
+  irregular_frequency_method: interior_panels
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+  detect_field_points_inside_bodies: true
+  field_points:
+    - name: airgap_splash
+      detect_inside_bodies: true
+      points:
+        - [2.0, 0.0, 0.5]
+        - [2.0, 0.0, 1.0]
+        - [-2.0, 0.0, 0.5]
+
+metadata:
+  project: "orcawave_gap_specs"
+  author: "digitalmodel"
+  description: "Field-points (airgap/splash) unit-box template (issue #953)"
+  tags: [example, orcawave, field_points, airgap, "issue-953"]
