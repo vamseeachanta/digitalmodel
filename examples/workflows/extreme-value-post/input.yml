@@ -1,0 +1,45 @@
+# Extreme-value post-processing — OFFLINE, LICENSE-FREE workflow.
+#
+# Fits Gumbel (Type I) and 3-parameter Weibull extreme-value distributions
+# to a committed block-maxima dataset and reports return-period extremes
+# (10 / 50 / 100 / 1000-yr). Uses ONLY digitalmodel.orcaflex.postprocessor
+# (numpy + scipy over numeric arrays) — NO OrcFxAPI, NO OrcaFlex .sim, NO
+# license. Block maxima are the inputs; how they were produced (OrcaFlex
+# dynamic seeds, measured data, etc.) is out of scope here.
+#
+# INVOCATION
+# ----------
+# The postprocessor is a *library API* (fit_gumbel / fit_weibull), not a
+# router basename of its own. The registry id `extreme-value-post` currently
+# maps to basename `orcaflex_post_process`, which routes through the
+# OrcaFlex engine path (requires-license) — so it cannot drive this offline
+# demo today. Until a dedicated offline router basename is wired
+# (follow-up to #941 / #938), run this example directly:
+#
+#     uv run python examples/workflows/extreme-value-post/run.py
+#
+# See README.md for details and the router-wiring follow-up note.
+#
+# References: Gumbel (1958); DNV-RP-C205 Sec. 3.4; API RP 2SK.
+
+meta:
+  basename: extreme_value_post          # logical name; offline library demo
+  runtime: offline
+  library: digitalmodel
+  label: Gumbel/Weibull extreme-value return-period post-processing
+
+extreme_value_post:
+  # Block-maxima input (one maximum per block / storm-year).
+  data:
+    source: csv
+    path: data/block_maxima.csv
+    column: effective_tension_kN
+    variable_name: Effective tension (kN)
+  # Distributions to fit.
+  distributions: [gumbel, weibull]
+  # Return periods in the same units as the block duration (here: years).
+  return_periods: [10, 50, 100, 1000]
+
+outputs:
+  directory: results/extreme_value_post
+  summary_json: extreme_value_summary.json
