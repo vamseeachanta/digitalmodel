@@ -1,0 +1,201 @@
+"""Parametric mudmat/foundation APDL template generator (digitalmodel #952).
+
+Emits a complete ANSYS Mechanical APDL ``.inp`` for a first-pass **screening**
+FE of a rectangular foundation mat (mudmat) resting on soil: a flat plate of the
+mat thickness supported on an **elastic Winkler foundation**, loaded by a central
+vertical load plus an applied (eccentric) overturning moment, solved static-
+structural, post-processed to peak plate von Mises stress (UC vs yield/design
+factor) AND peak soil bearing pressure (UC vs allowable bearing).
+
+Soil model: the Winkler soil is applied as an **elastic foundation stiffness**
+(EFS) real constant on the SHELL181 plate (``R,1,t, , ,EFS``). EFS has units of
+pressure-per-unit-out-of-plane-deflection = the subgrade reaction modulus
+(N/mm^3). This distributes a vertical pressure ``p = ksub * w`` under the mat,
+the textbook linear Winkler relation; max soil bearing pressure is then recovered
+post-solve from the peak downward deflection (``p_max = ksub * w_max``). Choosing
+EFS over discrete COMBIN14 nodal springs keeps the script geometry-mesh agnostic
+(no per-node tributary-area bookkeeping) and is the clean SHELL181 idiom.
+
+The generic ``apdl_generator`` building blocks cover materials/elements/mesh/BC
+but NOT a soil-supported plate, so this module writes the mat geometry and the
+foundation real constant directly. The generated script runs on a licensed MAPDL
+via the fail-closed ANSYS runner (#940); this module needs no license (it only
+writes text).
+
+Honesty: a SHELL181 plate on a linear Winkler foundation is a screening
+idealisation. It assumes the soil is a bed of linear springs that can take
+**tension as well as compression** (no uplift / no contact separation), no soil
+nonlinearity, no consolidation/settlement-over-time, and no global
+bearing-capacity (Brinch-Hansen) failure surface. Use it to size and rank the
+mat plate and to flag bearing-pressure exceedance; verify governing cases with a
+no-tension contact foundation and a proper geotechnical bearing-capacity check.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass
+class MudmatGeometry:
+    """Mudmat plate geometry, load, soil, and material (units: mm, N, MPa).
+
+    Loads are given in kN and kN*m for convenience and converted to N / N*mm
+    inside the generator.
+    """
+
+    mat_length_mm: float = 4000.0
+    mat_width_mm: float = 3000.0
+    thickness_mm: float = 60.0
+    vertical_load_kn: float = 800.0
+    moment_kNm: float = 400.0  # eccentric / overturning moment about the width axis
+    subgrade_modulus_n_per_mm3: float = 0.05  # Winkler soil stiffness (N/mm^3)
+    youngs_modulus_mpa: float = 205_000.0
+    poisson: float = 0.3
+    yield_strength_mpa: float = 355.0
+    design_factor: float = 1.67  # allowable = yield / design_factor (~0.6 Fy)
+    allowable_bearing_mpa: float = 0.25  # allowable soil bearing pressure (MPa)
+    element_size_mm: float = 100.0
+
+    def validate(self) -> list[str]:
+        issues: list[str] = []
+        if min(self.mat_length_mm, self.mat_width_mm, self.thickness_mm) <= 0:
+            issues.append("mat dimensions must be positive")
+        if self.element_size_mm <= 0:
+            issues.append("element size must be positive")
+        if self.subgrade_modulus_n_per_mm3 <= 0:
+            issues.append("subgrade modulus must be positive")
+        if self.vertical_load_kn <= 0:
+            issues.append("vertical load must be positive")
+        if self.moment_kNm < 0:
+            issues.append("moment must be non-negative")
+        if self.youngs_modulus_mpa <= 0 or self.poisson <= 0:
+            issues.append("material properties must be positive")
+        if self.design_factor <= 0 or self.yield_strength_mpa <= 0:
+            issues.append("yield strength and design factor must be positive")
+        if self.allowable_bearing_mpa <= 0:
+            issues.append("allowable bearing pressure must be positive")
+        return issues
+
+
+def generate_mudmat_apdl(geom: MudmatGeometry) -> str:
+    """Return a complete MAPDL ``.inp`` script for the mudmat screening FE."""
+    issues = geom.validate()
+    if issues:
+        raise ValueError("invalid mudmat geometry: " + "; ".join(issues))
+
+    allowable = geom.yield_strength_mpa / geom.design_factor
+    fz_total = -geom.vertical_load_kn * 1000.0  # N, downward (-Z)
+    moment_nmm = geom.moment_kNm * 1.0e6  # kN*m -> N*mm
+
+    # The overturning moment is applied as an equivalent linearly varying vertical
+    # line-load couple along the two short edges (x=0 and x=L): a downward push on
+    # the far edge, an upward pull on the near edge, magnitude = M / lever-arm.
+    # Lever arm = mat_length (edge-to-edge). Each edge gets a total vertical force
+    # of +/- M / L, distributed over its nodes by the script at solve time.
+    edge_force = moment_nmm / geom.mat_length_mm  # N on each short edge
+
+    return f"""! Mudmat / shallow-foundation screening FE — generated by digitalmodel.ansys.mudmat
+! Units: mm, N, MPa. SHELL181 plate on an elastic Winkler foundation (EFS).
+FINISH
+/CLEAR,NOSTART
+/TITLE,Mudmat screening: {geom.mat_length_mm}x{geom.mat_width_mm}mm t={geom.thickness_mm}mm
+/UNITS,MPA
+/PREP7
+
+! --- material (linear elastic steel) ---
+MP,EX,1,{geom.youngs_modulus_mpa}
+MP,PRXY,1,{geom.poisson}
+
+! --- element: SHELL181, mat thickness + elastic foundation stiffness (Winkler soil) ---
+ET,1,SHELL181
+! R,1, thickness, , , EFS  -> EFS = subgrade reaction modulus (N/mm^3), the
+! Winkler soil bed stiffness (vertical pressure per unit out-of-plane deflection).
+R,1,{geom.thickness_mm}, , ,{geom.subgrade_modulus_n_per_mm3}
+SECTYPE,1,SHELL
+SECDATA,{geom.thickness_mm},1
+SECNUM,1
+
+! --- geometry: rectangular mat in the X-Y plane ---
+BLC4,0,0,{geom.mat_length_mm},{geom.mat_width_mm}   ! area 1 = mat plate
+
+! --- mesh ---
+TYPE,1
+MAT,1
+REAL,1
+ESIZE,{geom.element_size_mm}
+AMESH,ALL
+
+! --- boundary conditions ---
+! The Winkler foundation supplies the vertical (Z) restraint everywhere; pin the
+! in-plane / rotational rigid-body modes only so the static solve is stable.
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+D,ALL,UX,0
+D,ALL,UY,0
+NSEL,S,LOC,X,{geom.mat_length_mm}
+NSEL,R,LOC,Y,0
+D,ALL,UY,0
+ALLSEL,ALL
+
+! --- load: central vertical load + eccentric overturning moment ---
+! 1) Vertical load spread over all mat nodes (downward, -Z).
+ALLSEL,ALL
+*GET,nall,NODE,0,COUNT
+fz_n = {fz_total} / nall
+F,ALL,FZ,fz_n
+! 2) Overturning moment as a vertical force couple on the two short edges.
+!    +edge_force pushes the far edge (x=L) down, -edge_force lifts the near edge.
+edgef = {edge_force}
+NSEL,S,LOC,X,{geom.mat_length_mm}
+*GET,nfar,NODE,0,COUNT
+F,ALL,FZ,-edgef/nfar
+NSEL,S,LOC,X,0
+*GET,nnear,NODE,0,COUNT
+F,ALL,FZ,edgef/nnear
+ALLSEL,ALL
+
+! --- solve (static structural) ---
+/SOLU
+ANTYPE,STATIC
+SOLVE
+FINISH
+
+! --- post: peak plate von Mises + soil bearing pressure, both with UCs ---
+/POST1
+SET,LAST
+! plate stress unity check vs yield/design_factor
+NSORT,S,EQV
+*GET,smax,SORT,0,MAX
+allow = {allowable}
+stress_uc = smax / allow
+! soil bearing pressure: p = ksub * w_max (peak downward deflection, -UZ).
+ksub = {geom.subgrade_modulus_n_per_mm3}
+NSORT,U,Z
+*GET,uz_min,SORT,0,MIN     ! most-negative (downward) deflection
+max_bearing = -uz_min * ksub
+allow_bear = {geom.allowable_bearing_mpa}
+bearing_uc = max_bearing / allow_bear
+/COM,============================================================
+/COM,MUDMAT SCREENING RESULT
+*MSG,INFO,smax,allow,stress_uc
+peak von Mises = %G MPa ; allowable = %G MPa ; stress UC = %G
+*MSG,INFO,max_bearing,allow_bear,bearing_uc
+max soil bearing = %G MPa ; allowable = %G MPa ; bearing UC = %G
+/COM,============================================================
+! numeric digest for the postprocessor (small, returnable)
+*CFOPEN,mudmat_result,csv
+*VWRITE,smax,stress_uc,max_bearing,bearing_uc
+('max_seqv_mpa,',F12.4,',stress_uc,',F10.5,',max_bearing_mpa,',F12.6,',bearing_uc,',F10.5)
+*CFCLOS
+FINISH
+"""
+
+
+def write_mudmat_inp(geom: MudmatGeometry, path: Path | str) -> Path:
+    """Write the generated APDL script to ``path`` and return it."""
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(generate_mudmat_apdl(geom))
+    return out
