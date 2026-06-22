@@ -1,0 +1,36 @@
+atlas_id: 4ab9337f5f3b
+basename: mudmat_bearing_capacity
+physics: utilization_threshold
+response: governing_utilisation
+axes:
+- name: vertical_load_kN
+  scale: linear
+  grid:
+  - 1500.0
+  - 2000.0
+  - 2500.0
+  - 3000.0
+  - 3500.0
+- name: undrained_shear_strength_kpa
+  scale: linear
+  grid:
+  - 12.0
+  - 16.0
+  - 20.0
+  - 24.0
+  - 28.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.01941849321374889
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: mudmat_bearing_capacity
+  code_version: 0cefe0c8
+  standards:
+  - id: DNV-RP-C212
+    edition: 2021-09
+  response_kwargs: {}
+  workflow_id: mudmat-bearing-capacity
+  content_fingerprint: 4ab9337f5f3b45b0f1c52c765ae36a1032cff329f3986386207a58ca1f36754a
+  input_template_sha256: 896f57a1fa4a817ba25a4863791cc8afe7ed46a67734a24adbeb3066391ed24d

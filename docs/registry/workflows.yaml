@@ -551,6 +551,22 @@ workflows:
       - examples/workflows/span-rectification/results/span_rectification/span_rectification_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification]
     runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: actual_span_length_m, scale: linear, grid: [8, 10.5, 13, 15.5, 18]}
+        - {name: current_velocity_ms, scale: linear, grid: [0.4, 0.6, 0.8, 1.0, 1.2]}
+      atlas: atlases/span_rectification
+  - id: span-rectification-atlas-query
+    basename: parametric_query
+    title: Instant interpolated free-span screening utilisation from the pre-computed atlas
+    input: examples/workflows/span-rectification-atlas-query/input.yml
+    outputs:
+      - examples/workflows/span-rectification-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification-atlas-query]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec
@@ -702,6 +718,22 @@ workflows:
       - examples/workflows/inspection-planning/results/inspection_planning/inspection_planning_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning]
     runtime: offline
+    parametric:
+      physics: linear
+      response: remaining_life_years
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: corrosion_rate_mm_yr, scale: linear, grid: [0.1, 0.3, 0.5, 0.7, 0.9]}
+        - {name: current_wall_thickness_mm, scale: linear, grid: [8, 10, 12, 14, 16]}
+      atlas: atlases/inspection_planning
+  - id: inspection-planning-atlas-query
+    basename: parametric_query
+    title: Instant interpolated remaining-life (yr) from the pre-computed inspection-planning atlas
+    input: examples/workflows/inspection-planning-atlas-query/input.yml
+    outputs:
+      - examples/workflows/inspection-planning-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning-atlas-query]
+    runtime: offline
   - id: jacket-member-joint-checks
     basename: jacket_checks
     title: API RP 2A-WSD tubular member and joint unity checks
@@ -839,6 +871,22 @@ workflows:
       - examples/workflows/mudmat-bearing-capacity/results/input.yml
       - examples/workflows/mudmat-bearing-capacity/results/mudmat_bearing_capacity/mudmat_bearing_capacity_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: vertical_load_kN, scale: linear, grid: [1500, 2000, 2500, 3000, 3500]}
+        - {name: undrained_shear_strength_kpa, scale: linear, grid: [12, 16, 20, 24, 28]}
+      atlas: atlases/mudmat_bearing_capacity
+  - id: mudmat-bearing-atlas-query
+    basename: parametric_query
+    title: Instant interpolated mudmat bearing-capacity utilisation from the pre-computed atlas
+    input: examples/workflows/mudmat-bearing-atlas-query/input.yml
+    outputs:
+      - examples/workflows/mudmat-bearing-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-atlas-query]
     runtime: offline
   - id: liquefaction-triggering
     basename: liquefaction

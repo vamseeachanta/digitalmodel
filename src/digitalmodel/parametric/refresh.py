@@ -34,6 +34,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "span_rectification": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "fowt_mooring": [{"id": "DNV-RP-0360", "edition": "2021-09"}],
     "lifting_lug": [{"id": "AISC-360-ASD", "edition": "2016"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
@@ -44,6 +45,10 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "viv_analysis": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "weather_window": [{"id": "DNV-OS-H101", "edition": "2011-10"},
                        {"id": "DNV-RP-H103", "edition": "2014-04"}],
+    "mudmat_bearing_capacity": [{"id": "DNV-RP-C212", "edition": "2021-09"}],
+    "inspection_planning": [{"id": "API-510", "edition": "2014"},
+                            {"id": "API-570", "edition": "2016"},
+                            {"id": "API-653", "edition": "2014"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -75,6 +80,13 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
     ],
+    # response is the as-surveyed/allowable screen ratio; track the allowable-
+    # length engine the workflow calls plus the workflow module itself.
+    "span_rectification": [
+        "src/digitalmodel/subsea/pipeline/span_rectification.py",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
+    ],
     "fowt_mooring": [
         "src/digitalmodel/orcaflex/mooring_design_fowt.py",
     ],
@@ -88,6 +100,12 @@ SOURCE_FILES: dict[str, list[str]] = {
     # the persistence/window math lives in the orcaflex weather_window module.
     "weather_window": [
         "src/digitalmodel/orcaflex/weather_window.py",
+    ],
+    "mudmat_bearing_capacity": [
+        "src/digitalmodel/geotechnical/mudmat.py",
+    ],
+    "inspection_planning": [
+        "src/digitalmodel/asset_integrity/inspection_planning.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],

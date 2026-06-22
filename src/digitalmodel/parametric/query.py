@@ -287,6 +287,9 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "synthetic_rope_mooring_fatigue": _handle_fatigue_bins,
     "code_check": _handle_utilisation,
     "free_span": _handle_utilisation,
+    # DNV-RP-F105 free-span screening utilisation (as-surveyed / allowable span):
+    # the atlas predicts utilisation directly, threshold at 1.0 (#982 pattern).
+    "span_rectification": _handle_utilisation,
     # FOWT watch-circle vs dynamic-cable MBR utilisation (parametrics atlas #975):
     # the atlas predicts utilisation directly, threshold at 1.0.
     "fowt_mooring": _handle_utilisation,
@@ -294,6 +297,11 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "lifting_lug": _handle_utilisation,
     # ESP pump-hydraulics governing screening utilisation atlas (#979 pattern).
     "esp_pump_hydraulics": _handle_utilisation,
+    # Mudmat bearing-capacity governing screening utilisation atlas (#979 pattern).
+    "mudmat_bearing_capacity": _handle_utilisation,
+    # API 510/570/653 remaining-life (yr) plain-value atlas (#979 pattern):
+    # interpolate the scalar remaining life directly, report it with a band.
+    "inspection_planning": _handle_value,
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,

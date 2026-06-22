@@ -324,6 +324,47 @@ def _viv_safety_factor_inline(point: dict[str, Any]) -> float:
     return float(sf["safety_factor_inline"].min())
 
 
+def _span_rectification_utilisation(point: dict[str, Any]) -> float:
+    """DNV-RP-F105 free-span screening utilisation (as-surveyed span / allowable
+    span) for one (actual_span_length_m, current_velocity_ms) point, at a fixed
+    reference pipe + soil. UC <= 1 passes (span within allowable, no
+    rectification); UC > 1 fails and triggers the equal-sub-span support layout.
+    The allowable span is the SpanAllowableLength the span_rectification workflow
+    calls; the response is the raw screen ratio that crosses 1.0."""
+    from digitalmodel.subsea.pipeline.free_span.models import (
+        BoundaryConditionF105,
+        EnvironmentType,
+        PipeSpanInput,
+    )
+    from digitalmodel.subsea.pipeline.free_span.span_allowable_length import (
+        SpanAllowableLength,
+    )
+
+    inp = PipeSpanInput(
+        od_m=0.2731,
+        wt_m=0.0127,
+        span_length_m=34.0,
+        e_modulus_pa=207e9,
+        steel_density_kgm3=7850.0,
+        content_density_kgm3=900.0,
+        water_density_kgm3=1025.0,
+        current_velocity_ms=float(point["current_velocity_ms"]),
+        wave_velocity_ms=0.0,
+        seabed_gap_m=0.5,
+        bc=BoundaryConditionF105("pinned-pinned"),
+        sag_m=0.0,
+        structural_damping=0.005,
+        hydrodynamic_damping=0.010,
+        sn_curve_class="F",
+        environment=EnvironmentType("seawater_cp"),
+        gamma_on_IL=1.1,
+        gamma_on_CF=1.3,
+        gamma_k=1.15,
+    )
+    allowable = SpanAllowableLength(inp, submerged_weight_N_m=850.0).max_span_m()
+    return float(point["actual_span_length_m"]) / allowable
+
+
 def _fowt_mbr_utilisation(point: dict[str, Any]) -> float:
     """FOWT watch-circle vs dynamic-cable MBR utilisation (mbr_limit / governing
     bend radius) for one (watch_circle_radius, mbr_limit_m) point, at a fixed
@@ -434,6 +475,50 @@ def _weather_window_operability_pct(point: dict[str, Any]) -> float:
     )
 
 
+def _mudmat_bearing_utilisation(point: dict[str, Any]) -> float:
+    """Mudmat governing screening utilisation (max of bearing + sliding) for one
+    (vertical_load_kN, undrained_shear_strength_kpa) point, at a fixed reference
+    foundation geometry / soil weight / horizontal load (the example values).
+    UC <= 1 passes (allowable capacity, with FoS, covers the applied load)."""
+    from digitalmodel.geotechnical.mudmat import mudmat_bearing_capacity
+
+    fos = 2.0
+    applied_v = float(point["vertical_load_kN"])
+    applied_h = 200.0
+    result = mudmat_bearing_capacity(
+        width_b_m=6.0,
+        length_l_m=8.0,
+        embedment_depth_m=0.5,
+        condition="undrained",
+        submerged_unit_weight_kn_m3=6.0,
+        vertical_load_kn=applied_v,
+        moment_knm=0.0,
+        undrained_shear_strength_kpa=float(point["undrained_shear_strength_kpa"]),
+    )
+    allowable_v = result.vertical_capacity_kn / fos
+    allowable_h = result.sliding_capacity_kn / fos
+    bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
+    sliding_util = (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+    return float(max(bearing_util, sliding_util))
+
+
+def _inspection_remaining_life_years(point: dict[str, Any]) -> float:
+    """API 510/570/653 remaining life (yr) = corrosion_allowance / corrosion_rate
+    for one (corrosion_rate_mm_yr, current_wall_thickness_mm) point, at a fixed
+    reference t_min and code-max interval. Plain positive scalar served directly
+    (life from rate + allowance); the half-life / code-cap decision is applied at
+    query time, not baked into the grid."""
+    from digitalmodel.asset_integrity.inspection_planning import plan_inspection
+
+    plan = plan_inspection(
+        current_mm=float(point["current_wall_thickness_mm"]),
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        corrosion_rate=float(point["corrosion_rate_mm_yr"]),
+    )
+    return float(plan.remaining_life_years)
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
@@ -443,10 +528,13 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "lifting_lug": _lifting_lug_utilisation,
     "esp_pump_hydraulics": _esp_pump_utilisation,
     "weather_window": _weather_window_operability_pct,
+    "mudmat_bearing_capacity": _mudmat_bearing_utilisation,
+    "inspection_planning": _inspection_remaining_life_years,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,
+    "span_rectification": _span_rectification_utilisation,
     "pile_capacity": _pile_capacity_kn,
     "anchor_capacity": _suction_anchor_capacity_kn,
 }
