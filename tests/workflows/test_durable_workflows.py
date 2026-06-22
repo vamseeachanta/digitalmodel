@@ -1382,6 +1382,23 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["response"] == "utilisation"
         assert result["screening_status"] == "pass"
         assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "mudmat-bearing-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range moderate-load / firm-clay point -> served utilisation, passes
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "inspection-planning-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range point -> served interpolated remaining life (plain value).
+        # _handle_value has no screening_status; assert what it actually returns.
+        assert result["in_range"] is True
+        assert result["response"] == "remaining_life_years"
+        assert "screening_status" not in result
+        assert math.isfinite(result["value"]) and result["value"] > 0.0
+        band = result["confidence"]["band"]
+        assert band[0] <= result["value"] <= band[1]
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:
