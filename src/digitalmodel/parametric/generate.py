@@ -343,12 +343,31 @@ def _fowt_mbr_utilisation(point: dict[str, Any]) -> float:
     return float(result.mbr_limit_m / result.governing_bend_radius_m)
 
 
+def _lifting_lug_utilisation(point: dict[str, Any]) -> float:
+    """AISC ASD lifting-lug / padeye governing utilisation (max of pin-bearing,
+    net-tension, shear-tear-out) for one (static_load_kN, plate_thickness_mm)
+    point, at a fixed reference padeye geometry. UC <= 1 passes."""
+    from digitalmodel.lifting_lug.workflow import design_load_kn, lug_checks
+
+    factored = design_load_kn(float(point["static_load_kN"]), 2.0, 1.1)
+    checks = lug_checks(
+        design_load_kn=factored,
+        total_thickness_mm=float(point["plate_thickness_mm"]),
+        pin_diameter_mm=75.0,
+        hole_diameter_mm=80.0,
+        outer_radius_mm=110.0,
+        yield_strength_mpa=355.0,
+    )
+    return float(max(c.utilization for c in checks))
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
     "spectral_fatigue": _spectral_fatigue_annual_damage,
     "fpso_mooring_full": _fpso_max_line_tension_N,
     "fowt_mooring": _fowt_mbr_utilisation,
+    "lifting_lug": _lifting_lug_utilisation,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,

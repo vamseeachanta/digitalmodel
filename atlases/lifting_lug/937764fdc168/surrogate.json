@@ -1,0 +1,30 @@
+{
+  "basename": "lifting_lug",
+  "atlas_id": "937764fdc168",
+  "physics": "utilization_threshold",
+  "response": "governing_utilisation",
+  "axes": [
+    {
+      "name": "static_load_kN",
+      "scale": "linear",
+      "grid": [
+        200.0,
+        300.0,
+        400.0,
+        500.0,
+        600.0
+      ]
+    },
+    {
+      "name": "plate_thickness_mm",
+      "scale": "linear",
+      "grid": [
+        30.0,
+        40.0,
+        50.0,
+        60.0,
+        70.0
+      ]
+    }
+  ]
+}
