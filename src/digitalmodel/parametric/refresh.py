@@ -43,6 +43,9 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "fpso_mooring_full": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
     "viv_analysis": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "mudmat_bearing_capacity": [{"id": "DNV-RP-C212", "edition": "2021-09"}],
+    "inspection_planning": [{"id": "API-510", "edition": "2014"},
+                            {"id": "API-570", "edition": "2016"},
+                            {"id": "API-653", "edition": "2014"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -85,6 +88,9 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "mudmat_bearing_capacity": [
         "src/digitalmodel/geotechnical/mudmat.py",
+    ],
+    "inspection_planning": [
+        "src/digitalmodel/asset_integrity/inspection_planning.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
