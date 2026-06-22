@@ -361,6 +361,30 @@ def _lifting_lug_utilisation(point: dict[str, Any]) -> float:
     return float(max(c.utilization for c in checks))
 
 
+def _esp_pump_utilisation(point: dict[str, Any]) -> float:
+    """ESP governing screening utilisation (max of pump-stages / motor-power /
+    rate-within-range checks) for one (flow_rate_m3_per_day, dynamic_fluid_level_m)
+    point, at a fixed reference well + pump. UC <= 1 passes."""
+    from digitalmodel.production_engineering.esp_pump_hydraulics import size_esp
+
+    result = size_esp(
+        flow_rate_m3_per_day=float(point["flow_rate_m3_per_day"]),
+        dynamic_fluid_level_m=float(point["dynamic_fluid_level_m"]),
+        pump_setting_depth_m=2500.0,
+        wellhead_pressure_kpa=2000.0,
+        specific_gravity=0.85,
+        tubing_inner_diameter_m=0.076,
+        head_per_stage_m=6.0,
+        bhp_per_stage_hp=0.5,
+        max_stages=400,
+        motor_rating_hp=250.0,
+        min_rate_m3_per_day=600.0,
+        max_rate_m3_per_day=2000.0,
+        hazen_williams_c=120.0,
+    )
+    return float(max(c["utilization"] for c in result.checks))
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
@@ -368,6 +392,7 @@ RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "fpso_mooring_full": _fpso_max_line_tension_N,
     "fowt_mooring": _fowt_mbr_utilisation,
     "lifting_lug": _lifting_lug_utilisation,
+    "esp_pump_hydraulics": _esp_pump_utilisation,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,

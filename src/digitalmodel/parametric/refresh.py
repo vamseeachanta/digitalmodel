@@ -79,6 +79,9 @@ SOURCE_FILES: dict[str, list[str]] = {
     "lifting_lug": [
         "src/digitalmodel/lifting_lug/workflow.py",
     ],
+    "esp_pump_hydraulics": [
+        "src/digitalmodel/production_engineering/esp_pump_hydraulics.py",
+    ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
     "spectral_fatigue": [
