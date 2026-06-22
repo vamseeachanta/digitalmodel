@@ -42,6 +42,8 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
                          {"id": "DNV-RP-C205", "edition": "2021-09"}],
     "fpso_mooring_full": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
     "viv_analysis": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "weather_window": [{"id": "DNV-OS-H101", "edition": "2011-10"},
+                       {"id": "DNV-RP-H103", "edition": "2014-04"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -81,6 +83,11 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "esp_pump_hydraulics": [
         "src/digitalmodel/production_engineering/esp_pump_hydraulics.py",
+    ],
+    # response is workability x persistence against a fixed reference hindcast;
+    # the persistence/window math lives in the orcaflex weather_window module.
+    "weather_window": [
+        "src/digitalmodel/orcaflex/weather_window.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],

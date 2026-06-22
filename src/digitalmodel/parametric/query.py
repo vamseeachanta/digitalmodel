@@ -300,6 +300,9 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "spectral_fatigue": _handle_annual_damage,
     "fpso_mooring_full": _handle_value,
     "viv_analysis": _handle_value,
+    # weather-window planned-operability % atlas (#979 pattern): a plain value,
+    # workability x persistence against a fixed reference hindcast.
+    "weather_window": _handle_value,
     # licensed-solver sparse library (#801): exact-match the case key, then
     # interpolate freq x heading within it; an uncovered case escalates.
     "diffraction_library": _handle_value,

@@ -1089,3 +1089,21 @@ workflows:
       - examples/workflows/weather-window/results/weather_window/weather_window_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]
     runtime: offline
+    parametric:
+      physics: linear
+      response: operability_pct
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      # axes are scalars; the Hs hindcast is a FIXED reference baked into the
+      # response function (an Hs time series is never an atlas axis).
+      axes:
+        - {name: hs_limit_m, scale: linear, grid: [2.0, 2.5, 3.0, 3.5, 4.0]}
+        - {name: required_window_hours, scale: linear, grid: [12, 24, 36, 48, 72]}
+      atlas: atlases/weather_window
+  - id: weather-window-atlas-query
+    basename: parametric_query
+    title: Instant interpolated weather-window operability from the pre-computed atlas
+    input: examples/workflows/weather-window-atlas-query/input.yml
+    outputs:
+      - examples/workflows/weather-window-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window-atlas-query]
+    runtime: offline
