@@ -275,7 +275,8 @@ class TestGeneratePVApdl:
         cond = DesignConditions(design_pressure_mpa=15.0)
         text = _gen().generate_pv_apdl(geom, cond)
         assert "15.0" in text
-        assert "SFA" in text
+        # axisymmetric 2-D wall: pressure applied to the inner line (SFL)
+        assert "SFL,ALL,PRES" in text
 
     def test_apdl_contains_solve(self):
         geom = VesselGeometry()
