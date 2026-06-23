@@ -45,6 +45,45 @@ _MOORING_SAFETY_FACTORS: Final[dict[MooringCondition, tuple[float, str]]] = {
 }
 
 
+_DNVGL_ST_E271_CITATION_TEMPLATE: Final = {
+    "code_id": "dnvgl-st-e271",
+    "publisher": "DNV",
+    "revision": "2017",
+    "wiki_path": "wikis/marine-engineering/wiki/standards/dnvgl-st-e271.md",
+}
+
+# DNVGL-ST-E271 (DNV 2.7-1) offshore-container design factors.
+_OFFSHORE_CONTAINER_FACTORS: Final[dict[str, tuple[float, str]]] = {
+    "primary_structure_load": (2.5, "Section 4.2.3.1 (FL = 2.5 R g)"),
+    "padeye_load": (3.0, "Section 4.2.3.1 (Fp = 3 R g over n-1 pad eyes)"),
+    "single_padeye_load": (5.0, "Section 4.2.3.1 (single pad eye Fp = 5 R g)"),
+    "allowable_usage_factor": (0.85, "Section 4.2.1 (sigma_e <= 0.85 C; steel C = Re)"),
+    "default_sling_angle_to_vertical_deg": (45.0, "Section 4.2.3.1 (v = 45 deg default)"),
+}
+
+
+def get_offshore_container_factor(
+    name: str, *, repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Return a DNVGL-ST-E271 (DNV 2.7-1) offshore-container design factor.
+
+    Fail-closed: raises CitationResolutionError if the cited wiki page is missing
+    or its frontmatter no longer matches the citation. When repo_root is None,
+    defers to the resolver (LLM_WIKI_PATH precedence chain).
+    """
+    if name not in _OFFSHORE_CONTAINER_FACTORS:
+        raise ValueError(f"Unknown offshore-container factor: {name!r}")
+    value, section = _OFFSHORE_CONTAINER_FACTORS[name]
+    citation = Citation(
+        section=section,
+        note=f"DNV 2.7-1 offshore-container design factor: {name}",
+        **_DNVGL_ST_E271_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    units = "deg" if name.endswith("_deg") else "dimensionless"
+    return CitedValue(value=value, citation=citation, units=units)
+
+
 def get_mooring_safety_factor(
     condition: MooringCondition, *, repo_root: Optional[Path] = None
 ) -> CitedValue:
