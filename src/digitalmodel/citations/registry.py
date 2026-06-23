@@ -106,6 +106,28 @@ def get_mooring_safety_factor(
     return CitedValue(value=value, citation=citation, units="dimensionless")
 
 
+# DNV-OS-E301 anchor / foundation resistance (geotechnical) safety factor.
+_ANCHOR_SAFETY_FACTOR: Final[tuple[float, str]] = (
+    1.5, "Section 2 (anchor resistance, geotechnical safety factor)")
+
+
+def get_anchor_safety_factor(*, repo_root: Optional[Path] = None) -> CitedValue:
+    """Return the DNV-OS-E301 anchor/foundation geotechnical safety factor.
+
+    Representative value for screening (the exact partial factor in DNV-OS-E301
+    varies with anchor type and consequence class). Fail-closed when the cited
+    wiki page is missing/mismatched; defers to the resolver when repo_root is None.
+    """
+    value, section = _ANCHOR_SAFETY_FACTOR
+    citation = Citation(
+        section=section,
+        note="Foundation/anchor resistance safety factor (screening)",
+        **_DNV_OS_E301_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=value, citation=citation, units="dimensionless")
+
+
 def get_dnv_f103_reference(
     section: str, *, note: str = "", repo_root: Optional[Path] = None
 ) -> CitedValue:
