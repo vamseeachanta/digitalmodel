@@ -37,6 +37,13 @@ _DNV_RP_F103_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103.md",
 }
 
+_EN400_CITATION_TEMPLATE: Final = {
+    "code_id": "EN400",
+    "publisher": "USNA",
+    "revision": "Summer 2020",
+    "wiki_path": "wikis/marine-engineering/wiki/standards/en400.md",
+}
+
 # DNV-OS-E301 Section 2.2 design load factors for mooring systems.
 # Values are industry-standard and also appear in API RP 2SK Table C-1.
 _MOORING_SAFETY_FACTORS: Final[dict[MooringCondition, tuple[float, str]]] = {
@@ -119,6 +126,24 @@ def get_dnv_f103_reference(
         section=section,
         note=note,
         **_DNV_RP_F103_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")
+
+
+def get_en400_reference(
+    section: str, *, note: str = "", repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Return a validated EN400 reference citation.
+
+    EN400 (USNA *Principles of Ship Performance*, Summer 2020) is the teaching
+    source the naval_architecture fundamentals/hydrostatics/stability/resistance
+    calcs derive from. The value is a sentinel; the citation is the payload.
+    """
+    citation = Citation(
+        section=section,
+        note=note,
+        **_EN400_CITATION_TEMPLATE,
     )
     validate_citation(citation, repo_root=repo_root)
     return CitedValue(value=1.0, citation=citation, units="reference")
