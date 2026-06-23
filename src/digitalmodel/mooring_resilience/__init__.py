@@ -8,6 +8,7 @@ from digitalmodel.mooring_resilience.screening import (
     assess,
     foundation_capacity_kN,
     intact_tension_kN,
+    safety_factor_citations,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "assess",
     "foundation_capacity_kN",
     "intact_tension_kN",
+    "safety_factor_citations",
 ]

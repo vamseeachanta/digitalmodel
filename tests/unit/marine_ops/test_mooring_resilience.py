@@ -123,3 +123,33 @@ def test_higher_mbl_reduces_tension_utilization():
     strong = assess(MooringConfig(12, 18000, 22600, 5, 20, 60, 1000),
                     Metocean(3.0, 11.0)).util_intact
     assert strong < weak
+
+
+# --- citations -------------------------------------------------------------
+
+def _write_e301_fixture(tmp_path):
+    page = (tmp_path / "wikis" / "engineering" / "wiki" / "standards"
+            / "dnv-os-e301.md")
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-OS-E301\npublisher: DNV\nrevision: 2021-07\n---\n# E301\n")
+    return tmp_path
+
+
+def test_safety_factor_citations_resolve_and_match_factors(tmp_path):
+    from digitalmodel.mooring_resilience import safety_factor_citations
+    cites = safety_factor_citations(repo_root=_write_e301_fixture(tmp_path))
+    f = ResilienceFactors()
+    assert cites["intact"].value == f.fos_intact == 1.67
+    assert cites["damaged"].value == f.fos_damaged == 1.25
+    assert cites["intact"].citation.code_id == "DNV-OS-E301"
+
+
+def test_safety_factor_citations_degrade_gracefully(tmp_path):
+    import digitalmodel.mooring_resilience.screening as mod
+    from digitalmodel.mooring_resilience import safety_factor_citations
+    mod._CITATION_WARNED = False
+    empty = tmp_path / "empty_clone"
+    (empty / "wikis").mkdir(parents=True)  # valid clone, no E301 page
+    with pytest.warns(RuntimeWarning):
+        assert safety_factor_citations(repo_root=empty) == {}
