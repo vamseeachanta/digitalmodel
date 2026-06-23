@@ -142,7 +142,9 @@ def test_safety_factor_citations_resolve_and_match_factors(tmp_path):
     f = ResilienceFactors()
     assert cites["intact"].value == f.fos_intact == 1.67
     assert cites["damaged"].value == f.fos_damaged == 1.25
+    assert cites["foundation"].value == f.fos_foundation == 1.5
     assert cites["intact"].citation.code_id == "DNV-OS-E301"
+    assert cites["foundation"].citation.code_id == "DNV-OS-E301"
 
 
 def test_safety_factor_citations_degrade_gracefully(tmp_path):

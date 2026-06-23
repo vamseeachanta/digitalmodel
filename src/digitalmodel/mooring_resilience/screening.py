@@ -188,18 +188,19 @@ _CITATION_WARNED = False
 
 
 def safety_factor_citations(repo_root: Optional[Path] = None) -> dict:
-    """Return ``{"intact": CitedValue, "damaged": CitedValue}`` for the mooring
-    tension safety factors, sourced from the existing DNV-OS-E301 registry.
+    """Return ``{"intact", "damaged", "foundation"}`` CitedValues for the mooring
+    safety factors, sourced from the existing DNV-OS-E301 registry.
 
-    The values match :class:`ResilienceFactors` (``fos_intact`` / ``fos_damaged``).
-    In standalone mode (no resolvable wiki page) it degrades gracefully: emits a
-    one-shot warning and returns ``{}`` rather than failing — mirroring
-    ``offshore_container.factor_citations``. Where the wiki resolves, a missing or
-    mismatched page fails closed (raises).
+    The values match :class:`ResilienceFactors` (``fos_intact`` / ``fos_damaged``
+    / ``fos_foundation``). In standalone mode (no resolvable wiki page) it degrades
+    gracefully: emits a one-shot warning and returns ``{}`` rather than failing —
+    mirroring ``offshore_container.factor_citations``. Where the wiki resolves, a
+    missing or mismatched page fails closed (raises).
     """
     global _CITATION_WARNED
     from digitalmodel.citations.registry import (
         MooringCondition,
+        get_anchor_safety_factor,
         get_mooring_safety_factor,
     )
     from digitalmodel.citations.schema import CitationResolutionError
@@ -210,6 +211,7 @@ def safety_factor_citations(repo_root: Optional[Path] = None) -> dict:
                 MooringCondition.INTACT_QUASI_STATIC, repo_root=repo_root),
             "damaged": get_mooring_safety_factor(
                 MooringCondition.DAMAGED_QUASI_STATIC, repo_root=repo_root),
+            "foundation": get_anchor_safety_factor(repo_root=repo_root),
         }
     except CitationResolutionError as exc:
         if not _CITATION_WARNED:
