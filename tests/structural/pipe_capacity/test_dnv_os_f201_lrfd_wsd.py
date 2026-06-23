@@ -16,7 +16,7 @@ import math
 
 import pytest
 
-from digitalmodel.code_checks.dnv_os_f201_lrfd_wsd import (
+from digitalmodel.structural.pipe_capacity.custom.DNV_OS_F201.dnv_os_f201_lrfd_wsd import (
     bursting_resistance,
     combined_loading_external_overpressure,
     combined_loading_internal_overpressure,
