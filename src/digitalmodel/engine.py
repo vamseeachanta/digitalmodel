@@ -412,6 +412,18 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.subsea.pipeline.integrity_workflows import run_free_span
 
         cfg_base = run_free_span(cfg_base)
+    elif basename == "riser_screening":
+        from digitalmodel.subsea.riser.riser_case_screening import (
+            run_riser_screening,
+        )
+
+        cfg_base = run_riser_screening(cfg_base)
+    elif basename == "wall_thickness_compare":
+        from digitalmodel.structural.analysis.wall_thickness_compare_workflow import (
+            run_wall_thickness_compare,
+        )
+
+        cfg_base = run_wall_thickness_compare(cfg_base)
     elif basename == "lateral_buckling":
         from digitalmodel.subsea.pipeline.integrity_workflows import (
             run_lateral_buckling,

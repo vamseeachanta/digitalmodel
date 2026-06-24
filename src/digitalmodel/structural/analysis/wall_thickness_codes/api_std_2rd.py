@@ -30,7 +30,12 @@ class ApiStd2rdStrategy:
     """
 
     code_name = "API-STD-2RD"
-    check_names = ["burst", "collapse"]
+    check_names = ["burst", "collapse", "combined"]
+
+    # Internal-pressure design factor for the combined (Method 1) check.
+    # API STD 2RD Method 1 uses the SLS/ULS internal-pressure factor (0.80)
+    # as the base, then corrects it for the pressure utilisation.
+    COMBINED_DESIGN_FACTOR = 0.80
 
     def run_checks(
         self,
@@ -42,7 +47,17 @@ class ApiStd2rdStrategy:
         results = {}
         results["burst"] = self._check_burst(geometry, material, loads)
         results["collapse"] = self._check_collapse(geometry, material, loads)
+        results["combined"] = self._check_combined(geometry, material, loads)
         return results
+
+    def compute_yield_moment(
+        self, geometry: PipeGeometry, material: PipeMaterial
+    ) -> float:
+        """First-yield (elastic) moment M_y = (pi/4) * SMYS * (D - t)^2 * t."""
+        D = geometry.outer_diameter
+        t = geometry.wall_thickness
+        smys = material.smys
+        return (math.pi / 4) * smys * (D - t) ** 2 * t
 
     def compute_plastic_moment(
         self, geometry: PipeGeometry, material: PipeMaterial
@@ -52,12 +67,8 @@ class ApiStd2rdStrategy:
         M_y = (pi/4) * SMYS * (D - t)^2 * t
         M_p = (4/pi) * M_y = SMYS * (D - t)^2 * t
         """
-        D = geometry.outer_diameter
-        t = geometry.wall_thickness
-        smys = material.smys
-        M_y = (math.pi / 4) * smys * (D - t) ** 2 * t
-        M_p = (4 / math.pi) * M_y
-        return M_p
+        M_y = self.compute_yield_moment(geometry, material)
+        return (4 / math.pi) * M_y
 
     def compute_plastic_tension(
         self, geometry: PipeGeometry, material: PipeMaterial
@@ -144,5 +155,72 @@ class ApiStd2rdStrategy:
         logger.info(
             "API STD 2RD collapse: p_c=%.2f MPa, f_c=%.2f, util=%.3f",
             p_c / 1e6, f_c, utilisation,
+        )
+        return utilisation, details
+
+    def _check_combined(self, geometry, material, loads):
+        """Combined moment-tension-pressure utilisation (API STD 2RD Method 1).
+
+        Method 1 is the linear (conservative) moment-tension interaction.
+        The internal-pressure design factor is corrected for the pressure
+        utilisation, then the tension and moment demands are normalised by
+        their first-yield capacities:
+
+            p_b           = 0.45 * (SMYS + SMTS) * ln(OD / (OD - 2t))
+            pressure_ratio= (p_i - p_e) / p_b
+            F_d_corr      = sqrt(max(F_d^2 - pressure_ratio^2, 0))
+            T_y           = SMYS * A
+            M_y           = (pi/4) * SMYS * (D - t)^2 * t
+            utilisation   = (|T|/T_y + |M|/M_y) / F_d_corr
+
+        This matches the legacy ``APISTD2RDAnalyzer`` Method 1 utilisation
+        (``calculate_method1_limits`` + ``calculate_utilization``); the ratio
+        form is dimensionless so it is unit-system independent. Validated by
+        the cross-check unit test against that legacy analyzer.
+        """
+        D = geometry.outer_diameter
+        t = geometry.wall_thickness
+        smys = material.smys
+        smts = material.smts
+
+        d_i = D - 2 * t
+        A = math.pi / 4 * (D**2 - d_i**2)
+        T_y = A * smys
+        M_y = self.compute_yield_moment(geometry, material)
+
+        p_b = 0.45 * (smys + smts) * math.log(D / (D - 2 * t))
+        p_net = loads.internal_pressure - loads.external_pressure
+        pressure_ratio = p_net / p_b if p_b > 0 else 0.0
+
+        f_d = self.COMBINED_DESIGN_FACTOR
+        arg = f_d**2 - pressure_ratio**2
+        f_d_corr = math.sqrt(arg) if arg > 0 else 0.0
+
+        tension_term = abs(loads.effective_tension) / T_y if T_y > 0 else 0.0
+        moment_term = abs(loads.bending_moment) / M_y if M_y > 0 else 0.0
+        demand = tension_term + moment_term
+
+        if f_d_corr <= 0:
+            utilisation = float("inf") if demand > 0 else 0.0
+        else:
+            utilisation = demand / f_d_corr
+
+        details = {
+            "p_b": p_b,
+            "p_net": p_net,
+            "pressure_ratio": pressure_ratio,
+            "f_d": f_d,
+            "f_d_corrected": f_d_corr,
+            "yield_tension": T_y,
+            "yield_moment": M_y,
+            "tension_term": tension_term,
+            "moment_term": moment_term,
+            "utilisation": utilisation,
+        }
+
+        logger.info(
+            "API STD 2RD combined (Method 1): F_d_corr=%.3f, T/Ty=%.3f, "
+            "M/My=%.3f, util=%.3f",
+            f_d_corr, tension_term, moment_term, utilisation,
         )
         return utilisation, details

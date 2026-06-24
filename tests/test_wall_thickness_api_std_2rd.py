@@ -205,6 +205,6 @@ def test_method2_contains_method1(geometry, material):
 
 
 def test_check_names(strategy):
-    """API STD 2RD has burst and collapse checks."""
-    assert strategy.check_names == ["burst", "collapse"]
+    """API STD 2RD has burst, collapse and combined (Method 1 M-T) checks."""
+    assert strategy.check_names == ["burst", "collapse", "combined"]
     assert strategy.code_name == "API-STD-2RD"
