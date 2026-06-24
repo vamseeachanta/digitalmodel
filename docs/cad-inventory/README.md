@@ -4,7 +4,13 @@
 **Host:** ace-linux-1 · **Scanned path:** native local disk `/mnt/ace` (no network share) · **Scan date:** 2026-06-24
 
 This folder holds the discovery output for the CAD/CAM automation initiative. This file (`README.md`) is the
-aggregate inventory; the per-file raw manifest is `cad-file-manifest.csv.gz`.
+aggregate inventory; the per-file manifest is `cad-file-manifest-deidentified.csv.gz`.
+
+> **Privacy — this repo is PUBLIC.** The committed manifest is **de-identified**: the raw `path` column (which
+> embeds a personal name and client/field linkage) is replaced by `path_sha1`, and the two external-company top
+> folders are relabelled (`epc-partner`, `eng-partner`). All aggregate columns are intact. The **full raw-path
+> manifest is retained only in the private ace-linux-1 context**, not committed. `build-manifest.py` produces the
+> raw manifest; `deidentify-manifest.py` produces the committed one.
 
 ---
 
@@ -37,9 +43,13 @@ aggregate inventory; the per-file raw manifest is `cad-file-manifest.csv.gz`.
   OrcaFlex input *or* generic data; `.nc` is NetCDF *or* (in principle) G-code — here it is 100% NetCDF.
 - **Dependency noise excluded from "signal" counts:** 1,115 files inside `.venv`/`site-packages` (scipy test
   `.dat`/`.nc`) are tagged `is_dependency=True` and dropped from the deduped headline.
-- **Manifest is gzipped** (`cad-file-manifest.csv.gz`, 8.5 MB; 152 MB raw) to keep the repo lean. Decompress with
-  `zcat cad-file-manifest.csv.gz` or `gunzip -k`. Columns:
-  `format, ecosystem, category, size_bytes, mtime, top_folder, project_group, is_preexisting, is_dependency, is_inbox_dump, path`.
+- **SolidWorks lock/temp files (found in #1008):** 8,839 of the 60,036 `.sldprt`/`.sldasm` matches are `~$…`
+  SolidWorks lock/temp files (8,684 parts + 155 assemblies), **not models** — real SW model count ≈ **51,200**.
+  They remain in the manifest (they were on disk); filter `path` for a leading `~$` to exclude them.
+- **Manifest is gzipped** (`cad-file-manifest-deidentified.csv.gz`, ~9 MB) to keep the repo lean. Decompress with
+  `zcat cad-file-manifest-deidentified.csv.gz`. Columns:
+  `format, ecosystem, category, size_bytes, mtime, top_folder, project_group, is_preexisting, is_dependency, is_inbox_dump, path_sha1`
+  (`path_sha1` = first 16 hex of `sha1(full_path)` — preserves per-file uniqueness/dedup without exposing the path).
 
 ### `.preexisting-before-repo-move-*` deduplication
 
@@ -52,9 +62,9 @@ the inventory; flagged for #1007).
 |---|---|---|---|
 | `client_projects.preexisting-…-064502` | yes (`client_projects`) | 4,522 | **drop** as duplicate |
 | `acma-projects.preexisting-…-075928` | yes (`acma-projects`) | 3,230 | **drop** as duplicate |
-| `doris.preexisting-…-064502` | yes (`doris`) | 502 | **drop** as duplicate |
+| `eng-partner.preexisting-…-064502` | yes (`eng-partner`) | 502 | **drop** as duplicate |
 | `seanation.preexisting-…-064502` | yes (`seanation`) | 481 | **drop** as duplicate |
-| `saipem.preexisting-…-064502` | **no live twin** | 317 | **keep** — only copy |
+| `epc-partner.preexisting-…-064502` | **no live twin** | 317 | **keep** — only copy |
 | `rock-oil-field.preexisting-…-064502` | **no live twin** | 424 | **keep** — only copy |
 
 Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = **9,850**.
@@ -111,17 +121,17 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 | `OGManufacturing` | 1,115 | 30.7 MB | **all `.venv`/site-packages noise** (not real CAD) |
 | `data` | 944 | 706 MB | |
 | `client_projects` | 815 | 170 MB | **active** client engineering CAD |
-| `doris.preexisting-…` | 502 | 750 MB | deduped |
+| `eng-partner.preexisting-…` | 502 | 750 MB | deduped |
 | `seanation.preexisting-…` | 481 | 87 MB | deduped |
 | `acma-projects` | 474 | 3.3 GB | **active** |
 | `rock-oil-field.preexisting-…` | 424 | 1.1 GB | no live twin → kept |
 | `gdrive` | 407 | 719 MB | mirrored Google-Drive corpus |
-| `saipem.preexisting-…` | 317 | 1.5 GB | no live twin → kept |
+| `epc-partner.preexisting-…` | 317 | 1.5 GB | no live twin → kept |
 | `aceengineer-admin` | 264 | 6.8 MB | |
 | `WEC-Sim` | 258 | 88 MB | open-source tool (incl. the 10 NetCDF `.nc`) |
 | `seanation` | 225 | 269 MB | **active** subsea project |
 | `O&G-Standards` | 31 | 5.7 GB | |
-| `doris` `acma-codes` `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
+| `eng-partner` `acma-codes` `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
 
 ## Aggregate 4 — "signal" set, **excluding** the `ri/00_inbox` dump
 
@@ -143,7 +153,7 @@ This is the curated engineering CAD that actually warrants automation analysis (
 | NetCDF (`.nc`) | 7 | 12.2 MB |
 
 > Most curated SolidWorks lives under `docs/disciplines/{misc,drilling}`; the subsea project repos
-> (`client_projects`, `acma-projects`, `seanation`, `saipem`, `rock-oil-field`, `doris`) are OrcaFlex-dominant.
+> (`client_projects`, `acma-projects`, `seanation`, `epc-partner`, `rock-oil-field`, `eng-partner`) are OrcaFlex-dominant.
 > Folder→domain→client mapping is in [`project-domain-map.md`](./project-domain-map.md) (#1007).
 
 ---
