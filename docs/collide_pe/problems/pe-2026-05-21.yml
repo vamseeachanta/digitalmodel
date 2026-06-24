@@ -1,0 +1,52 @@
+id: pe-2026-05-21
+date: "2026-05-21"
+slug: pe-problem-of-the-day-5-21-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-5-21-2026
+title: "PE Problem of the Day 5/21/2026 — OOIP volumetrics & recovery"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, reservoir-engineering, volumetrics]
+type: quantitative
+
+statement: >
+  A sandstone oil reservoir: areal extent 1,200 acres; net pay 40 ft; average
+  porosity 18%; initial oil saturation 80%; oil formation volume factor 1.25;
+  planned primary recovery factor 22% of OOIP. Assume uniform saturation, fully
+  drained within the area and net pay.
+
+  (a) Estimate OOIP in stock-tank barrels (STB).
+  (b) Estimate primary recoverable oil (STB).
+  (c) If a secondary project raises the recovery factor to 30%, how many extra
+      STB does that represent vs. primary alone?
+
+given:
+  area_acres: 1200
+  net_pay_ft: 40
+  porosity: 0.18
+  oil_saturation: 0.80
+  formation_volume_factor_boi: 1.25
+  primary_recovery_factor: 0.22
+  secondary_recovery_factor: 0.30
+
+find:
+  - "(a) OOIP in STB"
+  - "(b) primary recoverable STB at RF 22%"
+  - "(c) incremental STB from RF 22% -> 30%"
+
+solution:
+  method: "Volumetric OOIP = 7758*A*h*phi*So/Boi; recoverable = OOIP*RF; uplift = OOIP*(RF2-RF1)."
+  steps:
+    - "OOIP = 7758 * 1200 * 40 * 0.18 * 0.80 / 1.25 = 42,898,636.8 STB (~42.9 MMSTB)"
+    - "(b) primary = 42,898,636.8 * 0.22 = 9,437,700 STB (~9.44 MMSTB)"
+    - "(c) uplift = 42,898,636.8 * (0.30 - 0.22) = 3,431,891 STB (~3.43 MMSTB)"
+  answer:
+    a_ooip_stb: 42898636.8
+    b_primary_recoverable_stb: 9437700.1
+    c_secondary_uplift_stb: 3431891.0
+  caveats: >
+    Volumetric estimate assumes uniform saturation and full areal/vertical
+    drainage; real recovery depends on drive mechanism, sweep efficiency, and
+    well placement. 7758 = bbl per acre-ft.
+  confidence: high
+  domain_function: "digitalmodel.reservoir.volumetrics (ooip_stb, recoverable_stb, incremental_recovery_stb)"
+  domain_check: "Verified by tests/reservoir/test_volumetrics.py::TestCollidePeProblem20260521 (7 passed)"
+  solved_by: "digitalmodel reservoir.volumetrics; confirmed by hand-check"

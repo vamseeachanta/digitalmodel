@@ -1,0 +1,23 @@
+id: pe-2026-03-25
+date: "2026-03-25"
+slug: pe-problem-of-the-day-3-25-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-3-25-2026
+title: "PE Problem of the Day 3/25/2026 — closed-loop annular pressure control"
+posted_by: Yogashri Pradhan
+tags: [drilling, upstream, field-service]
+type: conceptual
+
+statement: >
+  What is an adaptive, closed-loop drilling process used to precisely control the annular pressure profile throughout the wellbore?
+
+find:
+  - "Name the process"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Managed Pressure Drilling (MPD) - an adaptive closed-loop method holding bottomhole/annular pressure in a narrow tolerance via a rotating control device, surface choke manifold, and back-pressure pump."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/managed-pressure-drilling.md
