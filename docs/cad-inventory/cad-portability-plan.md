@@ -34,7 +34,7 @@ with only ~3,138 neutral files already portable — and digitalmodel has **no CA
 Ingest the **existing neutral files** (STEP/IGES/Parasolid, ~3,138) → read headless with **pythonocc-core/OCP** or
 **FreeCAD (headless)** → emit normalized **STEP AP242 + glTF + JSON sidecar + thumbnail**. DWG→DXF via **ODA**.
 No CAD seat required.
-- **Pilot target:** the SLOR `URA` and FDAS `tensioner-cart` STEP/IGES files already on the share (proven readable
+- **Pilot target:** the `URA` riser assembly and tensioner-cart STEP/IGES files already on the share (proven readable
   in [#1008](https://github.com/vamseeachanta/digitalmodel/issues/1008) — a 485-component / 719-solid assembly parsed with no license).
 
 ### Tier 1 — one licensed seat (the single unlock)

@@ -45,7 +45,7 @@ self-extractors) also sit alongside. **Real SolidWorks model count ≈ 51,200.**
   drawing, BOM and mass-property table was redone per variant.
 - **Automatable as:** one configuration-driven (design-table) model → variants generated, not re-modeled.
 
-## Sample C — Moveable Tensioner Cart · code `F` (FDAS tensioner program)
+## Sample C — Moveable Tensioner Cart · code `F` (private tensioner program)
 
 - **Top assemblies:** `MoveableCart with 5 TC 100yr winter storm.SLDASM`,
   `MoveableCart3_Rev14 with 5 Tensionercarts.SLDASM`, `Wireline_Tensionercart_with semisub.SLDASM`.

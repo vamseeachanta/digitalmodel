@@ -94,7 +94,7 @@ These are the capabilities worth building **once** in `digitalmodel` and reusing
 ## 6. Recommended first build
 
 **Build #1 (headless STEP → BOM/mass/bbox/tree) as a `digitalmodel/cad/neutral/` package, validated on the
-SLOR `URA` and FDAS `tensioner-cart` STEP/IGES files already on the share.**
+the `URA` riser assembly and tensioner-cart STEP/IGES files already on the share.**
 
 Why first: highest ROI-to-effort that is **fully license-free**, has **immediate customer-demoable output**
 (auto BOM + weight + envelope from any STEP), seeds the **reusable library**, and needs **no seat and no new data**.

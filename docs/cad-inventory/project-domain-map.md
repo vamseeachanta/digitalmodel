@@ -40,7 +40,7 @@ Ranked by curated-CAD density × reuse potential.
 |--:|---|---|---|---|---|--:|---|
 | 1 | **P1** | `…/misc/projects/2100_*_slor_design` | Subsea risers — **SLOR** (single-line offset riser) design | Deepwater operator (de-id) | Heavy SolidWorks part/assembly modeling | ~26,120 | ✅ live |
 | 2 | **P2** | `…/drilling/projects/3824_*_containment_riser_analysis` | Drilling / **containment-riser** analysis | Major operator (de-id) | Mixed CAD + OrcaFlex; large drawing set | ~9,251 | ✅ live |
-| 3 | **F** | `*_fdas_*` family (tensioner-cart FE, airgap, support, animation) | **Drilling-riser tensioner** equipment & FE | Private deepwater **appraisal program** (de-id) | SolidWorks equipment + FE; the epic's "FDAS tensioner" assemblies | ~1,100 | ✅ live (private) |
+| 3 | **F** | a private tensioner-program family (tensioner-cart FE, airgap, support, animation) | **Drilling-riser tensioner** equipment & FE | Private deepwater **appraisal program** (de-id) | SolidWorks equipment + FE; the epic's tensioner assemblies | ~1,100 | ✅ live (private) |
 | 4 | **L1** | `acma-projects/B15xx` (LNG terminal) | **LNG terminal / structural** (Ansys FEA) | LNG terminal owner (de-id) | SolidWorks + FEA; structural fabrication | ~480 (+3,230 archived twin) | ✅ live (`acma-projects`); 🗄️ dedup `.preexisting` |
 | 5 | **O** | `…/drilling/projects/{31057,31098,...}` | Drilling-riser & subsea-structure analysis | Several international operators (de-id) | Per-job riser analysis; some CAD | ~1,400 | ✅ live |
 | 6 | **S1** | `seanation/0122_ct_drilling/reference/design` | **Coiled-tubing drilling** design | CT-drilling client (de-id) | ~700 SolidWorks design refs | 225 live (+481 archived) | ✅ live (`seanation`); 🗄️ dedup `.preexisting` |
@@ -82,7 +82,7 @@ Ranked by curated-CAD density × reuse potential.
 
 ## E. Where the reusable CAD value concentrates (feeds #1009)
 
-1. **Subsea-riser equipment modeling (SolidWorks)** — `CR` (riser-eng-job) + `P1` (SLOR) + `F` (FDAS tensioners)
+1. **Subsea-riser equipment modeling (SolidWorks)** — `CR` (riser-eng-job) + `P1` (SLOR) + `F` (tensioner program)
    are the same *domain*: deepwater riser hardware (tensioners, clamps, joints, frames). This is the **densest,
    most reusable CAD domain** and the natural target for parametric/library automation.
 2. **Riser & mooring *analysis* (OrcaFlex)** — `P2`, `E1`, `V`, `D1`, `client_projects` — analysis-dense, already
