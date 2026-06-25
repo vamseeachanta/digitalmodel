@@ -184,24 +184,22 @@ def _heave_period(mass_t: float, waterplane_area_m2: float, ca_heave: float) -> 
 
 
 def _pitch_period(
-    mass_t: float,
+    inertia_t_m2: float,
     displacement_t: float,
     gm_m: float,
-    radius_gyration_m: float,
     ca_pitch: float,
 ) -> float:
     """Uncoupled pitch natural period (s).
 
     ``T = 2*pi*sqrt((I55 + a55) / (rho*g*V*GM_L))`` with mass moment of inertia
-    ``I55 = m * kyy^2``, added inertia ``a55 = ca_pitch * I55`` and (for an
-    axisymmetric or near-square hull) ``GM_L ~ GM``. Returns ``inf`` for a
-    non-positive ``GM`` (the hull is not statically stable in pitch on its
+    ``I55`` about the combined CG, added inertia ``a55 = ca_pitch * I55`` and
+    (for an axisymmetric or near-square hull) ``GM_L ~ GM``. Returns ``inf`` for
+    a non-positive ``GM`` (the hull is not statically stable in pitch on its
     waterplane alone -- e.g. a TLP, handled separately).
     """
     if gm_m <= 0.0:
         return math.inf
-    m = mass_t * _KG_PER_TONNE
-    inertia = m * radius_gyration_m**2 * (1.0 + ca_pitch)
+    inertia = inertia_t_m2 * _KG_PER_TONNE * (1.0 + ca_pitch)
     vol = displacement_t * _KG_PER_TONNE / RHO_SEAWATER
     restoring = RHO_SEAWATER * G_STANDARD * vol * gm_m
     return 2.0 * math.pi * math.sqrt(inertia / restoring)
@@ -219,7 +217,7 @@ def _assemble(
     bm_m: float,
     kg_hull_m: float,
     topside_cg_above_keel_m: float,
-    radius_gyration_m: float,
+    k_horizontal_m: float,
     ca_heave: float,
     ca_pitch: float,
     tendon_stabilised: bool = False,
@@ -259,13 +257,26 @@ def _assemble(
     kg_m = cg_moment / total_mass_t if total_mass_t > 0 else kg_hull_m
     gm_m = kb_m + bm_m - kg_m
 
+    # Pitch mass moment of inertia about the combined CG (t.m^2). The vertical
+    # term -- each lumped mass at its height above the CG -- is dominant for a
+    # floating-wind unit because the high, heavy turbine has a long lever arm.
+    # The horizontal term captures the hull's in-plane mass spread (column
+    # footprint for a semi/TLP, hull breadth for a barge, ~0 for a spar).
+    i_vertical = (
+        steel_mass_t * (kg_hull_m - kg_m) ** 2
+        + ballast_mass_t * (ballast_cg_m - kg_m) ** 2
+        + topside_mass_t * (topside_cg_above_keel_m - kg_m) ** 2
+    )
+    i_horizontal = total_mass_t * k_horizontal_m**2
+    i55_t_m2 = i_vertical + i_horizontal
+
     if tendon_stabilised:
         heave_period = tendon_heave_period_s if tendon_heave_period_s else math.nan
         pitch_period = tendon_pitch_period_s if tendon_pitch_period_s else math.nan
     else:
         heave_period = _heave_period(total_mass_t, waterplane_area_m2, ca_heave)
         pitch_period = _pitch_period(
-            total_mass_t, displacement_t, gm_m, radius_gyration_m, ca_pitch
+            i55_t_m2, displacement_t, gm_m, ca_pitch
         )
         if gm_m <= 0.0:
             notes.append("non-positive GM: statically unstable on waterplane alone")
@@ -322,10 +333,6 @@ class SemiSubmersible(BaseModel):
     )
     ca_heave: float = Field(1.0, ge=0.0, description="Heave added-mass ratio a33/m")
     ca_pitch: float = Field(0.4, ge=0.0, description="Pitch added-inertia ratio")
-    kyy_frac: float = Field(
-        0.42, gt=0.0, description="Pitch radius of gyration / column_radius span"
-    )
-
     @model_validator(mode="after")
     def _check_geometry(self) -> "SemiSubmersible":
         if self.pontoon_height >= self.draft:
@@ -355,7 +362,8 @@ class SemiSubmersible(BaseModel):
 
         kg_hull = self.steel_vcg_frac * self.draft
         topside_cg = self.draft + topside.cg_above_waterline_m()
-        kyy = self.kyy_frac * (2.0 * self.column_radius)
+        # Horizontal mass spread: columns sit at radius R; rms offset ~ R/sqrt(2).
+        k_horiz = self.column_radius / math.sqrt(2.0)
 
         return _assemble(
             archetype=FloaterArchetype.SEMI,
@@ -368,7 +376,7 @@ class SemiSubmersible(BaseModel):
             bm_m=bm,
             kg_hull_m=kg_hull,
             topside_cg_above_keel_m=topside_cg,
-            radius_gyration_m=kyy,
+            k_horizontal_m=k_horiz,
             ca_heave=self.ca_heave,
             ca_pitch=self.ca_pitch,
         )
@@ -390,9 +398,6 @@ class Spar(BaseModel):
     )
     ca_heave: float = Field(0.9, ge=0.0, description="Heave added-mass ratio a33/m")
     ca_pitch: float = Field(0.25, ge=0.0, description="Pitch added-inertia ratio")
-    kyy_frac: float = Field(
-        0.30, gt=0.0, description="Pitch radius of gyration / draft"
-    )
 
     def properties(self, topside: TurbineTopside) -> FloaterProperties:
         a_wp = math.pi / 4.0 * self.diameter**2
@@ -405,7 +410,8 @@ class Spar(BaseModel):
 
         kg_hull = self.steel_vcg_frac * self.draft
         topside_cg = self.draft + topside.cg_above_waterline_m()
-        kyy = self.kyy_frac * self.draft
+        # A spar is slender: in-plane mass spread ~ cylinder radius of gyration.
+        k_horiz = self.diameter / 4.0
 
         return _assemble(
             archetype=FloaterArchetype.SPAR,
@@ -418,7 +424,7 @@ class Spar(BaseModel):
             bm_m=bm,
             kg_hull_m=kg_hull,
             topside_cg_above_keel_m=topside_cg,
-            radius_gyration_m=kyy,
+            k_horizontal_m=k_horiz,
             ca_heave=self.ca_heave,
             ca_pitch=self.ca_pitch,
         )
@@ -508,7 +514,7 @@ class TLP(BaseModel):
             bm_m=bm,
             kg_hull_m=kg_hull,
             topside_cg_above_keel_m=topside_cg,
-            radius_gyration_m=kyy,
+            k_horizontal_m=kyy,
             ca_heave=0.0,
             ca_pitch=0.0,
             tendon_stabilised=True,
@@ -552,7 +558,8 @@ class Barge(BaseModel):
         kb = self.draft / 2.0
         kg_hull = self.steel_vcg_frac * self.draft
         topside_cg = self.draft + topside.cg_above_waterline_m()
-        kyy = 0.30 * self.beam
+        # Roll (beam-governed) is the conservative screening axis; rms ~ B/sqrt(12).
+        k_horiz = self.beam / math.sqrt(12.0)
 
         return _assemble(
             archetype=FloaterArchetype.BARGE,
@@ -565,7 +572,7 @@ class Barge(BaseModel):
             bm_m=bm,
             kg_hull_m=kg_hull,
             topside_cg_above_keel_m=topside_cg,
-            radius_gyration_m=kyy,
+            k_horizontal_m=k_horiz,
             ca_heave=self.ca_heave,
             ca_pitch=self.ca_pitch,
         )
