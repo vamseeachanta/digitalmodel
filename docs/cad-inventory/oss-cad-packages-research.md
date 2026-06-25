@@ -56,9 +56,11 @@
 - ⚠️ **Parasolid (`.x_t`/`.x_b`): no OSS reader either.** OCCT reads Parasolid only via a **commercial** add-on
   (occt3d.com Parasolid Import Component). So even the ~815 `.x_t` files on the share need the seat or a commercial
   component to read — flag for #1015.
-- ⚠️ **STEP AP242 *write* fidelity.** OCCT/FreeCAD reliably *read* AP242 but their STEP **writer** is strongest for
-  **AP214**; AP242 (PMI/GD&T) write support is partial. The "AP242 archival master" goal may fall back to **AP214**
-  on the pure-OSS path unless the exporting seat writes AP242. **Validate in #1015 before committing the master format.**
+- ✅ **STEP AP242 *write* — RESOLVED by the pilot ([pilot-tier0-results.md](./pilot-tier0-results.md)).** OCCT **7.9**
+  writes a valid **`AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF`** (ISO 10303-442) file via
+  `write.step.schema=AP242DIS`. So AP242 **geometry** export is fully supported — the earlier "falls back to AP214"
+  worry was too pessimistic. The genuine limit is narrower: **PMI/GD&T annotation** export is partial. → **AP242 is a
+  safe archival master.**
 - ✅ **DWG needs an external converter.** ezdxf does DXF only ✅; DWG requires **ODA File Converter** (free, closed) or
   **LibreDWG** (GPL → arms-length). For an MIT library, ODA-as-external-tool is the cleaner path.
 
