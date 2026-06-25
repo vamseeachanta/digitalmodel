@@ -6,6 +6,12 @@
 This folder holds the discovery output for the CAD/CAM automation initiative. This file (`README.md`) is the
 aggregate inventory; the per-file manifest is `cad-file-manifest-deidentified.csv.gz`.
 
+> **Methodology.** This work is an instance of the [raw-to-knowledge-playbook](https://github.com/vamseeachanta/raw-to-knowledge-playbook)
+> — *extract deterministically, verify, trust nothing by default*. The binary-CAD/B-rep lane it embodies is written up
+> as that playbook's [doc 21 (CAD geometry & B-rep)](https://github.com/vamseeachanta/raw-to-knowledge-playbook/blob/main/docs/21-cad-and-brep-geometry.md):
+> license-locked native read (the [#1006](https://github.com/vamseeachanta/digitalmodel/issues/1006) extraction/run split), header/version detection,
+> the round-trip invariant oracle (the [pilot](./pilot-tier0-results.md)), and the de-identify-before-first-commit rule (GP-53).
+
 > **Privacy — this repo is PUBLIC.** The committed manifest is **de-identified**: the raw `path` column (which
 > embeds a personal name and client/field linkage) is replaced by `path_sha1`, and the two external-company top
 > folders are relabelled (`epc-partner`, `eng-partner`). All aggregate columns are intact. The **full raw-path
