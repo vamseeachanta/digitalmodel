@@ -62,7 +62,36 @@ meaningful on subsea weldments — likely low transfer; the value, if any, is on
 - **Native parts locked** → the spike runs on neutral STEP only until the seat export ([#1006](https://github.com/vamseeachanta/digitalmodel/issues/1006)/[#1012](https://github.com/vamseeachanta/digitalmodel/issues/1012)) widens coverage.
 - **License guardrail:** UV-Net/AAGNet/MFCAD/DeepCAD = commercial-OK; **CAD-Recode/Point2CAD/BRepNet = CC-BY-NC, do NOT use** here.
 
-## Recommended first step
+## Tier-A results (run 2026-06-25, `cadpilot` env, no ML, ~seconds)
 
-Run **Tier A** on a de-identified sample of the existing STEP set in the `cadpilot` env (no new deps, no training) —
-it directly tests the dedup/variant hypothesis at near-zero cost and tells us whether the ML tiers are even needed.
+Ran the OCC geometric-fingerprint probe on a **10-part labelled sample**: 3 known variant pairs of riser test-shells
+(each shell built with two connector types) + 4 unrelated parts (pin, box, actuating dog, foam block). Descriptor =
+scale/rotation-invariant bbox-aspect + normalized principal inertia + face-type histogram + log topo counts; z-scored;
+Euclidean NN.
+
+**What worked — coarse family separation:**
+- The 6 test-shells cluster tightly **away** from the 4 unrelated parts: mean within-family distance **2.32** vs
+  shells→out-group **5.35** (**2.3× separation**). Each out-group part's nearest neighbour is another out-group part
+  or far from the shells. → For **dedup / family-grouping of the hoard, the cheap no-ML fingerprint already delivers.**
+
+**What didn't — fine variant discrimination (0/3), and why it's still informative:**
+- None of my labelled test-type pairs (e.g. HYD-shell-HMF ↔ HYD-shell-AFG) were mutual nearest neighbours.
+- Instead the descriptor sub-grouped by **connector geometry**: the `*_afg` variants pair at d=**0.211**, the `*_hmf`
+  variants at d=**0.483** — *across* shell types. The dominant shape feature (the connector) drives the fingerprint;
+  the subtler test-type variation is below its resolution. My "known pair" was a hypothesis about which axis defines a
+  family — the geometry revealed a **different, equally valid** variant axis (connector, not test-type).
+
+**Verdict — partial GO:**
+- ✅ **Build a coarse shape-similarity index now** with this license-free descriptor — it separates families from
+  noise and finds near-duplicates, directly serving the 416k-hoard dedup ([#1007](https://github.com/vamseeachanta/digitalmodel/issues/1007)) at near-zero cost.
+- ➡️ **Fine variant-family resolution needs Tier-B** (UV-Net learned embeddings, MIT) **or a richer descriptor**
+  (D2 shape distributions, curvature histograms) — *now justified by evidence*, not assumed.
+
+Probe script: `pilot-sim.py` (committed; reads a local `sim_in/` of de-identified STEP — geometry not committed).
+
+## Recommended next step
+
+Two parallel, low-cost moves: (1) **scale the Tier-A descriptor** across the full neutral-STEP set to produce a
+first near-duplicate/family report for the hoard; (2) **enrich the descriptor** (D2 shape distribution) and only then
+weigh the Tier-B UV-Net training run — the evidence says the simple fingerprint is enough for *coarse* dedup but not
+*fine* variants.
