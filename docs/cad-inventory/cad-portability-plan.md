@@ -61,12 +61,31 @@ For each converted asset, compare source vs portable on objective invariants and
 
 This is exactly the headless STEP-parse capability demonstrated in #1008 — no CAD seat needed to *validate*.
 
+**Three verification layers (adopted from the [raw-to-knowledge-playbook](https://github.com/vamseeachanta/raw-to-knowledge-playbook) — *deterministic catches structure, vision catches values, adversarial catches process*):**
+1. **Deterministic** — the round-trip oracle above. **Integer invariants (solid/component/face counts) compared
+   *exactly*, never toleranced**; geometric tolerance lives *only* in the explicitly-labelled mass/bbox tier. And
+   **verify the comparator harder than the pipeline** — a precision-lossless compare, so the oracle can't flatter a
+   real loss (playbook failure `comparator-inflation`/GP-47, mirrored as CAD failure G6).
+2. **Vision** — render the glTF derivative and eyeball it against a source thumbnail; deterministic invariants can
+   match while the shape is visibly wrong (a value error a count can't see).
+3. **Adversarial** — an independent review of the conversion claims before the master is trusted.
+
 ## 5. Storage & organization
 
 Per asset, keep a **4-tuple**: `source` (native, on share) · `master` (STEP AP242) · `derivatives` (glTF/3MF/DXF/PDF)
 · `metadata` (JSON sidecar). Content-address + de-duplicate (directly addresses the 416k-file personal-backup hoard
 from [#1007](https://github.com/vamseeachanta/digitalmodel/issues/1007)). Portable artifacts inherit the source's
 client sensitivity → stay on share/private; only de-identified aggregates go to public digitalmodel.
+
+**Adopted from the playbook:**
+- **Format-coverage ledger** (playbook `silent-completeness-gap`): the sidecar records *what each lane does NOT
+  capture* — STEP master = geometry + assembly tree, **PMI/GD&T not captured**; IGES = surface-only; native = locked
+  until export. A faithful extract must disclose its known loss, not imply completeness.
+- **Sidecar as a standard, not ad-hoc** (playbook GP-34 / frictionless Data Package): give the JSON sidecar a
+  schema — units, density, coordinate frame, source CAD+version, STEP schema, assumption ledger — so a third party
+  can consume it without reverse-engineering conventions.
+- **Perceptual-hash dedup for drawings** (playbook Lane 6 / ImageHash): complement the geometric fingerprint
+  ([#1017](https://github.com/vamseeachanta/digitalmodel/issues/1017)) with pHash over rendered drawing/thumbnail images to catch re-saved 2D near-duplicates cheaply.
 
 ## 6. Blockers & risks
 
