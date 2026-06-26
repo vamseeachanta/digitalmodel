@@ -1,10 +1,10 @@
-# ABOUTME: Tests for the PRELIMINARY stiffened-panel buckling solver
-# ABOUTME: (panel_buckling.py): effective section, governing mode, monotonicity.
+# ABOUTME: Tests for the stiffened-panel buckling solver (panel_buckling.py):
+# ABOUTME: effective section, governing mode, monotonicity, + DNV golden case.
 """Tests for digitalmodel.structural.structural_analysis.panel_buckling.
 
-These assert *relationships and bounds* (areas summing, positivity, monotonic
-trends, pass/fail logic) rather than unvalidated magic magnitudes, consistent
-with the PRELIMINARY status of the solver under test.
+Most tests assert *relationships and bounds* (areas summing, positivity,
+monotonic trends, pass/fail logic). ``test_validation_0119_015_*`` pin the
+solver to the 0119-015 DNV-RP-C201 worked example (golden numbers).
 """
 
 import pytest
@@ -58,9 +58,10 @@ def analyzer():
     return StiffenedPanelBucklingAnalyzer(STEEL_AH36)
 
 
-# --- Honesty flag ----------------------------------------------------------
-def test_preliminary_flag_is_true():
-    assert PRELIMINARY is True
+# --- Production flag -------------------------------------------------------
+def test_production_flag_is_false():
+    # Solver is validated against the 0119-015 worked example -> production.
+    assert PRELIMINARY is False
 
 
 # --- effective_section -----------------------------------------------------
@@ -118,10 +119,10 @@ def test_check_panel_representative(analyzer):
     res = analyzer.check_panel(panel, sigma_x=120.0)
     assert isinstance(res, PanelBucklingResult)
     assert res.utilization > 0
-    assert res.governing_mode in ("plate_induced", "column")
-    # Governing utilization is the max of the two component utilizations.
+    assert res.governing_mode in ("plate_induced", "column", "torsional")
+    # Governing utilization is the max of the three component utilizations.
     assert res.utilization == pytest.approx(
-        max(res.plate_utilization, res.column_utilization)
+        max(res.plate_utilization, res.column_utilization, res.stiffener_utilization)
     )
     assert res.critical_stress > 0
 
@@ -129,17 +130,20 @@ def test_check_panel_representative(analyzer):
 def test_check_panel_details_populated(analyzer):
     panel = make_tee_panel()
     res = analyzer.check_panel(panel, sigma_x=120.0)
-    assert res.details["preliminary"] is True
-    assert res.details["stiffener_tripping_modelled"] is False
+    assert res.details["preliminary"] is False
+    assert res.details["stiffener_tripping_modelled"] is True
     assert "plate_result" in res.details
     assert "column_result" in res.details
+    assert "torsional" in res.details
     assert "section" in res.details
 
 
-def test_stiffener_utilization_is_zero_placeholder(analyzer):
-    # Tripping not modelled -> reported as 0.0 (honest placeholder).
+def test_stiffener_torsional_utilization_positive(analyzer):
+    # Tripping is now modelled -> a real, positive utilisation under compression.
     res = analyzer.check_panel(make_tee_panel(), sigma_x=120.0)
-    assert res.stiffener_utilization == pytest.approx(0.0)
+    assert res.stiffener_utilization > 0
+    assert res.details["torsional"]["lambda_T"] > 0
+    assert res.details["torsional"]["fT"] > 0
 
 
 # --- Monotonicity ----------------------------------------------------------
@@ -229,3 +233,52 @@ def test_flatbar_zeroes_flange_dims():
     )
     assert stiff.flange_width == 0.0
     assert stiff.flange_thickness == 0.0
+
+
+# --- Golden validation: 0119-015 DNV-RP-C201 worked example ----------------
+# Plate 700x12 mm, tee web 600x10 / flange 200x20 mm, span 2230 mm,
+# torsional restraint 3500 mm, fy 234.6 MPa, E 210105 MPa, nu 0.30.
+# Reference intermediates from the legacy StiffnerBuckling_Cal worked example;
+# the second moment uses the corrected hand calculation (legacy 1.273e9 has a
+# documented flange parallel-axis error).
+from digitalmodel.structural.structural_analysis.models import MaterialProperties
+
+
+def _legacy_panel():
+    mat = MaterialProperties(
+        yield_strength=234.6, ultimate_strength=400.0, youngs_modulus=210105.0,
+        poissons_ratio=0.30, density=7850.0, name="legacy-A36",
+    )
+    stf = StiffenerGeometry(
+        web_height=600.0, web_thickness=10.0, flange_width=200.0,
+        flange_thickness=20.0, spacing=700.0, section_type="tee",
+    )
+    panel = StiffenedPanelGeometry(
+        plate_length=2230.0, plate_thickness=12.0, stiffener=stf,
+        torsional_restraint_spacing=3500.0,
+    )
+    return StiffenedPanelBucklingAnalyzer(mat), panel
+
+
+def test_validation_0119_015_section():
+    an, panel = _legacy_panel()
+    sec = an.effective_section(panel)
+    assert sec["area_total"] == pytest.approx(18400.0, rel=1e-4)
+    assert sec["neutral_axis_outer"] == pytest.approx(239.70, rel=2e-3)
+    assert sec["I"] == pytest.approx(1.255e9, rel=2e-3)
+
+
+def test_validation_0119_015_plate_elastic():
+    an, panel = _legacy_panel()
+    ref = an.plate_elastic_reference(panel)
+    assert ref["fEpx"] == pytest.approx(223.52, rel=2e-3)
+    assert ref["fEpy"] == pytest.approx(55.57, rel=2e-3)
+    assert ref["fEpt"] == pytest.approx(308.73, rel=2e-3)
+
+
+def test_validation_0119_015_torsional():
+    an, panel = _legacy_panel()
+    tor = an.torsional_buckling(panel, sigma_x=15.732, sigma_y=48.576, tau=0.952)
+    assert tor["fET"] == pytest.approx(441.66, rel=5e-3)
+    assert tor["lambda_T"] == pytest.approx(0.729, rel=5e-3)
+    assert tor["fT"] == pytest.approx(215.61, rel=5e-3)
