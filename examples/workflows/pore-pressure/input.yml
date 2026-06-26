@@ -1,0 +1,51 @@
+basename: pore_pressure
+
+# Pore-pressure prediction with uncertainty bands + safe drilling window
+# (issue #1034). Closed-form, license-free:
+#   uv run python -m digitalmodel examples/workflows/pore-pressure/input.yml
+#
+# Two independent predictors (Eaton 1975 resistivity, Bowers 1995 velocity) are
+# combined into a P10/P50/P90 distribution, calibrated to an offset-well RFT
+# point, then expressed as a safe mud-weight window (pore <= MW <= fracture) for
+# static and dynamic (ECD) conditions. Feeds swab/surge + hydraulics (#1036).
+pore_pressure:
+  case:
+    id: registry_pore_pressure
+    description: Pore-pressure screen at 12,000 ft TVD with offset-well calibration
+
+  inputs:
+    tvd: 12000.0                  # true vertical depth, ft
+    overburden_emw_ppg: 18.0      # overburden / vertical-stress gradient Sv
+    normal_pressure_emw_ppg: 8.6  # normal (hydrostatic) pore pressure Pn
+
+    eaton:
+      method: resistivity         # resistivity | sonic
+      observed: 1.1               # R_obs at depth, ohm.m (below trend = overpressure)
+      normal: 2.0                 # R_normal from the compaction trend, ohm.m
+      exponent: 1.2               # Eaton resistivity exponent
+
+    bowers:
+      sonic_velocity_ft_s: 8200.0 # compressional velocity Vp at depth, ft/s
+      v0_ft_s: 5000.0             # mudline velocity intercept V0
+      a: 9.0                      # Bowers loading-curve A
+      b: 0.75                     # Bowers loading-curve B
+
+  ensemble:
+    model_sigma_ppg: 0.6          # within-method model uncertainty (1 sigma)
+
+  calibration:
+    mode: shift                   # shift | scale | none
+    measured_pore_pressure_emw_ppg: 12.4   # offset-well RFT/MDT at this depth
+
+  fracture:
+    p50_emw_ppg: 15.5             # fracture-gradient best estimate (LOT/FIT)
+    sigma_ppg: 0.5               # fracture uncertainty (1 sigma)
+
+  window:
+    ecd_delta_ppg: 0.5            # circulating ECD rise (annular friction)
+    kick_margin_ppg: 0.3          # trip/kick margin on the pore-pressure floor
+    loss_margin_ppg: 0.3          # loss/riser margin on the fracture ceiling
+
+  outputs:
+    directory: results/pore_pressure
+    summary_json: pore_pressure_summary.json
