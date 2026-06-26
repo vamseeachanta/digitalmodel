@@ -156,6 +156,11 @@ class FloaterProperties(BaseModel):
     heave_natural_period_s: float
     pitch_natural_period_s: float
 
+    pitch_radius_gyration_m: float = Field(
+        0.0,
+        description="Pitch radius of gyration about the CG, kyy = sqrt(I55/m) (m)",
+    )
+
     tendon_stabilised: bool = Field(
         False,
         description="True when vertical stability is tendon- not waterplane-derived (TLP)",
@@ -269,6 +274,7 @@ def _assemble(
     )
     i_horizontal = total_mass_t * k_horizontal_m**2
     i55_t_m2 = i_vertical + i_horizontal
+    kyy_m = math.sqrt(i55_t_m2 / total_mass_t) if total_mass_t > 0 else 0.0
 
     if tendon_stabilised:
         heave_period = tendon_heave_period_s if tendon_heave_period_s else math.nan
@@ -296,6 +302,7 @@ def _assemble(
         GM_m=gm_m,
         heave_natural_period_s=heave_period,
         pitch_natural_period_s=pitch_period,
+        pitch_radius_gyration_m=kyy_m,
         tendon_stabilised=tendon_stabilised,
         feasible=feasible,
         notes=tuple(notes),
