@@ -21,6 +21,10 @@ from .models import (
     STEEL_S355,
     STEEL_S420,
     STEEL_S275,
+    STEEL_GRADE_A,
+    STEEL_AH36,
+    STEEL_EH40,
+    MARINE_GRADES,
 )
 
 from .stress_calculator import StressCalculator
@@ -43,6 +47,11 @@ __all__ = [
     'STEEL_S355',
     'STEEL_S420',
     'STEEL_S275',
+    # Marine hull grades
+    'STEEL_GRADE_A',
+    'STEEL_AH36',
+    'STEEL_EH40',
+    'MARINE_GRADES',
     # Calculators
     'StressCalculator',
     'PlateBucklingAnalyzer',

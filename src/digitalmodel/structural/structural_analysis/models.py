@@ -90,6 +90,54 @@ STEEL_S420 = MaterialProperties(
 )
 
 
+# ---------------------------------------------------------------------------
+# Marine / shipbuilding hull-plate steels (IACS UR W11 unified grades).
+#
+# These are the "standard sheet materials used for ships". The trailing number
+# is the strength level; the leading letter (A/D/E/F) denotes notch-toughness
+# (Charpy) test temperature, not strength, so toughness grade does not change
+# the buckling properties used here. Young's modulus for classification-society
+# work is 206 GPa (slightly below the 210 GPa used for structural S-grades).
+#   - Grade A : normal-strength hull steel (235 MPa min yield)
+#   - AH36    : higher-strength hull steel (355 MPa min yield) — most common
+#   - EH40    : higher-strength hull steel (390 MPa min yield), -40 degC toughness
+# Ultimate strengths are the lower bounds of the IACS tensile bands.
+# ---------------------------------------------------------------------------
+STEEL_GRADE_A = MaterialProperties(
+    yield_strength=235,
+    ultimate_strength=400,
+    youngs_modulus=206000,
+    poissons_ratio=0.3,
+    density=7850,
+    name="Grade A (NV-NS)",
+)
+
+STEEL_AH36 = MaterialProperties(
+    yield_strength=355,
+    ultimate_strength=490,
+    youngs_modulus=206000,
+    poissons_ratio=0.3,
+    density=7850,
+    name="AH36 (NV-A36)",
+)
+
+STEEL_EH40 = MaterialProperties(
+    yield_strength=390,
+    ultimate_strength=510,
+    youngs_modulus=206000,
+    poissons_ratio=0.3,
+    density=7850,
+    name="EH40 (NV-E40)",
+)
+
+# Lookup for parametric studies: classification-society grade name -> properties.
+MARINE_GRADES: Dict[str, MaterialProperties] = {
+    "Grade A": STEEL_GRADE_A,
+    "AH36": STEEL_AH36,
+    "EH40": STEEL_EH40,
+}
+
+
 @dataclass
 class PlateGeometry:
     """Plate geometry for buckling analysis."""
