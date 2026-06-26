@@ -30,6 +30,9 @@ of duplicating its detailed issue history.
 | `hydrodynamics` | `src/digitalmodel/hydrodynamics/` | `tests/hydrodynamics/` | `docs/domains/hydrodynamics/` | Wave spectra, RAOs, diffraction, hull library, solver bridges | NumPy, SciPy, OrcaWave/AQWA context |
 | `infrastructure` | `src/digitalmodel/infrastructure/` | `tests/infrastructure/` | `docs/domains/infrastructure/` | Base configs, services, validators, transformations | YAML configs, shared services |
 | `marine_ops` | `src/digitalmodel/marine_ops/` | `tests/marine_ops/` | `docs/domains/marine_ops/` | Marine operations, RAO readers, installation and operational analysis | metocean and vessel data |
+| `floating_wind` | `src/digitalmodel/floating_wind/` | `tests/floating_wind/` | `docs/domains/README.md` | Floating-wind global sizing & concept screening (semi/spar/TLP/barge); `floating_wind_sizing` workflow | hydrostatics, parametric sweeps, OrcaWave/OrcaFlex (solver tier) |
+| `hydrostatics` | `src/digitalmodel/hydrostatics/` | `tests/hydrostatics/` | `docs/domains/README.md` | Fluid-column hydrostatics; seabed/hydrostatic pressure and offshore pressure-unit conversions | NumPy |
+| `mooring_resilience` | `src/digitalmodel/mooring_resilience/` | `tests/` | `docs/domains/README.md` | Mooring-system resilience screening (intact/damaged tension, foundation, fatigue) over pre-computed atlases | mooring atlases, API RP 2SK / DNV-OS-E301 |
 | `naval_architecture` | `src/digitalmodel/naval_architecture/` | `tests/naval_architecture/` | `docs/domains/README.md` | Stability, hull form, compliance, gyradius calculations | naval architecture standards |
 | `nde` | `src/digitalmodel/nde/` | `tests/nde/` | `docs/domains/README.md` | Non-destructive examination workflows and checks | inspection standards |
 | `orcaflex` | `src/digitalmodel/orcaflex/` | `tests/orcaflex/` | `docs/domains/orcaflex/` | Public OrcaFlex APIs, reporting, model and post-processing utilities | OrcFxAPI where licensed, YAML |
