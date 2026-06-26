@@ -33,7 +33,8 @@ of duplicating its detailed issue history.
 | `floating_wind` | `src/digitalmodel/floating_wind/` | `tests/floating_wind/` | `docs/domains/README.md` | Floating-wind global sizing & concept screening (semi/spar/TLP/barge); `floating_wind_sizing` workflow | hydrostatics, parametric sweeps, OrcaWave/OrcaFlex (solver tier) |
 | `hydrostatics` | `src/digitalmodel/hydrostatics/` | `tests/hydrostatics/` | `docs/domains/README.md` | Fluid-column hydrostatics; seabed/hydrostatic pressure and offshore pressure-unit conversions | NumPy |
 | `mooring_resilience` | `src/digitalmodel/mooring_resilience/` | `tests/` | `docs/domains/README.md` | Mooring-system resilience screening (intact/damaged tension, foundation, fatigue) over pre-computed atlases | mooring atlases, API RP 2SK / DNV-OS-E301 |
-| `naval_architecture` | `src/digitalmodel/naval_architecture/` | `tests/naval_architecture/` | `docs/domains/README.md` | Stability, hull form, compliance, gyradius calculations | naval architecture standards |
+| `naval_architecture` | `src/digitalmodel/naval_architecture/` | `tests/naval_architecture/` | `docs/domains/README.md` | Stability, hull form, compliance, gyradius calculations; loading computer (#1035) | naval architecture standards |
+| `reporting` | `src/digitalmodel/reporting/` | `tests/reporting/` | `docs/domains/README.md` | Shared report block library / backbone (report-as-backbone, #1018) | pydantic, HTML rendering |
 | `nde` | `src/digitalmodel/nde/` | `tests/nde/` | `docs/domains/README.md` | Non-destructive examination workflows and checks | inspection standards |
 | `orcaflex` | `src/digitalmodel/orcaflex/` | `tests/orcaflex/` | `docs/domains/orcaflex/` | Public OrcaFlex APIs, reporting, model and post-processing utilities | OrcFxAPI where licensed, YAML |
 | `orcawave` | `src/digitalmodel/orcawave/` | `tests/orcawave/` | `docs/domains/orcawave/` | OrcaWave package utilities, reporting, hydrodynamic inputs/outputs | OrcaWave, hydrodynamics |

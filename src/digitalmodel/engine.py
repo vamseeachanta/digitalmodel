@@ -553,6 +553,24 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.well.workflow import run_swab_surge
 
         cfg_base = run_swab_surge(cfg_base)
+    elif basename == "pore_pressure":
+        from digitalmodel.well.drilling.pore_pressure import (
+            router as run_pore_pressure,
+        )
+
+        cfg_base = run_pore_pressure(cfg_base)
+    elif basename == "dual_gradient":
+        from digitalmodel.well.drilling.dual_gradient import (
+            router as run_dual_gradient,
+        )
+
+        cfg_base = run_dual_gradient(cfg_base)
+    elif basename == "loading_computer":
+        from digitalmodel.naval_architecture.loading_computer import (
+            router as run_loading_computer,
+        )
+
+        cfg_base = run_loading_computer(cfg_base)
     elif basename == "wellpath":
         from digitalmodel.well.wellpath.workflow import router as wellpath
 
