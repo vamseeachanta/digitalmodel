@@ -52,13 +52,13 @@ class ExplorerConfig:
     grades: List[str] = field(default_factory=lambda: list(MARINE_GRADES.keys()))
     profiles: List[Dict] = field(default_factory=lambda: DEFAULT_PROFILES)
     spacings: List[float] = field(default_factory=lambda: [600.0, 700.0, 800.0])
+    spans: List[float] = field(default_factory=lambda: [1800.0, 2400.0, 3000.0, 3600.0])
     thickness_min: float = 6.0
     thickness_max: float = 24.0
     thickness_step: float = 0.5
     load_min: float = 0.0
     load_max: float = 280.0
     load_step: float = 5.0
-    plate_length: float = 2400.0   # frame span, fixed (mm)
     gamma_m: float = 1.15
     tau_fraction: float = 0.0      # optional shear as a fraction of sigma_x
 
@@ -68,9 +68,9 @@ def _frange(lo: float, hi: float, step: float) -> List[float]:
     return [round(lo + i * step, 6) for i in range(n + 1)]
 
 
-def combo_key(grade: str, profile: str, spacing: float) -> str:
-    """Stable key for a (grade, profile, spacing) selection."""
-    return f"{grade}|{profile}|{spacing:g}"
+def combo_key(grade: str, profile: str, spacing: float, span: float) -> str:
+    """Stable key for a (grade, profile, spacing, span) selection."""
+    return f"{grade}|{profile}|{spacing:g}|{span:g}"
 
 
 def build_design_grids(cfg: ExplorerConfig | None = None) -> Dict:
@@ -96,35 +96,35 @@ def build_design_grids(cfg: ExplorerConfig | None = None) -> Dict:
         analyzer = StiffenedPanelBucklingAnalyzer(MARINE_GRADES[grade])
         for prof in cfg.profiles:
             for spacing in cfg.spacings:
-                util_grid: List[List[float]] = []
-                mode_grid: List[List[int]] = []
-                allow: List[float | None] = [None] * len(thicknesses)
-                for j, load in enumerate(loads):
-                    util_row: List[float] = []
-                    mode_row: List[int] = []
-                    tau = load * cfg.tau_fraction
-                    for i, t in enumerate(thicknesses):
-                        panel = _panel(prof, spacing, t, cfg.plate_length)
-                        res = analyzer.check_panel(
-                            panel, sigma_x=load, tau=tau, gamma_m=cfg.gamma_m
-                        )
-                        util_row.append(round(res.utilization, 4))
-                        mode_row.append(MODE_CODE.get(res.governing_mode, 0))
-                        if res.utilization <= 1.0:
-                            allow[i] = load  # last passing load = allowable
-                    util_grid.append(util_row)
-                    mode_grid.append(mode_row)
-                grids[combo_key(grade, prof["name"], spacing)] = {
-                    "util": util_grid,
-                    "mode": mode_grid,
-                    "allow": allow,
-                }
+                for span in cfg.spans:
+                    util_grid: List[List[float]] = []
+                    mode_grid: List[List[int]] = []
+                    allow: List[float | None] = [None] * len(thicknesses)
+                    for j, load in enumerate(loads):
+                        util_row: List[float] = []
+                        mode_row: List[int] = []
+                        tau = load * cfg.tau_fraction
+                        for i, t in enumerate(thicknesses):
+                            panel = _panel(prof, spacing, t, span)
+                            res = analyzer.check_panel(
+                                panel, sigma_x=load, tau=tau, gamma_m=cfg.gamma_m
+                            )
+                            util_row.append(round(res.utilization, 4))
+                            mode_row.append(MODE_CODE.get(res.governing_mode, 0))
+                            if res.utilization <= 1.0:
+                                allow[i] = load  # last passing load = allowable
+                        util_grid.append(util_row)
+                        mode_grid.append(mode_row)
+                    grids[combo_key(grade, prof["name"], spacing, span)] = {
+                        "util": util_grid,
+                        "mode": mode_grid,
+                        "allow": allow,
+                    }
 
     return {
         "meta": {
             "standard": "DNV-RP-C201",
             "module": "digitalmodel.structural.panel_design_explorer",
-            "plate_length_mm": cfg.plate_length,
             "gamma_m": cfg.gamma_m,
             "tau_fraction": cfg.tau_fraction,
             "mode_labels": MODE_LABEL,
@@ -136,6 +136,7 @@ def build_design_grids(cfg: ExplorerConfig | None = None) -> Dict:
         "grades": cfg.grades,
         "profiles": [p["name"] for p in cfg.profiles],
         "spacings": [f"{s:g}" for s in cfg.spacings],
+        "spans": [f"{s:g}" for s in cfg.spans],
         "grids": grids,
     }
 
