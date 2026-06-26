@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from digitalmodel.well.drilling.hydraulics import WellboreHydraulics
+from digitalmodel.well.drilling.swab_surge import SwabSurge
 from digitalmodel.well.drilling.rop_models import BourgoineYoungROP, WarrenROP
 from digitalmodel.well.drilling.well_bore_design import WellDesign
 from digitalmodel.well.tubulars.design_envelope import (
@@ -124,6 +125,61 @@ def run_well_hydraulics(cfg: dict[str, Any]) -> dict[str, Any]:
         )
     )
     cfg["well_hydraulics"] = {**params, "result": result, "summary": summary}
+    return cfg
+
+
+def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Run the swab/surge tripping-pressure screen."""
+    params = cfg.get("swab_surge", {})
+    section = params["section"]
+    trip = params.get("trip", {})
+
+    calc = SwabSurge(
+        pipe_od=float(section["pipe_od"]),
+        pipe_id=float(section["pipe_id"]),
+        hole_diameter=float(section["hole_diameter"]),
+        mud_weight=float(section["mud_weight"]),
+        tvd=float(section["tvd"]),
+        plastic_viscosity=float(section["plastic_viscosity"]),
+        yield_point=float(section["yield_point"]),
+        clinging_constant=float(section.get("clinging_constant", 0.45)),
+        pipe_config=section.get("pipe_config", "closed"),
+    )
+
+    trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
+    evaluated = calc.evaluate(trip_speed).as_dict()
+
+    result: dict[str, Any] = {"at_trip_speed": evaluated}
+    window = params.get("window")
+    if window is not None:
+        limit = calc.max_safe_trip_speed(
+            pore_pressure_emw_ppg=float(window["pore_pressure_emw_ppg"]),
+            fracture_emw_ppg=float(window["fracture_emw_ppg"]),
+        )
+        result["safe_trip_speed"] = limit.as_dict()
+        result["kick_at_trip_speed"] = (
+            evaluated["swab_emw_ppg"] < float(window["pore_pressure_emw_ppg"])
+        )
+        result["loss_at_trip_speed"] = (
+            evaluated["surge_emw_ppg"] > float(window["fracture_emw_ppg"])
+        )
+
+    summary = {
+        "calculation": "swab_surge",
+        "section": dict(section),
+        "trip": dict(trip),
+        "result": result,
+    }
+    summary["summary_json"] = str(
+        _write_summary(
+            cfg,
+            params.get("outputs", {}),
+            summary,
+            "results/swab_surge",
+            "swab_surge_summary.json",
+        )
+    )
+    cfg["swab_surge"] = {**params, "result": result, "summary": summary}
     return cfg
 
 
