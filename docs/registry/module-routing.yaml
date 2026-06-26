@@ -92,6 +92,24 @@ modules:
     owner_wiki: docs/domains/marine_ops/
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
+  - module: floating_wind
+    entry_point: src/digitalmodel/floating_wind/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/floating_wind/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#floating_wind
+  - module: hydrostatics
+    entry_point: src/digitalmodel/hydrostatics/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/hydrostatics/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrostatics
+  - module: mooring_resilience
+    entry_point: src/digitalmodel/mooring_resilience/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_resilience
   - module: naval_architecture
     entry_point: src/digitalmodel/naval_architecture/
     maturity: beta

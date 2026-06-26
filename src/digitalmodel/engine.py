@@ -443,6 +443,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         fowt_mooring = FOWTMooringWorkflow()
         cfg_base = fowt_mooring.router(cfg_base)
+    elif basename == "floating_wind_sizing":
+        from digitalmodel.floating_wind.workflow import (
+            FloatingWindSizingWorkflow,
+        )
+
+        cfg_base = FloatingWindSizingWorkflow().router(cfg_base)
     elif basename == "fpso_mooring_full":
         from digitalmodel.marine_ops.marine_engineering.mooring_analysis.fpso_full_workflow import (
             FPSOMooringFullWorkflow,

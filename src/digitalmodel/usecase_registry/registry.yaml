@@ -287,6 +287,18 @@ usecases:
     analysis: [dynamic]
     readiness: ready
     notes: FOWT watch-circle screen; offline `fowt_mooring` workflow, no license (#964).
+  - id: floating-wind-sizing
+    domain: orcaflex/floating-wind
+    solver: orcaflex
+    basename: floating_wind_sizing
+    operation: null
+    template: examples/workflows/floating-wind-sizing/input.yml
+    analysis: [static, stability, modal]
+    readiness: ready
+    notes: >-
+      Floating-wind global sizing & concept screening (semi/spar/TLP/barge) --
+      offline closed-form first tier (#1023/#1024/#1028). High-fidelity
+      OrcaWave/OrcaFlex solver tier is #1025.
   - id: riser-fatigue
     domain: orcaflex/riser
     solver: orcaflex
