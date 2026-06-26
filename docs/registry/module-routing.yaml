@@ -116,6 +116,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/naval_architecture/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#naval_architecture
+  - module: reporting
+    entry_point: src/digitalmodel/reporting/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/reporting/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#reporting
   - module: nde
     entry_point: src/digitalmodel/nde/
     maturity: development
