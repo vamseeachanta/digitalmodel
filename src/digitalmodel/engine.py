@@ -549,6 +549,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.well.workflow import run_well_hydraulics
 
         cfg_base = run_well_hydraulics(cfg_base)
+    elif basename == "swab_surge":
+        from digitalmodel.well.workflow import run_swab_surge
+
+        cfg_base = run_swab_surge(cfg_base)
     elif basename == "wellpath":
         from digitalmodel.well.wellpath.workflow import router as wellpath
 
