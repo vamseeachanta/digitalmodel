@@ -1,0 +1,59 @@
+# ABOUTME: Loadicator example — a box barge with cargo plus one damage case.
+# ABOUTME: Screening tier: equilibrium, IMO intact, lost-buoyancy, SF/BM.
+basename: loading_computer
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+loading_computer:
+  # Rectangular (box) barge. Longitudinal x runs from the aft end (0) forward.
+  hull:
+    length_m: 90.0
+    beam_m: 27.0
+    depth_m: 6.0
+  water_density_t_m3: 1.025   # seawater
+
+  # GZ curve resolution for the intact check.
+  max_heel_deg: 60.0
+  heel_step_deg: 5.0
+
+  weight_items:
+    - name: lightship
+      weight_t: 2500.0
+      lcg_m: 45.0           # at midship
+      vcg_m: 3.0
+      length_m: 90.0        # spread over the full length
+    - name: cargo_fwd
+      weight_t: 1500.0
+      lcg_m: 63.0
+      vcg_m: 4.5
+      length_m: 24.0
+    - name: cargo_aft
+      weight_t: 1500.0
+      lcg_m: 27.0
+      vcg_m: 4.5
+      length_m: 24.0
+    - name: ballast
+      weight_t: 500.0
+      lcg_m: 45.0
+      vcg_m: 1.0
+      length_m: 30.0
+
+  longitudinal_strength:
+    n_stations: 201
+    allowable_bending_t_m: 60000.0   # screening allowable (still-water)
+
+  damage_cases:
+    - name: side_compartment_amidships
+      length_m: 15.0
+      x_center_m: 45.0
+      permeability: 0.95
+      # breadth_m omitted -> full beam flooded
+
+  outputs:
+    directory: results/loading_computer
+    summary_json: loading_computer_summary.json
