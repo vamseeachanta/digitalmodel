@@ -21,6 +21,11 @@ from .measurement_sufficiency import (
     SufficiencyAction,
     SufficiencyResult,
 )
+from .ffs_coordinator import (
+    FFSComponent,
+    FFSAssessmentResult,
+    assess_component,
+)
 
 __all__ = [
     "GridParser",
@@ -31,5 +36,8 @@ __all__ = [
     "MeasurementSufficiency",
     "SufficiencyAction",
     "SufficiencyResult",
+    "FFSComponent",
+    "FFSAssessmentResult",
+    "assess_component",
     "FFSReport",
 ]
