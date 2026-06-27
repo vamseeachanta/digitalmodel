@@ -128,7 +128,7 @@ bands:
     utilization_ratio_global: {conservative: 0.0, central: 0.0, optimistic: 0.0}
     utilization_ratio_gom_resident: {conservative: 0.0, central: 0.0, optimistic: 0.0}
     exposure_usd_per_yr: null
-    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    heavy_dead_well_cost_usd: {low: null, median: null, high: null}  # shelf jackup-serviced; deepwater-MODU rate N/A (source #629)
     confidence: forward_looking_risk
   band_500_3000:
     label: 500-3,000 ft
@@ -147,7 +147,7 @@ bands:
     utilization_ratio_global: {conservative: 0.014, central: 0.007, optimistic: 0.003}
     utilization_ratio_gom_resident: {conservative: 3.384, central: 1.606, optimistic: 0.625}
     exposure_usd_per_yr: {low: 109440000, central: 375105600, high: 785460000}
-    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    heavy_dead_well_cost_usd: {low: 9600000, median: 21936000, high: 34450000}  # band-varying, source #629/#638
     confidence: forward_looking_risk
   band_3000_5000:
     label: 3,000-5,000 ft
@@ -166,7 +166,7 @@ bands:
     utilization_ratio_global: {conservative: 0.028, central: 0.013, optimistic: 0.005}
     utilization_ratio_gom_resident: {conservative: 6.585, central: 3.129, optimistic: 1.217}
     exposure_usd_per_yr: {low: 213180000, central: 730674450, high: 1528626000}
-    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    heavy_dead_well_cost_usd: {low: 10200000, median: 23307000, high: 36570000}  # band-varying, source #629/#638
     confidence: forward_looking_risk
   band_5000_10000:
     label: 5,000-10,000 ft
@@ -185,7 +185,7 @@ bands:
     utilization_ratio_global: {conservative: 0.039, central: 0.019, optimistic: 0.007}
     utilization_ratio_gom_resident: {conservative: 9.123, central: 4.359, optimistic: 1.711}
     exposure_usd_per_yr: {low: 299700000, central: 1017967500, high: 2117880000}
-    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    heavy_dead_well_cost_usd: {low: 11100000, median: 25135000, high: 39220000}  # band-varying, source #629/#638
     confidence: forward_looking_risk
   band_gt_10000:
     label: '> 10,000 ft'
@@ -204,7 +204,7 @@ bands:
     utilization_ratio_global: {conservative: 0.0, central: 0.0, optimistic: 0.0}
     utilization_ratio_gom_resident: {conservative: null, central: null, optimistic: null}
     exposure_usd_per_yr: {low: 0, central: 0, high: 0}
-    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    heavy_dead_well_cost_usd: {low: 12000000, median: 26963000, high: 42400000}  # band-varying, source #629/#638
     confidence: forward_looking_risk
 
 method: >-
