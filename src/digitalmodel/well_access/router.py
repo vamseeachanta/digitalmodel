@@ -30,6 +30,7 @@ import yaml
 
 from .lifecycle_summary import compare_architectures, run_lifecycle
 from .models import AccessClass, WellProgram
+from .wed_calibration import load_wed_calibration
 
 
 def _jsonable(value: Any) -> Any:
@@ -177,6 +178,29 @@ def router(cfg: dict[str, Any]) -> dict[str, Any]:
     resources_cfg = params.get("resources", [])
     deferred_loss = float(params.get("deferred_loss_per_event_days", 30.0))
 
+    # Optional, additive: calibrate to the committed worldenergydata access-gap
+    # snapshot (digitalmodel#890). Default OFF — only engages when a `wed_calibration`
+    # block is present. When `use_wed_supply` is set and no resources are supplied,
+    # the heavy pool's available-days are taken from the REAL (binding GoM-resident
+    # or global) fleet supply instead of an assumed capacity. A provenance/empirical
+    # block is attached to the payload either way. FORWARD-LOOKING RISK, not measured.
+    wed_cfg = params.get("wed_calibration")
+    wed_block: dict[str, Any] | None = None
+    if wed_cfg:
+        if not isinstance(wed_cfg, dict):
+            wed_cfg = {}
+        wed = load_wed_calibration(wed_cfg.get("snapshot_path"))
+        if wed_cfg.get("use_wed_supply") and not resources_cfg:
+            resources_cfg = wed.calibrated_resource_pools(
+                resource_class=str(wed_cfg.get("resource_class", "modu")),
+                supply_scope=str(wed_cfg.get("supply_scope", "gom_resident")),
+            )
+        wed_block = {
+            "provenance": wed.provenance,
+            "empirical_demand": wed.empirical_demand_summary(),
+            "caveats": wed.caveats,
+        }
+
     primary = run_lifecycle(
         well_program, calibration, access_table, resources_cfg, deferred_loss
     )
@@ -187,6 +211,8 @@ def router(cfg: dict[str, Any]) -> dict[str, Any]:
         "deferred_loss_per_event_days": deferred_loss,
         "primary": _jsonable(primary),
     }
+    if wed_block is not None:
+        payload["wed_calibration"] = wed_block
 
     # Optional dry-tree vs subsea comparison block.
     cmp_cfg = params.get("comparison")
