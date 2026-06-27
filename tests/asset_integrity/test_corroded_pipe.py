@@ -11,6 +11,7 @@ from digitalmodel.asset_integrity.corroded_pipe import (
     CorrodedPipeResult,
     allowable_flaw_length,
     b31g_original,
+    b31g_original_allowable_length,
     folias_modified,
     folias_original,
     modified_b31g,
@@ -151,3 +152,34 @@ def test_geometry_validation():
         modified_b31g(0.0, T, DEPTH, LEN, SMYS)
     with pytest.raises(ValueError):
         modified_b31g(D, T, T + 0.1, LEN, SMYS)   # depth exceeds wall
+
+
+# --- Original B31G allowable length vs the published ASME table -------------
+# Golden values from ASME B31G-2012 page-26 allowable-defect-length table,
+# OD = 20 in (d in., t in. -> allowable longitudinal length in.).
+ASME_OD = 20.0
+
+
+@pytest.mark.parametrize("d, t, expected_L", [
+    (0.10, 0.500, 9.48),   # B-parameter regime
+    (0.15, 0.500, 4.72),
+    (0.25, 0.625, 3.76),
+    (0.10, 0.219, 1.93),
+    (0.05, 0.500, 14.17),  # shallow -> B capped at 4.0
+    (0.04, 0.344, 11.75),  # shallow -> B capped at 4.0
+    (0.50, 0.625, 1.78),   # d/t = 0.80 boundary (still acceptable)
+])
+def test_b31g_allowable_length_matches_asme_table(d, t, expected_L):
+    L = b31g_original_allowable_length(ASME_OD, t, d)
+    assert L == pytest.approx(expected_L, abs=0.02)
+
+
+def test_b31g_allowable_length_rejects_above_80pct():
+    # d/t = 0.18/0.219 = 0.822 > 0.80 -> not acceptable (table shows 0).
+    assert b31g_original_allowable_length(ASME_OD, 0.219, 0.18) == 0.0
+
+
+def test_b31g_allowable_length_decreases_with_depth():
+    shallow = b31g_original_allowable_length(ASME_OD, 0.5, 0.10)
+    deep = b31g_original_allowable_length(ASME_OD, 0.5, 0.30)
+    assert deep < shallow

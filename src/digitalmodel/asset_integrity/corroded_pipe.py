@@ -237,6 +237,35 @@ def allowable_flaw_length(
     return lo
 
 
+def b31g_original_allowable_length(D: float, t: float, d: float) -> float:
+    """Original ASME B31G maximum allowable longitudinal defect length (in).
+
+    The canonical B31G acceptance chart (e.g. ASME B31G-2012 page 26):
+
+        L_allow = 1.12 * B * sqrt(D * t)
+        B = sqrt( (dt / (1.1*dt - 0.15))^2 - 1 ),  capped at 4.0,
+
+    where ``dt = d/t``. ``B`` is taken as 4.0 for shallow defects (where the
+    bracket is <= 0 or would exceed 4.0). Defects deeper than 80 % of the wall
+    are not acceptable (returns 0.0 — repair/replace).
+
+    Unlike :func:`allowable_flaw_length` (a pressure-based Modified-B31G
+    inversion), this is the pressure-independent geometric B31G chart and
+    reproduces the published ASME table for a given diameter.
+    """
+    _validate(D, t, d, 0.0)
+    dt = d / t
+    if dt > 0.80:
+        return 0.0
+    denom = 1.1 * dt - 0.15
+    if denom <= 0.0:
+        B = 4.0
+    else:
+        bracket = (dt / denom) ** 2 - 1.0
+        B = 4.0 if bracket < 0.0 else min(4.0, math.sqrt(bracket))
+    return 1.12 * B * math.sqrt(D * t)
+
+
 # ---------------------------------------------------------------------------
 def _validate_geometry(D: float, t: float) -> None:
     if D <= 0 or t <= 0 or t >= D:
