@@ -6,6 +6,7 @@ Provides:
   Level1Screener   — compare t_mm to code-required t_min
   Level2Engine     — RSF/Folias-factor detailed assessment
   FFSDecision      — accept/reject/monitor/repair/replace verdict
+  MeasurementSufficiency — field guidance: sufficient / take more / escalate
   FFSReport        — self-contained HTML report generator
 """
 
@@ -15,6 +16,11 @@ from .ffs_router import FFSRouter
 from .grid_parser import GridParser
 from .level1_screener import Level1Screener
 from .level2_engine import Level2Engine
+from .measurement_sufficiency import (
+    MeasurementSufficiency,
+    SufficiencyAction,
+    SufficiencyResult,
+)
 
 __all__ = [
     "GridParser",
@@ -22,5 +28,8 @@ __all__ = [
     "Level1Screener",
     "Level2Engine",
     "FFSDecision",
+    "MeasurementSufficiency",
+    "SufficiencyAction",
+    "SufficiencyResult",
     "FFSReport",
 ]

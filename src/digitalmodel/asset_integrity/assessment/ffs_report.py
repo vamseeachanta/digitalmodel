@@ -77,6 +77,7 @@ class FFSReport:
         smys_psi: Optional[float] = None,
         corrosion_rate_in_per_yr: Optional[float] = None,
         plotly_heatmap_json: Optional[str] = None,
+        sufficiency: Optional[object] = None,
     ) -> str:
         """Render the full FFS assessment as a self-contained HTML string.
 
@@ -134,12 +135,66 @@ class FFSReport:
             FFSReport._html_foot(),
         ]
 
+        if sufficiency is not None:
+            # Field measurement-sufficiency guidance, prominent near the top.
+            sections.insert(2, FFSReport._section_sufficiency(sufficiency))
+
         if plotly_heatmap_json:
             # Insert after executive summary
             heatmap_section = FFSReport._section_heatmap(plotly_heatmap_json)
             sections.insert(2, heatmap_section)
 
         return "\n".join(sections)
+
+    @staticmethod
+    def _section_sufficiency(result: object) -> str:
+        """Render the field measurement-sufficiency guidance section.
+
+        Accepts any object exposing ``status``, ``confidence``, ``reasons``
+        (list[str]) and ``actions`` (list with ``action``/``location``/
+        ``rationale``/``count`` attributes) — i.e. a ``SufficiencyResult``.
+        """
+        status = html.escape(str(getattr(result, "status", "UNKNOWN")))
+        confidence = html.escape(str(getattr(result, "confidence", "")))
+        colors = {
+            "SUFFICIENT": "#38a169", "TAKE_MORE": "#dd6b20", "ESCALATE": "#e53e3e",
+        }
+        color = colors.get(status, _DEFAULT_COLOR)
+        reasons = getattr(result, "reasons", []) or []
+        actions = getattr(result, "actions", []) or []
+
+        reason_items = "".join(
+            f"<li>{html.escape(str(r))}</li>" for r in reasons
+        )
+        action_rows = ""
+        for a in actions:
+            act = html.escape(str(getattr(a, "action", "")))
+            loc = html.escape(str(getattr(a, "location", "")))
+            why = html.escape(str(getattr(a, "rationale", "")))
+            cnt = getattr(a, "count", None)
+            cnt_str = "" if cnt is None else f" (x{int(cnt)})"
+            action_rows += (
+                f"<tr><td><strong>{act}{cnt_str}</strong></td>"
+                f"<td>{loc}</td><td>{why}</td></tr>"
+            )
+        action_table = (
+            "<table><thead><tr><th>Action</th><th>Where</th><th>Why</th></tr>"
+            f"</thead><tbody>{action_rows}</tbody></table>"
+            if action_rows else "<p>No further field action required.</p>"
+        )
+
+        return (
+            "<div class='section'>\n"
+            "<h2>Field Measurement Sufficiency</h2>\n"
+            f"<p><span style='display:inline-block;padding:4px 12px;border-radius:6px;"
+            f"color:#fff;font-weight:700;background:{color}'>{status}</span>"
+            f" &nbsp; confidence: {confidence}</p>\n"
+            f"<ul>{reason_items}</ul>\n"
+            f"{action_table}\n"
+            "<p><em>Field screening only — does not replace a detailed Level 2/3 "
+            "assessment.</em></p>\n"
+            "</div>"
+        )
 
     # ------------------------------------------------------------------
     # Section builders
