@@ -50,10 +50,12 @@ def main() -> None:
     n = len(data["grids"])
     print(f"design grids: {n} combos "
           f"({len(data['grades'])} grades x {len(data['profiles'])} profiles "
-          f"x {len(data['spacings'])} spacings x {len(data['spans'])} spans)")
+          f"x {len(data['spacings'])} spacings x {len(data['spans'])} spans "
+          f"x {len(data['taus'])} shear levels)")
     print(f"thickness {data['thickness'][0]}-{data['thickness'][-1]} mm, "
-          f"load {data['load'][0]}-{data['load'][-1]} MPa, spans "
-          f"{', '.join(data['spans'])} mm, gamma_m {data['meta']['gamma_m']}")
+          f"axial {data['load'][0]}-{data['load'][-1]} MPa, spans "
+          f"{', '.join(data['spans'])} mm, shear {', '.join(data['taus'])} MPa, "
+          f"gamma_m {data['meta']['gamma_m']}")
     print(f"JSON  -> {JSON_PATH}  ({JSON_PATH.stat().st_size/1024:.0f} KB)")
     print(f"HTML  -> {HTML_PATH}  ({HTML_PATH.stat().st_size/1_048_576:.2f} MB, self-contained)")
 
@@ -131,6 +133,10 @@ def _render_html(data: dict) -> str:
           <option value="mode">Governing failure mode</option>
         </select>
       </div>
+      <div class="ctrl" style="min-width:230px">
+        <label>Shear load &tau; = <b id="tauval">0</b> MPa</label>
+        <input type="range" id="tau" min="0" max="0" step="1" value="0" style="width:210px; cursor:pointer;"/>
+      </div>
     </div>
     <div id="readout">Pick a configuration, then <b>click anywhere on the chart</b> to test a (thickness, load) operating point.</div>
     <div class="hint">
@@ -173,8 +179,10 @@ fill('span', DATA.spans, DATA.spans.map(s => s + ' mm'));
 $('profile').selectedIndex = 1;   // default to the mid T400x120 profile
 $('spacing').selectedIndex = 1;   // default 700 mm
 $('span').selectedIndex = Math.min(1, DATA.spans.length - 1);   // default 2400 mm
+$('tau').max = DATA.taus.length - 1;   // shear slider snaps to precomputed levels
 
-function key(){{ return $('grade').value + '|' + $('profile').value + '|' + $('spacing').value + '|' + $('span').value; }}
+function tauVal(){{ return DATA.taus[+$('tau').value]; }}
+function key(){{ return $('grade').value + '|' + $('profile').value + '|' + $('spacing').value + '|' + $('span').value + '|' + tauVal(); }}
 
 function nearestIndex(arr, v){{
   let best=0, bd=Infinity;
@@ -229,7 +237,7 @@ function render(){{
     font:{{family:'Inter, sans-serif', size:13, color:C.navy}},
     paper_bgcolor:'#fff', plot_bgcolor:'#fff',
     margin:{{l:64, r:30, t:54, b:56}},
-    title:{{text:'Design window — '+$('grade').value+' · '+$('profile').value+' · '+$('spacing').value+' mm spacing · '+$('span').value+' mm span', x:0.02, font:{{size:15}}}},
+    title:{{text:'Design window — '+$('grade').value+' · '+$('profile').value+' · '+$('spacing').value+' mm sp · '+$('span').value+' mm span · τ='+tauVal()+' MPa', x:0.02, font:{{size:14}}}},
     xaxis:{{title:'Plate thickness (mm)'}},
     yaxis:{{title:'Applied longitudinal load σ<sub>x</sub> (MPa)', rangemode:'tozero'}},
     legend:{{orientation:'h', y:-0.18}},
@@ -263,8 +271,8 @@ function probeAt(t, load){{
   const ro = $('readout');
   ro.className = ok ? 'pass' : 'fail';
   ro.innerHTML =
-    '<b>'+$('grade').value+' · '+$('profile').value+' · '+$('spacing').value+' mm sp · '+$('span').value+' mm span</b> &nbsp;|&nbsp; '
-    + 'plate '+tt.toFixed(1)+' mm, load &sigma;<sub>x</sub> = '+ll.toFixed(0)+' MPa<br>'
+    '<b>'+$('grade').value+' · '+$('profile').value+' · '+$('spacing').value+' mm sp · '+$('span').value+' mm span · &tau;='+tauVal()+' MPa</b> &nbsp;|&nbsp; '
+    + 'plate '+tt.toFixed(1)+' mm, axial &sigma;<sub>x</sub> = '+ll.toFixed(0)+' MPa<br>'
     + 'Utilisation <b>'+util.toFixed(2)+'</b> &rarr; '
     + (ok ? '<span class="verdict-pass">ACCEPTABLE</span>' : '<span class="verdict-fail">UNACCEPTABLE (buckling)</span>')
     + ' &nbsp;·&nbsp; governing mode: <b>'+mode+'</b><br>'
@@ -275,7 +283,9 @@ function probeAt(t, load){{
 }}
 
 ['grade','profile','spacing','span','colorby'].forEach(id => $(id).addEventListener('change', () => {{ probe=null; resetReadout(); render(); }}));
-function resetReadout(){{ const ro=$('readout'); ro.className=''; ro.innerHTML='Pick a configuration, then <b>click anywhere on the chart</b> to test a (thickness, load) operating point.'; }}
+$('tau').addEventListener('input', () => {{ $('tauval').textContent = tauVal(); probe=null; resetReadout(); render(); }});
+function resetReadout(){{ const ro=$('readout'); ro.className=''; ro.innerHTML='Pick a configuration (incl. shear &tau;), then <b>click anywhere on the chart</b> to test a (thickness, axial load) operating point.'; }}
+$('tauval').textContent = tauVal();
 render();
 bindClickOnce();
 </script>
