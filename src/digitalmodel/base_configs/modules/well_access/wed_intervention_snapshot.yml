@@ -1,0 +1,225 @@
+# ABOUTME: Dated SNAPSHOT of worldenergydata BSEE intervention access-gap figures.
+# ABOUTME: The cross-repo bridge — digitalmodel cannot import worldenergydata, so this
+# ABOUTME: committed, dated snapshot is the calibration input for well_access (W7).
+#
+# PROVENANCE / SCOPE HONESTY
+# --------------------------
+# This file is a hand-carried copy of figures produced ON THE worldenergydata SIDE.
+# It is NOT a live feed. Re-snapshot when the upstream YAMLs change.
+#
+#   source_repo:  vamseeachanta/worldenergydata
+#   source_issue: worldenergydata#638 (capstone of epic #626) ; feeds digitalmodel#890
+#   source_commit: adbd44c0  (PR worldenergydata#639, branch feat/* — not yet on main)
+#   source_files:
+#     - bsee/analysis/intervention/data/access_gap.yml            (worldenergydata#638)
+#     - bsee/analysis/intervention/data/intervention_demand.yml   (worldenergydata#630)
+#     - vessel_fleet/data/intervention_fleet_catalog.yml          (worldenergydata#598)
+#     - bsee/analysis/intervention/data/intervention_economics.yml(worldenergydata#629)
+#   as_of: '2026-06-26'              # date this snapshot was carried into digitalmodel
+#   dayrate_snapshot_as_of: '2026-02-19'
+#
+# LOAD-BEARING CAVEATS (carry these everywhere downstream — see wed_calibration.py)
+# - FORWARD-LOOKING ACCESS RISK, not a measured demand/supply crossover. A
+#   utilization_ratio > 1 is an access-risk indicator, NOT an observed shortfall.
+# - FLOOR (WAR ~6%): WATER_DEPTH is populated on only ~6% of WAR rows (#627/#630);
+#   every band-resolved empirical count is a hard lower bound, not a total. The
+#   #630 empirical interventions/well is a lifetime UPPER proxy on that 6% subset,
+#   NOT an annual lambda.
+# - GEOGRAPHY (#628): GoM has ~0 RESIDENT dedicated LIGHT-intervention fleet — this
+#   is geography (the global RLWI fleet is elsewhere) + the 6% WAR coverage, NOT
+#   evidence that deepwater light intervention is avoided. ~3 GoM-resident dedicated
+#   units total. The GoM-resident view is the BINDING supply constraint.
+# - PRESSURE CLASS ABSENT: bands are WATER-DEPTH only; HPHT / 20k-psi service
+#   capability is not resolved here (only 2 rigs worldwide rated to 20,000 psi).
+# - UNKNOWN 44.5% (#627): a large share of WAR service-type is unclassified.
+
+meta:
+  source_repo: vamseeachanta/worldenergydata
+  source_issue: 'worldenergydata#638'
+  feeds_issue: 'digitalmodel#890'
+  source_commit: adbd44c0
+  source_pr: 'worldenergydata#639'
+  as_of: '2026-06-26'
+  dayrate_snapshot_as_of: '2026-02-19'
+  framing: >-
+    FORWARD-LOOKING ACCESS RISK, not a measured crossover. Per band: intervention
+    demand rig-days/yr (subsea wells x parameterized frequency x band-effective
+    heavy-intervention duration) vs available fleet rig-days/yr (eligible fleet x
+    utilization x 365), with a binding GoM-resident-only variant.
+  headline: >-
+    5,000-10,000 ft holds 270 subsea wells but only 2 GoM-resident heavy-
+    intervention units: forward demand would need ~4.4x the rig-days resident
+    supply can provide (access-RISK indicator, NOT a measured crossover).
+  confidence: forward_looking_risk
+
+# Planning parameters used to derive the figures (cited, overridable upstream).
+parameters:
+  intervention_frequency_per_well_per_yr: {low: 0.1, central: 0.15, high: 0.2}
+  intervention_frequency_source: >-
+    [engineering-assumption] ~0.1-0.2 interventions per subsea well per year (one
+    every 5-10 yr); planning-grade from subsea reliability / operator norms, NOT a
+    measured BSEE rate.
+  fleet_utilization: {low: 0.6, central: 0.7, high: 0.8}
+  fleet_utilization_source: >-
+    [engineering-assumption] practical sustained fleet utilization 60-80%.
+  days_per_year: 365
+  heavy_deepwater_classes: [modu_drillship, modu_semisub, heavy_intervention_semi]
+  gom_resident_dedicated_total: 3
+
+# Fleet supply (deduped distinct hulls; GoM-resident is the binding constraint).
+fleet_supply:
+  scope_note: >-
+    by_asset_class counts are GLOBAL distinct hulls (#599 identity resolver), NOT
+    GoM-resident. The binding GoM intervention supply is gom_resident.
+  global_eligible_fleet_count: 471          # modu_drillship 161 + modu_semisub 305 + heavy_intervention_semi 5
+  eligible_classes:
+    modu_drillship: 161
+    modu_semisub: 305
+    heavy_intervention_semi: 5
+  rig_days_per_yr_global: {low: 103149.0, central: 120340.5, high: 137532.0}
+  gom_resident_dedicated_total: 3            # ~2-4 soft; Helix Q4000/Q5000 (heavy) + Island Performer (light)
+  gom_resident_eligible_heavy_count: 2       # Helix Q4000, Helix Q5000 (heavy-intervention semis)
+  gom_resident_eligible_heavy_units: [Helix Q4000, Helix Q5000]
+  rig_days_per_yr_gom_resident: {low: 438.0, central: 511.0, high: 584.0}
+  gom_resident_light_intervention_count: 0   # GEOGRAPHY (#628): ~0 resident dedicated LIGHT-intervention fleet
+  confidence: soft
+
+# Indicative public dayrates (#596 snapshot) for the heavy-deepwater servicing pool.
+dayrates:
+  modu_drillship:
+    median_usd_per_day: 457000
+    band_low_usd_per_day: 300000
+    band_high_usd_per_day: 530000
+    rate_disclosed: true
+    confidence_labels: [analyst, on_record, reported]
+  modu_semisub:
+    median_usd_per_day: 465000
+    band_low_usd_per_day: 452000
+    band_high_usd_per_day: 490000
+    rate_disclosed: true
+    confidence_labels: [on_record]
+  heavy_intervention_semi:
+    median_usd_per_day: null               # Helix Q-class not public
+    rate_disclosed: false
+    confidence_labels: [not_public]
+  mpsv_osv:
+    median_usd_per_day: 37500
+    band_low_usd_per_day: 22000
+    band_high_usd_per_day: 80000
+    rate_disclosed: true
+    confidence_labels: [analyst, reported]
+
+# Per water-depth band: empirical demand cross-check + forward demand/supply/gap + $ exposure.
+bands:
+  shelf_lt_500:
+    label: < 500 ft (shelf)
+    modu_servicing: false
+    subsea_wells: 0
+    empirical:                              # #630 FLOOR (6% depth-stamped WAR subset)
+      distinct_wells: 3705
+      interventions: 17687
+      interventions_per_well: 4.774         # lifetime UPPER proxy, NOT annual lambda
+      total_rig_days_floor: 121738
+    heavy_duration_days: {low: 30, median: 45, high: 60}
+    demand_rig_days_per_yr: {low: 0.0, central: 0.0, high: 0.0}
+    interventions_per_yr: {low: 0.0, central: 0.0, high: 0.0}
+    gap_vs_global_rig_days_per_yr: {conservative: -103149.0, central: -120340.5, optimistic: -137532.0}
+    gap_vs_gom_resident_rig_days_per_yr: {conservative: -438.0, central: -511.0, optimistic: -584.0}
+    utilization_ratio_global: {conservative: 0.0, central: 0.0, optimistic: 0.0}
+    utilization_ratio_gom_resident: {conservative: 0.0, central: 0.0, optimistic: 0.0}
+    exposure_usd_per_yr: null
+    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    confidence: forward_looking_risk
+  band_500_3000:
+    label: 500-3,000 ft
+    modu_servicing: true
+    subsea_wells: 114
+    empirical:
+      distinct_wells: 372
+      interventions: 2508
+      interventions_per_well: 6.742
+      total_rig_days_floor: 16777
+    heavy_duration_days: {low: 32, median: 48, high: 65}
+    demand_rig_days_per_yr: {low: 364.8, central: 820.8, high: 1482.0}
+    interventions_per_yr: {low: 11.4, central: 17.1, high: 22.8}
+    gap_vs_global_rig_days_per_yr: {conservative: -101667.0, central: -119519.7, optimistic: -137167.2}
+    gap_vs_gom_resident_rig_days_per_yr: {conservative: 1044.0, central: 309.8, optimistic: -219.2}
+    utilization_ratio_global: {conservative: 0.014, central: 0.007, optimistic: 0.003}
+    utilization_ratio_gom_resident: {conservative: 3.384, central: 1.606, optimistic: 0.625}
+    exposure_usd_per_yr: {low: 109440000, central: 375105600, high: 785460000}
+    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    confidence: forward_looking_risk
+  band_3000_5000:
+    label: 3,000-5,000 ft
+    modu_servicing: true
+    subsea_wells: 209
+    empirical:
+      distinct_wells: 249
+      interventions: 1876
+      interventions_per_well: 7.534
+      total_rig_days_floor: 12648
+    heavy_duration_days: {low: 34, median: 51, high: 69}
+    demand_rig_days_per_yr: {low: 710.6, central: 1598.8, high: 2884.2}
+    interventions_per_yr: {low: 20.9, central: 31.35, high: 41.8}
+    gap_vs_global_rig_days_per_yr: {conservative: -100264.8, central: -118741.7, optimistic: -136821.4}
+    gap_vs_gom_resident_rig_days_per_yr: {conservative: 2446.2, central: 1087.8, optimistic: 126.6}
+    utilization_ratio_global: {conservative: 0.028, central: 0.013, optimistic: 0.005}
+    utilization_ratio_gom_resident: {conservative: 6.585, central: 3.129, optimistic: 1.217}
+    exposure_usd_per_yr: {low: 213180000, central: 730674450, high: 1528626000}
+    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    confidence: forward_looking_risk
+  band_5000_10000:
+    label: 5,000-10,000 ft
+    modu_servicing: true
+    subsea_wells: 270
+    empirical:
+      distinct_wells: 129
+      interventions: 830
+      interventions_per_well: 6.434
+      total_rig_days_floor: 5511
+    heavy_duration_days: {low: 37, median: 55, high: 74}
+    demand_rig_days_per_yr: {low: 999.0, central: 2227.5, high: 3996.0}
+    interventions_per_yr: {low: 27.0, central: 40.5, high: 54.0}
+    gap_vs_global_rig_days_per_yr: {conservative: -99153.0, central: -118113.0, optimistic: -136533.0}
+    gap_vs_gom_resident_rig_days_per_yr: {conservative: 3558.0, central: 1716.5, optimistic: 415.0}
+    utilization_ratio_global: {conservative: 0.039, central: 0.019, optimistic: 0.007}
+    utilization_ratio_gom_resident: {conservative: 9.123, central: 4.359, optimistic: 1.711}
+    exposure_usd_per_yr: {low: 299700000, central: 1017967500, high: 2117880000}
+    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    confidence: forward_looking_risk
+  band_gt_10000:
+    label: '> 10,000 ft'
+    modu_servicing: true
+    subsea_wells: 0
+    empirical:
+      distinct_wells: 1
+      interventions: 10
+      interventions_per_well: 10.0
+      total_rig_days_floor: 70
+    heavy_duration_days: {low: 40, median: 59, high: 80}
+    demand_rig_days_per_yr: {low: 0.0, central: 0.0, high: 0.0}
+    interventions_per_yr: {low: 0.0, central: 0.0, high: 0.0}
+    gap_vs_global_rig_days_per_yr: {conservative: -103149.0, central: -120340.5, optimistic: -137532.0}
+    gap_vs_gom_resident_rig_days_per_yr: {conservative: 0.0, central: 0.0, optimistic: 0.0}
+    utilization_ratio_global: {conservative: 0.0, central: 0.0, optimistic: 0.0}
+    utilization_ratio_gom_resident: {conservative: null, central: null, optimistic: null}
+    exposure_usd_per_yr: {low: 0, central: 0, high: 0}
+    heavy_dead_well_cost_usd: {low: 9000000, median: 20565000, high: 31800000}
+    confidence: forward_looking_risk
+
+method: >-
+  DEMAND rig-days/yr = subsea_wells x frequency x band-effective heavy_dead_well
+  duration (#629, depth-scaled). SUPPLY rig-days/yr = eligible_fleet x utilization
+  x 365 for BOTH the global heavy-deepwater roster and the binding GoM-resident-only
+  fleet. GAP = DEMAND - SUPPLY; utilization_ratio = DEMAND / SUPPLY. $ exposure/yr =
+  (subsea_wells x frequency) x band heavy $/intervention (#629).
+
+caveats:
+- 'FORWARD-LOOKING: access RISK, not a measured demand/supply crossover; frequency and utilization are cited planning assumptions.'
+- 'FLOOR (WAR ~6%): empirical interventions/well is a lifetime upper proxy on the ~6% depth-stamped WAR subset, NOT an annual lambda.'
+- 'GEOGRAPHY (#628): GoM has ~0 resident dedicated LIGHT-intervention fleet (geography + 6% WAR coverage), NOT evidence light intervention is avoided.'
+- 'PRESSURE CLASS ABSENT: bands are water-depth only; HPHT / 20k-psi capability not resolved (only 2 rigs worldwide rated to 20,000 psi).'
+- 'UNKNOWN 44.5% (#627): a large share of WAR service-type is unclassified.'
+- 'Demand uses the HEAVY heavy_dead_well duration for all interventions (upper bound on rig-days); real campaigns mix lighter scopes.'
+- 'Global-roster supply is a worldwide pool a GoM operator competes for; the GoM-resident view is the binding constraint.'
+- 'Dayrates are a point-in-time PUBLIC snapshot (#596); Helix Q-class intervention semis have no public per-day figure.'

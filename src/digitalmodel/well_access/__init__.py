@@ -29,6 +29,12 @@ from .intervention_rates import (
 from .resource_queue import compute_resource_demand
 from .uptime_rollup import rollup_uptime
 from .lifecycle_summary import run_lifecycle, compare_architectures
+from .wed_calibration import (
+    WedCalibration,
+    BandDemand,
+    FleetSupply,
+    load_wed_calibration,
+)
 from .router import router
 
 __all__ = [
@@ -49,5 +55,9 @@ __all__ = [
     "rollup_uptime",
     "run_lifecycle",
     "compare_architectures",
+    "WedCalibration",
+    "BandDemand",
+    "FleetSupply",
+    "load_wed_calibration",
     "router",
 ]
