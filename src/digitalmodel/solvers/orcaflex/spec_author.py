@@ -30,7 +30,10 @@ is fully unit-testable offline (pass a stub author). The default implementation,
 no ``anthropic`` dependency). :class:`AnthropicIntentAuthor` uses the Anthropic
 SDK with structured outputs and is imported lazily.
 
-Only **mooring** outcomes are in scope for now (matching the resolver).
+It covers the resolver's three license-free model families -- **mooring**
+(spread-mooring strength / pretension), **riser** (static configuration / wave
+dynamic), and **pipeline** (on-bottom stability / installation lay) -- each
+dispatched by the chosen outcome's family.
 """
 
 from __future__ import annotations
@@ -53,8 +56,13 @@ from digitalmodel.common.spec_authoring import (
 from digitalmodel.solvers.orcaflex import inverse_resolver
 from digitalmodel.solvers.orcaflex.inverse_resolver import (
     OUTCOME_DESCRIPTIONS,
+    PIPELINE_OUTCOMES,
+    RISER_OUTCOMES,
     MooringResolverInputs,
     Outcome,
+    PipelineResolverInputs,
+    ResolverInputs,
+    RiserResolverInputs,
 )
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
@@ -72,45 +80,90 @@ DEFAULT_MODEL = "claude-opus-4-8"
 class OrcaFlexIntent(BaseModel):
     """Structured output the LLM produces from a project bundle + request.
 
-    This is *not* the full spec -- only the sparse, grounded mooring facts the
-    resolver needs as a starting point, plus the chosen outcome. Every input
-    field is optional: the LLM leaves a field ``None`` when the project data
-    does not state it, and the deterministic resolver fills it (and ledgers it).
+    This is *not* the full spec -- only the sparse, grounded facts the resolver
+    needs as a starting point, plus the chosen outcome. Every input field is
+    optional: the LLM leaves a field ``None`` when the project data does not
+    state it, and the deterministic resolver fills it (and ledgers it).
 
-    The input fields mirror :class:`inverse_resolver.MooringResolverInputs`.
+    The fields are grouped by model family and mirror the resolver input models
+    (:class:`inverse_resolver.MooringResolverInputs`,
+    :class:`~inverse_resolver.RiserResolverInputs`,
+    :class:`~inverse_resolver.PipelineResolverInputs`). Set only the fields that
+    apply to the chosen outcome's family; leave the others ``None``.
     """
 
     outcome: Outcome = Field(
         description="The analysis outcome that matches the request."
     )
-    # Sparse mooring inputs -- only set when the project data states them.
+    # Common across families -- only set when the project data states them.
     name: Optional[str] = Field(default=None, description="Model / system name.")
     water_depth: Optional[float] = Field(
         default=None, description="Site water depth (m)."
     )
+    vessel_name: Optional[str] = Field(
+        default=None,
+        description="Vessel the system attaches to (mooring fairleads / riser "
+        "hang-off).",
+    )
+    # --- Mooring fields (outcomes: mooring_strength, mooring_pretension) ---
     num_lines: Optional[int] = Field(
-        default=None, description="Number of mooring lines."
+        default=None, description="[mooring] Number of mooring lines."
     )
     chain_diameter: Optional[float] = Field(
-        default=None, description="Mooring chain diameter (m)."
+        default=None, description="[mooring] Mooring chain diameter (m)."
     )
     chain_grade: Optional[str] = Field(
-        default=None, description="Mooring chain grade (e.g. R3, R4, R5)."
+        default=None, description="[mooring] Mooring chain grade (e.g. R3, R4, R5)."
     )
     fairlead_radius: Optional[float] = Field(
-        default=None, description="Fairlead radius from origin (m)."
+        default=None, description="[mooring] Fairlead radius from origin (m)."
     )
     anchor_radius: Optional[float] = Field(
-        default=None, description="Anchor radius from origin (m)."
+        default=None, description="[mooring] Anchor radius from origin (m)."
     )
     line_length: Optional[float] = Field(
-        default=None, description="Mooring line length (m)."
-    )
-    vessel_name: Optional[str] = Field(
-        default=None, description="Vessel the fairleads attach to."
+        default=None, description="[mooring] Mooring line length (m)."
     )
     pretension: Optional[float] = Field(
-        default=None, description="Target line pretension (kN)."
+        default=None, description="[mooring] Target line pretension (kN)."
+    )
+    # --- Riser fields (outcomes: riser_static, riser_dynamic) ---
+    riser_outer_diameter: Optional[float] = Field(
+        default=None, description="[riser] Riser pipe outer diameter (m)."
+    )
+    riser_wall_thickness: Optional[float] = Field(
+        default=None, description="[riser] Riser pipe wall thickness (m)."
+    )
+    riser_length: Optional[float] = Field(
+        default=None, description="[riser] Riser arc length (m)."
+    )
+    riser_configuration: Optional[str] = Field(
+        default=None,
+        description="[riser] Configuration (e.g. catenary, lazy_wave).",
+    )
+    riser_top_position: Optional[list[float]] = Field(
+        default=None,
+        description="[riser] Hang-off [x, y, z] in m (z below free surface).",
+    )
+    riser_bottom_position: Optional[list[float]] = Field(
+        default=None,
+        description="[riser] Touchdown / anchor [x, y, z] in m.",
+    )
+    # --- Pipeline fields (outcomes: pipeline_onbottom, pipeline_lay) ---
+    pipeline_outer_diameter: Optional[float] = Field(
+        default=None, description="[pipeline] Pipe outer diameter (m)."
+    )
+    pipeline_wall_thickness: Optional[float] = Field(
+        default=None, description="[pipeline] Pipe wall thickness (m)."
+    )
+    pipeline_length: Optional[float] = Field(
+        default=None, description="[pipeline] Pipeline length (m)."
+    )
+    pipeline_material: Optional[str] = Field(
+        default=None, description="[pipeline] Line-pipe steel grade (e.g. X65)."
+    )
+    pipeline_segment_length: Optional[float] = Field(
+        default=None, description="[pipeline] FE mesh segment length (m)."
     )
     # Trace + handoff
     provenance: list[ProvenanceEntry] = Field(
@@ -133,17 +186,31 @@ class OrcaFlexIntent(BaseModel):
 
 
 _SYSTEM_PROMPT_TEMPLATE = """\
-You are a marine-mooring analysis spec author. Given an offshore project's data \
-and a natural-language request, you produce a structured authoring intent for an \
-OrcaFlex spread-mooring analysis.
+You are an offshore marine-analysis spec author. Given an offshore project's \
+data and a natural-language request, you produce a structured authoring intent \
+for an OrcaFlex analysis. Three license-free model families are supported -- \
+mooring (spread mooring), riser (steel catenary / wave dynamic), and pipeline \
+(on-bottom stability / installation lay).
 
 Choose the single `outcome` that best matches the request:
 {outcome_menu}
 
+The outcome's prefix names its family and which input fields apply:
+- `mooring_*` -> use the mooring fields: num_lines, chain_diameter, \
+chain_grade, fairlead_radius, anchor_radius, line_length, pretension (plus the \
+common name, water_depth, vessel_name).
+- `riser_*` -> use the riser fields: riser_outer_diameter, \
+riser_wall_thickness, riser_length, riser_configuration, riser_top_position, \
+riser_bottom_position (plus name, water_depth, vessel_name).
+- `pipeline_*` -> use the pipeline fields: pipeline_outer_diameter, \
+pipeline_wall_thickness, pipeline_length, pipeline_material, \
+pipeline_segment_length (plus name, water_depth).
+Leave the fields of the other families null.
+
 Your job is fact extraction, not engineering invention:
 - Fill a field ONLY with a value the project data actually states. If the data \
 does not give a value, leave it null. Do NOT estimate, default, or invent water \
-depth, line count, chain diameter, chain grade, radii, line length, or any \
+depth, diameters, wall thickness, line counts, grades, radii, lengths, or any \
 physical quantity -- a downstream deterministic resolver fills every gap from \
 maintained reference data and records each assumption for review. Inventing \
 values defeats that audit trail.
@@ -273,21 +340,51 @@ class AnthropicIntentAuthor:
 
 def intent_to_resolver_inputs(
     intent: OrcaFlexIntent,
-) -> tuple[Outcome, MooringResolverInputs]:
-    """Map an OrcaFlexIntent to the inverse resolver's (outcome, inputs)."""
-    inputs = MooringResolverInputs(
-        name=intent.name,
-        water_depth=intent.water_depth,
-        num_lines=intent.num_lines,
-        chain_diameter=intent.chain_diameter,
-        chain_grade=intent.chain_grade,
-        fairlead_radius=intent.fairlead_radius,
-        anchor_radius=intent.anchor_radius,
-        line_length=intent.line_length,
-        vessel_name=intent.vessel_name,
-        pretension=intent.pretension,
-    )
-    return intent.outcome, inputs
+) -> tuple[Outcome, ResolverInputs]:
+    """Map an OrcaFlexIntent to the inverse resolver's (outcome, inputs).
+
+    Dispatches on the outcome's model family and builds the matching
+    resolver-inputs object (mooring / riser / pipeline), copying only the
+    fields that family accepts.
+    """
+    outcome = intent.outcome
+    inputs: ResolverInputs
+    if outcome in RISER_OUTCOMES:
+        inputs = RiserResolverInputs(
+            name=intent.name,
+            water_depth=intent.water_depth,
+            outer_diameter=intent.riser_outer_diameter,
+            wall_thickness=intent.riser_wall_thickness,
+            length=intent.riser_length,
+            configuration=intent.riser_configuration,
+            vessel_name=intent.vessel_name,
+            top_position=intent.riser_top_position,
+            bottom_position=intent.riser_bottom_position,
+        )
+    elif outcome in PIPELINE_OUTCOMES:
+        inputs = PipelineResolverInputs(
+            name=intent.name,
+            water_depth=intent.water_depth,
+            outer_diameter=intent.pipeline_outer_diameter,
+            wall_thickness=intent.pipeline_wall_thickness,
+            length=intent.pipeline_length,
+            material=intent.pipeline_material,
+            segment_length=intent.pipeline_segment_length,
+        )
+    else:  # mooring family (default)
+        inputs = MooringResolverInputs(
+            name=intent.name,
+            water_depth=intent.water_depth,
+            num_lines=intent.num_lines,
+            chain_diameter=intent.chain_diameter,
+            chain_grade=intent.chain_grade,
+            fairlead_radius=intent.fairlead_radius,
+            anchor_radius=intent.anchor_radius,
+            line_length=intent.line_length,
+            vessel_name=intent.vessel_name,
+            pretension=intent.pretension,
+        )
+    return outcome, inputs
 
 
 # ---------------------------------------------------------------------------
@@ -418,9 +515,10 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = argparse.ArgumentParser(
         description=(
-            "Author an OrcaFlex mooring analysis spec (analysis SSOT) from a "
-            "project bundle (project SSOT) + a natural-language request, via an "
-            "LLM, then optionally generate the OrcaFlex model."
+            "Author an OrcaFlex analysis spec (analysis SSOT) for a mooring, "
+            "riser, or pipeline outcome from a project bundle (project SSOT) + "
+            "a natural-language request, via an LLM, then optionally generate "
+            "the OrcaFlex model."
         )
     )
     parser.add_argument("bundle", help="Path to the project bundle YAML.")
