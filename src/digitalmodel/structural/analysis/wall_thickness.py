@@ -23,6 +23,8 @@ from typing import Dict, Optional
 import math
 import logging
 
+from digitalmodel import codes as _codes
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,20 @@ class DesignCode(Enum):
     ASME_B31_8 = "ASME-B31.8"
     ISO_13623 = "ISO-13623"
     ASME_B31_4 = "ASME-B31.4"
+
+
+#: Governing code reference for each design code (used by WallThicknessResult).
+_CODE_REFERENCES = {
+    DesignCode.DNV_ST_F101: _codes.DNV_ST_F101,
+    DesignCode.DNV_ST_F201: _codes.DNV_ST_F201,
+    DesignCode.API_RP_1111: _codes.API_RP_1111,
+    DesignCode.API_RP_2RD: _codes.API_RP_2RD,
+    DesignCode.API_STD_2RD: _codes.API_STD_2RD,
+    DesignCode.PD_8010_2: _codes.PD_8010_2,
+    DesignCode.ASME_B31_8: _codes.ASME_B31_8,
+    DesignCode.ISO_13623: _codes.ISO_13623,
+    DesignCode.ASME_B31_4: _codes.ASME_B31_4,
+}
 
 
 @dataclass(frozen=True)
@@ -193,6 +209,7 @@ class WallThicknessResult:
     governing_check: Optional[str] = None
     max_utilisation: float = 0.0
     details: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    code_reference: str = ""   # governing design code, e.g. "DNV-ST-F101 (2021)"
 
 
 # ---------------------------------------------------------------------------
@@ -644,12 +661,14 @@ class WallThicknessAnalyzer:
         max_util = max(checks.values()) if checks else 0.0
         governing = max(checks, key=checks.get) if checks else None
 
+        _ref = _CODE_REFERENCES.get(self.code)
         result = WallThicknessResult(
             checks=checks,
             is_safe=max_util <= 1.0,
             governing_check=governing,
             max_utilisation=max_util,
             details=details,
+            code_reference=_ref.label if _ref else self.code.value,
         )
 
         logger.info(

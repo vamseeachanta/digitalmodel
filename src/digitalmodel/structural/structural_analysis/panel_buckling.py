@@ -62,6 +62,7 @@ from typing import Dict, Optional
 
 from .models import MaterialProperties, PlateGeometry
 from .buckling import PlateBucklingAnalyzer, ColumnBucklingAnalyzer
+from digitalmodel.codes import DNV_RP_C201
 
 
 # This stiffened-panel solver is validated (see module docstring) -> production.
@@ -134,6 +135,7 @@ class PanelBucklingResult:
     critical_stress: float   # MPa (governing mode)
     passes: bool
     details: Dict = field(default_factory=dict)
+    code_reference: str = ""   # governing code, e.g. "DNV-RP-C201 (2010)"
 
 
 class StiffenedPanelBucklingAnalyzer:
@@ -432,4 +434,5 @@ class StiffenedPanelBucklingAnalyzer:
             critical_stress=critical_stress,
             passes=governing_util <= 1.0,
             details=details,
+            code_reference=DNV_RP_C201.label,
         )

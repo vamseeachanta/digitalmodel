@@ -35,6 +35,8 @@ from typing import Optional, Sequence
 
 import numpy as np
 
+from digitalmodel.codes import ASME_B31G
+
 # Flow-stress adder for Modified B31G / RSTRENG: SMYS + 10 ksi (= 68.95 MPa).
 _FLOW_ADDER_PSI = 10_000.0
 # Default safety factor applied to predicted failure pressure (B31G practice).
@@ -65,6 +67,7 @@ class CorrodedPipeResult:
     safe_pressure_psi: float     # failure_pressure / safety_factor
     acceptable: Optional[bool] = None   # safe_pressure >= MAOP (if given)
     details: dict = field(default_factory=dict)
+    code_reference: str = ""            # governing code, e.g. "ASME B31G (2012)"
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +115,7 @@ def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, detai
         safe_pressure_psi=safe,
         acceptable=(None if maop_psi is None else bool(safe >= maop_psi)),
         details=details,
+        code_reference=ASME_B31G.label,
     )
 
 

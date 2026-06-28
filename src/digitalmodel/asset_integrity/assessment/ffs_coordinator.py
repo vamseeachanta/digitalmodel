@@ -31,6 +31,7 @@ from typing import Any, Optional, Union
 import numpy as np
 import pandas as pd
 
+from digitalmodel.codes import API_579
 from .ffs_decision import FFSDecision
 from .ffs_router import FFSRouter
 from .grid_parser import GridParser
@@ -81,6 +82,7 @@ class FFSAssessmentResult:
     level2: dict = field(default_factory=dict)
     decision: dict = field(default_factory=dict)
     details: dict = field(default_factory=dict)
+    code_reference: str = API_579.label  # governing FFS code
 
     @property
     def passes(self) -> bool:
@@ -106,6 +108,7 @@ class FFSAssessmentResult:
             "rerated_pressure_psi": self.rerated_pressure_psi,
             "sufficiency_status": self.sufficiency_status,
             "passes": self.passes,
+            "code_reference": self.code_reference,
         }
 
 
