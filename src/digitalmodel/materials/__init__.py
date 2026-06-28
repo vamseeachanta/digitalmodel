@@ -27,6 +27,16 @@ from .grades import (
     MPA_PER_PSI,
     PSI_PER_MPA,
 )
+from .line_pipe import (
+    LinePipe,
+    line_pipe,
+    NPS_OD_IN,
+    SCHEDULE_WT_IN,
+    list_nps,
+    od_for_nps,
+    available_schedules,
+    wt_for_schedule,
+)
 
 __all__ = [
     "MaterialGrade",
@@ -42,4 +52,13 @@ __all__ = [
     "legacy_smts_psi_dict",
     "MPA_PER_PSI",
     "PSI_PER_MPA",
+    # line pipe
+    "LinePipe",
+    "line_pipe",
+    "NPS_OD_IN",
+    "SCHEDULE_WT_IN",
+    "list_nps",
+    "od_for_nps",
+    "available_schedules",
+    "wt_for_schedule",
 ]
