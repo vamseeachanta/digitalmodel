@@ -380,6 +380,68 @@ class AuthoredSpec:
         paths["intent"].write_text(self.intent.model_dump_json(indent=2))
         return paths
 
+    def report_html(
+        self,
+        output_path: str | Path | None = None,
+        *,
+        source_id: str = "authored-in-memory",
+        digest: str | None = None,
+    ) -> str | Path:
+        """Render the analysis SSOT as a provenance-gated HTML report (#1019).
+
+        The summary is a *view* over the spec (read from ``model_dump``, not
+        copied), provenance declares the spec as the data source (mandatory),
+        and the assumption ledger renders as the no-silent-assumptions block.
+        Returns the HTML string, or writes to ``output_path`` and returns it.
+        """
+        from html import escape
+
+        from digitalmodel.reporting import (
+            Provenance,
+            ReportSection,
+            SectionMode,
+            assemble_report,
+        )
+
+        spec_data = self.spec.model_dump(mode="json", exclude_none=True)
+        vessel_name = (spec_data.get("vessel") or {}).get("name") or "vessel"
+
+        def _summary(data: dict, **_: Any) -> str:
+            vessel = data.get("vessel") or {}
+            geometry = vessel.get("geometry") or {}
+            environment = data.get("environment") or {}
+            rows = [
+                ("Outcome", self.intent.outcome.value),
+                ("Vessel", vessel.get("name", "")),
+                ("Mesh", geometry.get("mesh_file", "")),
+                ("Water depth", environment.get("water_depth", "")),
+            ]
+            body = "".join(
+                f"<tr><td>{escape(str(k))}</td><td>{escape(str(v))}</td></tr>"
+                for k, v in rows
+            )
+            return (
+                '<div class="section" id="summary"><h2>Analysis summary</h2>'
+                f"<table><tbody>{body}</tbody></table></div>"
+            )
+
+        provenance = Provenance().add(
+            "spec",
+            source_id,
+            digest=digest,
+            description="Authored diffraction analysis SSOT (DiffractionSpec)",
+        )
+        return assemble_report(
+            title=f"Diffraction analysis - {vessel_name}",
+            provenance=provenance,
+            sections=[
+                ReportSection("summary", "Summary", SectionMode.ALWAYS, _summary)
+            ],
+            data=spec_data,
+            ledger=self.ledger,
+            output_path=output_path,
+        )
+
 
 # ---------------------------------------------------------------------------
 # Top-level entry point

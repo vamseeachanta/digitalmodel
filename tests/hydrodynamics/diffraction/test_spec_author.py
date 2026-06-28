@@ -328,3 +328,27 @@ def test_author_spec_end_to_end_with_cli_runner(tmp_path: Path) -> None:
 
     result = author_spec(ProjectBundle(), "full QTF please", author=author)
     assert result.spec.solver_options.solve_type == "full_qtf"
+
+
+# --- AuthoredSpec.report_html (provenance-gated, #1019) --------------------
+
+
+def test_authored_spec_report_html_is_provenance_gated(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    result = author_spec(ProjectBundle(), "RAOs", author=StubAuthor(_full_intent(mesh)))
+    html = result.report_html(source_id="spec.yml", digest="deadbeef")
+    assert "<!DOCTYPE html>" in html
+    # mandatory provenance declares the spec as the source
+    assert 'id="provenance"' in html and "spec.yml" in html and "deadbeef" in html
+    # the no-silent-assumptions ledger is a first-class block
+    assert 'id="assumptions"' in html
+    # summary is a view over the spec (mesh path read from the SSOT)
+    assert str(mesh) in html
+
+
+def test_authored_spec_report_html_writes_file(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    result = author_spec(ProjectBundle(), "RAOs", author=StubAuthor(_full_intent(mesh)))
+    out = tmp_path / "report.html"
+    written = result.report_html(out)
+    assert written == out and out.exists()
