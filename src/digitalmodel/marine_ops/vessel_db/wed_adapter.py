@@ -11,8 +11,8 @@ particulars for diffraction) WITHOUT re-collecting it.
 Path resolution (mirrors the OCIMF/LLM_WIKI_PATH precedence used elsewhere):
   1. WED_VESSEL_FLEET_PATH  — points at the curated dir (or its parent)
   2. WORLDENERGYDATA_ROOT   — repo root; curated dir derived from it
-  3. local clone fallbacks  — /mnt/local-analysis/worldenergydata, ~/workspace-hub/worldenergydata,
-                              and a sibling of the digitalmodel repo
+  3. local clone fallbacks  — a local worldenergydata checkout (analysis root,
+                              ~/workspace-hub, or a sibling of the digitalmodel repo)
 Resolves to None (not an exception) when absent, so consumers degrade gracefully
 in environments where worldenergydata is not checked out (e.g. external installs).
 """
@@ -49,7 +49,7 @@ def resolve_wed_curated_dir(require: bool = False) -> Optional[Path]:
 
     # Local-clone fallbacks.
     candidates += [
-        Path("/mnt/local-analysis/worldenergydata") / _CURATED_REL,
+        Path("/mnt/local-analysis/worldenergydata") / _CURATED_REL,  # abs-path-allowed
         Path.home() / "workspace-hub" / "worldenergydata" / _CURATED_REL,
     ]
     # Sibling of the digitalmodel repo (…/<parent>/worldenergydata).
