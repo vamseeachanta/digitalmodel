@@ -200,3 +200,47 @@ def test_default_author_requires_anthropic(monkeypatch: pytest.MonkeyPatch) -> N
     )
     with pytest.raises(RuntimeError):
         author.author(ProjectBundle(), "RAOs")
+
+
+# --- broadened outcome set via the author --------------------------------
+
+
+def test_author_mean_drift_outcome_flows_to_solve_type(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    intent = AuthoredIntent(
+        outcome=Outcome.MEAN_DRIFT,
+        mesh_file=str(mesh),
+        loa=120.0,
+        beam=20.0,
+        draft=8.0,
+        displacement_t=15000.0,
+        water_depth=100.0,
+    )
+    result = author_spec(
+        ProjectBundle(), "mean drift forces", author=StubAuthor(intent)
+    )
+    assert result.spec.solver_options.solve_type == "mean_drift"
+
+
+def test_author_full_qtf_outcome_enables_qtf(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    intent = AuthoredIntent(
+        outcome=Outcome.FULL_QTF,
+        mesh_file=str(mesh),
+        loa=120.0,
+        beam=20.0,
+        draft=8.0,
+        displacement_t=15000.0,
+        water_depth=100.0,
+    )
+    result = author_spec(ProjectBundle(), "full QTF", author=StubAuthor(intent))
+    assert result.spec.solver_options.solve_type == "full_qtf"
+    assert result.spec.solver_options.resolved_qtf().enabled is True
+
+
+def test_system_prompt_lists_all_outcomes() -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import build_system_prompt
+
+    prompt = build_system_prompt()
+    for outcome in Outcome:
+        assert outcome.value in prompt

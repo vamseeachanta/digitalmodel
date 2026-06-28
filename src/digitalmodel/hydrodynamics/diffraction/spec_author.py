@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field
 from digitalmodel.hydrodynamics.diffraction.assumption_ledger import AssumptionLedger
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.resolver import (
+    OUTCOME_DESCRIPTIONS,
     Outcome,
     PrincipalDimensions,
     ResolverConfig,
@@ -185,13 +186,15 @@ class IntentAuthor(Protocol):
     def author(self, bundle: ProjectBundle, request: str) -> AuthoredIntent: ...
 
 
-SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT_TEMPLATE = """\
 You are a marine-hydrodynamics analysis spec author. Given a project's data and \
 a natural-language request, you produce a structured authoring intent for a \
 diffraction/radiation (seakeeping/RAO) analysis.
 
+Choose the single `outcome` that best matches the request:
+{outcome_menu}
+
 Your job is fact extraction, not engineering invention:
-- Choose the single `outcome` that matches the request.
 - Fill a field ONLY with a value the project data actually states. If the data \
 does not give a value, leave it null. Do NOT estimate, default, or invent \
 vessel dimensions, mass, water depth, or any physical quantity -- a downstream \
@@ -204,6 +207,19 @@ project data you found it.
 water; otherwise give `water_depth` if stated, else leave both unset.
 - Keep `rationale` to one short paragraph.
 """
+
+
+def build_system_prompt() -> str:
+    """System prompt with the outcome menu rendered from the resolver."""
+    menu = "\n".join(
+        f"  - {outcome.value}: {desc}" for outcome, desc in OUTCOME_DESCRIPTIONS.items()
+    )
+    return _SYSTEM_PROMPT_TEMPLATE.format(outcome_menu=menu)
+
+
+# Rendered once at import for convenience; ``build_system_prompt()`` stays the
+# source of truth if the outcome set changes at runtime.
+SYSTEM_PROMPT = build_system_prompt()
 
 
 class AnthropicIntentAuthor:
@@ -444,5 +460,6 @@ __all__ = [
     "AuthoredSpec",
     "author_spec",
     "intent_to_resolver_inputs",
+    "build_system_prompt",
     "DEFAULT_MODEL",
 ]
