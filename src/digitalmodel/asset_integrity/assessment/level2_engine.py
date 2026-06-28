@@ -19,11 +19,15 @@ LML (Local Metal Loss, Part 5):
         Mt  = Folias (bulging) factor (Eq. 4.20 / Table 4.4)
         L_a = longitudinal flaw length (derived from flaw bounding box)
 
-The Folias factor M_t for a cylindrical shell (API 579 Eq. 4.20):
+The Folias factor M_t for a cylindrical shell.  This uses the *simplified*
+Table 4.4 closed form, sqrt(1 + 0.48*lambda^2); the API 579-1 2021 main
+relation (Eq. 4.20) is a higher-order polynomial in lambda — the simplified
+form is a conservative approximation valid over the tabulated range:
   For lambda <= 0.354:   M_t = 1.0
   For lambda in (0.354, 20]:
-      M_t = sqrt(1 + 0.48 * lambda^2)   [Table 4.4 simplified column]
-  For lambda > 20:        M_t = 1.0 / Rt  (very long flaw → Rt floor = 0.9 RSF)
+      M_t = sqrt(1 + 0.48 * lambda^2)
+  For lambda > 20:        M_t = sqrt(1 + 0.48 * 20^2)   (frozen at the
+      lambda = 20 table limit; the simplified form is not extrapolated)
 
   lambda = 1.285 * L_a / sqrt(D * t_c)
   where D = nominal inside diameter = OD - 2*t_c (approximately OD - 2*t_min)
@@ -115,7 +119,9 @@ class Level2Engine:
 
         RSF = t_am / t_c  (t_c = t_min for current assessment)
         """
-        t_am = float(grid_df.mean(skipna=True).mean())
+        # True area-average over all valid cells.  ``df.mean().mean()`` averages
+        # the column means and is biased when columns hold unequal NaN counts.
+        t_am = float(np.nanmean(grid_df.to_numpy(dtype=float)))
         t_mm = float(grid_df.min(skipna=True).min())
         t_c = self._t_min  # conservative: use t_min as the reference
 
@@ -147,7 +153,8 @@ class Level2Engine:
         4. Compute RSF = Rt / (1 - (1 - Rt) / M_t).
         """
         t_mm = float(grid_df.min(skipna=True).min())
-        t_am = float(grid_df.mean(skipna=True).mean())
+        # True area-average over all valid cells (unbiased vs df.mean().mean()).
+        t_am = float(np.nanmean(grid_df.to_numpy(dtype=float)))
 
         # t_c: future thickness outside the flaw = t_min (conservative)
         t_c = self._t_min
@@ -206,7 +213,9 @@ class Level2Engine:
 
         For lambda <= 0.354:          M_t = 1.0
         For lambda in (0.354, 20]:    M_t = sqrt(1 + 0.48 * lambda**2)
-        For lambda > 20:              M_t → large (cap at formula limit)
+        For lambda > 20:              M_t = sqrt(1 + 0.48 * 20**2)
+                                      (frozen at the lambda = 20 table limit;
+                                      the simplified form is not extrapolated)
 
         Args:
             l_a: Flaw longitudinal extent (inches).

@@ -51,13 +51,13 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Material — API 5L specified minimum TENSILE strength (SMTS), psi.
 # DNV-RP-F101 capacity uses f_u = SMTS (not SMYS).  Values are the API 5L /
-# ISO 3183 PSL2 minimum UTS for each grade (rounded from MPa): X52 = 455 MPa,
+# ISO 3183 PSL2 minimum UTS for each grade (rounded from MPa): X52 = 460 MPa,
 # X60 = 520 MPa, X65 = 535 MPa, X70 = 570 MPa, X80 = 625 MPa.
 # ---------------------------------------------------------------------------
 SMTS_PSI = {
     "X42": 60_200.0,   # 415 MPa
     "X46": 63_100.0,   # 435 MPa
-    "X52": 66_700.0,   # 455 MPa
+    "X52": 66_700.0,   # 460 MPa
     "X56": 71_100.0,   # 490 MPa
     "X60": 75_400.0,   # 520 MPa
     "X65": 77_600.0,   # 535 MPa
@@ -85,6 +85,11 @@ _DEFAULT_GAMMA_M = 0.77
 _DEFAULT_GAMMA_D = 1.0
 _DEFAULT_EPSILON_D = 1.0
 _DEFAULT_STD_REL_DEPTH = 0.08
+
+# DNV-RP-F101 validity limit on relative defect depth.  The capacity equation is
+# calibrated for d/t up to 0.85; deeper defects are outside the qualified range
+# and should be assessed by repair/replace criteria rather than extrapolated.
+_DNV_F101_MAX_DT = 0.85
 
 
 @dataclass
@@ -147,6 +152,7 @@ def dnv_f101_single_defect(
     Q = length_correction_factor(D, t, L)
     p_cap = _capacity(t, f_u, D, dt, Q)
     p_allow = usage_factor * p_cap
+    within = dt <= _DNV_F101_MAX_DT
     return DNVF101Result(
         method="DNV-F101-AS",
         capacity_pressure_psi=p_cap,
@@ -156,7 +162,12 @@ def dnv_f101_single_defect(
         intact_pressure_psi=_intact_pressure(t, f_u, D),
         acceptable=(None if maop_psi is None else bool(p_allow >= maop_psi)),
         details={"usage_factor": usage_factor, "L_in": L,
-                 "smts_psi": f_u, "format": "allowable_stress"},
+                 "smts_psi": f_u, "format": "allowable_stress",
+                 "within_applicability": bool(within),
+                 "applicability_note": (
+                     None if within else
+                     f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit "
+                     f"{_DNV_F101_MAX_DT:.2f}; assess by repair/replace criteria")},
     )
 
 
