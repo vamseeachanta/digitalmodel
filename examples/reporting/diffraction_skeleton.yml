@@ -1,0 +1,22 @@
+# Skeleton-first report backbone (#1021). Created at engagement kickoff; every
+# analysis run fills a slot. Render/check with:
+#   uv run python -m digitalmodel.reporting examples/reporting/diffraction_skeleton.yml --check
+title: Diffraction analysis report
+require_provenance: true
+sections:
+  - key: summary
+    label: Summary
+    blocks:
+      - {key: scope, label: Analysis scope, required: true, description: vessel + outcome}
+      - {key: particulars, label: Vessel particulars, required: true}
+  - key: hydrodynamics
+    label: Hydrodynamic results
+    blocks:
+      - {key: rao, label: Motion RAOs, required: true}
+      - {key: added_mass_damping, label: Added mass & damping, required: true}
+      - {key: qtf, label: Second-order (QTF), required: false}
+  - key: quality
+    label: Quality & assumptions
+    blocks:
+      - {key: mesh_quality, label: Mesh quality, required: true}
+      - {key: assumptions, label: Assumption ledger, required: true}
