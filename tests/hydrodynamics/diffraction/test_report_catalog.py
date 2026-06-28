@@ -81,3 +81,67 @@ def test_filled_skeleton_with_provenance_is_complete() -> None:
 def test_unknown_structure_type_rejected() -> None:
     with pytest.raises(ValueError):
         diffraction_report_skeleton("submarine")
+
+
+# --- live wiring: fill slots from DiffractionReportData (#282) -------------
+
+
+def _report_data():
+    from digitalmodel.hydrodynamics.diffraction.report_data_models import (
+        DiffractionReportData,
+    )
+
+    return DiffractionReportData(
+        vessel_name="Test FPSO",
+        hull_type="fpso",
+        executive_warnings=["check roll"],
+        benchmark_html_sections={"dof_sections": "<div>RAO plots</div>"},
+    )
+
+
+def test_build_content_invokes_existing_builders():
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        build_diffraction_report_content,
+    )
+
+    content = build_diffraction_report_content(_report_data())
+    # builders that always render from minimal data
+    assert "executive_summary" in content and "identification" in content
+    # benchmark fragment is picked up
+    assert content["dof_sections"] == "<div>RAO plots</div>"
+    # a slot whose data is absent stays unfilled
+    assert "roll_damping" not in content
+
+
+def test_render_structured_report_gates_on_completeness():
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        render_structured_report,
+    )
+
+    out, status = render_structured_report(
+        "fpso", _report_data(), provenance=Provenance().add("solver_queue", "run9")
+    )
+    assert "<!DOCTYPE html>" in out and "run9" in out and "RAO plots" in out
+    # FPSO is ship-shaped -> roll_damping required and unfilled -> incomplete
+    assert not status.complete
+    assert "roll_damping" in status.missing_blocks
+
+
+def test_render_structured_report_complete_when_all_slots_filled(tmp_path):
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        diffraction_report_skeleton,
+        render_structured_report,
+    )
+
+    sk = diffraction_report_skeleton("ship")
+    extra = {k: f"<p>{k}</p>" for k in sk.required_block_keys()}
+    out_path = tmp_path / "ship_report.html"
+    out, status = render_structured_report(
+        "ship",
+        _report_data(),
+        provenance=Provenance().add("spec", "s.yml"),
+        extra_blocks=extra,
+        output_path=out_path,
+    )
+    assert out == out_path and out_path.exists()
+    assert status.complete and status.missing_blocks == []
