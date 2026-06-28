@@ -127,6 +127,53 @@ def test_build_provenance_barge_default_has_no_basis_run():
     assert prov["basis_run_id"] is None
 
 
+def test_build_provenance_t8_flips_to_catalog_when_used():
+    by_id_proxy = {
+        t["id"]: t for t in calc.build_provenance([], "barge")["tasks"]
+    }
+    assert by_id_proxy["T8"]["status"] == "proxy"  # default unchanged
+
+    prov = calc.build_provenance([], "barge", structure_catalog_used=True)
+    t8 = {t["id"]: t for t in prov["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+    assert t8["status"] != "proxy"
+    assert "subsea_structures.json" in t8["source"]
+
+
+# ---------------------------------------------------------------- structure catalog
+def test_load_structures_manifold_mass():
+    structures = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    assert set(["PLET-100", "MAN-250", "TMPL-180"]).issubset(structures)
+    manifold = structures["MAN-250"]
+    assert manifold["mass_properties"]["mass_air_te"] == pytest.approx(250.0)
+    # buoyancy + submerged weight reconcile with mass_air * g (seawater 1025, g 9.80665)
+    mp = manifold["mass_properties"]
+    total = mp["buoyancy_force_kn"] + mp["submerged_weight_kn"]
+    assert total == pytest.approx(250000 * 9.80665 / 1000, abs=0.05)
+
+
+def test_golden_catalog_structure_lift_is_defensible(vessel_info):
+    structures = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    manifold_te = structures["MAN-250"]["mass_properties"]["mass_air_te"]
+    lifts = [
+        {
+            "item": "Production manifold (250 te)",
+            "kind": "structure",
+            "source": "structure",
+            "mass_air_te": manifold_te,
+        }
+    ]
+    res = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
+    row = res["lifts"][0]
+    assert row["mass_air_te"] == pytest.approx(250.0)
+    assert row["hook_load_te"] == pytest.approx(250.0 * 1.30, abs=0.05)  # mass x DAF
+    assert row["defensible"] is True
+    assert 0.0 < row["utilization_pct"] <= 100.0
+    # the catalog-sourced structure flips T8 provenance to the real catalog
+    t8 = {t["id"]: t for t in res["provenance"]["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+
+
 # ---------------------------------------------------------------- golden numbers
 def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "barge")
@@ -226,6 +273,15 @@ def test_router_on_base_config_writes_artifacts(tmp_path):
     assert summary["n_lifts"] == 6
     assert summary["rao_basis"] == "drillship"  # auto-selected from completed_runs
     assert summary["all_lifts_defensible"] is True
+
+    # the base config now sources the 250 te manifold from subsea_structures.json,
+    # which flips the T8 structure-catalog provenance off the retired proxy
+    result = out["installation_pamphlet"]["result"]
+    t8 = {t["id"]: t for t in result["provenance"]["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+    assert t8["status"] != "proxy"
+    man = next(r for r in result["lifts"] if "manifold" in r["item"].lower())
+    assert man["mass_air_te"] == pytest.approx(250.0)
 
     html = html_path.read_text()
     assert "Installation Vessel Pamphlet" in html

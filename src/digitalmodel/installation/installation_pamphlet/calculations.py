@@ -71,6 +71,17 @@ def load_jumpers(path: str | Path) -> dict[str, dict[str, Any]]:
     return {j["id"]: j for j in data["jumpers"]}
 
 
+def load_structures(path: str | Path) -> dict[str, dict[str, Any]]:
+    """Load the subsea production structure catalog (PLET/manifold/SPS) keyed by id.
+
+    Same schema and normalized shape as ``load_mudmats`` — each record carries
+    ``mass_properties.mass_air_te`` which the lift assembly consumes.
+    """
+    with Path(path).open("r", encoding="utf-8") as stream:
+        data = json.load(stream)
+    return {s["id"]: s for s in data["structures"]}
+
+
 # ---------------------------------------------------------------- lift suitability
 def assess_lifts(
     vessel_info: dict[str, Any],
@@ -271,12 +282,17 @@ def build_provenance(
     completed_runs: list[dict[str, Any]],
     rao_basis: str,
     vessel_name: str = "BokaLift 2",
+    structure_catalog_used: bool = False,
 ) -> dict[str, Any]:
     """Run-state provenance manifest (T1..T8). Pure.
 
     Returns the full run-state object (vessel, basis, provenance, basis run id,
     completed-run count, and the ordered task list) used to render the analysis
     progress panel and the per-section provenance badges.
+
+    When ``structure_catalog_used`` is True the T8 task (manifold/PLET structure
+    catalog) reflects the real ``subsea_structures.json`` catalog (status
+    ``actual``) instead of the retired hardcoded proxy.
     """
     runs = list(completed_runs or [])
     prov = BASIS_PROVENANCE[rao_basis]
@@ -325,9 +341,19 @@ def build_provenance(
             "T7", 7, "DP / mooring statistical risk", "actual",
             "IMCA + HSE RR444 + DNV statistics", "industry datasets",
         ),
-        task(
-            "T8", 4, "Manifold / PLET structure catalog", "proxy",
-            "Proxy entry — real catalog pending", "examples/demos/gtm (mudmat only)",
+        (
+            task(
+                "T8", 4, "Manifold / PLET structure catalog", "actual",
+                "Catalog entries (PLET/manifold/SPS) computed from first principles "
+                "(DNV-RP-H103)",
+                "examples/demos/gtm/data/subsea_structures.json catalog",
+            )
+            if structure_catalog_used
+            else task(
+                "T8", 4, "Manifold / PLET structure catalog", "proxy",
+                "Proxy entry — real catalog pending",
+                "examples/demos/gtm (mudmat only)",
+            )
         ),
     ]
     return {
@@ -356,8 +382,14 @@ def assemble_result(
     lift_rows = assess_lifts(vessel_info, lifts, radius_m, daf)
     envelopes = compute_envelopes(rao_basis, operations, tp_grid_s)
     op_table = compute_operability(hs_scatter_limits)
+    structure_catalog_used = any(
+        str(it.get("source")) == "structure" for it in lifts
+    )
     provenance = build_provenance(
-        completed_runs, rao_basis, vessel_name=vessel_info.get("name", "Installation vessel")
+        completed_runs,
+        rao_basis,
+        vessel_name=vessel_info.get("name", "Installation vessel"),
+        structure_catalog_used=structure_catalog_used,
     )
     return {
         "vessel": vessel_info,

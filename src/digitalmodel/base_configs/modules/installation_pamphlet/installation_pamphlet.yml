@@ -10,12 +10,13 @@ installation_pamphlet:
   # below. Order is preserved (deterministic).
   catalogs:
     mudmats: examples/demos/gtm/data/mudmat_structures.json
+    structures: examples/demos/gtm/data/subsea_structures.json
     jumpers: examples/demos/gtm/data/rigid_jumpers.json
   lift_items:
     - {item: "Mudmat (small)", kind: mudmat, source: mudmat, id: MUD-S}
     - {item: "Mudmat (medium)", kind: mudmat, source: mudmat, id: MUD-M}
     - {item: "Subsea structure / template (large)", kind: structure, source: mudmat, id: MUD-L}
-    - {item: "Manifold/PLET proxy", kind: structure, mass_air_te: 250.0}
+    - {item: "Production manifold (250 te)", kind: structure, source: structure, id: MAN-250}
     - {item: "Rigid jumper (short 20 m)", kind: jumper, source: jumper, id: JMP-20}
     - {item: "Rigid jumper (long 100 m)", kind: jumper, source: jumper, id: JMP-100}
 

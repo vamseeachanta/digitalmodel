@@ -484,7 +484,7 @@ Governing limits are <b>seakeeping</b> and <b>station-keeping</b> (&sect;5–6),
 <tr><td class="l">Mudmat — small</td><td>6 &times; 6 &times; 1.5</td><td>50</td><td>mudmat_structures.json</td></tr>
 <tr><td class="l">Mudmat — medium</td><td>8 &times; 10 &times; 2.0</td><td>100</td><td>mudmat_structures.json</td></tr>
 <tr><td class="l">Subsea template — large</td><td>12 &times; 14 &times; 2.5</td><td>200</td><td>mudmat_structures.json</td></tr>
-<tr><td class="l">Manifold / PLET <small>(proxy)</small></td><td>14 &times; 12 &times; 6</td><td>250</td><td>proxy — catalog gap</td></tr>
+<tr><td class="l">Production manifold</td><td>14 &times; 12 &times; 6</td><td>250</td><td>subsea_structures.json</td></tr>
 <tr><td class="l">Rigid jumper — 20 m</td><td>8&Prime; X65, M-shape</td><td>1.85</td><td>rigid_jumpers.json</td></tr>
 <tr><td class="l">Rigid jumper — 100 m</td><td>8&Prime; X65, W-shape</td><td>9.24</td><td>rigid_jumpers.json</td></tr>
 </table>
@@ -548,7 +548,7 @@ but the cascade case is high-consequence; design for intact + one-line-damaged (
 
 </main>
 <footer>
-Generated {GEN} from digitalmodel tables (vessel_db, mudmat_structures, rigid_jumpers) + engines (vessel_suitability,
+Generated {GEN} from digitalmodel tables (vessel_db, mudmat_structures, subsea_structures, rigid_jumpers) + engines (vessel_suitability,
 operation_envelope, weather_window). Envelope proxy: {d['envelope_proxy']}. Live feed: Open-Meteo marine &amp; forecast APIs.
 Lookup + decision-support screening — verify against vessel RAO, DP/mooring FMEA and MWS approval before offshore execution.
 </footer>
