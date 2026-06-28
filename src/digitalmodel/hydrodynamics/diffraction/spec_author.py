@@ -33,13 +33,19 @@ and is imported lazily -- ``anthropic`` is not a project dependency.
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional, Protocol
+from typing import Any, Optional, Protocol
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.common.spec_authoring import (
+    CliRunner,
+    ProjectBundle,
+    ProvenanceEntry,
+    build_outcome_menu,
+    claude_cli_complete,
+)
 from digitalmodel.hydrodynamics.diffraction.assumption_ledger import AssumptionLedger
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.resolver import (
@@ -57,64 +63,13 @@ DEFAULT_MODEL = "claude-opus-4-8"
 
 
 # ---------------------------------------------------------------------------
-# Project single-source-of-truth contract (LLM input context)
-# ---------------------------------------------------------------------------
-
-
-class ProjectBundle(BaseModel):
-    """The upstream project SSOT handed to the authoring LLM.
-
-    Intentionally loose: real project data is heterogeneous. Structured fields
-    are convenience slots; ``documents`` and ``notes`` carry whatever free text
-    the project has (data-sheet excerpts, emails, scope notes). The LLM reads
-    the whole thing rendered as text and extracts what it can ground.
-    """
-
-    project_name: Optional[str] = None
-    vessel_particulars: dict[str, Any] = Field(default_factory=dict)
-    environment: dict[str, Any] = Field(default_factory=dict)
-    documents: list[str] = Field(default_factory=list)
-    notes: Optional[str] = None
-
-    @classmethod
-    def from_yaml(cls, path: str | Path) -> "ProjectBundle":
-        import yaml
-
-        with open(path) as f:
-            data = yaml.safe_load(f) or {}
-        return cls.model_validate(data)
-
-    def to_prompt_context(self) -> str:
-        """Render the bundle as text for the LLM."""
-        lines: list[str] = []
-        if self.project_name:
-            lines.append(f"Project: {self.project_name}")
-        if self.vessel_particulars:
-            lines.append("\nVessel particulars (as provided):")
-            for key, value in self.vessel_particulars.items():
-                lines.append(f"  - {key}: {value}")
-        if self.environment:
-            lines.append("\nEnvironment / site (as provided):")
-            for key, value in self.environment.items():
-                lines.append(f"  - {key}: {value}")
-        if self.notes:
-            lines.append(f"\nNotes:\n{self.notes}")
-        for i, doc in enumerate(self.documents, 1):
-            lines.append(f"\n--- Document {i} ---\n{doc}")
-        return "\n".join(lines).strip() or "(no project data provided)"
-
-
-# ---------------------------------------------------------------------------
 # Structured LLM output: the authored intent
 # ---------------------------------------------------------------------------
-
-
-class ProvenanceEntry(BaseModel):
-    """One value the LLM set, with where in the project data it came from."""
-
-    field: str
-    value: str
-    source: str = Field(description="Where in the project bundle this was found.")
+#
+# ``ProjectBundle`` and ``ProvenanceEntry`` are the generic project-SSOT contract
+# and provenance fragment, shared with the OrcaFlex front-end via
+# ``digitalmodel.common.spec_authoring`` (imported above and re-exported here for
+# back-compat).
 
 
 class AuthoredIntent(BaseModel):
@@ -212,10 +167,9 @@ water; otherwise give `water_depth` if stated, else leave both unset.
 
 def build_system_prompt() -> str:
     """System prompt with the outcome menu rendered from the resolver."""
-    menu = "\n".join(
-        f"  - {outcome.value}: {desc}" for outcome, desc in OUTCOME_DESCRIPTIONS.items()
+    return _SYSTEM_PROMPT_TEMPLATE.format(
+        outcome_menu=build_outcome_menu(OUTCOME_DESCRIPTIONS)
     )
-    return _SYSTEM_PROMPT_TEMPLATE.format(outcome_menu=menu)
 
 
 # Rendered once at import for convenience; ``build_system_prompt()`` stays the
@@ -267,51 +221,6 @@ class AnthropicIntentAuthor:
         return response.parsed_output
 
 
-def _extract_json_object(text: str) -> str:
-    """Pull the first top-level JSON object out of model text.
-
-    Tolerates ```json fences and surrounding prose by scanning for the first
-    balanced ``{...}`` (brace depth, string-aware).
-    """
-    start = text.find("{")
-    if start == -1:
-        raise ValueError(f"No JSON object in model output: {text[:200]!r}")
-    depth = 0
-    in_string = False
-    escaped = False
-    for i in range(start, len(text)):
-        ch = text[i]
-        if in_string:
-            if escaped:
-                escaped = False
-            elif ch == "\\":
-                escaped = True
-            elif ch == '"':
-                in_string = False
-            continue
-        if ch == '"':
-            in_string = True
-        elif ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                return text[start : i + 1]
-    raise ValueError(f"Unbalanced JSON object in model output: {text[:200]!r}")
-
-
-# Runs the CLI: (argv, stdin) -> CompletedProcess. Injectable for tests.
-CliRunner = Callable[[list[str], str], "subprocess.CompletedProcess[str]"]
-
-
-def _default_cli_runner(
-    argv: list[str], stdin: str
-) -> "subprocess.CompletedProcess[str]":
-    return subprocess.run(
-        argv, input=stdin, capture_output=True, text=True, timeout=300
-    )
-
-
 class ClaudeCliIntentAuthor:
     """Intent author backed by the ``claude -p`` CLI (Claude Code).
 
@@ -319,7 +228,7 @@ class ClaudeCliIntentAuthor:
     ``ANTHROPIC_API_KEY`` and no ``anthropic`` dependency. The CLI does not
     expose typed structured outputs, so the schema is supplied in the system
     prompt and the JSON object is parsed (and Pydantic-validated) from the
-    response. This is the default author.
+    response via the shared ``claude_cli_complete`` helper. Default author.
     """
 
     def __init__(
@@ -333,7 +242,7 @@ class ClaudeCliIntentAuthor:
         self.model = model
         self.cli = cli
         self.extra_args = list(extra_args or [])
-        self._runner = runner or _default_cli_runner
+        self._runner = runner
 
     def _system_prompt(self) -> str:
         schema = json.dumps(AuthoredIntent.model_json_schema())
@@ -348,34 +257,15 @@ class ClaudeCliIntentAuthor:
             f"Analysis request:\n{request}\n\n"
             f"Project data:\n{bundle.to_prompt_context()}"
         )
-        argv = [
-            self.cli,
-            "-p",
-            "--output-format",
-            "json",
-            "--model",
-            self.model,
-            "--system-prompt",
+        data = claude_cli_complete(
             self._system_prompt(),
-            *self.extra_args,
-        ]
-        proc = self._runner(argv, user_prompt)
-        if proc.returncode != 0:
-            raise RuntimeError(
-                f"`{self.cli} -p` failed (rc={proc.returncode}): "
-                f"{(proc.stderr or proc.stdout or '').strip()[:500]}"
-            )
-        try:
-            envelope = json.loads(proc.stdout)
-        except json.JSONDecodeError as exc:
-            raise RuntimeError(
-                f"Could not parse `{self.cli} -p` JSON envelope: "
-                f"{proc.stdout[:500]!r}"
-            ) from exc
-        if envelope.get("is_error"):
-            raise RuntimeError(f"claude returned an error: {envelope.get('result')}")
-        result_text = envelope.get("result", "")
-        return AuthoredIntent.model_validate_json(_extract_json_object(result_text))
+            user_prompt,
+            model=self.model,
+            cli=self.cli,
+            extra_args=self.extra_args,
+            runner=self._runner,
+        )
+        return AuthoredIntent.model_validate(data)
 
 
 # ---------------------------------------------------------------------------

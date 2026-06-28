@@ -1,0 +1,30 @@
+# Project single-source-of-truth (project SSOT) for the OrcaFlex LLM
+# spec-authoring front-end -- PIPELINE example.
+#
+# This is heterogeneous project data, NOT an analysis spec. The LLM reads it,
+# extracts only the pipeline facts that are actually stated here, and leaves
+# everything else for the deterministic inverse resolver to fill (and ledger).
+#
+# Run:
+#   uv run python -m digitalmodel.solvers.orcaflex.spec_author \
+#       examples/workflows/orcaflex-spec-authoring-llm/project_bundle_pipeline.yml \
+#       -r "Screen the pipeline installation lay" \
+#       -o authored_spec_pipeline
+
+project_name: West Horizon trunkline installation screening
+
+environment:
+  field: Deepwater GoM
+  water_depth_m: 300
+
+notes: >
+  24 in export trunkline, X70 line pipe, 0.6 m OD with a 30 mm wall, ~5 km long.
+  Client wants a first-pass installation lay check (sag-bend / over-bend response
+  during laydown) before the lay vessel and stinger are selected. Lay geometry
+  not fixed yet, so leave it to the resolver defaults.
+
+documents:
+  - >
+    Pipeline basis of design (excerpt): "Export trunkline, API 5L X70. Outer
+    diameter 0.60 m, wall thickness 30 mm. Total length ~5000 m. Water depth at
+    the site is 300 m. FBE corrosion coating. Lay vessel to be confirmed."
