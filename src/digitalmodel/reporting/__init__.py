@@ -17,17 +17,17 @@ Public API:
 
 from __future__ import annotations
 
-from digitalmodel.reporting._backbone import (
-    ReportBackbone,
-    ReportSection,
-    SectionMode,
-)
-from digitalmodel.reporting._base import (
-    ReportBlock,
-    ReportBlockFn,
-    ReportDataModel,
-)
+from digitalmodel.reporting._backbone import ReportBackbone, ReportSection, SectionMode
+from digitalmodel.reporting._base import ReportBlock, ReportBlockFn, ReportDataModel
 from digitalmodel.reporting._renderer import ReportRenderer
+from digitalmodel.reporting.provenance import (
+    DataSource,
+    Provenance,
+    ProvenanceError,
+    assemble_report,
+    assumption_ledger_block,
+    provenance_block,
+)
 
 __all__ = [
     "ReportDataModel",
@@ -37,4 +37,11 @@ __all__ = [
     "ReportSection",
     "ReportBackbone",
     "ReportRenderer",
+    # provenance / SSOT-view (#1019)
+    "ProvenanceError",
+    "DataSource",
+    "Provenance",
+    "provenance_block",
+    "assumption_ledger_block",
+    "assemble_report",
 ]
