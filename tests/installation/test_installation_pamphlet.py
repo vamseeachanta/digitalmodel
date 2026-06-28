@@ -174,6 +174,89 @@ def test_golden_catalog_structure_lift_is_defensible(vessel_info):
     assert t8["status"] == "actual"
 
 
+# ---------------------------------------------------------------- splash-zone (T5)
+def test_compute_splashzone_envelope_golden():
+    """Closed-form per-structure splash-zone Hs limit vs Tp (DNV-RP-H103)."""
+    mud = calc.load_mudmats(DATA_DIR / "mudmat_structures.json")
+    env = calc.compute_splashzone_envelope(mud["MUD-S"], calc.DEFAULT_TP_GRID_S)
+    assert env["id"] == "MUD-S"
+    assert env["daf"] == pytest.approx(1.30)
+    hs = env["hs_by_tp"]
+    # positive, golden values (locked with tolerance)
+    assert hs["6.0"] == pytest.approx(2.11, abs=0.02)
+    assert hs["16.0"] == pytest.approx(5.70, abs=0.02)
+    assert all(v > 0 for v in hs.values())
+    # monotone increasing in Tp (longer period -> milder kinematics -> higher Hs)
+    vals = [hs[f"{float(t):.1f}"] for t in calc.DEFAULT_TP_GRID_S]
+    assert vals == sorted(vals)
+    # flat-bottom mudmats are slamming-governed
+    assert set(env["gov_by_tp"].values()) == {"slam"}
+
+
+def test_splashzone_denser_structure_tolerates_higher_hs():
+    """A dense, small-footprint structure tolerates higher Hs than a light,
+    large-area one (the large flat bottom is slamming-limited)."""
+    sub = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    plet = calc.compute_splashzone_envelope(sub["PLET-100"], calc.DEFAULT_TP_GRID_S)
+    tmpl = calc.compute_splashzone_envelope(sub["TMPL-180"], calc.DEFAULT_TP_GRID_S)
+    # PLET-100: W_sub 852 kN over A_b 48 m2 ; SPS template: 1535 kN over 192 m2
+    assert plet["hs_by_tp"]["6.0"] == pytest.approx(2.66, abs=0.02)
+    assert tmpl["hs_by_tp"]["6.0"] == pytest.approx(1.50, abs=0.02)
+    assert plet["hs_by_tp"]["6.0"] > tmpl["hs_by_tp"]["6.0"]
+    assert tmpl["gov_by_tp"]["6.0"] == "slam"
+
+
+def _lifts_with_records():
+    mud = calc.load_mudmats(DATA_DIR / "mudmat_structures.json")
+    sub = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    return [
+        {
+            "item": "Mudmat (small)", "kind": "mudmat",
+            "mass_air_te": mud["MUD-S"]["mass_properties"]["mass_air_te"],
+            "catalog_record": mud["MUD-S"],
+        },
+        {
+            "item": "Production manifold (250 te)", "kind": "structure", "source": "structure",
+            "mass_air_te": sub["MAN-250"]["mass_properties"]["mass_air_te"],
+            "catalog_record": sub["MAN-250"],
+        },
+    ]
+
+
+def test_splashzone_set_in_payload_and_provenance(vessel_info):
+    res = _assemble(vessel_info, _lifts_with_records(), "drillship", runs=[DRILLSHIP_RUN])
+    sz = res["splashzone"]
+    assert [s["id"] for s in sz] == ["MUD-S", "MAN-250"]
+    # combined limit = min(vessel heavy-lift envelope, structure splash-zone) per Tp
+    hl = res["envelopes"]["heavy_lift"]["hs_by_tp"]
+    for s in sz:
+        for k, comb in s["combined_hs_by_tp"].items():
+            assert comb == pytest.approx(min(s["hs_by_tp"][k], hl[k]), abs=0.01)
+    # T5 provenance flips off "pending"
+    t5 = {t["id"]: t for t in res["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "actual"
+    assert t5["status"] != "pending"
+    assert "splash-zone" in t5["basis"].lower()
+
+
+def test_splashzone_renders_section(vessel_info):
+    res = _assemble(vessel_info, _lifts_with_records(), "drillship", runs=[DRILLSHIP_RUN])
+    html = render_pamphlet_html(res, "LBL")
+    assert "Per-structure splash-zone limits (DNV-RP-H103)" in html
+    assert "MUD-S" in html
+    assert "Governing lowering Hs" in html  # combined limit table
+
+
+def test_splashzone_absent_when_no_catalog_records(vessel_info, lifts):
+    """Without catalog records (hand-built lifts), T5 stays pending and the
+    splash-zone section is not rendered — keeps existing goldens green."""
+    res = _assemble(vessel_info, lifts, "barge")
+    assert res["splashzone"] == []
+    t5 = {t["id"]: t for t in res["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "pending"
+    assert "Per-structure splash-zone limits" not in render_pamphlet_html(res, "LBL")
+
+
 # ---------------------------------------------------------------- golden numbers
 def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "barge")
@@ -283,8 +366,15 @@ def test_router_on_base_config_writes_artifacts(tmp_path):
     man = next(r for r in result["lifts"] if "manifold" in r["item"].lower())
     assert man["mass_air_te"] == pytest.approx(250.0)
 
+    # the workflow attaches catalog records to mudmat/structure lifts, so the
+    # per-structure splash-zone envelope (T5) is computed and flips off "pending"
+    assert len(result["splashzone"]) >= 4  # 3 mudmats + 1 manifold
+    t5 = {t["id"]: t for t in result["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "actual"
+
     html = html_path.read_text()
     assert "Installation Vessel Pamphlet" in html
+    assert "Per-structure splash-zone limits (DNV-RP-H103)" in html
 
 
 def test_router_is_deterministic_on_base_config(tmp_path):

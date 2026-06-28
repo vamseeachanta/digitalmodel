@@ -55,6 +55,16 @@ BASIS_HUMAN = {
 DEFAULT_OPERATIONS = ["transit", "dp_station_keeping", "heavy_lift"]
 DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 
+# ----------------------------------------------------------------------------
+# Splash-zone (lowering through the wave zone) constants — DNV-RP-H103 (2011)
+# Sec 4 "Lifting through wave zone". Seawater density and g are fixed; the
+# lowering speed and snap/slack-sling margin are documented screening values.
+# ----------------------------------------------------------------------------
+SEAWATER_DENSITY = 1025.0  # kg/m3
+GRAVITY = 9.80665  # m/s2
+SPLASH_V_LOWERING_MS = 0.5  # crane lowering speed through the wave zone (m/s)
+SPLASH_SNAP_DAF = 1.30  # snap / slack-sling margin (DNV-RP-H103 splash-zone DAF)
+
 
 # ---------------------------------------------------------------- loaders
 def load_mudmats(path: str | Path) -> dict[str, dict[str, Any]]:
@@ -211,6 +221,148 @@ def compute_envelopes(
     return env_out
 
 
+# ---------------------------------------------------------------- splash-zone envelope
+def compute_splashzone_envelope(
+    structure: dict[str, Any],
+    tp_grid_s: list[float],
+    v_lowering_ms: float = SPLASH_V_LOWERING_MS,
+    snap_daf: float = SPLASH_SNAP_DAF,
+) -> dict[str, Any]:
+    """Closed-form per-structure splash-zone Hs limit vs Tp (DNV-RP-H103 Sec 4).
+
+    Deterministic, pure (no datetime / random / network). For each peak period
+    ``Tp`` it returns the significant wave height ``Hs`` at which the structure
+    can no longer be lowered through the wave zone without risking a *snap*
+    (slack-sling) load on the hoist wire.
+
+    Wave-zone kinematics (deep-water linear wave theory, DNV-RP-C205 / RP-H103
+    Sec 4.6). A characteristic surface vertical water-particle motion scales with
+    Hs and Tp as
+
+        v_w = pi * Hs / Tp          (vertical particle velocity amplitude, m/s)
+        a_w = 2 * pi^2 * Hs / Tp^2  (vertical particle acceleration amplitude, m/s^2)
+
+    (these are ``omega * zeta_a`` and ``omega^2 * zeta_a`` with omega = 2*pi/Tp and
+    a wave amplitude zeta_a = Hs/2). The crane lowers the object at ``v_lowering``,
+    so the slamming / drag relative velocity is ``v_rel = v_w + v_lowering``.
+
+    Hydrodynamic forces on the object in the splash zone (DNV-RP-H103 Sec 4.6):
+
+        F_slam   = 0.5 * rho * Cs * A_bottom * v_rel^2        (slamming impact)
+        F_drag   = 0.5 * rho * Cd * A_bottom * v_rel^2        (form drag)
+        F_inertia= rho * (1 + Ca) * V * a_w                   (Froude-Krylov + added mass)
+
+    with rho = 1025 kg/m^3, ``Cs``/``Cd``/``Ca`` and ``A_bottom``/``V`` taken from the
+    structure catalog (``hydrodynamic_coefficients``, ``projected_areas.bottom_m2``,
+    ``mass_properties.displaced_volume_m3``).
+
+    Governing (snap / slack-sling) criterion — DNV-RP-H103 Sec 4.6 "snap forces":
+    the hoist wire must stay in tension over the whole motion cycle, i.e. the
+    characteristic upward hydrodynamic force must not exceed the submerged weight
+    reduced by a documented margin::
+
+        F_slam + F_drag + F_inertia  <=  W_sub / snap_daf
+
+    Solving that (a quadratic in Hs, since v_rel is affine in Hs and a_w is linear
+    in Hs) gives the limiting ``Hs(Tp)``. The governing term is whichever of slam /
+    drag / inertia is largest at that limit.
+
+    A future OrcaFlex dynamic lowering run (licensed installation path) is the
+    verification route for these closed-form limits — NOT computed here.
+    """
+    rho = float(SEAWATER_DENSITY)
+    hc = structure["hydrodynamic_coefficients"]
+    cs = float(hc["slamming_coefficient_Cs"])
+    cd = float(hc["drag_coefficient_Cd"])
+    ca = float(hc["added_mass_coefficient_Ca"])
+    a_bottom = float(structure["projected_areas"]["bottom_m2"])
+    mp = structure["mass_properties"]
+    volume = float(mp["displaced_volume_m3"])
+    w_sub_n = float(mp["submerged_weight_kn"]) * 1000.0
+
+    v_low = float(v_lowering_ms)
+    target = w_sub_n / float(snap_daf)  # max allowable upward hydrodynamic force (N)
+
+    k_qs = 0.5 * rho * (cs + cd) * a_bottom  # slam+drag coefficient (x v_rel^2)
+    k_in = rho * (1.0 + ca) * volume  # inertia coefficient (x acceleration)
+
+    hs_by_tp: dict[str, float] = {}
+    gov_by_tp: dict[str, str] = {}
+    for tp in (float(t) for t in tp_grid_s):
+        c1 = math.pi / tp  # v_w = c1 * Hs
+        c2 = 2.0 * math.pi**2 / tp**2  # a_w = c2 * Hs
+        # k_qs*(c1*Hs + v_low)^2 + k_in*c2*Hs = target  ->  a*Hs^2 + b*Hs + c = 0
+        a = k_qs * c1**2
+        b = 2.0 * k_qs * c1 * v_low + k_in * c2
+        c = k_qs * v_low**2 - target
+        disc = b * b - 4.0 * a * c
+        if a <= 0.0 or disc < 0.0:
+            hs = 0.0
+        else:
+            hs = max((-b + math.sqrt(disc)) / (2.0 * a), 0.0)
+        v_rel = c1 * hs + v_low
+        a_w = c2 * hs
+        f_slam = 0.5 * rho * cs * a_bottom * v_rel**2
+        f_drag = 0.5 * rho * cd * a_bottom * v_rel**2
+        f_iner = k_in * a_w
+        gov = max(
+            ((f_slam, "slam"), (f_drag, "drag"), (f_iner, "inertia")),
+            key=lambda x: x[0],
+        )[1]
+        key = f"{round(tp, 1):.1f}"
+        hs_by_tp[key] = round(hs, 2)
+        gov_by_tp[key] = gov
+
+    return {
+        "id": structure.get("id"),
+        "name": structure.get("name"),
+        "submerged_weight_kn": round(w_sub_n / 1000.0, 2),
+        "bottom_area_m2": a_bottom,
+        "daf": float(snap_daf),
+        "v_lowering_ms": v_low,
+        "hs_by_tp": hs_by_tp,
+        "gov_by_tp": gov_by_tp,
+    }
+
+
+def compute_splashzone_set(
+    lifts: list[dict[str, Any]],
+    tp_grid_s: list[float],
+    heavy_lift_env: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Per-structure splash-zone envelopes for every lift carrying hydro data.
+
+    Each lift item may carry a ``catalog_record`` (the full mudmat / structure
+    catalog dict). Items that expose ``hydrodynamic_coefficients`` +
+    ``projected_areas`` + ``mass_properties.displaced_volume_m3`` get a closed-form
+    splash-zone envelope. When ``heavy_lift_env`` (the vessel-motion heavy-lift
+    envelope from :func:`compute_envelopes`) is supplied, each structure also gets
+    a ``combined_hs_by_tp`` = min(vessel heavy-lift limit, structure splash-zone
+    limit) — the governing lowering limit. Deterministic.
+    """
+    out: list[dict[str, Any]] = []
+    hl = (heavy_lift_env or {}).get("hs_by_tp") if heavy_lift_env else None
+    for it in lifts:
+        rec = it.get("catalog_record")
+        if not isinstance(rec, dict):
+            continue
+        if "hydrodynamic_coefficients" not in rec or "projected_areas" not in rec:
+            continue
+        if "displaced_volume_m3" not in (rec.get("mass_properties") or {}):
+            continue
+        env = compute_splashzone_envelope(rec, tp_grid_s)
+        env["item"] = it.get("item")
+        env["kind"] = it.get("kind")
+        if hl:
+            combined: dict[str, float] = {}
+            for key, hs in env["hs_by_tp"].items():
+                v = hl.get(key)
+                combined[key] = round(min(hs, v), 2) if v is not None else hs
+            env["combined_hs_by_tp"] = combined
+        out.append(env)
+    return out
+
+
 # ---------------------------------------------------------------- operability
 def compute_operability(hs_scatter_limits: list[float]) -> list[dict[str, Any]]:
     """Weather-window operability table (% time below each Hs limit)."""
@@ -283,6 +435,7 @@ def build_provenance(
     rao_basis: str,
     vessel_name: str = "BokaLift 2",
     structure_catalog_used: bool = False,
+    splashzone_computed: bool = False,
 ) -> dict[str, Any]:
     """Run-state provenance manifest (T1..T8). Pure.
 
@@ -293,6 +446,11 @@ def build_provenance(
     When ``structure_catalog_used`` is True the T8 task (manifold/PLET structure
     catalog) reflects the real ``subsea_structures.json`` catalog (status
     ``actual``) instead of the retired hardcoded proxy.
+
+    When ``splashzone_computed`` is True the T5 task (per-structure splash-zone
+    envelope) reflects the closed-form DNV-RP-H103 result (status ``actual``,
+    first-principles, like T8) instead of the ``pending`` OrcaFlex placeholder.
+    An OrcaFlex dynamic lowering run remains the future verification upgrade.
     """
     runs = list(completed_runs or [])
     prov = BASIS_PROVENANCE[rao_basis]
@@ -328,10 +486,20 @@ def build_provenance(
             "T4", 3, "Operation envelopes (Hs/Tp)", prov,
             "operation_envelope on T3 RAO", "operation_envelope", basis_run_id,
         ),
-        task(
-            "T5", 3, "Per-structure splash-zone envelope", "pending",
-            "Needs OrcaFlex installation run per structure",
-            "OrcaFlex (licensed) — not yet queued",
+        (
+            task(
+                "T5", 3, "Per-structure splash-zone envelope", "actual",
+                "Closed-form DNV-RP-H103 splash-zone (slamming + drag + added-mass "
+                "inertia, snap / slack-sling criterion) from catalog hydro coefficients",
+                "calculations.compute_splashzone_envelope (closed-form; OrcaFlex "
+                "dynamic run is the future verification path)",
+            )
+            if splashzone_computed
+            else task(
+                "T5", 3, "Per-structure splash-zone envelope", "pending",
+                "Needs OrcaFlex installation run per structure",
+                "OrcaFlex (licensed) — not yet queued",
+            )
         ),
         task(
             "T6", 5, "Weather-window operability", prov,
@@ -381,6 +549,9 @@ def assemble_result(
     """Compose the full deterministic pamphlet ``result`` payload (pure)."""
     lift_rows = assess_lifts(vessel_info, lifts, radius_m, daf)
     envelopes = compute_envelopes(rao_basis, operations, tp_grid_s)
+    splashzone = compute_splashzone_set(
+        lifts, tp_grid_s, heavy_lift_env=envelopes.get("heavy_lift")
+    )
     op_table = compute_operability(hs_scatter_limits)
     structure_catalog_used = any(
         str(it.get("source")) == "structure" for it in lifts
@@ -390,6 +561,7 @@ def assemble_result(
         rao_basis,
         vessel_name=vessel_info.get("name", "Installation vessel"),
         structure_catalog_used=structure_catalog_used,
+        splashzone_computed=bool(splashzone),
     )
     return {
         "vessel": vessel_info,
@@ -397,6 +569,7 @@ def assemble_result(
         "daf": float(daf),
         "lifts": lift_rows,
         "envelopes": envelopes,
+        "splashzone": splashzone,
         "tp_grid_s": [float(t) for t in tp_grid_s],
         "rao_basis": rao_basis,
         "rao_provenance": BASIS_PROVENANCE[rao_basis],

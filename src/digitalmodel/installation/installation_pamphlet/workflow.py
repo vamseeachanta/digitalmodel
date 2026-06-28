@@ -138,12 +138,14 @@ def _resolve_lifts(cfg: dict, settings: dict[str, Any]) -> list[dict[str, Any]]:
                 mud_cache = calc.load_mudmats(_config_path(cfg, catalogs["mudmats"]))
             rec = mud_cache[it["id"]]
             row["mass_air_te"] = float(rec["mass_properties"]["mass_air_te"])
+            row["catalog_record"] = rec  # feeds the per-structure splash-zone envelope (T5)
         elif it.get("source") == "structure":
             if str_cache is None:
                 str_cache = calc.load_structures(_config_path(cfg, catalogs["structures"]))
             rec = str_cache[it["id"]]
             row["mass_air_te"] = float(rec["mass_properties"]["mass_air_te"])
             row["source"] = "structure"  # flips provenance T8 to the real catalog
+            row["catalog_record"] = rec  # feeds the per-structure splash-zone envelope (T5)
         elif it.get("source") == "jumper":
             if jmp_cache is None:
                 jmp_cache = calc.load_jumpers(_config_path(cfg, catalogs["jumpers"]))
