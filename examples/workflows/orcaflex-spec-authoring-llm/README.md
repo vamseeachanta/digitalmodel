@@ -19,8 +19,17 @@ project_bundle.yml  +  "screen the mooring for storm strength"
 
 This mirrors the diffraction front-end
 (`digitalmodel.hydrodynamics.diffraction.spec_author`) and reuses the shared
-generic plumbing in `digitalmodel.common.spec_authoring`. Only **mooring**
-outcomes are in scope for now.
+generic plumbing in `digitalmodel.common.spec_authoring`. Three license-free
+model families are supported, dispatched by the chosen outcome's family:
+
+| Family | Outcomes | Example bundle |
+|---|---|---|
+| Mooring | `mooring_strength`, `mooring_pretension` | `project_bundle.yml` |
+| Riser | `riser_static`, `riser_dynamic` | `project_bundle_riser.yml` |
+| Pipeline | `pipeline_onbottom`, `pipeline_lay` | `project_bundle_pipeline.yml` |
+
+The LLM sets only the input fields that apply to the chosen family (e.g.
+`riser_outer_diameter` for a riser outcome) and leaves the rest `null`.
 
 ## Responsibility split (why this is auditable)
 
@@ -44,6 +53,20 @@ uv run python -m digitalmodel.solvers.orcaflex.spec_author \
     examples/workflows/orcaflex-spec-authoring-llm/project_bundle.yml \
     -r "Screen the spread mooring for storm strength" \
     -o authored_spec
+```
+
+Riser and pipeline requests use the same command with their bundles:
+
+```bash
+uv run python -m digitalmodel.solvers.orcaflex.spec_author \
+    examples/workflows/orcaflex-spec-authoring-llm/project_bundle_riser.yml \
+    -r "Check the steel catenary riser wave dynamics" \
+    -o authored_spec_riser
+
+uv run python -m digitalmodel.solvers.orcaflex.spec_author \
+    examples/workflows/orcaflex-spec-authoring-llm/project_bundle_pipeline.yml \
+    -r "Screen the pipeline installation lay" \
+    -o authored_spec_pipeline
 ```
 
 This writes into `authored_spec/`:
