@@ -3,6 +3,9 @@ Data Models for Structural Analysis
 
 Defines data structures for stress states, material properties,
 geometry, and analysis results.
+
+Material grades follow IACS UR W11 (marine hull steels: Grade A / AH36 / EH40)
+and EN 10025-2 (structural steels: S275 / S355 / S420).
 """
 
 from dataclasses import dataclass
