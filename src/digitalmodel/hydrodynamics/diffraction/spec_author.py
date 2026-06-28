@@ -33,9 +33,10 @@ and is imported lazily -- ``anthropic`` is not a project dependency.
 from __future__ import annotations
 
 import json
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Protocol
+from typing import Any, Callable, Optional, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -266,6 +267,117 @@ class AnthropicIntentAuthor:
         return response.parsed_output
 
 
+def _extract_json_object(text: str) -> str:
+    """Pull the first top-level JSON object out of model text.
+
+    Tolerates ```json fences and surrounding prose by scanning for the first
+    balanced ``{...}`` (brace depth, string-aware).
+    """
+    start = text.find("{")
+    if start == -1:
+        raise ValueError(f"No JSON object in model output: {text[:200]!r}")
+    depth = 0
+    in_string = False
+    escaped = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    raise ValueError(f"Unbalanced JSON object in model output: {text[:200]!r}")
+
+
+# Runs the CLI: (argv, stdin) -> CompletedProcess. Injectable for tests.
+CliRunner = Callable[[list[str], str], "subprocess.CompletedProcess[str]"]
+
+
+def _default_cli_runner(
+    argv: list[str], stdin: str
+) -> "subprocess.CompletedProcess[str]":
+    return subprocess.run(
+        argv, input=stdin, capture_output=True, text=True, timeout=300
+    )
+
+
+class ClaudeCliIntentAuthor:
+    """Intent author backed by the ``claude -p`` CLI (Claude Code).
+
+    Uses the local Claude Code install and its existing auth -- no
+    ``ANTHROPIC_API_KEY`` and no ``anthropic`` dependency. The CLI does not
+    expose typed structured outputs, so the schema is supplied in the system
+    prompt and the JSON object is parsed (and Pydantic-validated) from the
+    response. This is the default author.
+    """
+
+    def __init__(
+        self,
+        model: str = DEFAULT_MODEL,
+        *,
+        cli: str = "claude",
+        extra_args: Optional[list[str]] = None,
+        runner: Optional[CliRunner] = None,
+    ) -> None:
+        self.model = model
+        self.cli = cli
+        self.extra_args = list(extra_args or [])
+        self._runner = runner or _default_cli_runner
+
+    def _system_prompt(self) -> str:
+        schema = json.dumps(AuthoredIntent.model_json_schema())
+        return (
+            SYSTEM_PROMPT
+            + "\n\nReturn ONLY a single JSON object conforming to this JSON "
+            "schema -- no prose, no markdown, no code fences:\n" + schema
+        )
+
+    def author(self, bundle: ProjectBundle, request: str) -> AuthoredIntent:
+        user_prompt = (
+            f"Analysis request:\n{request}\n\n"
+            f"Project data:\n{bundle.to_prompt_context()}"
+        )
+        argv = [
+            self.cli,
+            "-p",
+            "--output-format",
+            "json",
+            "--model",
+            self.model,
+            "--system-prompt",
+            self._system_prompt(),
+            *self.extra_args,
+        ]
+        proc = self._runner(argv, user_prompt)
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"`{self.cli} -p` failed (rc={proc.returncode}): "
+                f"{(proc.stderr or proc.stdout or '').strip()[:500]}"
+            )
+        try:
+            envelope = json.loads(proc.stdout)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                f"Could not parse `{self.cli} -p` JSON envelope: "
+                f"{proc.stdout[:500]!r}"
+            ) from exc
+        if envelope.get("is_error"):
+            raise RuntimeError(f"claude returned an error: {envelope.get('result')}")
+        result_text = envelope.get("result", "")
+        return AuthoredIntent.model_validate_json(_extract_json_object(result_text))
+
+
 # ---------------------------------------------------------------------------
 # Intent -> resolver inputs
 # ---------------------------------------------------------------------------
@@ -402,12 +514,14 @@ def author_spec(
         The natural-language analysis request.
     author:
         The :class:`IntentAuthor` that performs the LLM call. Defaults to
-        :class:`AnthropicIntentAuthor`. Inject a stub for offline tests.
+        :class:`ClaudeCliIntentAuthor` (the ``claude -p`` CLI, no API key).
+        Inject a stub for offline tests, or :class:`AnthropicIntentAuthor`
+        to use the Anthropic SDK directly.
     hull_lookup, config:
         Passed straight through to :func:`resolver.resolve`.
     """
     if author is None:
-        author = AnthropicIntentAuthor()
+        author = ClaudeCliIntentAuthor()
     intent = author.author(bundle, request)
     outcome, inputs = intent_to_resolver_inputs(intent)
     spec, ledger = resolve(outcome, inputs, hull_lookup=hull_lookup, config=config)
@@ -435,13 +549,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "-o", "--out-dir", default="authored_spec", help="Output directory."
     )
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="Anthropic model id.")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help="Model id.")
+    parser.add_argument(
+        "--backend",
+        choices=["claude-cli", "anthropic-sdk"],
+        default="claude-cli",
+        help="LLM backend: 'claude-cli' (claude -p, no key) or 'anthropic-sdk'.",
+    )
     args = parser.parse_args(argv)
 
+    if args.backend == "anthropic-sdk":
+        author: IntentAuthor = AnthropicIntentAuthor(model=args.model)
+    else:
+        author = ClaudeCliIntentAuthor(model=args.model)
+
     bundle = ProjectBundle.from_yaml(args.bundle)
-    result = author_spec(
-        bundle, args.request, author=AnthropicIntentAuthor(model=args.model)
-    )
+    result = author_spec(bundle, args.request, author=author)
     paths = result.write(args.out_dir)
     print(json.dumps({k: str(v) for k, v in paths.items()}, indent=2))
     return 0
@@ -456,6 +579,7 @@ __all__ = [
     "ProvenanceEntry",
     "AuthoredIntent",
     "IntentAuthor",
+    "ClaudeCliIntentAuthor",
     "AnthropicIntentAuthor",
     "AuthoredSpec",
     "author_spec",
