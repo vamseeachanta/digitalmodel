@@ -28,6 +28,12 @@ from digitalmodel.reporting.provenance import (
     assumption_ledger_block,
     provenance_block,
 )
+from digitalmodel.reporting.skeleton import (
+    BlockSpec,
+    Completeness,
+    ReportSkeleton,
+    SectionSpec,
+)
 
 __all__ = [
     "ReportDataModel",
@@ -44,4 +50,9 @@ __all__ = [
     "provenance_block",
     "assumption_ledger_block",
     "assemble_report",
+    # skeleton-first (#1021)
+    "ReportSkeleton",
+    "SectionSpec",
+    "BlockSpec",
+    "Completeness",
 ]
