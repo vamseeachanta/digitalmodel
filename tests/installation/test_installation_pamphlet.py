@@ -391,3 +391,206 @@ def test_router_is_deterministic_on_base_config(tmp_path):
     html_b, data_b = run("run_b")
     assert html_a == html_b  # byte-identical HTML
     assert data_a == data_b  # byte-identical JSON
+
+
+# ---------------------------------------------------------------- real-RAO artifact ingestion (T3)
+# Advances #1111: a vessel-specific OrcaWave RAO artifact drives the operation
+# envelopes for the "vessel" basis. Tested here with a SYNTHETIC fixture RAOSet
+# (clearly NOT real vessel data) — the real BokaLift mesh + licensed solve remain.
+BOKALIFT_RUN = {"run_id": "lr_bl", "input": "acma/bokalift2-mesh/input.yml"}
+HS_LIMITS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+
+
+def _synthetic_rao_set():
+    """A clearly-synthetic fixture RAOSet (NOT real vessel data): a few freqs and
+    headings with flat, distinctive magnitudes — just enough to exercise the pipe."""
+    import numpy as np
+
+    from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+        DOF,
+        FrequencyData,
+        HeadingData,
+        RAOComponent,
+        RAOSet,
+    )
+
+    periods = np.array([4.0, 6.0, 8.0, 10.0, 12.0, 16.0, 20.0])
+    freqs = 2.0 * np.pi / periods
+    heads = np.array([0.0, 90.0, 180.0])
+    nf, nh = len(freqs), len(heads)
+
+    def comp(dof, val, unit):
+        mag = np.full((nf, nh), float(val))
+        return RAOComponent(
+            dof=dof,
+            magnitude=mag,
+            phase=np.zeros((nf, nh)),
+            frequencies=FrequencyData(
+                values=freqs, periods=periods, count=nf,
+                min_freq=float(freqs.min()), max_freq=float(freqs.max()),
+            ),
+            headings=HeadingData(
+                values=heads, count=nh,
+                min_heading=float(heads.min()), max_heading=float(heads.max()),
+            ),
+            unit=unit,
+        )
+
+    return RAOSet(
+        vessel_name="SYNTHETIC FIXTURE VESSEL (not real data)",
+        analysis_tool="OrcaWave",
+        water_depth=1500.0,
+        surge=comp(DOF.SURGE, 0.0, "m/m"),
+        sway=comp(DOF.SWAY, 0.0, "m/m"),
+        heave=comp(DOF.HEAVE, 0.55, "m/m"),
+        roll=comp(DOF.ROLL, 1.1, "deg/m"),
+        pitch=comp(DOF.PITCH, 0.7, "deg/m"),
+        yaw=comp(DOF.YAW, 0.0, "deg/m"),
+        created_date="2026-01-01",
+    )
+
+
+def _write_rao_artifact(tmp_path, rao_set, *, wrap=False):
+    import json
+
+    if wrap:  # DiffractionResults-style wrapper that nests a RAOSet under "raos"
+        payload = {
+            "vessel_name": rao_set.vessel_name,
+            "analysis_tool": "OrcaWave",
+            "water_depth": rao_set.water_depth,
+            "raos": rao_set.to_dict(),
+        }
+        path = tmp_path / "rao_wrapped.json"
+    else:
+        payload = rao_set.to_dict()
+        path = tmp_path / "rao.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def _envelopes_from_rao(rao_set):
+    from digitalmodel.marine_ops.operation_envelope import operation_envelope
+
+    out = {}
+    for op in calc.DEFAULT_OPERATIONS:
+        env = operation_envelope(rao_set, op, tp_range_s=calc.DEFAULT_TP_GRID_S)
+        out[op] = {
+            "alpha": env.alpha,
+            "hs_by_tp": {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) for p in env.points},
+            "gov_by_tp": {f"{round(p.tp_s, 1):.1f}": p.governing_dof for p in env.points},
+        }
+    return out
+
+
+def test_load_rao_set_from_artifact_roundtrips(tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    loaded = calc.load_rao_set_from_artifact(path)
+    # RAOSet holds numpy arrays (dataclass __eq__ is ambiguous), so compare the
+    # serialized form — a faithful round-trip.
+    assert loaded.to_dict() == fixture.to_dict()
+    assert loaded.vessel_name == "SYNTHETIC FIXTURE VESSEL (not real data)"
+
+
+def test_load_rao_set_from_artifact_diffraction_wrapper(tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture, wrap=True)
+    loaded = calc.load_rao_set_from_artifact(path)
+    assert loaded.to_dict() == fixture.to_dict()
+
+
+def test_load_rao_set_from_artifact_errors(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        calc.load_rao_set_from_artifact(tmp_path / "does_not_exist.json")
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not valid json", encoding="utf-8")
+    with pytest.raises(ValueError):
+        calc.load_rao_set_from_artifact(bad)
+    noraos = tmp_path / "noraos.json"
+    noraos.write_text('{"foo": 1}', encoding="utf-8")
+    with pytest.raises(ValueError):
+        calc.load_rao_set_from_artifact(noraos)
+
+
+def test_vessel_artifact_drives_envelopes_and_is_actual(vessel_info, lifts, tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    expected = _envelopes_from_rao(fixture)
+
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN], rao_artifact=str(path),
+    )
+
+    # the REAL ingested artifact drove the envelopes ...
+    assert res["envelopes"] == expected
+    # ... and they DIFFER from the Drillship-parametric (no-artifact) envelopes
+    drillship_proxy = calc.compute_envelopes(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S
+    )
+    assert res["envelopes"] != drillship_proxy
+
+    # provenance is honestly "actual" because a real artifact was loaded
+    assert res["rao_provenance"] == "actual"
+    assert res["rao_from_artifact"] is True
+    assert res["rao_artifact"] == str(path)
+    by_id = {t["id"]: t for t in res["provenance"]["tasks"]}
+    assert by_id["T3"]["status"] == "actual"
+    assert by_id["T3"]["source"] == "OrcaWave diffraction"
+    assert by_id["T4"]["status"] == "actual"
+
+
+def test_vessel_artifact_path_from_completed_run(vessel_info, lifts, tmp_path):
+    """The artifact path may ride on the completed-run entry that flipped basis."""
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    run = {**BOKALIFT_RUN, "rao_artifact": str(path)}
+
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[run],  # no explicit rao_artifact -> resolved from the run
+    )
+    assert res["rao_from_artifact"] is True
+    assert res["rao_provenance"] == "actual"
+    assert res["envelopes"] == _envelopes_from_rao(fixture)
+
+
+def test_vessel_without_artifact_is_honest_proxy(vessel_info, lifts):
+    """Honest fallback: basis resolves to "vessel" but NO artifact is available ->
+    do NOT claim "actual"; stay on the ship-shaped proxy with the synced note."""
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN],  # basis is "vessel" but no rao_artifact
+    )
+    assert res["rao_from_artifact"] is False
+    assert res["rao_artifact"] is None
+    assert res["rao_provenance"] != "actual"
+    assert res["rao_provenance"] == "ship_proxy"
+    by_id = {t["id"]: t for t in res["provenance"]["tasks"]}
+    assert by_id["T3"]["status"] == "ship_proxy"
+    assert by_id["T3"]["status"] != "actual"
+    assert "not yet synced" in by_id["T3"]["basis"]
+    assert "not yet synced" in res["envelope_proxy"]
+    # the proxy envelopes equal the ship-shaped (Drillship) parametric fallback
+    drillship = calc.compute_envelopes(
+        "drillship", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S
+    )
+    assert res["envelopes"] == drillship
+
+
+def test_resolve_rao_artifact_precedence(tmp_path):
+    run = {**BOKALIFT_RUN, "rao_artifact": "/from/run.json"}
+    # explicit config path wins over the completed-run-carried path
+    assert calc.resolve_rao_artifact("vessel", [run], "/explicit.json") == "/explicit.json"
+    # else the run-carried path is used
+    assert calc.resolve_rao_artifact("vessel", [run], None) == "/from/run.json"
+    # non-vessel basis never ingests an artifact
+    assert calc.resolve_rao_artifact("drillship", [run], "/explicit.json") is None
+    # vessel basis with nothing available -> None
+    assert calc.resolve_rao_artifact("vessel", [BOKALIFT_RUN], None) is None

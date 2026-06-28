@@ -22,19 +22,25 @@ from typing import Any
 #   barge      -> initial pessimistic 100 m tender-barge proxy
 #   drillship  -> ship-shaped proxy, justified by a completed ship diffraction
 #   fpso       -> alternate ship-shaped proxy
-#   vessel     -> vessel-specific OrcaWave diffraction (actual)
+#   vessel     -> vessel-specific OrcaWave diffraction. ONLY "actual" once a real
+#                 vessel RAO artifact is ingested (load_rao_set_from_artifact);
+#                 with no artifact synced it honestly falls back to the
+#                 ship-shaped proxy (see _effective_provenance below).
 # ----------------------------------------------------------------------------
 BASIS_MAP = {
     "barge": "Barge",
     "drillship": "Drillship",
     "fpso": "FPSO",
-    "vessel": "Drillship",  # placeholder until a vessel-specific mesh exists
+    "vessel": "Drillship",  # ship-shaped fallback proxy until a real RAO artifact is ingested
 }
+# Default (no-artifact) provenance per basis. "vessel" defaults to the honest
+# ship_proxy fallback; it is upgraded to "actual" only when a real vessel RAO
+# artifact is actually loaded (see _effective_provenance).
 BASIS_PROVENANCE = {
     "barge": "proxy",
     "drillship": "ship_proxy",
     "fpso": "ship_proxy",
-    "vessel": "actual",
+    "vessel": "ship_proxy",
 }
 BASIS_LABEL = {
     "barge": "Generic 100 m barge parametric RAO (initial proxy — pessimistic)",
@@ -51,6 +57,39 @@ BASIS_HUMAN = {
     "fpso": "ship-shaped FPSO proxy",
     "vessel": "vessel-specific OrcaWave RAO",
 }
+
+# Honest fallback when basis resolves to "vessel" but NO real RAO artifact is
+# available yet (vessel diffraction may be complete, but the OrcaWave RAO export
+# has not been synced to this Linux box). We do NOT claim "actual" — we stay on
+# the ship-shaped proxy and say so.
+VESSEL_PROXY_NOTE = "vessel diffraction complete; RAO artifact not yet synced"
+VESSEL_PROXY_LABEL = (
+    "Ship-shaped proxy RAO — vessel diffraction complete; RAO artifact not yet "
+    "synced (no vessel-specific OrcaWave RAO ingested)"
+)
+VESSEL_PROXY_HUMAN = "ship-shaped proxy (vessel diffraction complete; RAO artifact not yet synced)"
+
+
+def _effective_provenance(rao_basis: str, rao_from_artifact: bool = False) -> str:
+    """Honest provenance for a basis. "vessel" is only "actual" when a real RAO
+    artifact was actually loaded; otherwise it stays on the ship-shaped proxy."""
+    if rao_basis == "vessel":
+        return "actual" if rao_from_artifact else "ship_proxy"
+    return BASIS_PROVENANCE[rao_basis]
+
+
+def _effective_label(rao_basis: str, rao_from_artifact: bool = False) -> str:
+    """Envelope-basis label, honest about the vessel-without-artifact fallback."""
+    if rao_basis == "vessel" and not rao_from_artifact:
+        return VESSEL_PROXY_LABEL
+    return BASIS_LABEL[rao_basis]
+
+
+def _effective_human(rao_basis: str, rao_from_artifact: bool = False) -> str:
+    """Short human basis note, honest about the vessel-without-artifact fallback."""
+    if rao_basis == "vessel" and not rao_from_artifact:
+        return VESSEL_PROXY_HUMAN
+    return BASIS_HUMAN[rao_basis]
 
 DEFAULT_OPERATIONS = ["transit", "dp_station_keeping", "heavy_lift"]
 DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
@@ -92,6 +131,106 @@ def load_structures(path: str | Path) -> dict[str, dict[str, Any]]:
     return {s["id"]: s for s in data["structures"]}
 
 
+# ---------------------------------------------------------------- real RAO artifact ingestion
+_RAO_COMPONENT_KEYS = ("surge", "sway", "heave", "roll", "pitch", "yaw")
+
+
+def _extract_rao_dict(data: Any, path: Path) -> dict[str, Any]:
+    """Locate the ``RAOSet.to_dict()`` payload inside ``data``.
+
+    Supports two on-disk shapes:
+      * a bare ``RAOSet.to_dict()`` — top-level ``raos`` maps to the per-DOF
+        component dicts (``surge``/``heave``/...);
+      * a ``DiffractionResults.to_dict()`` wrapper — top-level ``raos`` is itself
+        a nested ``RAOSet.to_dict()`` (so it carries ``vessel_name`` + an inner
+        ``raos``). Any other top-level value that nests a RAOSet is also accepted.
+    """
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"installation_pamphlet: RAO artifact {path} is not a JSON object"
+        )
+    raos = data.get("raos")
+    if isinstance(raos, dict):
+        # bare RAOSet.to_dict(): data["raos"] holds the per-DOF component dicts
+        if any(k in raos for k in _RAO_COMPONENT_KEYS):
+            return data
+        # DiffractionResults-style wrapper: data["raos"] is itself a RAOSet.to_dict()
+        if isinstance(raos.get("raos"), dict) or "vessel_name" in raos:
+            return raos
+    # last resort: any nested value that itself looks like a RAOSet.to_dict()
+    for value in data.values():
+        if (
+            isinstance(value, dict)
+            and isinstance(value.get("raos"), dict)
+            and any(k in value["raos"] for k in _RAO_COMPONENT_KEYS)
+        ):
+            return value
+    raise ValueError(
+        f"installation_pamphlet: no RAOSet (top-level 'raos' with per-DOF "
+        f"components) found in RAO artifact {path}"
+    )
+
+
+def load_rao_set_from_artifact(path: str | Path):
+    """Ingest a real vessel RAO artifact (JSON) into an ``RAOSet``.
+
+    This is the license-free Linux-side ingestion path for a vessel-specific
+    OrcaWave diffraction result: a licensed host exports the RAOs as JSON
+    (``RAOSet.to_dict()`` or a ``DiffractionResults.to_dict()`` wrapper) and this
+    rebuilds the ``RAOSet`` — no OrcFxAPI, no heavy binaries. Pure given the file
+    bytes (no datetime / random / network). Raises a clear error if the file is
+    missing or malformed.
+    """
+    from digitalmodel.hydrodynamics.diffraction.output_schemas import RAOSet
+
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(
+            f"installation_pamphlet: RAO artifact not found: {p}"
+        )
+    try:
+        with p.open("r", encoding="utf-8") as stream:
+            data = json.load(stream)
+    except (json.JSONDecodeError, OSError) as exc:
+        raise ValueError(
+            f"installation_pamphlet: RAO artifact {p} is not valid JSON: {exc}"
+        ) from exc
+    rao_dict = _extract_rao_dict(data, p)
+    try:
+        return RAOSet.from_dict(rao_dict)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            f"installation_pamphlet: RAO artifact {p} is malformed "
+            f"(could not rebuild RAOSet): {exc}"
+        ) from exc
+
+
+def resolve_rao_artifact(
+    rao_basis: str,
+    completed_runs: list[dict[str, Any]] | None,
+    rao_artifact: str | Path | None = None,
+) -> str | None:
+    """Resolve the vessel RAO artifact path, or ``None`` if none is available.
+
+    Only the ``"vessel"`` basis ingests a real artifact. An explicit config path
+    (``rao_artifact``) wins; otherwise the path is taken from a ``completed_runs``
+    entry carrying a ``rao_artifact`` field — preferring the BokaLift run that
+    flipped the basis to ``"vessel"``.
+    """
+    if rao_basis != "vessel":
+        return None
+    if rao_artifact:
+        return str(rao_artifact)
+    runs = list(completed_runs or [])
+    for r in runs:
+        if "bokalift" in (r.get("input") or "").lower() and r.get("rao_artifact"):
+            return str(r["rao_artifact"])
+    for r in runs:
+        if r.get("rao_artifact"):
+            return str(r["rao_artifact"])
+    return None
+
+
 # ---------------------------------------------------------------- lift suitability
 def assess_lifts(
     vessel_info: dict[str, Any],
@@ -131,11 +270,20 @@ def assess_lifts(
 
 
 # ---------------------------------------------------------------- envelopes
-def _build_rao_set(rao_basis: str):
-    """Construct an RAOSet from the parametric vessel database for ``rao_basis``.
+def _build_rao_set(rao_basis: str, rao_artifact: str | Path | None = None):
+    """Construct the RAOSet that drives the operation envelopes for ``rao_basis``.
 
-    Ported verbatim from the validated prototype ``compute_pamphlet.py``.
+    Returns ``(rao_set, from_artifact)``. When ``rao_basis == "vessel"`` AND a
+    ``rao_artifact`` path is supplied, the REAL ingested vessel RAO drives the
+    envelopes (``from_artifact=True``); otherwise the parametric ship/barge proxy
+    is built from the validated vessel database (``from_artifact=False``).
+
+    Parametric path ported verbatim from the validated prototype
+    ``compute_pamphlet.py``.
     """
+    if rao_basis == "vessel" and rao_artifact:
+        return load_rao_set_from_artifact(rao_artifact), True
+
     import numpy as np
 
     from digitalmodel.orcawave.vessel_database import get_representative_raos
@@ -179,17 +327,20 @@ def _build_rao_set(rao_basis: str):
             unit=unit,
         )
 
-    return RAOSet(
-        vessel_name=f"Installation vessel ({vessel_type} proxy RAO)",
-        analysis_tool="parametric",
-        water_depth=1200.0,
-        surge=comp(DOF.SURGE, zero.copy(), "m/m"),
-        sway=comp(DOF.SWAY, zero.copy(), "m/m"),
-        heave=comp(DOF.HEAVE, heave, "m/m"),
-        roll=comp(DOF.ROLL, roll, "deg/m"),
-        pitch=comp(DOF.PITCH, pitch, "deg/m"),
-        yaw=comp(DOF.YAW, zero.copy(), "deg/m"),
-        created_date="2026-06-28",
+    return (
+        RAOSet(
+            vessel_name=f"Installation vessel ({vessel_type} proxy RAO)",
+            analysis_tool="parametric",
+            water_depth=1200.0,
+            surge=comp(DOF.SURGE, zero.copy(), "m/m"),
+            sway=comp(DOF.SWAY, zero.copy(), "m/m"),
+            heave=comp(DOF.HEAVE, heave, "m/m"),
+            roll=comp(DOF.ROLL, roll, "deg/m"),
+            pitch=comp(DOF.PITCH, pitch, "deg/m"),
+            yaw=comp(DOF.YAW, zero.copy(), "deg/m"),
+            created_date="2026-06-28",
+        ),
+        False,
     )
 
 
@@ -197,16 +348,20 @@ def compute_envelopes(
     rao_basis: str,
     operations: list[str],
     tp_grid_s: list[float],
+    rao_artifact: str | Path | None = None,
 ) -> dict[str, Any]:
     """Operation envelopes (limiting Hs vs Tp) for each operation.
 
     Returns an ordered dict keyed by operation name, each value being
     ``{"alpha", "hs_by_tp", "gov_by_tp"}``. ``hs_by_tp`` / ``gov_by_tp`` keys are
     one-decimal Tp strings (e.g. ``"6.0"``) so JSON round-trips stably.
+
+    When ``rao_basis == "vessel"`` and ``rao_artifact`` is supplied, the envelopes
+    are driven by the REAL ingested vessel RAO instead of the parametric proxy.
     """
     from digitalmodel.marine_ops.operation_envelope import operation_envelope
 
-    rset = _build_rao_set(rao_basis)
+    rset, _from_artifact = _build_rao_set(rao_basis, rao_artifact)
     tp_grid = [float(t) for t in tp_grid_s]
     env_out: dict[str, Any] = {}
     for op in operations:
@@ -436,6 +591,7 @@ def build_provenance(
     vessel_name: str = "BokaLift 2",
     structure_catalog_used: bool = False,
     splashzone_computed: bool = False,
+    rao_from_artifact: bool = False,
 ) -> dict[str, Any]:
     """Run-state provenance manifest (T1..T8). Pure.
 
@@ -451,11 +607,16 @@ def build_provenance(
     envelope) reflects the closed-form DNV-RP-H103 result (status ``actual``,
     first-principles, like T8) instead of the ``pending`` OrcaFlex placeholder.
     An OrcaFlex dynamic lowering run remains the future verification upgrade.
+
+    ``rao_from_artifact`` governs the HONESTY of the RAO provenance (T3/T4): the
+    ``"vessel"`` basis is only marked ``actual`` (OrcaWave diffraction) when a REAL
+    vessel RAO artifact was actually ingested. With no artifact synced it stays on
+    the ship-shaped proxy and carries the "RAO artifact not yet synced" note.
     """
     runs = list(completed_runs or [])
-    prov = BASIS_PROVENANCE[rao_basis]
+    prov = _effective_provenance(rao_basis, rao_from_artifact)
     basis_run_id = select_basis_run_id(runs, rao_basis)
-    basis_note = BASIS_HUMAN[rao_basis]
+    basis_note = _effective_human(rao_basis, rao_from_artifact)
     rao_source = "OrcaWave diffraction" if prov == "actual" else "parametric ship RAO"
 
     def task(tid, section, title, status, basis, source, run_id=None):
@@ -545,10 +706,22 @@ def assemble_result(
     tp_grid_s: list[float],
     hs_scatter_limits: list[float],
     completed_runs: list[dict[str, Any]],
+    rao_artifact: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Compose the full deterministic pamphlet ``result`` payload (pure)."""
+    """Compose the full deterministic pamphlet ``result`` payload (pure).
+
+    When ``rao_basis == "vessel"`` and a real vessel RAO artifact is resolvable
+    (explicit ``rao_artifact`` path, or a ``completed_runs`` entry carrying a
+    ``rao_artifact`` field), the operation envelopes are driven by the REAL
+    ingested RAO and provenance is honestly marked ``actual``. Otherwise the
+    vessel basis honestly falls back to the ship-shaped proxy.
+    """
+    artifact_path = resolve_rao_artifact(rao_basis, completed_runs, rao_artifact)
+    rao_from_artifact = artifact_path is not None
     lift_rows = assess_lifts(vessel_info, lifts, radius_m, daf)
-    envelopes = compute_envelopes(rao_basis, operations, tp_grid_s)
+    envelopes = compute_envelopes(
+        rao_basis, operations, tp_grid_s, rao_artifact=artifact_path
+    )
     splashzone = compute_splashzone_set(
         lifts, tp_grid_s, heavy_lift_env=envelopes.get("heavy_lift")
     )
@@ -562,6 +735,7 @@ def assemble_result(
         vessel_name=vessel_info.get("name", "Installation vessel"),
         structure_catalog_used=structure_catalog_used,
         splashzone_computed=bool(splashzone),
+        rao_from_artifact=rao_from_artifact,
     )
     return {
         "vessel": vessel_info,
@@ -572,8 +746,10 @@ def assemble_result(
         "splashzone": splashzone,
         "tp_grid_s": [float(t) for t in tp_grid_s],
         "rao_basis": rao_basis,
-        "rao_provenance": BASIS_PROVENANCE[rao_basis],
-        "envelope_proxy": BASIS_LABEL[rao_basis],
+        "rao_provenance": _effective_provenance(rao_basis, rao_from_artifact),
+        "rao_from_artifact": rao_from_artifact,
+        "rao_artifact": str(artifact_path) if artifact_path else None,
+        "envelope_proxy": _effective_label(rao_basis, rao_from_artifact),
         "op_table": op_table,
         "provenance": provenance,
     }

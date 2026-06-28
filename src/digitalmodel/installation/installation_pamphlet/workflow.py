@@ -46,6 +46,13 @@ def router(cfg: dict) -> dict:
         rao_basis = calc.select_rao_basis(completed_runs)
     generated_label = settings.get("generated_label") or DEFAULT_GENERATED_LABEL
 
+    # Explicit config artifact path (resolved like catalog refs). Explicit config
+    # wins over any completed-run-carried artifact path (resolved in calculations).
+    rao_artifact_cfg = settings.get("rao_artifact")
+    rao_artifact = (
+        str(_config_path(cfg, rao_artifact_cfg)) if rao_artifact_cfg else None
+    )
+
     result = calc.assemble_result(
         vessel_info=vessel_info,
         lifts=lifts,
@@ -56,6 +63,7 @@ def router(cfg: dict) -> dict:
         tp_grid_s=tp_grid_s,
         hs_scatter_limits=hs_scatter_limits,
         completed_runs=completed_runs,
+        rao_artifact=rao_artifact,
     )
     html = render_pamphlet_html(result, generated_label)
 
@@ -175,8 +183,10 @@ def scan_completed_runs(results_dir: str | Path) -> list[dict[str, Any]]:
 
     Reads ``*.json`` (sorted for stable ordering), keeps those with
     ``state == "finished"`` and ``returncode == 0``, and extracts
-    ``run_id`` / ``workflow`` / ``input``. Lives here (not in calculations.py)
-    because it touches the filesystem.
+    ``run_id`` / ``workflow`` / ``input`` (and, when present, a ``rao_artifact``
+    path the run exported — the real vessel RAO export that lets the "vessel"
+    basis ingest an actual RAO). Lives here (not in calculations.py) because it
+    touches the filesystem.
     """
     out: list[dict[str, Any]] = []
     base = Path(results_dir)
@@ -193,12 +203,18 @@ def scan_completed_runs(results_dir: str | Path) -> list[dict[str, Any]]:
             summary = r.get("summary") or {}
             workflow = audit.get("workflow") or summary.get("workflow", "")
             inp = audit.get("input_relpath") or summary.get("input_relpath", "")
+            rao_artifact = (
+                r.get("rao_artifact")
+                or audit.get("rao_artifact")
+                or summary.get("rao_artifact")
+            )
             out.append(
                 {
                     "run_id": r.get("run_id"),
                     "workflow": workflow,
                     "input": inp,
                     "finished_at": r.get("finished_at"),
+                    "rao_artifact": rao_artifact,
                 }
             )
     return out
