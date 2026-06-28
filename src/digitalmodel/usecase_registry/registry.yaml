@@ -197,6 +197,15 @@ usecases:
     analysis: [operability]
     readiness: ready
     notes: Operability / weather-window assessment.
+  - id: installation-pamphlet
+    domain: marine/installation
+    solver: orcawave
+    basename: installation_pamphlet
+    operation: null
+    template: src/digitalmodel/base_configs/modules/installation_pamphlet/installation_pamphlet.yml
+    analysis: [screening, operability]
+    readiness: ready
+    notes: Deterministic installation-vessel pamphlet (crane suitability, seakeeping envelopes, weather-window operability, DP/mooring risk) with live monitor widget.
   - id: free-span-f105
     domain: subsea/pipeline
     solver: orcaflex
