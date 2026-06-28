@@ -70,7 +70,8 @@ def signature(domain: str, inputs: dict) -> str:
     return domain + "|" + "|".join(f"{_num(inputs[f])}" for f in fields)
 
 
-def _record(domain, inputs, metric, metric_name, acceptable, governing, extra=None):
+def _record(domain, inputs, metric, metric_name, acceptable, governing,
+            extra=None, code_reference=""):
     inputs = {k: _num(v) for k, v in inputs.items()}
     rec = {
         "domain": domain,
@@ -83,6 +84,7 @@ def _record(domain, inputs, metric, metric_name, acceptable, governing, extra=No
             else ("ACCEPTABLE" if acceptable else "UNACCEPTABLE")
         ),
         "governing": governing,
+        "code_reference": code_reference,
         "key": signature(domain, inputs),
     }
     if extra:
@@ -134,6 +136,7 @@ def evaluate_pipe_corroded(
          "d_in": d_in, "L_in": L_in},
         metric, mname, accept, governing=m,
         extra={"maop_psi": round(float(maop_psi), 2)},
+        code_reference=r.code_reference,
     )
 
 
@@ -156,6 +159,7 @@ def evaluate_plate_metal_loss(
         r.utilization, "utilization", bool(r.passes), governing="plate_buckling",
         extra={"capacity_retained_frac": round(r.capacity_retained_frac, 4),
                "remaining_thickness_mm": round(r.remaining_thickness_mm, 3)},
+        code_reference=r.code_reference,
     )
 
 
@@ -185,6 +189,7 @@ def record_from_assessment(result) -> dict:
         "acceptable": bool(result.passes),
         "verdict": result.verdict,
         "governing": result.assessment_type,
+        "code_reference": result.code_reference,
         "key": f"component|{result.component_id}",
         "sufficiency_status": result.sufficiency_status,
         "remaining_life_yr": result.remaining_life_yr,

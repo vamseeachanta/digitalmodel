@@ -50,11 +50,15 @@ from .panel_buckling import (
     StiffenedPanelGeometry,
     StiffenerGeometry,
 )
+from digitalmodel.codes import API_579, DNV_RP_C201
 
 
 # This layer only orchestrates the validated buckling solvers; it adds no new
 # (unvalidated) closed-form physics of its own.
 PRELIMINARY = False
+
+# FFS framing (API 579-style screening) over the validated DNV-RP-C201 capacity.
+_METAL_LOSS_FFS_CODE = f"{API_579.label}; {DNV_RP_C201.label} (capacity basis)"
 
 
 @dataclass
@@ -76,6 +80,7 @@ class MetalLossFFSResult:
     governing_mode: Optional[str] = None    # panel governing mode
     max_acceptable_loss_mm: Optional[float] = None
     details: Dict = field(default_factory=dict)
+    code_reference: str = _METAL_LOSS_FFS_CODE  # FFS framing + capacity basis
 
 
 # ---------------------------------------------------------------------------

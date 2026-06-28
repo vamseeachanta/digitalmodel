@@ -9,6 +9,7 @@ Implements:
 
 import numpy as np
 from .models import MaterialProperties, PlateGeometry, BucklingResult
+from digitalmodel.codes import DNV_RP_C201, EUROCODE_3
 
 
 class PlateBucklingAnalyzer:
@@ -135,7 +136,8 @@ class PlateBucklingAnalyzer:
             utilization=total_util,
             safety_factor=1 / total_util if total_util > 0 else float('inf'),
             mode="plate_buckling",
-            passes=total_util <= 1.0
+            passes=total_util <= 1.0,
+            code_reference=DNV_RP_C201.label,
         )
 
 
@@ -262,5 +264,6 @@ class ColumnBucklingAnalyzer:
             utilization=util,
             safety_factor=1 / util if util > 0 else float('inf'),
             mode="column_buckling",
-            passes=util <= 1.0
+            passes=util <= 1.0,
+            code_reference=EUROCODE_3.label,
         )

@@ -48,6 +48,8 @@ from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from digitalmodel.codes import DNV_RP_F101
+
 # ---------------------------------------------------------------------------
 # Material — API 5L specified minimum TENSILE strength (SMTS), psi.
 # DNV-RP-F101 capacity uses f_u = SMTS (not SMYS).  Values are the API 5L /
@@ -104,6 +106,7 @@ class DNVF101Result:
     intact_pressure_psi: float        # 2 t f_u / (D - t) (defect-free)
     acceptable: Optional[bool] = None  # allowable >= MAOP (if maop_psi given)
     details: dict = field(default_factory=dict)
+    code_reference: str = DNV_RP_F101.label  # governing code (all formats)
 
 
 # ---------------------------------------------------------------------------

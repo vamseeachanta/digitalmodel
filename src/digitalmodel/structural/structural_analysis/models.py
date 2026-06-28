@@ -155,6 +155,7 @@ class BucklingResult:
     safety_factor: float
     mode: str
     passes: bool
+    code_reference: str = ""   # governing code (set per buckling mode)
 
 
 @dataclass
@@ -166,3 +167,4 @@ class CapacityResult:
     governing_mode: str
     passes: bool
     details: Dict
+    code_reference: str = ""   # governing code, e.g. "EN 1993-1-1 (2005)"
