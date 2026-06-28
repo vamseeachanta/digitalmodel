@@ -39,6 +39,10 @@ import numpy as np
 _FLOW_ADDER_PSI = 10_000.0
 # Default safety factor applied to predicted failure pressure (B31G practice).
 _DEFAULT_SAFETY_FACTOR = 1.39
+# ASME B31G / Modified B31G validity limit on relative defect depth.  The
+# methods are calibrated for d/t up to 0.80; deeper defects fall outside the
+# qualified range and should be assessed by repair/replace criteria.
+_B31G_MAX_DT = 0.80
 
 # API 5L specified minimum yield strength (psi) — grade number is SMYS in ksi.
 SMYS_PSI = {
@@ -86,8 +90,17 @@ def _failure_pressure(flow: float, t: float, D: float, ar: float, M: float) -> f
     return (2.0 * flow * t / D) * (1.0 - ar) / (1.0 - ar / M)
 
 
-def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, details):
+def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, details,
+              d_over_t=None):
     safe = pf / safety_factor
+    if d_over_t is not None:
+        within = d_over_t <= _B31G_MAX_DT
+        details = {**details,
+                   "within_applicability": bool(within),
+                   "applicability_note": (
+                       None if within else
+                       f"d/t={d_over_t:.3f} exceeds B31G validity limit "
+                       f"{_B31G_MAX_DT:.2f}; assess by repair/replace criteria")}
     return CorrodedPipeResult(
         method=method,
         failure_pressure_psi=pf,
@@ -135,6 +148,7 @@ def b31g_original(
         "B31G", pf, intact, flow, M_report, ar,
         maop_psi=maop_psi, safety_factor=safety_factor,
         details={"z": z, "regime": regime, "d_over_t": d / t},
+        d_over_t=d / t,
     )
 
 
@@ -154,6 +168,7 @@ def modified_b31g(
         "Modified_B31G", pf, intact, flow, M, ar,
         maop_psi=maop_psi, safety_factor=safety_factor,
         details={"z": z, "d_over_t": d / t},
+        d_over_t=d / t,
     )
 
 
@@ -203,11 +218,14 @@ def rstreng_effective_area(
                 worst_pf = pf
                 worst = {"L": float(L), "ar": float(ar), "M": float(M),
                          "i": i, "j": j}
+    max_dt = float(np.max(d)) / t
     return _finalise(
         "RSTRENG", worst_pf, intact, flow, worst["M"], worst["ar"],
         maop_psi=maop_psi, safety_factor=safety_factor,
         details={"critical_length_in": worst["L"],
-                 "critical_segment": (worst["i"], worst["j"])},
+                 "critical_segment": (worst["i"], worst["j"]),
+                 "d_over_t": max_dt},
+        d_over_t=max_dt,
     )
 
 
