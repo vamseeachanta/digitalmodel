@@ -15,6 +15,8 @@ from digitalmodel.common.spec_authoring import ProjectBundle, ProvenanceEntry
 from digitalmodel.solvers.orcaflex.inverse_resolver import (
     MooringResolverInputs,
     Outcome,
+    PipelineResolverInputs,
+    RiserResolverInputs,
 )
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 from digitalmodel.solvers.orcaflex.spec_author import (
@@ -239,3 +241,138 @@ def test_author_spec_end_to_end_with_cli_runner(tmp_path: Path) -> None:
     result = author_spec(ProjectBundle(), "pretension check", author=author)
     assert result.spec.simulation.stages == [10]
     assert len(result.spec.mooring.lines) == 6
+
+
+# --- Riser outcomes --------------------------------------------------------
+
+
+def _riser_intent() -> OrcaFlexIntent:
+    return OrcaFlexIntent(
+        outcome=Outcome.RISER_DYNAMIC,
+        name="West Test SCR",
+        water_depth=1200.0,
+        vessel_name="FPSO_A",
+        riser_outer_diameter=0.4,
+        riser_wall_thickness=0.03,
+        riser_length=2000.0,
+        riser_configuration="lazy_wave",
+        provenance=[
+            ProvenanceEntry(field="water_depth", value="1200 m", source="data sheet"),
+            ProvenanceEntry(field="riser_outer_diameter", value="16 in", source="BOD"),
+        ],
+        open_questions=["Wave spectrum not specified"],
+        rationale="Request asks for a riser wave dynamic check; geometry given.",
+    )
+
+
+def test_riser_intent_maps_to_riser_resolver_inputs() -> None:
+    outcome, inputs = intent_to_resolver_inputs(_riser_intent())
+    assert outcome == Outcome.RISER_DYNAMIC
+    assert isinstance(inputs, RiserResolverInputs)
+    assert inputs.water_depth == 1200.0
+    assert inputs.outer_diameter == 0.4
+    assert inputs.wall_thickness == 0.03
+    assert inputs.length == 2000.0
+    assert inputs.configuration == "lazy_wave"
+    assert inputs.vessel_name == "FPSO_A"
+
+
+def test_author_spec_produces_riser_spec() -> None:
+    author = StubAuthor(_riser_intent())
+    result = author_spec(ProjectBundle(notes="riser"), "riser dynamic", author=author)
+    assert isinstance(result.spec, ProjectInputSpec)
+    # Right model family is set; other families are absent.
+    assert result.spec.riser is not None
+    assert result.spec.mooring is None and result.spec.pipeline is None
+    assert result.spec.metadata.structure == "riser"
+    # Correct outcome -> simulation stages (static + wave dynamic).
+    assert result.spec.simulation.stages == [8, 16]
+    lt = result.spec.riser.line_types[0]
+    assert lt.outer_diameter == 0.4
+    assert lt.inner_diameter == 0.34  # 0.4 - 2*0.03
+    assert result.spec.riser.vessel.name == "FPSO_A"
+
+
+def test_riser_static_outcome_drives_single_stage() -> None:
+    intent = OrcaFlexIntent(outcome=Outcome.RISER_STATIC)
+    result = author_spec(ProjectBundle(), "riser config", author=StubAuthor(intent))
+    assert result.spec.riser is not None
+    assert result.spec.simulation.stages == [10]
+
+
+def test_generate_riser_model_via_modular_generator(tmp_path: Path) -> None:
+    result = author_spec(ProjectBundle(), "riser", author=StubAuthor(_riser_intent()))
+    out = result.generate_model(tmp_path / "riser_model")
+    assert (out / "master.yml").exists()
+    assert any(out.rglob("*.yml"))
+
+
+# --- Pipeline outcomes -----------------------------------------------------
+
+
+def _pipeline_intent() -> OrcaFlexIntent:
+    return OrcaFlexIntent(
+        outcome=Outcome.PIPELINE_LAY,
+        name="Trunkline",
+        water_depth=300.0,
+        pipeline_outer_diameter=0.6,
+        pipeline_wall_thickness=0.03,
+        pipeline_length=5000.0,
+        pipeline_material="X70",
+        provenance=[
+            ProvenanceEntry(field="pipeline_material", value="X70", source="BOD"),
+        ],
+        open_questions=["Lay vessel not specified"],
+        rationale="Request asks for an installation lay check; geometry given.",
+    )
+
+
+def test_pipeline_intent_maps_to_pipeline_resolver_inputs() -> None:
+    outcome, inputs = intent_to_resolver_inputs(_pipeline_intent())
+    assert outcome == Outcome.PIPELINE_LAY
+    assert isinstance(inputs, PipelineResolverInputs)
+    assert inputs.water_depth == 300.0
+    assert inputs.outer_diameter == 0.6
+    assert inputs.wall_thickness == 0.03
+    assert inputs.length == 5000.0
+    assert inputs.material == "X70"
+
+
+def test_author_spec_produces_pipeline_spec() -> None:
+    author = StubAuthor(_pipeline_intent())
+    result = author_spec(ProjectBundle(notes="pipe"), "pipeline lay", author=author)
+    assert isinstance(result.spec, ProjectInputSpec)
+    assert result.spec.pipeline is not None
+    assert result.spec.mooring is None and result.spec.riser is None
+    assert result.spec.metadata.structure == "pipeline"
+    # Correct outcome -> simulation stages (static + lay dynamic).
+    assert result.spec.simulation.stages == [8, 16]
+    assert result.spec.pipeline.dimensions.outer_diameter == 0.6
+    assert result.spec.pipeline.dimensions.wall_thickness == 0.03
+    assert result.spec.pipeline.material == "X70"
+
+
+def test_pipeline_onbottom_outcome_drives_single_stage() -> None:
+    intent = OrcaFlexIntent(outcome=Outcome.PIPELINE_ONBOTTOM)
+    result = author_spec(ProjectBundle(), "stability", author=StubAuthor(intent))
+    assert result.spec.pipeline is not None
+    assert result.spec.simulation.stages == [10]
+
+
+def test_generate_pipeline_model_via_modular_generator(tmp_path: Path) -> None:
+    result = author_spec(
+        ProjectBundle(), "pipeline", author=StubAuthor(_pipeline_intent())
+    )
+    out = result.generate_model(tmp_path / "pipeline_model")
+    assert (out / "master.yml").exists()
+    assert any(out.rglob("*.yml"))
+
+
+def test_riser_intent_leaves_pipeline_fields_unmapped() -> None:
+    # A riser intent must not leak into pipeline resolver inputs (family-scoped).
+    intent = OrcaFlexIntent(
+        outcome=Outcome.RISER_STATIC, riser_outer_diameter=0.3, water_depth=500.0
+    )
+    _, inputs = intent_to_resolver_inputs(intent)
+    assert isinstance(inputs, RiserResolverInputs)
+    assert inputs.outer_diameter == 0.3
