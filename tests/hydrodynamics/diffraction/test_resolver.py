@@ -17,10 +17,7 @@ from digitalmodel.hydrodynamics.diffraction.assumption_ledger import (
     Confidence,
 )
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
-from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
-    RunResult,
-    RunStatus,
-)
+from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunResult, RunStatus
 from digitalmodel.hydrodynamics.diffraction.parametric_spec_generator import (
     estimate_cog,
     estimate_cog_from_dimensions,
@@ -37,7 +34,9 @@ from digitalmodel.hydrodynamics.diffraction.report_generator import (
 )
 from digitalmodel.hydrodynamics.diffraction.resolver import (
     ASSUMPTION_CONTROLLED_FIELDS,
+    OUTCOME_DESCRIPTIONS,
     OUTCOME_REQUIREMENTS,
+    OUTCOME_SOLVE_TYPE,
     Outcome,
     PrincipalDimensions,
     ResolverConfig,
@@ -195,9 +194,7 @@ def test_lookup_threshold_falls_through_below_near_threshold(
         hull_lookup=FakeLookup(0.1),
     )
 
-    high_mass = [
-        r for r in high_ledger if r.field == "vessel.inertia.mass"
-    ][0]
+    high_mass = [r for r in high_ledger if r.field == "vessel.inertia.mass"][0]
     low_mass = [r for r in low_ledger if r.field == "vessel.inertia.mass"][0]
     assert high_mass.source == AssumptionSource.DATABASE_LOOKUP
     assert high_mass.confidence == Confidence.HIGH
@@ -217,8 +214,7 @@ def test_dual_backend_ledger_field_and_report_render(tmp_path: Path) -> None:
     assert "assumption_ledger" in {f.name for f in fields(RunResult)}
     assert "assumption_ledger" in {f.name for f in fields(AQWARunResult)}
     assert (
-        RunResult(status=RunStatus.PENDING, assumption_ledger=ledger)
-        .assumption_ledger
+        RunResult(status=RunStatus.PENDING, assumption_ledger=ledger).assumption_ledger
         is ledger
     )
     assert (
@@ -317,9 +313,7 @@ def test_explicit_inertia_tensor_origin_is_centre_of_mass(tmp_path: Path) -> Non
 
 def test_ledger_travels_through_run_entrypoints(tmp_path: Path) -> None:
     from digitalmodel.hydrodynamics.diffraction.aqwa_runner import run_aqwa
-    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
-        run_orcawave,
-    )
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import run_orcawave
 
     mesh = _write_box_mesh(tmp_path / "box.gdf")
     spec, ledger = resolve(
@@ -373,9 +367,7 @@ def test_mesh_units_symmetry_and_draft_use_waterline(tmp_path: Path) -> None:
 
     assert spec.vessel.inertia.centre_of_gravity[0] == pytest.approx(1.524)
     assert spec.vessel.inertia.centre_of_gravity[2] == pytest.approx(-0.3048)
-    dims_record = [
-        r for r in ledger if r.field == "vessel.principal_dimensions"
-    ][0]
+    dims_record = [r for r in ledger if r.field == "vessel.principal_dimensions"][0]
     assert dims_record.value["beam"] == pytest.approx(2.4384)
     assert dims_record.value["draft"] == pytest.approx(0.6096)
 
@@ -424,9 +416,7 @@ def test_estimator_dimension_functions_match_profile_wrappers() -> None:
         block_coefficient=0.8,
     )
 
-    assert estimate_mass(profile) == pytest.approx(
-        estimate_mass_from_dimensions(dims)
-    )
+    assert estimate_mass(profile) == pytest.approx(estimate_mass_from_dimensions(dims))
     assert estimate_cog(profile) == estimate_cog_from_dimensions(dims)
     assert estimate_radii_of_gyration(
         profile
@@ -472,3 +462,62 @@ def test_outcome_requirements_are_data_driven(tmp_path: Path) -> None:
 
     assert "solver_options.qtf_calculation" in OUTCOME_REQUIREMENTS[Outcome.QTF]
     assert spec.solver_options.qtf_calculation is True
+
+
+# --- broadened outcome set -------------------------------------------------
+
+
+def test_mean_drift_outcome_sets_solve_type(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    spec, ledger = resolve(
+        Outcome.MEAN_DRIFT,
+        ResolverInputs(mesh_file=str(mesh), water_depth=50.0),
+        hull_lookup=FakeLookup(0.1),
+    )
+    assert spec.solver_options.solve_type == "mean_drift"
+    # Mean drift is a second-order mean force, not a QTF run.
+    assert spec.solver_options.resolved_qtf().enabled is False
+    assert any(r.field == "solver_options.solve_type" for r in ledger)
+
+
+def test_diagonal_qtf_outcome_enables_qtf(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    spec, _ = resolve(
+        Outcome.DIAGONAL_QTF,
+        ResolverInputs(mesh_file=str(mesh), water_depth=50.0),
+        hull_lookup=FakeLookup(0.1),
+    )
+    assert spec.solver_options.solve_type == "diagonal_qtf"
+    assert spec.solver_options.resolved_qtf().enabled is True
+
+
+def test_full_qtf_outcome_enables_qtf(tmp_path: Path) -> None:
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    spec, ledger = resolve(
+        "full_qtf",  # string form also accepted
+        ResolverInputs(mesh_file=str(mesh), water_depth=50.0),
+        hull_lookup=FakeLookup(0.1),
+    )
+    assert spec.solver_options.solve_type == "full_qtf"
+    assert spec.solver_options.resolved_qtf().enabled is True
+    assert any(r.field == "solver_options.solve_type" for r in ledger)
+
+
+def test_legacy_qtf_outcome_unchanged(tmp_path: Path) -> None:
+    # Back-compat: the generic QTF outcome still uses the flat flag and does
+    # not force a QTF solve type.
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    spec, _ = resolve(
+        Outcome.QTF,
+        ResolverInputs(mesh_file=str(mesh), water_depth=50.0),
+        hull_lookup=FakeLookup(0.1),
+    )
+    assert spec.solver_options.qtf_calculation is True
+
+
+def test_every_outcome_has_requirements_and_description() -> None:
+    for outcome in Outcome:
+        assert outcome in OUTCOME_REQUIREMENTS, outcome
+        assert outcome in OUTCOME_DESCRIPTIONS, outcome
+    # The solve-type-driven outcomes are a subset of the full set.
+    assert set(OUTCOME_SOLVE_TYPE).issubset(set(Outcome))
