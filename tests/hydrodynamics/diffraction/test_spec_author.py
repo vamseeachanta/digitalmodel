@@ -307,7 +307,7 @@ def test_claude_cli_author_raises_on_nonzero_returncode() -> None:
 
 
 def test_extract_json_object_handles_prose_and_fences() -> None:
-    from digitalmodel.hydrodynamics.diffraction.spec_author import _extract_json_object
+    from digitalmodel.common.spec_authoring import _extract_json_object
 
     assert _extract_json_object('prefix ```json\n{"a": 1}\n``` suffix') == '{"a": 1}'
     assert _extract_json_object('{"a": {"b": 2}} trailing') == '{"a": {"b": 2}}'

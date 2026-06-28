@@ -27,7 +27,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ---------------------------------------------------------------------------
 # Project single-source-of-truth contract (LLM input context)
@@ -37,17 +37,52 @@ from pydantic import BaseModel, Field
 class ProjectBundle(BaseModel):
     """The upstream project SSOT handed to the authoring LLM.
 
-    Intentionally loose: real project data is heterogeneous. Structured fields
-    are convenience slots; ``documents`` and ``notes`` carry whatever free text
-    the project has (data-sheet excerpts, emails, scope notes). The LLM reads
-    the whole thing rendered as text and extracts what it can ground.
+    Deliberately loose *inside* the data slots (``vessel_particulars`` /
+    ``environment`` are open dicts; ``documents`` / ``notes`` carry free text) so
+    heterogeneous real project data fits. The *contract* around them is hardened:
+
+    * unknown TOP-LEVEL keys are rejected (``extra="forbid"``) -- a misspelled
+      ``vessel_particular`` is an error, not a silently-dropped field;
+    * ``units`` declares the unit system explicitly (silent unit assumptions are
+      a classic engineering footgun) and :meth:`contract_warnings` flags it when
+      missing alongside numeric data;
+    * ``codes`` / ``references`` carry design standards and citations, surfaced
+      to the LLM so it can ground against them.
+
+    The LLM reads :meth:`to_prompt_context` and extracts only what it can ground;
+    the deterministic resolver fills and ledgers the rest.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     project_name: Optional[str] = None
+    units: Optional[str] = Field(
+        default=None,
+        description="Declared unit system for numeric data, e.g. 'SI' or 'metric'.",
+    )
     vessel_particulars: dict[str, Any] = Field(default_factory=dict)
     environment: dict[str, Any] = Field(default_factory=dict)
+    codes: list[str] = Field(
+        default_factory=list, description="Design codes / standards in scope."
+    )
+    references: list[str] = Field(
+        default_factory=list, description="Citations / source links."
+    )
     documents: list[str] = Field(default_factory=list)
     notes: Optional[str] = None
+
+    @field_validator("project_name", "units", "notes")
+    @classmethod
+    def _blank_to_none(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
+
+    @field_validator("documents", "codes", "references")
+    @classmethod
+    def _drop_empty_strings(cls, v: list[str]) -> list[str]:
+        return [s for s in (item.strip() for item in v) if s]
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "ProjectBundle":
@@ -57,11 +92,50 @@ class ProjectBundle(BaseModel):
             data = yaml.safe_load(f) or {}
         return cls.model_validate(data)
 
+    @classmethod
+    def to_json_schema(cls) -> dict[str, Any]:
+        """JSON Schema for the project-SSOT contract (for docs / validation)."""
+        return cls.model_json_schema()
+
+    def is_empty(self) -> bool:
+        """True when the bundle carries no project data at all."""
+        return not any(
+            (
+                self.project_name,
+                self.vessel_particulars,
+                self.environment,
+                self.codes,
+                self.references,
+                self.documents,
+                self.notes,
+            )
+        )
+
+    def contract_warnings(self) -> list[str]:
+        """Non-fatal gaps worth surfacing before authoring (advisory, not fatal).
+
+        Empty list means the bundle is well-formed. The resolver still ledgers
+        every assumed value downstream regardless.
+        """
+        warnings: list[str] = []
+        if self.is_empty():
+            warnings.append("Project bundle is empty -- nothing to ground against.")
+        if (self.vessel_particulars or self.environment) and self.units is None:
+            warnings.append(
+                "No 'units' declared while numeric particulars are present -- "
+                "unit interpretation is ambiguous; declare e.g. units: SI."
+            )
+        return warnings
+
     def to_prompt_context(self) -> str:
         """Render the bundle as text for the LLM."""
         lines: list[str] = []
         if self.project_name:
             lines.append(f"Project: {self.project_name}")
+        if self.units:
+            lines.append(f"Units: {self.units}")
+        if self.codes:
+            lines.append("Design codes / standards: " + ", ".join(self.codes))
         if self.vessel_particulars:
             lines.append("\nVessel particulars (as provided):")
             for key, value in self.vessel_particulars.items():
@@ -72,6 +146,10 @@ class ProjectBundle(BaseModel):
                 lines.append(f"  - {key}: {value}")
         if self.notes:
             lines.append(f"\nNotes:\n{self.notes}")
+        if self.references:
+            lines.append("\nReferences:")
+            for ref in self.references:
+                lines.append(f"  - {ref}")
         for i, doc in enumerate(self.documents, 1):
             lines.append(f"\n--- Document {i} ---\n{doc}")
         return "\n".join(lines).strip() or "(no project data provided)"
