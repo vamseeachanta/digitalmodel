@@ -1,0 +1,36 @@
+# Project single-source-of-truth (project SSOT) for the OrcaFlex LLM
+# spec-authoring front-end.
+#
+# This is heterogeneous project data, NOT an analysis spec. The LLM reads it,
+# extracts only the mooring facts that are actually stated here, and leaves
+# everything else for the deterministic inverse resolver to fill (and ledger).
+#
+# Run:
+#   uv run python -m digitalmodel.solvers.orcaflex.spec_author \
+#       examples/workflows/orcaflex-spec-authoring-llm/project_bundle.yml \
+#       -r "Screen the spread mooring for storm strength" \
+#       -o authored_spec
+
+project_name: West Horizon FPSO mooring screening
+
+vessel_particulars:
+  type: FPSO
+  loa_m: 285
+  beam_m: 63
+
+environment:
+  field: Deepwater GoM
+  water_depth_m: 1500
+
+notes: >
+  Permanent spread mooring, 12 lines. The chain segments are 130 mm R5 studless.
+  Client wants a first-pass storm strength screening (peak line tension vs MBL)
+  before the detailed metocean is finalised. No fairlead/anchor geometry has been
+  fixed yet, so leave the layout to the resolver defaults.
+
+documents:
+  - >
+    Mooring basis of design (excerpt): "The system comprises 12 mooring lines in
+    a symmetric spread. Top chain: 130 mm grade R5 studless. Water depth at the
+    site is 1500 m. Anchor radius and line length to be confirmed in detailed
+    design."
