@@ -262,6 +262,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--output-format", choices=("json-matrix", "list"), default="json-matrix"
     )
+    parser.add_argument(
+        "--on-missing-base",
+        choices=("error", "full"),
+        default="error",
+        help=(
+            "Behavior when the base SHA is unreachable (zero-SHA new branch or "
+            "force-push pruned history). 'error' (default) hard-fails with exit 2; "
+            "'full' fails SAFE to the full matrix."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.mode == "touched" and (not args.base or not args.head):
         parser.error("--mode touched requires --base and --head")
@@ -272,16 +282,26 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
     try:
         domains = parse_domains(args.domains_file)
-        selected = (
-            domains
-            if args.mode == "full"
-            else touched_domains(
-                git_changed_files(args.base, args.head),
-                domains,
-                args.base,
-                args.head,
-            )
-        )
+        if args.mode == "full":
+            selected = domains
+        else:
+            try:
+                changed = git_changed_files(args.base, args.head)
+            except subprocess.CalledProcessError:
+                # Base SHA unreachable: zero-SHA new branch or force-push pruned
+                # history. Fail SAFE to the full matrix when asked; otherwise let
+                # the catch-all below preserve the historical exit-2 behavior.
+                if args.on_missing_base == "full":
+                    selected = domains
+                else:
+                    raise
+            else:
+                selected = touched_domains(
+                    changed,
+                    domains,
+                    args.base,
+                    args.head,
+                )
     except Exception as exc:
         print(f"detect_touched_domains.py: {exc}", file=sys.stderr)
         return 2

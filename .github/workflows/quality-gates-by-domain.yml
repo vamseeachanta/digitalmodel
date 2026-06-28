@@ -36,6 +36,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_AFTER_SHA: ${{ github.event.after }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
@@ -44,7 +46,20 @@ jobs:
               --head "$PR_HEAD_SHA" \
               --domains-file tests/DOMAINS.md \
               --output-format json-matrix)
+          elif [ "$EVENT_NAME" = "push" ]; then
+            # Route push like PR: touched-domain-only. github.event.before is the
+            # all-zero SHA on branch-create and may be pruned after a force-push;
+            # --on-missing-base full makes the detector fail SAFE to the full sweep
+            # rather than silently skipping every leg.
+            matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
+              --mode touched \
+              --base "$PUSH_BEFORE_SHA" \
+              --head "$PUSH_AFTER_SHA" \
+              --on-missing-base full \
+              --domains-file tests/DOMAINS.md \
+              --output-format json-matrix)
           else
+            # schedule (nightly cron) + workflow_dispatch run the full sweep.
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
               --mode full \
               --domains-file tests/DOMAINS.md \
