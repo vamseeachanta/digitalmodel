@@ -18,16 +18,31 @@ OrcaWave .yml / AQWA .dat   (licensed-program input)
 
 ## Run
 
-The LLM call uses the Anthropic SDK (`claude-opus-4-8`, structured outputs).
-It is an optional dependency, so run with `--with anthropic` and set a key:
+By default the LLM call goes through the **`claude -p` CLI** (Claude Code) —
+it uses your existing Claude Code auth, so **no `ANTHROPIC_API_KEY` and no extra
+dependency**:
+
+```bash
+uv run python -m digitalmodel.hydrodynamics.diffraction.spec_author \
+    examples/workflows/spec-authoring-llm/project_bundle.yml \
+    --request "Give me first-pass motion RAOs for a transit screening study" \
+    --out-dir /tmp/authored_spec
+```
+
+Alternative backend — the Anthropic SDK (needs `anthropic` + `ANTHROPIC_API_KEY`):
 
 ```bash
 export ANTHROPIC_API_KEY=...
 uv run --with anthropic python -m digitalmodel.hydrodynamics.diffraction.spec_author \
     examples/workflows/spec-authoring-llm/project_bundle.yml \
-    --request "Give me first-pass motion RAOs for a transit screening study" \
-    --out-dir /tmp/authored_spec
+    --request "..." --backend anthropic-sdk --out-dir /tmp/authored_spec
 ```
+
+> **Mesh note:** the resolver requires a hull mesh to complete the spec. This
+> example bundle deliberately omits one — the author step extracts the
+> particulars and **flags the missing mesh as an open question** (no silent
+> assumptions). For a full run, add `vessel_particulars.mesh_file: <path.gdf>`
+> to the bundle (or generate a parametric hull first).
 
 Outputs in `--out-dir`:
 

@@ -6,6 +6,7 @@ resolve -> analysis-SSOT pipeline without any network or API key.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -244,3 +245,86 @@ def test_system_prompt_lists_all_outcomes() -> None:
     prompt = build_system_prompt()
     for outcome in Outcome:
         assert outcome.value in prompt
+
+
+# --- ClaudeCliIntentAuthor (mocked runner, no real CLI) --------------------
+
+
+def _fake_completed(stdout: str, returncode: int = 0, stderr: str = ""):
+    import subprocess
+
+    return subprocess.CompletedProcess(
+        args=["claude"], returncode=returncode, stdout=stdout, stderr=stderr
+    )
+
+
+def test_claude_cli_author_parses_fenced_json(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import ClaudeCliIntentAuthor
+
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    inner = (
+        '{"outcome": "ship_raos", "mesh_file": "%s", "water_depth": 100.0, '
+        '"provenance": [], "open_questions": [], "rationale": "ok"}' % mesh
+    )
+    # claude -p returns an envelope whose `result` may wrap JSON in fences.
+    envelope = json.dumps({"is_error": False, "result": "```json\n" + inner + "\n```"})
+
+    captured: dict = {}
+
+    def runner(argv, stdin):
+        captured["argv"] = argv
+        captured["stdin"] = stdin
+        return _fake_completed(envelope)
+
+    author = ClaudeCliIntentAuthor(runner=runner)
+    intent = author.author(ProjectBundle(notes="x"), "vessel RAOs")
+
+    assert intent.outcome == Outcome.SHIP_RAOS
+    assert intent.mesh_file == str(mesh)
+    # The CLI was invoked headlessly with the right flags + stdin prompt.
+    assert "-p" in captured["argv"]
+    assert "--output-format" in captured["argv"]
+    assert "vessel RAOs" in captured["stdin"]
+
+
+def test_claude_cli_author_raises_on_error_envelope() -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import ClaudeCliIntentAuthor
+
+    envelope = json.dumps({"is_error": True, "result": "boom"})
+    author = ClaudeCliIntentAuthor(runner=lambda argv, stdin: _fake_completed(envelope))
+    with pytest.raises(RuntimeError, match="boom"):
+        author.author(ProjectBundle(), "RAOs")
+
+
+def test_claude_cli_author_raises_on_nonzero_returncode() -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import ClaudeCliIntentAuthor
+
+    author = ClaudeCliIntentAuthor(
+        runner=lambda argv, stdin: _fake_completed("", returncode=1, stderr="no auth")
+    )
+    with pytest.raises(RuntimeError, match="no auth"):
+        author.author(ProjectBundle(), "RAOs")
+
+
+def test_extract_json_object_handles_prose_and_fences() -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import _extract_json_object
+
+    assert _extract_json_object('prefix ```json\n{"a": 1}\n``` suffix') == '{"a": 1}'
+    assert _extract_json_object('{"a": {"b": 2}} trailing') == '{"a": {"b": 2}}'
+    assert _extract_json_object('{"s": "}"}') == '{"s": "}"}'
+
+
+def test_author_spec_end_to_end_with_cli_runner(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.spec_author import ClaudeCliIntentAuthor
+
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    inner = (
+        '{"outcome": "full_qtf", "mesh_file": "%s", "loa": 120, "beam": 20, '
+        '"draft": 8, "displacement_t": 15000, "water_depth": 100, '
+        '"provenance": [], "open_questions": [], "rationale": "ok"}' % mesh
+    )
+    envelope = json.dumps({"is_error": False, "result": inner})
+    author = ClaudeCliIntentAuthor(runner=lambda argv, stdin: _fake_completed(envelope))
+
+    result = author_spec(ProjectBundle(), "full QTF please", author=author)
+    assert result.spec.solver_options.solve_type == "full_qtf"
