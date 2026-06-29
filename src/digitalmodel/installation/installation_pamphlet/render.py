@@ -349,6 +349,106 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
             )
         return blocks
 
+    SZ = d.get("splashzone") or []
+
+    def splashzone_svg():
+        W, H, ml, mr, mt, mb = 460, 250, 46, 150, 16, 34
+        palette = ["#0a6cbf", "#c0392b", "#0a8f4f", "#8e44ad", "#d98b00", "#16707f"]
+        tmin, tmax = min(TP), max(TP)
+        allhs = [s["hs_by_tp"][f"{float(t):.1f}"] for s in SZ for t in TP]
+        hmax = max(allhs) * 1.15 if allhs else 1.0
+        hmax = max(hmax, 0.5)
+
+        def X(t):
+            return ml + (t - tmin) / (tmax - tmin) * (W - ml - mr)
+
+        def Y(h):
+            return H - mb - h / hmax * (H - mt - mb)
+
+        ticks = [round(hmax * k / 4, 1) for k in range(5)]
+        grid = "".join(
+            f'<line x1="{ml}" y1="{Y(h):.1f}" x2="{W-mr}" y2="{Y(h):.1f}" stroke="#eef2f6"/>'
+            f'<text x="{ml-6}" y="{Y(h)+3:.1f}" font-size="9" text-anchor="end" fill="#5a6b7a">{h:.1f}</text>'
+            for h in ticks
+        )
+        grid += "".join(
+            f'<text x="{X(t):.1f}" y="{H-mb+14:.1f}" font-size="10" text-anchor="middle" fill="#5a6b7a">{t:.0f}</text>'
+            for t in TP
+        )
+        series = ""
+        leg = ""
+        for i, s in enumerate(SZ):
+            col = palette[i % len(palette)]
+            pts = " ".join(f"{X(t):.1f},{Y(s['hs_by_tp'][f'{float(t):.1f}']):.1f}" for t in TP)
+            series += f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2.2"/>'
+            series += "".join(
+                f'<circle cx="{X(t):.1f}" cy="{Y(s["hs_by_tp"][f"{float(t):.1f}"]):.1f}" r="2.6" fill="{col}"/>'
+                for t in TP
+            )
+            ly = mt + 4 + i * 16
+            leg += (
+                f'<line x1="{W-mr+6}" y1="{ly}" x2="{W-mr+24}" y2="{ly}" stroke="{col}" stroke-width="2.6"/>'
+                f'<text x="{W-mr+28}" y="{ly+3}" font-size="9.5" fill="#0f2233">{s["id"] or s["item"]}</text>'
+            )
+        return (
+            f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Splash-zone limiting Hs vs Tp">\n'
+            f'{grid}{series}{leg}\n'
+            f'<text x="{(ml+W-mr)//2}" y="{H-3}" font-size="10" text-anchor="middle" fill="#5a6b7a">Peak period Tp (s)</text>\n'
+            f'<text x="12" y="{H//2}" font-size="10" text-anchor="middle" fill="#5a6b7a" transform="rotate(-90 12 {H//2})">Splash-zone Hs limit (m)</text></svg>'
+        )
+
+    def splashzone_rows():
+        out = ""
+        for s in SZ:
+            govs = list(s["gov_by_tp"].values())
+            gov0 = govs[0] if govs else "—"  # governing term at the shortest (most onerous) Tp
+            cells = "".join(
+                f"<td>{s['hs_by_tp'][f'{float(t):.1f}']:.2f}</td>" for t in TP
+            )
+            out += (
+                f"<tr><td class='l'>{s['item']} <small>(W<sub>sub</sub>={s['submerged_weight_kn']:,.0f} kN, "
+                f"A<sub>b</sub>={s['bottom_area_m2']:.0f} m&sup2;)</small></td>{cells}"
+                f"<td><small>{gov0}</small></td></tr>"
+            )
+        return out
+
+    def splashzone_combined_rows():
+        out = ""
+        for s in SZ:
+            comb = s.get("combined_hs_by_tp")
+            if not comb:
+                continue
+            cells = "".join(f"<td>{comb[f'{float(t):.1f}']:.2f}</td>" for t in TP)
+            out += f"<tr><td class='l'>{s['item']}</td>{cells}</tr>"
+        return out
+
+    def splashzone_block():
+        if not SZ:
+            return ""
+        any_combined = any(s.get("combined_hs_by_tp") for s in SZ)
+        combined_tbl = (
+            "<div class=\"card\"><h3>Governing lowering Hs (m) = min(vessel heavy-lift, splash-zone)</h3>"
+            f"<table><tr><th class='l'>Structure</th>{ehead}</tr>{splashzone_combined_rows()}</table>"
+            "<p class=\"sub\" style=\"margin-top:8px\">Per structure, the lower of the vessel heavy-lift "
+            "motion limit and its own splash-zone limit governs the lower-through-wave-zone go/no-go.</p></div>"
+            if any_combined
+            else ""
+        )
+        return (
+            "<h3 class='oph' style='margin-top:18px'>Per-structure splash-zone limits (DNV-RP-H103)</h3>"
+            "<div class=\"sub\">Closed-form slamming + drag + added-mass inertia vs the snap / slack-sling "
+            "criterion (characteristic upward hydrodynamic force &le; submerged weight / DAF). Hoist wire must "
+            "stay in tension through the wave zone. Future verification: OrcaFlex dynamic lowering run.</div>"
+            "<div class=\"grid\">"
+            "<div class=\"card\"><h3>Splash-zone Hs limit (m)</h3>" + splashzone_svg() + "</div>"
+            "<div class=\"card\"><h3>Limiting Hs (m) by Tp (s) &middot; governing term</h3>"
+            f"<table><tr><th class='l'>Structure</th>{ehead}<th>Gov.</th></tr>{splashzone_rows()}</table>"
+            "<p class=\"sub\" style=\"margin-top:8px\">Header row = Tp (s). \"Gov.\" = governing term at the "
+            "shortest Tp (slam / drag / inertia).</p></div>"
+            "</div>"
+            + (f"<div class=\"grid\" style=\"margin-top:14px\">{combined_tbl}</div>" if combined_tbl else "")
+        )
+
     envelope_note_tail = (
         "These are still parametric — the vessel-specific BokaLift mesh diffraction (when that licensed run completes) replaces them and is expected to widen the limits further."
         if d["rao_provenance"] != "actual"
@@ -479,12 +579,14 @@ Governing limits are <b>seakeeping</b> and <b>station-keeping</b> (&sect;5–6),
 </div>
 <div class="note"><b>Envelope basis:</b> {d['envelope_proxy']}. {envelope_note_tail}</div>
 
+{splashzone_block()}
+
 <h2>4 &nbsp;Lift Items (reference catalogs)</h2>
 <table><tr><th class="l">Item</th><th>Footprint L&times;W&times;H (m)</th><th>Air mass (te)</th><th>Source</th></tr>
 <tr><td class="l">Mudmat — small</td><td>6 &times; 6 &times; 1.5</td><td>50</td><td>mudmat_structures.json</td></tr>
 <tr><td class="l">Mudmat — medium</td><td>8 &times; 10 &times; 2.0</td><td>100</td><td>mudmat_structures.json</td></tr>
 <tr><td class="l">Subsea template — large</td><td>12 &times; 14 &times; 2.5</td><td>200</td><td>mudmat_structures.json</td></tr>
-<tr><td class="l">Manifold / PLET <small>(proxy)</small></td><td>14 &times; 12 &times; 6</td><td>250</td><td>proxy — catalog gap</td></tr>
+<tr><td class="l">Production manifold</td><td>14 &times; 12 &times; 6</td><td>250</td><td>subsea_structures.json</td></tr>
 <tr><td class="l">Rigid jumper — 20 m</td><td>8&Prime; X65, M-shape</td><td>1.85</td><td>rigid_jumpers.json</td></tr>
 <tr><td class="l">Rigid jumper — 100 m</td><td>8&Prime; X65, W-shape</td><td>9.24</td><td>rigid_jumpers.json</td></tr>
 </table>
@@ -548,7 +650,7 @@ but the cascade case is high-consequence; design for intact + one-line-damaged (
 
 </main>
 <footer>
-Generated {GEN} from digitalmodel tables (vessel_db, mudmat_structures, rigid_jumpers) + engines (vessel_suitability,
+Generated {GEN} from digitalmodel tables (vessel_db, mudmat_structures, subsea_structures, rigid_jumpers) + engines (vessel_suitability,
 operation_envelope, weather_window). Envelope proxy: {d['envelope_proxy']}. Live feed: Open-Meteo marine &amp; forecast APIs.
 Lookup + decision-support screening — verify against vessel RAO, DP/mooring FMEA and MWS approval before offshore execution.
 </footer>

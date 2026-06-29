@@ -127,6 +127,136 @@ def test_build_provenance_barge_default_has_no_basis_run():
     assert prov["basis_run_id"] is None
 
 
+def test_build_provenance_t8_flips_to_catalog_when_used():
+    by_id_proxy = {
+        t["id"]: t for t in calc.build_provenance([], "barge")["tasks"]
+    }
+    assert by_id_proxy["T8"]["status"] == "proxy"  # default unchanged
+
+    prov = calc.build_provenance([], "barge", structure_catalog_used=True)
+    t8 = {t["id"]: t for t in prov["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+    assert t8["status"] != "proxy"
+    assert "subsea_structures.json" in t8["source"]
+
+
+# ---------------------------------------------------------------- structure catalog
+def test_load_structures_manifold_mass():
+    structures = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    assert set(["PLET-100", "MAN-250", "TMPL-180"]).issubset(structures)
+    manifold = structures["MAN-250"]
+    assert manifold["mass_properties"]["mass_air_te"] == pytest.approx(250.0)
+    # buoyancy + submerged weight reconcile with mass_air * g (seawater 1025, g 9.80665)
+    mp = manifold["mass_properties"]
+    total = mp["buoyancy_force_kn"] + mp["submerged_weight_kn"]
+    assert total == pytest.approx(250000 * 9.80665 / 1000, abs=0.05)
+
+
+def test_golden_catalog_structure_lift_is_defensible(vessel_info):
+    structures = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    manifold_te = structures["MAN-250"]["mass_properties"]["mass_air_te"]
+    lifts = [
+        {
+            "item": "Production manifold (250 te)",
+            "kind": "structure",
+            "source": "structure",
+            "mass_air_te": manifold_te,
+        }
+    ]
+    res = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
+    row = res["lifts"][0]
+    assert row["mass_air_te"] == pytest.approx(250.0)
+    assert row["hook_load_te"] == pytest.approx(250.0 * 1.30, abs=0.05)  # mass x DAF
+    assert row["defensible"] is True
+    assert 0.0 < row["utilization_pct"] <= 100.0
+    # the catalog-sourced structure flips T8 provenance to the real catalog
+    t8 = {t["id"]: t for t in res["provenance"]["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+
+
+# ---------------------------------------------------------------- splash-zone (T5)
+def test_compute_splashzone_envelope_golden():
+    """Closed-form per-structure splash-zone Hs limit vs Tp (DNV-RP-H103)."""
+    mud = calc.load_mudmats(DATA_DIR / "mudmat_structures.json")
+    env = calc.compute_splashzone_envelope(mud["MUD-S"], calc.DEFAULT_TP_GRID_S)
+    assert env["id"] == "MUD-S"
+    assert env["daf"] == pytest.approx(1.30)
+    hs = env["hs_by_tp"]
+    # positive, golden values (locked with tolerance)
+    assert hs["6.0"] == pytest.approx(2.11, abs=0.02)
+    assert hs["16.0"] == pytest.approx(5.70, abs=0.02)
+    assert all(v > 0 for v in hs.values())
+    # monotone increasing in Tp (longer period -> milder kinematics -> higher Hs)
+    vals = [hs[f"{float(t):.1f}"] for t in calc.DEFAULT_TP_GRID_S]
+    assert vals == sorted(vals)
+    # flat-bottom mudmats are slamming-governed
+    assert set(env["gov_by_tp"].values()) == {"slam"}
+
+
+def test_splashzone_denser_structure_tolerates_higher_hs():
+    """A dense, small-footprint structure tolerates higher Hs than a light,
+    large-area one (the large flat bottom is slamming-limited)."""
+    sub = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    plet = calc.compute_splashzone_envelope(sub["PLET-100"], calc.DEFAULT_TP_GRID_S)
+    tmpl = calc.compute_splashzone_envelope(sub["TMPL-180"], calc.DEFAULT_TP_GRID_S)
+    # PLET-100: W_sub 852 kN over A_b 48 m2 ; SPS template: 1535 kN over 192 m2
+    assert plet["hs_by_tp"]["6.0"] == pytest.approx(2.66, abs=0.02)
+    assert tmpl["hs_by_tp"]["6.0"] == pytest.approx(1.50, abs=0.02)
+    assert plet["hs_by_tp"]["6.0"] > tmpl["hs_by_tp"]["6.0"]
+    assert tmpl["gov_by_tp"]["6.0"] == "slam"
+
+
+def _lifts_with_records():
+    mud = calc.load_mudmats(DATA_DIR / "mudmat_structures.json")
+    sub = calc.load_structures(DATA_DIR / "subsea_structures.json")
+    return [
+        {
+            "item": "Mudmat (small)", "kind": "mudmat",
+            "mass_air_te": mud["MUD-S"]["mass_properties"]["mass_air_te"],
+            "catalog_record": mud["MUD-S"],
+        },
+        {
+            "item": "Production manifold (250 te)", "kind": "structure", "source": "structure",
+            "mass_air_te": sub["MAN-250"]["mass_properties"]["mass_air_te"],
+            "catalog_record": sub["MAN-250"],
+        },
+    ]
+
+
+def test_splashzone_set_in_payload_and_provenance(vessel_info):
+    res = _assemble(vessel_info, _lifts_with_records(), "drillship", runs=[DRILLSHIP_RUN])
+    sz = res["splashzone"]
+    assert [s["id"] for s in sz] == ["MUD-S", "MAN-250"]
+    # combined limit = min(vessel heavy-lift envelope, structure splash-zone) per Tp
+    hl = res["envelopes"]["heavy_lift"]["hs_by_tp"]
+    for s in sz:
+        for k, comb in s["combined_hs_by_tp"].items():
+            assert comb == pytest.approx(min(s["hs_by_tp"][k], hl[k]), abs=0.01)
+    # T5 provenance flips off "pending"
+    t5 = {t["id"]: t for t in res["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "actual"
+    assert t5["status"] != "pending"
+    assert "splash-zone" in t5["basis"].lower()
+
+
+def test_splashzone_renders_section(vessel_info):
+    res = _assemble(vessel_info, _lifts_with_records(), "drillship", runs=[DRILLSHIP_RUN])
+    html = render_pamphlet_html(res, "LBL")
+    assert "Per-structure splash-zone limits (DNV-RP-H103)" in html
+    assert "MUD-S" in html
+    assert "Governing lowering Hs" in html  # combined limit table
+
+
+def test_splashzone_absent_when_no_catalog_records(vessel_info, lifts):
+    """Without catalog records (hand-built lifts), T5 stays pending and the
+    splash-zone section is not rendered — keeps existing goldens green."""
+    res = _assemble(vessel_info, lifts, "barge")
+    assert res["splashzone"] == []
+    t5 = {t["id"]: t for t in res["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "pending"
+    assert "Per-structure splash-zone limits" not in render_pamphlet_html(res, "LBL")
+
+
 # ---------------------------------------------------------------- golden numbers
 def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "barge")
@@ -227,8 +357,24 @@ def test_router_on_base_config_writes_artifacts(tmp_path):
     assert summary["rao_basis"] == "drillship"  # auto-selected from completed_runs
     assert summary["all_lifts_defensible"] is True
 
+    # the base config now sources the 250 te manifold from subsea_structures.json,
+    # which flips the T8 structure-catalog provenance off the retired proxy
+    result = out["installation_pamphlet"]["result"]
+    t8 = {t["id"]: t for t in result["provenance"]["tasks"]}["T8"]
+    assert t8["status"] == "actual"
+    assert t8["status"] != "proxy"
+    man = next(r for r in result["lifts"] if "manifold" in r["item"].lower())
+    assert man["mass_air_te"] == pytest.approx(250.0)
+
+    # the workflow attaches catalog records to mudmat/structure lifts, so the
+    # per-structure splash-zone envelope (T5) is computed and flips off "pending"
+    assert len(result["splashzone"]) >= 4  # 3 mudmats + 1 manifold
+    t5 = {t["id"]: t for t in result["provenance"]["tasks"]}["T5"]
+    assert t5["status"] == "actual"
+
     html = html_path.read_text()
     assert "Installation Vessel Pamphlet" in html
+    assert "Per-structure splash-zone limits (DNV-RP-H103)" in html
 
 
 def test_router_is_deterministic_on_base_config(tmp_path):
@@ -245,3 +391,206 @@ def test_router_is_deterministic_on_base_config(tmp_path):
     html_b, data_b = run("run_b")
     assert html_a == html_b  # byte-identical HTML
     assert data_a == data_b  # byte-identical JSON
+
+
+# ---------------------------------------------------------------- real-RAO artifact ingestion (T3)
+# Advances #1111: a vessel-specific OrcaWave RAO artifact drives the operation
+# envelopes for the "vessel" basis. Tested here with a SYNTHETIC fixture RAOSet
+# (clearly NOT real vessel data) — the real BokaLift mesh + licensed solve remain.
+BOKALIFT_RUN = {"run_id": "lr_bl", "input": "acma/bokalift2-mesh/input.yml"}
+HS_LIMITS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+
+
+def _synthetic_rao_set():
+    """A clearly-synthetic fixture RAOSet (NOT real vessel data): a few freqs and
+    headings with flat, distinctive magnitudes — just enough to exercise the pipe."""
+    import numpy as np
+
+    from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+        DOF,
+        FrequencyData,
+        HeadingData,
+        RAOComponent,
+        RAOSet,
+    )
+
+    periods = np.array([4.0, 6.0, 8.0, 10.0, 12.0, 16.0, 20.0])
+    freqs = 2.0 * np.pi / periods
+    heads = np.array([0.0, 90.0, 180.0])
+    nf, nh = len(freqs), len(heads)
+
+    def comp(dof, val, unit):
+        mag = np.full((nf, nh), float(val))
+        return RAOComponent(
+            dof=dof,
+            magnitude=mag,
+            phase=np.zeros((nf, nh)),
+            frequencies=FrequencyData(
+                values=freqs, periods=periods, count=nf,
+                min_freq=float(freqs.min()), max_freq=float(freqs.max()),
+            ),
+            headings=HeadingData(
+                values=heads, count=nh,
+                min_heading=float(heads.min()), max_heading=float(heads.max()),
+            ),
+            unit=unit,
+        )
+
+    return RAOSet(
+        vessel_name="SYNTHETIC FIXTURE VESSEL (not real data)",
+        analysis_tool="OrcaWave",
+        water_depth=1500.0,
+        surge=comp(DOF.SURGE, 0.0, "m/m"),
+        sway=comp(DOF.SWAY, 0.0, "m/m"),
+        heave=comp(DOF.HEAVE, 0.55, "m/m"),
+        roll=comp(DOF.ROLL, 1.1, "deg/m"),
+        pitch=comp(DOF.PITCH, 0.7, "deg/m"),
+        yaw=comp(DOF.YAW, 0.0, "deg/m"),
+        created_date="2026-01-01",
+    )
+
+
+def _write_rao_artifact(tmp_path, rao_set, *, wrap=False):
+    import json
+
+    if wrap:  # DiffractionResults-style wrapper that nests a RAOSet under "raos"
+        payload = {
+            "vessel_name": rao_set.vessel_name,
+            "analysis_tool": "OrcaWave",
+            "water_depth": rao_set.water_depth,
+            "raos": rao_set.to_dict(),
+        }
+        path = tmp_path / "rao_wrapped.json"
+    else:
+        payload = rao_set.to_dict()
+        path = tmp_path / "rao.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def _envelopes_from_rao(rao_set):
+    from digitalmodel.marine_ops.operation_envelope import operation_envelope
+
+    out = {}
+    for op in calc.DEFAULT_OPERATIONS:
+        env = operation_envelope(rao_set, op, tp_range_s=calc.DEFAULT_TP_GRID_S)
+        out[op] = {
+            "alpha": env.alpha,
+            "hs_by_tp": {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) for p in env.points},
+            "gov_by_tp": {f"{round(p.tp_s, 1):.1f}": p.governing_dof for p in env.points},
+        }
+    return out
+
+
+def test_load_rao_set_from_artifact_roundtrips(tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    loaded = calc.load_rao_set_from_artifact(path)
+    # RAOSet holds numpy arrays (dataclass __eq__ is ambiguous), so compare the
+    # serialized form — a faithful round-trip.
+    assert loaded.to_dict() == fixture.to_dict()
+    assert loaded.vessel_name == "SYNTHETIC FIXTURE VESSEL (not real data)"
+
+
+def test_load_rao_set_from_artifact_diffraction_wrapper(tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture, wrap=True)
+    loaded = calc.load_rao_set_from_artifact(path)
+    assert loaded.to_dict() == fixture.to_dict()
+
+
+def test_load_rao_set_from_artifact_errors(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        calc.load_rao_set_from_artifact(tmp_path / "does_not_exist.json")
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not valid json", encoding="utf-8")
+    with pytest.raises(ValueError):
+        calc.load_rao_set_from_artifact(bad)
+    noraos = tmp_path / "noraos.json"
+    noraos.write_text('{"foo": 1}', encoding="utf-8")
+    with pytest.raises(ValueError):
+        calc.load_rao_set_from_artifact(noraos)
+
+
+def test_vessel_artifact_drives_envelopes_and_is_actual(vessel_info, lifts, tmp_path):
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    expected = _envelopes_from_rao(fixture)
+
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN], rao_artifact=str(path),
+    )
+
+    # the REAL ingested artifact drove the envelopes ...
+    assert res["envelopes"] == expected
+    # ... and they DIFFER from the Drillship-parametric (no-artifact) envelopes
+    drillship_proxy = calc.compute_envelopes(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S
+    )
+    assert res["envelopes"] != drillship_proxy
+
+    # provenance is honestly "actual" because a real artifact was loaded
+    assert res["rao_provenance"] == "actual"
+    assert res["rao_from_artifact"] is True
+    assert res["rao_artifact"] == str(path)
+    by_id = {t["id"]: t for t in res["provenance"]["tasks"]}
+    assert by_id["T3"]["status"] == "actual"
+    assert by_id["T3"]["source"] == "OrcaWave diffraction"
+    assert by_id["T4"]["status"] == "actual"
+
+
+def test_vessel_artifact_path_from_completed_run(vessel_info, lifts, tmp_path):
+    """The artifact path may ride on the completed-run entry that flipped basis."""
+    fixture = _synthetic_rao_set()
+    path = _write_rao_artifact(tmp_path, fixture)
+    run = {**BOKALIFT_RUN, "rao_artifact": str(path)}
+
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[run],  # no explicit rao_artifact -> resolved from the run
+    )
+    assert res["rao_from_artifact"] is True
+    assert res["rao_provenance"] == "actual"
+    assert res["envelopes"] == _envelopes_from_rao(fixture)
+
+
+def test_vessel_without_artifact_is_honest_proxy(vessel_info, lifts):
+    """Honest fallback: basis resolves to "vessel" but NO artifact is available ->
+    do NOT claim "actual"; stay on the ship-shaped proxy with the synced note."""
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN],  # basis is "vessel" but no rao_artifact
+    )
+    assert res["rao_from_artifact"] is False
+    assert res["rao_artifact"] is None
+    assert res["rao_provenance"] != "actual"
+    assert res["rao_provenance"] == "ship_proxy"
+    by_id = {t["id"]: t for t in res["provenance"]["tasks"]}
+    assert by_id["T3"]["status"] == "ship_proxy"
+    assert by_id["T3"]["status"] != "actual"
+    assert "not yet synced" in by_id["T3"]["basis"]
+    assert "not yet synced" in res["envelope_proxy"]
+    # the proxy envelopes equal the ship-shaped (Drillship) parametric fallback
+    drillship = calc.compute_envelopes(
+        "drillship", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S
+    )
+    assert res["envelopes"] == drillship
+
+
+def test_resolve_rao_artifact_precedence(tmp_path):
+    run = {**BOKALIFT_RUN, "rao_artifact": "/from/run.json"}
+    # explicit config path wins over the completed-run-carried path
+    assert calc.resolve_rao_artifact("vessel", [run], "/explicit.json") == "/explicit.json"
+    # else the run-carried path is used
+    assert calc.resolve_rao_artifact("vessel", [run], None) == "/from/run.json"
+    # non-vessel basis never ingests an artifact
+    assert calc.resolve_rao_artifact("drillship", [run], "/explicit.json") is None
+    # vessel basis with nothing available -> None
+    assert calc.resolve_rao_artifact("vessel", [BOKALIFT_RUN], None) is None
