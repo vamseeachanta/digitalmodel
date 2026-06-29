@@ -9,7 +9,14 @@ from digitalmodel.naval_architecture.hull_girder_smith import (
     smith_ultimate,
     stiffened_plate_element,
 )
-from digitalmodel.structural.structural_analysis.models import STEEL_AH36
+from digitalmodel.structural.structural_analysis.buckling import (
+    PlateBucklingAnalyzer,
+)
+from digitalmodel.structural.structural_analysis.models import (
+    PlateGeometry,
+    STEEL_AH36,
+    STEEL_GRADE_A,
+)
 from digitalmodel.structural.structural_analysis.panel_buckling import (
     StiffenedPanelBucklingAnalyzer,
     StiffenedPanelGeometry,
@@ -272,3 +279,82 @@ def test_result_carries_code_reference_and_na_migration():
     na_peak = res.sagging_curve[-1].neutral_axis_m
     assert math.isclose(na_zero, centroid, abs_tol=1e-6)
     assert na_peak < centroid  # NA drops toward the keel (tension side)
+
+
+# ===========================================================================
+# Independently-verified golden cases (Grade A: fy=235 MPa, E=206 GPa).
+# Reproduced by an external check of the Smith method; high confidence.
+# ===========================================================================
+GA_FY = 235.0
+GA_E = 206000.0
+GA_D = 10.0  # flange separation / depth (m)
+GA_AF = 0.25  # flange area B*tf = 10 m * 25 mm (m^2)
+
+
+def _ga_kappa_yield():
+    return GA_FY / (GA_E * (GA_D / 2.0))
+
+
+# CASE 1 — stocky two-flange box reduces to first-yield = fully-plastic.
+# Shape factor exactly 1.0 (webs shear-only -> no bending element): Z = A_f*D =
+# 2.5 m^3, M_U = fy*Z = 587,500 kN.m. THE make-or-break correctness check.
+def test_case1_two_flange_box_reduces_to_first_yield():
+    els = [
+        HullGirderElement(GA_AF, 0.0, GA_FY, GA_FY, GA_E),
+        HullGirderElement(GA_AF, GA_D, GA_FY, GA_FY, GA_E),
+    ]
+    res = smith_ultimate(els, max_curvature=50.0 * _ga_kappa_yield(), num_steps=300)
+    assert math.isclose(res.ultimate_moment_hogging_kn_m, 587_500.0, rel_tol=1e-5)
+    assert math.isclose(res.ultimate_moment_sagging_kn_m, 587_500.0, rel_tol=1e-5)
+
+
+# CASE 2 — stocky single-cell box with webs: M-kappa rises from the first-yield
+# moment fy*Z = 783,333 kN.m to a plateau at the fully-plastic moment
+# fy*Zp = 881,250 kN.m (shape factor 1.125). Webs discretised into point areas;
+# the lumped section converges to the continuous I=16.6667 / Zp=3.75.
+def test_case2_single_cell_box_shape_factor_reserve():
+    n_per_web = 100
+    tw, t_f, breadth = 0.025, 0.025, 10.0
+    els = [
+        HullGirderElement(breadth * t_f, 0.0, GA_FY, GA_FY, GA_E),
+        HullGirderElement(breadth * t_f, GA_D, GA_FY, GA_FY, GA_E),
+    ]
+    dz = GA_D / n_per_web
+    a_web = tw * dz
+    for _wall in range(2):
+        for i in range(n_per_web):
+            els.append(HullGirderElement(a_web, (i + 0.5) * dz, GA_FY, GA_FY, GA_E))
+    # First yield at kappa_y -> fy*Z.
+    res_y = smith_ultimate(els, max_curvature=_ga_kappa_yield(), num_steps=1)
+    assert math.isclose(res_y.hogging_curve[-1].moment_kn_m, 783_333.0, rel_tol=1e-3)
+    # Fully-plastic plateau -> fy*Zp, with shape-factor reserve > first yield.
+    res_p = smith_ultimate(els, max_curvature=50.0 * _ga_kappa_yield(), num_steps=300)
+    assert math.isclose(res_p.ultimate_moment_hogging_kn_m, 881_250.0, rel_tol=1e-3)
+    assert res_p.ultimate_moment_hogging_kn_m > res_y.hogging_curve[-1].moment_kn_m
+
+
+# CASE 3 — slender compression flange (plate b=800, t=20, a=2400, k=4) buckles:
+# Johnson-Ostenfeld sigma_u = 205.34 MPa (0.874*fy) -> sagging M_U = sigma_u*Z =
+# 513,347 kN.m, a 12.6% knockdown below fy*Z. (Published-formula-derived, not
+# published-validated.) sigma_u taken from the validated DNV-RP-C201 plate
+# solver; the pure buckling cap (residual=1) gives the first-collapse plateau.
+def test_case3_slender_flange_buckling_knockdown():
+    analyzer = PlateBucklingAnalyzer(STEEL_GRADE_A)
+    plate = PlateGeometry(length=2400.0, width=800.0, thickness=20.0)
+    sigma_u = analyzer.johnson_ostenfeld(analyzer.elastic_buckling_stress(plate))
+    assert math.isclose(sigma_u, 205.34, rel_tol=1e-3)
+    assert math.isclose(sigma_u / GA_FY, 0.874, rel_tol=2e-3)
+
+    # Deck (z=D) is the compression flange in sagging; keel stays at fy.
+    els = [
+        HullGirderElement(GA_AF, 0.0, GA_FY, GA_FY, GA_E),
+        HullGirderElement(
+            GA_AF, GA_D, GA_FY, sigma_u, GA_E, post_buckling_residual=1.0
+        ),
+    ]
+    res = smith_ultimate(els, max_curvature=10.0 * _ga_kappa_yield(), num_steps=400)
+    # Hogging (deck in tension) keeps the full fy*Z.
+    assert math.isclose(res.ultimate_moment_hogging_kn_m, 587_500.0, rel_tol=1e-5)
+    # Sagging knocked down to sigma_u*Z = 513,347 kN.m.
+    assert math.isclose(res.ultimate_moment_sagging_kn_m, 513_347.0, rel_tol=1e-3)
+    assert res.ultimate_moment_sagging_kn_m < 587_500.0

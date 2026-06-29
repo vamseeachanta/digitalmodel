@@ -71,7 +71,28 @@ Z = 3.989 m³; first-yield `M_y = fy·Z = 1.4161×10⁶ kN·m`; fully-plastic
    `StiffenedPanelBucklingAnalyzer.check_panel(...).critical_stress`; the
    buckling physics is delegated, not duplicated.
 
-`tests/naval_architecture/test_hull_girder_smith.py` — **8 tests**, black +
+### Independently-verified golden cases (Grade A: fy=235 MPa, E=206 GPa, ν=0.3)
+
+Cross-checked against an external reproduction of the Smith method (high
+confidence). Cases 1 and 3 are two-flange (shape factor 1) so they are *exact*
+in the lumped model; Case 2 discretises the webs into point areas and converges.
+
+| Case | Section | Quantity | Analytic | Smith march |
+|---|---|---|---|---|
+| 1 | two flanges B=10 m, tf=25 mm, D=10 m (webs shear-only) | Z=2.5 m³, M_U=fy·Z | **587,500 kN·m** | 587,500 (hog=sag, rel 1e-5) |
+| 2 | single-cell box, flange tf=25 mm, web tw=25 mm, B=D=10 m | first-yield fy·Z (Z=3.3333) | **783,333 kN·m** | 783,314 (rel 1e-3) |
+| 2 | (same) | plastic fy·Zp (Zp=3.75), shape factor 1.125 | **881,250 kN·m** | 881,191 (rel 1e-3) |
+| 3 | Case-1 box, comp. flange plate b=800, t=20, a=2400 (k=4) | σ_e=465.46, J-O σ_u=205.34 MPa (0.874·fy), M_U=σ_u·Z | **513,347 kN·m** | 513,347 (rel 1e-3) |
+
+Case 3 is **published-formula-derived, not published-validated** (no external
+benchmark). The σ_u cap uses the **unfactored** plate critical stress
+(DNV-RP-C201 Johnson-Ostenfeld); S11A partial factors are applied *only* later in
+`hull_girder_strength.ultimate_strength_check`, never inside the Smith march. The
+two-flange knockdown plateau is reproduced with the pure buckling cap
+(`post_buckling_residual=1.0`); the default Smith-style softening (`0.5`) gives a
+slightly lower, decaying sagging peak (the more physical post-collapse branch).
+
+`tests/naval_architecture/test_hull_girder_smith.py` — **11 tests**, black +
 flake8 (E9,F63,F7,F82,F401,F811,F841) clean, runs under the `naval-architecture`
 CI domain.
 
