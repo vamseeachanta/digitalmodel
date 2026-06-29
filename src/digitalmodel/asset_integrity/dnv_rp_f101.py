@@ -34,15 +34,17 @@ Two formats are provided:
   factor on the measurement standard deviation and ``StD`` the relative-depth
   measurement standard deviation (fraction of ``t``).  ``gamma_m``, ``gamma_d``
   and ``epsilon_d`` are selected from the DNV-RP-F101 Part-A tables by **safety
-  class** (low/normal/high) and the **sizing-accuracy band** ``StD[d/t]`` (see
+  class** (low/medium/high/'very high') and the **sizing-accuracy band**
+  ``StD[d/t]`` (see
   :func:`gamma_m_factor`, :func:`gamma_d_factor`, :func:`epsilon_d_fractile`);
   any factor may still be overridden explicitly.
 
 Interacting-defect colonies (:func:`dnv_f101_interacting`) follow DNV-RP-F101
-Sec. 8: for a run of adjacent interacting defects the combined defect takes the
-total length (defect lengths + interior spacings) and a **length-weighted
-(area-averaged) combined relative depth** ``d_comb = sum(d_k l_k)/sum(l_k)`` —
-not the maximum depth — and is then assessed as a single defect.
+Sec. 3.8.2: for a run of adjacent interacting defects the combined defect takes
+the total length ``L_comb`` (defect lengths + interior spacings) and an
+**area-averaged combined depth** ``d_comb = sum(d_i l_i)/L_comb`` — total
+metal-loss area over the total combined length (gaps included), not the maximum
+depth — and is then assessed as a single defect.
 
 Units are US customary throughout: lengths in inches, stresses and pressures in
 psi.  All formula constants follow DNV-RP-F101 (2015/2017) Sections 2 (PSF) and
@@ -107,21 +109,51 @@ _DEFAULT_USAGE_FACTOR = 0.72
 # with the factors selected by SAFETY CLASS and by the relative measurement
 # accuracy band StD[d/t] (the sizing standard deviation as a fraction of t).
 #
-# gamma_m (model factor) — DNV-RP-F101 Table (Part A), by safety class and by
-# whether the inspection sizes depth RELATIVE to t (e.g. MFL ILI) or ABSOLUTE
-# (e.g. UT).  The legacy scalar default 0.77 == Normal class / absolute sizing.
+# gamma_m (model factor) — DNV-RP-F101 (Jan-2015) Table 3-2, by safety class
+# (Low / Medium / High / Very High) and by whether the inspection sizes depth
+# RELATIVE to t (e.g. MFL ILI) or ABSOLUTE (e.g. UT).  The legacy scalar default
+# 0.77 == Very-High class / absolute sizing (NOT Normal — the prior code label
+# was wrong; per Table 3-2 0.77 is the Very-High absolute value).
 # ---------------------------------------------------------------------------
 _GAMMA_M_TABLE = {
-    # safety_class: {sizing_method: gamma_m}
-    "low": {"relative": 0.79, "absolute": 0.82},
-    "normal": {"relative": 0.74, "absolute": 0.77},
-    "high": {"relative": 0.70, "absolute": 0.72},
+    # safety_class: {sizing_method: gamma_m}   (DNV-RP-F101 Table 3-2)
+    "low": {"relative": 0.90, "absolute": 0.94},
+    "medium": {"relative": 0.85, "absolute": 0.88},
+    "high": {"relative": 0.80, "absolute": 0.82},
+    "very high": {"relative": 0.76, "absolute": 0.77},
 }
 
-# Default DNV-RP-F101 PSF selection (chosen to reproduce the legacy scalar
-# default gamma_m = 0.77 == Normal safety class, absolute depth sizing).
-_DEFAULT_SAFETY_CLASS = "normal"
+# Safety-class name normalisation.  DNV uses Low/Medium/High/Very High; "normal"
+# is accepted as an alias for "medium" for callers who use that wording.
+_SAFETY_CLASS_ALIASES = {
+    "low": "low",
+    "medium": "medium",
+    "normal": "medium",
+    "high": "high",
+    "very high": "very high",
+    "very_high": "very high",
+    "veryhigh": "very high",
+    "vhigh": "very high",
+}
+
+# Default DNV-RP-F101 PSF selection — Very-High safety class with absolute depth
+# sizing, chosen because that pair reproduces the legacy scalar default
+# gamma_m = 0.77 (DNV-RP-F101 Table 3-2).  Callers should set ``safety_class``
+# to the pipeline's actual class rather than relying on this conservative
+# default.
+_DEFAULT_SAFETY_CLASS = "very high"
 _DEFAULT_MEASUREMENT_METHOD = "absolute"
+
+
+def _normalise_safety_class(safety_class: str) -> str:
+    sc = safety_class.strip().lower()
+    if sc not in _SAFETY_CLASS_ALIASES:
+        raise ValueError(
+            f"safety_class {safety_class!r} must be one of "
+            f"low / medium / high / 'very high'."
+        )
+    return _SAFETY_CLASS_ALIASES[sc]
+
 
 # Relative-depth measurement standard deviation (fraction of t); ~0.08 t is a
 # typical high-resolution MFL ILI tolerance.  The Part-A gamma_d / epsilon_d
@@ -139,18 +171,15 @@ def gamma_m_factor(
     safety_class: str = _DEFAULT_SAFETY_CLASS,
     measurement_method: str = _DEFAULT_MEASUREMENT_METHOD,
 ) -> float:
-    """DNV-RP-F101 Part-A model partial safety factor ``gamma_m``.
+    """DNV-RP-F101 (Jan-2015) Table 3-2 model partial safety factor ``gamma_m``.
 
     Looked up from the safety-class / sizing-method table.  ``safety_class`` is
-    one of ``low``/``normal``/``high``; ``measurement_method`` is ``relative``
-    (depth sized as a fraction of t, e.g. MFL) or ``absolute`` (e.g. UT).
+    one of ``low``/``medium``/``high``/``very high`` (``normal`` is an alias for
+    ``medium``); ``measurement_method`` is ``relative`` (depth sized as a
+    fraction of t, e.g. MFL) or ``absolute`` (e.g. UT).
     """
-    sc = safety_class.strip().lower()
+    sc = _normalise_safety_class(safety_class)
     mm = measurement_method.strip().lower()
-    if sc not in _GAMMA_M_TABLE:
-        raise ValueError(
-            f"safety_class {safety_class!r} must be one of {sorted(_GAMMA_M_TABLE)}."
-        )
     if mm not in ("relative", "absolute"):
         raise ValueError(
             f"measurement_method {measurement_method!r} must be 'relative' or 'absolute'."
@@ -181,35 +210,40 @@ def epsilon_d_fractile(std_rel_depth: float) -> float:
 def gamma_d_factor(
     std_rel_depth: float, safety_class: str = _DEFAULT_SAFETY_CLASS
 ) -> float:
-    """DNV-RP-F101 Part-A depth partial safety factor ``gamma_d``.
+    """DNV-RP-F101 (Jan-2015) Table 3-8 depth partial safety factor ``gamma_d``.
 
     Tabulated as a function of the sizing standard deviation ``a = StD[d/t]``
-    and the safety class (DNV-RP-F101 Part A):
+    and the safety class:
 
-        Low    : a < 0.04         -> 1.0 + 4.0 a
-                 0.04 <= a < 0.08  -> 1.0 + 5.5 a - 37.5 a**2
-                 0.08 <= a <= 0.16 -> 1.2
-        Normal : a <= 0.16         -> 1.0 + 4.6 a - 13.9 a**2
-        High   : a <= 0.16         -> 1.0 + 4.3 a - 4.1 a**2
+        Low       : a < 0.04         -> 1.0 + 4.0 a
+                    0.04 <= a < 0.08  -> 1.0 + 5.5 a - 37.5 a**2
+                    0.08 <= a <= 0.16 -> 1.2
+        Medium    : a <= 0.16         -> 1.0 + 4.6 a - 13.9 a**2
+        High      : a <= 0.16         -> 1.0 + 4.3 a - 4.1 a**2
+        Very High : a < 0.03          -> 1.0 + 4.0 a
+                    0.03 <= a <= 0.16  -> 0.92 + 7.1 a - 8.3 a**2
 
-    Larger StD and higher safety class both raise ``gamma_d`` (more
-    conservative).  ``a`` above 0.16 is clamped to the 0.16 calibration point.
+    (``normal`` aliases ``medium``.)  Larger StD and higher safety class both
+    raise ``gamma_d`` (more conservative); e.g. at a = 0.08 gamma_d is 1.20
+    (Low) / 1.279 (Medium) / 1.318 (High) / 1.435 (Very High), matching the
+    Table 3-7 tabulated points.  ``a`` above 0.16 is clamped to the 0.16 point.
     """
     a = min(max(std_rel_depth, 0.0), _DNV_F101_MAX_STD)
-    sc = safety_class.strip().lower()
+    sc = _normalise_safety_class(safety_class)
     if sc == "low":
         if a < 0.04:
             return 1.0 + 4.0 * a
         if a < 0.08:
             return 1.0 + 5.5 * a - 37.5 * a * a
         return 1.2
+    if sc == "medium":
+        return 1.0 + 4.6 * a - 13.9 * a * a
     if sc == "high":
         return 1.0 + 4.3 * a - 4.1 * a * a
-    if sc == "normal":
-        return 1.0 + 4.6 * a - 13.9 * a * a
-    raise ValueError(
-        f"safety_class {safety_class!r} must be one of {sorted(_GAMMA_M_TABLE)}."
-    )
+    # very high
+    if a < 0.03:
+        return 1.0 + 4.0 * a
+    return 0.92 + 7.1 * a - 8.3 * a * a
 
 
 @dataclass
@@ -329,15 +363,16 @@ def dnv_f101_psf(
         P_corr = gamma_m * (2 t f_u/(D-t)) * (1 - gamma_d*(d/t)*)
                  / (1 - gamma_d*(d/t)*/Q).
 
-    The partial safety factors are taken from the DNV-RP-F101 Part-A tables:
-    ``gamma_m`` from :func:`gamma_m_factor` (by ``safety_class`` =
-    low/normal/high and ``measurement_method`` = relative/absolute), and
-    ``gamma_d`` / ``epsilon_d`` from :func:`gamma_d_factor` /
+    The partial safety factors are taken from the DNV-RP-F101 (Jan-2015) Part-A
+    tables: ``gamma_m`` from :func:`gamma_m_factor` (by ``safety_class`` =
+    low/medium/high/'very high' and ``measurement_method`` = relative/absolute),
+    and ``gamma_d`` / ``epsilon_d`` from :func:`gamma_d_factor` /
     :func:`epsilon_d_fractile` (by ``safety_class`` and the sizing standard
     deviation ``std_rel_depth`` = StD[d/t], fraction of ``t``).  The defaults
-    (normal class, absolute sizing, StD = 0.08) reproduce the historical scalar
-    ``gamma_m = 0.77``.  Any of ``gamma_m``/``gamma_d``/``epsilon_d`` may be
-    passed explicitly to override the table lookup.
+    (Very-High class, absolute sizing, StD = 0.08) reproduce the historical
+    scalar ``gamma_m = 0.77`` (which Table 3-2 places at Very-High/absolute, not
+    Normal as the prior code assumed).  Any of ``gamma_m``/``gamma_d``/
+    ``epsilon_d`` may be passed explicitly to override the table lookup.
 
     The PSF pressure is reported as the allowable pressure; the un-factored mean
     capacity is also returned for reference.
@@ -388,7 +423,7 @@ def dnv_f101_psf(
             "epsilon_d": epsilon_d,
             "std_rel_depth": std_rel_depth,
             "d_over_t_star": dt_star,
-            "safety_class": safety_class.strip().lower(),
+            "safety_class": _normalise_safety_class(safety_class),
             "measurement_method": measurement_method.strip().lower(),
             "L_in": L,
             "smts_psi": f_u,
@@ -425,20 +460,22 @@ def dnv_f101_interacting(
         usage_factor / maop_psi: as for :func:`dnv_f101_single_defect`.
 
     Adjacent defects whose axial gap is smaller than ``2*sqrt(D*t)`` are merged
-    into a composite defect (DNV-RP-F101 Sec. 8) spanning from the first start to
-    the last end — the **combined length** ``L_comb`` includes the defect
-    lengths plus the interior spacings — with a **length-weighted (area-averaged)
-    combined relative depth**
+    into a composite defect per DNV-RP-F101 Sec. 3.8.2 (combined-defect rule):
 
-        d_comb = sum(d_k * l_k) / sum(l_k)
+        L_comb (Step 7) = l_m + sum_{i=n..m-1} (l_i + s_i)  = total span from the
+            first start to the last end, INCLUDING the inter-defect spacings s_i.
+        d_comb (Step 8) = sum(d_i * l_i) / L_comb           = total metal-loss
+            area divided by the TOTAL combined length (gaps included, so the
+            spacings dilute the average depth).
 
-    over the member defects (``l_k`` = member defect lengths, ``d_k`` = member
-    depths; the denominator excludes the gaps).  The composite is then assessed
-    as a single defect with ``(L_comb, d_comb)``.  Every individual defect and
-    every interacting composite (each contiguous sub-run) is evaluated; the
-    governing (lowest-capacity) case is returned.  This area-averaging replaces
-    the earlier max-depth grouping, which was conservative but mislabelled as the
-    DNV method.
+    The composite is assessed as a single defect with ``(L_comb, d_comb)``.
+    Because the same total span feeds both Q (length correction) and the depth
+    average, the two are consistent.  Every individual defect and every
+    interacting composite (each contiguous sub-run) is evaluated; the governing
+    (lowest-capacity) case is returned.  This area-averaging replaces the earlier
+    max-depth grouping, which was conservative but mislabelled as the DNV method.
+    Equal-depth members reduce to the max depth only when they are touching
+    (zero spacing); a non-zero gap dilutes the combined depth below the members'.
     """
     _validate_geometry(D, t)
     if not defects:
@@ -478,18 +515,15 @@ def dnv_f101_interacting(
             if gap >= limit:
                 break  # run broken; no further j interacts with i..
             comp_length = float(ends[j] - starts[i])
-            # DNV-RP-F101 Sec. 8 length-weighted (area-averaged) combined depth
-            # over the member defects (weights = member defect lengths, not the
-            # interior spacings).  NB: when member depths are equal this reduces
-            # to the (former) max depth.
+            # DNV-RP-F101 Sec. 3.8.2 Step 8 area-averaged combined depth:
+            # total metal-loss area (sum d_i*l_i) divided by the TOTAL combined
+            # length L_comb (== comp_length, which INCLUDES the interior gaps).
+            # The same span feeds Q above, keeping length and depth consistent.
             member_lengths = lengths[i : j + 1]
             member_depths = depths[i : j + 1]
-            total_member_length = float(np.sum(member_lengths))
-            if total_member_length > 0.0:
-                comp_depth = float(
-                    np.sum(member_depths * member_lengths) / total_member_length
-                )
-            else:  # degenerate zero-length members; fall back to mean depth
+            if comp_length > 0.0:
+                comp_depth = float(np.sum(member_depths * member_lengths) / comp_length)
+            else:  # degenerate zero-length span; fall back to mean depth
                 comp_depth = float(np.mean(member_depths))
             res = dnv_f101_single_defect(
                 D, t, comp_depth, comp_length, smts_psi, usage_factor=usage_factor
