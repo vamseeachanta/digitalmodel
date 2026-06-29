@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>digitalmodel — Engineering Capabilities</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--ink:#e6edf3;--mut:#8b949e;
+        --accent:#3b82f6;--ok:#3fb950;--warn:#d29922}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  header{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  h1{margin:0 0 6px;font-size:30px;letter-spacing:-.4px}
+  .sub{color:var(--mut);font-size:16px;max-width:760px}
+  .tag{display:inline-block;margin-top:14px;padding:3px 10px;border:1px solid var(--line);
+       border-radius:20px;color:var(--mut);font-size:12.5px}
+  h2{font-size:18px;margin:38px 0 14px;letter-spacing:-.2px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .card h3{margin:0 0 4px;font-size:15.5px}
+  .card .std{color:var(--accent);font-size:12.5px;font-weight:600;margin-bottom:8px}
+  .card ul{margin:0;padding-left:18px;color:var(--mut);font-size:13.5px}
+  .card li{margin:2px 0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px;
+        background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:#1c2330;color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  tr:last-child td{border-bottom:none}
+  td.val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+  .pub{color:var(--ok);font-weight:600}
+  .der{color:var(--warn);font-weight:600}
+  .note{color:var(--mut);font-size:13px;margin:10px 0 0}
+  footer{margin:46px 0 30px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--mut);font-size:12.5px}
+  a{color:var(--accent);text-decoration:none}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#1c2330;
+       padding:1px 5px;border-radius:4px;font-size:12.5px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>digitalmodel — Engineering Capabilities</h1>
+  <div class="sub">Offshore &amp; ship structural strength, tubular products, and fitness-for-service —
+  each method built on validated solvers and checked against the governing code or a published worked example.</div>
+  <span class="tag">EPIC #1080 — tubular products + ship structural elements + provenance (complete) + FFS hardening</span>
+</div></header>
+
+<div class="wrap">
+
+  <h2>Tubular products</h2>
+  <div class="grid">
+    <div class="card"><h3>Material grade matrix</h3><div class="std">API 5L / ISO 3183 · IACS UR W11 · EN 10025-2</div>
+      <ul><li>33 reconciled grades, single source of truth</li><li>PSL1 vs PSL2, US-customary vs ISO resolved</li><li>back-compat adapters for legacy dicts</li></ul></div>
+    <div class="card"><h3>Line pipe catalog</h3><div class="std">API 5L · ASME B36.10M</div>
+      <ul><li>NPS 1/8–80 × schedule × grade → <code>LinePipe</code></li><li>ID, D/t, metal area, plain-end weight, bore volume</li></ul></div>
+    <div class="card"><h3>Casing &amp; tubing</h3><div class="std">API 5CT · API 5C3 / TR 5C3</div>
+      <ul><li>4-regime collapse (yield/plastic/transition/elastic)</li><li>internal-yield burst, pipe-body yield</li><li>feeds the VME / API-ellipse design envelope</li></ul></div>
+    <div class="card"><h3>Sucker rod</h3><div class="std">API 11B · modified Goodman</div>
+      <ul><li>grades C/K/D, sizes ½–1¼ in</li><li>service-factor (sour) derated allowable stress</li><li>ties into the dynacard rod-buckling workflow</li></ul></div>
+  </div>
+
+  <h2>Ship structural strength</h2>
+  <div class="grid">
+    <div class="card"><h3>Hull-girder longitudinal strength</h3><div class="std">IACS UR S11 / S11A</div>
+      <ul><li>wave bending moment + still-water envelope</li><li>section-modulus yield check (175/k)</li><li>simplified + full <b>Smith incremental-iterative</b> ultimate</li></ul></div>
+    <div class="card"><h3>Plate &amp; stiffened-panel buckling</h3><div class="std">DNV-RP-C201</div>
+      <ul><li>plate-induced, column, torsional (tripping)</li><li>Johnson-Ostenfeld inelastic correction</li></ul></div>
+    <div class="card"><h3>Grillage &amp; girder / web-frame</h3><div class="std">DNV-RP-C201 · DNV CN 30.1</div>
+      <ul><li>orthogonally-stiffened grillage (overall mode)</li><li>web-panel shear buckling; tripping-bracket spacing</li></ul></div>
+    <div class="card"><h3>Corrugated bulkhead</h3><div class="std">IACS CSR · DNV-RP-C201</div>
+      <ul><li>trapezoidal-corrugation section properties</li><li>flange/web plate &amp; overall buckling screens</li></ul></div>
+    <div class="card"><h3>Class-rule scantlings</h3><div class="std">DNV-RU-SHIP · IACS CSR</div>
+      <ul><li>minimum plate thickness by location</li><li>plate-for-pressure &amp; stiffener section modulus</li></ul></div>
+  </div>
+
+  <h2>Fitness-for-service &amp; fatigue</h2>
+  <div class="grid">
+    <div class="card"><h3>Corroded-pipe remaining strength</h3><div class="std">ASME B31G · DNV-RP-F101</div>
+      <ul><li>B31G / Modified / RSTRENG effective-area</li><li>DNV-RP-F101 single + interacting (length-weighted)</li><li>full Part-A PSF tables + validity layer</li></ul></div>
+    <div class="card"><h3>Metal-loss / level FFS</h3><div class="std">API 579-1 / ASME FFS-1</div>
+      <ul><li>GML/LML Level-2 RSF, Folias factor</li><li>measurement-sufficiency &amp; decision layer</li></ul></div>
+    <div class="card"><h3>Circumferential &amp; 2D defects</h3><div class="std">API 579 Part 5 · RSTRENG</div>
+      <ul><li>circumferential net-section RSF</li><li>2D river-bottom (axial×circumferential grid)</li></ul></div>
+    <div class="card"><h3>Connection &amp; tubular-joint SCF</h3><div class="std">DNV-RP-C203 (Efthymiou)</div>
+      <ul><li>T/Y SCFs (full-fidelity + short-chord F1)</li><li>weld-detail hot-spot stress + S-N class</li></ul></div>
+  </div>
+
+  <h2>Validated against published references</h2>
+  <p class="note"><span class="pub">■ published-validated</span> = reproduces a standard's worked example or published rating;
+     <span class="der">■ derivation-anchored</span> = matches the governing closed form (hand-derived).</p>
+  <table>
+    <thead><tr><th>Method</th><th>Case</th><th>Result</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td>API 5C3 collapse</td><td>7″ 26# P110 (D/t 19.3, plastic)</td><td class="val">6 230 psi</td><td class="pub">published API rating</td></tr>
+      <tr><td>API 5C3 burst / body-yield</td><td>7″ 26# P110</td><td class="val">9 960 psi / 830 000 lbf</td><td class="pub">published API rating</td></tr>
+      <tr><td>Line-pipe plain-end weight</td><td>NPS 8 STD (8.625×0.322)</td><td class="val">28.55 lb/ft</td><td class="pub">ASME B36.10M</td></tr>
+      <tr><td>DNV-RP-F101 capacity</td><td>§8.2 worked pipe-1</td><td class="val">15.866 MPa</td><td class="pub">published (6 sig-figs)</td></tr>
+      <tr><td>ASME B31G safe pressure</td><td>CRVL.BAS Example #1 (X52)</td><td class="val">1 093 psi</td><td class="pub">B31G-1991 App. A</td></tr>
+      <tr><td>IACS S11 wave BM</td><td>L200·B32·Cb0.8 (hog / sag)</td><td class="val">+1.897 / −2.059 ×10⁶ kN·m</td><td class="der">IACS UR S11 formula</td></tr>
+      <tr><td>Smith hull-girder ultimate</td><td>stocky box → first yield</td><td class="val">M_U = f_y·Z (rel 1e-6)</td><td class="der">analytic limit</td></tr>
+      <tr><td>DNV-RP-C201 panel tripping</td><td>0119-015 worked example</td><td class="val">f_T = 215.61 MPa</td><td class="pub">validated example</td></tr>
+      <tr><td>Grillage overall mode</td><td>isotropic limit (k=4)</td><td class="val">σ_cr = 223.11 MPa</td><td class="der">Timoshenko long-plate</td></tr>
+      <tr><td>Efthymiou T/Y chord saddle</td><td>β0.5 γ12 τ0.5 θ90 (long / short)</td><td class="val">6.21 / 4.755</td><td class="pub">DNV-RP-C203 App. B</td></tr>
+      <tr><td>Corrugation section modulus</td><td>a=c=800, φ45, t15</td><td class="val">Z = 4.525×10⁶ mm³</td><td class="der">IACS CSR closed form</td></tr>
+      <tr><td>2D river-bottom RSTRENG</td><td>24″ X52 grid (MAX projection)</td><td class="val">p_f = 1 969.2 psi</td><td class="der">RSTRENG effective-area</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Provenance</h2>
+  <p class="note">Every strength / FFS result carries a <code>code_reference</code> naming its governing code and edition,
+  sourced from one <code>codes.py</code> register that the
+  <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md">codes register</a>
+  documents — a CI test keeps the two in sync, so a result can never cite a code the register doesn't list.</p>
+
+  <footer>
+    Generated from the EPIC&nbsp;#1080 work (tubular products, ship structural elements, code provenance) plus FFS / SCF / hull-girder hardening.
+    Validation records live under <code>docs/domains/</code>; method APIs under <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>.
+    · <a href="../ffs/ffs-showcase.html">FFS decision-layer showcase →</a>
+  </footer>
+</div>
+</body>
+</html>
