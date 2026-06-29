@@ -121,17 +121,30 @@ def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
     b = geom.beta
     g = geom.gamma
     t = geom.tau
+    a = geom.alpha
     th = math.radians(geom.theta)
     sin_th = math.sin(th)
 
-    # Chord saddle
-    scf_cs = g * t * (1.11 - 3.0 * (b - 0.52) ** 2) * sin_th ** 1.6
-    # Chord crown
-    scf_cc = g * t * (2.65 + 5.0 * (b - 0.65) ** 2) + t * b * (0.25 * geom.alpha - 3.0) * sin_th ** 0.2
-    # Brace saddle
-    scf_bs = 1.3 + g * t * 0.187 * b * (1.25 * b ** 0.5 - b ** 2.5) * sin_th ** 1.1
-    # Brace crown
-    scf_bc = 3.0 + g * t * 0.12 * math.exp(-4.0 * b) * (0.011 * b ** 2 - 0.045) + b * t * sin_th ** 0.2
+    # Published Efthymiou (1988, OTC 4829) / DNV-RP-C203 App. B T/Y axial set.
+    # Chord saddle:  gamma * tau^1.1 * (1.11 - 3(beta-0.52)^2) * sin(theta)^1.6
+    scf_cs = g * t**1.1 * (1.11 - 3.0 * (b - 0.52) ** 2) * sin_th**1.6
+    # Chord crown:   gamma^0.2 * tau * (2.65 + 5(beta-0.65)^2)
+    #                + tau * beta * (0.25*alpha - 3) * sin(theta)
+    scf_cc = (
+        g**0.2 * t * (2.65 + 5.0 * (b - 0.65) ** 2) + t * b * (0.25 * a - 3.0) * sin_th
+    )
+    # Brace saddle:  1.3 + gamma * tau^0.52 * alpha^0.1
+    #                * (0.187 - 1.25*beta^1.1*(beta-0.96)) * sin(theta)^(2.7 - 0.01*alpha)
+    scf_bs = 1.3 + g * t**0.52 * a**0.1 * (
+        0.187 - 1.25 * b**1.1 * (b - 0.96)
+    ) * sin_th ** (2.7 - 0.01 * a)
+    # Brace crown:   3 + gamma^1.2 * (0.12*exp(-4*beta) + 0.011*beta^2 - 0.045)
+    #                + beta * tau * (0.1*alpha - 1.2)
+    scf_bc = (
+        3.0
+        + g**1.2 * (0.12 * math.exp(-4.0 * b) + 0.011 * b**2 - 0.045)
+        + b * t * (0.1 * a - 1.2)
+    )
 
     scf_chord = max(abs(scf_cs), abs(scf_cc), 1.0)
     scf_brace = max(abs(scf_bs), abs(scf_bc), 1.0)
