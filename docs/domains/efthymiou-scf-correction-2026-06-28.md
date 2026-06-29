@@ -51,9 +51,14 @@ Key defects:
   `exp` and polynomial terms were multiplied instead of added, and the final
   `beta*tau*(0.1*alpha-1.2)` term was replaced by `beta*tau*sin(theta)^0.2`.
 
-Scope note: short-chord correction factors (F1/F2/F3 for `alpha < 12`) are **not**
-applied — consistent with `connection_scf.efthymiou_chord_saddle_axial_scf` and
-with the 6.21 golden value, which is the uncorrected published form.
+Scope note (superseded): this exponent-correction change deliberately left the
+short-chord correction factors (F1/F2/F3 for `alpha < 12`) **unapplied**, so the
+golden chord-saddle value here was the uncorrected `6.21`. The follow-on change
+**adds the F1 short-chord factor** (axial saddle terms) — see
+[`efthymiou-short-chord-f1-2026-06-29.md`](efthymiou-short-chord-f1-2026-06-29.md).
+With the default short chord (`alpha = 5`) the chord-saddle golden becomes the
+F1-corrected `4.755`. The "new" SCF values in the table below are therefore the
+*pre-F1* (long-chord) values; the F1-corrected goldens live in that follow-on doc.
 
 ## Computed value changes (round to 3 dp)
 

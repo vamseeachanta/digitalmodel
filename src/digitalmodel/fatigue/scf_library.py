@@ -105,10 +105,46 @@ class SCFResult(BaseModel):
 # Efthymiou SCF equations — T/Y joints
 # ---------------------------------------------------------------------------
 
+def short_chord_factor_f1(beta: float, gamma: float, alpha: float) -> float:
+    """Efthymiou short-chord correction factor F1 (axial saddle terms).
+
+    DNV-RP-C203 (2021) Appendix B, Table B-1 / Efthymiou (1988), OTC 4829.
+    For short chords (``alpha < 12``) the brace-**axial** *saddle* SCFs — chord
+    saddle (Eqn. 1) and brace saddle (Eqn. 3) — are reduced by F1 for
+    **fixed chord ends**::
+
+        F1 = 1 - (0.83*beta - 0.56*beta^2 - 0.02) * gamma^0.23
+                 * exp(-0.21 * gamma^(-1.16) * alpha^2.5)
+
+    For ``alpha >= 12`` (long chord) the saddle SCFs are not reduced and
+    ``F1 = 1.0``. Crown terms (Eqns. 2, 4) are never reduced.
+
+    Companion factors not implemented here (out of scope for this axial,
+    fixed-end function): **F2** (axial saddle, *pinned* chord ends) and **F3**
+    (out-of-plane-bending saddle terms).
+
+    Parameters
+    ----------
+    beta : float  — brace/chord diameter ratio d/D.
+    gamma : float — chord radius/thickness ratio D/(2T).
+    alpha : float — chord length parameter 2L/D.
+    """
+    if alpha >= 12.0:
+        return 1.0
+    return 1.0 - (0.83 * beta - 0.56 * beta**2 - 0.02) * gamma**0.23 * math.exp(
+        -0.21 * gamma ** (-1.16) * alpha**2.5
+    )
+
+
 def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
     """Efthymiou SCF for T/Y joint under axial brace load.
 
-    DNV-RP-C203 (2021), Table B-5; Efthymiou (1988), OTC 4829.
+    DNV-RP-C203 (2021), Table B-1; Efthymiou (1988), OTC 4829.
+
+    The short-chord correction factor F1 (fixed chord ends) is applied to the
+    saddle terms when ``alpha < 12`` — see :func:`short_chord_factor_f1`. The
+    default geometry (``L = 2.5*D`` -> ``alpha = 5``) is a short chord, so F1
+    *does* reduce the saddle SCFs by default.
 
     Parameters
     ----------
@@ -145,6 +181,14 @@ def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
         + g**1.2 * (0.12 * math.exp(-4.0 * b) + 0.011 * b**2 - 0.045)
         + b * t * (0.1 * a - 1.2)
     )
+
+    # Short-chord correction (DNV-RP-C203 App. B, Table B-1): for alpha < 12 the
+    # axial SADDLE SCFs (chord saddle + brace saddle) are reduced by F1 (fixed
+    # chord ends). Crown terms are unaffected. F2 (pinned ends) / F3 (OPB) are
+    # out of scope for this fixed-end axial function.
+    f1 = short_chord_factor_f1(b, g, a)
+    scf_cs *= f1
+    scf_bs *= f1
 
     scf_chord = max(abs(scf_cs), abs(scf_cc), 1.0)
     scf_brace = max(abs(scf_bs), abs(scf_bc), 1.0)
