@@ -1,4 +1,8 @@
-"""Custom pipe capacity methods for asset integrity assessments."""
+"""Custom pipe capacity methods for asset integrity assessments.
+
+Collapse pressure per API TR 5C3 (performance properties of pipe used as casing
+or tubing); burst per Barlow / thick-wall.
+"""
 
 import logging
 import math

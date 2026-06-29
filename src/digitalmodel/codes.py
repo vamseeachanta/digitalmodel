@@ -90,6 +90,27 @@ IACS_W11 = CodeReference(
     "IACS UR W11", "", "Normal & Higher Strength Hull Structural Steels")
 EN_10025_2 = CodeReference("EN 10025-2", "2019", "Hot rolled structural steel")
 
+# ---------------------------------------------------------------------------
+# Tubular products (casing / tubing / sucker rod)
+# ---------------------------------------------------------------------------
+API_5CT = CodeReference("API 5CT", "2018", "Casing and Tubing")
+API_5C3 = CodeReference(
+    "API 5C3 / API TR 5C3", "2018",
+    "Calculating Performance Properties of Pipe Used as Casing or Tubing")
+API_11B = CodeReference("API 11B", "2018", "Sucker Rods")
+
+# ---------------------------------------------------------------------------
+# Ship longitudinal strength & scantlings
+# ---------------------------------------------------------------------------
+IACS_S11 = CodeReference(
+    "IACS UR S11", "2020", "Longitudinal Strength Standard")
+IACS_S11A = CodeReference(
+    "IACS UR S11A", "2021",
+    "Longitudinal Strength Standard for Container Ships")
+DNV_RU_SHIP = CodeReference(
+    "DNV-RU-SHIP", "2021", "Rules for Classification: Ships")
+IACS_CSR = CodeReference("IACS CSR", "2022", "Common Structural Rules")
+
 #: All references, keyed by attribute name — used by the codes register (#1093).
 REGISTER: dict[str, CodeReference] = {
     name: value
