@@ -1,3 +1,4 @@
+import json
 import math
 from pathlib import Path
 
@@ -1418,6 +1419,56 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["annual_damage"] > 0.0
         assert result["value"] > 0.0  # fatigue life (years)
         assert result["screening_status"] in {"pass", "fail"}
+    elif workflow["id"] == "ffs-metal-loss":
+        # workflow-API adoption row (workspace-hub#3285): the `ffs` route parks the
+        # #1066 indexed 16-key FFSAssessmentResult.to_dict() on cfg["ffs"].
+        result = cfg["ffs"]
+        assert result["component_id"] == "LINE-001"
+        assert result["assessment_type"] == "LML"  # 2-cell deep local thin spot
+        assert result["verdict"] == "ACCEPT"
+        # the measurement-sufficiency catch: an L1-ACCEPT that is under-measured
+        assert result["sufficiency_status"] == "TAKE_MORE"
+        assert result["passes"] is True
+        assert result["t_nominal_in"] == pytest.approx(0.5)
+        assert result["t_measured_min_in"] == pytest.approx(0.3)
+        assert result["folias_factor"] >= 1.0
+        assert set(result) == {
+            "component_id", "assessment_type", "level_reached", "t_nominal_in",
+            "t_min_in", "t_measured_min_in", "t_measured_avg_in", "fca_in", "rsf",
+            "rsf_a", "folias_factor", "remaining_life_yr", "verdict",
+            "rerated_pressure_psi", "sufficiency_status", "passes", "code_reference",
+        }
+    elif workflow["id"] == "buckling-parametric":
+        # workflow-API adoption row (workspace-hub#3285-OWNED): the
+        # buckling_parametric route writes a byte-stable results.json.
+        result = cfg["buckling_parametric"]
+        assert result["standard"] == "DNV-RP-C201"
+        assert result["n_cases"] == 8  # 2 grades x 2 thk x 1 width x 1 length x 2 loads
+        results_json = Path(result["outputs"]["results_json"])
+        if not results_json.is_absolute():
+            results_json = REPO_ROOT / results_json
+        payload = json.loads(results_json.read_text())
+        assert payload["meta"]["n_cases"] == 8
+        assert payload["meta"]["standard"] == "DNV-RP-C201"
+        # timestamp=None => meta.generated_at omitted => byte-stable golden
+        assert "generated_at" not in payload["meta"]
+        assert len(payload["index"]) == 8
+        assert set(payload["meta"]["grades"]) == {"Grade A", "AH36"}
+    elif workflow["id"] == "mooring-design-mbl":
+        # workflow-API adoption row (workspace-hub#3285): NEW `mooring_mbl` basename
+        # (the reserved `mooring` arm is untouched). DNV-OS-E301 SF + citation sidecar.
+        result = cfg["mooring_mbl"]
+        assert result["condition"] == "intact"
+        assert result["safety_factor"] == pytest.approx(1.67)
+        assert set(result["results"]) == {"R4_84mm_chain", "160mm_polyester"}
+        for seg in result["results"].values():
+            assert seg["utilisation_with_sf"] == pytest.approx(
+                seg["utilisation_no_sf"] * result["safety_factor"], rel=1e-3
+            )
+        citations = result["citations"]
+        assert len(citations) == 1
+        assert citations[0]["code_id"] == "DNV-OS-E301"
+        assert citations[0]["publisher"] == "DNV"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:

@@ -653,6 +653,26 @@ def engine(
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "ffs":
+        # workspace-hub#3285: Phase-1 FFS coordinator (assess_component) engine route.
+        # NEW basename -- legacy "API579" arm (a different engine) is untouched.
+        from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+
+        cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "buckling_parametric":
+        # workspace-hub#3285-OWNED: DNV-RP-C201 parametric plate-buckling sweep.
+        # NEW basename -- legacy "plate_buckling" arm (PlateBuckling class) untouched.
+        from digitalmodel.structural.buckling_workflow import (
+            BucklingParametricWorkflow,
+        )
+
+        cfg_base = BucklingParametricWorkflow().router(cfg_base)
+    elif basename == "mooring_mbl":
+        # workspace-hub#3285: DNV-OS-E301 mooring MBL pilot (#2685). NEW basename --
+        # the reserved "mooring" arm (subsea/mooring_analysis/ redirect) is untouched.
+        from digitalmodel.orcaflex.mooring_workflow import MooringMBLWorkflow
+
+        cfg_base = MooringMBLWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

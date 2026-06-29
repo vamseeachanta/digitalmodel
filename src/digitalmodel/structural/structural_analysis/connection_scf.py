@@ -47,6 +47,7 @@ from digitalmodel.fatigue.scf_library import (
     scf_butt_weld_misalignment,
     scf_cruciform_joint,
     scf_fillet_weld_toe,
+    short_chord_factor_f1,
 )
 from digitalmodel.fatigue.weld_classification import (
     WeldDetail,
@@ -172,18 +173,23 @@ def efthymiou_chord_saddle_axial_scf(
     gamma: float,
     tau: float,
     theta_deg: float = 90.0,
+    alpha: float = 5.0,
 ) -> float:
     """Chord-saddle SCF of an axially-loaded tubular T/Y joint (Efthymiou).
 
-    DNV-RP-C203 App. B / Efthymiou (1988), chord-saddle term::
+    DNV-RP-C203 App. B / Efthymiou (1988), chord-saddle term (Eqn. 1)::
 
         SCF = gamma * tau^1.1 * (1.11 - 3(beta - 0.52)^2) * sin(theta)^1.6
+              * F1(beta, gamma, alpha)
 
     with non-dimensional geometry ``beta = d/D``, ``gamma = D/(2T)``,
-    ``tau = t/T``. This is the **published tau^1.1** form. Note that the
-    repository's :func:`...scf_library.efthymiou_ty_axial` uses ``tau^1.0`` and
-    therefore returns a value ~7% higher; this function reproduces the
-    published value for a loaded attachment lug / brace stub.
+    ``tau = t/T``, ``alpha = 2L/D``. ``F1`` is the short-chord correction
+    factor (fixed chord ends) applied to the saddle term for ``alpha < 12`` —
+    see :func:`...scf_library.short_chord_factor_f1`. This matches the value
+    returned by :func:`...scf_library.efthymiou_ty_axial` for the same
+    geometry. The default ``alpha = 5`` corresponds to the ``L = 2.5*D`` short
+    chord used elsewhere in the library, so F1 is applied by default; pass
+    ``alpha >= 12`` for a long chord (no reduction).
 
     Parameters
     ----------
@@ -195,11 +201,14 @@ def efthymiou_chord_saddle_axial_scf(
         Brace/chord thickness ratio ``t/T`` (0.2..1.0).
     theta_deg : float
         Brace-to-chord angle (degrees). Default 90.
+    alpha : float
+        Chord length parameter ``2L/D``. Default 5 (short chord, F1 applied).
     """
     if beta <= 0 or gamma <= 0 or tau <= 0:
         raise ValueError("beta, gamma, tau must be > 0")
     sin_th = math.sin(math.radians(theta_deg))
     scf = gamma * tau**1.1 * (1.11 - 3.0 * (beta - 0.52) ** 2) * sin_th**1.6
+    scf *= short_chord_factor_f1(beta, gamma, alpha)
     return max(scf, 1.0)
 
 

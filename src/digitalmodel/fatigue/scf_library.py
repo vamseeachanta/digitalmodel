@@ -105,10 +105,46 @@ class SCFResult(BaseModel):
 # Efthymiou SCF equations — T/Y joints
 # ---------------------------------------------------------------------------
 
+def short_chord_factor_f1(beta: float, gamma: float, alpha: float) -> float:
+    """Efthymiou short-chord correction factor F1 (axial saddle terms).
+
+    DNV-RP-C203 (2021) Appendix B, Table B-1 / Efthymiou (1988), OTC 4829.
+    For short chords (``alpha < 12``) the brace-**axial** *saddle* SCFs — chord
+    saddle (Eqn. 1) and brace saddle (Eqn. 3) — are reduced by F1 for
+    **fixed chord ends**::
+
+        F1 = 1 - (0.83*beta - 0.56*beta^2 - 0.02) * gamma^0.23
+                 * exp(-0.21 * gamma^(-1.16) * alpha^2.5)
+
+    For ``alpha >= 12`` (long chord) the saddle SCFs are not reduced and
+    ``F1 = 1.0``. Crown terms (Eqns. 2, 4) are never reduced.
+
+    Companion factors not implemented here (out of scope for this axial,
+    fixed-end function): **F2** (axial saddle, *pinned* chord ends) and **F3**
+    (out-of-plane-bending saddle terms).
+
+    Parameters
+    ----------
+    beta : float  — brace/chord diameter ratio d/D.
+    gamma : float — chord radius/thickness ratio D/(2T).
+    alpha : float — chord length parameter 2L/D.
+    """
+    if alpha >= 12.0:
+        return 1.0
+    return 1.0 - (0.83 * beta - 0.56 * beta**2 - 0.02) * gamma**0.23 * math.exp(
+        -0.21 * gamma ** (-1.16) * alpha**2.5
+    )
+
+
 def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
     """Efthymiou SCF for T/Y joint under axial brace load.
 
-    DNV-RP-C203 (2021), Table B-5; Efthymiou (1988), OTC 4829.
+    DNV-RP-C203 (2021), Table B-1; Efthymiou (1988), OTC 4829.
+
+    The short-chord correction factor F1 (fixed chord ends) is applied to the
+    saddle terms when ``alpha < 12`` — see :func:`short_chord_factor_f1`. The
+    default geometry (``L = 2.5*D`` -> ``alpha = 5``) is a short chord, so F1
+    *does* reduce the saddle SCFs by default.
 
     Parameters
     ----------
@@ -121,17 +157,38 @@ def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
     b = geom.beta
     g = geom.gamma
     t = geom.tau
+    a = geom.alpha
     th = math.radians(geom.theta)
     sin_th = math.sin(th)
 
-    # Chord saddle
-    scf_cs = g * t * (1.11 - 3.0 * (b - 0.52) ** 2) * sin_th ** 1.6
-    # Chord crown
-    scf_cc = g * t * (2.65 + 5.0 * (b - 0.65) ** 2) + t * b * (0.25 * geom.alpha - 3.0) * sin_th ** 0.2
-    # Brace saddle
-    scf_bs = 1.3 + g * t * 0.187 * b * (1.25 * b ** 0.5 - b ** 2.5) * sin_th ** 1.1
-    # Brace crown
-    scf_bc = 3.0 + g * t * 0.12 * math.exp(-4.0 * b) * (0.011 * b ** 2 - 0.045) + b * t * sin_th ** 0.2
+    # Published Efthymiou (1988, OTC 4829) / DNV-RP-C203 App. B T/Y axial set.
+    # Chord saddle:  gamma * tau^1.1 * (1.11 - 3(beta-0.52)^2) * sin(theta)^1.6
+    scf_cs = g * t**1.1 * (1.11 - 3.0 * (b - 0.52) ** 2) * sin_th**1.6
+    # Chord crown:   gamma^0.2 * tau * (2.65 + 5(beta-0.65)^2)
+    #                + tau * beta * (0.25*alpha - 3) * sin(theta)
+    scf_cc = (
+        g**0.2 * t * (2.65 + 5.0 * (b - 0.65) ** 2) + t * b * (0.25 * a - 3.0) * sin_th
+    )
+    # Brace saddle:  1.3 + gamma * tau^0.52 * alpha^0.1
+    #                * (0.187 - 1.25*beta^1.1*(beta-0.96)) * sin(theta)^(2.7 - 0.01*alpha)
+    scf_bs = 1.3 + g * t**0.52 * a**0.1 * (
+        0.187 - 1.25 * b**1.1 * (b - 0.96)
+    ) * sin_th ** (2.7 - 0.01 * a)
+    # Brace crown:   3 + gamma^1.2 * (0.12*exp(-4*beta) + 0.011*beta^2 - 0.045)
+    #                + beta * tau * (0.1*alpha - 1.2)
+    scf_bc = (
+        3.0
+        + g**1.2 * (0.12 * math.exp(-4.0 * b) + 0.011 * b**2 - 0.045)
+        + b * t * (0.1 * a - 1.2)
+    )
+
+    # Short-chord correction (DNV-RP-C203 App. B, Table B-1): for alpha < 12 the
+    # axial SADDLE SCFs (chord saddle + brace saddle) are reduced by F1 (fixed
+    # chord ends). Crown terms are unaffected. F2 (pinned ends) / F3 (OPB) are
+    # out of scope for this fixed-end axial function.
+    f1 = short_chord_factor_f1(b, g, a)
+    scf_cs *= f1
+    scf_bs *= f1
 
     scf_chord = max(abs(scf_cs), abs(scf_cc), 1.0)
     scf_brace = max(abs(scf_bs), abs(scf_bc), 1.0)

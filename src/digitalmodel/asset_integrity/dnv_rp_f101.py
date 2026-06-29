@@ -67,23 +67,17 @@ from typing import List, Optional, Sequence, Tuple
 import numpy as np
 
 from digitalmodel.codes import DNV_RP_F101
+from digitalmodel.materials import legacy_smts_psi_dict
 
 # ---------------------------------------------------------------------------
 # Material — API 5L specified minimum TENSILE strength (SMTS), psi.
 # DNV-RP-F101 capacity uses f_u = SMTS (not SMYS).  Values are the API 5L /
 # ISO 3183 PSL2 minimum UTS for each grade (rounded from MPa): X52 = 460 MPa,
 # X60 = 520 MPa, X65 = 535 MPa, X70 = 570 MPa, X80 = 625 MPa.
+# Sourced from the canonical grade matrix (issue #1089), which reproduces these
+# psi values exactly (PSL2 SMTS MPa -> psi, rounded to the nearest 100 psi).
 # ---------------------------------------------------------------------------
-SMTS_PSI = {
-    "X42": 60_200.0,  # 415 MPa
-    "X46": 63_100.0,  # 435 MPa
-    "X52": 66_700.0,  # 460 MPa
-    "X56": 71_100.0,  # 490 MPa
-    "X60": 75_400.0,  # 520 MPa
-    "X65": 77_600.0,  # 535 MPa
-    "X70": 82_700.0,  # 570 MPa
-    "X80": 90_600.0,  # 625 MPa
-}
+SMTS_PSI = legacy_smts_psi_dict()
 
 # Default usage factor for the allowable-stress format.
 #

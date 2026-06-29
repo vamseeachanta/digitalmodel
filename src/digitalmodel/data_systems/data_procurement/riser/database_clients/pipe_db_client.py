@@ -37,6 +37,8 @@ import logging
 from typing import Dict, Any, List, Optional
 import numpy as np
 
+from digitalmodel.materials import legacy_pipe_db_grades_mpa
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,15 +68,12 @@ class PipeSpecificationClient:
     # Standard pipe diameters (inches)
     STANDARD_DIAMETERS = [2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36]
 
-    # API 5L grades
-    API_5L_GRADES = {
-        'X42': {'yield_strength': 289, 'tensile_strength': 414},  # MPa
-        'X52': {'yield_strength': 359, 'tensile_strength': 455},
-        'X60': {'yield_strength': 414, 'tensile_strength': 517},
-        'X65': {'yield_strength': 448, 'tensile_strength': 531},
-        'X70': {'yield_strength': 483, 'tensile_strength': 565},
-        'X80': {'yield_strength': 552, 'tensile_strength': 621},
-    }
+    # API 5L grades (MPa) — sourced from the canonical grade matrix (issue
+    # #1089). Yields are US-customary (X42 289, X52 359 vs canonical ISO 290 /
+    # 360) and the SMTS is PSL1-ish (X65 531, X80 621); preserved verbatim
+    # pending the convergence sign-off in
+    # docs/domains/grade-table-migration-2026-06-28.md.
+    API_5L_GRADES = legacy_pipe_db_grades_mpa()
 
     # Material properties (steel)
     STEEL_PROPERTIES = {
