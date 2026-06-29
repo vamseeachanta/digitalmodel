@@ -15,7 +15,7 @@ EPIC #1080 (tubular products + ship structural elements + code provenance) is **
 **Provenance** — every strength/FFS result carries a `code_reference`; one `codes.py` register + a kept-current CI test; consolidated `docs/domains/codes-register.md`.
 
 **Showcase (live)** — `docs/api/capabilities/index.html`, served at
-`https://vamseeachanta.github.io/digitalmodel/capabilities/` — capability cards + a published-validated-vs-derivation-anchored golden-values table.
+`https://vamseeachanta.github.io/digitalmodel/capabilities/` — capability cards + a published-validated-vs-derivation-anchored golden-values table + a **Live dashboards & explorers** hub linking the FFS showcase, FFS field dashboard, and ship plate/panel buckling explorers.
 
 ## How it was built (reusable process)
 
@@ -35,3 +35,6 @@ EPIC #1080 (tubular products + ship structural elements + code provenance) is **
 - One judgment call to revisit: `dnv_f101_psf` defaults to `safety_class="very high"` to preserve the legacy γ_m=0.77 — the most conservative class. Callers should set their pipeline's actual safety class; flip the default to "medium" if a conventional default is preferred (one-line + a test update).
 - `efthymiou_ty_axial` defaults to a short chord (α=2L/D=5), so default saddle SCFs are F1-reduced ~23%; long-chord users pass α≥12 (or larger L).
 - Method APIs live under `src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/`.
+
+### Operational note — git infrastructure
+At session end the local git on this repo degraded badly: `git fetch` timed out (~3 min) on the shared object store (so the local `origin/main` ref goes stale — use `gh` to check `main`), `git worktree add` hit 7-minute timeouts and sometimes left a partial checkout that vanished, and the primary checkout was occupied by another session's branch. **Workaround that worked**: edit the file content locally (outside the repo tree) and push it through the **GitHub Contents API** — create the branch via `gh api .../git/refs`, then update the file via `gh api -X PUT .../contents/<path>` with the base64 content + the current blob SHA + the branch. This bypasses the local working tree entirely and is the reliable path when worktrees fail.
