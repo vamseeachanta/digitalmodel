@@ -258,3 +258,139 @@ def legacy_smts_psi_dict() -> dict[str, float]:
         name: float(round(get(name).smts_mpa * PSI_PER_MPA, -2))
         for name in _LEGACY_API_5L
     }
+
+
+# ---------------------------------------------------------------------------
+# Generic unit-view helpers (canonical-derived).
+# Exact for consumers that already used the canonical ISO numbers (e.g. the
+# OrcaFlex linetype DNV-ST-F101 yield in kN/m^2).
+# ---------------------------------------------------------------------------
+def smys_kn_m2(name: str) -> float:
+    """Specified minimum yield strength in kN/m^2 (1 MPa = 1000 kN/m^2)."""
+    return smys_mpa(name) * 1000.0
+
+
+def smts_kn_m2(name: str, *, psl: str = "PSL2") -> float:
+    """Specified minimum tensile strength in kN/m^2."""
+    return smts_mpa(name, psl=psl) * 1000.0
+
+
+def smys_pa(name: str) -> float:
+    """Specified minimum yield strength in Pa (1 MPa = 1e6 Pa)."""
+    return smys_mpa(name) * 1.0e6
+
+
+def smts_pa(name: str, *, psl: str = "PSL2") -> float:
+    """Specified minimum tensile strength in Pa."""
+    return smts_mpa(name, psl=psl) * 1.0e6
+
+
+# ---------------------------------------------------------------------------
+# Legacy-preserved grade snapshots (issue #1089).
+#
+# These reproduce, VERBATIM, the API 5L strength dicts that were previously
+# hardcoded across the scattered consumers, so that routing those consumers
+# through this module is a *zero value change* consolidation.  Where a snapshot
+# diverges from the canonical ``smys_mpa`` / ``smts_mpa`` above (US-customary
+# ksi rounding, PSL1-vs-PSL2 tensile, and small per-module drift) the LEGACY
+# value is kept as-is.  Every delta is catalogued in
+# ``docs/domains/grade-table-migration-2026-06-28.md`` as a future-convergence
+# candidate; DO NOT "fix" these toward canonical without that sign-off.
+#
+# Per-module SMYS drift on the low grades (a reconciliation target):
+#   X52  -> 358 (riser_config, pipeline_pressure) | 359 (pipeline_skill,
+#           pipe_db, wall_thickness) | 360 canonical ISO
+#   X60  -> 413 (pipeline_pressure) | 414 (others) | 415 canonical ISO
+#   X70  -> 482 (pipeline_pressure) | 483 (others) | 485 canonical ISO
+# ---------------------------------------------------------------------------
+
+# asset_integrity.pipeline_skill.SMYS_TABLE — US-customary SMYS in MPa.
+_LEGACY_SMYS_TABLE_MPA: dict[str, float] = {
+    "X52": 359.0, "X60": 414.0, "X65": 448.0,
+    "X70": 483.0, "X80": 552.0, "X100": 690.0,
+}
+
+# pipe_db_client.API_5L_GRADES / wall_thickness_parametric.API_5L_GRADES — the
+# same US-customary SMYS + PSL1-ish SMTS (X65 531, X80 621 sit +1 MPa above the
+# canonical PSL1 values 530 / 620), in MPa.
+_LEGACY_PIPE_DB_MPA: dict[str, dict[str, float]] = {
+    "X42": {"yield_strength": 289.0, "tensile_strength": 414.0},
+    "X52": {"yield_strength": 359.0, "tensile_strength": 455.0},
+    "X60": {"yield_strength": 414.0, "tensile_strength": 517.0},
+    "X65": {"yield_strength": 448.0, "tensile_strength": 531.0},
+    "X70": {"yield_strength": 483.0, "tensile_strength": 565.0},
+    "X80": {"yield_strength": 552.0, "tensile_strength": 621.0},
+}
+
+# orcaflex.riser_config.PIPE_GRADES strengths — note X52 SMYS 358 (not 359), MPa.
+_LEGACY_RISER_MPA: dict[str, dict[str, float]] = {
+    "X52": {"smys_mpa": 358, "smts_mpa": 455},
+    "X60": {"smys_mpa": 414, "smts_mpa": 517},
+    "X65": {"smys_mpa": 448, "smts_mpa": 531},
+    "X70": {"smys_mpa": 483, "smts_mpa": 565},
+    "X80": {"smys_mpa": 552, "smts_mpa": 621},
+}
+
+# subsea.pipeline.pipeline_pressure.MATERIAL_LIBRARY strengths — a third drift
+# variant (X52 358, X60 413, X70 482), MPa.
+_LEGACY_PIPELINE_PRESSURE_MPA: dict[str, dict[str, float]] = {
+    "X52": {"smys": 358.0, "smts": 455.0},
+    "X60": {"smys": 413.0, "smts": 517.0},
+    "X65": {"smys": 448.0, "smts": 531.0},
+    "X70": {"smys": 482.0, "smts": 565.0},
+}
+
+
+def legacy_smys_table_mpa() -> dict[str, float]:
+    """Reproduce ``asset_integrity.pipeline_skill.SMYS_TABLE`` (SMYS, MPa).
+
+    US-customary SMYS (grade ksi -> MPa); diverges 1-3 MPa below canonical ISO.
+    """
+    return dict(_LEGACY_SMYS_TABLE_MPA)
+
+
+def legacy_pipe_db_grades_mpa() -> dict[str, dict[str, float]]:
+    """Reproduce ``pipe_db_client.PipeSpecificationClient.API_5L_GRADES`` (MPa).
+
+    Keys ``yield_strength`` / ``tensile_strength`` per grade.
+    """
+    return {g: dict(v) for g, v in _LEGACY_PIPE_DB_MPA.items()}
+
+
+def legacy_pipe_db_grades_pa() -> dict[str, dict[str, float]]:
+    """Reproduce ``wall_thickness_parametric.API_5L_GRADES`` (SMYS/SMTS, Pa).
+
+    Same numeric table as :func:`legacy_pipe_db_grades_mpa`, scaled MPa -> Pa,
+    with keys ``smys`` / ``smts``.
+    """
+    return {
+        g: {"smys": v["yield_strength"] * 1.0e6,
+            "smts": v["tensile_strength"] * 1.0e6}
+        for g, v in _LEGACY_PIPE_DB_MPA.items()
+    }
+
+
+def legacy_riser_pipe_grades_mpa() -> dict[str, dict[str, float]]:
+    """Reproduce ``orcaflex.riser_config.PIPE_GRADES``.
+
+    Strengths (``smys_mpa`` / ``smts_mpa``) are the legacy snapshot; ``E_gpa``
+    and ``density_kg_m3`` are sourced from the canonical :class:`MaterialGrade`.
+    """
+    out: dict[str, dict[str, float]] = {}
+    for g, v in _LEGACY_RISER_MPA.items():
+        grade = get(g)
+        out[g] = {
+            "smys_mpa": v["smys_mpa"],
+            "smts_mpa": v["smts_mpa"],
+            "E_gpa": grade.E_mpa / 1000.0,
+            "density_kg_m3": grade.rho_kg_m3,
+        }
+    return out
+
+
+def legacy_pipeline_material_library_mpa() -> dict[str, dict[str, float]]:
+    """Reproduce ``subsea.pipeline.pipeline_pressure.MATERIAL_LIBRARY`` strengths.
+
+    Keys ``smys`` / ``smts`` (MPa) per grade.
+    """
+    return {g: dict(v) for g, v in _LEGACY_PIPELINE_PRESSURE_MPA.items()}

@@ -709,6 +709,8 @@ workflows:
       - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wall-thickness-quickcheck]
     runtime: offline
+    result:                             # workflow-API result descriptor (#3282 shape; #3295-reserved slot)
+      kind: files                       # extract_result globs the injected embed root; EXCLUDES the save_cfg dump
   - id: api579-pipe-ffs-b314
     basename: API579
     title: API 579 FFS for a 12.75 inch B31.4 oil pipe
@@ -1171,3 +1173,41 @@ workflows:
       - examples/workflows/weather-window-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window-atlas-query]
     runtime: offline
+  # ---- workflow-API adoption rows (workspace-hub#3285) ---------------------
+  # FULL durable workflows (input/outputs/test/runtime + the #3282 result: slot):
+  # tests/workflows/test_durable_workflows.py parametrizes over EVERY row and reads
+  # input/outputs, so these are real CLI-exercised workflows, not descriptor-only.
+  - id: ffs-metal-loss                  # NEW basename `ffs` -- legacy api579-* rows untouched
+    basename: ffs
+    title: API 579 L1/L2 metal-loss FFS coordinator (measurement-sufficiency aware, #1066)
+    input: examples/workflows/ffs-metal-loss/input.yml
+    outputs:
+      - examples/workflows/ffs-metal-loss/results/input.yml   # save_cfg dump carrying cfg["ffs"] = to_dict()
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ffs-metal-loss]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: ffs                          # cfg["ffs"] = FFSAssessmentResult.to_dict() (16-key indexed shape)
+  - id: buckling-parametric             # #3285-OWNED; bare in-repo id; #3283 references golden illustratively
+    basename: buckling_parametric
+    title: DNV-RP-C201 plate-buckling parametric sweep (results.json + O(1) index)
+    input: examples/workflows/buckling-parametric/input.yml
+    outputs:
+      - examples/workflows/buckling-parametric/results/input.yml     # save_cfg dump
+      - examples/workflows/buckling-parametric/results/results.json  # write_outputs (meta.generated_at omitted -> byte-stable)
+      - examples/workflows/buckling-parametric/results/cases.csv     # write_outputs cases table
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[buckling-parametric]
+    runtime: offline
+    result:
+      kind: files                       # results.json {meta,lookup,index,index_status,curves} + cases.csv
+  - id: mooring-design-mbl              # NEW basename `mooring_mbl` -- reserved `mooring` arm untouched
+    basename: mooring_mbl
+    title: DNV-OS-E301 mooring MBL safety-factor check (calc-citation pilot #2685)
+    input: examples/workflows/mooring-design-mbl/input.yml
+    outputs:
+      - examples/workflows/mooring-design-mbl/results/input.yml      # save_cfg dump carrying cfg["mooring_mbl"]
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-design-mbl]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: mooring_mbl

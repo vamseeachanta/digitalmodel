@@ -1,0 +1,10 @@
+# Packaged base config for the `mooring_mbl` engine basename (workspace-hub#3285).
+# Minimal skeleton -- the durable fixture supplies `mooring_mbl_design` (design,
+# max_tension_kn, condition, repo_root for DNV-OS-E301 citation resolution).
+basename: mooring_mbl
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

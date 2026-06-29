@@ -19,6 +19,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from digitalmodel.materials import legacy_pipe_db_grades_pa
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
@@ -32,15 +33,11 @@ from digitalmodel.structural.analysis.wall_thickness import (
 
 logger = logging.getLogger(__name__)
 
-# Material database (API 5L grades, Pa)
-API_5L_GRADES: Dict[str, Dict[str, float]] = {
-    "X42": {"smys": 289e6, "smts": 414e6},
-    "X52": {"smys": 359e6, "smts": 455e6},
-    "X60": {"smys": 414e6, "smts": 517e6},
-    "X65": {"smys": 448e6, "smts": 531e6},
-    "X70": {"smys": 483e6, "smts": 565e6},
-    "X80": {"smys": 552e6, "smts": 621e6},
-}
+# Material database (API 5L grades, Pa) — sourced from the canonical grade
+# matrix (issue #1089). Same legacy snapshot as pipe_db_client (US-customary
+# SMYS + PSL1-ish SMTS), scaled to Pa; preserved verbatim pending the
+# convergence sign-off in docs/domains/grade-table-migration-2026-06-28.md.
+API_5L_GRADES: Dict[str, Dict[str, float]] = legacy_pipe_db_grades_pa()
 
 
 @dataclass

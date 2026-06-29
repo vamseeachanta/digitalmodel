@@ -66,7 +66,29 @@ def _running_under_pytest() -> bool:
     )
 
 
-def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
+def engine(
+    inputfile: str = None,
+    cfg: dict = None,
+    config_flag: bool = True,
+    root_folder: str = None,
+    log_to_file: bool = True,
+    embed: bool = False,
+) -> dict:
+    """Run a digitalmodel workflow.
+
+    Additive params (workspace-hub#3307, mirroring assetutilities #3297);
+    defaults are byte-identical to today's digitalmodel CLI behavior:
+
+    - ``root_folder`` (default None): on the file/default path, explicitly
+      override the resolved ``analysis_root_folder`` so outputs land under this
+      dir. None => today's input-file-dir / os.getcwd() resolution.
+    - ``log_to_file`` (default True): consumed only by the ``embed`` path (passed
+      through to ``configure_embed``). The file/default path keeps configure()'s
+      forced-file logging regardless (``log_to_file`` is NOT threaded there).
+    - ``embed`` (default False): when True, dispatch the caller's in-memory
+      ``cfg`` directly under ``root_folder`` (re-entrant, sandboxed) -- the
+      embeddable run path #3285's digitalmodel-bound ``run_workflow`` consumes.
+    """
     cfg_argv_dict = {}
     if cfg is None:
         try:
@@ -96,20 +118,55 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         raise ValueError("basename not found in cfg")
 
-    if config_flag:
+    if embed:
+        # ---- EMBEDDABLE RUN PATH (workspace-hub#3307; mirrors #3297) ----
+        # The entrypoint #3285's digitalmodel-bound run_workflow calls. Dispatches
+        # the caller's in-memory cfg directly under the injected root_folder.
+        if cfg is None or root_folder is None:
+            raise ValueError(
+                "engine(embed=True) requires both cfg and root_folder"
+            )
+        fm = FileManagement()
+        # Per-call instance => no module-singleton (app_manager) re-entrancy bleed
+        # across repeated in-process embed runs. configure_embed (assetutilities
+        # #3297) sets analysis_root_folder=root, log folders under root, AND
+        # rebases cfg["_config_dir_path"]=root so config-relative routers (the
+        # wall-thickness quickcheck + ~20 peers that read _config_dir_path) write
+        # under root, not the input-file dir or cwd. Positional call -- NO
+        # library_name (that arg exists only on the regular configure()).
+        cfg_base = ConfigureApplicationInputs().configure_embed(
+            cfg, basename, root_folder, log_to_file=log_to_file
+        )
+        # DELIBERATELY skip the _config_dir_path/_config_file_path re-copy that the
+        # default path does below -- re-copying the original cfg's input-file dir
+        # would clobber the rebased root and send config-relative routers back
+        # outside the injected root, defeating isolation. configure_embed already
+        # created the results folders, so no second configure_result_folder.
+        cfg_base = fm.router(cfg_base)
+    elif config_flag:
         fm = FileManagement()
         if inputfile is not None and _running_under_pytest():
             original_argv = sys.argv[:]
             sys.argv = [original_argv[0], inputfile]
             try:
                 cfg_base = app_manager.configure(
-                    cfg, library_name, basename, cfg_argv_dict, inputfile=inputfile
+                    cfg,
+                    library_name,
+                    basename,
+                    cfg_argv_dict,
+                    inputfile=inputfile,
+                    root_folder=root_folder,
                 )
             finally:
                 sys.argv = original_argv
         else:
             cfg_base = app_manager.configure(
-                cfg, library_name, basename, cfg_argv_dict, inputfile=inputfile
+                cfg,
+                library_name,
+                basename,
+                cfg_argv_dict,
+                inputfile=inputfile,
+                root_folder=root_folder,
             )
         # Preserve config file path from original cfg
         if "_config_file_path" in cfg:
@@ -596,6 +653,26 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "ffs":
+        # workspace-hub#3285: Phase-1 FFS coordinator (assess_component) engine route.
+        # NEW basename -- legacy "API579" arm (a different engine) is untouched.
+        from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+
+        cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "buckling_parametric":
+        # workspace-hub#3285-OWNED: DNV-RP-C201 parametric plate-buckling sweep.
+        # NEW basename -- legacy "plate_buckling" arm (PlateBuckling class) untouched.
+        from digitalmodel.structural.buckling_workflow import (
+            BucklingParametricWorkflow,
+        )
+
+        cfg_base = BucklingParametricWorkflow().router(cfg_base)
+    elif basename == "mooring_mbl":
+        # workspace-hub#3285: DNV-OS-E301 mooring MBL pilot (#2685). NEW basename --
+        # the reserved "mooring" arm (subsea/mooring_analysis/ redirect) is untouched.
+        from digitalmodel.orcaflex.mooring_workflow import MooringMBLWorkflow
+
+        cfg_base = MooringMBLWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

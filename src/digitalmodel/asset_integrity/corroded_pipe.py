@@ -36,6 +36,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 from digitalmodel.codes import ASME_B31G
+from digitalmodel.materials import legacy_smys_psi_dict
 
 # Flow-stress adder for Modified B31G / RSTRENG: SMYS + 10 ksi (= 68.95 MPa).
 _FLOW_ADDER_PSI = 10_000.0
@@ -47,10 +48,9 @@ _DEFAULT_SAFETY_FACTOR = 1.39
 _B31G_MAX_DT = 0.80
 
 # API 5L specified minimum yield strength (psi) — grade number is SMYS in ksi.
-SMYS_PSI = {
-    "X42": 42_000.0, "X46": 46_000.0, "X52": 52_000.0, "X56": 56_000.0,
-    "X60": 60_000.0, "X65": 65_000.0, "X70": 70_000.0, "X80": 80_000.0,
-}
+# Sourced from the canonical grade matrix (issue #1089); the matrix reproduces
+# these values exactly via the grade-ksi convention (X52 -> 52,000 psi).
+SMYS_PSI = legacy_smys_psi_dict()
 
 
 @dataclass
