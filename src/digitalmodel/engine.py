@@ -194,6 +194,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = jumper_installation(cfg_base)
+    elif basename == "installation_pamphlet":
+        from digitalmodel.installation.installation_pamphlet.workflow import (
+            router as installation_pamphlet,
+        )
+
+        cfg_base = installation_pamphlet(cfg_base)
     elif basename == "ship_design":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)
