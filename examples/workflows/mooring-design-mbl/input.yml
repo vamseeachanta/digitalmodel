@@ -1,0 +1,18 @@
+basename: mooring_mbl
+
+# DNV-OS-E301 mooring MBL safety-factor pilot (#2685). check_mbl_with_safety_factor
+# applies the intact-condition SF (1.67) to each segment's utilisation and emits a
+# DNV-OS-E301 citation sidecar. Standalone (no knowledge/wikis tree) degrades to an
+# empty citations list with a one-shot RuntimeWarning; with a wiki base resolvable
+# the citation populates provenance.standard_revisions.
+mooring_mbl_design:
+  condition: intact
+  max_tension_kn: 3000.0
+  design:
+    water_depth: 1500.0
+    fairlead_depth: 10.0
+    target_pretension: 1500.0
+    segments:
+      - {material_key: R4_84mm_chain, length: 150.0}
+      - {material_key: "160mm_polyester", length: 1800.0}
+      - {material_key: R4_84mm_chain, length: 300.0}
