@@ -32,12 +32,28 @@ Two formats are provided:
   with ``gamma_m`` the partial safety factor on the model/capacity,
   ``gamma_d`` the factor on the corrected defect depth, ``epsilon_d`` the depth
   factor on the measurement standard deviation and ``StD`` the relative-depth
-  measurement standard deviation (fraction of ``t``).
+  measurement standard deviation (fraction of ``t``).  ``gamma_m``, ``gamma_d``
+  and ``epsilon_d`` are selected from the DNV-RP-F101 Part-A tables by **safety
+  class** (low/normal/high) and the **sizing-accuracy band** ``StD[d/t]`` (see
+  :func:`gamma_m_factor`, :func:`gamma_d_factor`, :func:`epsilon_d_fractile`);
+  any factor may still be overridden explicitly.
+
+Interacting-defect colonies (:func:`dnv_f101_interacting`) follow DNV-RP-F101
+Sec. 8: for a run of adjacent interacting defects the combined defect takes the
+total length (defect lengths + interior spacings) and a **length-weighted
+(area-averaged) combined relative depth** ``d_comb = sum(d_k l_k)/sum(l_k)`` —
+not the maximum depth — and is then assessed as a single defect.
 
 Units are US customary throughout: lengths in inches, stresses and pressures in
 psi.  All formula constants follow DNV-RP-F101 (2015/2017) Sections 2 (PSF) and
 3 (allowable-stress).  The default factors below are documented at their point
 of use; callers may override every factor.
+
+.. note::
+   The allowable-stress ``usage_factor`` default 0.72 is the **ASME B31.8
+   location-class-1 design factor**, *not* a DNV safety-class usage factor.  Use
+   the PSF format (:func:`dnv_f101_psf`) with an explicit ``safety_class`` for
+   DNV-RP-F101 code-compliant safety.
 """
 
 from __future__ import annotations
@@ -57,36 +73,61 @@ from digitalmodel.codes import DNV_RP_F101
 # X60 = 520 MPa, X65 = 535 MPa, X70 = 570 MPa, X80 = 625 MPa.
 # ---------------------------------------------------------------------------
 SMTS_PSI = {
-    "X42": 60_200.0,   # 415 MPa
-    "X46": 63_100.0,   # 435 MPa
-    "X52": 66_700.0,   # 460 MPa
-    "X56": 71_100.0,   # 490 MPa
-    "X60": 75_400.0,   # 520 MPa
-    "X65": 77_600.0,   # 535 MPa
-    "X70": 82_700.0,   # 570 MPa
-    "X80": 90_600.0,   # 625 MPa
+    "X42": 60_200.0,  # 415 MPa
+    "X46": 63_100.0,  # 435 MPa
+    "X52": 66_700.0,  # 460 MPa
+    "X56": 71_100.0,  # 490 MPa
+    "X60": 75_400.0,  # 520 MPa
+    "X65": 77_600.0,  # 535 MPa
+    "X70": 82_700.0,  # 570 MPa
+    "X80": 90_600.0,  # 625 MPa
 }
 
-# Default usage factor for the allowable-stress format.  DNV-RP-F101 allowable
-# operating pressure for the longitudinal-stress / hoop-controlled case is
-# commonly taken at the design-factor level (~0.72 for transmission pipelines,
-# ASME B31.8 location class 1); overridable per safety class / location.
+# Default usage factor for the allowable-stress format.
+#
+# NOTE on 0.72: this is the ASME B31.8 location-class-1 DESIGN FACTOR (hoop-stress
+# usage factor for onshore transmission pipelines), NOT a DNV-RP-F101 safety-class
+# usage factor.  DNV-RP-F101's own calibrated safety derives from the Part-A
+# partial-safety-factor format (see ``dnv_f101_psf`` and the gamma_m table below),
+# not from a single scalar usage factor.  We expose 0.72 only as a familiar
+# allowable-stress screening level; for code-compliant DNV safety use the PSF
+# format with the appropriate ``safety_class``.  Location class 2/3/4 would use
+# 0.60/0.50/0.40 respectively (ASME B31.8), overridable via ``usage_factor``.
 _DEFAULT_USAGE_FACTOR = 0.72
 
-# DNV-RP-F101 partial-safety-factor defaults (allowable-stress -> LRFD).
-# gamma_m  : partial safety factor on the predicted capacity, by safety class
-#            (DNV-RP-F101 Table — Normal class ~0.77, High class ~0.74 for the
-#            usual inspection-accuracy band).  Default = Normal safety class.
-# gamma_d  : factor on the corrected relative depth (depends on measurement
-#            accuracy StD; ~1.0 for very accurate, up to ~1.2 for poorer ILI).
-# epsilon_d: depth factor applied to the relative-depth standard deviation
-#            (DNV uses 1.0 at the standard fractile for relative-depth sizing).
-# StD      : relative-depth measurement standard deviation (fraction of t);
-#            ~0.08 t is a typical high-resolution MFL ILI tolerance.
-_DEFAULT_GAMMA_M = 0.77
-_DEFAULT_GAMMA_D = 1.0
-_DEFAULT_EPSILON_D = 1.0
+# ---------------------------------------------------------------------------
+# DNV-RP-F101 Part-A partial-safety-factor (LRFD) tables.
+#
+# The Part-A factored capacity for a single longitudinal defect is
+#
+#     (d/t)*  = (d/t) + epsilon_d * StD[d/t]
+#     P_corr  = gamma_m * (2 t f_u/(D-t)) * (1 - gamma_d (d/t)*)
+#                                          / (1 - gamma_d (d/t)*/Q)
+#
+# with the factors selected by SAFETY CLASS and by the relative measurement
+# accuracy band StD[d/t] (the sizing standard deviation as a fraction of t).
+#
+# gamma_m (model factor) — DNV-RP-F101 Table (Part A), by safety class and by
+# whether the inspection sizes depth RELATIVE to t (e.g. MFL ILI) or ABSOLUTE
+# (e.g. UT).  The legacy scalar default 0.77 == Normal class / absolute sizing.
+# ---------------------------------------------------------------------------
+_GAMMA_M_TABLE = {
+    # safety_class: {sizing_method: gamma_m}
+    "low": {"relative": 0.79, "absolute": 0.82},
+    "normal": {"relative": 0.74, "absolute": 0.77},
+    "high": {"relative": 0.70, "absolute": 0.72},
+}
+
+# Default DNV-RP-F101 PSF selection (chosen to reproduce the legacy scalar
+# default gamma_m = 0.77 == Normal safety class, absolute depth sizing).
+_DEFAULT_SAFETY_CLASS = "normal"
+_DEFAULT_MEASUREMENT_METHOD = "absolute"
+
+# Relative-depth measurement standard deviation (fraction of t); ~0.08 t is a
+# typical high-resolution MFL ILI tolerance.  The Part-A gamma_d / epsilon_d
+# tables below are calibrated over StD[d/t] in [0, 0.16].
 _DEFAULT_STD_REL_DEPTH = 0.08
+_DNV_F101_MAX_STD = 0.16
 
 # DNV-RP-F101 validity limit on relative defect depth.  The capacity equation is
 # calibrated for d/t up to 0.85; deeper defects are outside the qualified range
@@ -94,16 +135,93 @@ _DEFAULT_STD_REL_DEPTH = 0.08
 _DNV_F101_MAX_DT = 0.85
 
 
+def gamma_m_factor(
+    safety_class: str = _DEFAULT_SAFETY_CLASS,
+    measurement_method: str = _DEFAULT_MEASUREMENT_METHOD,
+) -> float:
+    """DNV-RP-F101 Part-A model partial safety factor ``gamma_m``.
+
+    Looked up from the safety-class / sizing-method table.  ``safety_class`` is
+    one of ``low``/``normal``/``high``; ``measurement_method`` is ``relative``
+    (depth sized as a fraction of t, e.g. MFL) or ``absolute`` (e.g. UT).
+    """
+    sc = safety_class.strip().lower()
+    mm = measurement_method.strip().lower()
+    if sc not in _GAMMA_M_TABLE:
+        raise ValueError(
+            f"safety_class {safety_class!r} must be one of {sorted(_GAMMA_M_TABLE)}."
+        )
+    if mm not in ("relative", "absolute"):
+        raise ValueError(
+            f"measurement_method {measurement_method!r} must be 'relative' or 'absolute'."
+        )
+    return _GAMMA_M_TABLE[sc][mm]
+
+
+def epsilon_d_fractile(std_rel_depth: float) -> float:
+    """DNV-RP-F101 Part-A fractile factor ``epsilon_d`` for the corrosion depth.
+
+    The corrected relative depth is ``(d/t)* = (d/t) + epsilon_d * StD[d/t]``.
+    Per the DNV-RP-F101 table (StD[d/t] denoted ``a``):
+
+        a <= 0.04        -> epsilon_d = 0
+        0.04 < a <= 0.16 -> epsilon_d = -1.33 + 37.5 a - 104.2 a**2
+
+    (The quadratic gives epsilon_d ~ 0, 1.0, 2.0 at a = 0.04, 0.08, 0.16 — so
+    the legacy scalar default epsilon_d = 1.0 corresponds to StD[d/t] = 0.08.)
+    For ``a`` above the calibrated 0.16 the value is clamped at the 0.16 point.
+    """
+    a = std_rel_depth
+    if a <= 0.04:
+        return 0.0
+    a = min(a, _DNV_F101_MAX_STD)
+    return -1.33 + 37.5 * a - 104.2 * a * a
+
+
+def gamma_d_factor(
+    std_rel_depth: float, safety_class: str = _DEFAULT_SAFETY_CLASS
+) -> float:
+    """DNV-RP-F101 Part-A depth partial safety factor ``gamma_d``.
+
+    Tabulated as a function of the sizing standard deviation ``a = StD[d/t]``
+    and the safety class (DNV-RP-F101 Part A):
+
+        Low    : a < 0.04         -> 1.0 + 4.0 a
+                 0.04 <= a < 0.08  -> 1.0 + 5.5 a - 37.5 a**2
+                 0.08 <= a <= 0.16 -> 1.2
+        Normal : a <= 0.16         -> 1.0 + 4.6 a - 13.9 a**2
+        High   : a <= 0.16         -> 1.0 + 4.3 a - 4.1 a**2
+
+    Larger StD and higher safety class both raise ``gamma_d`` (more
+    conservative).  ``a`` above 0.16 is clamped to the 0.16 calibration point.
+    """
+    a = min(max(std_rel_depth, 0.0), _DNV_F101_MAX_STD)
+    sc = safety_class.strip().lower()
+    if sc == "low":
+        if a < 0.04:
+            return 1.0 + 4.0 * a
+        if a < 0.08:
+            return 1.0 + 5.5 * a - 37.5 * a * a
+        return 1.2
+    if sc == "high":
+        return 1.0 + 4.3 * a - 4.1 * a * a
+    if sc == "normal":
+        return 1.0 + 4.6 * a - 13.9 * a * a
+    raise ValueError(
+        f"safety_class {safety_class!r} must be one of {sorted(_GAMMA_M_TABLE)}."
+    )
+
+
 @dataclass
 class DNVF101Result:
     """DNV-RP-F101 remaining-strength result for a corroded pipe defect."""
 
-    method: str                       # DNV-F101-AS | DNV-F101-PSF | ...-interacting
-    capacity_pressure_psi: float      # predicted burst (capacity) pressure
-    allowable_pressure_psi: float     # F * capacity (AS) or P_corr (PSF)
-    Q: float                          # length-correction factor
-    d_over_t: float                   # governing relative depth
-    intact_pressure_psi: float        # 2 t f_u / (D - t) (defect-free)
+    method: str  # DNV-F101-AS | DNV-F101-PSF | ...-interacting
+    capacity_pressure_psi: float  # predicted burst (capacity) pressure
+    allowable_pressure_psi: float  # F * capacity (AS) or P_corr (PSF)
+    Q: float  # length-correction factor
+    d_over_t: float  # governing relative depth
+    intact_pressure_psi: float  # 2 t f_u / (D - t) (defect-free)
     acceptable: Optional[bool] = None  # allowable >= MAOP (if maop_psi given)
     details: dict = field(default_factory=dict)
     code_reference: str = DNV_RP_F101.label  # governing code (all formats)
@@ -135,8 +253,14 @@ def _capacity(t: float, f_u: float, D: float, dt: float, Q: float) -> float:
 # Single defect — allowable-stress format
 # ---------------------------------------------------------------------------
 def dnv_f101_single_defect(
-    D: float, t: float, d: float, L: float, smts_psi: float,
-    *, maop_psi: Optional[float] = None, usage_factor: float = _DEFAULT_USAGE_FACTOR,
+    D: float,
+    t: float,
+    d: float,
+    L: float,
+    smts_psi: float,
+    *,
+    maop_psi: Optional[float] = None,
+    usage_factor: float = _DEFAULT_USAGE_FACTOR,
 ) -> DNVF101Result:
     """DNV-RP-F101 allowable-stress single-defect capacity and allowable pressure.
 
@@ -164,13 +288,19 @@ def dnv_f101_single_defect(
         d_over_t=dt,
         intact_pressure_psi=_intact_pressure(t, f_u, D),
         acceptable=(None if maop_psi is None else bool(p_allow >= maop_psi)),
-        details={"usage_factor": usage_factor, "L_in": L,
-                 "smts_psi": f_u, "format": "allowable_stress",
-                 "within_applicability": bool(within),
-                 "applicability_note": (
-                     None if within else
-                     f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit "
-                     f"{_DNV_F101_MAX_DT:.2f}; assess by repair/replace criteria")},
+        details={
+            "usage_factor": usage_factor,
+            "L_in": L,
+            "smts_psi": f_u,
+            "format": "allowable_stress",
+            "within_applicability": bool(within),
+            "applicability_note": (
+                None
+                if within
+                else f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit "
+                f"{_DNV_F101_MAX_DT:.2f}; assess by repair/replace criteria"
+            ),
+        },
     )
 
 
@@ -178,10 +308,19 @@ def dnv_f101_single_defect(
 # Single defect — partial-safety-factor (LRFD) format
 # ---------------------------------------------------------------------------
 def dnv_f101_psf(
-    D: float, t: float, d: float, L: float, smts_psi: float,
-    *, maop_psi: Optional[float] = None,
-    gamma_m: float = _DEFAULT_GAMMA_M, gamma_d: float = _DEFAULT_GAMMA_D,
-    epsilon_d: float = _DEFAULT_EPSILON_D, std_rel_depth: float = _DEFAULT_STD_REL_DEPTH,
+    D: float,
+    t: float,
+    d: float,
+    L: float,
+    smts_psi: float,
+    *,
+    maop_psi: Optional[float] = None,
+    safety_class: str = _DEFAULT_SAFETY_CLASS,
+    measurement_method: str = _DEFAULT_MEASUREMENT_METHOD,
+    gamma_m: Optional[float] = None,
+    gamma_d: Optional[float] = None,
+    epsilon_d: Optional[float] = None,
+    std_rel_depth: float = _DEFAULT_STD_REL_DEPTH,
 ) -> DNVF101Result:
     """DNV-RP-F101 partial-safety-factor (Part A / LRFD) corroded capacity.
 
@@ -190,22 +329,51 @@ def dnv_f101_psf(
         P_corr = gamma_m * (2 t f_u/(D-t)) * (1 - gamma_d*(d/t)*)
                  / (1 - gamma_d*(d/t)*/Q).
 
-    Args mirror :func:`dnv_f101_single_defect`; the partial safety factors and
-    the relative-depth measurement standard deviation ``std_rel_depth`` (fraction
-    of ``t``) carry DNV defaults (see module constants) and are overridable.
-    The PSF pressure is reported as the allowable pressure; the un-factored
+    The partial safety factors are taken from the DNV-RP-F101 Part-A tables:
+    ``gamma_m`` from :func:`gamma_m_factor` (by ``safety_class`` =
+    low/normal/high and ``measurement_method`` = relative/absolute), and
+    ``gamma_d`` / ``epsilon_d`` from :func:`gamma_d_factor` /
+    :func:`epsilon_d_fractile` (by ``safety_class`` and the sizing standard
+    deviation ``std_rel_depth`` = StD[d/t], fraction of ``t``).  The defaults
+    (normal class, absolute sizing, StD = 0.08) reproduce the historical scalar
+    ``gamma_m = 0.77``.  Any of ``gamma_m``/``gamma_d``/``epsilon_d`` may be
+    passed explicitly to override the table lookup.
+
+    The PSF pressure is reported as the allowable pressure; the un-factored mean
     capacity is also returned for reference.
     """
     _validate(D, t, d, L)
     f_u = smts_psi
     dt = d / t
+    if gamma_m is None:
+        gamma_m = gamma_m_factor(safety_class, measurement_method)
+    if gamma_d is None:
+        gamma_d = gamma_d_factor(std_rel_depth, safety_class)
+    if epsilon_d is None:
+        epsilon_d = epsilon_d_fractile(std_rel_depth)
     dt_star = dt + epsilon_d * std_rel_depth
     dt_star = min(dt_star, 0.999)
     Q = length_correction_factor(D, t, L)
     intact = _intact_pressure(t, f_u, D)
-    p_corr = gamma_m * intact * (1.0 - gamma_d * dt_star) / (1.0 - gamma_d * dt_star / Q)
+    p_corr = (
+        gamma_m * intact * (1.0 - gamma_d * dt_star) / (1.0 - gamma_d * dt_star / Q)
+    )
     p_corr = max(p_corr, 0.0)
     p_cap = _capacity(t, f_u, D, dt, Q)  # un-factored mean capacity, for reference
+    within_dt = dt <= _DNV_F101_MAX_DT
+    within_std = std_rel_depth <= _DNV_F101_MAX_STD
+    within = within_dt and within_std
+    notes = []
+    if not within_dt:
+        notes.append(
+            f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit {_DNV_F101_MAX_DT:.2f}; "
+            f"assess by repair/replace criteria"
+        )
+    if not within_std:
+        notes.append(
+            f"StD[d/t]={std_rel_depth:.3f} exceeds the Part-A PSF calibration "
+            f"range {_DNV_F101_MAX_STD:.2f}; gamma_d/epsilon_d clamped at 0.16"
+        )
     return DNVF101Result(
         method="DNV-F101-PSF",
         capacity_pressure_psi=p_cap,
@@ -214,9 +382,20 @@ def dnv_f101_psf(
         d_over_t=dt,
         intact_pressure_psi=intact,
         acceptable=(None if maop_psi is None else bool(p_corr >= maop_psi)),
-        details={"gamma_m": gamma_m, "gamma_d": gamma_d, "epsilon_d": epsilon_d,
-                 "std_rel_depth": std_rel_depth, "d_over_t_star": dt_star,
-                 "L_in": L, "smts_psi": f_u, "format": "partial_safety_factor"},
+        details={
+            "gamma_m": gamma_m,
+            "gamma_d": gamma_d,
+            "epsilon_d": epsilon_d,
+            "std_rel_depth": std_rel_depth,
+            "d_over_t_star": dt_star,
+            "safety_class": safety_class.strip().lower(),
+            "measurement_method": measurement_method.strip().lower(),
+            "L_in": L,
+            "smts_psi": f_u,
+            "format": "partial_safety_factor",
+            "within_applicability": bool(within),
+            "applicability_note": ("; ".join(notes) if notes else None),
+        },
     )
 
 
@@ -230,8 +409,12 @@ def interaction_spacing_limit(D: float, t: float) -> float:
 
 
 def dnv_f101_interacting(
-    D: float, t: float, defects: Sequence[Tuple[float, float, float]],
-    smts_psi: float, *, maop_psi: Optional[float] = None,
+    D: float,
+    t: float,
+    defects: Sequence[Tuple[float, float, float]],
+    smts_psi: float,
+    *,
+    maop_psi: Optional[float] = None,
     usage_factor: float = _DEFAULT_USAGE_FACTOR,
 ) -> DNVF101Result:
     """Assess a colony of longitudinal defects with the DNV-RP-F101 interaction rule.
@@ -242,10 +425,20 @@ def dnv_f101_interacting(
         usage_factor / maop_psi: as for :func:`dnv_f101_single_defect`.
 
     Adjacent defects whose axial gap is smaller than ``2*sqrt(D*t)`` are merged
-    into a composite defect spanning from the first start to the last end
-    (combined length) with a grouped (maximum) depth, then assessed as a single
-    defect.  Every individual defect and every interacting composite is
-    evaluated; the governing (lowest-capacity) case is returned.
+    into a composite defect (DNV-RP-F101 Sec. 8) spanning from the first start to
+    the last end — the **combined length** ``L_comb`` includes the defect
+    lengths plus the interior spacings — with a **length-weighted (area-averaged)
+    combined relative depth**
+
+        d_comb = sum(d_k * l_k) / sum(l_k)
+
+    over the member defects (``l_k`` = member defect lengths, ``d_k`` = member
+    depths; the denominator excludes the gaps).  The composite is then assessed
+    as a single defect with ``(L_comb, d_comb)``.  Every individual defect and
+    every interacting composite (each contiguous sub-run) is evaluated; the
+    governing (lowest-capacity) case is returned.  This area-averaging replaces
+    the earlier max-depth grouping, which was conservative but mislabelled as the
+    DNV method.
     """
     _validate_geometry(D, t)
     if not defects:
@@ -271,7 +464,8 @@ def dnv_f101_interacting(
     # 1) Every individual defect on its own.
     for k in range(len(items)):
         res = dnv_f101_single_defect(
-            D, t, depths[k], lengths[k], smts_psi, usage_factor=usage_factor)
+            D, t, depths[k], lengths[k], smts_psi, usage_factor=usage_factor
+        )
         candidates.append({"res": res, "kind": "single", "members": [k]})
 
     # 2) Every maximal run of consecutive interacting defects, and each
@@ -284,15 +478,48 @@ def dnv_f101_interacting(
             if gap >= limit:
                 break  # run broken; no further j interacts with i..
             comp_length = float(ends[j] - starts[i])
-            comp_depth = float(np.max(depths[i:j + 1]))
+            # DNV-RP-F101 Sec. 8 length-weighted (area-averaged) combined depth
+            # over the member defects (weights = member defect lengths, not the
+            # interior spacings).  NB: when member depths are equal this reduces
+            # to the (former) max depth.
+            member_lengths = lengths[i : j + 1]
+            member_depths = depths[i : j + 1]
+            total_member_length = float(np.sum(member_lengths))
+            if total_member_length > 0.0:
+                comp_depth = float(
+                    np.sum(member_depths * member_lengths) / total_member_length
+                )
+            else:  # degenerate zero-length members; fall back to mean depth
+                comp_depth = float(np.mean(member_depths))
             res = dnv_f101_single_defect(
-                D, t, comp_depth, comp_length, smts_psi, usage_factor=usage_factor)
+                D, t, comp_depth, comp_length, smts_psi, usage_factor=usage_factor
+            )
             candidates.append(
-                {"res": res, "kind": "composite", "members": list(range(i, j + 1)),
-                 "comp_length_in": comp_length, "comp_depth_in": comp_depth})
+                {
+                    "res": res,
+                    "kind": "composite",
+                    "members": list(range(i, j + 1)),
+                    "comp_length_in": comp_length,
+                    "comp_depth_in": comp_depth,
+                }
+            )
 
     governing = min(candidates, key=lambda c: c["res"].capacity_pressure_psi)
     gres = governing["res"]
+    gov_within = bool(gres.details.get("within_applicability", True))
+    gov_details = {
+        "interaction_limit_in": limit,
+        "governing_kind": governing["kind"],
+        "governing_members": governing["members"],
+        "n_defects": int(n),
+        "usage_factor": usage_factor,
+        "n_candidates": int(len(candidates)),
+        "within_applicability": gov_within,
+        "applicability_note": gres.details.get("applicability_note"),
+    }
+    if governing["kind"] == "composite":
+        gov_details["comp_length_in"] = governing["comp_length_in"]
+        gov_details["comp_depth_in"] = governing["comp_depth_in"]
     return DNVF101Result(
         method="DNV-F101-interacting",
         capacity_pressure_psi=gres.capacity_pressure_psi,
@@ -300,12 +527,10 @@ def dnv_f101_interacting(
         Q=gres.Q,
         d_over_t=gres.d_over_t,
         intact_pressure_psi=gres.intact_pressure_psi,
-        acceptable=(None if maop_psi is None
-                    else bool(gres.allowable_pressure_psi >= maop_psi)),
-        details={"interaction_limit_in": limit, "governing_kind": governing["kind"],
-                 "governing_members": governing["members"],
-                 "n_defects": int(n), "usage_factor": usage_factor,
-                 "n_candidates": int(len(candidates))},
+        acceptable=(
+            None if maop_psi is None else bool(gres.allowable_pressure_psi >= maop_psi)
+        ),
+        details=gov_details,
     )
 
 
