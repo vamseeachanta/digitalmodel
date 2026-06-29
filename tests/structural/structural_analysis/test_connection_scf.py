@@ -53,16 +53,26 @@ def test_golden_hotspot_linear_extrapolation():
     assert junction_hotspot_stress(20.0, 200.0, 150.0) == pytest.approx(233.5)
 
 
-# --- GOLDEN: Efthymiou chord-saddle SCF, axial T-joint (published tau^1.1) ----
+# --- GOLDEN: Efthymiou chord-saddle SCF, axial T-joint (tau^1.1 + short-chord F1)
 def test_golden_efthymiou_chord_saddle_axial():
-    # gamma*tau^1.1*(1.11-3(beta-0.52)^2)*sin(theta)^1.6
-    # beta=0.5, gamma=12, tau=0.5, theta=90 ->
-    #   12 * 0.5^1.1 * (1.11 - 3*(-0.02)^2) * 1 = 6.207 (~6.21 published).
+    # gamma*tau^1.1*(1.11-3(beta-0.52)^2)*sin(theta)^1.6 * F1(beta,gamma,alpha)
+    # beta=0.5, gamma=12, tau=0.5, theta=90, alpha=5 (default short chord) ->
+    #   12 * 0.5^1.1 * (1.11 - 3*(-0.02)^2) * 1 = 6.207 uncorrected,
+    #   F1 = 0.766 -> 6.207 * 0.766 = 4.755 (DNV-RP-C203 App. B short chord).
     scf = efthymiou_chord_saddle_axial_scf(0.5, 12.0, 0.5, 90.0)
-    assert scf == pytest.approx(6.21, abs=0.01)
-    # hand value to full precision
-    expected = 12.0 * 0.5**1.1 * (1.11 - 3.0 * (0.5 - 0.52) ** 2)
+    assert scf == pytest.approx(4.755, abs=0.01)
+    # hand value to full precision (with F1 short-chord factor at alpha=5)
+    f1 = 1.0 - (0.83 * 0.5 - 0.56 * 0.5**2 - 0.02) * 12.0**0.23 * math.exp(
+        -0.21 * 12.0 ** (-1.16) * 5.0**2.5
+    )
+    expected = 12.0 * 0.5**1.1 * (1.11 - 3.0 * (0.5 - 0.52) ** 2) * f1
     assert scf == pytest.approx(expected, rel=1e-12)
+
+
+def test_long_chord_recovers_uncorrected_saddle():
+    # alpha >= 12 -> F1 = 1.0 -> the uncorrected published 6.21 is recovered.
+    scf = efthymiou_chord_saddle_axial_scf(0.5, 12.0, 0.5, 90.0, alpha=12.0)
+    assert scf == pytest.approx(6.207, abs=0.01)
 
 
 def test_efthymiou_angle_reduces_saddle_scf():
