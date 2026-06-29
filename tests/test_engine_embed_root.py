@@ -53,7 +53,10 @@ def _embed_cfg(cache_path: Path | None = None) -> dict:
     """
     return {
         "basename": "wall_thickness",
-        "default": {"log_level": "INFO"},
+        # configure_overwrite_filenames (assetutilities) reads
+        # default.config.overwrite.output; mirror the real wall_thickness
+        # input.yml shape so the embed run dispatches as #3285's run_workflow will.
+        "default": {"log_level": "INFO", "config": {"overwrite": {"output": True}}},
         "wall_thickness": {
             "quickcheck": {
                 "cache": str(cache_path or CACHE_FIXTURE),
