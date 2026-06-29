@@ -123,6 +123,55 @@ class TestEfthymiouTYJoint:
         assert scf_low.governing != scf_high.governing
 
 
+# -- Test: Efthymiou T/Y axial golden values (published exponents) -------------
+
+class TestEfthymiouTYAxialGolden:
+    """Golden SCFs vs published Efthymiou (1988, OTC 4829) / DNV-RP-C203 App. B.
+
+    The chord-saddle term is ``gamma * tau^1.1 * (1.11 - 3(beta-0.52)^2) *
+    sin(theta)^1.6`` (the published ``tau^1.1`` form). The repo previously used
+    ``tau^1.0`` (chord saddle) and ``gamma^1.0`` (chord crown), which inflated
+    the chord SCFs. These tests pin the corrected published values and match
+    structural_analysis.connection_scf.efthymiou_chord_saddle_axial_scf
+    (6.21 for beta=0.5, gamma=12, tau=0.5, theta=90).
+    """
+
+    def test_chord_saddle_golden_g12(self):
+        """beta=0.5, gamma=12, tau=0.5, theta=90 -> chord-saddle SCF = 6.21."""
+        # D=1200, T=50 -> gamma=12; d=600 -> beta=0.5; t=25 -> tau=0.5
+        geom = TubularJointGeometry(D=1200, T=50, d=600, t=25, theta=90)
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(6.21, abs=0.01)
+
+    def test_typical_axial_golden_values(self):
+        """beta=0.5, gamma=10, tau=0.5, alpha=5, theta=90 published values."""
+        geom = TubularJointGeometry(D=1000, T=50, d=500, t=25, theta=90)
+        result = efthymiou_ty_axial(geom)
+        # chord governed by saddle = 10*0.5^1.1*(1.11-3*0.0004)*1 = 5.173
+        assert result.scf_chord == pytest.approx(5.173, abs=0.01)
+        # brace governed by saddle term = 5.029
+        assert result.scf_brace == pytest.approx(5.029, abs=0.01)
+        assert result.governing == pytest.approx(5.173, abs=0.01)
+
+    def test_chord_saddle_theta45_golden(self):
+        """theta=45 scales chord saddle by sin(45)^1.6 -> 2.971."""
+        geom = TubularJointGeometry(D=1000, T=50, d=500, t=25, theta=45)
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(2.971, abs=0.01)
+
+    def test_chord_saddle_matches_connection_scf(self):
+        """scf_library chord saddle equals the connection_scf published form."""
+        from digitalmodel.structural.structural_analysis.connection_scf import (
+            efthymiou_chord_saddle_axial_scf,
+        )
+        geom = TubularJointGeometry(D=1200, T=50, d=600, t=25, theta=90)
+        ref = efthymiou_chord_saddle_axial_scf(
+            beta=0.5, gamma=12.0, tau=0.5, theta_deg=90.0
+        )
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(round(ref, 3), abs=0.01)
+
+
 # -- Test: K-joint SCF --------------------------------------------------------
 
 class TestEfthymiouKJoint:
