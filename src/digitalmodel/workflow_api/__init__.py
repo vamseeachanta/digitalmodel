@@ -9,6 +9,13 @@ imported from assetutilities -- never redefined here.
 
 from assetutilities.workflow_api import ResultEnvelope
 
+from digitalmodel.workflow_api.golden import (
+    GOLDEN_VOLATILE_KEYS,
+    capture_golden,
+    diff_results,
+    golden_workflow_test,
+)
+from digitalmodel.workflow_api.provenance import stamp_provenance
 from digitalmodel.workflow_api.runner import (
     build_cfg,
     load_registry,
@@ -24,4 +31,10 @@ __all__ = [
     "load_registry",
     "registry_path",
     "resolve_registry_row",
+    # workspace-hub#3283 determinism harness
+    "golden_workflow_test",
+    "GOLDEN_VOLATILE_KEYS",
+    "capture_golden",
+    "diff_results",
+    "stamp_provenance",
 ]
