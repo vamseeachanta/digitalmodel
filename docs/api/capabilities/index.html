@@ -37,6 +37,9 @@
   a{color:var(--accent);text-decoration:none}
   code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#1c2330;
        padding:1px 5px;border-radius:4px;font-size:12.5px}
+  a.linkcard{text-decoration:none;color:inherit;display:block;transition:border-color .15s,transform .1s}
+  a.linkcard:hover{border-color:var(--accent);transform:translateY(-1px)}
+  a.linkcard h3{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -108,6 +111,22 @@
     </tbody>
   </table>
 
+  <h2>Live dashboards &amp; explorers</h2>
+  <div class="grid">
+    <a class="card linkcard" href="../ffs/ffs-showcase.html"><h3>FFS decision-layer showcase →</h3>
+      <div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div>
+      <ul><li>interactive remaining-strength &amp; inspector-verdict walkthrough</li></ul></a>
+    <a class="card linkcard" href="../ffs/ffs-field-dashboard.html"><h3>FFS inspector field dashboard →</h3>
+      <div class="std">measurement sufficiency</div>
+      <ul><li>accept / re-rate / take-more-measurements / escalate</li></ul></a>
+    <a class="card linkcard" href="../buckling/ship-plate-buckling.html"><h3>Ship plate buckling explorer →</h3>
+      <div class="std">DNV-RP-C201</div>
+      <ul><li>plate capacity vs geometry &amp; combined loading</li></ul></a>
+    <a class="card linkcard" href="../buckling/ship-panel-buckling.html"><h3>Stiffened-panel buckling explorer →</h3>
+      <div class="std">DNV-RP-C201</div>
+      <ul><li>plate-field / column / tripping interaction</li></ul></a>
+  </div>
+
   <h2>Provenance</h2>
   <p class="note">Every strength / FFS result carries a <code>code_reference</code> naming its governing code and edition,
   sourced from one <code>codes.py</code> register that the
@@ -117,7 +136,6 @@
   <footer>
     Generated from the EPIC&nbsp;#1080 work (tubular products, ship structural elements, code provenance) plus FFS / SCF / hull-girder hardening.
     Validation records live under <code>docs/domains/</code>; method APIs under <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>.
-    · <a href="../ffs/ffs-showcase.html">FFS decision-layer showcase →</a>
   </footer>
 </div>
 </body>
