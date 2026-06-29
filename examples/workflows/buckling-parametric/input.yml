@@ -1,5 +1,11 @@
 basename: buckling_parametric
 
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
 # DNV-RP-C201 parametric plate-buckling sweep. A SMALL explicit sweep (not the
 # 972-case default) keeps results.json compact + byte-stable for the reference
 # golden. write_outputs runs with timestamp=None so meta.generated_at is omitted.

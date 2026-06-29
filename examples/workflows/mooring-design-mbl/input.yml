@@ -1,5 +1,11 @@
 basename: mooring_mbl
 
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
 # DNV-OS-E301 mooring MBL safety-factor pilot (#2685). check_mbl_with_safety_factor
 # applies the intact-condition SF (1.67) to each segment's utilisation and emits a
 # DNV-OS-E301 citation sidecar. Standalone (no knowledge/wikis tree) degrades to an
@@ -8,6 +14,11 @@ basename: mooring_mbl
 mooring_mbl_design:
   condition: intact
   max_tension_kn: 3000.0
+  # Wiki base (dir containing knowledge/wikis/) for DNV-OS-E301 citation resolution.
+  # Relative -> resolved against the digitalmodel repo root (portable + embed-safe).
+  # The committed fixture wiki tree is the only DNV-OS-E301 page in this public repo;
+  # production runs set LLM_WIKI_PATH to a private llm-wiki clone instead.
+  repo_root: tests/citations/fixtures
   design:
     water_depth: 1500.0
     fairlead_depth: 10.0

@@ -36,11 +36,10 @@ class MooringMBLWorkflow:
             )
 
         design = MooringLineDesign(**mbl_cfg.get("design", {}))
-        repo_root = mbl_cfg.get("repo_root")
         out = design.check_mbl_with_safety_factor(
             float(mbl_cfg["max_tension_kn"]),
             condition=mbl_cfg.get("condition", "intact"),
-            repo_root=Path(repo_root) if repo_root else None,
+            repo_root=_resolve_repo_root(mbl_cfg.get("repo_root")),
         )
 
         # Serialise Citation sidecars to plain dicts -> JSON-clean in_memory payload.
@@ -49,6 +48,28 @@ class MooringMBLWorkflow:
 
         cfg[cfg["basename"]] = out
         return cfg
+
+
+def _digitalmodel_repo_root() -> Path:
+    # mooring_workflow.py -> orcaflex -> digitalmodel -> src -> <repo root>
+    return Path(__file__).resolve().parents[3]
+
+
+def _resolve_repo_root(repo_root: Any) -> Optional[Path]:
+    """Resolve the cfg ``repo_root`` (the wiki-base dir for citation resolution).
+
+    A relative value is resolved against the digitalmodel repo root so a committed
+    fixture stays portable across machines AND across the #3307 embed path (which
+    rebases ``_config_dir_path`` to a throwaway tempdir -- so the wiki base must NOT
+    be resolved relative to the config dir). ``None`` => the resolver's own
+    precedence chain (LLM_WIKI_PATH / parent-walk / standalone) applies.
+    """
+    if not repo_root:
+        return None
+    path = Path(repo_root)
+    if not path.is_absolute():
+        path = _digitalmodel_repo_root() / path
+    return path
 
 
 def _citation_to_dict(citation: Any) -> dict[str, Optional[str]]:

@@ -1,5 +1,11 @@
 basename: ffs
 
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
 # Phase-1 FFS metal-loss coordinator (assess_component). The grid is a 6x6
 # measurement lattice with a 2-cell deep local thin spot -> routes LML and the
 # measurement-sufficiency engine flags it under-sampled (TAKE_MORE) -- the #1066
