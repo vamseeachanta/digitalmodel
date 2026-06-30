@@ -31,6 +31,8 @@ from digitalmodel.solvers.openfoam.validation.flat_plate import (
     _CF_COEFF,
     _DELTA99_COEFF,
     _PLATE_CD_COEFF,
+    BLASIUS_SOLVE_TOLERANCE,
+    extract_plate_mean_cf_error,
 )
 
 from .conftest import assert_valid_case_dir, solver_capable
@@ -122,8 +124,13 @@ def test_build_produces_valid_case_dir(tmp_path) -> None:
 
 
 def test_flat_plate_solve_matches_blasius(tmp_path) -> None:
+    """End-to-end: mesh + solve the verified case, then check the computed skin
+    friction against Blasius. Gated to solver-capable hosts (skipped in dry-run
+    CI). The case is the one validated in the report
+    docs/api/cfd/flat-plate-blasius-verification.html (mean Cf error 4.6%)."""
     if not solver_capable(tmp_path):
         pytest.skip("OpenFOAM not available — run gated to solver-capable hosts")
+    pytest.importorskip("pyvista")
 
     cfg = FlatPlateConfig()
     case_dir = build_flat_plate_case(cfg, parent_dir=tmp_path)
@@ -131,22 +138,10 @@ def test_flat_plate_solve_matches_blasius(tmp_path) -> None:
     result = runner.run(case_dir)
     assert result.status == OpenFOAMRunStatus.COMPLETED, result.error_message
 
-    pp_dir = case_dir / "postProcessing"
-    if not pp_dir.is_dir():
-        pytest.skip(
-            "solver ran but the minimal golden mesh emits no force "
-            "postProcessing — full Cf extraction needs the plate-patch "
-            "forceCoeffs wiring (see #1167 acceptance criteria)"
-        )
-    # On a fully-wired host: integrated plate drag within 5% of Blasius.
-    from digitalmodel.solvers.openfoam.post_processing import OpenFOAMPostProcessor
-
-    pp = OpenFOAMPostProcessor(case_dir=case_dir)
-    force_files = sorted(pp_dir.rglob("force*.dat"))
-    assert force_files, "no force.dat produced by forces function object"
-    fts = pp.parse_force_file(force_files[0])
-    rho, area = 1000.0, cfg.plate_length  # unit-span 2D plate
-    drag = float(fts.total_fx[-1])
-    cd = drag / (0.5 * rho * cfg.free_stream_velocity**2 * area)
-    expected = blasius_plate_cd(cfg.re_l)
-    assert cd == pytest.approx(expected, rel=BLASIUS_TOLERANCE)
+    # Local skin friction Cf(Re_x) over the developed region vs 0.664/sqrt(Re_x).
+    mean_err, n = extract_plate_mean_cf_error(case_dir, cfg)
+    assert n >= 50, f"too few plate Cf samples ({n})"
+    assert mean_err <= BLASIUS_SOLVE_TOLERANCE, (
+        f"mean Cf error {mean_err:.1%} exceeds {BLASIUS_SOLVE_TOLERANCE:.0%} "
+        f"(expected ~4.6% for the verified case)"
+    )
