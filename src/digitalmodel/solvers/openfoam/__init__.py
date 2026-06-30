@@ -16,6 +16,13 @@ from .models import (
 )
 from .case_builder import OpenFOAMCaseBuilder
 from .domain_builder import DomainBuilder
+from .runner import (
+    OpenFOAMRunConfig,
+    OpenFOAMRunner,
+    OpenFOAMRunResult,
+    OpenFOAMRunStatus,
+    StageResult,
+)
 from .spectral_analysis import (
     SpectralPeak,
     SpectrumResult,
@@ -33,6 +40,11 @@ __all__ = [
     "DomainBuilder",
     "OpenFOAMCase",
     "OpenFOAMCaseBuilder",
+    "OpenFOAMRunConfig",
+    "OpenFOAMRunner",
+    "OpenFOAMRunResult",
+    "OpenFOAMRunStatus",
+    "StageResult",
     "SolverConfig",
     "TurbulenceModel",
     "TurbulenceType",
