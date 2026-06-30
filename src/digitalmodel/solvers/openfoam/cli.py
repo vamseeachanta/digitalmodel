@@ -15,6 +15,7 @@ from .case_builder import OpenFOAMCaseBuilder
 from .domain_builder import DomainBuilder
 from .models import CaseType, OpenFOAMCase, SolverConfig
 from .parametric import ParametricStudy, StudyParameter
+from .runner import OpenFOAMRunConfig, OpenFOAMRunner, OpenFOAMRunStatus
 
 
 @click.group()
@@ -171,6 +172,82 @@ def parametric_cmd(
     click.echo(f"Generated {len(dirs)} cases in {output_dir}:")
     for d in dirs:
         click.echo(f"  {d}")
+
+
+# ============================================================================
+# openfoam run
+# ============================================================================
+
+
+@cli.command("run")
+@click.argument(
+    "case_dir",
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.option(
+    "--solver",
+    default=None,
+    help="Solver application (default: read 'application' from controlDict).",
+)
+@click.option(
+    "--mesh-utility",
+    default="blockMesh",
+    show_default=True,
+    help="Mesh generator to run first.",
+)
+@click.option(
+    "--snappy/--no-snappy",
+    default=False,
+    show_default=True,
+    help="Run snappyHexMesh -overwrite after the mesh utility (3D from STL).",
+)
+@click.option(
+    "--vtk/--no-vtk",
+    default=True,
+    show_default=True,
+    help="Run foamToVTK after the solver for PyVista/ParaView.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Validate the case and report stages without executing.",
+)
+def run_cmd(
+    case_dir: str,
+    solver: str | None,
+    mesh_utility: str,
+    snappy: bool,
+    vtk: bool,
+    dry_run: bool,
+) -> None:
+    """Execute a prepared OpenFOAM case (mesh -> solve -> VTK), fail-closed."""
+    runner = OpenFOAMRunner(
+        OpenFOAMRunConfig(
+            solver=solver,
+            mesh_utility=mesh_utility,
+            run_snappy=snappy,
+            to_vtk=vtk,
+            dry_run=dry_run,
+        )
+    )
+    result = runner.run(Path(case_dir))
+    click.echo(f"Status : {result.status.value}")
+    click.echo(f"Solver : {result.solver}")
+    for stage in result.stages:
+        mark = "ok" if stage.ok else "FAIL"
+        click.echo(
+            f"  [{mark}] {stage.name} "
+            f"rc={stage.return_code} ({stage.duration_seconds:.1f}s)"
+        )
+    if result.error_message:
+        click.echo(f"Note   : {result.error_message}", err=True)
+    # Fail-closed: a DRY_RUN caused by a missing install, or any FAILED, is a
+    # non-zero exit so the licensed-run lane never records a false finish.
+    if result.status not in (OpenFOAMRunStatus.COMPLETED, OpenFOAMRunStatus.DRY_RUN):
+        sys.exit(1)
+    if result.status is OpenFOAMRunStatus.DRY_RUN and not dry_run:
+        sys.exit(2)  # asked for a real solve but OpenFOAM was unavailable
 
 
 def main() -> None:
