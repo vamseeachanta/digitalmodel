@@ -250,6 +250,64 @@ def run_cmd(
         sys.exit(2)  # asked for a real solve but OpenFOAM was unavailable
 
 
+# ============================================================================
+# openfoam doctor
+# ============================================================================
+
+
+@cli.command("doctor")
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output root to test for writability (default: /mnt/ace/cfd-output).",
+)
+@click.option(
+    "--require-solver",
+    is_flag=True,
+    default=False,
+    help="Exit nonzero if the host cannot actually solve (dry-run only).",
+)
+def doctor_cmd(output_dir: str | None, require_solver: bool) -> None:
+    """Diagnose OpenFOAM CFD readiness on this host.
+
+    Reports PASS/WARN/FAIL for the OpenFOAM utilities, solvers, version, the
+    Python post-processing/meshing stack, and output-root writability, then
+    states whether the host is solver-capable or dry-run only.
+
+    Exit policy: 0 = host usable (dry-run-only is a supported mode);
+    nonzero = any FAIL check, or dry-run-only with --require-solver.
+    """
+    from .doctor import has_failure, run_doctor
+
+    click.echo("=" * 80)
+    click.echo("OpenFOAM CFD Doctor")
+    click.echo("=" * 80)
+
+    checks, capability = run_doctor(
+        output_dir=Path(output_dir) if output_dir else None,
+    )
+    colors = {"PASS": "green", "WARN": "yellow", "FAIL": "red"}
+    for check in checks:
+        click.echo(
+            click.style(f"[{check.status:4}] ", fg=colors[check.status])
+            + f"{check.name}: {check.detail}"
+        )
+
+    if has_failure(checks):
+        click.echo(click.style("\n[FAIL] Hard failures present.", fg="red"))
+        sys.exit(1)
+    if require_solver and capability == "dry-run-only":
+        click.echo(
+            click.style(
+                "\n[FAIL] --require-solver: host is dry-run only.", fg="red"
+            )
+        )
+        sys.exit(1)
+    click.echo(click.style(f"\n[OK] Host usable ({capability}).", fg="green"))
+
+
 def main() -> None:
     """Main CLI entry point."""
     cli()
