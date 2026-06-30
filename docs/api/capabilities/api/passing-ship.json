@@ -19,5 +19,18 @@
       "url": "https://vamseeachanta.github.io/digitalmodel/hydro/passing-ship-benchmark.html"
     }
   ],
-  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it."
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Run the Wang (1975) passing-ship interaction benchmark - sway force and yaw moment.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Run the Wang (1975) passing-ship interaction benchmark - sway force and yaw moment."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/hydro/passing-ship-benchmark.html"
+    }
+  ]
 }
