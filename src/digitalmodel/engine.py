@@ -1,3 +1,4 @@
+import inspect
 import os
 import sys
 
@@ -55,6 +56,25 @@ from digitalmodel.solvers.orcaflex.output_control import (
 library_name = "digitalmodel"
 wwyaml = WorkingWithYAML()
 app_manager = ConfigureApplicationInputs()
+
+
+def _configure_accepts_root_folder() -> bool:
+    """Whether assetutilities' ``ConfigureApplicationInputs.configure`` accepts
+    ``root_folder``.
+
+    The embed-port (#1136 / workspace-hub#3307) passes ``root_folder`` to
+    ``configure``; assetutilities releases that predate that change raise
+    ``TypeError: ... unexpected keyword argument 'root_folder'``. Feature-detect
+    once so digitalmodel runs against both the old and new dependency API.
+    """
+    try:
+        params = inspect.signature(ConfigureApplicationInputs.configure).parameters
+    except (TypeError, ValueError):
+        return False
+    return "root_folder" in params
+
+
+_CONFIGURE_HAS_ROOT_FOLDER = _configure_accepts_root_folder()
 
 
 def _running_under_pytest() -> bool:
@@ -134,7 +154,14 @@ def engine(
         # wall-thickness quickcheck + ~20 peers that read _config_dir_path) write
         # under root, not the input-file dir or cwd. Positional call -- NO
         # library_name (that arg exists only on the regular configure()).
-        cfg_base = ConfigureApplicationInputs().configure_embed(
+        embed_app_manager = ConfigureApplicationInputs()
+        if not hasattr(embed_app_manager, "configure_embed"):
+            raise NotImplementedError(
+                "engine(embed=True) requires assetutilities with "
+                "ConfigureApplicationInputs.configure_embed (assetutilities#3297); "
+                "the installed assetutilities does not provide it — upgrade it."
+            )
+        cfg_base = embed_app_manager.configure_embed(
             cfg, basename, root_folder, log_to_file=log_to_file
         )
         # DELIBERATELY skip the _config_dir_path/_config_file_path re-copy that the
@@ -145,6 +172,18 @@ def engine(
         cfg_base = fm.router(cfg_base)
     elif config_flag:
         fm = FileManagement()
+        # Pass root_folder only when the installed assetutilities supports it;
+        # older releases don't accept the kwarg (see _configure_accepts_root_folder).
+        configure_kwargs = {"inputfile": inputfile}
+        if _CONFIGURE_HAS_ROOT_FOLDER:
+            configure_kwargs["root_folder"] = root_folder
+        elif root_folder is not None:
+            logger.warning(
+                "root_folder=%r ignored: installed assetutilities "
+                "ConfigureApplicationInputs.configure() does not accept it; "
+                "upgrade assetutilities for embed/root-folder routing.",
+                root_folder,
+            )
         if inputfile is not None and _running_under_pytest():
             original_argv = sys.argv[:]
             sys.argv = [original_argv[0], inputfile]
@@ -154,8 +193,7 @@ def engine(
                     library_name,
                     basename,
                     cfg_argv_dict,
-                    inputfile=inputfile,
-                    root_folder=root_folder,
+                    **configure_kwargs,
                 )
             finally:
                 sys.argv = original_argv
@@ -165,8 +203,7 @@ def engine(
                 library_name,
                 basename,
                 cfg_argv_dict,
-                inputfile=inputfile,
-                root_folder=root_folder,
+                **configure_kwargs,
             )
         # Preserve config file path from original cfg
         if "_config_file_path" in cfg:
