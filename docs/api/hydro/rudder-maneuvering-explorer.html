@@ -6,43 +6,43 @@
 <title>Rudder &amp; low-speed manoeuvring explorer — digitalmodel</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 <style>
-  :root{--navy:#0B3D91;--teal:#2BB2A6;--bg:#070c16;--panel:#0e1726;--ink:#e8eef9;
-        --muted:#90a0bd;--line:#22304f;--ok:#3fb950;--warn:#d29922;--bad:#f85149;--side:330px}
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
+        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--warn:#b7791f;--bad:#d1242f;--side:330px}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
        color:var(--ink);line-height:1.45}
-  code{font-family:ui-monospace,Menlo,monospace;background:#11203a;padding:1px 5px;border-radius:5px;font-size:12px}
+  code{font-family:ui-monospace,Menlo,monospace;background:var(--soft);border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:12px}
   a{color:var(--teal);text-decoration:none}
-  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#0a1120;
+  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#fff;
         border-right:1px solid var(--line);padding:20px 18px;overflow-y:auto;z-index:20}
-  .side h1{font-size:17px;font-weight:800;letter-spacing:-.2px;margin-bottom:2px}
+  .side h1{font-size:17px;font-weight:800;letter-spacing:-.2px;margin-bottom:2px;color:var(--navy)}
   .side .sub{font-size:12px;color:var(--muted);margin-bottom:16px}
   .ctl{margin-bottom:15px}
-  .ctl label{display:block;font-size:12.5px;font-weight:600;color:#cfe0f2;margin-bottom:5px}
+  .ctl label{display:block;font-size:12.5px;font-weight:600;color:#34466a;margin-bottom:5px}
   .ctl .val{float:right;color:var(--teal);font-family:ui-monospace,Menlo,monospace}
   input[type=range]{width:100%;accent-color:var(--teal)}
   .seg{display:flex;gap:6px;margin-top:4px}
-  .seg button{flex:1;background:#11203a;border:1px solid var(--line);color:var(--muted);
+  .seg button{flex:1;background:var(--soft);border:1px solid var(--line);color:var(--muted);
               padding:7px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer}
-  .seg button.on{background:linear-gradient(135deg,var(--teal),#7af0c0);color:#06243b;border-color:transparent}
-  .verdict{margin-top:8px;padding:10px 12px;border-radius:10px;font-size:12.5px;border:1px solid var(--line);background:var(--panel)}
+  .seg button.on{background:linear-gradient(135deg,var(--teal),#3cc6b3);color:#fff;border-color:transparent}
+  .verdict{margin-top:8px;padding:10px 12px;border-radius:10px;font-size:12.5px;border:1px solid var(--line);background:var(--soft)}
   .verdict b{font-size:13px}
   .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
-  .pill.ok{background:rgba(63,185,80,.16);color:var(--ok)}
-  .pill.warn{background:rgba(210,153,34,.16);color:var(--warn)}
-  .pill.bad{background:rgba(248,81,73,.16);color:var(--bad)}
+  .pill.ok{background:rgba(31,157,87,.14);color:var(--ok)}
+  .pill.warn{background:rgba(183,121,31,.16);color:var(--warn)}
+  .pill.bad{background:rgba(209,36,47,.12);color:var(--bad)}
   main{margin-left:var(--side);padding:18px 24px 70px;max-width:1180px}
-  .hero h2{font-size:20px;font-weight:800}
+  .hero h2{font-size:20px;font-weight:800;color:var(--navy)}
   .hero p{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:840px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px}
-  .card .ttl{font-size:13px;font-weight:700;color:#cfe0f2;padding:8px 10px 2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px;box-shadow:0 1px 3px rgba(16,40,80,.05)}
+  .card .ttl{font-size:13px;font-weight:700;color:#34466a;padding:8px 10px 2px}
   .card .ttl span{font-weight:500;color:var(--muted)}
   .plot{width:100%;height:330px}
   .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(16,40,80,.05)}
   .stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
-  .stat .v{font-size:20px;font-weight:800;margin-top:3px;font-family:ui-monospace,Menlo,monospace}
+  .stat .v{font-size:20px;font-weight:800;margin-top:3px;font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
   .note{color:var(--muted);font-size:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
   @media(max-width:900px){:root{--side:0px}.side{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line)}
     main{margin-left:0}.grid{grid-template-columns:1fr}}
@@ -134,6 +134,9 @@ const COND = {
   laden:   {T:12.2, A_Re:44.94, span:9.0, A_L:2200, label:'Laden'},
   ballast: {T:7.0,  A_Re:35.0,  span:8.0, A_L:3500, label:'Ballast'}
 };
+// Plot palette tuned for a LIGHT background (matches capabilities house style).
+const CLR = {teal:'#0f8a7e', blue:'#1f6feb', red:'#d1242f', amber:'#b7791f',
+             now:'#0B3D91', ship:'#7a1fa2'};
 // OCIMF-style current coefficients vs heading off bow (deg): peak near beam.
 function CYc(hdgDeg){ return 0.75*Math.sin(hdgDeg*DEG); }                 // ~0 head/stern, ~0.75 beam
 function CXYc(hdgDeg){ return 0.05*Math.sin(2*hdgDeg*DEG); }             // zero at 0/90, peak ~45
@@ -162,9 +165,9 @@ function steadyRoverL(Kp, deltaDeg){ const d=deltaDeg*DEG; return d>0 ? 1/(Kp*d)
 let S = {load:'laden', spd:3.0, rud:35, cur:3.0, hdg:90, wnd:20, thr:500};
 const plotCfg = {displayModeBar:false, responsive:true};
 const baseLayout = {paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
-  font:{color:'#90a0bd', size:11}, margin:{l:48,r:14,t:8,b:40},
+  font:{color:'#5b6b86', size:11}, margin:{l:48,r:14,t:8,b:40},
   legend:{orientation:'h', y:1.12, font:{size:10}}, showlegend:true};
-const axStyle = {gridcolor:'#1a2740', zerolinecolor:'#2a3a5c', linecolor:'#2a3a5c'};
+const axStyle = {gridcolor:'#dbe4f0', zerolinecolor:'#c5d2e6', linecolor:'#c5d2e6'};
 
 function recompute(){
   const c = COND[S.load];
@@ -207,7 +210,7 @@ function render(){
   // ----- verdict -----
   let v='';
   if (S.spd < m.Umin) v=`<b>⚠ Below steerage threshold.</b> At ${fmt(S.spd,1)} kn the rudder cannot beat the ${S.wnd} kn beam wind in ${m.c.label.toLowerCase()} trim (need ${fmt(m.Umin,1)} kn). Use a kick-ahead or tug.`;
-  else if (m.reqDeg===null) v=`<b>⚠ Current beyond rudder authority.</b> ${fmt(m.cur,1)>0?'':''}The ${fmt(m.Ncur/1e6,0)} MN·m current yaw moment exceeds the ${fmt(m.authority/1e6,0)} MN·m engine-on authority — tug or more thrust required.`;
+  else if (m.reqDeg===null) v=`<b>⚠ Current beyond rudder authority.</b> The ${fmt(m.Ncur/1e6,0)} MN·m current yaw moment exceeds the ${fmt(m.authority/1e6,0)} MN·m engine-on authority — tug or more thrust required.`;
   else v=`<b>✓ Controllable.</b> ${fmt(m.reqDeg,0)}° of carried helm holds heading against the current; turning circle ${fmt(m.TDoverL,2)}·L ${imoPass?'meets':'exceeds'} the IMO 5L limit.`;
   document.getElementById('verdict').innerHTML = v;
 
@@ -221,9 +224,9 @@ function drawTurn(m){
   const Rimo=5.0*L/2, imo={x:[],y:[]};
   for(let i=0;i<=n;i++){const th=Math.PI*i/n; imo.x.push(Rimo*Math.sin(th)); imo.y.push(Rimo-Rimo*Math.cos(th));}
   Plotly.react('p-turn',[
-    {x:imo.x,y:imo.y,mode:'lines',name:'IMO 5·L limit',line:{color:'#d29922',dash:'dot',width:1.5}},
-    {x:path.x,y:path.y,mode:'lines',name:`${m.c.label} TD ${m.TDoverL.toFixed(2)}·L`,line:{color:'#2BB2A6',width:2.5}},
-    {x:[0],y:[0],mode:'markers',name:'start',marker:{color:'#7af0c0',size:8}}
+    {x:imo.x,y:imo.y,mode:'lines',name:'IMO 5·L limit',line:{color:CLR.amber,dash:'dot',width:1.5}},
+    {x:path.x,y:path.y,mode:'lines',name:`${m.c.label} TD ${m.TDoverL.toFixed(2)}·L`,line:{color:CLR.teal,width:2.5}},
+    {x:[0],y:[0],mode:'markers',name:'start',marker:{color:CLR.now,size:8}}
   ],Object.assign({},baseLayout,{
     xaxis:Object.assign({title:'transfer (m)',scaleanchor:'y',scaleratio:1},axStyle),
     yaxis:Object.assign({title:'advance (m)'},axStyle)}),plotCfg);
@@ -232,13 +235,13 @@ function drawTurn(m){
 // Panel 2: threshold speed vs wind, both loadings + coasting/kick, current op point
 function drawThresh(m){
   const winds=[];for(let w=0;w<=50;w+=2)winds.push(w);
-  const mk=(cond,c,cFac)=>winds.map(w=>thresholdSpeed(w*KN,cond.A_L,cond.A_Re,cond.span,0.8,cFac)/KN);
+  const mk=(cond,cFac)=>winds.map(w=>thresholdSpeed(w*KN,cond.A_L,cond.A_Re,cond.span,0.8,cFac)/KN);
   Plotly.react('p-thresh',[
-    {x:winds,y:mk(COND.laden,'l',1.0),mode:'lines',name:'laden · coasting',line:{color:'#4cc2ff',width:2}},
-    {x:winds,y:mk(COND.ballast,'b',1.0),mode:'lines',name:'ballast · coasting',line:{color:'#f85149',width:2}},
-    {x:winds,y:mk(COND.ballast,'b',1.5),mode:'lines',name:'ballast · kick-ahead',line:{color:'#d29922',width:1.8,dash:'dash'}},
-    {x:[S.wnd],y:[m.Umin],mode:'markers',name:'now',marker:{color:'#7af0c0',size:11,symbol:'diamond'}},
-    {x:[S.wnd],y:[S.spd],mode:'markers',name:'ship speed',marker:{color:'#fff',size:9,symbol:'x'}}
+    {x:winds,y:mk(COND.laden,1.0),mode:'lines',name:'laden · coasting',line:{color:CLR.blue,width:2}},
+    {x:winds,y:mk(COND.ballast,1.0),mode:'lines',name:'ballast · coasting',line:{color:CLR.red,width:2}},
+    {x:winds,y:mk(COND.ballast,1.5),mode:'lines',name:'ballast · kick-ahead',line:{color:CLR.amber,width:1.8,dash:'dash'}},
+    {x:[S.wnd],y:[m.Umin],mode:'markers',name:'now',marker:{color:CLR.now,size:11,symbol:'diamond'}},
+    {x:[S.wnd],y:[S.spd],mode:'markers',name:'ship speed',marker:{color:CLR.ship,size:9,symbol:'x'}}
   ],Object.assign({},baseLayout,{
     xaxis:Object.assign({title:'beam wind (kn)'},axStyle),
     yaxis:Object.assign({title:'min steerage speed (kn)',rangemode:'tozero'},axStyle)}),plotCfg);
@@ -253,9 +256,9 @@ function drawHold(m){
     return util<=1?Math.asin(Math.min(1,util*Math.sin(35*DEG)))/DEG:null;
   });
   Plotly.react('p-hold',[
-    {x:curs,y:req,mode:'lines',name:`carried helm (${S.hdg}° off bow)`,line:{color:'#2BB2A6',width:2.5},connectgaps:false},
-    {x:[0,5],y:[35,35],mode:'lines',name:'35° helm limit',line:{color:'#f85149',dash:'dot',width:1.5}},
-    {x:[S.cur],y:[m.reqDeg],mode:'markers',name:'now',marker:{color:'#7af0c0',size:11,symbol:'diamond'}}
+    {x:curs,y:req,mode:'lines',name:`carried helm (${S.hdg}° off bow)`,line:{color:CLR.teal,width:2.5},connectgaps:false},
+    {x:[0,5],y:[35,35],mode:'lines',name:'35° helm limit',line:{color:CLR.red,dash:'dot',width:1.5}},
+    {x:[S.cur],y:[m.reqDeg],mode:'markers',name:'now',marker:{color:CLR.now,size:11,symbol:'diamond'}}
   ],Object.assign({},baseLayout,{
     xaxis:Object.assign({title:'current speed (kn)'},axStyle),
     yaxis:Object.assign({title:'rudder angle to hold (deg)',range:[0,40]},axStyle)}),plotCfg);
@@ -267,13 +270,13 @@ function drawCurr(m){
   const N=h.map(a=>currentYaw(CXYc(a),m.Vc,m.c.T)/1e6);
   const Fy=h.map(a=>currentSway(CYc(a),m.Vc,m.c.T)/1e6);
   Plotly.react('p-curr',[
-    {x:h,y:N,mode:'lines',name:'yaw moment (MN·m)',line:{color:'#2BB2A6',width:2.5}},
-    {x:h,y:Fy,mode:'lines',name:'lateral force (MN)',yaxis:'y2',line:{color:'#4cc2ff',width:2,dash:'dash'}},
-    {x:[S.hdg],y:[currentYaw(CXYc(S.hdg),m.Vc,m.c.T)/1e6],mode:'markers',name:'now',marker:{color:'#7af0c0',size:10,symbol:'diamond'}}
+    {x:h,y:N,mode:'lines',name:'yaw moment (MN·m)',line:{color:CLR.teal,width:2.5}},
+    {x:h,y:Fy,mode:'lines',name:'lateral force (MN)',yaxis:'y2',line:{color:CLR.blue,width:2,dash:'dash'}},
+    {x:[S.hdg],y:[currentYaw(CXYc(S.hdg),m.Vc,m.c.T)/1e6],mode:'markers',name:'now',marker:{color:CLR.now,size:10,symbol:'diamond'}}
   ],Object.assign({},baseLayout,{
     xaxis:Object.assign({title:'current heading off bow (deg)'},axStyle),
     yaxis:Object.assign({title:'yaw moment (MN·m)'},axStyle),
-    yaxis2:{title:'lateral force (MN)',overlaying:'y',side:'right',gridcolor:'rgba(0,0,0,0)',color:'#4cc2ff'}}),plotCfg);
+    yaxis2:{title:'lateral force (MN)',overlaying:'y',side:'right',gridcolor:'rgba(0,0,0,0)',color:CLR.blue}}),plotCfg);
 }
 
 // ---- Wire controls -------------------------------------------------------
