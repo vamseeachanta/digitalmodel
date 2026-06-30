@@ -1,0 +1,23 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html",
+  "provenance": {
+    "basis": "measurement sufficiency",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html"
+  },
+  "surface": "digitalmodel:ffs-field-dashboard",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it."
+}
