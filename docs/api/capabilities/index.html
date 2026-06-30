@@ -45,8 +45,9 @@
 <body>
 <header><div class="wrap">
   <h1>digitalmodel — Engineering Capabilities</h1>
-  <div class="sub">Offshore &amp; ship structural strength, tubular products, and fitness-for-service —
-  each method built on validated solvers and checked against the governing code or a published worked example.</div>
+  <div class="sub">Offshore &amp; ship structural strength, tubular products, fitness-for-service, and
+  hydrodynamics &amp; diffraction — each method built on validated solvers and checked against the
+  governing code, a published worked example, or an independent solver.</div>
   <span class="tag">EPIC #1080 — tubular products + ship structural elements + provenance (complete) + FFS hardening</span>
 </div></header>
 
@@ -90,6 +91,18 @@
       <ul><li>T/Y SCFs (full-fidelity + short-chord F1)</li><li>weld-detail hot-spot stress + S-N class</li></ul></div>
   </div>
 
+  <h2>Hydrodynamics &amp; diffraction</h2>
+  <div class="grid">
+    <div class="card"><h3>Panel diffraction / radiation</h3><div class="std">OrcaWave · AQWA</div>
+      <ul><li>added mass, radiation damping, wave-exciting forces</li><li>6-DOF RAOs from a project-driven model-gen pipeline</li><li>provenance-gated: spec YAML &rarr; licensed run &rarr; report</li></ul></div>
+    <div class="card"><h3>Cross-solver validation</h3><div class="std">WAMIT · AQWA · OrcaWave</div>
+      <ul><li>3-way unit-box diffraction benchmark</li><li>per-DOF amplitude / phase comparison</li><li>RAO cross-check between solvers</li></ul></div>
+    <div class="card"><h3>Environmental load coefficients</h3><div class="std">OCIMF MEG3 / MEG4</div>
+      <ul><li>wind &amp; current force / moment coefficients</li><li>interpolated by heading &amp; loading condition</li></ul></div>
+    <div class="card"><h3>Vessel interaction</h3><div class="std">Wang (1975) closed form</div>
+      <ul><li>passing-ship sway force &amp; yaw moment</li><li>benchmarked against the published solution</li></ul></div>
+  </div>
+
   <h2>Validated against published references</h2>
   <p class="note"><span class="pub">■ published-validated</span> = reproduces a standard's worked example or published rating;
      <span class="der">■ derivation-anchored</span> = matches the governing closed form (hand-derived).</p>
@@ -128,6 +141,18 @@
     <a class="card linkcard" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html"><h3>Installation vessel pamphlet — BokaLift 2 →</h3>
       <div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div>
       <ul><li>crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability, DP/mooring failure-risk, live weather monitor</li></ul></a>
+    <a class="card linkcard" href="../hydro/rao-comparison/"><h3>AQWA vs OrcaWave RAO comparison →</h3>
+      <div class="std">cross-solver diffraction</div>
+      <ul><li>interactive 6-DOF RAO overlay between two diffraction solvers</li></ul></a>
+    <a class="card linkcard" href="../hydro/unit-box-benchmark/benchmark_report.html"><h3>Unit-box 3-way diffraction benchmark →</h3>
+      <div class="std">WAMIT · AQWA · OrcaWave</div>
+      <ul><li>added-mass / damping / RAO amplitude &amp; phase across three solvers</li></ul></a>
+    <a class="card linkcard" href="../hydro/ocimf-coefficient-explorer.html"><h3>OCIMF coefficient explorer →</h3>
+      <div class="std">OCIMF MEG3 / MEG4</div>
+      <ul><li>wind &amp; current force / moment coefficients by heading</li></ul></a>
+    <a class="card linkcard" href="../hydro/passing-ship-benchmark.html"><h3>Passing-ship interaction benchmark →</h3>
+      <div class="std">Wang (1975)</div>
+      <ul><li>sway-force &amp; yaw-moment validation against the published solution</li></ul></a>
   </div>
 
   <h2>Provenance</h2>
