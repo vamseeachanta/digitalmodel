@@ -5,166 +5,250 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>digitalmodel — Engineering Capabilities</title>
 <style>
-  :root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--ink:#e6edf3;--mut:#8b949e;
-        --accent:#3b82f6;--ok:#3fb950;--warn:#d29922}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
-  header{padding:54px 0 30px;border-bottom:1px solid var(--line)}
-  h1{margin:0 0 6px;font-size:30px;letter-spacing:-.4px}
-  .sub{color:var(--mut);font-size:16px;max-width:760px}
-  .tag{display:inline-block;margin-top:14px;padding:3px 10px;border:1px solid var(--line);
-       border-radius:20px;color:var(--mut);font-size:12.5px}
-  h2{font-size:18px;margin:38px 0 14px;letter-spacing:-.2px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
-  .card h3{margin:0 0 4px;font-size:15.5px}
-  .card .std{color:var(--accent);font-size:12.5px;font-weight:600;margin-bottom:8px}
-  .card ul{margin:0;padding-left:18px;color:var(--mut);font-size:13.5px}
-  .card li{margin:2px 0}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px;
-        background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  :root{--navy:#0B3D91;--teal:#2BB2A6;--bg:#070c16;--panel:#0e1726;--ink:#e8eef9;
+        --muted:#90a0bd;--line:#22304f;--ok:#3fb950;--warn:#d29922;--side:288px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+       color:var(--ink);line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#11203a;
+       padding:1px 5px;border-radius:5px;font-size:12px}
+  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#0a1120;
+        border-right:1px solid var(--line);display:flex;flex-direction:column;
+        padding:22px 16px;overflow-y:auto;z-index:20}
+  .side .brand{display:inline-flex;align-self:flex-start;background:#fff;border-radius:11px;
+               padding:10px 14px;margin-bottom:6px}
+  .side .brand svg{height:30px;width:auto;display:block}
+  .side .tag{font-size:12px;color:var(--muted);margin:0 0 16px 3px}
+  .side nav{flex:1}
+  .navgroup{margin-bottom:6px}
+  .navh{display:block;font-size:13px;font-weight:700;color:#cfe0f2;padding:7px 10px;
+        border-radius:8px;border-left:3px solid transparent}
+  .navh:hover,.navh.active{background:#11203a;border-left-color:var(--teal);color:#fff}
+  .side .start{margin-top:14px;text-align:center;font-weight:700;color:#06243b;
+               background:linear-gradient(135deg,var(--teal),#7af0c0);padding:11px;
+               border-radius:11px}
+  main{margin-left:var(--side);max-width:1200px;padding:0 30px 80px}
+  .hero{padding:42px 4px 8px}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.4px}
+  .hero p{color:var(--muted);font-size:17px;margin-top:10px;max-width:820px}
+  .hero .pill{display:inline-block;margin-top:16px;padding:4px 12px;border:1px solid var(--line);
+              border-radius:20px;color:var(--muted);font-size:12.5px}
+  .chan{margin-top:42px;scroll-margin-top:18px}
+  .chan h2{font-size:20px;border-left:4px solid var(--teal);padding-left:12px;margin-bottom:6px}
+  .chan .lead{color:var(--muted);font-size:14px;padding-left:16px;margin-bottom:18px;max-width:820px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+  a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+         padding:18px 18px 16px;transition:transform .15s,border-color .15s}
+  a.card:hover{transform:translateY(-3px);border-color:#3a4d74}
+  a.card h3{font-size:15.5px;font-weight:700;line-height:1.3;color:var(--ink)}
+  a.card .std{color:var(--teal);font-size:12px;font-weight:600;margin:5px 0 8px}
+  a.card p{color:var(--muted);font-size:13.5px}
+  a.card .open{display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#06243b;
+               background:linear-gradient(135deg,#4cc2ff,#7af0c0);padding:7px 13px;border-radius:10px}
+  .tablewrap{overflow-x:auto;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+        border:1px solid var(--line);border-radius:14px;overflow:hidden}
   th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
-  th{background:#1c2330;color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  th{background:#11203a;color:var(--muted);font-weight:600;font-size:11.5px;
+     text-transform:uppercase;letter-spacing:.4px}
   tr:last-child td{border-bottom:none}
-  td.val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
-  .pub{color:var(--ok);font-weight:600}
-  .der{color:var(--warn);font-weight:600}
-  .note{color:var(--mut);font-size:13px;margin:10px 0 0}
-  footer{margin:46px 0 30px;padding-top:22px;border-top:1px solid var(--line);
-         color:var(--mut);font-size:12.5px}
-  a{color:var(--accent);text-decoration:none}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#1c2330;
-       padding:1px 5px;border-radius:4px;font-size:12.5px}
-  a.linkcard{text-decoration:none;color:inherit;display:block;transition:border-color .15s,transform .1s}
-  a.linkcard:hover{border-color:var(--accent);transform:translateY(-1px)}
-  a.linkcard h3{color:var(--accent)}
+  td.val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right}
+  .pub{color:var(--ok);font-weight:600}.der{color:var(--warn);font-weight:600}
+  .note{color:var(--muted);font-size:13px;margin:10px 0 0;padding-left:16px}
+  footer{margin-left:var(--side);text-align:center;color:var(--muted);font-size:13px;
+         padding:28px 30px 50px;border-top:1px solid var(--line)}
+  footer a{color:var(--teal)}
+  @media(max-width:980px){
+    :root{--side:0px}
+    .side{position:sticky;top:0;bottom:auto;width:auto;flex-direction:row;align-items:center;
+          gap:10px;overflow-x:auto;padding:9px 14px}
+    .side .brand{margin:0;flex:none}.side .tag,.side .start{display:none}
+    .side nav{display:flex;gap:6px}.navgroup{margin:0}
+    .navh{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;padding:7px 10px}
+    .navh.active{border-left:0;border-bottom-color:var(--teal)}
+    main,footer{margin-left:0}.hero{padding-top:26px}
+  }
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <h1>digitalmodel — Engineering Capabilities</h1>
-  <div class="sub">Offshore &amp; ship structural strength, tubular products, fitness-for-service, and
-  hydrodynamics &amp; diffraction — each method built on validated solvers and checked against the
-  governing code, a published worked example, or an independent solver.</div>
-  <span class="tag">EPIC #1080 — tubular products + ship structural elements + provenance (complete) + FFS hardening</span>
-</div></header>
-
-<div class="wrap">
-
-  <h2>Tubular products</h2>
-  <div class="grid">
-    <div class="card"><h3>Material grade matrix</h3><div class="std">API 5L / ISO 3183 · IACS UR W11 · EN 10025-2</div>
-      <ul><li>33 reconciled grades, single source of truth</li><li>PSL1 vs PSL2, US-customary vs ISO resolved</li><li>back-compat adapters for legacy dicts</li></ul></div>
-    <div class="card"><h3>Line pipe catalog</h3><div class="std">API 5L · ASME B36.10M</div>
-      <ul><li>NPS 1/8–80 × schedule × grade → <code>LinePipe</code></li><li>ID, D/t, metal area, plain-end weight, bore volume</li></ul></div>
-    <div class="card"><h3>Casing &amp; tubing</h3><div class="std">API 5CT · API 5C3 / TR 5C3</div>
-      <ul><li>4-regime collapse (yield/plastic/transition/elastic)</li><li>internal-yield burst, pipe-body yield</li><li>feeds the VME / API-ellipse design envelope</li></ul></div>
-    <div class="card"><h3>Sucker rod</h3><div class="std">API 11B · modified Goodman</div>
-      <ul><li>grades C/K/D, sizes ½–1¼ in</li><li>service-factor (sour) derated allowable stress</li><li>ties into the dynacard rod-buckling workflow</li></ul></div>
+<aside class="side">
+  <div class="brand">
+    <svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DigitalModel">
+      <defs>
+        <clipPath id="clip">
+          <rect x="0" y="0" width="800" height="220" rx="16"/>
+        </clipPath>
+        <pattern id="lay-dm" patternUnits="userSpaceOnUse" width="11" height="11"
+                 patternTransform="rotate(38)">
+          <rect width="11" height="11" fill="none"/>
+          <line x1="0" y1="0" x2="0" y2="11" stroke="#12A6B0" stroke-width="3.4"/>
+          <line x1="5.5" y1="0" x2="5.5" y2="11" stroke="#6FE8D4" stroke-width="1.6" opacity=".9"/>
+        </pattern>
+      </defs>
+      <g clip-path="url(#clip)">
+        <g transform="translate(20 10)">
+          <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
+          <path d="M38 72c20-32 64-32 84 0v76c-20 32-64 32-84 0z" fill="#2BB2A6" opacity=".85"/>
+          <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
+                fill="none" stroke="#12A6B0" stroke-width="11" stroke-linecap="round"/>
+          <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
+                fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+          <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+          <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+          <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+          <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+          <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
+          <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
+        </g>
+        <g transform="translate(200 40)">
+          <text x="0" y="70" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="600" fill="#0B3D91" letter-spacing="0.5">
+            Digital <tspan fill="#2BB2A6">Model</tspan>
+          </text>
+          <g transform="translate(72 96)" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="500" fill="#1C3557">
+            <g transform="translate(0 0)">
+              <circle cx="8" cy="8" r="6" fill="#2BB2A6" opacity=".9"/>
+              <text x="24" y="12">Asset Lifecycle</text>
+            </g>
+            <g transform="translate(-21 32)">
+              <circle cx="8" cy="8" r="6" fill="#0B3D91" opacity=".9"/>
+              <text x="24" y="12">Offshore · Subsea · Marine</text>
+            </g>
+            <g transform="translate(-40 64)" font-size="17">
+              <circle cx="8" cy="8" r="6" fill="#6FE8D4" opacity=".9"/>
+              <text x="24" y="12">Automation: ASCII Data to Engineering Insights</text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
   </div>
+  <div class="tag">Engineering solvers · validated to code</div>
+  <nav>
+    <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
+    <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
+    <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
+    <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
+    <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
+    <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
+    <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
+  </nav>
+  <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
+</aside>
 
-  <h2>Ship structural strength</h2>
-  <div class="grid">
-    <div class="card"><h3>Hull-girder longitudinal strength</h3><div class="std">IACS UR S11 / S11A</div>
-      <ul><li>wave bending moment + still-water envelope</li><li>section-modulus yield check (175/k)</li><li>simplified + full <b>Smith incremental-iterative</b> ultimate</li></ul></div>
-    <div class="card"><h3>Plate &amp; stiffened-panel buckling</h3><div class="std">DNV-RP-C201</div>
-      <ul><li>plate-induced, column, torsional (tripping)</li><li>Johnson-Ostenfeld inelastic correction</li></ul></div>
-    <div class="card"><h3>Grillage &amp; girder / web-frame</h3><div class="std">DNV-RP-C201 · DNV CN 30.1</div>
-      <ul><li>orthogonally-stiffened grillage (overall mode)</li><li>web-panel shear buckling; tripping-bracket spacing</li></ul></div>
-    <div class="card"><h3>Corrugated bulkhead</h3><div class="std">IACS CSR · DNV-RP-C201</div>
-      <ul><li>trapezoidal-corrugation section properties</li><li>flange/web plate &amp; overall buckling screens</li></ul></div>
-    <div class="card"><h3>Class-rule scantlings</h3><div class="std">DNV-RU-SHIP · IACS CSR</div>
-      <ul><li>minimum plate thickness by location</li><li>plate-for-pressure &amp; stiffener section modulus</li></ul></div>
-  </div>
+<main>
+  <header class="hero">
+    <h1>digitalmodel — Engineering Capabilities</h1>
+    <p>Offshore &amp; ship structural strength, fitness-for-service, hydrodynamics &amp; diffraction,
+    risers, pipelines and subsea cross-sections &mdash; each result computed by unit-tested domain
+    code, checked against the governing code or an independent solver, and frozen into a static report.
+    Every card below opens a live page.</p>
+    <span class="pill">Validated solvers · governing-code provenance · a live link for every surface</span>
+  </header>
 
-  <h2>Fitness-for-service &amp; fatigue</h2>
-  <div class="grid">
-    <div class="card"><h3>Corroded-pipe remaining strength</h3><div class="std">ASME B31G · DNV-RP-F101</div>
-      <ul><li>B31G / Modified / RSTRENG effective-area</li><li>DNV-RP-F101 single + interacting (length-weighted)</li><li>full Part-A PSF tables + validity layer</li></ul></div>
-    <div class="card"><h3>Metal-loss / level FFS</h3><div class="std">API 579-1 / ASME FFS-1</div>
-      <ul><li>GML/LML Level-2 RSF, Folias factor</li><li>measurement-sufficiency &amp; decision layer</li></ul></div>
-    <div class="card"><h3>Circumferential &amp; 2D defects</h3><div class="std">API 579 Part 5 · RSTRENG</div>
-      <ul><li>circumferential net-section RSF</li><li>2D river-bottom (axial×circumferential grid)</li></ul></div>
-    <div class="card"><h3>Connection &amp; tubular-joint SCF</h3><div class="std">DNV-RP-C203 (Efthymiou)</div>
-      <ul><li>T/Y SCFs (full-fidelity + short-chord F1)</li><li>weld-detail hot-spot stress + S-N class</li></ul></div>
-  </div>
+  <section class="chan" id="ffs">
+    <h2>Fitness-for-service</h2>
+    <p class="lead">Remaining-strength assessment of corroded and metal-loss components with an
+    inspector decision layer &mdash; benchmarked to standard worked examples and published ratings.</p>
+    <div class="grid">
+      <a class="card" href="../ffs/ffs-showcase.html"><h3>FFS decision-layer showcase</h3><div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div><p>Interactive remaining-strength and inspector-verdict walkthrough across the three governing FFS codes.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../ffs/ffs-field-dashboard.html"><h3>FFS inspector field dashboard</h3><div class="std">measurement sufficiency</div><p>Accept / re-rate / take-more-measurements / escalate, driven by measurement-sufficiency on real defect data.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
 
-  <h2>Hydrodynamics &amp; diffraction</h2>
-  <div class="grid">
-    <div class="card"><h3>Panel diffraction / radiation</h3><div class="std">OrcaWave · AQWA</div>
-      <ul><li>added mass, radiation damping, wave-exciting forces</li><li>6-DOF RAOs from a project-driven model-gen pipeline</li><li>provenance-gated: spec YAML &rarr; licensed run &rarr; report</li></ul></div>
-    <div class="card"><h3>Cross-solver validation</h3><div class="std">WAMIT · AQWA · OrcaWave</div>
-      <ul><li>3-way unit-box diffraction benchmark</li><li>per-DOF amplitude / phase comparison</li><li>RAO cross-check between solvers</li></ul></div>
-    <div class="card"><h3>Environmental load coefficients</h3><div class="std">OCIMF MEG3 / MEG4</div>
-      <ul><li>wind &amp; current force / moment coefficients</li><li>interpolated by heading &amp; loading condition</li></ul></div>
-    <div class="card"><h3>Vessel interaction</h3><div class="std">Wang (1975) closed form</div>
-      <ul><li>passing-ship sway force &amp; yaw moment</li><li>benchmarked against the published solution</li></ul></div>
-  </div>
+  <section class="chan" id="structural">
+    <h2>Ship structural strength</h2>
+    <p class="lead">Plate and stiffened-panel buckling for ship structure, with plate-field, column and
+    tripping interaction explored against the governing class code.</p>
+    <div class="grid">
+      <a class="card" href="../buckling/ship-plate-buckling.html"><h3>Ship plate buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../buckling/ship-panel-buckling.html"><h3>Stiffened-panel buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
 
-  <h2>Validated against published references</h2>
-  <p class="note"><span class="pub">■ published-validated</span> = reproduces a standard's worked example or published rating;
-     <span class="der">■ derivation-anchored</span> = matches the governing closed form (hand-derived).</p>
-  <table>
-    <thead><tr><th>Method</th><th>Case</th><th>Result</th><th>Basis</th></tr></thead>
-    <tbody>
-      <tr><td>API 5C3 collapse</td><td>7″ 26# P110 (D/t 19.3, plastic)</td><td class="val">6 230 psi</td><td class="pub">published API rating</td></tr>
-      <tr><td>API 5C3 burst / body-yield</td><td>7″ 26# P110</td><td class="val">9 960 psi / 830 000 lbf</td><td class="pub">published API rating</td></tr>
-      <tr><td>Line-pipe plain-end weight</td><td>NPS 8 STD (8.625×0.322)</td><td class="val">28.55 lb/ft</td><td class="pub">ASME B36.10M</td></tr>
-      <tr><td>DNV-RP-F101 capacity</td><td>§8.2 worked pipe-1</td><td class="val">15.866 MPa</td><td class="pub">published (6 sig-figs)</td></tr>
-      <tr><td>ASME B31G safe pressure</td><td>CRVL.BAS Example #1 (X52)</td><td class="val">1 093 psi</td><td class="pub">B31G-1991 App. A</td></tr>
-      <tr><td>IACS S11 wave BM</td><td>L200·B32·Cb0.8 (hog / sag)</td><td class="val">+1.897 / −2.059 ×10⁶ kN·m</td><td class="der">IACS UR S11 formula</td></tr>
-      <tr><td>Smith hull-girder ultimate</td><td>stocky box → first yield</td><td class="val">M_U = f_y·Z (rel 1e-6)</td><td class="der">analytic limit</td></tr>
-      <tr><td>DNV-RP-C201 panel tripping</td><td>0119-015 worked example</td><td class="val">f_T = 215.61 MPa</td><td class="pub">validated example</td></tr>
-      <tr><td>Grillage overall mode</td><td>isotropic limit (k=4)</td><td class="val">σ_cr = 223.11 MPa</td><td class="der">Timoshenko long-plate</td></tr>
-      <tr><td>Efthymiou T/Y chord saddle</td><td>β0.5 γ12 τ0.5 θ90 (long / short)</td><td class="val">6.21 / 4.755</td><td class="pub">DNV-RP-C203 App. B</td></tr>
-      <tr><td>Corrugation section modulus</td><td>a=c=800, φ45, t15</td><td class="val">Z = 4.525×10⁶ mm³</td><td class="der">IACS CSR closed form</td></tr>
-      <tr><td>2D river-bottom RSTRENG</td><td>24″ X52 grid (MAX projection)</td><td class="val">p_f = 1 969.2 psi</td><td class="der">RSTRENG effective-area</td></tr>
-    </tbody>
-  </table>
+  <section class="chan" id="hydro">
+    <h2>Hydrodynamics &amp; diffraction</h2>
+    <p class="lead">Panel-method diffraction / radiation RAOs cross-checked between solvers, a 3-way
+    unit-box benchmark, environmental load coefficients and a closed-form passing-ship interaction.</p>
+    <div class="grid">
+      <a class="card" href="../hydro/rao-comparison/"><h3>AQWA vs OrcaWave RAO comparison</h3><div class="std">cross-solver diffraction</div><p>Interactive 6-DOF RAO overlay between two diffraction solvers on the same vessel model.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/unit-box-benchmark/benchmark_report.html"><h3>Unit-box 3-way diffraction benchmark</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Added-mass, damping and RAO amplitude &amp; phase compared across three diffraction solvers.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/unit-box-benchmark/benchmark_amplitude.html"><h3>RAO amplitude overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO amplitude overlay for the unit-box benchmark across the three solvers.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/unit-box-benchmark/benchmark_phase.html"><h3>RAO phase overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO phase overlay for the unit-box benchmark across the three solvers.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/unit-box-benchmark/benchmark_combined.html"><h3>Combined solver comparison</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Combined amplitude-and-phase view of the three-solver unit-box diffraction comparison.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/unit-box-benchmark/benchmark_heatmap.html"><h3>Solver correlation heatmap</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/ocimf-coefficient-explorer.html"><h3>OCIMF coefficient explorer</h3><div class="std">OCIMF MEG3 / MEG4</div><p>Wind &amp; current force / moment coefficients interpolated by heading and loading condition.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../hydro/passing-ship-benchmark.html"><h3>Passing-ship interaction benchmark</h3><div class="std">Wang (1975)</div><p>Sway-force and yaw-moment interaction validated against the published closed-form solution.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
 
-  <h2>Live dashboards &amp; explorers</h2>
-  <div class="grid">
-    <a class="card linkcard" href="../ffs/ffs-showcase.html"><h3>FFS decision-layer showcase →</h3>
-      <div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div>
-      <ul><li>interactive remaining-strength &amp; inspector-verdict walkthrough</li></ul></a>
-    <a class="card linkcard" href="../ffs/ffs-field-dashboard.html"><h3>FFS inspector field dashboard →</h3>
-      <div class="std">measurement sufficiency</div>
-      <ul><li>accept / re-rate / take-more-measurements / escalate</li></ul></a>
-    <a class="card linkcard" href="../buckling/ship-plate-buckling.html"><h3>Ship plate buckling explorer →</h3>
-      <div class="std">DNV-RP-C201</div>
-      <ul><li>plate capacity vs geometry &amp; combined loading</li></ul></a>
-    <a class="card linkcard" href="../buckling/ship-panel-buckling.html"><h3>Stiffened-panel buckling explorer →</h3>
-      <div class="std">DNV-RP-C201</div>
-      <ul><li>plate-field / column / tripping interaction</li></ul></a>
-    <a class="card linkcard" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html"><h3>Installation vessel pamphlet — BokaLift 2 →</h3>
-      <div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div>
-      <ul><li>crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability, DP/mooring failure-risk, live weather monitor</li></ul></a>
-    <a class="card linkcard" href="../hydro/rao-comparison/"><h3>AQWA vs OrcaWave RAO comparison →</h3>
-      <div class="std">cross-solver diffraction</div>
-      <ul><li>interactive 6-DOF RAO overlay between two diffraction solvers</li></ul></a>
-    <a class="card linkcard" href="../hydro/unit-box-benchmark/benchmark_report.html"><h3>Unit-box 3-way diffraction benchmark →</h3>
-      <div class="std">WAMIT · AQWA · OrcaWave</div>
-      <ul><li>added-mass / damping / RAO amplitude &amp; phase across three solvers</li></ul></a>
-    <a class="card linkcard" href="../hydro/ocimf-coefficient-explorer.html"><h3>OCIMF coefficient explorer →</h3>
-      <div class="std">OCIMF MEG3 / MEG4</div>
-      <ul><li>wind &amp; current force / moment coefficients by heading</li></ul></a>
-    <a class="card linkcard" href="../hydro/passing-ship-benchmark.html"><h3>Passing-ship interaction benchmark →</h3>
-      <div class="std">Wang (1975)</div>
-      <ul><li>sway-force &amp; yaw-moment validation against the published solution</li></ul></a>
-  </div>
+  <section class="chan" id="risers">
+    <h2>Risers &amp; pipelines</h2>
+    <p class="lead">OrcaFlex riser global-analysis verification &mdash; a validation report against reference
+    cases and a mesh / segmentation convergence study.</p>
+    <div class="grid">
+      <a class="card" href="../orcaflex/riser-validation-report.html"><h3>Riser validation report</h3><div class="std">OrcaFlex · tier-2 fast library</div><p>Riser global-analysis results verified against reference cases from the tier-2 fast model library.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="../orcaflex/riser-mesh-sensitivity.html"><h3>Riser mesh sensitivity report</h3><div class="std">OrcaFlex · convergence study</div><p>Segmentation / mesh-density convergence study quantifying discretisation effect on riser response.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
 
-  <h2>Provenance</h2>
-  <p class="note">Every strength / FFS result carries a <code>code_reference</code> naming its governing code and edition,
-  sourced from one <code>codes.py</code> register that the
+  <section class="chan" id="subsea">
+    <h2>Subsea</h2>
+    <p class="lead">To-scale cross-section schematics for offshore cables, umbilicals and pipelines,
+    generated deterministically from a layer specification.</p>
+    <div class="grid">
+      <a class="card" href="../subsea/offshore-cross-section-report.html"><h3>Offshore cross-section report</h3><div class="std">cables · umbilicals · pipelines</div><p>Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles with envelope geometry.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
+
+  <section class="chan" id="installation">
+    <h2>Installation</h2>
+    <p class="lead">Marine-installation suitability for a crane vessel &mdash; lift envelopes, splash-zone
+    operability and weather-window analysis, published as a Deckhand deliverable.</p>
+    <div class="grid">
+      <a class="card" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html"><h3>Installation vessel pamphlet — BokaLift 2</h3><div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div><p>Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability and DP/mooring failure-risk.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
+
+  <section class="chan" id="validation">
+    <h2>Validated against published references</h2>
+    <p class="note"><span class="pub">■ published-validated</span> = reproduces a standard's worked example or published rating;
+       <span class="der">■ derivation-anchored</span> = matches the governing closed form (hand-derived).
+       Tubular products and structural-detail methods, which have no standalone dashboard, are represented by these golden values.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Method</th><th>Case</th><th>Result</th><th>Basis</th></tr></thead>
+      <tbody>
+        <tr><td>API 5C3 collapse</td><td>7″ 26# P110 (D/t 19.3, plastic)</td><td class="val">6 230 psi</td><td class="pub">published API rating</td></tr>
+        <tr><td>API 5C3 burst / body-yield</td><td>7″ 26# P110</td><td class="val">9 960 psi / 830 000 lbf</td><td class="pub">published API rating</td></tr>
+        <tr><td>Line-pipe plain-end weight</td><td>NPS 8 STD (8.625×0.322)</td><td class="val">28.55 lb/ft</td><td class="pub">ASME B36.10M</td></tr>
+        <tr><td>DNV-RP-F101 capacity</td><td>§8.2 worked pipe-1</td><td class="val">15.866 MPa</td><td class="pub">published (6 sig-figs)</td></tr>
+        <tr><td>ASME B31G safe pressure</td><td>CRVL.BAS Example #1 (X52)</td><td class="val">1 093 psi</td><td class="pub">B31G-1991 App. A</td></tr>
+        <tr><td>IACS S11 wave BM</td><td>L200·B32·Cb0.8 (hog / sag)</td><td class="val">+1.897 / −2.059 ×10⁶ kN·m</td><td class="der">IACS UR S11 formula</td></tr>
+        <tr><td>Smith hull-girder ultimate</td><td>stocky box → first yield</td><td class="val">M_U = f_y·Z (rel 1e-6)</td><td class="der">analytic limit</td></tr>
+        <tr><td>DNV-RP-C201 panel tripping</td><td>0119-015 worked example</td><td class="val">f_T = 215.61 MPa</td><td class="pub">validated example</td></tr>
+        <tr><td>Grillage overall mode</td><td>isotropic limit (k=4)</td><td class="val">σ_cr = 223.11 MPa</td><td class="der">Timoshenko long-plate</td></tr>
+        <tr><td>Efthymiou T/Y chord saddle</td><td>β0.5 γ12 τ0.5 θ90 (long / short)</td><td class="val">6.21 / 4.755</td><td class="pub">DNV-RP-C203 App. B</td></tr>
+        <tr><td>Corrugation section modulus</td><td>a=c=800, φ45, t15</td><td class="val">Z = 4.525×10⁶ mm³</td><td class="der">IACS CSR closed form</td></tr>
+        <tr><td>2D river-bottom RSTRENG</td><td>24″ X52 grid (MAX projection)</td><td class="val">p_f = 1 969.2 psi</td><td class="der">RSTRENG effective-area</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</main>
+
+<footer>
+  Built from validated digitalmodel solvers; method APIs live under
+  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>
+  and validation records under <code>docs/domains/</code>. Every strength / FFS result carries a
+  <code>code_reference</code> naming its governing code, kept in sync with the
   <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md">codes register</a>
-  documents — a CI test keeps the two in sync, so a result can never cite a code the register doesn't list.</p>
-
-  <footer>
-    Generated from the EPIC&nbsp;#1080 work (tubular products, ship structural elements, code provenance) plus FFS / SCF / hull-girder hardening.
-    Validation records live under <code>docs/domains/</code>; method APIs under <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>.
-  </footer>
-</div>
+  by a CI test, so a published number can never silently cite a code the register doesn't list.
+</footer>
 </body>
 </html>
