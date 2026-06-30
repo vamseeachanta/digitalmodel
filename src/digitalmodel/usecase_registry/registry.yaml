@@ -7,7 +7,7 @@
 #   partial  - the code/options exist but no committed dispatchable template yet
 #   planned  - identified, not yet built
 #
-# solver: orcawave | aqwa | orcaflex | ansys
+# solver: orcawave | aqwa | orcaflex | ansys | openfoam
 # Dispatch (licensed lane): uv run python -m digitalmodel <template>, where the
 # template sets `basename` (+ diffraction/ansys operation) per this entry.
 version: 1
@@ -355,3 +355,53 @@ usecases:
     analysis: [static_structural]
     readiness: ready
     notes: Mudmat / foundation screening FE (SHELL181 on Winkler EFS soil); generator + dispatchable template (#954).
+  # --- OpenFOAM (CFD) ------------------------------------------------------
+  # Engine route digitalmodel #1161: basename openfoam (or cfd) -> case build
+  # (OpenFOAMCaseBuilder, license-free) + optional solve (OpenFOAMRunner,
+  # fail-closed). The per-run case is built from an inline `case_type` config,
+  # not a committed dispatchable template -> readiness: partial (template null).
+  - id: openfoam-current-loading
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [current_loading, drag]
+    readiness: partial
+    notes: Steady current-loading (simpleFoam) drag screening; case built from case_type, no committed template.
+  - id: openfoam-wave-loading
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [wave_loading, multiphase]
+    readiness: partial
+    notes: Wave-loading on a fixed/floating body (interFoam multiphase); case built from case_type.
+  - id: openfoam-greenwater
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [greenwater, multiphase]
+    readiness: partial
+    notes: Green-water on deck (interFoam); case built from case_type.
+  - id: openfoam-sloshing
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [sloshing, multiphase, spectral]
+    readiness: partial
+    notes: Prismatic-tank sloshing (interFoam) + natural-frequency spectral post; case built from case_type.
+  - id: openfoam-viv
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [viv]
+    readiness: partial
+    notes: Vortex-induced vibration screening (pimpleFoam); case built from case_type.
