@@ -51,7 +51,7 @@
 <body>
 <aside class="side">
   <h1>Rudder &amp; manoeuvring</h1>
-  <div class="sub">Low-speed turning, threshold speed &amp; heading-hold under current — B1528 SIROCCO</div>
+  <div class="sub">Low-speed turning, threshold speed &amp; heading-hold under current</div>
 
   <div class="ctl">
     <label>Loading condition</label>
@@ -94,7 +94,8 @@
 <main>
   <div class="hero">
     <h2>Low-speed manoeuvring &amp; station-keeping explorer</h2>
-    <p>For the SIROCCO (B1528) Panamax/LR1 tanker. Answers three operational questions —
+    <p>For a representative single-screw tanker (Lpp ≈ 225 m, beam ≈ 32 m, laden draft ≈ 12 m).
+    Answers three operational questions —
     <b>can I turn within the channel?</b> (turning circle vs the IMO 5L limit),
     <b>do I still have steerage?</b> (threshold speed vs wind, by loading),
     and <b>can I hold heading on the engine?</b> (rudder angle to balance the current yaw moment,
@@ -124,7 +125,7 @@
 </main>
 
 <script>
-// ---- Constants & SIROCCO particulars -------------------------------------
+// ---- Constants & reference-tanker particulars (generic ~225 m single-screw tanker) ----
 const KN = 0.514444, RHO_W = 1025, RHO_AIR = 1.225, DEG = Math.PI/180;
 const L = 225.5, B = 32.26, X_R = 0.6*L;          // Barrass rudder lever 135.3 m
 const KP_LADEN = 1.02;                             // calibrated Nomoto K' (laden, 35deg -> TD/L 3.2)
