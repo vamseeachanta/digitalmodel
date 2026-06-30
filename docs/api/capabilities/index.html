@@ -5,57 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>digitalmodel — Engineering Capabilities</title>
 <style>
-  :root{--navy:#0B3D91;--teal:#2BB2A6;--bg:#070c16;--panel:#0e1726;--ink:#e8eef9;
-        --muted:#90a0bd;--line:#22304f;--ok:#3fb950;--warn:#d29922;--side:288px}
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
+        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--warn:#b7791f;--side:288px}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
        color:var(--ink);line-height:1.5}
   a{color:inherit;text-decoration:none}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#11203a;
-       padding:1px 5px;border-radius:5px;font-size:12px}
-  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#0a1120;
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);
+       border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:12px}
+  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#fff;
         border-right:1px solid var(--line);display:flex;flex-direction:column;
         padding:22px 16px;overflow-y:auto;z-index:20}
-  .side .brand{display:inline-flex;align-self:flex-start;background:#fff;border-radius:11px;
-               padding:10px 14px;margin-bottom:6px}
+  .side .brand{display:inline-flex;align-self:flex-start;background:#fff;border:1px solid var(--line);
+               border-radius:11px;padding:10px 14px;margin-bottom:6px}
   .side .brand svg{height:30px;width:auto;display:block}
   .side .tag{font-size:12px;color:var(--muted);margin:0 0 16px 3px}
   .side nav{flex:1}
-  .navgroup{margin-bottom:6px}
-  .navh{display:block;font-size:13px;font-weight:700;color:#cfe0f2;padding:7px 10px;
+  .navgroup{margin-bottom:4px}
+  .navh{display:block;font-size:13px;font-weight:700;color:var(--navy);padding:7px 10px;
         border-radius:8px;border-left:3px solid transparent}
-  .navh:hover,.navh.active{background:#11203a;border-left-color:var(--teal);color:#fff}
-  .side .start{margin-top:14px;text-align:center;font-weight:700;color:#06243b;
-               background:linear-gradient(135deg,var(--teal),#7af0c0);padding:11px;
+  .navh:hover,.navh.active{background:var(--soft);border-left-color:var(--teal)}
+  .side .start{margin-top:14px;text-align:center;font-weight:700;color:#fff;
+               background:linear-gradient(135deg,var(--teal),var(--navy));padding:11px;
                border-radius:11px}
   main{margin-left:var(--side);max-width:1200px;padding:0 30px 80px}
   .hero{padding:42px 4px 8px}
-  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.4px}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.4px;color:var(--navy)}
   .hero p{color:var(--muted);font-size:17px;margin-top:10px;max-width:820px}
   .hero .pill{display:inline-block;margin-top:16px;padding:4px 12px;border:1px solid var(--line);
-              border-radius:20px;color:var(--muted);font-size:12.5px}
+              background:#fff;border-radius:20px;color:var(--muted);font-size:12.5px}
   .chan{margin-top:42px;scroll-margin-top:18px}
-  .chan h2{font-size:20px;border-left:4px solid var(--teal);padding-left:12px;margin-bottom:6px}
+  .chanhead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+  .chanhead h2{font-size:20px;border-left:4px solid var(--teal);padding-left:12px;color:var(--navy)}
+  .onepager{font-size:12px;font-weight:700;color:var(--navy);border:1px solid var(--line);
+            background:#fff;border-radius:9px;padding:6px 11px;white-space:nowrap}
+  .onepager:hover{border-color:var(--teal)}
   .chan .lead{color:var(--muted);font-size:14px;padding-left:16px;margin-bottom:18px;max-width:820px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
-  a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:16px;
-         padding:18px 18px 16px;transition:transform .15s,border-color .15s}
-  a.card:hover{transform:translateY(-3px);border-color:#3a4d74}
-  a.card h3{font-size:15.5px;font-weight:700;line-height:1.3;color:var(--ink)}
-  a.card .std{color:var(--teal);font-size:12px;font-weight:600;margin:5px 0 8px}
-  a.card p{color:var(--muted);font-size:13.5px}
-  a.card .open{display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#06243b;
-               background:linear-gradient(135deg,#4cc2ff,#7af0c0);padding:7px 13px;border-radius:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+  .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+        border-radius:16px;padding:18px 18px 16px;box-shadow:0 1px 2px rgba(16,40,80,.04);
+        transition:transform .15s,border-color .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-3px);border-color:#b9cbe6;box-shadow:0 8px 22px rgba(16,40,80,.10)}
+  .card h3{font-size:15.5px;font-weight:700;line-height:1.3;color:var(--ink)}
+  .card .std{color:var(--teal);font-size:12px;font-weight:700;margin:5px 0 8px}
+  .card p{color:var(--muted);font-size:13.5px;flex:1}
+  .actions{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .actions .open{font-size:13px;font-weight:700;color:#fff;
+                 background:linear-gradient(135deg,var(--teal),var(--navy));padding:7px 13px;border-radius:10px}
+  .actions .sec{font-size:12.5px;font-weight:700;color:var(--navy);border:1px solid var(--line);
+                background:#fff;padding:6px 11px;border-radius:9px}
+  .actions .sec:hover{border-color:var(--teal)}
   .tablewrap{overflow-x:auto;margin-top:6px}
   table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
         border:1px solid var(--line);border-radius:14px;overflow:hidden}
   th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
-  th{background:#11203a;color:var(--muted);font-weight:600;font-size:11.5px;
+  th{background:var(--soft);color:var(--muted);font-weight:700;font-size:11.5px;
      text-transform:uppercase;letter-spacing:.4px}
   tr:last-child td{border-bottom:none}
   td.val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right}
-  .pub{color:var(--ok);font-weight:600}.der{color:var(--warn);font-weight:600}
+  .pub{color:var(--ok);font-weight:700}.der{color:var(--warn);font-weight:700}
   .note{color:var(--muted);font-size:13px;margin:10px 0 0;padding-left:16px}
   footer{margin-left:var(--side);text-align:center;color:var(--muted);font-size:13px;
          padding:28px 30px 50px;border-top:1px solid var(--line)}
@@ -134,10 +143,10 @@
     <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
     <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
-    <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
+    <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -149,88 +158,87 @@
     <p>Offshore &amp; ship structural strength, fitness-for-service, hydrodynamics &amp; diffraction,
     risers, pipelines and subsea cross-sections &mdash; each result computed by unit-tested domain
     code, checked against the governing code or an independent solver, and frozen into a static report.
-    Every card below opens a live page.</p>
-    <span class="pill">Validated solvers · governing-code provenance · a live link for every surface</span>
+    Every work below opens a live page, a 1-page client PDF, and a self-contained workflow-API call.</p>
+    <span class="pill">Live page · 1-page PDF · workflow-API call — for every capability</span>
   </header>
 
   <section class="chan" id="ffs">
-    <h2>Fitness-for-service</h2>
+    <div class="chanhead"><h2>Fitness-for-service</h2><a class="onepager" href="pdf/sec-ffs.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Remaining-strength assessment of corroded and metal-loss components with an
     inspector decision layer &mdash; benchmarked to standard worked examples and published ratings.</p>
     <div class="grid">
-      <a class="card" href="../ffs/ffs-showcase.html"><h3>FFS decision-layer showcase</h3><div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div><p>Interactive remaining-strength and inspector-verdict walkthrough across the three governing FFS codes.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../ffs/ffs-field-dashboard.html"><h3>FFS inspector field dashboard</h3><div class="std">measurement sufficiency</div><p>Accept / re-rate / take-more-measurements / escalate, driven by measurement-sufficiency on real defect data.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>FFS decision-layer showcase</h3><div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div><p>Interactive remaining-strength and inspector-verdict walkthrough across the three governing FFS codes.</p><div class="actions"><a class="open" href="../ffs/ffs-showcase.html">Open &rarr;</a><a class="sec" href="pdf/ffs-showcase.pdf" download>PDF &darr;</a><a class="sec" href="api/ffs-showcase.html">API &rarr;</a></div></div>
+      <div class="card"><h3>FFS inspector field dashboard</h3><div class="std">measurement sufficiency</div><p>Accept / re-rate / take-more-measurements / escalate, driven by measurement-sufficiency on real defect data.</p><div class="actions"><a class="open" href="../ffs/ffs-field-dashboard.html">Open &rarr;</a><a class="sec" href="pdf/ffs-field-dashboard.pdf" download>PDF &darr;</a><a class="sec" href="api/ffs-field-dashboard.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="structural">
-    <h2>Ship structural strength</h2>
+    <div class="chanhead"><h2>Ship structural strength</h2><a class="onepager" href="pdf/sec-structural.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Plate and stiffened-panel buckling for ship structure, with plate-field, column and
     tripping interaction explored against the governing class code.</p>
     <div class="grid">
-      <a class="card" href="../buckling/ship-plate-buckling.html"><h3>Ship plate buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../buckling/ship-panel-buckling.html"><h3>Stiffened-panel buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>Ship plate buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.</p><div class="actions"><a class="open" href="../buckling/ship-plate-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-plate.pdf" download>PDF &darr;</a><a class="sec" href="api/buckling-plate.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Stiffened-panel buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.</p><div class="actions"><a class="open" href="../buckling/ship-panel-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-panel.pdf" download>PDF &darr;</a><a class="sec" href="api/buckling-panel.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="hydro">
-    <h2>Hydrodynamics &amp; diffraction</h2>
+    <div class="chanhead"><h2>Hydrodynamics &amp; diffraction</h2><a class="onepager" href="pdf/sec-hydro.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Panel-method diffraction / radiation RAOs cross-checked between solvers, a 3-way
     unit-box benchmark, environmental load coefficients and a closed-form passing-ship interaction.</p>
     <div class="grid">
-      <a class="card" href="../hydro/rao-comparison/"><h3>AQWA vs OrcaWave RAO comparison</h3><div class="std">cross-solver diffraction</div><p>Interactive 6-DOF RAO overlay between two diffraction solvers on the same vessel model.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/unit-box-benchmark/benchmark_report.html"><h3>Unit-box 3-way diffraction benchmark</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Added-mass, damping and RAO amplitude &amp; phase compared across three diffraction solvers.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/unit-box-benchmark/benchmark_amplitude.html"><h3>RAO amplitude overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO amplitude overlay for the unit-box benchmark across the three solvers.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/unit-box-benchmark/benchmark_phase.html"><h3>RAO phase overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO phase overlay for the unit-box benchmark across the three solvers.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/unit-box-benchmark/benchmark_combined.html"><h3>Combined solver comparison</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Combined amplitude-and-phase view of the three-solver unit-box diffraction comparison.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/unit-box-benchmark/benchmark_heatmap.html"><h3>Solver correlation heatmap</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/ocimf-coefficient-explorer.html"><h3>OCIMF coefficient explorer</h3><div class="std">OCIMF MEG3 / MEG4</div><p>Wind &amp; current force / moment coefficients interpolated by heading and loading condition.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../hydro/passing-ship-benchmark.html"><h3>Passing-ship interaction benchmark</h3><div class="std">Wang (1975)</div><p>Sway-force and yaw-moment interaction validated against the published closed-form solution.</p><span class="open">Open &rarr;</span></a>
-    </div>
-  </section>
-
-  <section class="chan" id="manoeuvring">
-    <h2>Manoeuvring &amp; station-keeping</h2>
-    <p class="lead">Low-speed ship controllability for a single-screw tanker &mdash; turning circle against
-    the IMO criteria, the minimum steerage speed by loading condition, and the rudder angle needed to
-    hold heading against a current with the engine on. Built on a researched rudder-type database and
-    the existing Nomoto / Whicker-Fehlner / S&ouml;ding-Brix physics.</p>
-    <div class="grid">
-      <a class="card" href="../hydro/rudder-maneuvering-explorer.html"><h3>Rudder &amp; low-speed manoeuvring explorer</h3><div class="std">IMO MSC.137(76) · Clarke 1983 · OCIMF</div><p>Interactive turning circle vs the 5&middot;L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and engine-on rudder angle to balance the current yaw moment.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml"><h3>Rudder-type database</h3><div class="std">Molland &amp; Turnock · Brix · DNV/ABS</div><p>Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>AQWA vs OrcaWave RAO comparison</h3><div class="std">cross-solver diffraction</div><p>Interactive 6-DOF RAO overlay between two diffraction solvers on the same vessel model.</p><div class="actions"><a class="open" href="../hydro/rao-comparison/">Open &rarr;</a><a class="sec" href="pdf/rao-comparison.pdf" download>PDF &darr;</a><a class="sec" href="api/rao-comparison.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Unit-box 3-way diffraction benchmark</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Added-mass, damping and RAO amplitude &amp; phase compared across three diffraction solvers.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_report.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-report.pdf" download>PDF &darr;</a><a class="sec" href="api/unitbox-report.html">API &rarr;</a></div></div>
+      <div class="card"><h3>RAO amplitude overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO amplitude overlay for the unit-box benchmark across the three solvers.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_amplitude.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-amplitude.pdf" download>PDF &darr;</a><a class="sec" href="api/unitbox-amplitude.html">API &rarr;</a></div></div>
+      <div class="card"><h3>RAO phase overlay</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Per-DOF RAO phase overlay for the unit-box benchmark across the three solvers.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_phase.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-phase.pdf" download>PDF &darr;</a><a class="sec" href="api/unitbox-phase.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Combined solver comparison</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Combined amplitude-and-phase view of the three-solver unit-box diffraction comparison.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_combined.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-combined.pdf" download>PDF &darr;</a><a class="sec" href="api/unitbox-combined.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Solver correlation heatmap</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_heatmap.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-heatmap.pdf" download>PDF &darr;</a><a class="sec" href="api/unitbox-heatmap.html">API &rarr;</a></div></div>
+      <div class="card"><h3>OCIMF coefficient explorer</h3><div class="std">OCIMF MEG3 / MEG4</div><p>Wind &amp; current force / moment coefficients interpolated by heading and loading condition.</p><div class="actions"><a class="open" href="../hydro/ocimf-coefficient-explorer.html">Open &rarr;</a><a class="sec" href="pdf/ocimf.pdf" download>PDF &darr;</a><a class="sec" href="api/ocimf.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Passing-ship interaction benchmark</h3><div class="std">Wang (1975)</div><p>Sway-force and yaw-moment interaction validated against the published closed-form solution.</p><div class="actions"><a class="open" href="../hydro/passing-ship-benchmark.html">Open &rarr;</a><a class="sec" href="pdf/passing-ship.pdf" download>PDF &darr;</a><a class="sec" href="api/passing-ship.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="risers">
-    <h2>Risers &amp; pipelines</h2>
+    <div class="chanhead"><h2>Risers &amp; pipelines</h2><a class="onepager" href="pdf/sec-risers.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">OrcaFlex riser global-analysis verification &mdash; a validation report against reference
     cases and a mesh / segmentation convergence study.</p>
     <div class="grid">
-      <a class="card" href="../orcaflex/riser-validation-report.html"><h3>Riser validation report</h3><div class="std">OrcaFlex · tier-2 fast library</div><p>Riser global-analysis results verified against reference cases from the tier-2 fast model library.</p><span class="open">Open &rarr;</span></a>
-      <a class="card" href="../orcaflex/riser-mesh-sensitivity.html"><h3>Riser mesh sensitivity report</h3><div class="std">OrcaFlex · convergence study</div><p>Segmentation / mesh-density convergence study quantifying discretisation effect on riser response.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>Riser validation report</h3><div class="std">OrcaFlex · tier-2 fast library</div><p>Riser global-analysis results verified against reference cases from the tier-2 fast model library.</p><div class="actions"><a class="open" href="../orcaflex/riser-validation-report.html">Open &rarr;</a><a class="sec" href="pdf/riser-validation.pdf" download>PDF &darr;</a><a class="sec" href="api/riser-validation.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Riser mesh sensitivity report</h3><div class="std">OrcaFlex · convergence study</div><p>Segmentation / mesh-density convergence study quantifying discretisation effect on riser response.</p><div class="actions"><a class="open" href="../orcaflex/riser-mesh-sensitivity.html">Open &rarr;</a><a class="sec" href="pdf/riser-mesh.pdf" download>PDF &darr;</a><a class="sec" href="api/riser-mesh.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="subsea">
-    <h2>Subsea</h2>
+    <div class="chanhead"><h2>Subsea</h2><a class="onepager" href="pdf/sec-subsea.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">To-scale cross-section schematics for offshore cables, umbilicals and pipelines,
     generated deterministically from a layer specification.</p>
     <div class="grid">
-      <a class="card" href="../subsea/offshore-cross-section-report.html"><h3>Offshore cross-section report</h3><div class="std">cables · umbilicals · pipelines</div><p>Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles with envelope geometry.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>Offshore cross-section report</h3><div class="std">cables · umbilicals · pipelines</div><p>Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles with envelope geometry.</p><div class="actions"><a class="open" href="../subsea/offshore-cross-section-report.html">Open &rarr;</a><a class="sec" href="pdf/subsea-xsection.pdf" download>PDF &darr;</a><a class="sec" href="api/subsea-xsection.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="installation">
-    <h2>Installation</h2>
+    <div class="chanhead"><h2>Installation</h2><a class="onepager" href="pdf/sec-installation.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Marine-installation suitability for a crane vessel &mdash; lift envelopes, splash-zone
     operability and weather-window analysis, published as a Deckhand deliverable.</p>
     <div class="grid">
-      <a class="card" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html"><h3>Installation vessel pamphlet — BokaLift 2</h3><div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div><p>Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability and DP/mooring failure-risk.</p><span class="open">Open &rarr;</span></a>
+      <div class="card"><h3>Installation vessel pamphlet — BokaLift 2</h3><div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div><p>Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability and DP/mooring failure-risk.</p><div class="actions"><a class="open" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html">Open &rarr;</a><a class="sec" href="pdf/installation-bokalift.pdf" download>PDF &darr;</a><a class="sec" href="api/installation-bokalift.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="manoeuvring">
+    <div class="chanhead"><h2>Manoeuvring &amp; station-keeping</h2><a class="onepager" href="pdf/sec-manoeuvring.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Low-speed manoeuvring and station-keeping screens &mdash; turning circle against the IMO
+    criteria, minimum steerage speed by loading condition, and the rudder angle needed to hold heading
+    against a current, built on a researched rudder-type database.</p>
+    <div class="grid">
+      <div class="card"><h3>Rudder &amp; low-speed manoeuvring explorer</h3><div class="std">IMO MSC.137(76) · Clarke 1983 · OCIMF</div><p>Interactive turning circle vs the 5&middot;L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and engine-on rudder angle to balance the current yaw moment.</p><div class="actions"><a class="open" href="../hydro/rudder-maneuvering-explorer.html">Open &rarr;</a><a class="sec" href="pdf/rudder-explorer.pdf" download>PDF &darr;</a><a class="sec" href="api/rudder-explorer.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Rudder-type database</h3><div class="std">Molland &amp; Turnock · Brix · DNV/ABS</div><p>Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml">Open &rarr;</a><a class="sec" href="pdf/rudder-database.pdf" download>PDF &darr;</a><a class="sec" href="api/rudder-database.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="validation">
-    <h2>Validated against published references</h2>
+    <div class="chanhead"><h2>Validated against published references</h2></div>
     <p class="note"><span class="pub">■ published-validated</span> = reproduces a standard's worked example or published rating;
        <span class="der">■ derivation-anchored</span> = matches the governing closed form (hand-derived).
        Tubular products and structural-detail methods, which have no standalone dashboard, are represented by these golden values.</p>
@@ -260,7 +268,8 @@
 </main>
 
 <footer>
-  Built from validated digitalmodel solvers; method APIs live under
+  Built from validated digitalmodel solvers; 1-page PDFs and workflow-API artifacts by
+  <code>scripts/capabilities/build_onepagers.py</code>. Method APIs live under
   <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>
   and validation records under <code>docs/domains/</code>. Every strength / FFS result carries a
   <code>code_reference</code> naming its governing code, kept in sync with the

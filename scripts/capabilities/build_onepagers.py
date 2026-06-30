@@ -1,0 +1,450 @@
+# ABOUTME: Generate client-facing 1-page capability PDFs (light theme, branded).
+# ABOUTME: One PDF per left-nav section and per live work; rendered via headless Chrome.
+"""Build the **capability one-pagers** — a single-page, client-facing PDF for every
+left-nav section and every live work surfaced on ``/capabilities/``, plus a
+self-contained workflow-API artifact (a typed ResultEnvelope + request snippet +
+an ``<iframe>`` embedding the live report) for every work.
+
+Each one-pager is a self-contained, light-themed, A4 page (digitalmodel logo,
+what-it-is, key figures, what-you-get, and the live link) rendered to PDF with
+headless Chrome. Outputs (committed frozen artifacts; mkdocs serves them as static
+files under ``docs/api``):
+
+    docs/api/capabilities/pdf/<id>.pdf        # section + work one-pagers
+    docs/api/capabilities/api/<id>.{html,json}  # one workflow-API call per work
+
+Run (stdlib only; needs google-chrome on PATH, override with CHROME=/path):
+    python3 scripts/capabilities/build_onepagers.py
+"""
+
+from __future__ import annotations
+
+import html
+import json as _json
+import os
+import re
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+_REPO = Path(__file__).resolve().parents[2]
+_CAP = _REPO / "docs" / "api" / "capabilities"
+_OUT = _CAP / "pdf"
+_API = _CAP / "api"
+_SITE = "https://vamseeachanta.github.io/digitalmodel"
+_CHROME = os.environ.get("CHROME") or shutil.which("google-chrome") or shutil.which(
+    "google-chrome-stable"
+) or shutil.which("chromium")
+
+# digitalmodel brand logo (native colors), inlined from the repo asset with any
+# XML prolog stripped so it drops cleanly into both the one-pager and API pages.
+_LOGO = re.sub(
+    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo.svg").read_text(
+        encoding="utf-8"
+    )
+).strip()
+
+# Each spec: id, kind (section|work), title, std (basis line), path (live page —
+# relative under the site, or a full http(s) URL for an external deliverable),
+# blurb (what it is), figures [(value,label)], bullets (what you get).
+SPECS: list[dict] = [
+    # ---- sections (one per left-nav menu item) ----
+    dict(id="sec-ffs", kind="section", title="Fitness-for-service",
+         std="API 579-1 · ASME B31G · DNV-RP-F101", path="capabilities/#ffs",
+         blurb="Remaining-strength assessment of corroded and metal-loss components with an "
+               "inspector decision layer — benchmarked to standard worked examples and published "
+               "ratings across the three governing FFS codes.",
+         figures=[],
+         bullets=["Remaining-strength and inspector-verdict walkthrough across API 579-1, ASME B31G and DNV-RP-F101",
+                  "Accept / re-rate / take-more-measurements / escalate driven by measurement sufficiency",
+                  "RSTRENG effective-area and B31G screens validated to published worked examples"]),
+    dict(id="sec-structural", kind="section", title="Ship structural strength",
+         std="DNV-RP-C201 · IACS UR S11 · class rules", path="capabilities/#structural",
+         blurb="Plate and stiffened-panel buckling for ship structure — plate-field, column and "
+               "tripping interaction explored against the governing class code.",
+         figures=[("215.61 MPa", "panel tripping f_T"), ("DNV-RP-C201", "governing code")],
+         bullets=["Plate capacity vs geometry and combined in-plane loading (Johnson-Ostenfeld correction)",
+                  "Plate-field / column / torsional-tripping interaction for stiffened panels",
+                  "Tripping stress reproduces the DNV-RP-C201 worked example (f_T = 215.61 MPa)"]),
+    dict(id="sec-hydro", kind="section", title="Hydrodynamics & diffraction",
+         std="WAMIT · AQWA · OrcaWave · OCIMF · Wang (1975)", path="capabilities/#hydro",
+         blurb="Panel-method diffraction / radiation RAOs cross-checked between solvers, a 3-way "
+               "unit-box benchmark, environmental load coefficients and a closed-form passing-ship "
+               "interaction.",
+         figures=[("3", "diffraction solvers"), ("6-DOF", "RAO overlay")],
+         bullets=["Cross-solver 6-DOF RAO overlay between two diffraction solvers on one vessel",
+                  "WAMIT / AQWA / OrcaWave unit-box added-mass, damping and RAO benchmark",
+                  "OCIMF wind & current coefficients and a Wang (1975) passing-ship interaction check"]),
+    dict(id="sec-risers", kind="section", title="Risers & pipelines",
+         std="OrcaFlex · DNV-OS-F201", path="capabilities/#risers",
+         blurb="OrcaFlex riser global-analysis verification — a validation report against reference "
+               "cases and a mesh / segmentation convergence study.",
+         figures=[],
+         bullets=["Riser global-analysis results verified against the tier-2 fast model library",
+                  "DNV-OS-F201 code-check on the riser response",
+                  "Segmentation / mesh-density convergence study quantifying discretisation effect"]),
+    dict(id="sec-subsea", kind="section", title="Subsea",
+         std="cables · umbilicals · pipelines", path="capabilities/#subsea",
+         blurb="To-scale cross-section schematics for offshore cables, umbilicals and pipelines, "
+               "generated deterministically from a layer specification.",
+         figures=[],
+         bullets=["Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles",
+                  "Envelope geometry computed from the layer specification",
+                  "Self-contained, deterministic static output"]),
+    dict(id="sec-installation", kind="section", title="Installation",
+         std="DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444", path="capabilities/#installation",
+         blurb="Marine-installation suitability for a crane vessel — lift envelopes, splash-zone "
+               "operability and weather-window analysis, published as a Deckhand deliverable.",
+         figures=[],
+         bullets=["Crane lift suitability against the vessel's load chart",
+                  "Operational and per-structure splash-zone Hs/Tp envelopes",
+                  "Weather-window operability with DP / mooring failure-risk"]),
+    dict(id="sec-validation", kind="section", title="Validated against published references",
+         std="governing-code provenance · CI-guarded", path="capabilities/#validation",
+         blurb="Every strength / FFS result reproduces a standard's worked example, a published "
+               "rating, or the governing closed form, and carries a code_reference naming its "
+               "governing code — kept in sync with the codes register by a CI test.",
+         figures=[("16", "validated cases"), ("100%", "code-referenced"), ("CI", "drift-guarded")],
+         bullets=["Published-validated vs derivation-anchored clearly labelled on every figure",
+                  "Tubular, structural-detail and manoeuvring golden values frozen as references",
+                  "A published number can never silently cite a code the register doesn't list"]),
+
+    # ---- works (one per live card) ----
+    dict(id="ffs-showcase", kind="work", title="FFS decision-layer showcase",
+         std="API 579-1 · ASME B31G · DNV-RP-F101", path="ffs/ffs-showcase.html",
+         blurb="Interactive remaining-strength and inspector-verdict walkthrough across the three "
+               "governing FFS codes.",
+         figures=[], bullets=["Remaining-strength across API 579-1, ASME B31G and DNV-RP-F101",
+                              "Inspector decision layer over the computed margins"]),
+    dict(id="ffs-field-dashboard", kind="work", title="FFS inspector field dashboard",
+         std="measurement sufficiency", path="ffs/ffs-field-dashboard.html",
+         blurb="Accept / re-rate / take-more-measurements / escalate, driven by measurement "
+               "sufficiency on real defect data.",
+         figures=[], bullets=["Decision verdict per defect from measurement sufficiency",
+                              "Runs on real metal-loss defect data"]),
+    dict(id="buckling-plate", kind="work", title="Ship plate buckling explorer",
+         std="DNV-RP-C201", path="buckling/ship-plate-buckling.html",
+         blurb="Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld "
+               "inelastic correction.",
+         figures=[], bullets=["Plate capacity swept over geometry and combined loading",
+                              "Johnson-Ostenfeld inelastic correction applied"]),
+    dict(id="buckling-panel", kind="work", title="Stiffened-panel buckling explorer",
+         std="DNV-RP-C201", path="buckling/ship-panel-buckling.html",
+         blurb="Plate-field / column / torsional-tripping interaction for a stiffened panel, swept "
+               "over scantlings and load.",
+         figures=[("215.61 MPa", "tripping f_T")],
+         bullets=["Plate-field / column / tripping interaction over scantlings and load",
+                  "Tripping stress reproduces the DNV-RP-C201 worked example"]),
+    dict(id="rao-comparison", kind="work", title="AQWA vs OrcaWave RAO comparison",
+         std="cross-solver diffraction", path="hydro/rao-comparison/",
+         blurb="Interactive 6-DOF RAO overlay between two diffraction solvers on the same vessel model.",
+         figures=[], bullets=["6-DOF RAO overlay between two diffraction solvers",
+                              "Same vessel model on both solvers"]),
+    dict(id="unitbox-report", kind="work", title="Unit-box 3-way diffraction benchmark",
+         std="WAMIT · AQWA · OrcaWave", path="hydro/unit-box-benchmark/benchmark_report.html",
+         blurb="Added-mass, damping and RAO amplitude & phase compared across three diffraction solvers.",
+         figures=[("3", "solvers")], bullets=["Added-mass, damping and RAO amplitude & phase",
+                              "Compared across WAMIT, AQWA and OrcaWave"]),
+    dict(id="unitbox-amplitude", kind="work", title="RAO amplitude overlay",
+         std="WAMIT · AQWA · OrcaWave", path="hydro/unit-box-benchmark/benchmark_amplitude.html",
+         blurb="Per-DOF RAO amplitude overlay for the unit-box benchmark across the three solvers.",
+         figures=[], bullets=["Per-DOF RAO amplitude overlay", "Three-solver unit-box benchmark"]),
+    dict(id="unitbox-phase", kind="work", title="RAO phase overlay",
+         std="WAMIT · AQWA · OrcaWave", path="hydro/unit-box-benchmark/benchmark_phase.html",
+         blurb="Per-DOF RAO phase overlay for the unit-box benchmark across the three solvers.",
+         figures=[], bullets=["Per-DOF RAO phase overlay", "Three-solver unit-box benchmark"]),
+    dict(id="unitbox-combined", kind="work", title="Combined solver comparison",
+         std="WAMIT · AQWA · OrcaWave", path="hydro/unit-box-benchmark/benchmark_combined.html",
+         blurb="Combined amplitude-and-phase view of the three-solver unit-box diffraction comparison.",
+         figures=[], bullets=["Combined amplitude-and-phase view", "Three-solver unit-box comparison"]),
+    dict(id="unitbox-heatmap", kind="work", title="Solver correlation heatmap",
+         std="WAMIT · AQWA · OrcaWave", path="hydro/unit-box-benchmark/benchmark_heatmap.html",
+         blurb="Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.",
+         figures=[], bullets=["Cross-solver agreement heatmap", "Across DOFs and frequencies"]),
+    dict(id="ocimf", kind="work", title="OCIMF coefficient explorer",
+         std="OCIMF MEG3 / MEG4", path="hydro/ocimf-coefficient-explorer.html",
+         blurb="Wind & current force / moment coefficients interpolated by heading and loading condition.",
+         figures=[], bullets=["Wind & current force / moment coefficients",
+                              "Interpolated by heading and loading condition"]),
+    dict(id="passing-ship", kind="work", title="Passing-ship interaction benchmark",
+         std="Wang (1975)", path="hydro/passing-ship-benchmark.html",
+         blurb="Sway-force and yaw-moment interaction validated against the published closed-form solution.",
+         figures=[], bullets=["Sway-force and yaw-moment interaction",
+                              "Validated against the Wang (1975) closed form"]),
+    dict(id="riser-validation", kind="work", title="Riser validation report",
+         std="OrcaFlex · tier-2 fast library", path="orcaflex/riser-validation-report.html",
+         blurb="Riser global-analysis results verified against reference cases from the tier-2 fast "
+               "model library.",
+         figures=[], bullets=["Global-analysis results vs reference cases",
+                              "DNV-OS-F201 code-check on the response"]),
+    dict(id="riser-mesh", kind="work", title="Riser mesh sensitivity report",
+         std="OrcaFlex · convergence study", path="orcaflex/riser-mesh-sensitivity.html",
+         blurb="Segmentation / mesh-density convergence study quantifying discretisation effect on "
+               "riser response.",
+         figures=[], bullets=["Segmentation / mesh-density convergence study",
+                              "Discretisation effect on riser response"]),
+    dict(id="subsea-xsection", kind="work", title="Offshore cross-section report",
+         std="cables · umbilicals · pipelines", path="subsea/offshore-cross-section-report.html",
+         blurb="Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles "
+               "with envelope geometry.",
+         figures=[], bullets=["Layer-by-layer cross-section schematics",
+                              "Envelope geometry from a layer specification"]),
+    dict(id="installation-bokalift", kind="work", title="Installation vessel pamphlet — BokaLift 2",
+         std="DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444",
+         path="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/"
+              "deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html",
+         blurb="Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, "
+               "weather-window operability and DP/mooring failure-risk, published as a Deckhand "
+               "deliverable.",
+         figures=[], bullets=["Crane lift suitability against the load chart",
+                              "Splash-zone Hs/Tp envelopes and weather-window operability",
+                              "DP / mooring failure-risk screen"]),
+    dict(id="sec-manoeuvring", kind="section", title="Manoeuvring & station-keeping",
+         std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="capabilities/#manoeuvring",
+         blurb="Low-speed manoeuvring and station-keeping screens — turning circle against the IMO "
+               "criteria, minimum steerage speed by loading condition, and the rudder angle needed "
+               "to hold heading against a current, built on a researched rudder-type database.",
+         figures=[],
+         bullets=["Turning circle vs the 5·L IMO advance/tactical-diameter limit",
+                  "Steerage-threshold speed vs wind (laden / ballast / kick-ahead)",
+                  "Engine-on rudder angle to balance the current yaw moment"]),
+    dict(id="rudder-explorer", kind="work", title="Rudder & low-speed manoeuvring explorer",
+         std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="hydro/rudder-maneuvering-explorer.html",
+         blurb="Interactive turning circle vs the 5·L limit, steerage-threshold speed vs wind "
+               "(laden / ballast / kick-ahead), and the engine-on rudder angle to balance the "
+               "current yaw moment.",
+         figures=[], bullets=["Turning circle vs the IMO 5·L limit",
+                              "Steerage-threshold speed vs wind by loading condition",
+                              "Engine-on rudder angle to balance the current"]),
+    dict(id="rudder-database", kind="work", title="Rudder-type database",
+         std="Molland & Turnock · Brix · DNV/ABS",
+         path="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/"
+              "naval_architecture/data/rudder_database.yml",
+         blurb="Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, "
+               "Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and "
+               "a class-rule area sizing check.",
+         figures=[], bullets=["Nine rudder types with area / aspect ratios and lift coefficients",
+                              "Class-rule (DNV/ABS) rudder-area sizing check"]),
+]
+
+
+# Capabilities whose output is produced by a deterministic registry workflow
+# (docs/registry/workflows.yaml) — these get a real workflow-API call. Everything
+# else is a published report surface, whose API is an HTTP GET of the report.
+# Only ids verified to exist in docs/registry/workflows.yaml are cited here.
+WORKFLOW_MAP: dict[str, str] = {
+    "buckling-plate": "elastic-buckling",
+    "buckling-panel": "elastic-buckling",
+    "rao-comparison": "rao-tabulation",
+    "unitbox-report": "rao-tabulation",
+    "riser-validation": "dnv-os-f201-riser",
+}
+_API_INVOKE = "uv run python -m digitalmodel {input}"
+
+
+def _report_url(spec: dict) -> str:
+    p = spec["path"]
+    return p if p.startswith("http") else f"{_SITE}/{p}"
+
+
+def _api_envelope(spec: dict) -> dict:
+    """A typed, self-contained workflow-API ResultEnvelope for one capability —
+    honest about whether it is a registry workflow or a published report surface."""
+    report_url = _report_url(spec)
+    wf = WORKFLOW_MAP.get(spec["id"])
+    env: dict = {
+        "schema": "deckhand.workflow_api.ResultEnvelope/2",
+        "status": "ok",
+        "repo": "digitalmodel",
+        "report_url": report_url,
+        "provenance": {"basis": spec["std"], "deterministic": True,
+                       "source": "validated digitalmodel solver"},
+    }
+    if wf:
+        env["request"] = {
+            "method": "POST", "path": "/api/run",
+            "body": {"repo": "digitalmodel", "workflow": wf},
+        }
+        env["invocation"] = _API_INVOKE.format(input=f"examples/workflows/{wf}/input.yml")
+        env["workflow"] = f"digitalmodel:{wf}"
+        env["outputs"] = [{"kind": "report", "url": report_url}]
+        env["note"] = ("Deterministic registry workflow (docs/registry/workflows.yaml). "
+                       "POST to the Deckhand workflow-API, or run the invocation locally; "
+                       "the embedded page is a representative live output of the workflow.")
+    else:
+        env["request"] = {"method": "GET", "url": report_url}
+        env["surface"] = f"digitalmodel:{spec['id']}"
+        env["outputs"] = [{"kind": "report", "url": report_url}]
+        env["note"] = ("Published report surface — the deterministic output is served as a "
+                       "self-contained page; GET the report_url to consume it.")
+    return env
+
+
+_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page{{size:A4;margin:0}}
+  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff;
+       width:210mm;min-height:297mm;padding:18mm 18mm 14mm}}
+  .top{{display:flex;align-items:center;justify-content:space-between;
+       border-bottom:2px solid var(--navy);padding-bottom:12px}}
+  .top svg{{height:30px;width:auto}}
+  .kind{{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700}}
+  h1{{font-size:30px;color:var(--navy);margin:26px 0 4px;letter-spacing:-.4px;line-height:1.15}}
+  .std{{color:var(--teal);font-weight:700;font-size:13px}}
+  .blurb{{color:var(--ink);font-size:14.5px;line-height:1.55;margin:18px 0 4px;max-width:165mm}}
+  .figs{{display:flex;gap:14px;margin:22px 0 6px}}
+  .fig{{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px}}
+  .fig .v{{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.5px}}
+  .fig .l{{font-size:11.5px;color:var(--muted);margin-top:3px}}
+  h2{{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+     margin:26px 0 10px;border-left:4px solid var(--teal);padding-left:10px}}
+  ul{{list-style:none}}
+  li{{font-size:14px;line-height:1.5;padding:6px 0 6px 24px;position:relative;border-bottom:1px solid var(--line)}}
+  li:before{{content:"";position:absolute;left:4px;top:13px;width:8px;height:8px;border-radius:50%;
+            background:var(--teal)}}
+  .foot{{position:absolute;left:18mm;right:18mm;bottom:14mm;border-top:1px solid var(--line);
+        padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end;
+        font-size:11.5px;color:var(--muted)}}
+  .foot .live{{color:var(--navy);font-weight:700}}
+  .cta{{background:linear-gradient(135deg,#0f8a7e,#0B3D91);color:#fff;font-weight:700;
+       font-size:12px;padding:8px 14px;border-radius:9px;display:inline-block}}
+</style></head>
+<body>
+  <div class="top">{logo}<div class="kind">Capability one-pager</div></div>
+  <div class="std">{std}</div>
+  <h1>{title}</h1>
+  <p class="blurb">{blurb}</p>
+  {figs}
+  <h2>What you get</h2>
+  <ul>{bullets}</ul>
+  <div class="foot">
+    <div>digitalmodel · validated engineering solvers · governing-code provenance<br>
+      <span class="live">Explore live: {live}</span></div>
+    <span class="cta">View interactive &rarr;</span>
+  </div>
+</body></html>"""
+
+
+_API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} — API call</title>
+<style>
+  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#eef3fa;line-height:1.5}}
+  .wrap{{max-width:1000px;margin:0 auto;padding:22px}}
+  .top{{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--navy);padding-bottom:12px}}
+  .top svg{{height:28px}} .kind{{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700}}
+  h1{{font-size:23px;color:var(--navy);margin:18px 0 2px}}
+  .std{{color:var(--teal);font-weight:700;font-size:12.5px}}
+  .row{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}}
+  .panel{{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}}
+  .panel h2{{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}}
+  pre{{background:#0e1726;color:#d6e2f5;border-radius:9px;padding:12px;font:12px/1.5 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre-wrap;word-break:break-word}}
+  .verb{{display:inline-block;font:700 11px ui-monospace,monospace;background:var(--teal);color:#fff;padding:2px 8px;border-radius:6px;margin-bottom:8px}}
+  a.btn{{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:#fff;
+        background:linear-gradient(135deg,#0f8a7e,#0B3D91);padding:8px 14px;border-radius:9px;text-decoration:none}}
+  .reportwrap{{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}}
+  .reportwrap .bar{{font-size:12px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}}
+  iframe{{width:100%;height:560px;border:0;display:block;background:#fff}}
+  .note{{color:var(--muted);font-size:12.5px;margin-top:6px}}
+  a{{color:var(--navy)}}
+</style></head>
+<body><div class="wrap">
+  <div class="top">{logo}<div class="kind">Workflow-API · self-contained call</div></div>
+  <h1>{title}</h1><div class="std">{std}</div>
+  <div class="row">
+    <div class="panel"><h2>Request — input</h2><span class="verb">{verb}</span>{reqsnippet}</div>
+    <div class="panel"><h2>Response — ResultEnvelope</h2><pre>{envelope}</pre>
+      <a class="btn" href="{id}.json" download>Download envelope JSON &darr;</a></div>
+  </div>
+  <p class="note">{note}</p>
+  <div class="reportwrap">
+    <div class="bar"><span>Comprehensive report (live output)</span><a href="{report_url}">open full report &rarr;</a></div>
+    <iframe src="{report_url}" loading="lazy" title="{title} report"></iframe>
+  </div>
+</div></body></html>"""
+
+
+def _render_api_html(spec: dict, env: dict) -> str:
+    report_url = env["report_url"]
+    if env["request"]["method"] == "POST":
+        verb = "POST /api/run"
+        reqsnippet = (
+            f"<pre>curl -X POST https://api.deckhand/run \\\n"
+            f"  -H 'content-type: application/json' \\\n"
+            f"  -d '{html.escape(_json.dumps(env['request']['body']))}'\n\n"
+            f"# or run locally (deterministic):\n# {html.escape(env['invocation'])}</pre>"
+        )
+    else:
+        verb = "GET"
+        reqsnippet = f"<pre>curl -L {html.escape(report_url)}</pre>"
+    return _API_TEMPLATE.format(
+        logo=_LOGO, title=html.escape(spec["title"]), std=html.escape(spec["std"]),
+        verb=verb, reqsnippet=reqsnippet,
+        envelope=html.escape(_json.dumps(env, indent=2)),
+        id=spec["id"], note=html.escape(env["note"]), report_url=html.escape(report_url),
+    )
+
+
+def _render_html(spec: dict) -> str:
+    figs = ""
+    if spec["figures"]:
+        cells = "".join(
+            f'<div class="fig"><div class="v">{html.escape(v)}</div>'
+            f'<div class="l">{html.escape(l)}</div></div>'
+            for v, l in spec["figures"]
+        )
+        figs = f'<div class="figs">{cells}</div>'
+    bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
+    live = _report_url(spec)
+    return _TEMPLATE.format(
+        logo=_LOGO, std=html.escape(spec["std"]), title=html.escape(spec["title"]),
+        blurb=html.escape(spec["blurb"]), figs=figs, bullets=bullets, live=html.escape(live),
+    )
+
+
+def _to_pdf(html_text: str, out_pdf: Path) -> None:
+    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
+        f.write(html_text)
+        src = f.name
+    try:
+        subprocess.run(
+            [_CHROME, "--headless", "--no-sandbox", "--disable-gpu",
+             "--no-pdf-header-footer", f"--print-to-pdf={out_pdf}", src],
+            check=True, capture_output=True, timeout=90,
+        )
+    finally:
+        os.unlink(src)
+
+
+def main() -> None:
+    if not _CHROME:
+        raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
+    _OUT.mkdir(parents=True, exist_ok=True)
+    _API.mkdir(parents=True, exist_ok=True)
+    ids: set[str] = set()
+    n_pdf = 0
+    n_api = 0
+    for spec in SPECS:
+        assert spec["id"] not in ids, f"duplicate id {spec['id']}"
+        ids.add(spec["id"])
+        _to_pdf(_render_html(spec), _OUT / f"{spec['id']}.pdf")
+        n_pdf += 1
+        # API artifacts: one self-contained workflow-API call per live work.
+        if spec["kind"] == "work":
+            env = _api_envelope(spec)
+            (_API / f"{spec['id']}.json").write_text(
+                _json.dumps(env, indent=2) + "\n", encoding="utf-8")
+            (_API / f"{spec['id']}.html").write_text(
+                _render_api_html(spec, env), encoding="utf-8")
+            n_api += 1
+    print(f"Wrote {n_pdf} one-pager PDFs into {_OUT.relative_to(_REPO)}/ "
+          f"and {n_api} API artifacts (.html+.json) into {_API.relative_to(_REPO)}/")
+
+
+if __name__ == "__main__":
+    main()

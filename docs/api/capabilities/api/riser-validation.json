@@ -1,0 +1,28 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/orcaflex/riser-validation-report.html",
+  "provenance": {
+    "basis": "OrcaFlex \u00b7 tier-2 fast library",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/run",
+    "body": {
+      "repo": "digitalmodel",
+      "workflow": "dnv-os-f201-riser"
+    }
+  },
+  "invocation": "uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml",
+  "workflow": "digitalmodel:dnv-os-f201-riser",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/orcaflex/riser-validation-report.html"
+    }
+  ],
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow."
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_heatmap.html",
+  "provenance": {
+    "basis": "WAMIT \u00b7 AQWA \u00b7 OrcaWave",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_heatmap.html"
+  },
+  "surface": "digitalmodel:unitbox-heatmap",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_heatmap.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it."
+}
