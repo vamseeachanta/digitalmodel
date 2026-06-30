@@ -134,6 +134,7 @@
     <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
     <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
+    <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
@@ -188,6 +189,18 @@
     </div>
   </section>
 
+  <section class="chan" id="manoeuvring">
+    <h2>Manoeuvring &amp; station-keeping</h2>
+    <p class="lead">Low-speed ship controllability for a single-screw tanker &mdash; turning circle against
+    the IMO criteria, the minimum steerage speed by loading condition, and the rudder angle needed to
+    hold heading against a current with the engine on. Built on a researched rudder-type database and
+    the existing Nomoto / Whicker-Fehlner / S&ouml;ding-Brix physics.</p>
+    <div class="grid">
+      <a class="card" href="../hydro/rudder-maneuvering-explorer.html"><h3>Rudder &amp; low-speed manoeuvring explorer</h3><div class="std">IMO MSC.137(76) · Clarke 1983 · OCIMF</div><p>Interactive turning circle vs the 5&middot;L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and engine-on rudder angle to balance the current yaw moment.</p><span class="open">Open &rarr;</span></a>
+      <a class="card" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml"><h3>Rudder-type database</h3><div class="std">Molland &amp; Turnock · Brix · DNV/ABS</div><p>Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.</p><span class="open">Open &rarr;</span></a>
+    </div>
+  </section>
+
   <section class="chan" id="risers">
     <h2>Risers &amp; pipelines</h2>
     <p class="lead">OrcaFlex riser global-analysis verification &mdash; a validation report against reference
@@ -236,6 +249,10 @@
         <tr><td>Efthymiou T/Y chord saddle</td><td>β0.5 γ12 τ0.5 θ90 (long / short)</td><td class="val">6.21 / 4.755</td><td class="pub">DNV-RP-C203 App. B</td></tr>
         <tr><td>Corrugation section modulus</td><td>a=c=800, φ45, t15</td><td class="val">Z = 4.525×10⁶ mm³</td><td class="der">IACS CSR closed form</td></tr>
         <tr><td>2D river-bottom RSTRENG</td><td>24″ X52 grid (MAX projection)</td><td class="val">p_f = 1 969.2 psi</td><td class="der">RSTRENG effective-area</td></tr>
+        <tr><td>Clarke 1983 derivatives</td><td>SIROCCO laden (Cb 0.82) stability C</td><td class="val">−9.3×10⁻⁶ (unstable)</td><td class="der">Clarke/Gedling/Hine linear</td></tr>
+        <tr><td>Whicker-Fehlner lift slope</td><td>rudder AR 1.80 (behind hull)</td><td class="val">a = 3.77 / rad</td><td class="der">6.13·AR/(AR+2.25)</td></tr>
+        <tr><td>Turning circle (Nomoto)</td><td>SIROCCO 35° helm vs IMO 5·L</td><td class="val">TD = 3.21·L (PASS)</td><td class="der">R/L = 1/(K′·δ)</td></tr>
+        <tr><td>Steerage threshold</td><td>laden, 20 kn beam wind, coasting</td><td class="val">U_min ≈ 2.9 kn</td><td class="der">rudder-vs-wind balance</td></tr>
       </tbody>
     </table></div>
   </section>
