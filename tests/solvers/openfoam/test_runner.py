@@ -160,3 +160,31 @@ class TestStagedExecution:
         result = OpenFOAMRunner().run(case)
         assert result.status is OpenFOAMRunStatus.FAILED
         assert "FOAM FATAL ERROR" in result.stages[0].error_message
+
+    def test_benign_sigfpe_banner_is_not_an_error(self, tmp_path: Path, monkeypatch):
+        """Regression: OpenFOAM prints the FPE-trapping banner on EVERY successful
+        run; a substring match on 'Floating point exception' false-positived every
+        solve. rc=0 + banner must be COMPLETED, not FAILED."""
+        case = _make_case(tmp_path, application="simpleFoam")
+        # The exact line real blockMesh/solvers emit at startup.
+        banner = (
+            "Create time\n\n"
+            "trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).\n"
+            "...\nEnd\n"
+        )
+        self._patch(monkeypatch, returncode=0, stdout=banner)
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.COMPLETED, result.error_message
+        assert all(s.ok for s in result.stages)
+
+    def test_real_fpe_crash_caught_by_return_code(self, tmp_path: Path, monkeypatch):
+        """A genuine FPE crash aborts with a non-zero rc — still caught."""
+        case = _make_case(tmp_path)
+        self._patch(
+            monkeypatch,
+            returncode=136,  # 128 + SIGFPE(8)
+            stdout="trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).\n",
+        )
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert "136" in result.stages[0].error_message

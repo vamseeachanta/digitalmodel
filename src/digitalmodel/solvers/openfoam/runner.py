@@ -35,10 +35,14 @@ from pathlib import Path
 from typing import Optional
 
 # OpenFOAM utilities can return rc=0 yet write a fatal error to their log.
+# NOTE: do NOT add "Floating point exception" here — OpenFOAM's normal startup
+# banner prints "trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE)."
+# on EVERY successful run, so a substring match false-positives every solve. A
+# real FPE *crash* aborts the process with a non-zero return code, which the
+# return_code != 0 check below already catches.
 _ERROR_MARKERS = (
     "FOAM FATAL ERROR",
     "FOAM FATAL IO ERROR",
-    "Floating point exception",
 )
 # Divergence markers — present in solver logs when the solution blows up.
 _DIVERGENCE_MARKERS = ("bounding", "Maximum number of iterations exceeded")
