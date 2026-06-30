@@ -673,6 +673,14 @@ def engine(
         from digitalmodel.orcaflex.mooring_workflow import MooringMBLWorkflow
 
         cfg_base = MooringMBLWorkflow().router(cfg_base)
+    elif basename in ["openfoam", "cfd"]:
+        # digitalmodel #1161: route an OpenFOAM CFD case through the engine.
+        # Thin handler -- builds the case (OpenFOAMCaseBuilder) and optionally
+        # runs it (OpenFOAMRunner, fail-closed). NEW basename; the existing
+        # solver arms (ansys/aqwa/orcawave) are untouched.
+        from digitalmodel.solvers.openfoam.workflow import OpenFOAMWorkflow
+
+        cfg_base = OpenFOAMWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 

@@ -1,5 +1,6 @@
 """Solver use-case registry — the single source of truth for every analysis run
-we can prepare/dispatch across OrcaWave / AQWA / OrcaFlex / ANSYS (#938 b).
+we can prepare/dispatch across OrcaWave / AQWA / OrcaFlex / ANSYS / OpenFOAM
+(#938 b, OpenFOAM CFD added #1161).
 
 Load with :func:`load_usecases`; check integrity (ready entries must have a
 resolvable template, ids unique, solvers/readiness valid) with
@@ -18,7 +19,7 @@ import yaml
 REGISTRY_PATH = Path(__file__).with_name("registry.yaml")
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-SOLVERS = {"orcawave", "aqwa", "orcaflex", "ansys"}
+SOLVERS = {"orcawave", "aqwa", "orcaflex", "ansys", "openfoam"}
 READINESS = {"ready", "partial", "planned"}
 
 

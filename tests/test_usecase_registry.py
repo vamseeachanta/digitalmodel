@@ -27,12 +27,14 @@ def test_registry_is_internally_valid():
     assert issues == [], "registry integrity issues:\n" + "\n".join(issues)
 
 
-def test_all_four_solvers_present():
+def test_all_solvers_present():
     grouped = by_solver()
     assert set(grouped) == SOLVERS
     # AQWA + ANSYS are now in the registry (deployable programs #939/#940).
     assert grouped["aqwa"]
     assert grouped["ansys"]
+    # OpenFOAM CFD route is registered (engine basename openfoam/cfd, #1161).
+    assert grouped["openfoam"]
 
 
 def test_readiness_counts_cover_every_case():
