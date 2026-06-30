@@ -24,5 +24,26 @@
       "url": "https://vamseeachanta.github.io/digitalmodel/hydro/rao-comparison/"
     }
   ],
-  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow."
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Compare AQWA vs OrcaWave 6-DOF displacement RAOs for my vessel.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Compare AQWA vs OrcaWave 6-DOF displacement RAOs for my vessel."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "rao-tabulation"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/rao-tabulation/input.yml"
+    }
+  ]
 }

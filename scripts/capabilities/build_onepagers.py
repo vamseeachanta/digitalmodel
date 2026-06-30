@@ -241,6 +241,36 @@ WORKFLOW_MAP: dict[str, str] = {
     "riser-validation": "dnv-os-f201-riser",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
+_BOT = "https://t.me/the_deckhand_bot"
+
+# A ready-to-send natural-language "starting prompt" per live work — paste it to
+# @the_deckhand_bot (hermes routes NL to the workflow) or pass it as the body of
+# a workflow-API run. Keyed by spec id; works without a prompt fall back to a
+# generic ask built from the title.
+PROMPTS: dict[str, str] = {
+    "ffs-showcase": "Run an FFS remaining-strength assessment (API 579-1 / ASME B31G / DNV-RP-F101) on a corroded pipe and give me the inspector verdict.",
+    "ffs-field-dashboard": "Given my metal-loss measurements, tell me whether to accept, re-rate, take more measurements, or escalate.",
+    "buckling-plate": "Check ship plate buckling per DNV-RP-C201 for an 800x2400x14 mm panel under in-plane compression.",
+    "buckling-panel": "Check stiffened-panel buckling (plate / column / tripping) per DNV-RP-C201 for my scantlings.",
+    "rao-comparison": "Compare AQWA vs OrcaWave 6-DOF displacement RAOs for my vessel.",
+    "unitbox-report": "Run the unit-box 3-way diffraction benchmark across WAMIT, AQWA and OrcaWave.",
+    "unitbox-amplitude": "Show the RAO amplitude overlay for the unit-box 3-solver diffraction benchmark.",
+    "unitbox-phase": "Show the RAO phase overlay for the unit-box 3-solver diffraction benchmark.",
+    "unitbox-combined": "Show the combined amplitude-and-phase solver comparison for the unit-box benchmark.",
+    "unitbox-heatmap": "Show the cross-solver correlation heatmap for the unit-box diffraction benchmark.",
+    "ocimf": "Give me OCIMF MEG3/MEG4 wind and current coefficients for my heading and loading condition.",
+    "passing-ship": "Run the Wang (1975) passing-ship interaction benchmark - sway force and yaw moment.",
+    "riser-validation": "Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).",
+    "riser-mesh": "Run a riser mesh-density convergence study and quantify the discretisation effect on response.",
+    "subsea-xsection": "Generate a layer-by-layer offshore cable / umbilical / pipeline cross-section with envelope geometry.",
+    "installation-bokalift": "Assess crane-lift installation suitability and splash-zone weather windows for BokaLift 2.",
+    "rudder-explorer": "Check turning circle vs the IMO 5.L limit and the minimum steerage speed for my vessel.",
+    "rudder-database": "Show the rudder-type database with area ratios, aspect ratios and lift coefficients.",
+}
+
+
+def _prompt_for(spec: dict) -> str:
+    return PROMPTS.get(spec["id"], f"Run the digitalmodel {spec['title'].lower()} and send me the report.")
 
 
 def _report_url(spec: dict) -> str:
@@ -278,6 +308,21 @@ def _api_envelope(spec: dict) -> dict:
         env["outputs"] = [{"kind": "report", "url": report_url}]
         env["note"] = ("Published report surface — the deterministic output is served as a "
                        "self-contained page; GET the report_url to consume it.")
+    # Natural-language starting prompt + how-to-run, so users can fire it via the
+    # Deckhand bot (hermes routes NL → workflow) or the HTTP / CLI paths.
+    prompt = _prompt_for(spec)
+    env["prompt"] = prompt
+    how: list[dict] = [
+        {"via": "telegram", "bot": "@the_deckhand_bot", "deep_link": _BOT,
+         "step": f"Open @the_deckhand_bot and send: {prompt}"}
+    ]
+    if wf:
+        how.append({"via": "http", "step": "POST /api/run with a scoped bearer token",
+                    "body": env["request"]["body"]})
+        how.append({"via": "cli", "step": env["invocation"]})
+    else:
+        how.append({"via": "http", "step": f"GET {report_url}"})
+    env["how_to_run"] = how
     return env
 
 
@@ -320,6 +365,7 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   {figs}
   <h2>What you get</h2>
   <ul>{bullets}</ul>
+  {ask}
   <div class="foot">
     <div>digitalmodel · validated engineering solvers · governing-code provenance<br>
       <span class="live">Explore live: {live}</span></div>
@@ -352,10 +398,28 @@ _API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   iframe{{width:100%;height:560px;border:0;display:block;background:#fff}}
   .note{{color:var(--muted);font-size:12.5px;margin-top:6px}}
   a{{color:var(--navy)}}
+  .bigpanel{{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px}}
+  .bigpanel h2{{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}}
+  .prompt{{display:flex;gap:10px;align-items:flex-start}}
+  .prompt .q{{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;color:var(--ink)}}
+  .copy{{font:700 12px Arial;color:#fff;background:linear-gradient(135deg,#0f8a7e,#0B3D91);border:0;border-radius:9px;padding:10px 13px;cursor:pointer;white-space:nowrap}}
+  .how ol{{margin:8px 0 0 18px}} .how li{{font-size:13.5px;margin:7px 0;color:var(--ink)}}
+  .how code{{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}}
 </style></head>
 <body><div class="wrap">
   <div class="top">{logo}<div class="kind">Workflow-API · self-contained call</div></div>
   <h1>{title}</h1><div class="std">{std}</div>
+
+  <div class="bigpanel">
+    <h2>Starting prompt — fire it at Deckhand</h2>
+    <div class="prompt">
+      <div class="q" id="prompt">{prompt}</div>
+      <button class="copy" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(document.getElementById('prompt').innerText)">Copy</button>
+      <a class="copy" href="{bot}" style="text-decoration:none">Run on Deckhand &rarr;</a>
+    </div>
+    <div class="how"><h2 style="margin-top:14px">How to run the API</h2><ol>{howsteps}</ol></div>
+  </div>
+
   <div class="row">
     <div class="panel"><h2>Request — input</h2><span class="verb">{verb}</span>{reqsnippet}</div>
     <div class="panel"><h2>Response — ResultEnvelope</h2><pre>{envelope}</pre>
@@ -382,11 +446,16 @@ def _render_api_html(spec: dict, env: dict) -> str:
     else:
         verb = "GET"
         reqsnippet = f"<pre>curl -L {html.escape(report_url)}</pre>"
+    howsteps = ""
+    for step in env["how_to_run"]:
+        label = {"telegram": "Telegram", "http": "HTTP", "cli": "CLI"}.get(step["via"], step["via"])
+        howsteps += f"<li><b>{label}.</b> {html.escape(step['step'])}</li>"
     return _API_TEMPLATE.format(
         logo=_LOGO, title=html.escape(spec["title"]), std=html.escape(spec["std"]),
         verb=verb, reqsnippet=reqsnippet,
         envelope=html.escape(_json.dumps(env, indent=2)),
         id=spec["id"], note=html.escape(env["note"]), report_url=html.escape(report_url),
+        prompt=html.escape(env["prompt"]), bot=_BOT, howsteps=howsteps,
     )
 
 
@@ -401,9 +470,16 @@ def _render_html(spec: dict) -> str:
         figs = f'<div class="figs">{cells}</div>'
     bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
     live = _report_url(spec)
+    ask = ""
+    if spec["kind"] == "work":
+        ask = ('<div style="margin-top:18px;padding:11px 14px;background:var(--soft);'
+               'border:1px solid var(--line);border-radius:10px;font-size:12.5px">'
+               f'<b>Ask Deckhand:</b> &ldquo;{html.escape(_prompt_for(spec))}&rdquo; '
+               '&mdash; send to @the_deckhand_bot to run it live.</div>')
     return _TEMPLATE.format(
         logo=_LOGO, std=html.escape(spec["std"]), title=html.escape(spec["title"]),
         blurb=html.escape(spec["blurb"]), figs=figs, bullets=bullets, live=html.escape(live),
+        ask=ask,
     )
 
 

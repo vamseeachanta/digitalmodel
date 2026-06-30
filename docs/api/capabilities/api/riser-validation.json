@@ -24,5 +24,26 @@
       "url": "https://vamseeachanta.github.io/digitalmodel/orcaflex/riser-validation-report.html"
     }
   ],
-  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow."
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check)."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "dnv-os-f201-riser"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml"
+    }
+  ]
 }

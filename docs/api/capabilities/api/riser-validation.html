@@ -22,6 +22,13 @@
   iframe{width:100%;height:560px;border:0;display:block;background:#fff}
   .note{color:var(--muted);font-size:12.5px;margin-top:6px}
   a{color:var(--navy)}
+  .bigpanel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px}
+  .bigpanel h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .prompt{display:flex;gap:10px;align-items:flex-start}
+  .prompt .q{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;color:var(--ink)}
+  .copy{font:700 12px Arial;color:#fff;background:linear-gradient(135deg,#0f8a7e,#0B3D91);border:0;border-radius:9px;padding:10px 13px;cursor:pointer;white-space:nowrap}
+  .how ol{margin:8px 0 0 18px} .how li{font-size:13.5px;margin:7px 0;color:var(--ink)}
+  .how code{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}
 </style></head>
 <body><div class="wrap">
   <div class="top"><svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -94,6 +101,17 @@
   </g>
 </svg><div class="kind">Workflow-API · self-contained call</div></div>
   <h1>Riser validation report</h1><div class="std">OrcaFlex · tier-2 fast library</div>
+
+  <div class="bigpanel">
+    <h2>Starting prompt — fire it at Deckhand</h2>
+    <div class="prompt">
+      <div class="q" id="prompt">Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).</div>
+      <button class="copy" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(document.getElementById('prompt').innerText)">Copy</button>
+      <a class="copy" href="https://t.me/the_deckhand_bot" style="text-decoration:none">Run on Deckhand &rarr;</a>
+    </div>
+    <div class="how"><h2 style="margin-top:14px">How to run the API</h2><ol><li><b>Telegram.</b> Open @the_deckhand_bot and send: Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).</li><li><b>HTTP.</b> POST /api/run with a scoped bearer token</li><li><b>CLI.</b> uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml</li></ol></div>
+  </div>
+
   <div class="row">
     <div class="panel"><h2>Request — input</h2><span class="verb">POST /api/run</span><pre>curl -X POST https://api.deckhand/run \
   -H 'content-type: application/json' \
@@ -127,7 +145,28 @@
       &quot;url&quot;: &quot;https://vamseeachanta.github.io/digitalmodel/orcaflex/riser-validation-report.html&quot;
     }
   ],
-  &quot;note&quot;: &quot;Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.&quot;
+  &quot;note&quot;: &quot;Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.&quot;,
+  &quot;prompt&quot;: &quot;Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).&quot;,
+  &quot;how_to_run&quot;: [
+    {
+      &quot;via&quot;: &quot;telegram&quot;,
+      &quot;bot&quot;: &quot;@the_deckhand_bot&quot;,
+      &quot;deep_link&quot;: &quot;https://t.me/the_deckhand_bot&quot;,
+      &quot;step&quot;: &quot;Open @the_deckhand_bot and send: Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).&quot;
+    },
+    {
+      &quot;via&quot;: &quot;http&quot;,
+      &quot;step&quot;: &quot;POST /api/run with a scoped bearer token&quot;,
+      &quot;body&quot;: {
+        &quot;repo&quot;: &quot;digitalmodel&quot;,
+        &quot;workflow&quot;: &quot;dnv-os-f201-riser&quot;
+      }
+    },
+    {
+      &quot;via&quot;: &quot;cli&quot;,
+      &quot;step&quot;: &quot;uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml&quot;
+    }
+  ]
 }</pre>
       <a class="btn" href="riser-validation.json" download>Download envelope JSON &darr;</a></div>
   </div>
