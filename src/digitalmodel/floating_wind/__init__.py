@@ -32,6 +32,13 @@ from .reliability import (
     apply_reliability,
     lcoe_with_reliability,
 )
+from .sweep import (
+    LeverChange,
+    DriverScenario,
+    SweepRow,
+    apply_change,
+    run_sweep,
+)
 from .qualification import (
     DNV_TRL_MAX,
     trl_to_maturity,
@@ -66,6 +73,11 @@ __all__ = [
     "ReliabilityScenario",
     "apply_reliability",
     "lcoe_with_reliability",
+    "LeverChange",
+    "DriverScenario",
+    "SweepRow",
+    "apply_change",
+    "run_sweep",
     "DNV_TRL_MAX",
     "trl_to_maturity",
     "QualificationVerdict",
