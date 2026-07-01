@@ -965,6 +965,35 @@ def test_workflow_registry(workflow, monkeypatch):
         assert row["transverse_force_N"] == pytest.approx(97417.402886)
         assert row["yaw_moment_Nm"] == pytest.approx(-4383783.129880)
         assert row["sign_convention"] == "port"
+    elif workflow["id"] == "naval-arch-maneuvering-envelope":
+        block = cfg["naval_arch"]["maneuvering_envelope"]
+        assert cfg["naval_arch"]["calculation"] == "maneuvering_envelope"
+        meta = block["result"]["metadata"]
+        rows = block["result"]["rows"]
+
+        # Full-form tanker is marginally course-unstable; IMO turning passes.
+        assert meta["course_stability_discriminant"] < 0
+        assert meta["rudder_lift_slope_per_rad"] == pytest.approx(3.77, abs=0.02)
+        assert meta["tactical_diameter_over_L"] == pytest.approx(3.2, abs=0.1)
+        assert meta["imo_turning"]["overall_pass"] is True
+
+        assert len(rows) == 2  # 1 loading x 2 current speeds
+        r3 = next(r for r in rows if r["current_speed_kn"] == pytest.approx(3.0))
+        r5 = next(r for r in rows if r["current_speed_kn"] == pytest.approx(5.0))
+
+        # 3 kn beam current holdable on the engine; 5 kn beyond authority -> tug.
+        assert r3["can_hold_heading"] is True
+        assert r5["can_hold_heading"] is False
+        assert r5["required_rudder_angle_deg"] is None
+        assert r3["utilisation"] < 1.0 < r5["utilisation"]
+        # Current yaw moment is quadratic in current speed.
+        assert r5["current_yaw_moment_MNm"] / r3["current_yaw_moment_MNm"] == pytest.approx(
+            (5.0 / 3.0) ** 2, rel=1e-6
+        )
+        # Frozen deterministic values.
+        assert r3["threshold_speed_engine_on_kn"] == pytest.approx(1.9054868442)
+        assert r3["current_yaw_moment_MNm"] == pytest.approx(37.864787106557)
+        assert r3["required_rudder_angle_deg"] == pytest.approx(33.407753387878)
     elif workflow["id"] == "rudder-stock-torque":
         row = cfg["naval_arch"]["rudder_stock_torque"]["result"]["rows"][0]
         assert cfg["naval_arch"]["calculation"] == "rudder_stock_torque"
