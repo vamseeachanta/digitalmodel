@@ -51,6 +51,20 @@ from .qualification import (
     rank_concepts,
     default_criteria,
 )
+from .tradespace_economics import (
+    LCOE_METRIC_KEY,
+    variant_lcoe,
+    mean_steel_mass_t,
+    lcoe_records,
+    pareto_front_with_lcoe,
+)
+from .economics_report import (
+    LCOEDataSheetData,
+    lcoe_data_sheet,
+    render_lcoe_data_sheet_html,
+    write_lcoe_data_sheet,
+)
+from .economics_workflow import FloatingWindEconomicsWorkflow
 
 __all__ = [
     "RHO_SEAWATER",
@@ -88,4 +102,14 @@ __all__ = [
     "score_concept",
     "rank_concepts",
     "default_criteria",
+    "LCOE_METRIC_KEY",
+    "variant_lcoe",
+    "mean_steel_mass_t",
+    "lcoe_records",
+    "pareto_front_with_lcoe",
+    "LCOEDataSheetData",
+    "lcoe_data_sheet",
+    "render_lcoe_data_sheet_html",
+    "write_lcoe_data_sheet",
+    "FloatingWindEconomicsWorkflow",
 ]
