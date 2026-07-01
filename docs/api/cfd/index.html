@@ -43,13 +43,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">2 / 2 foundational cases verified against classical benchmarks</span></p>
+<p style="margin-top:14px"><span class="badge">3 / 3 verification cases across laminar + turbulent regimes</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body</span></div>
-<div><b>Cases verified</b><span class="good">2 / 2</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS</span></div>
+<div><b>Cases verified</b><span class="good">3 / 3</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -94,6 +94,16 @@ reports.</p>
 <td class="good">&minus;0.5%</td>
 <td><a href="cylinder-re100-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Turbulent flat plate (k-&omega; SST)<br><span class="sub">#1168</span></td>
+<td>Turbulent boundary layer (RANS)</td>
+<td>simpleFoam + kOmegaSST</td>
+<td>Skin friction C<sub>f</sub> + law of the wall</td>
+<td>law of the wall captured;<br>C<sub>f</sub> within ~9% of correlations</td>
+<td>Prandtl/Schlichting turbulent C<sub>f</sub>;<br>universal log law</td>
+<td class="good">~9%</td>
+<td><a href="turbulent-flat-plate-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -133,18 +143,27 @@ O-grid (not snappyHexMesh) keeps wall shear accurate, giving C<sub>d</sub> withi
 grid-aligned symmetric setup suppresses shedding, so the freestream is tilted <b>5&deg;</b> to seed
 it &mdash; a circle is rotationally symmetric, so C<sub>d</sub> and St are unchanged. Strouhal is
 extracted from lift zero-crossings because the FFT bin is too coarse.</div>
+<div class="callout key"><b>Turbulent flat plate &mdash; resolved to the wall.</b> Meshed to
+y+&nbsp;&asymp;&nbsp;0.13 (viscous sublayer, no wall functions bridging the gap); the k-&omega; SST
+profile collapses onto the universal law of the wall (sublayer&nbsp;+&nbsp;log law&nbsp;+&nbsp;wake).
+The residual ~9% C<sub>f</sub> offset vs the empirical correlations sits within their own 5&ndash;10%
+mutual scatter and the resolved near-leading-edge transition; the law-of-the-wall collapse is the
+stronger verification.</div>
 
 <h2>5&nbsp;&nbsp;Reproduce</h2>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
-(<code>flat_plate_blasius</code>, <code>cylinder_re100</code>) with a generator script and a README.
+(<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>) with a
+generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
 <h2>6&nbsp;&nbsp;Provenance &amp; roadmap</h2>
-<p>This suite is part of the digitalmodel <b>CFD epic&nbsp;#1161</b>, covering the two foundational
-verification cases: <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder). Remaining work:</p>
+<p>This suite is part of the digitalmodel <b>CFD epic&nbsp;#1161</b>, covering the foundational
+verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder) plus the first turbulent
+case <b>#1168</b> (turbulent flat plate, k-&omega; SST) &mdash; <b>now done</b>, so the turbulent
+milestone is reached. Remaining work:</p>
 <ul>
-<li>Aero / marine validation backlog (<b>#1168&ndash;#1177</b>).</li>
+<li>Aero / marine validation backlog (<b>#1169&ndash;#1177</b>).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
 <li>Provenance run-index across verified cases.</li>
 </ul>
