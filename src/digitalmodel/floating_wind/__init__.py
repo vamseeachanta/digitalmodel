@@ -27,6 +27,30 @@ from .economics import (
     compute_lcoe,
     base_case,
 )
+from .reliability import (
+    ReliabilityScenario,
+    apply_reliability,
+    lcoe_with_reliability,
+)
+from .sweep import (
+    LeverChange,
+    DriverScenario,
+    SweepRow,
+    apply_change,
+    run_sweep,
+)
+from .qualification import (
+    DNV_TRL_MAX,
+    trl_to_maturity,
+    QualificationVerdict,
+    Criterion,
+    QualificationCriteria,
+    ConceptMaturity,
+    QualificationResult,
+    score_concept,
+    rank_concepts,
+    default_criteria,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -46,4 +70,22 @@ __all__ = [
     "LCOEResult",
     "compute_lcoe",
     "base_case",
+    "ReliabilityScenario",
+    "apply_reliability",
+    "lcoe_with_reliability",
+    "LeverChange",
+    "DriverScenario",
+    "SweepRow",
+    "apply_change",
+    "run_sweep",
+    "DNV_TRL_MAX",
+    "trl_to_maturity",
+    "QualificationVerdict",
+    "Criterion",
+    "QualificationCriteria",
+    "ConceptMaturity",
+    "QualificationResult",
+    "score_concept",
+    "rank_concepts",
+    "default_criteria",
 ]
