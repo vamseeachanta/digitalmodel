@@ -1,0 +1,17 @@
+generated_by: scripts/riser_database/build_tables.py
+issue: 1245
+route: public
+sources_spec: scripts/riser_database/sources.yml
+tables:
+  config_catalog:
+    file: config_catalog.csv
+    rows: 27
+    sha256: 3f457b9ddff20181406512bc10a69a006ee851c141f4b310ce0b0fc78f48959a
+  material_sn_scf_dff:
+    file: material_sn_scf_dff.csv
+    rows: 3
+    sha256: 121a4d08df0a271b12e59ba8344893dd6aa71fc310a09d4c8b2bed3509a98c2f
+  standards_crosswalk:
+    file: standards_crosswalk.csv
+    rows: 4
+    sha256: 5f0c5d7b58425e328c6f10be158eb23f09a378e06a22cc51cf908657918dc3eb
