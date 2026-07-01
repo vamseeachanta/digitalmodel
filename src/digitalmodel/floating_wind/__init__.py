@@ -27,6 +27,13 @@ from .economics import (
     compute_lcoe,
     base_case,
 )
+from .sweep import (
+    LeverChange,
+    DriverScenario,
+    SweepRow,
+    apply_change,
+    run_sweep,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -46,4 +53,9 @@ __all__ = [
     "LCOEResult",
     "compute_lcoe",
     "base_case",
+    "LeverChange",
+    "DriverScenario",
+    "SweepRow",
+    "apply_change",
+    "run_sweep",
 ]
