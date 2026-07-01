@@ -27,6 +27,11 @@ from .economics import (
     compute_lcoe,
     base_case,
 )
+from .reliability import (
+    ReliabilityScenario,
+    apply_reliability,
+    lcoe_with_reliability,
+)
 from .qualification import (
     DNV_TRL_MAX,
     trl_to_maturity,
@@ -58,6 +63,9 @@ __all__ = [
     "LCOEResult",
     "compute_lcoe",
     "base_case",
+    "ReliabilityScenario",
+    "apply_reliability",
+    "lcoe_with_reliability",
     "DNV_TRL_MAX",
     "trl_to_maturity",
     "QualificationVerdict",
