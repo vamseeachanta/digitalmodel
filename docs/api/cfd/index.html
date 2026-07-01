@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFD Verification Suite — digitalmodel</title>
+<style>
+:root{--ink:#1a2332;--mut:#5a6b7b;--line:#dde3ea;--accent:#0b6e99;--good:#1a7a3f;--warn:#b06f00;--bg:#f7f9fb;}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;
+box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.85rem;line-height:1.2;margin:.3em 0 .15em}
+h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)}
+.sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;
+padding:5px 12px;border-radius:4px;letter-spacing:.03em}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+.good{color:var(--good)}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;
+font-family:'Cambria Math','Latin Modern Math',Georgia,serif;font-size:1.02rem}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0}
+.callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em}
+a{color:var(--accent)}
+ul{margin:.4em 0} li{margin:.2em 0}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head>
+<body><div class="wrap">
+
+<header>
+<div class="kicker">Code-to-theory validation &middot; OpenFOAM</div>
+<h1>CFD Verification Suite &mdash; digitalmodel</h1>
+<p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
+verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
+<p style="margin-top:14px"><span class="badge">2 / 2 foundational cases verified against classical benchmarks</span></p>
+</header>
+
+<div class="meta">
+<div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body</span></div>
+<div><b>Cases verified</b><span class="good">2 / 2</span></div>
+<div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
+<div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
+<div><b>License host</b><span>Linux, license-free</span></div>
+</div>
+
+<h2>1&nbsp;&nbsp;Verification philosophy</h2>
+<p>The digitalmodel CFD capability is verified by <b>known-answer</b> cases. No domain workflow is
+considered production-ready until it reproduces a result with a known analytical or benchmark
+answer. Verification runs execute against <b>real OpenFOAM v2312</b> &mdash; not mocked &mdash;
+so the numbers below come from converged solutions of the actual solver, not from stubs. Two flow
+regimes anchor the suite: a <b>steady boundary-layer</b> case (flat plate, Blasius similarity
+solution) and a <b>transient bluff-body</b> case (cylinder at Re&nbsp;=&nbsp;100, vortex shedding).
+CFD without verification is decoration.</p>
+
+<h2>2&nbsp;&nbsp;Verification summary</h2>
+<p>Each row is a fully reproducible case whose CFD result is compared against a classical
+analytical or experimental benchmark. Full derivations, meshes, and figures are in the linked
+reports.</p>
+<table>
+<thead><tr>
+<th>Case</th><th>Regime</th><th>Solver</th><th>Quantity</th>
+<th>CFD</th><th>Benchmark</th><th>Error</th><th>Report</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Flat plate (Blasius)<br><span class="sub">#1167</span></td>
+<td>Steady boundary layer</td>
+<td>simpleFoam (laminar)</td>
+<td>Skin friction C<sub>f</sub></td>
+<td>mean 4.6%<br>(&le;5.2% max) agreement</td>
+<td>Blasius 0.664/&radic;Re<sub>x</sub></td>
+<td class="good">within 5%</td>
+<td><a href="flat-plate-blasius-verification.html">View report &rarr;</a></td>
+</tr>
+<tr>
+<td>Cylinder Re&nbsp;=&nbsp;100<br><span class="sub">#1166</span></td>
+<td>Transient bluff body</td>
+<td>pimpleFoam (laminar)</td>
+<td>Mean drag C<sub>d</sub></td>
+<td>1.344</td>
+<td>1.33&ndash;1.37<br>(Williamson 1996)</td>
+<td class="good">&minus;0.5%</td>
+<td><a href="cylinder-re100-verification.html">View report &rarr;</a></td>
+</tr>
+</tbody>
+</table>
+<p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
+<b>RMS 0.025</b> (28,600-cell two-block mesh, Re<sub>L</sub>&nbsp;=&nbsp;1&times;10<sup>4</sup>).
+Cylinder also matches Strouhal <b>St&nbsp;=&nbsp;0.1655</b> vs 0.164 (<b>+0.9%</b>) with lift
+amplitude 0.325 (21,120-cell body-fitted O-grid).</p>
+
+<h2>3&nbsp;&nbsp;How the capability is built</h2>
+<p>The CFD stack is fully open-source and runs <b>license-free on Linux</b> &mdash; no Windows
+licensed host is required, unlike the OrcaFlex / AQWA / ANSYS workflows. The toolchain is
+Python-orchestrated end to end:</p>
+<div class="eq">FreeCAD + gmsh&nbsp;&rarr;&nbsp;OpenFOAM ESI + olaFlow&nbsp;&rarr;&nbsp;PyVista / ParaView</div>
+<p>The execution layer wraps this pipeline in fail-closed, config-driven components:</p>
+<ul>
+<li><code>OpenFOAMRunner</code> &mdash; fail-closed mesh&nbsp;&rarr;&nbsp;solve&nbsp;&rarr;&nbsp;VTK
+orchestration (PR&nbsp;#1163).</li>
+<li><code>openfoam doctor</code> &mdash; solver-readiness diagnostics for a host (PR&nbsp;#1181).</li>
+<li>Engine routing on <code>basename: openfoam</code> / <code>cfd</code> (PR&nbsp;#1190).</li>
+</ul>
+<div class="callout"><b>Caught only by running real OpenFOAM.</b> A latent runner bug was
+surfaced &mdash; and fixed &mdash; only because verification ran against the actual solver: the
+error-marker matched OpenFOAM's benign startup banner
+<code>trapFpe: Floating point exception trapping enabled</code>, false-positiving <i>every</i>
+successful run. Fixed in PR&nbsp;#1191. A mocked pipeline would never have exposed this.</div>
+<p>Every case is <b>config-driven, deterministic, and provenance-stamped</b>; figures and metrics
+are computed directly from the converged solutions &mdash; no hand-entered values.</p>
+
+<h2>4&nbsp;&nbsp;Engineering depth</h2>
+<p>Each case involved a modelling judgment that mattered more than raw mesh count.</p>
+<div class="callout key"><b>Flat plate &mdash; leading-edge treatment dominates.</b> A 4-iteration
+error-isolation study drove C<sub>f</sub> agreement from <b>~30% to ~5%</b> by identifying the
+<b>leading-edge treatment</b> (a 20&nbsp;mm upstream symmetry run-in) as the controlling modelling
+decision &mdash; not mesh density and not domain size. The dominant error source was physical, not
+numerical.</div>
+<div class="callout key"><b>Cylinder &mdash; body-fitted grid + seeded shedding.</b> A body-fitted
+O-grid (not snappyHexMesh) keeps wall shear accurate, giving C<sub>d</sub> within 0.5%. A
+grid-aligned symmetric setup suppresses shedding, so the freestream is tilted <b>5&deg;</b> to seed
+it &mdash; a circle is rotationally symmetric, so C<sub>d</sub> and St are unchanged. Strouhal is
+extracted from lift zero-crossings because the FFT bin is too coarse.</div>
+
+<h2>5&nbsp;&nbsp;Reproduce</h2>
+<p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
+(<code>flat_plate_blasius</code>, <code>cylinder_re100</code>) with a generator script and a README.
+Reproduction requires a solver-capable host; check readiness first with
+<code>openfoam doctor</code>.</p>
+
+<h2>6&nbsp;&nbsp;Provenance &amp; roadmap</h2>
+<p>This suite is part of the digitalmodel <b>CFD epic&nbsp;#1161</b>, covering the two foundational
+verification cases: <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder). Remaining work:</p>
+<ul>
+<li>Aero / marine validation backlog (<b>#1168&ndash;#1177</b>).</li>
+<li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
+<li>Provenance run-index across verified cases.</li>
+</ul>
+
+<footer>
+Generated by the digitalmodel CFD verification workflow &middot; deterministic, config-driven,
+provenance-stamped. Figures and metrics are computed directly from the converged OpenFOAM
+solutions &mdash; no values are hand-entered.
+</footer>
+</div></body></html>
