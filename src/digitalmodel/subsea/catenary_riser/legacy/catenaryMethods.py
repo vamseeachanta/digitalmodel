@@ -48,9 +48,6 @@ def catenaryEquation(data):
 
         return data
 
-    elif data["X"] != None:
-        raise NotImplementedError("Not implemented yet")
-
     elif data["q"] != None:
         tanq = math.tan(math.radians(90 - data["q"]))
         BendRadius = (
@@ -64,6 +61,11 @@ def catenaryEquation(data):
         data.update({"S": S, "X": X, "BendRadius": BendRadius})
 
         return data
+
+    # The X-driven branch is unimplemented; keep it LAST so a re-invocation on a
+    # dict whose "X" was populated by the q-branch above still resolves via q.
+    elif data["X"] != None:
+        raise NotImplementedError("Not implemented yet")
 
 
 def catenaryForces(data):

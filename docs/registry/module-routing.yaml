@@ -320,3 +320,21 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well_access/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#well_access
+  - module: common
+    entry_point: src/digitalmodel/common/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/common/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#common
+  - module: materials
+    entry_point: src/digitalmodel/materials/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/materials/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
+  - module: workflow_api
+    entry_point: src/digitalmodel/workflow_api/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/workflow_api/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#workflow_api

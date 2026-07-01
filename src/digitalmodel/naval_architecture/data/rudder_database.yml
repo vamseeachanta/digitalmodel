@@ -143,3 +143,169 @@ worked_example_sirocco:
   loading_notes:
     laden: Full rudder immersion; maximum control authority; lowest steerage threshold.
     ballast: Reduced rudder immersion + propeller emergence; effective area ~35 m2 (~78%); higher windage. Stern trim used to restore immersion.
+
+# Seed vessels for the manoeuvring explorer's vessel picker + type illustration.
+# tag: PUB = published/benchmark value ; EST = engineering estimate.
+# rudder_projected_area_m2 for EST vessels ~= DNV rule (Lpp*T/100)(1+25(B/Lpp)^2).
+# Ballast drafts, unpublished Cb, and rudder spans are estimates. Two benchmark
+# hulls (Esso Osaka, KVLCC2) carry published geometry. No client/project vessels.
+seed_vessels:
+  - id: esso_osaka
+    display_name: Esso Osaka
+    vessel_class: VLCC crude tanker (278,000 dwt) — classic manoeuvring benchmark
+    lbp_m: 325.0            # PUB
+    beam_m: 53.0            # PUB
+    draft_laden_m: 21.79    # PUB (full load, even keel)
+    draft_ballast_m: 9.0    # EST
+    Cb: 0.831              # PUB
+    rudder_type: semi_balanced_horn      # PUB (Mariner-type horn rudder)
+    rudder_projected_area_m2: 119.8      # PUB (Crane 1979; DNV-rule cross-check 117.9, -1.6%)
+    rudder_span_m: 12.0                  # EST
+    single_screw: true                   # PUB
+    source: "Crane (1979) full-scale trials; ITTC 23rd/24th Manoeuvring Committee benchmark"
+  - id: kvlcc2
+    display_name: KVLCC2 (MOERI benchmark hull)
+    vessel_class: VLCC crude tanker (~300,000 dwt) — SIMMAN benchmark
+    lbp_m: 320.0           # PUB
+    beam_m: 58.0           # PUB
+    draft_laden_m: 20.8    # PUB (design)
+    draft_ballast_m: 8.5   # EST
+    Cb: 0.8098             # PUB
+    rudder_type: semi_balanced_horn      # PUB (horn rudder)
+    rudder_projected_area_m2: 136.7      # PUB (movable/lateral area; NOT the 273.3 total wetted surface)
+    rudder_span_m: 15.0                  # EST
+    single_screw: true                   # PUB
+    source: "MOERI / SIMMAN 2008/2014 benchmark data"
+  - id: suezmax_crude
+    display_name: Suezmax crude tanker (representative)
+    vessel_class: Suezmax crude tanker (~157,000 dwt)
+    lbp_m: 264.0           # EST
+    beam_m: 48.0           # EST
+    draft_laden_m: 17.0    # EST
+    draft_ballast_m: 8.0   # EST
+    Cb: 0.84              # EST
+    rudder_type: semi_balanced_horn
+    rudder_projected_area_m2: 82.0       # EST (DNV rule)
+    rudder_span_m: 10.5                  # EST
+    single_screw: true
+    source: "Class-typical Suezmax particulars; rudder area = DNV area rule"
+  - id: aframax_crude
+    display_name: Aframax crude tanker (representative)
+    vessel_class: Aframax crude tanker (~110,000 dwt)
+    lbp_m: 239.0           # EST
+    beam_m: 44.0           # EST
+    draft_laden_m: 14.9    # EST
+    draft_ballast_m: 7.5   # EST
+    Cb: 0.83              # EST
+    rudder_type: spade
+    rudder_projected_area_m2: 66.0       # EST (DNV rule)
+    rudder_span_m: 9.5                   # EST
+    single_screw: true
+    source: "Class-typical Aframax particulars; rudder area = DNV area rule"
+  - id: lr1_product_tanker
+    display_name: LR1 / Panamax product tanker (representative)
+    vessel_class: LR1 (Panamax) product/crude tanker (~74,000 dwt)
+    lbp_m: 225.0           # EST
+    beam_m: 32.2           # EST (Panamax beam limit)
+    draft_laden_m: 12.5    # EST
+    draft_ballast_m: 7.0   # EST
+    Cb: 0.82              # EST
+    rudder_type: spade
+    rudder_projected_area_m2: 43.0       # EST (DNV rule)
+    rudder_span_m: 8.5                   # EST
+    single_screw: true
+    source: "Class-typical LR1/Panamax product-tanker particulars; rudder area = DNV area rule"
+  - id: handysize_product_tanker
+    display_name: Handysize product tanker (representative)
+    vessel_class: Handysize/MR product tanker (~37,000-40,000 dwt)
+    lbp_m: 176.0           # EST
+    beam_m: 27.4           # EST
+    draft_laden_m: 11.0    # EST
+    draft_ballast_m: 6.0   # EST
+    Cb: 0.80              # EST
+    rudder_type: spade
+    rudder_projected_area_m2: 31.0       # EST (DNV rule)
+    rudder_span_m: 7.0                   # EST
+    single_screw: true
+    source: "Class-typical Handysize/MR particulars; rudder area = DNV area rule"
+  - id: capesize_bulker
+    display_name: Capesize bulk carrier (representative)
+    vessel_class: Capesize bulk carrier (~180,000 dwt)
+    lbp_m: 279.0           # EST
+    beam_m: 45.0           # EST
+    draft_laden_m: 18.2    # EST
+    draft_ballast_m: 8.5   # EST
+    Cb: 0.85              # EST
+    rudder_type: semi_balanced_horn
+    rudder_projected_area_m2: 84.0       # EST (DNV rule)
+    rudder_span_m: 10.5                  # EST
+    single_screw: true
+    source: "Class-typical Capesize particulars; rudder area = DNV area rule"
+  - id: post_panamax_container
+    display_name: Post-Panamax container ship (representative)
+    vessel_class: Post-Panamax container ship (~8,000-8,500 TEU)
+    lbp_m: 320.0           # EST
+    beam_m: 42.8           # EST
+    draft_laden_m: 14.5    # EST
+    draft_ballast_m: 9.0   # EST
+    Cb: 0.65              # EST
+    rudder_type: twisted_leading_edge
+    rudder_projected_area_m2: 67.0       # EST (DNV rule)
+    rudder_span_m: 11.0                  # EST
+    single_screw: true
+    source: "Class-typical Post-Panamax container-ship particulars; rudder area = DNV area rule"
+  - id: gate_rudder_feeder
+    display_name: Feeder container ship with gate rudder (Shigenobu-type)
+    vessel_class: Coastal/feeder container ship, GATE RUDDER-fitted
+    lbp_m: 165.0           # EST
+    beam_m: 27.0           # EST
+    draft_laden_m: 8.6     # EST
+    draft_ballast_m: 5.5   # EST
+    Cb: 0.68              # EST
+    rudder_type: gate_rudder             # real ship "Shigenobu" (2017); blade particulars EST
+    rudder_projected_area_m2: 30.0       # EST (two blades combined)
+    rudder_span_m: 6.5                   # EST (per blade)
+    single_screw: true
+    source: "Shigenobu (2017, first newbuild gate-rudder ship) / EU GATERS project; blade particulars ESTIMATED"
+    note: "Gate rudder provides system side force + thrust vectoring; bare-rudder lift slope under-predicts its low-speed authority."
+  - id: ropax_ferry
+    display_name: Large ROPAX ferry (representative)
+    vessel_class: ROPAX ferry (~210 m LOA), high-lift flap rudders
+    lbp_m: 195.0           # EST
+    beam_m: 30.5           # EST
+    draft_laden_m: 7.1     # EST
+    draft_ballast_m: 6.3   # EST
+    Cb: 0.60              # EST
+    rudder_type: flap_becker
+    rudder_projected_area_m2: 14.0       # EST (per rudder; twin-rudder installation)
+    rudder_span_m: 5.5                   # EST
+    single_screw: false                  # typically twin-screw + twin flap rudders
+    source: "Class-typical large ROPAX; twin-screw/twin high-lift flap rudder; area = EST"
+    note: "Twin-screw/twin-rudder; the single-screw engine-on heading-hold model does not map one-to-one."
+  - id: escort_tug_schilling
+    display_name: Escort/ship-handling tug (Schilling rudder)
+    vessel_class: Single-screw harbour/escort tug (~28 m), high-lift Schilling rudder
+    lbp_m: 28.0            # EST
+    beam_m: 9.5            # EST
+    draft_laden_m: 4.2     # EST
+    draft_ballast_m: 4.0   # EST
+    Cb: 0.56              # EST
+    rudder_type: schilling
+    rudder_projected_area_m2: 5.5        # EST
+    rudder_span_m: 2.6                   # EST
+    single_screw: true
+    source: "Class-typical single-screw ship-handling tug w/ Schilling high-lift rudder; area = EST"
+  - id: harbour_tug_nozzle
+    display_name: Harbour tug (Kort nozzle)
+    vessel_class: Single-screw harbour/berthing tug (~26 m), propeller in Kort nozzle
+    lbp_m: 26.0            # EST
+    beam_m: 8.5            # EST
+    draft_laden_m: 3.8     # EST
+    draft_ballast_m: 3.6   # EST
+    Cb: 0.55              # EST
+    rudder_type: kort_nozzle
+    rudder_projected_area_m2: 4.0        # EST (rudder behind nozzle)
+    rudder_span_m: 2.2                   # EST
+    single_screw: true
+    source: "Class-typical single-screw ducted (Kort 19A) harbour tug; area = EST"
+    note: "Ducted system side force differs from bare-rudder lift; low-speed authority is under-predicted."

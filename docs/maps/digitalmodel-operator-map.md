@@ -53,6 +53,9 @@ of duplicating its detailed issue history.
 | `workflows` | `src/digitalmodel/workflows/` | `tests/workflows/` | `docs/domains/workflows/` | Multi-step issue workflows and agent/solver orchestration | repo workflow conventions |
 | `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
 | `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
+| `common` | `src/digitalmodel/common/` | `tests/common/` | `docs/domains/README.md` | Shared assumption-ledger and spec-authoring helpers | PyYAML |
+| `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
+| `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
 | `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
 | `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
 | `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |

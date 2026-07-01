@@ -54,10 +54,16 @@
   <div class="sub">Low-speed turning, threshold speed &amp; heading-hold under current</div>
 
   <div class="ctl">
+    <label>Vessel</label>
+    <select id="sel-vessel" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:12.5px;font-weight:600"></select>
+    <div class="sub" id="vessel-meta" style="margin:5px 0 0"></div>
+  </div>
+
+  <div class="ctl">
     <label>Loading condition</label>
     <div class="seg" id="seg-load">
-      <button data-load="laden" class="on">Laden (T 12.2 m)</button>
-      <button data-load="ballast">Ballast (T 7 m)</button>
+      <button data-load="laden" class="on">Laden <span id="lbl-laden"></span></button>
+      <button data-load="ballast">Ballast <span id="lbl-ballast"></span></button>
     </div>
   </div>
 
@@ -94,7 +100,8 @@
 <main>
   <div class="hero">
     <h2>Low-speed manoeuvring &amp; station-keeping explorer</h2>
-    <p>For a representative single-screw tanker (Lpp ≈ 225 m, beam ≈ 32 m, laden draft ≈ 12 m).
+    <p>Pick a vessel in the sidebar — from a VLCC to a harbour tug (two are published
+    manoeuvring-benchmark hulls; the rest are class-typical estimates).
     Answers three operational questions —
     <b>can I turn within the channel?</b> (turning circle vs the IMO 5L limit),
     <b>do I still have steerage?</b> (threshold speed vs wind, by loading),
@@ -119,7 +126,10 @@
     engine-on rudder authority from the Söding/Brix slipstream model
     (yaw ∝ C<sub>rp</sub>·F<sub>prop</sub>·[1+1/√(1+C<sub>th</sub>)]·sinδ);
     current load from the OCIMF form N = C<sub>XYc</sub>·½ρV<sub>c</sub>²·L²·T, F<sub>y</sub> = C<sub>Yc</sub>·½ρV<sub>c</sub>²·L·T.
-    Not a class/IMO compliance proof and not a full MMG/6-DOF model.
+    Not a class/IMO compliance proof and not a full MMG/6-DOF model. Per-vessel K'
+    (turning), windage and ballast rudder-emergence are screening estimates derived
+    from each vessel's geometry. Ducted/gate/twin-rudder vessels carry system side
+    force the bare-rudder lift slope under-predicts.
     Source: <code>naval_architecture/maneuvering_envelope.py</code> and <code>data/rudder_database.yml</code>.
   </div>
 </main>
@@ -127,14 +137,43 @@
 <script>
 // ---- Constants & reference-tanker particulars (generic ~225 m single-screw tanker) ----
 const KN = 0.514444, RHO_W = 1025, RHO_AIR = 1.225, DEG = Math.PI/180;
-const L = 225.5, B = 32.26, X_R = 0.6*L;          // Barrass rudder lever 135.3 m
-const KP_LADEN = 1.02;                             // calibrated Nomoto K' (laden, 35deg -> TD/L 3.2)
-const C_RP = 0.5, T_DED = 0.2, W_WAKE = 0.25, D_PROP = 7.0; // propulsion
+const C_RP = 0.5, T_DED = 0.2, W_WAKE = 0.25, D_PROP = 7.0; // nominal single-screw propulsion
 const KT = [0.35, -0.30];                          // K_T = 0.35 - 0.30 J  (representative)
-const COND = {
-  laden:   {T:12.2, A_Re:44.94, span:9.0, A_L:2200, label:'Laden'},
-  ballast: {T:7.0,  A_Re:35.0,  span:8.0, A_L:3500, label:'Ballast'}
+
+// Vessel library (geometry from research; benchmark hulls carry published data,
+// others are class-typical estimates — see rudder_database.yml seed_vessels).
+// Derived screening quantities (K', windage A_L, ballast effective rudder area)
+// are computed from the geometry below via documented rules in applyVessel().
+const VESSELS = {
+  generic:      {name:'Generic single-screw tanker (~225 m)', L:225.5,area:44.94,span:9.0,Tlad:12.2,Tbal:7.0,type:'spade / semi-balanced'},
+  esso_osaka:   {name:'Esso Osaka — VLCC (benchmark)',        L:325.0,area:119.8,span:12.0,Tlad:21.8,Tbal:9.0,type:'semi-balanced horn', bench:true},
+  kvlcc2:       {name:'KVLCC2 — VLCC (benchmark)',            L:320.0,area:136.7,span:15.0,Tlad:20.8,Tbal:8.5,type:'semi-balanced horn', bench:true},
+  suezmax:      {name:'Suezmax crude tanker',                 L:264.0,area:82.0,span:10.5,Tlad:17.0,Tbal:8.0,type:'semi-balanced horn'},
+  aframax:      {name:'Aframax crude tanker',                 L:239.0,area:66.0,span:9.5,Tlad:14.9,Tbal:7.5,type:'spade'},
+  lr1:          {name:'LR1 / Panamax product tanker',         L:225.0,area:43.0,span:8.5,Tlad:12.5,Tbal:7.0,type:'spade'},
+  handysize:    {name:'Handysize product tanker',             L:176.0,area:31.0,span:7.0,Tlad:11.0,Tbal:6.0,type:'spade'},
+  capesize:     {name:'Capesize bulk carrier',                L:279.0,area:84.0,span:10.5,Tlad:18.2,Tbal:8.5,type:'semi-balanced horn'},
+  container:    {name:'Post-Panamax container ship',          L:320.0,area:67.0,span:11.0,Tlad:14.5,Tbal:9.0,type:'twisted spade'},
+  gate:         {name:'Feeder w/ gate rudder (Shigenobu-type)',L:165.0,area:30.0,span:6.5,Tlad:8.6,Tbal:5.5,type:'gate rudder', sys:true},
+  ropax:        {name:'ROPAX ferry (twin-screw)',             L:195.0,area:14.0,span:5.5,Tlad:7.1,Tbal:6.3,type:'flap / Becker', twin:true},
+  tug_schilling:{name:'Escort tug (Schilling)',               L:28.0,area:5.5,span:2.6,Tlad:4.2,Tbal:4.0,type:'Schilling', sys:true},
+  tug_nozzle:   {name:'Harbour tug (Kort nozzle)',            L:26.0,area:4.0,span:2.2,Tlad:3.8,Tbal:3.6,type:'Kort nozzle', sys:true},
 };
+// Mutable per-vessel state (set by applyVessel).
+let L, X_R, KP, COND, VESSEL;
+function applyVessel(id){
+  const v = VESSELS[id]; VESSEL = v;
+  L = v.L; X_R = 0.6 * v.L;                          // Barrass rudder lever ~0.6 Lpp
+  const arRatio = v.area / (v.L * v.Tlad);           // rudder area ratio A_R/(L*T)
+  KP = Math.max(0.6, Math.min(1.6, 1.02 * arRatio / 0.0163)); // K' tied to area ratio (screening)
+  const aReBal = v.area * 0.78;                      // ballast rudder emergence (~78%, screening)
+  const aLlad = v.L * v.Tlad * 0.75;                 // windage ~= 0.75x underwater lateral area (screening)
+  COND = {
+    laden:   {T:v.Tlad, A_Re:v.area,  span:v.span, A_L:aLlad, label:'Laden'},
+    ballast: {T:v.Tbal, A_Re:aReBal, span:v.span, A_L:aLlad + v.L*(v.Tlad-v.Tbal), label:'Ballast'}
+  };
+}
+applyVessel('generic');
 // Plot palette tuned for a LIGHT background (matches capabilities house style).
 const CLR = {teal:'#0f8a7e', blue:'#1f6feb', red:'#d1242f', amber:'#b7791f',
              now:'#0B3D91', ship:'#7a1fa2'};
@@ -172,7 +211,7 @@ const axStyle = {gridcolor:'#dbe4f0', zerolinecolor:'#c5d2e6', linecolor:'#c5d2e
 
 function recompute(){
   const c = COND[S.load];
-  const Kp = S.load==='laden' ? KP_LADEN : KP_LADEN*Math.sqrt(c.A_Re/COND.laden.A_Re);
+  const Kp = S.load==='laden' ? KP : KP*Math.sqrt(c.A_Re/COND.laden.A_Re);
   const RoverL = steadyRoverL(Kp, S.rud), TDoverL = 2*RoverL;
   const TD = TDoverL*L;
   const Vs = S.spd*KN, Vc = S.cur*KN, Vw = S.wnd*KN, Fprop = S.thr*1000;
@@ -288,6 +327,23 @@ bind('r-hdg','hdg','v-hdg',0);bind('r-wnd','wnd','v-wnd',0);bind('r-thr','thr','
 document.querySelectorAll('#seg-load button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('#seg-load button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');S.load=b.dataset.load;render();}));
+
+// Vessel picker
+function updateVesselUI(){
+  const v = VESSEL;
+  document.getElementById('lbl-laden').textContent = `(T ${v.Tlad} m)`;
+  document.getElementById('lbl-ballast').textContent = `(T ${v.Tbal} m)`;
+  const tag = v.bench ? 'published geometry' : 'class-typical estimate';
+  let flag = v.twin ? ' · twin-screw (single-screw model approximates)' :
+             v.sys ? ' · system side force (bare-rudder lift under-predicts)' : '';
+  document.getElementById('vessel-meta').innerHTML =
+    `Lpp ${v.L} m · rudder ${v.area} m² / ${v.span} m span · ${v.type} · <em>${tag}</em>${flag}`;
+}
+const sel = document.getElementById('sel-vessel');
+sel.innerHTML = Object.keys(VESSELS).map(k=>`<option value="${k}">${VESSELS[k].name}</option>`).join('');
+sel.value = 'generic';
+sel.addEventListener('change', ()=>{ applyVessel(sel.value); updateVesselUI(); render(); });
+updateVesselUI();
 render();
 window.addEventListener('resize',()=>['p-turn','p-thresh','p-hold','p-curr'].forEach(p=>Plotly.Plots.resize(p)));
 </script>
