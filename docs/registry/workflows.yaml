@@ -792,6 +792,16 @@ workflows:
       - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rudder-stock-torque]
     runtime: offline
+  - id: naval-arch-maneuvering-envelope
+    basename: naval_arch
+    title: Low-speed manoeuvring & station-keeping envelope screen
+    input: examples/workflows/naval-arch-maneuvering-envelope/input.yml
+    outputs:
+      - examples/workflows/naval-arch-maneuvering-envelope/results/input.yml
+      - examples/workflows/naval-arch-maneuvering-envelope/results/naval_arch_maneuvering_envelope/maneuvering_envelope_sweep.csv
+      - examples/workflows/naval-arch-maneuvering-envelope/results/naval_arch_maneuvering_envelope/maneuvering_envelope_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[naval-arch-maneuvering-envelope]
+    runtime: offline
   - id: pile-axial-capacity
     basename: geotechnical
     title: API RP 2GEO alpha-method axial pile capacity in clay

@@ -242,68 +242,70 @@ class ConfigRegistry:
             ValueError: If circular inheritance detected
         """
         result = config.copy()
-        
-        # Handle 'extends' directive (YAML-based inheritance)
+
+        # Own keys are everything the config declares itself, minus the
+        # inheritance directives. Precedence is extends(base) < preset < own.
+        own = {k: v for k, v in config.items() if k not in ("extends", "preset")}
+        base_layers = []  # ordered lowest->highest priority, own applied last
+
+        # Handle 'extends' directive (YAML-based inheritance) -- base layer.
         if "extends" in config:
             extends_file = config["extends"]
-            
+
             # Check for circular inheritance
             if extends_file in self._inheritance_stack:
                 raise ValueError(f"Circular inheritance detected: {extends_file}")
-                
+
             self._inheritance_stack.add(extends_file)
-            
+
             try:
                 # Resolve path (relative to config directory)
                 extends_path = config_dir / extends_file
-                
+
                 if not extends_path.exists():
                     raise FileNotFoundError(f"Extended config not found: {extends_path}")
-                    
+
                 # Load and resolve parent config (recursive)
                 parent_config = self._load_yaml_file(extends_path)
                 parent_config = self._resolve_inheritance(parent_config, extends_path.parent)
-                
-                # Deep merge: parent as base, current as override
-                result = self._deep_merge(parent_config, config)
-                
-                # Remove extends directive from result
-                result.pop("extends", None)
-                
+                base_layers.append(parent_config)
             finally:
                 self._inheritance_stack.discard(extends_file)
-                
-        # Handle 'preset' directive (preset-based inheritance)
+
+        # Handle 'preset' directive (preset-based inheritance) -- above extends.
         if "preset" in config:
             preset_name = config["preset"]
-            
+
             # Try multiple preset locations
             preset_locations = [
                 self.presets_path / f"{preset_name}.yml",
                 self.presets_path / f"{preset_name}.yaml",
-                # Also check in same directory as modules (for tests)
+                # Also check alongside modules and one level up (for tests).
+                self.modules_path / "presets" / f"{preset_name}.yml",
+                self.modules_path / "presets" / f"{preset_name}.yaml",
                 self.modules_path.parent / "presets" / f"{preset_name}.yml",
                 self.modules_path.parent / "presets" / f"{preset_name}.yaml",
             ]
-            
+
             preset_file = None
             for location in preset_locations:
                 if location.exists():
                     preset_file = location
                     break
-                    
+
             if preset_file is None:
                 raise FileNotFoundError(f"Preset config not found: {preset_name}")
-                
-            # Load preset config
-            preset_config = self._load_yaml_file(preset_file)
-            
-            # Deep merge: preset as base, current as override
-            result = self._deep_merge(preset_config, config)
-            
-            # Remove preset directive from result
-            result.pop("preset", None)
-            
+
+            base_layers.append(self._load_yaml_file(preset_file))
+
+        # Merge layers in precedence order, then apply this config's own keys on
+        # top (so extends+preset compose instead of preset discarding extends).
+        if base_layers:
+            merged: Dict[str, Any] = {}
+            for layer in base_layers:
+                merged = self._deep_merge(merged, layer)
+            result = self._deep_merge(merged, own)
+
         return result
         
     def _apply_env_overrides(self, config: Dict[str, Any]) -> Dict[str, Any]:
