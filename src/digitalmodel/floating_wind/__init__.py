@@ -19,6 +19,14 @@ from .floaters import (
     build_floater,
     IEA_15MW_RNA,
 )
+from .economics import (
+    FinancialParameters,
+    CapexBreakdown,
+    ProjectEconomics,
+    LCOEResult,
+    compute_lcoe,
+    base_case,
+)
 from .qualification import (
     DNV_TRL_MAX,
     trl_to_maturity,
@@ -44,6 +52,12 @@ __all__ = [
     "Barge",
     "build_floater",
     "IEA_15MW_RNA",
+    "FinancialParameters",
+    "CapexBreakdown",
+    "ProjectEconomics",
+    "LCOEResult",
+    "compute_lcoe",
+    "base_case",
     "DNV_TRL_MAX",
     "trl_to_maturity",
     "QualificationVerdict",
