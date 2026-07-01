@@ -27,6 +27,11 @@ from .economics import (
     compute_lcoe,
     base_case,
 )
+from .reliability import (
+    ReliabilityScenario,
+    apply_reliability,
+    lcoe_with_reliability,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -46,4 +51,7 @@ __all__ = [
     "LCOEResult",
     "compute_lcoe",
     "base_case",
+    "ReliabilityScenario",
+    "apply_reliability",
+    "lcoe_with_reliability",
 ]
