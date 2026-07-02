@@ -1,0 +1,33 @@
+# Floating-wind economies-of-scale bases (turbine size + farm size).
+#
+# Each cost component's cost is split between three scaling behaviours; the
+# remainder after per_unit + per_farm is per-MW (capacity-proportional, i.e.
+# constant $/kW). Calibrated so the base case (15 MW x 33 = 495 MW) reproduces
+# $184/MWh exactly and the deck's two turbine/farm points to <0.6%:
+#   20 MW x 33 (660 MW) -> $161 (model 161.9)
+#   20 MW x 25 (500 MW) -> $172 (model 171.0)
+#
+# Rationale:
+#   substructure per_unit 0.40 — bigger turbines -> bigger single floaters with
+#     fabrication economies of scale (part of the hull cost is per-unit).
+#   opex per_unit 0.80 — O&M (inspection/repair visits) scales with the NUMBER
+#     of turbines, so fewer, bigger units cut per-MW OPEX.
+#   installation / export_cable / development per_farm 1.0 — one installation
+#     campaign and one export system amortised over the whole farm.
+# Public references only (Wood/Whooley 2021, NREL 2019, ORE Catapult).
+basename: economies_of_scale
+
+economies_of_scale:
+  reference_turbine_mw: 15.0
+  reference_farm_mw: 495.0        # 15 MW x 33 turbines
+  capex:
+    substructure:
+      per_unit: 0.40
+    installation:
+      per_farm: 1.00
+    export_cable:
+      per_farm: 1.00
+    development:
+      per_farm: 1.00
+  opex:
+    per_unit: 0.80
