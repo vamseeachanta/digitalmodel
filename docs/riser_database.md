@@ -94,3 +94,30 @@ attach the output to the PR as evidence.
   `atlases/riser_database*` per `parametric.atlas` conventions — deliberately
   NOT used for these relational tables (binary Parquet is invisible to
   text-based leak scanning).
+
+## riser_stackup + rig_riser_interface (#1259)
+
+The stack-up layer publishes **handles + banded envelopes only**. Each row of
+`riser_stackup` carries an `rsu_id` (resolving into the PRIVATE llm-wiki
+stack-up registry via `wiki_path` — always the registry page itself, never
+per-source pages), a `topology_class` from a controlled vocabulary (so
+depth-collapsed queries are first-class), a coarse `water_depth_band`
+(synthetic example: a dataset at an exact depth of, say, 1,234 m publishes
+only `1000-1500m`), and the `rig_ref` **residency join**: a riser string is
+stationed on a rig, so every stack-up row can join to a rig-class row in
+`rig_riser_interface` (tensioner/TJ capability columns; `wed_rig_name` joins
+the worldenergydata rig fleet and is populated only for rows sourced from
+public rig specifications).
+
+**De-id rules (enforced by tests):** no exact depths/masses/joint counts, no
+unit-bearing values, no registry generic-name strings, and no provenance name
+tokens or project numbers anywhere in the public artifacts (`tests/
+riser_database/test_stackup_rig.py`, `test_provenance_tripwire.py` — the
+latter auto-extracts tokens from the private registry's source pages, so it
+runs in-context and is part of the merge gate). Banding is decided wiki-side,
+on water depth only, one band per source dataset family.
+
+**Cross-repo coupling (by design):** registering a new RSU id in the llm-wiki
+registry makes the in-context reconciliation test fail here until the table
+gains the row — a conscious update, never silent drift. Public issues, PRs
+and commit messages about this table family carry bands and handles only.
