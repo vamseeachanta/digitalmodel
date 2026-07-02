@@ -33,9 +33,11 @@ advanced work. It does **two** things and no more:
 advanced computation itself. This module does not run FEA and does not solve a
 FAD; it decides escalation and produces the handoff so that fast L1/L2
 screening never silently substitutes for the detailed analysis a flaw needs.
-The actual fracture path is implemented elsewhere
-(:func:`digitalmodel.asset_integrity.fracture_mechanics.fracture_mechanics`,
-a BS 7910 FAD router).
+The Level-2 fracture tier for a single surface flaw is implemented in
+:mod:`digitalmodel.asset_integrity.assessment.crack_fad` (#1270) — run it
+on the handoff's flaw dimensions before commissioning FEA; the legacy
+config-driven path remains at
+:func:`digitalmodel.asset_integrity.fracture_mechanics.fracture_mechanics`.
 """
 
 from __future__ import annotations
