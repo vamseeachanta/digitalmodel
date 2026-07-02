@@ -50,6 +50,10 @@ mock_modules = {
     'digitalmodel.infrastructure.base_solvers.marine.pipe_properties': MagicMock(),
     'loguru': MagicMock(),
     'digitalmodel.solvers.orcaflex.output_control': MagicMock(),
+    # Lazily-imported routing targets (engine imports these inside the
+    # basename dispatch, not at module level)
+    'digitalmodel.specialized.rigging.rigging': MagicMock(),
+    'digitalmodel.subsea.catenary_riser.legacy.catenary': MagicMock(),
 }
 
 for module_name, mock_obj in mock_modules.items():
@@ -112,6 +116,11 @@ def test_yaml_input_path():
                 # Setup validation and YAML loading
                 mock_app_manager.validate_arguments_run_methods.return_value = (temp_file, {})
                 mock_wwyaml.ymlInput.return_value = {"basename": "transformation"}
+                # engine now runs configure + configure_result_folder on the
+                # inputfile path too; the latter's return is tuple-unpacked
+                cfg_configured = MockAttributeDict({"basename": "transformation"})
+                mock_app_manager.configure.return_value = cfg_configured
+                mock_app_manager.configure_result_folder.return_value = ({}, cfg_configured)
 
                 with patch('digitalmodel.engine.logger'):
                     with patch('os.path.exists', return_value=True):
@@ -135,26 +144,34 @@ def test_output_control_levels():
 
     cfg = MockAttributeDict({"basename": "transformation"})
 
-    # Test QUIET output level
-    with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-        from digitalmodel.solvers.orcaflex.output_control import OutputController
-        mock_output.return_value = OutputController.QUIET
+    # Transformation router must be identity so the cfg dict (with the
+    # quiet/verbose flags engine set) is what engine returns
+    with patch('digitalmodel.engine.Transformation') as mock_trans:
+        mock_trans.return_value.router.side_effect = lambda c: c
 
-        with patch('digitalmodel.engine.logger'):
-            result = engine(cfg=cfg, config_flag=False)
+        # Test QUIET output level
+        with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
+            # Use engine's own OutputController binding (sibling test modules
+            # swap sys.modules entries at collection time; re-importing from
+            # the mocked module path yields a different object)
+            from digitalmodel.engine import OutputController
+            mock_output.return_value = OutputController.QUIET
 
-        assert result.get('quiet') is True
-        assert result.get('verbose') is False
+            with patch('digitalmodel.engine.logger'):
+                result = engine(cfg=cfg, config_flag=False)
 
-    # Test VERBOSE output level
-    with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-        mock_output.return_value = OutputController.VERBOSE
+            assert result.get('quiet') is True
+            assert result.get('verbose') is False
 
-        with patch('digitalmodel.engine.logger'):
-            result = engine(cfg=cfg, config_flag=False)
+        # Test VERBOSE output level
+        with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
+            mock_output.return_value = OutputController.VERBOSE
 
-        assert result.get('quiet') is False
-        assert result.get('verbose') is True
+            with patch('digitalmodel.engine.logger'):
+                result = engine(cfg=cfg, config_flag=False)
+
+            assert result.get('quiet') is False
+            assert result.get('verbose') is True
 
     print("✓ Output control levels tested")
 
@@ -184,12 +201,19 @@ def test_config_path_preservation():
         with patch('digitalmodel.engine.wwyaml') as mock_wwyaml:
             mock_app_manager.validate_arguments_run_methods.return_value = (test_file, {})
             mock_wwyaml.ymlInput.return_value = {"basename": "transformation"}
+            # engine copies _config_*_path onto configure()'s cfg, then
+            # tuple-unpacks configure_result_folder — return the same object
+            cfg_configured = MockAttributeDict({"basename": "transformation"})
+            mock_app_manager.configure.return_value = cfg_configured
+            mock_app_manager.configure_result_folder.return_value = ({}, cfg_configured)
 
-            with patch('os.path.exists', return_value=True):
-                with patch('os.path.abspath', return_value=test_file):
-                    with patch('os.path.dirname', return_value=test_dir):
-                        with patch('digitalmodel.engine.logger'):
-                            result = engine(inputfile=test_file, cfg=None)
+            with patch('digitalmodel.engine.Transformation') as mock_trans:
+                mock_trans.return_value.router.side_effect = lambda c: c
+                with patch('os.path.exists', return_value=True):
+                    with patch('os.path.abspath', return_value=test_file):
+                        with patch('os.path.dirname', return_value=test_dir):
+                            with patch('digitalmodel.engine.logger'):
+                                result = engine(inputfile=test_file, cfg=None)
 
             # Verify path tracking
             assert "_config_file_path" in result
@@ -204,7 +228,8 @@ def test_rigging_dynamic_import():
 
     cfg = MockAttributeDict({"basename": "rigging"})
 
-    with patch('digitalmodel.engine.Rigging') as mock_rigging:
+    # Rigging is lazily imported inside engine() from its source module
+    with patch('digitalmodel.specialized.rigging.rigging.Rigging') as mock_rigging:
         mock_instance = MagicMock()
         mock_instance.get_rigging_groups.return_value = cfg
         mock_rigging.return_value = mock_instance
@@ -224,7 +249,8 @@ def test_catenary_dynamic_import():
 
     cfg = MockAttributeDict({"basename": "catenary_analysis"})
 
-    with patch('digitalmodel.engine.Catenary') as mock_catenary:
+    # Catenary is lazily imported inside engine() from its source module
+    with patch('digitalmodel.subsea.catenary_riser.legacy.catenary.Catenary') as mock_catenary:
         mock_instance = MagicMock()
         mock_instance.router.return_value = cfg
         mock_catenary.return_value = mock_instance
