@@ -206,7 +206,7 @@ def test_registry_generic_names_not_republished():
 # -- RSU registry reconciliation (in-context) ---------------------------------------
 
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),
+    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
     Path.home() / "workspace-hub" / "llm-wiki",
 )
 
