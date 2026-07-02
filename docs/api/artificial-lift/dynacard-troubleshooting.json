@@ -276,5 +276,33 @@
       },
       "n_points": 100
     }
-  ]
+  ],
+  "library_summary": {
+    "n_cards": 336,
+    "phenomena": [
+      "BENT_BARREL",
+      "BUTTERFLY",
+      "DELAYED_TV_CLOSURE",
+      "EXCESSIVE_FRICTION",
+      "EXCESSIVE_VIBRATION",
+      "FILLAGE_COLLAPSE",
+      "FLUID_POUND",
+      "FULL_CARD",
+      "GAS_INTERFERENCE",
+      "GAS_LOCK",
+      "INCOMPLETE_FILLAGE",
+      "NORMAL",
+      "PARAFFIN_RESTRICTION",
+      "PLUNGER_UNDERTRAVEL",
+      "PUMPED_OFF",
+      "PUMP_TAGGING",
+      "ROD_PARTING",
+      "SAND_ABRASION",
+      "STUCK_PUMP",
+      "TUBING_MOVEMENT",
+      "VALVE_LEAK_SV",
+      "VALVE_LEAK_TV",
+      "WORN_BARREL"
+    ]
+  }
 }
