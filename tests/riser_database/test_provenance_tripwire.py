@@ -22,7 +22,7 @@ from digitalmodel.riser_database.loader import DEFAULT_DB_ROOT
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),
+    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
     Path.home() / "workspace-hub" / "llm-wiki",
 )
 

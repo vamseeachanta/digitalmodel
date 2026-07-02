@@ -41,7 +41,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from digitalmodel.well.tubulars.casing import Casing
+from digitalmodel.well.tubulars.casing import Casing, collapse_pressure
 from digitalmodel.well.tubulars.design_envelope import (
     compute_hoop_stress,
     compute_vme_stress,
@@ -281,22 +281,85 @@ def check_burst(casing_product: Casing,
                                  internal.label)
 
 
+def reduced_yield_under_tension(min_yield_psi: float,
+                                axial_stress_psi: float) -> float:
+    """Axial-stress-equivalent yield for combined loading (API 5C3).
+
+    ``Ypa = Yp * (sqrt(1 - 0.75*(sa/Yp)^2) - 0.5*sa/Yp)`` for a tensile axial
+    stress ``sa``.  Compressive axial stress (``sa < 0``) is conservatively
+    treated as zero derating here; axial stress at or beyond yield returns 0.
+    """
+    ratio = axial_stress_psi / min_yield_psi
+    if ratio <= 0.0:
+        return min_yield_psi
+    if ratio >= 1.0:
+        return 0.0
+    return min_yield_psi * (math.sqrt(1.0 - 0.75 * ratio ** 2) - 0.5 * ratio)
+
+
+def collapse_pressure_under_tension(od_in: float, wt_in: float,
+                                    min_yield_psi: float,
+                                    axial_stress_psi: float
+                                    ) -> tuple[float, str]:
+    """API 5C3 collapse pressure derated for axial tension.
+
+    Re-evaluates the four-regime collapse formulas (constants and regime
+    boundaries included) at the reduced yield ``Ypa`` — the standard API 5C3
+    combined-loading treatment.  Zero or compressive axial stress reproduces
+    the uniaxial rating exactly.
+    """
+    ypa = reduced_yield_under_tension(min_yield_psi, axial_stress_psi)
+    if ypa <= 0.0:
+        return 0.0, "yield-exhausted"
+    return collapse_pressure(od_in, wt_in, ypa)
+
+
 def check_collapse(casing_product: Casing,
                    external: PressureProfile,
                    td_ft: float,
                    internal: Optional[PressureProfile] = None,
-                   factors: DesignFactors = DesignFactors()) -> ModeCheckResult:
+                   factors: DesignFactors = DesignFactors(),
+                   weight_ppf: Optional[float] = None,
+                   mud_ppg_for_buoyancy: Optional[float] = None
+                   ) -> ModeCheckResult:
     """Collapse design-factor check: rating vs net external pressure.
 
-    ``internal`` defaults to full evacuation (zero pressure inside).
+    ``internal`` defaults to full evacuation (zero pressure inside).  When
+    ``weight_ppf`` is given, the collapse rating is derated for the buoyed
+    string tension at each depth per API 5C3 combined loading
+    (:func:`collapse_pressure_under_tension`); the buoyancy mud defaults to
+    the external profile being a mud column only if ``mud_ppg_for_buoyancy``
+    is supplied — otherwise unbuoyed (in-air) weight is used conservatively.
     """
     rating = api_round_pressure_psi(casing_product.collapse_psi)
     if internal is None:
         internal = full_evacuation_internal_profile(td_ft)
     z = _depth_grid(td_ft, (internal, external))
     net = external.at(z) - internal.at(z)
-    return _pressure_mode_result("collapse", rating, net, z, factors.collapse,
-                                 external.label)
+    if weight_ppf is None:
+        return _pressure_mode_result("collapse", rating, net, z,
+                                     factors.collapse, external.label)
+
+    bf = (buoyancy_factor(mud_ppg_for_buoyancy)
+          if mud_ppg_for_buoyancy is not None else 1.0)
+    area = casing_product.metal_area_in2
+    yp = casing_product.grade.min_yield_psi
+    ratings = np.array([
+        api_round_pressure_psi(collapse_pressure_under_tension(
+            casing_product.od_in, casing_product.wt_in, yp,
+            weight_ppf * (td_ft - depth) * bf / area)[0])
+        for depth in z
+    ])
+    df = np.where(net > 0.0, ratings / np.maximum(net, 1e-12), math.inf)
+    i = int(np.argmin(df))
+    min_df = float(df[i])
+    return ModeCheckResult(mode="collapse", rating=float(ratings[i]),
+                           max_load=float(net[i]),
+                           min_design_factor=min_df,
+                           governing_depth_ft=float(z[i]),
+                           required_design_factor=factors.collapse,
+                           passes=min_df >= factors.collapse,
+                           load_case=f"{external.label} (tension-derated)")
 
 
 def _pressure_mode_result(mode: str, rating: float, net: np.ndarray,
