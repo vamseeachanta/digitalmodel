@@ -311,23 +311,25 @@ SPECS: list[dict] = [
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
          std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
          blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
-               "wave-equation solvers, an 18-mode failure-signature library, ML card "
-               "classification with a CI drift-guard on every published diagnosis, and a "
+               "wave-equation solvers, an 18-mode failure-signature library plus a 336-card "
+               "example library, ML card classification with a CI drift-guard on every "
+               "published diagnosis, recommended controller setpoints & alarms, and a "
                "field-wide health screen.",
-         figures=[("18", "failure modes"), ("7", "published use cases"), ("2", "registered workflows")],
+         figures=[("336", "example cards"), ("28", "guide entries"), ("2", "registered workflows")],
          bullets=["Troubleshooting use cases: card signature → ML diagnosis → field response",
-                  "Gibbs frequency-domain and finite-difference surface-to-downhole solvers",
+                  "Example-card library: synthetic-verified, measured field wells, digitized archive",
+                  "POC setpoints & alarms recommended per well from its own card",
                   "Field-wide per-well health ranking with a fail-closed screening verdict"]),
     dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
          std="Gibbs wave equation · Bezerra projections · 18 failure modes",
          path="artificial-lift/dynacard-troubleshooting.html",
-         blurb="Seven practical rod-pump troubleshooting cases — gas interference, fluid pound, "
-               "valve leak, pump tagging, parted rods, gas lock — each with the card signature, "
-               "ML diagnosis, load metrics and the recommended field response.",
-         figures=[("7", "use cases"), ("7/7", "CI-verified diagnoses")],
-         bullets=["Pump-card signature per failure mode with a healthy-reference overlay",
+         blurb="Seven curated rod-pump troubleshooting cases, a 336-card example library behind "
+               "phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting "
+               "guide, and recommended controller setpoints & alarms computed per well.",
+         figures=[("336", "example cards"), ("28", "phenomena in guide"), ("7/7", "CI-verified diagnoses")],
+         bullets=["Example-card library: synthetic-verified, measured field wells, digitized archive",
                   "ML classification with confidence and top-3 differential",
-                  "Fluid load, peak/min load and card-area metrics plus field actions",
+                  "Two-tier load / span / card-area alarm recipes computed per well",
                   "Every published diagnosis re-verified against the live classifier in CI"]),
     dict(id="dynacard-field-health", kind="work", title="Field-wide dynacard health rollup",
          std="per-well diagnosis · fail-closed screening",
