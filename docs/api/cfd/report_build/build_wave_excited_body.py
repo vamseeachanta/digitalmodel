@@ -34,7 +34,8 @@ cfg, resp, wq = r["config"], r["response"], r["wave_quality"]
 t_hist = np.array(r["heave"]["t"]); z_hist = np.array(r["heave"]["z_cm"])
 W0, W1 = cfg["steady_window"]
 A_I = resp["incident_amplitude"]
-Z_EQ_TH = cfg["body"]["draft"] + 0.2  # CoM at waterline = depth (0.4 m)
+# equilibrium CoM height: depth - draft + body_height/2 (= the waterline, 0.4 m)
+Z_EQ_TH = cfg["wave"]["depth"] - cfg["body"]["draft"] + cfg["body"]["height"] / 2
 BODY_X = cfg["body"]["x"]; BEAM = cfg["body"]["beam"]; BH = cfg["body"]["height"]
 rao_pct = resp["rao_error"] * 100
 draft_pct = resp["draft_error"] * 100
@@ -155,7 +156,7 @@ g1c, g1s = ok(gates["rao"]); g2c, g2s = ok(gates["draft"]); g3c, g3s = ok(gates[
 fast_row = ""
 if rf:
     fr = rf["response"]
-    fast_row = (f"<tr><td>Fast regression variant (250&times;35, ~40 min at 8-way)</td>"
+    fast_row = (f"<tr><td>Fast regression variant (250&times;35, ~75 min at 8-way)</td>"
                 f"<td>RAO {fr['rao']:.3f}, draft {fr['draft_error']*100:+.1f}%, "
                 f"T {fr['period_measured']:.3f} s</td>"
                 f"<td>reference values reproduced</td><td class=\"good\">mesh-consistent</td>"
@@ -187,7 +188,7 @@ quasi-static limit pins the answer: a small floating body is a wave follower, he
 Issue #1302, epic #1161.</div>
 <p><span class="badge">VERIFIED &mdash; heave RAO {resp['rao']:.3f} ({rao_pct:+.1f}% vs the wave-follower limit); draft {draft_pct:+.1f}%; periodic at T</span></p>
 <div class="meta">
-<div><b>Solver</b><span>overInterDyMFoam (overset) + sixDoFRigidBodyMotion, v2312</span></div>
+<div><b>Solver</b><span>overInterDyMFoam + sixDoF, v2312</span></div>
 <div><b>Wave</b><span>StokesII H = {cfg['wave']['H']:g} m, T = {cfg['wave']['T']:g} s, d = {cfg['wave']['depth']:g} m, &lambda; = {cfg['wave']['wavelength']:.2f} m</span></div>
 <div><b>Body</b><span>{BEAM:g}&times;{BH:g} m section, &rho; = {cfg['body']['density']:g} kg/m&sup3;, &lambda;/B = {cfg['wave']['lambda_over_beam']:.0f}</span></div>
 <div><b>Heave RAO</b><span>{resp['rao']:.3f} vs 1.0 (gate &plusmn;15%)</span></div>
