@@ -65,6 +65,13 @@ from .economics_report import (
     write_lcoe_data_sheet,
 )
 from .economics_workflow import FloatingWindEconomicsWorkflow
+from .scaling import (
+    ComponentScaling,
+    EconomiesOfScale,
+    scale_economics,
+    lcoe_at_scale,
+    default_scaling,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -112,4 +119,9 @@ __all__ = [
     "render_lcoe_data_sheet_html",
     "write_lcoe_data_sheet",
     "FloatingWindEconomicsWorkflow",
+    "ComponentScaling",
+    "EconomiesOfScale",
+    "scale_economics",
+    "lcoe_at_scale",
+    "default_scaling",
 ]
