@@ -79,6 +79,13 @@ from .standardization import (
     lcoe_with_standardization,
     default_learning_curve,
 )
+from .collaboration import (
+    JointIndustryProject,
+    CollaborationProgram,
+    apply_collaboration,
+    requalify_with_collaboration,
+    default_collaboration_program,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -136,4 +143,9 @@ __all__ = [
     "apply_standardization",
     "lcoe_with_standardization",
     "default_learning_curve",
+    "JointIndustryProject",
+    "CollaborationProgram",
+    "apply_collaboration",
+    "requalify_with_collaboration",
+    "default_collaboration_program",
 ]
