@@ -64,6 +64,7 @@ of duplicating its detailed issue history.
 | `parametrics` | `src/digitalmodel/parametrics/` | `tests/parametrics/` | `docs/domains/README.md` | Parametric sweep bridging into atlases and query handlers | NumPy, pandas |
 | `pipelay` | `src/digitalmodel/pipelay/` | `tests/pipelay/` | `docs/domains/README.md` | Pipelay analysis, lay tension and configuration checks | marine/subsea standards |
 | `rao_spectral_fatigue` | `src/digitalmodel/rao_spectral_fatigue/` | `tests/` | `docs/domains/README.md` | RAO-driven spectral fatigue workflow (closed-form) | fatigue/hydrodynamics standards |
+| `riser_database` | `src/digitalmodel/riser_database/` | `tests/riser_database/` | `docs/domains/README.md` | Public riser reference tables (config catalog, materials, crosswalk) | PyYAML, pandas |
 | `riser_fatigue` | `src/digitalmodel/riser_fatigue/` | `tests/riser_fatigue/` | `docs/domains/README.md` | Riser fatigue analysis and automation | fatigue standards, NumPy |
 | `spectral_fatigue` | `src/digitalmodel/spectral_fatigue/` | `tests/` | `docs/domains/README.md` | Spectral (frequency-domain) fatigue calculation | fatigue standards, SciPy |
 | `synthetic_rope_mooring_fatigue` | `src/digitalmodel/synthetic_rope_mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Synthetic-rope mooring fatigue analysis | fatigue standards, NumPy |
