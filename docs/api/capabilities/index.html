@@ -210,13 +210,14 @@
   <section class="chan" id="cfd">
     <div class="chanhead"><h2>Computational fluid dynamics (CFD)</h2></div>
     <p class="lead">Open-source CFD (OpenFOAM) verified against classical analytical and benchmark
-    solutions &mdash; known-answer verification across steady-laminar, transient-laminar and
-    turbulent (RANS) regimes, computed on real OpenFOAM v2312 (not mocked).</p>
+    solutions &mdash; known-answer verification across steady-laminar, transient-laminar,
+    turbulent (RANS) and free-surface (VOF) regimes, computed on real OpenFOAM v2312 (not mocked).</p>
     <div class="grid">
-      <div class="card"><h3>CFD verification suite</h3><div class="std">OpenFOAM · 4 cases</div><p>Landing page tying the four verification cases together: philosophy, summary table, toolchain and engineering depth.</p><div class="actions"><a class="open" href="../cfd/">Open &rarr;</a></div></div>
+      <div class="card"><h3>CFD verification suite</h3><div class="std">OpenFOAM · 5 cases</div><p>Landing page tying the five verification cases together: philosophy, summary table, toolchain and engineering depth.</p><div class="actions"><a class="open" href="../cfd/">Open &rarr;</a></div></div>
       <div class="card"><h3>Flat-plate boundary layer</h3><div class="std">Blasius · laminar</div><p>Steady simpleFoam skin friction within 4.6% of the Blasius law; velocity profiles collapse onto the similarity solution.</p><div class="actions"><a class="open" href="../cfd/flat-plate-blasius-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>Cylinder vortex shedding (Re=100)</h3><div class="std">Williamson · transient</div><p>Transient pimpleFoam K&aacute;rm&aacute;n street on a body-fitted O-grid: mean drag within 0.5% and Strouhal within 0.9% of benchmark.</p><div class="actions"><a class="open" href="../cfd/cylinder-re100-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>Turbulent flat plate</h3><div class="std">k-&omega; SST · RANS</div><p>Wall-resolved k-&omega; SST (y&#8314;&asymp;0.13): the velocity profile collapses onto the universal law of the wall; skin friction within ~9% of turbulent correlations.</p><div class="actions"><a class="open" href="../cfd/turbulent-flat-plate-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Dam break (free surface)</h3><div class="std">Martin &amp; Moyce 1952 · VOF</div><p>interFoam VOF column collapse vs the canonical experiments: surge front within the 10% gate (mean 3.0% with the standard gate-release shift) and mass conserved to 10&#8315;&#8310;.</p><div class="actions"><a class="open" href="../cfd/dam-break-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>NACA0012 airfoil polar</h3><div class="std">thin-airfoil · lift</div><p>Angle-of-attack polar (Spalart-Allmaras RANS): lift-curve slope within 2.2% of experiment and a physical drag polar.</p><div class="actions"><a class="open" href="../cfd/naca0012-airfoil-verification.html">Open &rarr;</a></div></div>
     </div>
   </section>
