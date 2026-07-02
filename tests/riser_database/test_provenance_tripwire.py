@@ -50,6 +50,11 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "docs" / "riser_database.md",
     REPO_ROOT / "src" / "digitalmodel" / "riser_database" / "loader.py",
     REPO_ROOT / "src" / "digitalmodel" / "riser_database" / "getters.py",
+    # #1280 assembly engine artifacts (discuss the 16Q formula; must carry
+    # no provenance tokens):
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "assembly.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_assembly.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_assembly_golden.py",
 )
 
 
