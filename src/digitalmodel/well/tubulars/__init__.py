@@ -43,6 +43,7 @@ from digitalmodel.well.tubulars.casing_design import (
     check_production_casing,
     check_tension,
     check_triaxial,
+    collapse_pressure_under_tension,
     connection_class,
     cooling_tension_delta_lbf,
     fluid_column_profile,
@@ -50,6 +51,7 @@ from digitalmodel.well.tubulars.casing_design import (
     h2s_partial_pressure_psia,
     injection_internal_profile,
     max_frac_surface_pressure,
+    reduced_yield_under_tension,
     sour_service_screen,
     tubing_leak_internal_profile,
 )
@@ -104,6 +106,7 @@ __all__ = [
     "check_production_casing",
     "check_tension",
     "check_triaxial",
+    "collapse_pressure_under_tension",
     "connection_class",
     "cooling_tension_delta_lbf",
     "fluid_column_profile",
@@ -111,6 +114,7 @@ __all__ = [
     "h2s_partial_pressure_psia",
     "injection_internal_profile",
     "max_frac_surface_pressure",
+    "reduced_yield_under_tension",
     "sour_service_screen",
     "tubing_leak_internal_profile",
     # sucker rod (API 11B / modified Goodman)

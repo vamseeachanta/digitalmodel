@@ -405,3 +405,65 @@ class TestCheckProductionCasing:
             packer_fluid_ppg=9.0, frac_surface_pressure_psi=9_000.0)
         results = check_production_casing(weak, 14.0, well)
         assert not results["burst"].passes
+
+
+# ---------------------------------------------------------------------------
+# Biaxial collapse derating under axial tension (API 5C3 reduced yield, #1311)
+# ---------------------------------------------------------------------------
+from digitalmodel.well.tubulars.casing_design import (  # noqa: E402
+    collapse_pressure_under_tension,
+    reduced_yield_under_tension,
+)
+
+
+class TestBiaxialCollapseDerating:
+    def test_zero_and_compressive_tension_no_derating(self):
+        assert reduced_yield_under_tension(110_000.0, 0.0) == 110_000.0
+        assert reduced_yield_under_tension(110_000.0, -20_000.0) == 110_000.0
+
+    def test_reduced_yield_golden_at_half_ratio(self):
+        # sa/Yp = 0.5 -> sqrt(1 - 0.75*0.25) - 0.25 = 0.6513878...
+        ypa = reduced_yield_under_tension(100_000.0, 50_000.0)
+        assert ypa == pytest.approx(65_138.78, rel=1e-6)
+
+    def test_yield_exhausted_at_and_beyond_ratio_one(self):
+        assert reduced_yield_under_tension(100_000.0, 100_000.0) == 0.0
+        assert reduced_yield_under_tension(100_000.0, 150_000.0) == 0.0
+        p, regime = collapse_pressure_under_tension(5.5, 0.415, 100_000.0,
+                                                    100_000.0)
+        assert p == 0.0
+        assert regime == "yield-exhausted"
+
+    def test_zero_tension_reproduces_uniaxial_rating(self, p110_55_23):
+        p, regime = collapse_pressure_under_tension(
+            p110_55_23.od_in, p110_55_23.wt_in,
+            p110_55_23.grade.min_yield_psi, 0.0)
+        assert p == pytest.approx(p110_55_23.collapse_psi)
+        assert regime == p110_55_23.collapse_regime
+
+    def test_derating_is_monotonic_in_tension(self, p110_55_23):
+        args = (p110_55_23.od_in, p110_55_23.wt_in,
+                p110_55_23.grade.min_yield_psi)
+        p0 = collapse_pressure_under_tension(*args, 0.0)[0]
+        p1 = collapse_pressure_under_tension(*args, 20_000.0)[0]
+        p2 = collapse_pressure_under_tension(*args, 60_000.0)[0]
+        assert p0 > p1 > p2 > 0.0
+
+    def test_check_collapse_with_tension_derates_df(self, p110_55_23):
+        td = 12_000.0
+        external = fluid_column_profile(10.0, td)
+        base = check_collapse(p110_55_23, external, td)
+        derated = check_collapse(p110_55_23, external, td, weight_ppf=23.0,
+                                 mud_ppg_for_buoyancy=10.0)
+        assert derated.min_design_factor <= base.min_design_factor
+        assert "tension-derated" in derated.load_case
+        # At TD the tension is zero, so the derated rating there equals the
+        # uniaxial one; any DF reduction must come from shallower depths.
+        assert derated.min_design_factor > 0.0
+
+    def test_check_collapse_without_weight_unchanged(self, p110_55_23):
+        td = 10_000.0
+        external = fluid_column_profile(10.0, td)
+        res = check_collapse(p110_55_23, external, td)
+        assert res.rating == api_round_pressure_psi(p110_55_23.collapse_psi)
+        assert res.governing_depth_ft == td
