@@ -15,6 +15,7 @@ from digitalmodel.well.tubulars.design_envelope import (
 from digitalmodel.well.tubulars.casing import (
     API_5CT_GRADES,
     CASING_SIZES,
+    TUBING_SIZES,
     Casing,
     CasingGrade,
     casing,
@@ -22,7 +23,10 @@ from digitalmodel.well.tubulars.casing import (
     collapse_pressure,
     internal_yield_pressure,
     list_sizes,
+    list_tubing_sizes,
     pipe_body_yield_strength,
+    tubing,
+    tubing_wall_for_size,
     wall_for_size,
 )
 from digitalmodel.well.tubulars.casing_design import (
@@ -55,6 +59,13 @@ from digitalmodel.well.tubulars.casing_design import (
     sour_service_screen,
     tubing_leak_internal_profile,
 )
+from digitalmodel.well.tubulars.tubing_design import (
+    TubingWell,
+    check_production_tubing,
+    packer_fluid_annulus_profile,
+    shut_in_piston_force_lbf,
+    shut_in_tubing_profile,
+)
 from digitalmodel.well.tubulars.sucker_rod import (
     API_11B_ROD_GRADES,
     ROD_SIZES_IN,
@@ -76,9 +87,10 @@ __all__ = [
     "compute_hoop_stress",
     "compute_vme_stress",
     "design_envelope_points",
-    # casing (API 5CT / API 5C3)
+    # casing + tubing catalog (API 5CT / API 5C3)
     "API_5CT_GRADES",
     "CASING_SIZES",
+    "TUBING_SIZES",
     "Casing",
     "CasingGrade",
     "casing",
@@ -86,7 +98,10 @@ __all__ = [
     "collapse_pressure",
     "internal_yield_pressure",
     "list_sizes",
+    "list_tubing_sizes",
     "pipe_body_yield_strength",
+    "tubing",
+    "tubing_wall_for_size",
     "wall_for_size",
     # casing design checks (Hansen/Devon EPA workshop; API 5C3, NACE MR0175)
     "CONNECTION_CLASSES",
@@ -117,6 +132,12 @@ __all__ = [
     "reduced_yield_under_tension",
     "sour_service_screen",
     "tubing_leak_internal_profile",
+    # production tubing design checks
+    "TubingWell",
+    "check_production_tubing",
+    "packer_fluid_annulus_profile",
+    "shut_in_piston_force_lbf",
+    "shut_in_tubing_profile",
     # sucker rod (API 11B / modified Goodman)
     "API_11B_ROD_GRADES",
     "ROD_SIZES_IN",
