@@ -10,6 +10,15 @@ Provides:
   FFSReport        — self-contained HTML report generator
 """
 
+from .crack_fad import (
+    CrackFlawAssessment,
+    assess_crack_like_flaw,
+    critical_flaw_depth_mm,
+    fad_curve_option1,
+    kmat_from_charpy,
+    newman_raju_k,
+    reference_stress_surface_flaw,
+)
 from .ffs_decision import FFSDecision
 from .ffs_report import FFSReport
 from .ffs_router import FFSRouter
