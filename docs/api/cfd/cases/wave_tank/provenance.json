@@ -1,0 +1,45 @@
+{
+  "validation_case": "wave_tank_stokes2",
+  "issue": "#1170",
+  "reference": "linear dispersion omega^2 = g k tanh(k d); input StokesII wave",
+  "citations": [
+    "$FOAM_TUTORIALS/multiphase/interFoam/laminar/waves/stokesII (ESI v2312)",
+    "Larsen, Fuhrman & Roenby (2019), arXiv:1804.01158 \u2014 interFoam progressive-wave performance",
+    "Goda & Suzuki (1976) \u2014 incident/reflected wave resolution from gauge arrays"
+  ],
+  "wave": {
+    "H_m": 0.05,
+    "T_s": 3.0,
+    "depth_m": 0.4,
+    "wavelength_m": 5.7651268052574425,
+    "celerity_m_s": 1.921708935085814,
+    "wavenumber_rad_m": 1.0898607297674192
+  },
+  "tank": {
+    "length_m": 20.0,
+    "height_m": 0.55,
+    "mesh": [
+      500,
+      1,
+      55
+    ]
+  },
+  "gauges_x_m": [
+    2.0,
+    8.0,
+    8.8,
+    9.6,
+    10.4,
+    11.2,
+    12.0,
+    12.8,
+    14.0,
+    18.0
+  ],
+  "tolerances": {
+    "wave_height": 0.05,
+    "decay": 0.05,
+    "dispersion": 0.05,
+    "reflection": 0.1
+  }
+}

@@ -143,6 +143,32 @@ class TestStagedExecution:
         names = [s.name for s in result.stages]
         assert names == ["blockMesh", "setFields", "interFoam"]
 
+    def test_topo_set_and_subset_mesh_stages(self, tmp_path: Path, monkeypatch):
+        case = _make_case(tmp_path, application="interFoam")
+        self._patch(monkeypatch)
+        cfg = OpenFOAMRunConfig(
+            run_topo_set=True,
+            subset_mesh_set="c0",
+            subset_mesh_patch="floatingObject",
+            run_set_fields=True,
+            to_vtk=False,
+        )
+        result = OpenFOAMRunner(cfg).run(case)
+        names = [s.name for s in result.stages]
+        assert names == [
+            "blockMesh", "topoSet", "subsetMesh", "setFields", "interFoam",
+        ]
+
+    def test_subset_mesh_requires_both_set_and_patch(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path, application="interFoam")
+        self._patch(monkeypatch)
+        cfg = OpenFOAMRunConfig(subset_mesh_set="c0", to_vtk=False)
+        result = OpenFOAMRunner(cfg).run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert "together" in result.error_message
+
     def test_snappy_inserted_after_blockmesh(self, tmp_path: Path, monkeypatch):
         case = _make_case(tmp_path, application="simpleFoam")
         self._patch(monkeypatch)
