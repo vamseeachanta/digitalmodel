@@ -702,6 +702,13 @@ def engine(
         from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
 
         cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "riser_joint_ffs":
+        # #1292: drilling-riser joint FFS — Level-1 envelopes, placement, rollup.
+        from digitalmodel.asset_integrity.riser_joint_ffs import (
+            RiserJointFFSWorkflow,
+        )
+
+        cfg_base = RiserJointFFSWorkflow().router(cfg_base)
     elif basename == "buckling_parametric":
         # workspace-hub#3285-OWNED: DNV-RP-C201 parametric plate-buckling sweep.
         # NEW basename -- legacy "plate_buckling" arm (PlateBuckling class) untouched.

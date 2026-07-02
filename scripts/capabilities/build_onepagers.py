@@ -139,6 +139,14 @@ SPECS: list[dict] = [
                "sufficiency on real defect data.",
          figures=[], bullets=["Decision verdict per defect from measurement sufficiency",
                               "Runs on real metal-loss defect data"]),
+    dict(id="riser-joint-acceptance", kind="work", title="Riser-joint flaw-acceptance explorer",
+         std="API 579-1 · Modified B31G · API RP 1111", path="ffs/riser-joint-acceptance-explorer.html",
+         blurb="Level-1 acceptable flaw length-vs-depth envelopes for a drilling-riser joint with "
+               "campaign-end growth allowance, collapse-limited water depth and string-zone "
+               "placement — demonstrated on real anonymized inspection data.",
+         figures=[], bullets=["Acceptance envelopes split base-metal / weld and campaign start / end",
+                              "Collapse-qualified water depth from the measured minimum wall (API RP 1111)",
+                              "String-zone placement verdict on the real 26-joint inspected fleet"]),
     dict(id="buckling-plate", kind="work", title="Ship plate buckling explorer",
          std="DNV-RP-C201", path="buckling/ship-plate-buckling.html",
          blurb="Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld "
@@ -392,6 +400,7 @@ _BOT = "https://t.me/the_deckhand_bot"
 # generic ask built from the title.
 PROMPTS: dict[str, str] = {
     "ffs-showcase": "Run an FFS remaining-strength assessment (API 579-1 / ASME B31G / DNV-RP-F101) on a corroded pipe and give me the inspector verdict.",
+    "riser-joint-acceptance": "Run the drilling-riser joint FFS screen: Level-1 flaw-acceptance envelope, collapse-limited water depth and string-zone placement for a corroded joint.",
     "ffs-field-dashboard": "Given my metal-loss measurements, tell me whether to accept, re-rate, take more measurements, or escalate.",
     "buckling-plate": "Check ship plate buckling per DNV-RP-C201 for an 800x2400x14 mm panel under in-plane compression.",
     "buckling-panel": "Check stiffened-panel buckling (plate / column / tripping) per DNV-RP-C201 for my scantlings.",
