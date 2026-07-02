@@ -1,0 +1,4 @@
+joint_id,weld,flaw_length_mm,flaw_depth_mm,flaw_type,zones
+RJ-200,A,23,2.0,ext,"A, E"
+RJ-108,A,17,1.9,emb,"A, E"
+RJ-104,B,16,2.3,int,"B,C, D"
