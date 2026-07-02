@@ -278,6 +278,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+  - module: riser_database
+    entry_point: src/digitalmodel/riser_database/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_database/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_database
   - module: riser_fatigue
     entry_point: src/digitalmodel/riser_fatigue/
     maturity: beta
