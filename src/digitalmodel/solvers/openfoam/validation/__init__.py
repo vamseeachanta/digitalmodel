@@ -17,6 +17,8 @@ Cases:
   Archimedes draft + hydrostatic heave period.
 - Kleefsman green-water impact, #1172 — 3D dam break onto an instrumented
   box; impact pressures + water heights vs the official MARIN data.
+- Wave-excited floating body, #1302 — overInterDyMFoam 2D overset; heave
+  RAO vs the long-wave (wave-follower) limit.
 """
 
 from __future__ import annotations
@@ -79,6 +81,17 @@ from .kleefsman import (
     build_kleefsman_case,
     extract_impact_metrics,
     load_experiment,
+)
+from .wave_excited_body import (
+    PERIOD_TOLERANCE,
+    RAO_TOLERANCE,
+    WaveExcitedBodyConfig,
+    analyze_excited_heave,
+    build_wave_excited_body_case,
+    extract_heave_from_log,
+    harmonic_amplitude,
+    incident_wave_split,
+    response_period,
 )
 from .wave_tank import (
     DISPERSION_TOLERANCE,
@@ -215,6 +228,22 @@ KLEEFSMAN_CASE = ValidationCase(
     },
 )
 
+WAVE_EXCITED_BODY_CASE = ValidationCase(
+    name="wave_excited_body",
+    build=build_wave_excited_body_case,
+    reference={
+        # long-wave (wave-follower) limit
+        "heave_rao": 1.0,
+        "draft": WaveExcitedBodyConfig().draft,
+    },
+    tolerance=RAO_TOLERANCE,
+    domain="marine (wave-body interaction, overset)",
+    metadata={
+        "issue": "#1302",
+        "reference": "Newman (1977) ch. 6 — quasi-static long-wave response",
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
@@ -222,6 +251,7 @@ FOUNDATIONAL_CASES = (
     WAVE_TANK_CASE,
     FLOATING_BODY_CASE,
     KLEEFSMAN_CASE,
+    WAVE_EXCITED_BODY_CASE,
 )
 
 __all__ = [
@@ -234,6 +264,17 @@ __all__ = [
     "WAVE_TANK_CASE",
     "FLOATING_BODY_CASE",
     "KLEEFSMAN_CASE",
+    "WAVE_EXCITED_BODY_CASE",
+    # Wave-excited floating body (#1302)
+    "PERIOD_TOLERANCE",
+    "RAO_TOLERANCE",
+    "WaveExcitedBodyConfig",
+    "analyze_excited_heave",
+    "build_wave_excited_body_case",
+    "extract_heave_from_log",
+    "harmonic_amplitude",
+    "incident_wave_split",
+    "response_period",
     # Kleefsman impact (#1172)
     "HEIGHT_MAE_TOLERANCE",
     "PRESSURE_ARRIVAL_TOLERANCE",

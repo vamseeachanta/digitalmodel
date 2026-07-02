@@ -1,0 +1,23 @@
+FoamFile { version 2.0; format ascii; class dictionary; object blockMeshDict; }
+
+// 2D NWT background (x-z plane, one empty cell in y): verified #1170
+// numerics with the tank top raised so the overset fringe stays interior.
+scale 1;
+vertices
+(
+    (0 0 0) (20 0 0) (20 0.04 0) (0 0.04 0)
+    (0 0 0.7) (20 0 0.7) (20 0.04 0.7) (0 0.04 0.7)
+);
+blocks ( hex (0 1 2 3 4 5 6 7) (375 1 49) simpleGrading (1 1 1) );
+edges ();
+boundary
+(
+    // Dummy patch to trigger overset interpolation before any other bcs
+    oversetPatch { type overset; faces (); }
+    inlet  { type patch; faces ( (0 4 7 3) ); }
+    outlet { type patch; faces ( (1 5 6 2) ); }
+    ground { type wall;  faces ( (0 1 2 3) ); }
+    top    { type patch; faces ( (4 5 6 7) ); }
+    sides  { type empty; faces ( (0 1 5 4) (3 2 6 7) ); }
+);
+mergePatchPairs ();

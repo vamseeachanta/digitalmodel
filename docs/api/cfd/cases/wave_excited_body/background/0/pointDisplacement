@@ -1,0 +1,16 @@
+FoamFile { version 2.0; format ascii; class pointVectorField; object pointDisplacement; }
+
+dimensions      [0 1 0 0 0 0 0];
+internalField   uniform (0 0 0);
+boundaryField
+{
+    oversetPatch    { patchType overset; type zeroGradient; }
+    oversetBoundary { patchType overset; type zeroGradient; }
+    inlet  { type fixedValue; value uniform (0 0 0); }
+    outlet { type fixedValue; value uniform (0 0 0); }
+    ground { type fixedValue; value uniform (0 0 0); }
+    top    { type fixedValue; value uniform (0 0 0); }
+    sides  { type empty; }
+    bodyFrontBack { type empty; }
+    floatingObject { type calculated; value uniform (0 0 0); }
+}

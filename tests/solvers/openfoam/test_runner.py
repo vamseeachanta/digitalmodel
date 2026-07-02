@@ -159,6 +159,41 @@ class TestStagedExecution:
             "blockMesh", "topoSet", "subsetMesh", "setFields", "interFoam",
         ]
 
+    def test_merge_meshes_inserted_before_topo_set(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path, application="overInterDyMFoam")
+        self._patch(monkeypatch)
+        cfg = OpenFOAMRunConfig(
+            merge_meshes_source="../body",
+            run_topo_set=True,
+            run_set_fields=True,
+            to_vtk=False,
+        )
+        result = OpenFOAMRunner(cfg).run(case)
+        names = [s.name for s in result.stages]
+        assert names == [
+            "blockMesh", "mergeMeshes", "topoSet", "setFields",
+            "overInterDyMFoam",
+        ]
+
+    def test_run_solver_false_is_mesh_prep_only(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path, application="blockMesh")
+        self._patch(monkeypatch)
+        cfg = OpenFOAMRunConfig(
+            run_topo_set=True,
+            subset_mesh_set="c0",
+            subset_mesh_patch="floatingObject",
+            run_solver=False,
+        )
+        result = OpenFOAMRunner(cfg).run(case)
+        assert result.status is OpenFOAMRunStatus.COMPLETED
+        names = [s.name for s in result.stages]
+        # no solver, and to_vtk (default True) is ignored without a solve
+        assert names == ["blockMesh", "topoSet", "subsetMesh"]
+
     def test_subset_mesh_requires_both_set_and_patch(
         self, tmp_path: Path, monkeypatch
     ):

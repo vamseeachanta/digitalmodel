@@ -43,14 +43,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">8 / 8 verification cases &mdash; laminar, turbulent, lift, free surface, waves, floating body + green-water impact</span>
+<p style="margin-top:14px"><span class="badge">9 / 9 verification cases &mdash; laminar, turbulent, lift, free surface, waves, floating body, green-water impact + wave-body interaction</span>
 <span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body</span></div>
-<div><b>Cases verified</b><span class="good">8 / 8</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body &middot; Wave-body (overset)</span></div>
+<div><b>Cases verified</b><span class="good">9 / 9</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -159,6 +159,16 @@ reports.</p>
 <td class="good">within 20%</td>
 <td><a href="kleefsman-impact-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Wave-excited floating body<br><span class="sub">#1302</span></td>
+<td>Marine wave-body interaction (overset)</td>
+<td>overInterDyMFoam + sixDoF</td>
+<td>Heave RAO (long-wave limit)</td>
+<td>RAO 1.017<br>(fast mesh 1.006)</td>
+<td>wave follower: RAO &rarr; 1<br>(&lambda;/B &asymp; 29, Newman 1977)</td>
+<td class="good">+1.7%</td>
+<td><a href="wave-excited-body-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -217,6 +227,17 @@ shift</b> (used identically by the Lethe benchmark) brings every digitized Marti
 within 8.1%. Both raw and corrected metrics are gated in the regression test, and the uniform mesh is
 sized so the column edges fall exactly on cell faces &mdash; the initial water volume matches the
 analytic column to five digits and drifts by only 6&times;10<sup>&minus;7</sup> over the run.</div>
+<div class="callout key"><b>Wave-excited body &mdash; overset retires the morphing collapse.</b> The
+deforming-mesh attempt floats perfectly through the calm ramp and dies at first wave arrival &mdash; a
+waterline corner cell is sheared to zero volume (deltaCoeffs FPE), reproducibly. Moving the body on a
+<b>rigid overset component mesh</b> eliminates the failure structurally: no cell ever deforms. The heave
+RAO then lands within 1.7% of the long-wave wave-follower limit, with the incident amplitude taken from a
+Goda&ndash;Suzuki split over upstream gauges &mdash; minus one gauge whose sample ray sits bit-exactly on
+a cell face and double-counts columns (detected by a mean-level guard and excluded in the open, the same
+class of lesson as the Kleefsman density-aware probes). Two more portability facts: sixDoFRigidBodyState
+FATALs under the overset mesh class (the body state is parsed from the solver log), and the parallel
+decomposition must keep the overset region inside one slab &mdash; a straddling boundary ran ~6&times;
+slower per cell.</div>
 <div class="callout key"><b>Wave tank &mdash; the near-field is physics, not error.</b> The gauge 0.35
 wavelengths from the wavemaker reads +8% on wave height: generation carries evanescent modes that decay
 within about a wavelength, so wave-quality gates apply from x &ge; 8 m (standard NWT practice). In the
@@ -240,7 +261,8 @@ near-singular and was smoothed even by the original 1.2M-cell VOF study.</div>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
 (<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>,
 <code>naca0012_polar</code>, <code>dam_break</code>, <code>wave_tank</code>,
-<code>floating_body_decay</code>, <code>kleefsman_impact</code>) with a generator script and a README.
+<code>floating_body_decay</code>, <code>kleefsman_impact</code>,
+<code>wave_excited_body</code>) with a generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
@@ -249,13 +271,13 @@ Reproduction requires a solver-capable host; check readiness first with
 verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder), the first turbulent
 case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-generating case
 <b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras), and the first free-surface case <b>#1165</b>
-(dam break, interFoam VOF), the wave-generation gate <b>#1170</b> (StokesII numerical wave tank)
-and the first moving-body case <b>#1169</b> (floating-body heave decay, sixDoFRigidBodyMotion) &mdash;
+(dam break, interFoam VOF), the wave-generation gate <b>#1170</b> (StokesII numerical wave tank),
+the first moving-body case <b>#1169</b> (floating-body heave decay, sixDoFRigidBodyMotion) and the
+first wave-body interaction case <b>#1302</b> (wave-excited floating body, overset) &mdash;
 <b>now done</b>. Remaining work:</p>
 <ul>
 <li>Marine loading backlog: wave force on a cylinder <b>#1171</b>, hull resistance <b>#1173</b>;
-aero (<b>#1175&ndash;#1177</b>); wave-excited floating body <b>#1302</b> (parked: mesh-morphing collapse
-diagnosed, overset recommended).</li>
+aero (<b>#1175&ndash;#1177</b>).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
 <li>Provenance run-index across verified cases.</li>
 </ul>
