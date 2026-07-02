@@ -43,14 +43,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">5 / 5 verification cases across laminar, turbulent, lift-generating + free-surface regimes</span>
+<p style="margin-top:14px"><span class="badge">7 / 7 verification cases &mdash; laminar, turbulent, lift, free surface, waves + floating body</span>
 <span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS &middot; Lift-generating airfoil &middot; Free-surface VOF</span></div>
-<div><b>Cases verified</b><span class="good">5 / 5</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body</span></div>
+<div><b>Cases verified</b><span class="good">7 / 7</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -129,6 +129,26 @@ reports.</p>
 <td class="good">within 10%</td>
 <td><a href="dam-break-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Numerical wave tank (StokesII)<br><span class="sub">#1170</span></td>
+<td>Marine wave generation</td>
+<td>interFoam + waveModels</td>
+<td>H, dispersion k, reflection</td>
+<td>H within 4.7%; k +0.2%;<br>K<sub>r</sub> = 0.010</td>
+<td>&omega;&sup2; = gk&middot;tanh(kd);<br>input StokesII wave</td>
+<td class="good">within 5%</td>
+<td><a href="wave-tank-verification.html">View report &rarr;</a></td>
+</tr>
+<tr>
+<td>Floating-body heave decay<br><span class="sub">#1169</span></td>
+<td>Marine 6-DOF floating body</td>
+<td>interFoam + sixDoFRigidBodyMotion</td>
+<td>Draft + heave period</td>
+<td>draft +1.1%; 11 damped cycles;<br>Ca &asymp; 0.39 (physical)</td>
+<td>Archimedes; hydrostatic<br>period + added mass</td>
+<td class="good">within 5%</td>
+<td><a href="floating-body-decay-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -187,11 +207,23 @@ shift</b> (used identically by the Lethe benchmark) brings every digitized Marti
 within 8.1%. Both raw and corrected metrics are gated in the regression test, and the uniform mesh is
 sized so the column edges fall exactly on cell faces &mdash; the initial water volume matches the
 analytic column to five digits and drifts by only 6&times;10<sup>&minus;7</sup> over the run.</div>
+<div class="callout key"><b>Wave tank &mdash; the near-field is physics, not error.</b> The gauge 0.35
+wavelengths from the wavemaker reads +8% on wave height: generation carries evanescent modes that decay
+within about a wavelength, so wave-quality gates apply from x &ge; 8 m (standard NWT practice). In the
+established region the height holds within 4.7% with 1% boundary reflection &mdash; the absorption
+quality that makes long screening runs affordable.</div>
+<div class="callout key"><b>Floating body &mdash; the period offset is the added mass.</b> The measured
+heave period exceeds the waterplane-stiffness value by 18%; solving for the added mass gives
+Ca &asymp; 0.39, inside the published range for rectangular sections. A solver that missed the
+radiation/added-mass physics would land <em>on</em> the hydrostatic period &mdash; the offset is gated
+as a physical band, not hidden as an error. Heave-only constraints turn the tutorial into a clean
+1-DOF decay benchmark.</div>
 
 <h2>5&nbsp;&nbsp;Reproduce</h2>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
 (<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>,
-<code>naca0012_polar</code>, <code>dam_break</code>) with a generator script and a README.
+<code>naca0012_polar</code>, <code>dam_break</code>, <code>wave_tank</code>,
+<code>floating_body_decay</code>) with a generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
@@ -200,10 +232,12 @@ Reproduction requires a solver-capable host; check readiness first with
 verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder), the first turbulent
 case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-generating case
 <b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras), and the first free-surface case <b>#1165</b>
-(dam break, interFoam VOF) &mdash; <b>now done</b>, unlocking the marine free-surface backlog
-(waves, green water, sloshing). Remaining work:</p>
+(dam break, interFoam VOF), the wave-generation gate <b>#1170</b> (StokesII numerical wave tank)
+and the first moving-body case <b>#1169</b> (floating-body heave decay, sixDoFRigidBodyMotion) &mdash;
+<b>now done</b>. Remaining work:</p>
 <ul>
-<li>Marine free-surface validation backlog (<b>#1169&ndash;#1173</b>) + aero (<b>#1175&ndash;#1177</b>).</li>
+<li>Marine loading backlog: wave force on a cylinder <b>#1171</b>, Kleefsman impact <b>#1172</b>,
+hull resistance <b>#1173</b>; aero (<b>#1175&ndash;#1177</b>).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
 <li>Provenance run-index across verified cases.</li>
 </ul>

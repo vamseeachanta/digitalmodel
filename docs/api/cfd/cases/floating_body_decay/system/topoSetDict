@@ -1,0 +1,15 @@
+FoamFile { version 2.0; format ascii; class dictionary; object topoSetDict; }
+
+actions
+(
+    {
+        name    c0;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        // body volume: 0.3 x 0.2 x 0.5, bottom raised to z = 0.2333 so the
+        // release starts ~0.054 m below hydrostatic equilibrium
+        box     (0.35 0.35 0.233333) (0.65 0.55 0.733333);
+    }
+    { name c0; type cellSet; action invert; }
+);

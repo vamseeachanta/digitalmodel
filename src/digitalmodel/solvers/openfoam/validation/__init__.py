@@ -11,6 +11,10 @@ Cases:
 - Cylinder Re=100, #1166 — laminar Karman vortex street; mean Cd, Strouhal St.
 - Dam break (Martin & Moyce 1952), #1165 — interFoam VOF free surface; surge
   front Z(T) + mass conservation.
+- Regular-wave tank (StokesII NWT), #1170 — wave height, dispersion,
+  reflection vs wave theory.
+- Floating-body heave decay, #1169 — interFoam + sixDoFRigidBodyMotion;
+  Archimedes draft + hydrostatic heave period.
 """
 
 from __future__ import annotations
@@ -52,6 +56,31 @@ from .flat_plate import (
     blasius_delta99,
     blasius_plate_cd,
     build_flat_plate_case,
+)
+from .floating_body import (
+    ADDED_MASS_BAND,
+    DRAFT_TOLERANCE,
+    PERIOD_RATIO_BAND,
+    FloatingBodyConfig,
+    analyze_decay,
+    build_floating_body_case,
+    equilibrium_draft,
+    extract_heave_history,
+    heave_stiffness,
+    hydrostatic_heave_period,
+)
+from .wave_tank import (
+    DISPERSION_TOLERANCE,
+    REFLECTION_TOLERANCE,
+    WAVE_DECAY_TOLERANCE,
+    WAVE_HEIGHT_TOLERANCE,
+    WaveTankConfig,
+    build_wave_tank_case,
+    celerity,
+    dispersion_wavenumber,
+    extract_wave_quality,
+    reflection_coefficient,
+    wavelength,
 )
 
 
@@ -129,7 +158,44 @@ DAM_BREAK_CASE = ValidationCase(
     },
 )
 
-FOUNDATIONAL_CASES = (FLAT_PLATE_CASE, CYLINDER_CASE, DAM_BREAK_CASE)
+WAVE_TANK_CASE = ValidationCase(
+    name="wave_tank_stokes2",
+    build=build_wave_tank_case,
+    reference={
+        # dispersion for the default wave (T=3 s, d=0.4 m)
+        "wavenumber": dispersion_wavenumber(3.0, 0.4),
+        "wave_height": 0.05,
+    },
+    tolerance=DISPERSION_TOLERANCE,
+    domain="marine (wave generation / NWT)",
+    metadata={
+        "issue": "#1170",
+        "reference": "linear dispersion; stokesII tutorial (ESI v2312)",
+    },
+)
+
+FLOATING_BODY_CASE = ValidationCase(
+    name="floating_body_decay",
+    build=build_floating_body_case,
+    reference={
+        "draft": FloatingBodyConfig().draft,
+        "hydrostatic_period": FloatingBodyConfig().hydrostatic_period,
+    },
+    tolerance=DRAFT_TOLERANCE,
+    domain="marine (floating body, 6-DOF)",
+    metadata={
+        "issue": "#1169",
+        "reference": "Archimedes + waterplane-stiffness heave period",
+    },
+)
+
+FOUNDATIONAL_CASES = (
+    FLAT_PLATE_CASE,
+    CYLINDER_CASE,
+    DAM_BREAK_CASE,
+    WAVE_TANK_CASE,
+    FLOATING_BODY_CASE,
+)
 
 __all__ = [
     # Shared
@@ -138,6 +204,8 @@ __all__ = [
     "FLAT_PLATE_CASE",
     "CYLINDER_CASE",
     "DAM_BREAK_CASE",
+    "WAVE_TANK_CASE",
+    "FLOATING_BODY_CASE",
     # Flat plate (#1167)
     "BLASIUS_TOLERANCE",
     "FlatPlateConfig",
@@ -170,4 +238,27 @@ __all__ = [
     "dimensionless_time",
     "front_deviation",
     "martin_moyce_front",
+    # Wave tank (#1170)
+    "DISPERSION_TOLERANCE",
+    "REFLECTION_TOLERANCE",
+    "WAVE_DECAY_TOLERANCE",
+    "WAVE_HEIGHT_TOLERANCE",
+    "WaveTankConfig",
+    "build_wave_tank_case",
+    "celerity",
+    "dispersion_wavenumber",
+    "extract_wave_quality",
+    "reflection_coefficient",
+    "wavelength",
+    # Floating body (#1169)
+    "ADDED_MASS_BAND",
+    "DRAFT_TOLERANCE",
+    "PERIOD_RATIO_BAND",
+    "FloatingBodyConfig",
+    "analyze_decay",
+    "build_floating_body_case",
+    "equilibrium_draft",
+    "extract_heave_history",
+    "heave_stiffness",
+    "hydrostatic_heave_period",
 ]
