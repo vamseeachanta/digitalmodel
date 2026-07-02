@@ -162,6 +162,7 @@
     <div class="navgroup"><a class="navh" href="#wind">Floating wind</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
+    <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -308,6 +309,17 @@
     <div class="grid">
       <div class="card"><h3>Dynacard troubleshooting explorer</h3><div class="std">Gibbs wave equation · Bezerra projections · 18 failure modes</div><p>Seven curated troubleshooting cases, a 336-card example library behind phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting guide, and controller setpoints &amp; alarms computed per well.</p><div class="actions"><a class="open" href="../artificial-lift/dynacard-troubleshooting.html">Open &rarr;</a><a class="sec" href="pdf/dynacard-troubleshooting.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-troubleshooting.html">API &rarr;</a></div></div>
       <div class="card"><h3>Field-wide dynacard health rollup</h3><div class="std">per-well diagnosis · fail-closed screening</div><p>Every well's card classified and ranked into normal / warning / critical / failure, with the worst wells surfaced and a fail-closed field screening verdict (JSON + CSV).</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health">Open &rarr;</a><a class="sec" href="pdf/dynacard-field-health.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-field-health.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="well">
+    <div class="chanhead"><h2>Well construction &mdash; casing &amp; tubulars</h2><a class="onepager" href="pdf/sec-well.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Production-casing design checks on the API 5C3 / API 5CT product catalog &mdash; burst
+    (tubing leak + frac screen-out), full-evacuation collapse, buoyed-weight tension and Von Mises triaxial
+    against published operator design-factor minimums, plus the maximum allowable frac surface pressure,
+    the NACE MR0175 sour-service screen and the connection-class tension efficiencies.</p>
+    <div class="grid">
+      <div class="card"><h3>Casing design explorer</h3><div class="std">API 5C3 · API 5CT · NACE MR0175</div><p>Eight candidate products checked against a reference frac'd well &mdash; per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2&quot; 23# P110 &rarr; 14,520 psi), the NACE sour-service screen and the connection-class table.</p><div class="actions"><a class="open" href="../well/casing-design-explorer.html">Open &rarr;</a><a class="sec" href="pdf/casing-design.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/casing-design.html">API &rarr;</a></div></div>
     </div>
   </section>
 

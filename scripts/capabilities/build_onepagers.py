@@ -331,6 +331,31 @@ SPECS: list[dict] = [
                   "ML classification with confidence and top-3 differential",
                   "Two-tier load / span / card-area alarm recipes computed per well",
                   "Every published diagnosis re-verified against the live classifier in CI"]),
+    dict(id="sec-well", kind="section", title="Well construction — casing & tubulars",
+         std="API 5C3 · API 5CT · NACE MR0175", path="capabilities/#well",
+         blurb="Production-casing design checks on the API 5C3 / API 5CT product catalog — burst "
+               "(tubing leak + frac screen-out), full-evacuation collapse, buoyed-weight tension "
+               "and Von Mises triaxial against published operator design-factor minimums, plus the "
+               "maximum allowable frac surface pressure, the NACE MR0175 sour-service screen and "
+               "the connection-class tension efficiencies.",
+         figures=[("4", "design-check modes"), ("14,520 psi", "golden Barlow burst"),
+                  ("MR0175", "sour-service screen")],
+         bullets=["Burst / collapse / tension / triaxial design factors with governing depth per product",
+                  "API 5C3 ratings (4-regime collapse) computed from the API 5CT catalog, API-rounded",
+                  "Max allowable frac surface pressure at the burst design factor",
+                  "NACE MR0175 sour screen (0.05 psia H2S; 65 / 265 psia) with grade temperature windows"]),
+    dict(id="casing-design", kind="work", title="Casing design explorer",
+         std="API 5C3 · API 5CT · NACE MR0175",
+         path="well/casing-design-explorer.html",
+         blurb="Eight candidate products checked against a reference frac'd well — per-mode design "
+               "factors with governing depth and pass/fail, max allowable frac surface pressure, "
+               "the golden Barlow worked example (5-1/2\" 23# P110 → 14,520 psi), the NACE "
+               "sour-service screen and the connection-class table.",
+         figures=[("8", "candidate products"), ("14,520 psi", "golden Barlow burst")],
+         bullets=["Per-mode design factor, governing depth and pass/fail for every product",
+                  "Depth profiles for the tubing-leak and frac screen-out load cases vs the burst rating",
+                  "Max allowable frac surface pressure at DF 1.25 per product",
+                  "Every published margin re-verified against the live checks in CI"]),
     dict(id="dynacard-field-health", kind="work", title="Field-wide dynacard health rollup",
          std="per-well diagnosis · fail-closed screening",
          path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
@@ -392,6 +417,7 @@ PROMPTS: dict[str, str] = {
     "mooring-resilience": "Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit.",
     "dynacard-troubleshooting": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
     "dynacard-field-health": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
+    "casing-design": "Check my production casing design (burst / collapse / tension / triaxial) per API 5C3 and give me the max frac surface pressure.",
 }
 
 
