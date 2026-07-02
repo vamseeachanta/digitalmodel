@@ -59,7 +59,7 @@ def test_layer_a_public_rows_structurally_clean():
 # -- Layer B: private deny list (in-context hard gate) -----------------------------
 
 _KNOWN_HUB_ROOTS = (
-    Path("/mnt/local-analysis/workspace-hub"),
+    Path("/mnt/local-analysis/workspace-hub"),  # abs-path-allowed
     Path.home() / "workspace-hub",
 )
 
