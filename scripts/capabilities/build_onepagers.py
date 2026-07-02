@@ -304,6 +304,37 @@ SPECS: list[dict] = [
          figures=[], bullets=["Intact 1.67 / damaged 1.25 ASD factors per API RP 2SK",
                               "Anchor-foundation check at 1.5 per DNV-OS-E301 practice",
                               "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
+    dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
+         std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
+         blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
+               "wave-equation solvers, an 18-mode failure-signature library, ML card "
+               "classification with a CI drift-guard on every published diagnosis, and a "
+               "field-wide health screen.",
+         figures=[("18", "failure modes"), ("7", "published use cases"), ("2", "registered workflows")],
+         bullets=["Troubleshooting use cases: card signature → ML diagnosis → field response",
+                  "Gibbs frequency-domain and finite-difference surface-to-downhole solvers",
+                  "Field-wide per-well health ranking with a fail-closed screening verdict"]),
+    dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
+         std="Gibbs wave equation · Bezerra projections · 18 failure modes",
+         path="artificial-lift/dynacard-troubleshooting.html",
+         blurb="Seven practical rod-pump troubleshooting cases — gas interference, fluid pound, "
+               "valve leak, pump tagging, parted rods, gas lock — each with the card signature, "
+               "ML diagnosis, load metrics and the recommended field response.",
+         figures=[("7", "use cases"), ("7/7", "CI-verified diagnoses")],
+         bullets=["Pump-card signature per failure mode with a healthy-reference overlay",
+                  "ML classification with confidence and top-3 differential",
+                  "Fluid load, peak/min load and card-area metrics plus field actions",
+                  "Every published diagnosis re-verified against the live classifier in CI"]),
+    dict(id="dynacard-field-health", kind="work", title="Field-wide dynacard health rollup",
+         std="per-well diagnosis · fail-closed screening",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "artificial-lift-field-health",
+         blurb="Every well's dynamometer card classified and ranked into normal / warning / "
+               "critical / failure, with the worst wells surfaced and a fail-closed field "
+               "screening verdict as JSON + CSV.",
+         figures=[], bullets=["Per-well ML diagnosis rolled up to field status counts",
+                              "Worst-wells ranking by severity and fillage",
+                              "Fail-closed screening verdict (JSON summary + per-well CSV)"]),
 ]
 
 
@@ -318,6 +349,8 @@ WORKFLOW_MAP: dict[str, str] = {
     "unitbox-report": "rao-tabulation",
     "riser-validation": "dnv-os-f201-riser",
     "diffraction-deck-prep": "aqwa-diffraction-deck-prep",
+    "dynacard-troubleshooting": "dynacard-diagnostics",
+    "dynacard-field-health": "artificial-lift-field-health",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
@@ -351,6 +384,8 @@ PROMPTS: dict[str, str] = {
     "wind-sizing": "Screen floating-wind floater variants (semi-sub / spar / TLP / barge) for my site load cases.",
     "wind-economics": "Run the floating-wind LCOE / TOTEX tradespace with reliability and economies-of-scale levers.",
     "mooring-resilience": "Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit.",
+    "dynacard-troubleshooting": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
+    "dynacard-field-health": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
 }
 
 
@@ -548,9 +583,9 @@ def _render_html(spec: dict) -> str:
     figs = ""
     if spec["figures"]:
         cells = "".join(
-            f'<div class="fig"><div class="v">{html.escape(v)}</div>'
-            f'<div class="l">{html.escape(l)}</div></div>'
-            for v, l in spec["figures"]
+            f'<div class="fig"><div class="v">{html.escape(value)}</div>'
+            f'<div class="l">{html.escape(label)}</div></div>'
+            for value, label in spec["figures"]
         )
         figs = f'<div class="figs">{cells}</div>'
     bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
@@ -583,6 +618,14 @@ def _to_pdf(html_text: str, out_pdf: Path) -> None:
 
 
 def main() -> None:
+    """Build all one-pagers, or only the spec ids passed as CLI args
+    (keeps the committed-PDF diff scoped when adding one capability)."""
+    import sys
+
+    only = set(sys.argv[1:])
+    unknown = only - {spec["id"] for spec in SPECS}
+    if unknown:
+        raise SystemExit(f"Unknown spec id(s): {sorted(unknown)}")
     if not _CHROME:
         raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -593,6 +636,8 @@ def main() -> None:
     for spec in SPECS:
         assert spec["id"] not in ids, f"duplicate id {spec['id']}"
         ids.add(spec["id"])
+        if only and spec["id"] not in only:
+            continue
         _to_pdf(_render_html(spec), _OUT / f"{spec['id']}.pdf")
         n_pdf += 1
         # API artifacts: one self-contained workflow-API call per live work.

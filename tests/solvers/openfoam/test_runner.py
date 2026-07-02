@@ -135,6 +135,14 @@ class TestStagedExecution:
         assert (case / "log.blockMesh").is_file()
         assert (case / "log.interFoam").is_file()
 
+    def test_set_fields_inserted_before_solver(self, tmp_path: Path, monkeypatch):
+        case = _make_case(tmp_path, application="interFoam")
+        self._patch(monkeypatch)
+        cfg = OpenFOAMRunConfig(run_set_fields=True, to_vtk=False)
+        result = OpenFOAMRunner(cfg).run(case)
+        names = [s.name for s in result.stages]
+        assert names == ["blockMesh", "setFields", "interFoam"]
+
     def test_snappy_inserted_after_blockmesh(self, tmp_path: Path, monkeypatch):
         case = _make_case(tmp_path, application="simpleFoam")
         self._patch(monkeypatch)
