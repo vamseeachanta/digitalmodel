@@ -162,6 +162,7 @@ def assess_component(
         t_mm_in=t_mm,
         t_min_in=t_min,
         corrosion_rate_in_per_yr=component.corrosion_rate_in_per_yr,
+        design_pressure_psi=component.design_pressure_psi,
     )
 
     sufficiency = MeasurementSufficiency().evaluate(
@@ -173,8 +174,9 @@ def assess_component(
     )
 
     rsf = float(l2["rsf"])
-    rerated = component.design_pressure_psi * min(1.0, rsf / component.rsf_a) \
-        if component.rsf_a > 0 else float("nan")
+    # single source: the decision layer's MAWP_r (API 579-1 §2.4.2.2, #1273)
+    _rr = decision.get("rerated_mawp_psi")
+    rerated = float(_rr) if _rr is not None else float("nan")
     level_reached = 1 if l1["verdict"] == "ACCEPT" else 2
 
     return FFSAssessmentResult(

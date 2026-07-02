@@ -9,8 +9,10 @@ ACCEPT       Both Level 1 and Level 2 pass.  Component is fit-for-service.
 MONITOR      Level 2 passes with margin close to RSFa — increase inspection
              frequency.  (RSFa <= RSF < RSFa + MONITOR_BAND)
 RE_RATE      Level 2 fails but reduced MAWP brings the component back to
-             acceptance.  (Not implemented at this scope — returned when RSF
-             is between RE_RATE_FLOOR and RSFa.)
+             acceptance.  When ``design_pressure_psi`` is supplied the
+             re-rated pressure MAWP_r = MAWP * (RSF / RSFa) per API 579-1
+             §2.4.2.2 is computed and reported (returned when RSF is between
+             RE_RATE_FLOOR and RSFa).
 REPAIR       Level 1 or Level 2 fails and re-rating is not viable.  The
              component requires physical repair per ASME PCC-2.
 REPLACE      Remaining life is exhausted or RSF is below the safe operating
@@ -47,6 +49,7 @@ class FFSDecision:
         t_mm_in: float,
         t_min_in: float,
         corrosion_rate_in_per_yr: float,
+        design_pressure_psi: float | None = None,
     ) -> dict:
         """Determine the final FFS action verdict.
 
@@ -59,6 +62,10 @@ class FFSDecision:
             t_min_in: Code-required minimum wall thickness (inches).
             corrosion_rate_in_per_yr: Future corrosion rate (inches/year).
                 Use 0.0 for no further degradation.
+            design_pressure_psi: Design pressure / MAWP.  When supplied, the
+                RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
+                (API 579-1 §2.4.2.2) is computed and reported on every
+                verdict; the RE_RATE criterion quotes it explicitly.
 
         Returns:
             dict with keys:
@@ -70,7 +77,10 @@ class FFSDecision:
                     governing assessment criterion.
                 rsf (float): Echoed input RSF.
                 rsf_a (float): Echoed input RSFa.
+                rerated_mawp_psi (float | None): MAWP_r when
+                    design_pressure_psi was supplied, else None.
         """
+        rerated = FFSDecision._rerated_mawp(design_pressure_psi, rsf, rsf_a)
         remaining_life = FFSDecision._remaining_life(
             t_mm_in, t_min_in, corrosion_rate_in_per_yr
         )
@@ -96,6 +106,7 @@ class FFSDecision:
                 "governing_criterion": criterion,
                 "rsf": rsf,
                 "rsf_a": rsf_a,
+                "rerated_mawp_psi": rerated,
             }
 
         # At least one level fails — determine remediation path
@@ -110,8 +121,13 @@ class FFSDecision:
             verdict = "RE_RATE"
             criterion = (
                 f"Level 1 or Level 2 FAIL; RSF={rsf:.3f} in re-rating band "
-                f"[{_RE_RATE_FLOOR:.2f}, {rsf_a:.2f}).  "
-                "Reduce MAWP or operating pressure."
+                f"[{_RE_RATE_FLOOR:.2f}, {rsf_a:.2f})."
+                + (
+                    f"  Re-rate to MAWP_r={rerated:.0f} psi "
+                    "(MAWP x RSF/RSFa, API 579-1 §2.4.2.2)."
+                    if rerated is not None
+                    else "  Reduce MAWP or operating pressure."
+                )
             )
         else:
             # Level 1 fails but Level 2 still passes (RSF >= RSFa) —
@@ -127,7 +143,12 @@ class FFSDecision:
                 verdict = "RE_RATE"
                 criterion = (
                     "Level 1 FAIL; Level 2 RSF acceptable.  "
-                    "Consider re-rating or accepting at reduced MAWP."
+                    + (
+                        f"Operable at MAWP_r={rerated:.0f} psi "
+                        "(MAWP x RSF/RSFa, API 579-1 §2.4.2.2)."
+                        if rerated is not None
+                        else "Consider re-rating or accepting at reduced MAWP."
+                    )
                 )
 
         return {
@@ -136,11 +157,25 @@ class FFSDecision:
             "governing_criterion": criterion,
             "rsf": rsf,
             "rsf_a": rsf_a,
+            "rerated_mawp_psi": rerated,
         }
 
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _rerated_mawp(
+        design_pressure_psi: float | None, rsf: float, rsf_a: float
+    ) -> float | None:
+        """RSF-based re-rated pressure, API 579-1 §2.4.2.2.
+
+        MAWP_r = MAWP * (RSF / RSFa), capped at the original MAWP (a passing
+        RSF never rates the component above its design pressure).
+        """
+        if design_pressure_psi is None or rsf_a <= 0:
+            return None
+        return design_pressure_psi * min(1.0, max(0.0, rsf) / rsf_a)
 
     @staticmethod
     def _remaining_life(
