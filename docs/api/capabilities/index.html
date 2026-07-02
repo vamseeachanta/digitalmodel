@@ -156,6 +156,7 @@
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
+    <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -257,6 +258,17 @@
     <div class="grid">
       <div class="card"><h3>Rudder &amp; low-speed manoeuvring explorer</h3><div class="std">IMO MSC.137(76) · Clarke 1983 · OCIMF</div><p>Interactive turning circle vs the 5&middot;L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and engine-on rudder angle to balance the current yaw moment.</p><div class="actions"><a class="open" href="../hydro/rudder-maneuvering-explorer.html">Open &rarr;</a><a class="sec" href="pdf/rudder-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/rudder-explorer.html">API &rarr;</a></div></div>
       <div class="card"><h3>Rudder-type database</h3><div class="std">Molland &amp; Turnock · Brix · DNV/ABS</div><p>Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml">Open &rarr;</a><a class="sec" href="pdf/rudder-database.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/rudder-database.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="artificial-lift">
+    <div class="chanhead"><h2>Artificial lift &mdash; rod-pump diagnostics</h2><a class="onepager" href="pdf/sec-artificial-lift.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Sucker-rod-pump dynamometer-card (dynacard) diagnostics &mdash; surface-to-downhole
+    wave-equation solvers, an 18-mode failure-signature library, ML card classification with a CI
+    drift-guard on every published diagnosis, and a field-wide health screen.</p>
+    <div class="grid">
+      <div class="card"><h3>Dynacard troubleshooting explorer</h3><div class="std">Gibbs wave equation · Bezerra projections · 18 failure modes</div><p>Seven practical troubleshooting cases &mdash; gas interference, fluid pound, valve leak, pump tagging, parted rods, gas lock &mdash; each with the card signature, ML diagnosis, load metrics and the recommended field response.</p><div class="actions"><a class="open" href="../artificial-lift/dynacard-troubleshooting.html">Open &rarr;</a><a class="sec" href="pdf/dynacard-troubleshooting.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-troubleshooting.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Field-wide dynacard health rollup</h3><div class="std">per-well diagnosis · fail-closed screening</div><p>Every well's card classified and ranked into normal / warning / critical / failure, with the worst wells surfaced and a fail-closed field screening verdict (JSON + CSV).</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health">Open &rarr;</a><a class="sec" href="pdf/dynacard-field-health.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-field-health.html">API &rarr;</a></div></div>
     </div>
   </section>
 
