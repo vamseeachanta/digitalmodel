@@ -54,10 +54,14 @@ SPECS: list[dict] = [
          std="API 579-1 · ASME B31G · DNV-RP-F101", path="capabilities/#ffs",
          blurb="Remaining-strength assessment of corroded and metal-loss components with an "
                "inspector decision layer — benchmarked to standard worked examples and published "
-               "ratings across the three governing FFS codes.",
-         figures=[],
+               "ratings across the three governing FFS codes. Built to slot behind inspection, "
+               "mechanical-integrity and RBI service programs: thickness and defect data in, "
+               "code-cited verdict and report out.",
+         figures=[("3", "governing FFS codes"), ("Part 4/5", "API 579-1 metal loss"),
+                  ("510/570/653", "interval planning")],
          bullets=["Remaining-strength and inspector-verdict walkthrough across API 579-1, ASME B31G and DNV-RP-F101",
                   "Accept / re-rate / take-more-measurements / escalate driven by measurement sufficiency",
+                  "UT / phased-array thickness-grid intake; remaining life and next-inspection interval per API 510 / 570 / 653",
                   "RSTRENG effective-area and B31G screens validated to published worked examples"]),
     dict(id="sec-structural", kind="section", title="Ship structural strength",
          std="DNV-RP-C201 · IACS UR S11 · class rules", path="capabilities/#structural",
