@@ -94,13 +94,69 @@ class MaterialSnScfDffRow:
     note: str
 
 
-_NUMERIC_CONFIG_COLUMNS = ("water_depth_m", "od_mm", "wt_mm")
+@dataclass(frozen=True)
+class RiserStackupRow:
+    """Registry HANDLE + banded envelope (#1259): joint-by-joint values live
+    wiki-side; ``water_depth_band`` is a coarse band, never an exact depth;
+    ``rig_ref`` is the rig-residency join into ``rig_riser_interface``."""
+
+    rsu_id: str
+    topology_class: str
+    stackup_type: str
+    operation: str
+    riser_od_in: Optional[float]
+    water_depth_band: str
+    rig_ref: str
+    wiki_path: str
+    note: str
+
+
+@dataclass(frozen=True)
+class RigRiserInterfaceRow:
+    """Rig-class riser-handling capability (#1259). ``rig_ref`` is a generic
+    technical-signature slug; ``wed_rig_name`` joins the worldenergydata
+    2,268-rig identity space and is populated ONLY for rows sourced from
+    public rig specifications (named-rig <-> engagement mapping stays
+    wiki-side)."""
+
+    rig_ref: str
+    rig_type: str
+    n_tensioners: Optional[float]
+    tensioner_type: str
+    tensioner_capacity_kips: Optional[float]
+    tensioner_stroke_ft: Optional[float]
+    tj_stroke_ft: Optional[float]
+    n_tension_wires: Optional[float]
+    moonpool_length_ft: Optional[float]
+    moonpool_width_ft: Optional[float]
+    drill_floor_elev_ft: Optional[float]
+    wed_rig_name: str
+    wiki_path: str
+    note: str
+
+
+_NUMERIC_CONFIG_COLUMNS = (
+    "water_depth_m",
+    "od_mm",
+    "wt_mm",
+    "riser_od_in",
+    "n_tensioners",
+    "tensioner_capacity_kips",
+    "tensioner_stroke_ft",
+    "tj_stroke_ft",
+    "n_tension_wires",
+    "moonpool_length_ft",
+    "moonpool_width_ft",
+    "drill_floor_elev_ft",
+)
 #: Known tables: csv file, key column, row type. Anything else in the
 #: manifest is rejected (bounded reads: no discovery, no globbing).
 _TABLE_SPECS = {
     "config_catalog": ("config_catalog.csv", "config_id", RiserConfigRow),
     "standards_crosswalk": ("standards_crosswalk.csv", "code_id", StandardsCrosswalkRow),
     "material_sn_scf_dff": ("material_sn_scf_dff.csv", "ref_id", MaterialSnScfDffRow),
+    "riser_stackup": ("riser_stackup.csv", "rsu_id", RiserStackupRow),
+    "rig_riser_interface": ("rig_riser_interface.csv", "rig_ref", RigRiserInterfaceRow),
 }
 
 
@@ -159,10 +215,14 @@ class RiserDatabase:
         configs: Mapping[str, RiserConfigRow],
         crosswalk: Mapping[str, StandardsCrosswalkRow],
         materials: Mapping[str, MaterialSnScfDffRow],
+        stackups: Mapping[str, RiserStackupRow],
+        rigs: Mapping[str, RigRiserInterfaceRow],
     ) -> None:
         self._configs = dict(configs)
         self._crosswalk = dict(crosswalk)
         self._materials = dict(materials)
+        self._stackups = dict(stackups)
+        self._rigs = dict(rigs)
 
     @classmethod
     def load(cls, root: Path = DEFAULT_DB_ROOT) -> "RiserDatabase":
@@ -190,6 +250,8 @@ class RiserDatabase:
             configs=loaded["config_catalog"],
             crosswalk=loaded["standards_crosswalk"],
             materials=loaded["material_sn_scf_dff"],
+            stackups=loaded["riser_stackup"],
+            rigs=loaded["rig_riser_interface"],
         )
 
     # -- accessors: unknown key escalates (never defaults) -----------------------
@@ -202,6 +264,12 @@ class RiserDatabase:
 
     def material(self, ref_id: str) -> MaterialSnScfDffRow:
         return self._lookup("material_sn_scf_dff", self._materials, ref_id)
+
+    def stackup(self, rsu_id: str) -> RiserStackupRow:
+        return self._lookup("riser_stackup", self._stackups, rsu_id)
+
+    def rig(self, rig_ref: str) -> RigRiserInterfaceRow:
+        return self._lookup("rig_riser_interface", self._rigs, rig_ref)
 
     @staticmethod
     def _lookup(table: str, rows: Mapping[str, object], key: str):
@@ -224,13 +292,25 @@ class RiserDatabase:
     def materials(self) -> tuple[MaterialSnScfDffRow, ...]:
         return tuple(self._materials.values())
 
+    @property
+    def stackups(self) -> tuple[RiserStackupRow, ...]:
+        return tuple(self._stackups.values())
+
+    @property
+    def rigs(self) -> tuple[RigRiserInterfaceRow, ...]:
+        return tuple(self._rigs.values())
+
     def iter_public_rows(self) -> Iterator[tuple[str, str, str]]:
         """Yield ``(table, key, flattened-row-text)`` for every public-route
-        row — the substrate the leak gate (suite 6) scans."""
+        row — the substrate the leak gate (suite 6) scans. Kept in lockstep
+        with ``_TABLE_SPECS`` (a new table must appear here; the coverage
+        test derives its expectation from ``_TABLE_SPECS``)."""
         for table, rows in (
             ("config_catalog", self._configs),
             ("standards_crosswalk", self._crosswalk),
             ("material_sn_scf_dff", self._materials),
+            ("riser_stackup", self._stackups),
+            ("rig_riser_interface", self._rigs),
         ):
             for key, row in rows.items():
                 flat = " | ".join(

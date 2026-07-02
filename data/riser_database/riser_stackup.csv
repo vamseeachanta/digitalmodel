@@ -1,0 +1,10 @@
+rsu_id,topology_class,stackup_type,operation,riser_od_in,water_depth_band,rig_ref,wiki_path,note
+RSU-0001,conventional-bop-on-wellhead,as-planned-stackup,drilling,21,2000-3000m,drillship-6g-16x3600k-dat,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0002,completion-bop-on-ths,as-planned-stackup,completion,21,2000-3000m,drillship-6g-16x3600k-dat,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0003,intervention-bop-on-tree,as-planned-stackup,intervention,21,2000-3000m,drillship-6g-16x3600k-dat,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0004,mpd-surface-stack,as-planned-stackup,mpd,21,1000-1500m,drillship-16w-wireline,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0005,mpd-surface-stack,as-run-tally,mpd,21,1000-1500m,drillship-16w-wireline,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0006,none,weight-table,drilling,21,1000-1500m,drillship-16w-wireline,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0007,none,joint-library,drilling,21,1000-1500m,drillship-16w-wireline,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0008,production-scr-hangoff,component-library,,12.75,,,wikis/riser-projects/wiki/datasets/stackup-registry.md,
+RSU-0009,conventional-bop-on-wellhead,as-planned-stackup,drilling,21,2000-3000m,,wikis/riser-projects/wiki/datasets/stackup-registry.md,

@@ -110,3 +110,109 @@ material_rows:
     code_id: dnv-rp-c203
     wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
     note: alternative girth-weld detail class for riser fatigue screening
+
+# riser_stackup (#1259): registry HANDLES + banded envelopes ONLY. The private
+# stack-up registry (wiki_path below) is the value authority; exact depths,
+# masses, joint counts and the registry generic-name strings must NEVER appear
+# in this file or the generated CSVs (de-id + provenance tripwires enforce).
+stackup_rows:
+  - rsu_id: RSU-0001
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0002
+    topology_class: completion-bop-on-ths
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0003
+    topology_class: intervention-bop-on-tree
+    stackup_type: as-planned-stackup
+    operation: intervention
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0004
+    topology_class: mpd-surface-stack
+    stackup_type: as-planned-stackup
+    operation: mpd
+    riser_od_in: "21"
+    water_depth_band: 1000-1500m
+    rig_ref: drillship-16w-wireline
+  - rsu_id: RSU-0005
+    topology_class: mpd-surface-stack
+    stackup_type: as-run-tally
+    operation: mpd
+    riser_od_in: "21"
+    water_depth_band: 1000-1500m
+    rig_ref: drillship-16w-wireline
+  - rsu_id: RSU-0006
+    topology_class: none
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1000-1500m
+    rig_ref: drillship-16w-wireline
+  - rsu_id: RSU-0007
+    topology_class: none
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1000-1500m
+    rig_ref: drillship-16w-wireline
+  - rsu_id: RSU-0008
+    topology_class: production-scr-hangoff
+    stackup_type: component-library
+    operation: ""
+    riser_od_in: "12.75"
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0009
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: ""
+
+# rig_riser_interface (#1259): generic rig-class slugs; wed_rig_name joins the
+# worldenergydata 2,268-rig identity space and is populated ONLY for rows
+# sourced from public rig specifications (none in this slice). Capability
+# numerics are rig-class brochure-grade values; moonpool/drill-floor columns
+# ship empty until public-safe seeds exist.
+rig_rows:
+  - rig_ref: drillship-6g-16x3600k-dat
+    rig_type: drillship
+    n_tensioners: "16"
+    tensioner_type: direct-acting
+    tensioner_capacity_kips: "3600"
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: "60"
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: sixth-generation drillship class with direct-acting tensioners
+  - rig_ref: drillship-16w-wireline
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: wireline
+    tensioner_capacity_kips: ""
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: "16"
+    wed_rig_name: ""
+    note: wireline-tensioner drillship class; two wires may fail per the tension criterion
+  - rig_ref: drillship-generic-market
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: direct-acting
+    tensioner_capacity_kips: "3500"
+    tensioner_stroke_ft: "50"
+    tj_stroke_ft: "65"
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: market-typical capability figures for screening

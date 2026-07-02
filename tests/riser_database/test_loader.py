@@ -173,8 +173,12 @@ def test_oversized_table_fail_closed(tmp_path, monkeypatch):
 
 
 def test_iter_public_rows_covers_all_tables():
+    # Derived from _TABLE_SPECS so an added table can never silently escape
+    # the leak gate's row substrate (#1259 review finding).
     db = RiserDatabase.load()
     tables = {table for table, _key, _flat in db.iter_public_rows()}
-    assert tables == {"config_catalog", "standards_crosswalk", "material_sn_scf_dff"}
+    assert tables == set(rdb_loader._TABLE_SPECS)
     n_rows = sum(1 for _ in db.iter_public_rows())
-    assert n_rows == len(db.configs) + len(db.crosswalk_rows) + len(db.materials)
+    assert n_rows == len(db.configs) + len(db.crosswalk_rows) + len(
+        db.materials
+    ) + len(db.stackups) + len(db.rigs)

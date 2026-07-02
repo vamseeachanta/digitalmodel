@@ -21,7 +21,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from digitalmodel.riser_database.loader import DEFAULT_DB_ROOT, RiserDatabase
+from digitalmodel.riser_database.loader import (
+    _TABLE_SPECS as rdb_loader_specs,
+    DEFAULT_DB_ROOT,
+    RiserDatabase,
+)
 
 # -- Layer A: structural patterns (public-safe) ----------------------------------
 
@@ -34,12 +38,11 @@ STRUCTURAL_PATTERNS = (
     (re.compile(r"(?i)https?://"), "URL"),
 )
 
-_DATA_FILES = (
-    "config_catalog.csv",
-    "standards_crosswalk.csv",
-    "material_sn_scf_dff.csv",
-    "manifest.yaml",
-)
+# Derived from the loader's table specs so a new table can never drift out of
+# the raw-file scan (#1259 review finding), plus the non-CSV public files.
+_DATA_FILES = tuple(
+    spec[0] for spec in rdb_loader_specs.values()
+) + ("manifest.yaml",)
 
 
 def test_layer_a_public_rows_structurally_clean():
