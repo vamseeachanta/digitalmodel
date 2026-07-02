@@ -46,6 +46,36 @@ CROSSWALK_COLUMNS = [
     "registry_revision",
     "note",
 ]
+STACKUP_COLUMNS = [
+    "rsu_id",
+    "topology_class",
+    "stackup_type",
+    "operation",
+    "riser_od_in",
+    "water_depth_band",
+    "rig_ref",
+    "wiki_path",
+    "note",
+]
+RIG_COLUMNS = [
+    "rig_ref",
+    "rig_type",
+    "n_tensioners",
+    "tensioner_type",
+    "tensioner_capacity_kips",
+    "tensioner_stroke_ft",
+    "tj_stroke_ft",
+    "n_tension_wires",
+    "moonpool_length_ft",
+    "moonpool_width_ft",
+    "drill_floor_elev_ft",
+    "wed_rig_name",
+    "wiki_path",
+    "note",
+]
+#: The ONLY wiki_path the public stack-up/rig tables may carry (#1259 review:
+#: per-source page slugs leak provenance; the registry page is the resolver).
+REGISTRY_WIKI_PATH = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 MATERIAL_COLUMNS = [
     "ref_id",
     "sn_curve_name",
@@ -138,6 +168,10 @@ def main() -> int:
 
     crosswalk_rows = sorted(spec["crosswalk_rows"], key=lambda r: r["code_id"])
     material_rows = sorted(spec["material_rows"], key=lambda r: r["ref_id"])
+    stackup_rows = sorted(spec["stackup_rows"], key=lambda r: r["rsu_id"])
+    rig_rows = sorted(spec["rig_rows"], key=lambda r: r["rig_ref"])
+    for row in stackup_rows + rig_rows:
+        row["wiki_path"] = REGISTRY_WIKI_PATH
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tables = {
@@ -149,6 +183,12 @@ def main() -> int:
         ),
         "material_sn_scf_dff": _write_csv(
             OUT_DIR / "material_sn_scf_dff.csv", MATERIAL_COLUMNS, material_rows
+        ),
+        "riser_stackup": _write_csv(
+            OUT_DIR / "riser_stackup.csv", STACKUP_COLUMNS, stackup_rows
+        ),
+        "rig_riser_interface": _write_csv(
+            OUT_DIR / "rig_riser_interface.csv", RIG_COLUMNS, rig_rows
         ),
     }
     manifest = {

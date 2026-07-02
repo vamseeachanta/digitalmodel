@@ -925,6 +925,16 @@ workflows:
       - examples/workflows/liquefaction/results/liquefaction/liquefaction_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]
     runtime: offline
+  - id: casing-design
+    basename: casing_design
+    title: Production casing design-factor screen (burst/collapse/tension/triaxial + frac limit + NACE sour)
+    input: examples/workflows/casing-design/input.yml
+    outputs:
+      - examples/workflows/casing-design/results/input.yml
+      - examples/workflows/casing-design/results/casing_design/casing_design_summary.json
+      - examples/workflows/casing-design/results/casing_design/casing_design_products.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[casing-design]
+    runtime: offline
   - id: well-bore-design
     basename: well_bore_design
     title: Standard offshore wellbore casing/cost/risk screen

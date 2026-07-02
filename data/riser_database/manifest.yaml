@@ -11,6 +11,14 @@ tables:
     file: material_sn_scf_dff.csv
     rows: 3
     sha256: 121a4d08df0a271b12e59ba8344893dd6aa71fc310a09d4c8b2bed3509a98c2f
+  rig_riser_interface:
+    file: rig_riser_interface.csv
+    rows: 3
+    sha256: a7602f37afc3bcda207cad9daba55f24a681d93972011d3f512f731053e2a59e
+  riser_stackup:
+    file: riser_stackup.csv
+    rows: 9
+    sha256: f7d949cd0ffeceecc174c9e0c7b03845374fb34d395138c94cda4b85017de64a
   standards_crosswalk:
     file: standards_crosswalk.csv
     rows: 4
