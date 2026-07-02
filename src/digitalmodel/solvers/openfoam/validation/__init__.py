@@ -9,6 +9,8 @@ the analytical + build checks still run green.
 Cases:
 - Flat plate (Blasius), #1167 — laminar boundary layer; Cf, delta99, plate Cd.
 - Cylinder Re=100, #1166 — laminar Karman vortex street; mean Cd, Strouhal St.
+- Dam break (Martin & Moyce 1952), #1165 — interFoam VOF free surface; surge
+  front Z(T) + mass conservation.
 """
 
 from __future__ import annotations
@@ -27,6 +29,21 @@ from .cylinder import (
     cylinder_reference_strouhal,
     shedding_frequency,
     strouhal_number,
+)
+from .dam_break import (
+    DAM_BREAK_FRONT_TOLERANCE,
+    DAM_BREAK_MASS_TOLERANCE,
+    DAM_BREAK_RAW_FRONT_TOLERANCE,
+    DAM_BREAK_SOLVE_TOLERANCE,
+    GATE_RELEASE_TIME_SHIFT,
+    MARTIN_MOYCE_N2_FRONT,
+    MARTIN_MOYCE_N2_TIME,
+    DamBreakConfig,
+    build_dam_break_case,
+    dimensionless_front,
+    dimensionless_time,
+    front_deviation,
+    martin_moyce_front,
 )
 from .flat_plate import (
     BLASIUS_TOLERANCE,
@@ -96,7 +113,23 @@ CYLINDER_CASE = ValidationCase(
     metadata={"issue": "#1166", "reference": "Williamson (1996); Henderson (1997)"},
 )
 
-FOUNDATIONAL_CASES = (FLAT_PLATE_CASE, CYLINDER_CASE)
+DAM_BREAK_CASE = ValidationCase(
+    name="dam_break_martin_moyce",
+    build=build_dam_break_case,
+    reference={
+        # Digitized experimental surge-front spot values Z(T), n^2=2.
+        "front_z_at_T1p97": 2.33,
+        "front_z_at_T2p96": 3.67,
+    },
+    tolerance=DAM_BREAK_FRONT_TOLERANCE,
+    domain="marine (free-surface VOF)",
+    metadata={
+        "issue": "#1165",
+        "reference": "Martin & Moyce (1952), doi:10.1098/rsta.1952.0006",
+    },
+)
+
+FOUNDATIONAL_CASES = (FLAT_PLATE_CASE, CYLINDER_CASE, DAM_BREAK_CASE)
 
 __all__ = [
     # Shared
@@ -104,6 +137,7 @@ __all__ = [
     "FOUNDATIONAL_CASES",
     "FLAT_PLATE_CASE",
     "CYLINDER_CASE",
+    "DAM_BREAK_CASE",
     # Flat plate (#1167)
     "BLASIUS_TOLERANCE",
     "FlatPlateConfig",
@@ -122,4 +156,18 @@ __all__ = [
     "cylinder_reference_strouhal",
     "shedding_frequency",
     "strouhal_number",
+    # Dam break (#1165)
+    "DAM_BREAK_FRONT_TOLERANCE",
+    "DAM_BREAK_MASS_TOLERANCE",
+    "DAM_BREAK_RAW_FRONT_TOLERANCE",
+    "DAM_BREAK_SOLVE_TOLERANCE",
+    "GATE_RELEASE_TIME_SHIFT",
+    "MARTIN_MOYCE_N2_FRONT",
+    "MARTIN_MOYCE_N2_TIME",
+    "DamBreakConfig",
+    "build_dam_break_case",
+    "dimensionless_front",
+    "dimensionless_time",
+    "front_deviation",
+    "martin_moyce_front",
 ]
