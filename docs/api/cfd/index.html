@@ -43,7 +43,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">5 / 5 verification cases across laminar, turbulent, lift-generating + free-surface regimes</span></p>
+<p style="margin-top:14px"><span class="badge">5 / 5 verification cases across laminar, turbulent, lift-generating + free-surface regimes</span>
+<span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
 
 <div class="meta">
@@ -59,7 +60,11 @@ verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#116
 <p>The digitalmodel CFD capability is verified by <b>known-answer</b> cases. No domain workflow is
 considered production-ready until it reproduces a result with a known analytical or benchmark
 answer. Verification runs execute against <b>real OpenFOAM v2312</b> &mdash; not mocked &mdash;
-so the numbers below come from converged solutions of the actual solver, not from stubs. Two flow
+so the numbers below come from converged solutions of the actual solver, not from stubs.
+Every report is an <b>interactive capability page</b>: charts support hover/zoom/series-toggling
+(Plotly), the transient cases carry scrubbable animations of the solved fields (the K&aacute;rm&aacute;n
+vortex street; the dam-break collapse), and each case states the <b>realistic offshore use case it
+gates</b> &mdash; hull friction, VIV screening, control-surface lift, green water &amp; sloshing. Two flow
 regimes anchor the suite: a <b>steady boundary-layer</b> case (flat plate, Blasius similarity
 solution) and a <b>transient bluff-body</b> case (cylinder at Re&nbsp;=&nbsp;100, vortex shedding).
 CFD without verification is decoration.</p>
