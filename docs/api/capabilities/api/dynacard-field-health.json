@@ -1,0 +1,49 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health",
+  "provenance": {
+    "basis": "per-well diagnosis \u00b7 fail-closed screening",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/run",
+    "body": {
+      "repo": "digitalmodel",
+      "workflow": "artificial-lift-field-health"
+    }
+  },
+  "invocation": "uv run python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml",
+  "workflow": "digitalmodel:artificial-lift-field-health",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health"
+    }
+  ],
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Screen my field's rod-pump dynacards and rank the worst wells by health status."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "artificial-lift-field-health"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml"
+    }
+  ]
+}

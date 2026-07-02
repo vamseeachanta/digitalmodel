@@ -67,6 +67,9 @@ class OpenFOAMRunConfig:
             Read from the case's ``controlDict`` if left ``None``.
         mesh_utility: Mesh generator to run first (``blockMesh`` by default).
         run_snappy: Run ``snappyHexMesh -overwrite`` after blockMesh (3D from STL).
+        run_set_fields: Run ``setFields`` after meshing, before the solver —
+            required by VOF/multiphase cases that initialise a phase region
+            from ``system/setFieldsDict`` (e.g. the dam-break water column).
         to_vtk: Run ``foamToVTK`` after the solver for PyVista/ParaView.
         timeout_seconds: Hard wall-clock cap on any single utility.
         dry_run: Skip execution; report DRY_RUN (used for plan/validation).
@@ -75,6 +78,7 @@ class OpenFOAMRunConfig:
     solver: Optional[str] = None
     mesh_utility: str = "blockMesh"
     run_snappy: bool = False
+    run_set_fields: bool = False
     to_vtk: bool = True
     timeout_seconds: int = 7200
     dry_run: bool = False
@@ -173,6 +177,8 @@ class OpenFOAMRunner:
             stages.append(
                 (OpenFOAMRunStatus.MESHING, ["snappyHexMesh", "-overwrite"])
             )
+        if self._config.run_set_fields:
+            stages.append((OpenFOAMRunStatus.MESHING, ["setFields"]))
         stages.append((OpenFOAMRunStatus.RUNNING, [solver]))
         if self._config.to_vtk:
             stages.append((OpenFOAMRunStatus.RUNNING, ["foamToVTK"]))

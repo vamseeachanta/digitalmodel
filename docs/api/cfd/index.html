@@ -43,13 +43,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">4 / 4 verification cases across laminar, turbulent + lift-generating regimes</span></p>
+<p style="margin-top:14px"><span class="badge">5 / 5 verification cases across laminar, turbulent, lift-generating + free-surface regimes</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS &middot; Lift-generating airfoil</span></div>
-<div><b>Cases verified</b><span class="good">4 / 4</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS &middot; Lift-generating airfoil &middot; Free-surface VOF</span></div>
+<div><b>Cases verified</b><span class="good">5 / 5</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -114,6 +114,16 @@ reports.</p>
 <td class="good">&minus;2.2%</td>
 <td><a href="naca0012-airfoil-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Dam break (VOF free surface)<br><span class="sub">#1165</span></td>
+<td>Multiphase free surface</td>
+<td>interFoam (VOF, laminar)</td>
+<td>Surge front Z(T) + mass</td>
+<td>mean 3.0% / max 8.1%<br>(gate-corrected); drift 6&times;10<sup>&minus;7</sup></td>
+<td>Martin &amp; Moyce (1952)<br>experiments, n&sup2;=2</td>
+<td class="good">within 10%</td>
+<td><a href="dam-break-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -165,11 +175,18 @@ ideal 2&pi;/rad &mdash; the physically correct thickness/viscous deficit. The sl
 incidence-independent, so the mesh's built-in geometric offset (recovered as a &minus;1.4&deg;
 zero-lift angle) doesn't affect the verification; the reference area uses the measured ~35-chord, not
 unit chord.</div>
+<div class="callout key"><b>Dam break &mdash; the gate-release artifact is physics, not error.</b> The
+CFD releases the column instantaneously; the experiment's diaphragm removal takes finite time, so the
+raw front leads the measurement at early T. The literature-standard <b>+0.175 dimensionless time
+shift</b> (used identically by the Lethe benchmark) brings every digitized Martin &amp; Moyce point
+within 8.1%. Both raw and corrected metrics are gated in the regression test, and the uniform mesh is
+sized so the column edges fall exactly on cell faces &mdash; the initial water volume matches the
+analytic column to five digits and drifts by only 6&times;10<sup>&minus;7</sup> over the run.</div>
 
 <h2>5&nbsp;&nbsp;Reproduce</h2>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
 (<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>,
-<code>naca0012_polar</code>) with a generator script and a README.
+<code>naca0012_polar</code>, <code>dam_break</code>) with a generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
@@ -177,10 +194,11 @@ Reproduction requires a solver-capable host; check readiness first with
 <p>This suite is part of the digitalmodel <b>CFD epic&nbsp;#1161</b>, covering the foundational
 verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder), the first turbulent
 case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-generating case
-<b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras) &mdash; <b>now done</b>, so both the turbulent and
-the lift-generation milestones are reached. Remaining work:</p>
+<b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras), and the first free-surface case <b>#1165</b>
+(dam break, interFoam VOF) &mdash; <b>now done</b>, unlocking the marine free-surface backlog
+(waves, green water, sloshing). Remaining work:</p>
 <ul>
-<li>Aero / marine validation backlog (<b>#1169&ndash;#1177</b>).</li>
+<li>Marine free-surface validation backlog (<b>#1169&ndash;#1173</b>) + aero (<b>#1175&ndash;#1177</b>).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
 <li>Provenance run-index across verified cases.</li>
 </ul>

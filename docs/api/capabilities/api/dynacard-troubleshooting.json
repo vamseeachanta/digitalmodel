@@ -1,0 +1,49 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/artificial-lift/dynacard-troubleshooting.html",
+  "provenance": {
+    "basis": "Gibbs wave equation \u00b7 Bezerra projections \u00b7 18 failure modes",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/run",
+    "body": {
+      "repo": "digitalmodel",
+      "workflow": "dynacard-diagnostics"
+    }
+  },
+  "invocation": "uv run python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml",
+  "workflow": "digitalmodel:dynacard-diagnostics",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/artificial-lift/dynacard-troubleshooting.html"
+    }
+  ],
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "dynacard-diagnostics"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml"
+    }
+  ]
+}

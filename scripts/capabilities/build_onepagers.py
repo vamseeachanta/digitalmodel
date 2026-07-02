@@ -98,12 +98,24 @@ SPECS: list[dict] = [
                   "Self-contained, deterministic static output"]),
     dict(id="sec-installation", kind="section", title="Installation",
          std="DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444", path="capabilities/#installation",
-         blurb="Marine-installation suitability for a crane vessel — lift envelopes, splash-zone "
-               "operability and weather-window analysis, published as a Deckhand deliverable.",
+         blurb="Marine-installation suitability — a crane-vessel pamphlet with lift envelopes, "
+               "splash-zone operability and weather windows, a provenance-audited installation "
+               "fleet database with confidence-weighted suitability ranking, and a DNV 2.7-1 "
+               "offshore-container screen.",
          figures=[],
          bullets=["Crane lift suitability against the vessel's load chart",
                   "Operational and per-structure splash-zone Hs/Tp envelopes",
-                  "Weather-window operability with DP / mooring failure-risk"]),
+                  "Confidence-weighted vessel suitability ranking over the installation fleet",
+                  "DNV 2.7-1 (DNVGL-ST-E271) offshore-container utilization screen"]),
+    dict(id="sec-wind", kind="section", title="Floating wind",
+         std="semi-sub · spar · TLP · barge · LCOE", path="capabilities/#wind",
+         blurb="Floating-wind concept screening and economics — parametric floater archetypes "
+               "screened across site load cases as the licence-free first tier, and an LCOE / "
+               "TOTEX trade space with reliability, qualification and industrialisation levers.",
+         figures=[("4", "floater archetypes"), ("IEA 15 MW", "reference turbine")],
+         bullets=["Stability, motion, modal-separation and mooring-offset screens per variant",
+                  "LCOE / TOTEX engine with capex breakdown and reliability scenarios",
+                  "Qualification levers and turbine- / farm-scale economies of scale"]),
     dict(id="sec-validation", kind="section", title="Validated against published references",
          std="governing-code provenance · CI-guarded", path="capabilities/#validation",
          blurb="Every strength / FFS result reproduces a standard's worked example, a published "
@@ -207,12 +219,15 @@ SPECS: list[dict] = [
     dict(id="sec-manoeuvring", kind="section", title="Manoeuvring & station-keeping",
          std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="capabilities/#manoeuvring",
          blurb="Low-speed manoeuvring and station-keeping screens — turning circle against the IMO "
-               "criteria, minimum steerage speed by loading condition, and the rudder angle needed "
-               "to hold heading against a current, built on a researched rudder-type database.",
+               "criteria, minimum steerage speed by loading condition, the rudder angle needed "
+               "to hold heading against a current, built on a researched rudder-type database, "
+               "and a mooring-system resilience traffic-light composed from the pre-computed "
+               "mooring atlases.",
          figures=[],
          bullets=["Turning circle vs the 5·L IMO advance/tactical-diameter limit",
                   "Steerage-threshold speed vs wind (laden / ballast / kick-ahead)",
-                  "Engine-on rudder angle to balance the current yaw moment"]),
+                  "Engine-on rudder angle to balance the current yaw moment",
+                  "Mooring resilience traffic-light (intact / damaged / foundation / fatigue)"]),
     dict(id="rudder-explorer", kind="work", title="Rudder & low-speed manoeuvring explorer",
          std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="hydro/rudder-maneuvering-explorer.html",
          blurb="Interactive turning circle vs the 5·L limit, steerage-threshold speed vs wind "
@@ -230,6 +245,100 @@ SPECS: list[dict] = [
                "a class-rule area sizing check.",
          figures=[], bullets=["Nine rudder types with area / aspect ratios and lift coefficients",
                               "Class-rule (DNV/ABS) rudder-area sizing check"]),
+    dict(id="diffraction-deck-prep", kind="work",
+         title="Diffraction deck generation — spec to solver input",
+         std="AQWA · OrcaWave · canonical spec",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "aqwa-diffraction-deck-prep",
+         blurb="One canonical vessel spec (YAML) deterministically prepared into a solver-ready "
+               "AQWA diffraction deck offline; the OrcaWave solve runs on the licensed lane with "
+               "provenance carried through.",
+         figures=[], bullets=["Solver-ready AQWA .dat deck prepared offline from one spec",
+                              "OrcaWave solve on the licensed lane, same canonical spec",
+                              "Deterministic registry workflow, durable-workflow tested"]),
+    dict(id="vessel-suitability", kind="work",
+         title="Installation vessel database & suitability ranking",
+         std="DNV-RP-H103 · flag-don't-fake provenance",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels",
+         blurb="Curated + worldenergydata installation crane fleet (crane curves, deck, DP) with "
+               "cited / estimated / gap provenance on every field; ranks vessels for a lift by "
+               "capability margin weighted by data confidence.",
+         figures=[], bullets=["Every field cited, flagged estimated, or an explicit gap — never faked",
+                              "Confidence-weighted capability score per vessel for a lift requirement",
+                              "Defensibility flag on each ranking"]),
+    dict(id="container-utilization", kind="work",
+         title="Offshore container utilization — DNV 2.7-1",
+         std="DNVGL-ST-E271 (2017)",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/"
+              "offshore_container_utilization",
+         blurb="Clause-traced offshore-lift screening for CCUs — 2.5·R·g primary load, 3·R·g "
+               "pad-eye set, 0.85·Re allowable — swept into utilization curves across rating, "
+               "aspect ratio and sling angle.",
+         figures=[], bullets=["Clause-traced design loads per DNVGL-ST-E271 §4.2.3.1 / §4.2.1",
+                              "Utilization curves vs rating, aspect ratio and sling angle",
+                              "Screening tier ahead of the certified FEA + prototype tests"]),
+    dict(id="wind-sizing", kind="work", title="Floating-wind sizing & concept screening",
+         std="semi-sub · spar · TLP · barge · IEA 15 MW",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "floating-wind-sizing",
+         blurb="Parametric floater archetypes swept across site load cases and screened on "
+               "stability, motion, modal separation and mooring offset — the closed-form first "
+               "tier ahead of the licensed OrcaWave/OrcaFlex pass.",
+         figures=[("4", "floater archetypes")],
+         bullets=["Stability / motion / modal / mooring screen per design variant",
+                  "IEA 15 MW-class lumped turbine topside carried explicitly",
+                  "Licence-free closed-form tier; shortlist goes to OrcaWave/OrcaFlex"]),
+    dict(id="wind-economics", kind="work", title="Floating-wind LCOE / TOTEX tradespace",
+         std="LCOE · reliability · economies of scale",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "floating-wind-economics",
+         blurb="Levelised-cost engine with capex breakdown, availability / reliability scenarios, "
+               "qualification levers and turbine- / farm-scale economies swept over the concept "
+               "trade space.",
+         figures=[], bullets=["LCOE / TOTEX with an explicit capex breakdown",
+                              "Availability and reliability scenarios applied to the cost of energy",
+                              "Turbine- and farm-scale economies-of-scale sweeps"]),
+    dict(id="mooring-resilience", kind="work", title="Mooring resilience screen",
+         std="API RP 2SK · DNV-OS-E301",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/"
+              "mooring_resilience",
+         blurb="Intact / one-line-damaged tension, anchor-foundation and chain-fatigue checks "
+               "composed from the pre-computed mooring and anchor atlases into a single "
+               "traffic-light — out-of-range cases are escalated, never extrapolated.",
+         figures=[], bullets=["Intact 1.67 / damaged 1.25 ASD factors per API RP 2SK",
+                              "Anchor-foundation check at 1.5 per DNV-OS-E301 practice",
+                              "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
+    dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
+         std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
+         blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
+               "wave-equation solvers, an 18-mode failure-signature library, ML card "
+               "classification with a CI drift-guard on every published diagnosis, and a "
+               "field-wide health screen.",
+         figures=[("18", "failure modes"), ("7", "published use cases"), ("2", "registered workflows")],
+         bullets=["Troubleshooting use cases: card signature → ML diagnosis → field response",
+                  "Gibbs frequency-domain and finite-difference surface-to-downhole solvers",
+                  "Field-wide per-well health ranking with a fail-closed screening verdict"]),
+    dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
+         std="Gibbs wave equation · Bezerra projections · 18 failure modes",
+         path="artificial-lift/dynacard-troubleshooting.html",
+         blurb="Seven practical rod-pump troubleshooting cases — gas interference, fluid pound, "
+               "valve leak, pump tagging, parted rods, gas lock — each with the card signature, "
+               "ML diagnosis, load metrics and the recommended field response.",
+         figures=[("7", "use cases"), ("7/7", "CI-verified diagnoses")],
+         bullets=["Pump-card signature per failure mode with a healthy-reference overlay",
+                  "ML classification with confidence and top-3 differential",
+                  "Fluid load, peak/min load and card-area metrics plus field actions",
+                  "Every published diagnosis re-verified against the live classifier in CI"]),
+    dict(id="dynacard-field-health", kind="work", title="Field-wide dynacard health rollup",
+         std="per-well diagnosis · fail-closed screening",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "artificial-lift-field-health",
+         blurb="Every well's dynamometer card classified and ranked into normal / warning / "
+               "critical / failure, with the worst wells surfaced and a fail-closed field "
+               "screening verdict as JSON + CSV.",
+         figures=[], bullets=["Per-well ML diagnosis rolled up to field status counts",
+                              "Worst-wells ranking by severity and fillage",
+                              "Fail-closed screening verdict (JSON summary + per-well CSV)"]),
 ]
 
 
@@ -243,6 +352,9 @@ WORKFLOW_MAP: dict[str, str] = {
     "rao-comparison": "rao-tabulation",
     "unitbox-report": "rao-tabulation",
     "riser-validation": "dnv-os-f201-riser",
+    "diffraction-deck-prep": "aqwa-diffraction-deck-prep",
+    "dynacard-troubleshooting": "dynacard-diagnostics",
+    "dynacard-field-health": "artificial-lift-field-health",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
@@ -270,6 +382,14 @@ PROMPTS: dict[str, str] = {
     "installation-bokalift": "Assess crane-lift installation suitability and splash-zone weather windows for BokaLift 2.",
     "rudder-explorer": "Check turning circle vs the IMO 5.L limit and the minimum steerage speed for my vessel.",
     "rudder-database": "Show the rudder-type database with area ratios, aspect ratios and lift coefficients.",
+    "diffraction-deck-prep": "Prepare a solver-ready AQWA diffraction deck from my canonical vessel spec.",
+    "vessel-suitability": "Rank the installation fleet for my lift (weight, reach, water depth) with confidence-weighted suitability.",
+    "container-utilization": "Screen my offshore container (CCU) utilization per DNV 2.7-1 for rating, aspect ratio and sling angle.",
+    "wind-sizing": "Screen floating-wind floater variants (semi-sub / spar / TLP / barge) for my site load cases.",
+    "wind-economics": "Run the floating-wind LCOE / TOTEX tradespace with reliability and economies-of-scale levers.",
+    "mooring-resilience": "Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit.",
+    "dynacard-troubleshooting": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
+    "dynacard-field-health": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
 }
 
 
@@ -467,9 +587,9 @@ def _render_html(spec: dict) -> str:
     figs = ""
     if spec["figures"]:
         cells = "".join(
-            f'<div class="fig"><div class="v">{html.escape(v)}</div>'
-            f'<div class="l">{html.escape(l)}</div></div>'
-            for v, l in spec["figures"]
+            f'<div class="fig"><div class="v">{html.escape(value)}</div>'
+            f'<div class="l">{html.escape(label)}</div></div>'
+            for value, label in spec["figures"]
         )
         figs = f'<div class="figs">{cells}</div>'
     bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
@@ -502,6 +622,14 @@ def _to_pdf(html_text: str, out_pdf: Path) -> None:
 
 
 def main() -> None:
+    """Build all one-pagers, or only the spec ids passed as CLI args
+    (keeps the committed-PDF diff scoped when adding one capability)."""
+    import sys
+
+    only = set(sys.argv[1:])
+    unknown = only - {spec["id"] for spec in SPECS}
+    if unknown:
+        raise SystemExit(f"Unknown spec id(s): {sorted(unknown)}")
     if not _CHROME:
         raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -512,6 +640,8 @@ def main() -> None:
     for spec in SPECS:
         assert spec["id"] not in ids, f"duplicate id {spec['id']}"
         ids.add(spec["id"])
+        if only and spec["id"] not in only:
+            continue
         _to_pdf(_render_html(spec), _OUT / f"{spec['id']}.pdf")
         n_pdf += 1
         # API artifacts: one self-contained workflow-API call per live work.
