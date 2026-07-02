@@ -72,6 +72,13 @@ from .scaling import (
     lcoe_at_scale,
     default_scaling,
 )
+from .standardization import (
+    LearningCurve,
+    StandardizationDiscount,
+    apply_standardization,
+    lcoe_with_standardization,
+    default_learning_curve,
+)
 
 __all__ = [
     "RHO_SEAWATER",
@@ -124,4 +131,9 @@ __all__ = [
     "scale_economics",
     "lcoe_at_scale",
     "default_scaling",
+    "LearningCurve",
+    "StandardizationDiscount",
+    "apply_standardization",
+    "lcoe_with_standardization",
+    "default_learning_curve",
 ]

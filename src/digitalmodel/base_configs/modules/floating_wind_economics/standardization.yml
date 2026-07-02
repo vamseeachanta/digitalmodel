@@ -1,0 +1,21 @@
+# Floating-wind standardization / learning-curve lever (JIP33, design-one-build-many).
+#
+# Wright's-law learning curve on fabrication CAPEX: per-unit cost falls by the
+# progress ratio for each doubling of cumulative units. Identity at
+# reference_units, so the base case is unchanged.
+#
+# learning_rate 0.90 = 10% learning per doubling — mid of the published offshore-
+# wind range (~8-12%; IRENA / Wiser et al.); floating expected higher while
+# immature. reference_units 100 ~ 2025 floating cumulative deployment scale.
+# At LR 0.90: ~10x reference -> ~-30% fab cost, ~30x -> ~-40% — bracketing the
+# deck's -25%/-50% fabrication levers (slide 15) as deployment milestones.
+# All inputs overridable; public references only.
+basename: standardization
+
+standardization:
+  learning_curve:
+    learning_rate: 0.90
+    reference_units: 100.0
+    components:
+      - substructure
+      - installation
