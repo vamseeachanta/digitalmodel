@@ -1,5 +1,7 @@
 # digitalmodel
 
+> *Everyday complex engineering — made deterministically simple.*
+
 > **Part of the Deckhand API — the API for real-world work.**
 > The standard-mapped functions in this repo back **Deckhand API paths**: one call (`POST /api/run`)
 > runs an engineering workflow and returns a **standards-traceable HTML report URL** — deterministic,
