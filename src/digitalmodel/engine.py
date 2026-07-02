@@ -659,6 +659,10 @@ def engine(
         from digitalmodel.well.workflow import run_swab_surge
 
         cfg_base = run_swab_surge(cfg_base)
+    elif basename == "casing_design":
+        from digitalmodel.well.workflow import run_casing_design
+
+        cfg_base = run_casing_design(cfg_base)
     elif basename == "pore_pressure":
         from digitalmodel.well.drilling.pore_pressure import (
             router as run_pore_pressure,
