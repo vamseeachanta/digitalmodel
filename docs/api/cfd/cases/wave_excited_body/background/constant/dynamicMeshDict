@@ -1,0 +1,36 @@
+FoamFile { version 2.0; format ascii; class dictionary; object dynamicMeshDict; }
+
+motionSolverLibs    (sixDoFRigidBodyMotion);
+dynamicFvMesh       dynamicOversetFvMesh;
+solver              sixDoFRigidBodyMotion;
+
+sixDoFRigidBodyMotionCoeffs
+{
+    patches         (floatingObject);
+    innerDistance   100.0;   // whole component mesh moves rigidly
+    outerDistance   101.0;
+
+    centreOfMass    (13 0.02 0.4);
+    mass            0.8;
+    momentOfInertia (0.00277333 0.00533333 0.00277333);
+    rhoInf          1;
+    report          on;
+    accelerationRelaxation 0.7;
+
+    solver { type Newmark; }
+
+    constraints
+    {
+        // Pure heave: translation along z only, no rotation.
+        fixedLine
+        {
+            sixDoFRigidBodyMotionConstraint line;
+            centreOfRotation (13 0.02 0.4);
+            direction        (0 0 1);
+        }
+        fixedOrientation
+        {
+            sixDoFRigidBodyMotionConstraint orientation;
+        }
+    }
+}
