@@ -25,16 +25,19 @@ from the sixDoF `report on` log lines instead.
 
 | Metric | Result | Gate |
 |--------|--------|------|
-| Heave RAO (2A_z / H_incident) | **@RAO@** | 1.0 ± 15% |
-| Mean draft vs Archimedes (0.10 m) | **@DRAFT@** | ± 5% |
-| Response period vs wave period (3 s) | **@PERIOD@** | ± 5% |
-| Incident split at the upstream array | 2a_i = @HINC@ m, Kr = @KR@ | consistency |
+| Heave RAO (2A_z / H_incident) | **1.017** (+1.7%) | 1.0 ± 15% |
+| Mean draft vs Archimedes (0.10 m) | **+2.1%** | ± 5% |
+| Response period vs wave period (3 s) | **3.001 s** (+0.03%) | ± 5% |
+| Incident split at the upstream array | 2a_i = 0.0472 m, Kr = 0.098 | consistency |
 
 The incident amplitude comes from a Goda–Suzuki least-squares split over the gauges at
 x = 8–12 m (≥ 1λ from the wavemaker, upstream of the component region), so the body's
-scattered field cannot pollute the RAO denominator. The fast regression variant
-(background 250×35, ~75 min at 8-way / ~2.5 h serial) reproduces: RAO @FRAO@,
-draft @FDRAFT@, period @FPERIOD@ s.
+scattered field cannot pollute the RAO denominator — minus the x = 8.8 m gauge, whose
+sample ray lands bit-exactly on a cell face at *both* resolutions and double-counts cell
+columns (mean level 0.47/0.78 m vs the true 0.40 m); `incident_wave_split` detects this
+by a mean-level guard and excludes it in the open. The fast regression variant
+(background 250×35, ~75 min at 8-way / ~2.5 h serial) reproduces: RAO 1.006,
+draft +2.0%, period 3.002 s — mesh-consistent to ~1%.
 
 ## Layout
 

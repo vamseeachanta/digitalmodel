@@ -20,10 +20,9 @@ from digitalmodel.solvers.openfoam.validation import (
     PERIOD_TOLERANCE,
     RAO_TOLERANCE,
     WaveExcitedBodyConfig,
-    WaveTankConfig,
     analyze_excited_heave,
     extract_heave_from_log,
-    extract_wave_quality,
+    incident_wave_split,
 )
 
 
@@ -41,17 +40,8 @@ def main() -> None:
 
     bg = case_root / "background"
 
-    # incident amplitude from the upstream gauge split (verified #1170 machinery)
-    quality = extract_wave_quality(
-        bg,
-        WaveTankConfig(
-            wave_height=cfg.wave_height,
-            wave_period=cfg.wave_period,
-            depth=cfg.depth,
-            gauges_x=cfg.gauges_x,
-        ),
-        window=cfg.steady_window,
-    )
+    # incident amplitude from the broken-gauge-safe upstream split
+    quality = incident_wave_split(bg, cfg)
     a_i = quality["incident_amplitude"]
 
     t, z = extract_heave_from_log(bg)

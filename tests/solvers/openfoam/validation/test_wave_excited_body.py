@@ -30,12 +30,11 @@ from digitalmodel.solvers.openfoam.validation import (
     RAO_TOLERANCE,
     WAVE_EXCITED_BODY_CASE,
     WaveExcitedBodyConfig,
-    WaveTankConfig,
     analyze_excited_heave,
     build_wave_excited_body_case,
     extract_heave_from_log,
-    extract_wave_quality,
     harmonic_amplitude,
+    incident_wave_split,
     response_period,
 )
 
@@ -93,6 +92,56 @@ def test_analyze_excited_heave_synthetic_wave_follower() -> None:
 def test_analyze_excited_heave_rejects_bad_incident() -> None:
     with pytest.raises(ValueError):
         analyze_excited_heave([0, 1], [0, 1], 0.0)
+
+
+def _write_synthetic_gauges(case_dir, cfg, corrupt_x=None) -> None:
+    """Synthetic interfaceHeight output: unit incident wave at every gauge,
+    optionally one gauge offset + doubled (the on-face ray artifact)."""
+    import numpy as np
+
+    a = cfg.wave_height / 2.0
+    om = 2 * math.pi / cfg.wave_period
+    k = cfg.wavenumber
+    t = np.arange(cfg.steady_window[0], cfg.steady_window[1], 0.02)
+    cols = [t]
+    for xg in cfg.gauges_x:
+        lvl = cfg.depth + a * np.cos(om * t - k * xg)
+        if corrupt_x is not None and xg == corrupt_x:
+            lvl = cfg.depth + 0.08 + 2 * a * np.cos(om * t - k * xg)
+        cols.extend([lvl, lvl])  # FO writes two identical-format columns
+    out = case_dir / "postProcessing" / "waveGauges" / "0"
+    out.mkdir(parents=True)
+    np.savetxt(out / "height.dat", np.column_stack(cols))
+
+
+def test_incident_wave_split_recovers_synthetic_amplitude(tmp_path) -> None:
+    cfg = WaveExcitedBodyConfig()
+    _write_synthetic_gauges(tmp_path, cfg)
+    res = incident_wave_split(tmp_path, cfg)
+    assert res["incident_amplitude"] == pytest.approx(cfg.wave_height / 2, rel=0.02)
+    assert res["reflection_kr"] < 0.05
+    assert res["excluded_gauges_x"] == []
+    assert res["k_error"] == pytest.approx(0.0, abs=0.02)
+
+
+def test_incident_wave_split_excludes_on_face_gauge_artifact(tmp_path) -> None:
+    # A gauge ray bit-exactly on a cell face double-counts cell columns and
+    # reports an impossible mean level; the split must exclude it, not
+    # average it in (observed on the x = 8.8 m gauge at two resolutions).
+    cfg = WaveExcitedBodyConfig()
+    _write_synthetic_gauges(tmp_path, cfg, corrupt_x=8.8)
+    res = incident_wave_split(tmp_path, cfg)
+    assert res["excluded_gauges_x"] == [8.8]
+    assert res["incident_amplitude"] == pytest.approx(cfg.wave_height / 2, rel=0.02)
+    bad = [g for g in res["gauges"] if g["x"] == 8.8][0]
+    assert not bad["healthy"]
+
+
+def test_incident_wave_split_needs_three_healthy_gauges(tmp_path) -> None:
+    cfg = WaveExcitedBodyConfig(gauges_x=(8.0, 8.8, 9.6))
+    _write_synthetic_gauges(tmp_path, cfg, corrupt_x=8.8)
+    with pytest.raises(RuntimeError):
+        incident_wave_split(tmp_path, cfg)
 
 
 # --------------------------------------------------------------------------- #
@@ -240,17 +289,8 @@ def test_wave_excited_body_solve_matches_long_wave_limit(tmp_path) -> None:
     assert names == ["blockMesh", "mergeMeshes", "topoSet", "setFields",
                      "overInterDyMFoam"]
 
-    # incident amplitude from the upstream gauge split (#1170 machinery)
-    quality = extract_wave_quality(
-        root / "background",
-        WaveTankConfig(
-            wave_height=cfg.wave_height,
-            wave_period=cfg.wave_period,
-            depth=cfg.depth,
-            gauges_x=cfg.gauges_x,
-        ),
-        window=cfg.steady_window,
-    )
+    # incident amplitude from the broken-gauge-safe upstream split
+    quality = incident_wave_split(root / "background", cfg)
     a_i = quality["incident_amplitude"]
     assert a_i > 0.0
 

@@ -793,6 +793,97 @@ def build_wave_excited_body_case(
 # ---------------------------------------------------------------------------
 
 
+def incident_wave_split(
+    case_dir: Path | str,
+    config: WaveExcitedBodyConfig | None = None,
+    window: Tuple[float, float] | None = None,
+    split_x: Tuple[float, float] = (7.9, 12.9),
+    level_tolerance: float = 0.05,
+) -> Dict[str, Any]:
+    """Incident/reflected split over the upstream gauges, broken-gauge safe.
+
+    An ``interfaceHeight`` gauge whose sample ray lands *bit-exactly on a
+    cell face* double-counts cell columns and reports a physically
+    impossible mean water level (observed: 0.78 m and 0.47 m for the same
+    x = 8.8 m gauge on two meshes of a 0.4 m-deep tank). Gauges whose mean
+    level over the window deviates from the still-water depth by more than
+    ``level_tolerance`` (relative) are excluded before the Goda-Suzuki
+    least-squares split; the exclusions are reported, not hidden.
+
+    Returns:
+        Dict with ``incident_amplitude``, ``reflection_kr``, ``k_measured``,
+        ``k_error``, per-gauge records and the excluded gauge list.
+
+    Raises:
+        RuntimeError: If no gauge output exists or fewer than 3 clean
+            gauges remain in ``split_x``.
+    """
+    import numpy as np
+
+    config = config or WaveExcitedBodyConfig()
+    case_dir = Path(case_dir)
+    om = 2.0 * math.pi / config.wave_period
+    k_th = config.wavenumber
+    w0, w1 = window or config.steady_window
+
+    files = sorted(
+        case_dir.glob("postProcessing/waveGauges/*/height.dat"),
+        key=lambda q: float(q.parent.name),
+    )
+    if not files:
+        raise RuntimeError(f"no waveGauges output under {case_dir}")
+    raw = np.vstack([np.loadtxt(f, comments="#") for f in files])
+    t = raw[:, 0]
+    ncol = raw.shape[1] - 1
+    ng = len(config.gauges_x)
+    if ncol == ng:
+        levels = raw[:, 1:]
+    elif ncol == 2 * ng:
+        levels = raw[:, 1::2]
+    else:
+        raise RuntimeError(f"unexpected gauge column count {ncol} for {ng} gauges")
+    m = (t >= w0) & (t <= w1)
+    t, levels = t[m], levels[m]
+
+    gauges: List[Dict[str, Any]] = []
+    excluded: List[float] = []
+    for j, xg in enumerate(config.gauges_x):
+        lvl = levels[:, j]
+        mean_level = float(lvl.mean())
+        healthy = abs(mean_level - config.depth) <= level_tolerance * config.depth
+        e = lvl - mean_level
+        amp = np.trapz(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
+        gauges.append({
+            "x": xg, "mean_level": mean_level, "healthy": healthy,
+            "H": float(2.0 * abs(amp)), "amp": complex(amp),
+            "phase": float(np.angle(amp)),
+        })
+        if not healthy:
+            excluded.append(xg)
+
+    arr = [g for g in gauges if split_x[0] <= g["x"] <= split_x[1] and g["healthy"]]
+    if len(arr) < 3:
+        raise RuntimeError(
+            f"fewer than 3 healthy gauges in x = {split_x} "
+            f"(excluded: {excluded})"
+        )
+    xs = np.array([g["x"] for g in arr])
+    phs = np.unwrap([g["phase"] for g in arr])
+    k_meas = float(-np.polyfit(xs, phs, 1)[0])
+    from .wave_tank import reflection_coefficient
+    kr, a_i, _a_r = reflection_coefficient(xs, [g["amp"] for g in arr], k_th)
+
+    return {
+        "incident_amplitude": float(a_i),
+        "reflection_kr": float(kr),
+        "k_measured": k_meas,
+        "k_error": float((k_meas - k_th) / k_th),
+        "gauges": [{k: v for k, v in g.items() if k != "amp"} for g in gauges],
+        "excluded_gauges_x": excluded,
+        "window": [float(w0), float(w1)],
+    }
+
+
 def extract_heave_from_log(case_dir: Path | str,
                            log_name: str = "log.overInterDyMFoam",
                            ) -> Tuple[List[float], List[float]]:

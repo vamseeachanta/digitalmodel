@@ -90,6 +90,7 @@ from .wave_excited_body import (
     build_wave_excited_body_case,
     extract_heave_from_log,
     harmonic_amplitude,
+    incident_wave_split,
     response_period,
 )
 from .wave_tank import (
@@ -272,6 +273,7 @@ __all__ = [
     "build_wave_excited_body_case",
     "extract_heave_from_log",
     "harmonic_amplitude",
+    "incident_wave_split",
     "response_period",
     # Kleefsman impact (#1172)
     "HEIGHT_MAE_TOLERANCE",

@@ -128,11 +128,18 @@ follow_chart = plot_div("web-follow", [
 gauge_traces = []
 for g in wq["gauges"]:
     if 7.9 <= g["x"] <= 12.9:
-        gauge_traces.append({"x": [g["x"]], "y": [g["H"]], "mode": "markers",
-                             "name": f"gauge x={g['x']:g} m",
-                             "marker": {"color": BLUE, "size": 9},
-                             "showlegend": False,
-                             "hovertemplate": f"x={g['x']:g}m<br>H=%{{y:.4f}}m<extra></extra>"})
+        healthy = g.get("healthy", True)
+        gauge_traces.append({
+            "x": [g["x"]], "y": [g["H"]], "mode": "markers",
+            "name": f"gauge x={g['x']:g} m" + ("" if healthy else " (excluded)"),
+            "marker": ({"color": BLUE, "size": 9} if healthy else
+                       {"color": RED, "size": 10, "symbol": "x"}),
+            "showlegend": False,
+            "hovertemplate": (f"x={g['x']:g}m<br>H=%{{y:.4f}}m"
+                              + ("" if healthy else
+                                 f"<br>EXCLUDED: mean level {g['mean_level']:.3f} m "
+                                 "(on-face ray artifact)")
+                              + "<extra></extra>")})
 gauge_traces.append({
     "x": [7.9, 12.9], "y": [cfg["wave"]["H"], cfg["wave"]["H"]], "mode": "lines",
     "name": "input H = 0.05 m", "line": {"color": RED, "width": 1.3, "dash": "dash"},
@@ -141,6 +148,14 @@ gauge_traces.append({
     "x": [7.9, 12.9], "y": [2 * A_I, 2 * A_I], "mode": "lines",
     "name": f"incident 2a_i = {2 * A_I:.4f} m (Goda–Suzuki split, Kr = {wq['reflection_kr']:.3f})",
     "line": {"color": GREEN, "width": 1.5}, "hoverinfo": "skip"})
+excl = wq.get("excluded_gauges_x", [])
+excl_note = ("" if not excl else
+    f"<p class=\"sub\">Gauge{'s' if len(excl) > 1 else ''} at x = "
+    f"{', '.join(f'{x:g}' for x in excl)} m excluded (red &times;): the sample ray lands "
+    "bit-exactly on a cell face and the <code>interfaceHeight</code> walk double-counts cell "
+    "columns, reporting an impossible mean water level. Detected by the mean-level guard in "
+    "<code>incident_wave_split</code> and reported, not hidden — the same class of lesson as the "
+    "Kleefsman density-aware probes.</p>")
 gauge_chart = plot_div("web-gauges", gauge_traces, {
     "title": {"text": "Upstream gauge array — incident wave isolated from the body's scattered field"},
     "xaxis": {"title": {"text": "gauge x (m)"}, "gridcolor": "#eef1f5"},
@@ -228,6 +243,7 @@ cases. One more portability note: <code>sixDoFRigidBodyState</code> hard-casts t
 {heave_chart}
 {follow_chart}
 {gauge_chart}
+{excl_note}
 <table>
 <tr><th>Quantity</th><th>Measured</th><th>Reference</th><th>Error / gate</th><th>Status</th></tr>
 <tr><td>Heave RAO (2A<sub>z</sub>/H<sub>i</sub>)</td><td>{resp['rao']:.3f}</td><td>1.0 (wave-follower limit)</td><td class="{g1c}">{rao_pct:+.1f}% (gate &plusmn;15%)</td><td class="{g1c}">{g1s}</td></tr>
