@@ -11,6 +11,8 @@ from digitalmodel.riser_database.getters import (
 )
 from digitalmodel.riser_database.loader import (
     DEFAULT_DB_ROOT,
+    RigRiserInterfaceRow,
+    RiserStackupRow,
     MaterialSnScfDffRow,
     RiserConfigRow,
     RiserDatabase,
@@ -24,6 +26,8 @@ __all__ = [
     "RiserConfigRow",
     "RiserDatabase",
     "RiserDatabaseError",
+    "RigRiserInterfaceRow",
+    "RiserStackupRow",
     "StandardsCrosswalkRow",
     "get_riser_dff",
     "get_riser_scf",
