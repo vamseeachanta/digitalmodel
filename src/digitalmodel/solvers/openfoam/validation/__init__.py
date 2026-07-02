@@ -15,6 +15,8 @@ Cases:
   reflection vs wave theory.
 - Floating-body heave decay, #1169 — interFoam + sixDoFRigidBodyMotion;
   Archimedes draft + hydrostatic heave period.
+- Kleefsman green-water impact, #1172 — 3D dam break onto an instrumented
+  box; impact pressures + water heights vs the official MARIN data.
 """
 
 from __future__ import annotations
@@ -68,6 +70,15 @@ from .floating_body import (
     extract_heave_history,
     heave_stiffness,
     hydrostatic_heave_period,
+)
+from .kleefsman import (
+    HEIGHT_MAE_TOLERANCE,
+    PRESSURE_ARRIVAL_TOLERANCE,
+    PRESSURE_PEAK_TOLERANCE,
+    KleefsmanConfig,
+    build_kleefsman_case,
+    extract_impact_metrics,
+    load_experiment,
 )
 from .wave_tank import (
     DISPERSION_TOLERANCE,
@@ -189,12 +200,28 @@ FLOATING_BODY_CASE = ValidationCase(
     },
 )
 
+KLEEFSMAN_CASE = ValidationCase(
+    name="kleefsman_impact",
+    build=build_kleefsman_case,
+    reference={
+        # official experimental P2 peak (Pa) over the primary impact
+        "p2_peak_pa": 8127.0,
+    },
+    tolerance=PRESSURE_PEAK_TOLERANCE,
+    domain="marine (green-water / wave impact)",
+    metadata={
+        "issue": "#1172",
+        "reference": "Kleefsman et al. (2005) MARIN experiment; SPHERIC Test 2",
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
     DAM_BREAK_CASE,
     WAVE_TANK_CASE,
     FLOATING_BODY_CASE,
+    KLEEFSMAN_CASE,
 )
 
 __all__ = [
@@ -206,6 +233,15 @@ __all__ = [
     "DAM_BREAK_CASE",
     "WAVE_TANK_CASE",
     "FLOATING_BODY_CASE",
+    "KLEEFSMAN_CASE",
+    # Kleefsman impact (#1172)
+    "HEIGHT_MAE_TOLERANCE",
+    "PRESSURE_ARRIVAL_TOLERANCE",
+    "PRESSURE_PEAK_TOLERANCE",
+    "KleefsmanConfig",
+    "build_kleefsman_case",
+    "extract_impact_metrics",
+    "load_experiment",
     # Flat plate (#1167)
     "BLASIUS_TOLERANCE",
     "FlatPlateConfig",

@@ -43,14 +43,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">7 / 7 verification cases &mdash; laminar, turbulent, lift, free surface, waves + floating body</span>
+<p style="margin-top:14px"><span class="badge">8 / 8 verification cases &mdash; laminar, turbulent, lift, free surface, waves, floating body + green-water impact</span>
 <span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
 <div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body</span></div>
-<div><b>Cases verified</b><span class="good">7 / 7</span></div>
+<div><b>Cases verified</b><span class="good">8 / 8</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -149,6 +149,16 @@ reports.</p>
 <td class="good">within 5%</td>
 <td><a href="floating-body-decay-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Green-water impact (Kleefsman)<br><span class="sub">#1172</span></td>
+<td>Marine wave impact / slamming</td>
+<td>interFoam (VOF, 3D)</td>
+<td>Impact pressure + water heights</td>
+<td>P2 peak +1.5%, arrival +3.5%;<br>H2/H4 MAE 4.3%/2.1%</td>
+<td>Kleefsman/MARIN experiment<br>(official SPHERIC data)</td>
+<td class="good">within 20%</td>
+<td><a href="kleefsman-impact-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -218,12 +228,19 @@ Ca &asymp; 0.39, inside the published range for rectangular sections. A solver t
 radiation/added-mass physics would land <em>on</em> the hydrostatic period &mdash; the offset is gated
 as a physical band, not hidden as an error. Heave-only constraints turn the tutorial into a clean
 1-DOF decay benchmark.</div>
+<div class="callout key"><b>Kleefsman impact &mdash; official data, density-aware sensors.</b> The
+geometry and every experimental trace come from the official SPHERIC Test 2 distribution (no hand
+digitizing), and the P2 impact peak lands within 1.5% on half the Kleefsman grid. The pressure probes
+are placed half a <em>local</em> cell off the box faces by the builder — a fixed offset valid at one
+resolution sits inside the carved obstacle at another (caught by running the coarse variant;
+regression-tested). Impact peaks keep the standard 20% band: P1's first-millisecond spike is
+near-singular and was smoothed even by the original 1.2M-cell VOF study.</div>
 
 <h2>5&nbsp;&nbsp;Reproduce</h2>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
 (<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>,
 <code>naca0012_polar</code>, <code>dam_break</code>, <code>wave_tank</code>,
-<code>floating_body_decay</code>) with a generator script and a README.
+<code>floating_body_decay</code>, <code>kleefsman_impact</code>) with a generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
@@ -236,8 +253,9 @@ case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-gene
 and the first moving-body case <b>#1169</b> (floating-body heave decay, sixDoFRigidBodyMotion) &mdash;
 <b>now done</b>. Remaining work:</p>
 <ul>
-<li>Marine loading backlog: wave force on a cylinder <b>#1171</b>, Kleefsman impact <b>#1172</b>,
-hull resistance <b>#1173</b>; aero (<b>#1175&ndash;#1177</b>).</li>
+<li>Marine loading backlog: wave force on a cylinder <b>#1171</b>, hull resistance <b>#1173</b>;
+aero (<b>#1175&ndash;#1177</b>); wave-excited floating body <b>#1302</b> (parked: mesh-morphing collapse
+diagnosed, overset recommended).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
 <li>Provenance run-index across verified cases.</li>
 </ul>
