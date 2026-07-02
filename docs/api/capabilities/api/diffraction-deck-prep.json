@@ -1,0 +1,49 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep",
+  "provenance": {
+    "basis": "AQWA \u00b7 OrcaWave \u00b7 canonical spec",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/run",
+    "body": {
+      "repo": "digitalmodel",
+      "workflow": "aqwa-diffraction-deck-prep"
+    }
+  },
+  "invocation": "uv run python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml",
+  "workflow": "digitalmodel:aqwa-diffraction-deck-prep",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep"
+    }
+  ],
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Prepare a solver-ready AQWA diffraction deck from my canonical vessel spec.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Prepare a solver-ready AQWA diffraction deck from my canonical vessel spec."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "aqwa-diffraction-deck-prep"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml"
+    }
+  ]
+}

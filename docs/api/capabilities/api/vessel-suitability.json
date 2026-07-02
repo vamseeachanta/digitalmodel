@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels",
+  "provenance": {
+    "basis": "DNV-RP-H103 \u00b7 flag-don't-fake provenance",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+  },
+  "surface": "digitalmodel:vessel-suitability",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Rank the installation fleet for my lift (weight, reach, water depth) with confidence-weighted suitability.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Rank the installation fleet for my lift (weight, reach, water depth) with confidence-weighted suitability."
+    },
+    {
+      "via": "http",
+      "step": "GET https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+    }
+  ]
+}
