@@ -1,0 +1,112 @@
+# Seed specification for data/riser_database/ (#1245).
+# Externalized per the workspace externalize-config rule: file lists, filename
+# derivation rules, unit conversions, and reference-table rows all live here —
+# build_tables.py contains mechanism only.
+#
+# config/pipe files are an EXPLICIT list (not a glob): the two Drilling_Riser
+# variants break case-sensitive globs, and an explicit list keeps regeneration
+# deterministic.
+
+riser_input_files:  # unified riser input schema (#809); depths/OD/WT in metres
+  - examples/riser_input/riser_drilling.yml
+  - examples/riser_input/riser_flexible.yml
+  - examples/riser_input/riser_scr.yml
+  - examples/riser_input/riser_slwr.yml
+  - examples/riser_input/riser_ttr.yml
+
+config_pipe_files:  # pipe engine schema; OD/WT implicitly inches; depth/position ONLY in the filename
+  - config/pipe/pipe_py_06OD_1000in_10000ft_lower_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_10000ft_upper_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_2500ft_lower_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_2500ft_upper_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_5000ft_lower_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_5000ft_upper_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_8000ft_lower_riser.yml
+  - config/pipe/pipe_py_06OD_1000in_8000ft_upper_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_10000ft_lower_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_10000ft_mid_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_10000ft_upper_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_2500ft_lower_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_2500ft_mid_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_2500ft_upper_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_5000ft_lower_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_5000ft_mid_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_5000ft_upper_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_8000ft_lower_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_8000ft_mid_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_8000ft_upper_riser.yml
+  - config/pipe/pipe_py_21OD_0875in_Drilling_Riser.yml
+  - config/pipe/pipe_py_21OD_1in_Drilling_Riser.yml
+
+filename_rules:
+  depth_token: "([0-9]+)ft"          # ft -> m; token absent -> empty cell (never guessed)
+  position_tokens: [upper, mid, lower, drilling]  # matched case-insensitively
+
+unit_conversions:
+  ft_to_m: 0.3048
+  in_to_mm: 25.4
+  m_to_mm: 1000.0
+
+# Identifiers + wiki_path ONLY — no clause text, no table values (plan D2/[R2-B4]).
+# registry_revision mirrors llm-wiki data/standards-registry.json verbatim.
+crosswalk_rows:
+  - code_id: api-std-2rd
+    family_key: api-std-2rd
+    publisher: API
+    section: "Sec.5"
+    topic: dynamic riser design criteria
+    wiki_path: wikis/engineering-standards/wiki/standards/api-std-2rd.md
+    registry_revision: 3e-2025
+    note: formerly API RP 2RD; API reclassified it as STD 2RD
+  - code_id: api-rp-16q
+    family_key: api-rp-16q
+    publisher: API
+    section: "Sec.3.3"
+    topic: marine drilling riser design and operation
+    wiki_path: wikis/engineering-standards/wiki/standards/api-rp-16q.md
+    registry_revision: public-metadata-required-before-citation-use
+    note: wiki revision metadata pending; citation getters deferred to issue 1246
+  - code_id: dnv-os-f201
+    family_key: dnv-os-f201
+    publisher: DNV
+    section: "Sec.5"
+    topic: dynamic risers; design fatigue factors
+    wiki_path: wikis/engineering-standards/wiki/standards/dnv-os-f201.md
+    registry_revision: "2010"
+    note: value getter get_riser_dff
+  - code_id: dnv-rp-c203
+    family_key: dnv-rp-c203
+    publisher: DNV
+    section: "Sec.2"
+    topic: fatigue design; S-N curves and SCF methodology
+    wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
+    registry_revision: 2024-10
+    note: code implements the 2021 edition tables; drift vs wiki revision recorded
+
+# sn_curve_name/environment use fatigue/sn_curves.py vocabulary (the real
+# riser consumer); scf_ref/dff_ref name getters — references, never values.
+material_rows:
+  - ref_id: riser_touchdown_default
+    sn_curve_name: F1
+    environment: seawater_cp
+    scf_ref: get_riser_scf
+    dff_ref: get_riser_dff
+    code_id: dnv-rp-c203
+    wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
+    note: defaults used by the riser_fatigue touchdown assessment
+  - ref_id: riser_girth_weld_class_d
+    sn_curve_name: D
+    environment: seawater_cp
+    scf_ref: get_riser_scf
+    dff_ref: get_riser_dff
+    code_id: dnv-rp-c203
+    wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
+    note: common girth-weld detail class for riser fatigue screening
+  - ref_id: riser_girth_weld_class_e
+    sn_curve_name: E
+    environment: seawater_cp
+    scf_ref: get_riser_scf
+    dff_ref: get_riser_dff
+    code_id: dnv-rp-c203
+    wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
+    note: alternative girth-weld detail class for riser fatigue screening
