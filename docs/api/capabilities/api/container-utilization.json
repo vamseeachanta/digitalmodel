@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization",
+  "provenance": {
+    "basis": "DNVGL-ST-E271 (2017)",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+  },
+  "surface": "digitalmodel:container-utilization",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Screen my offshore container (CCU) utilization per DNV 2.7-1 for rating, aspect ratio and sling angle.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Screen my offshore container (CCU) utilization per DNV 2.7-1 for rating, aspect ratio and sling angle."
+    },
+    {
+      "via": "http",
+      "step": "GET https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+    }
+  ]
+}
