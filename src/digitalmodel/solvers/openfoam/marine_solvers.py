@@ -20,6 +20,7 @@ from .models import (
     TurbulenceModel,
     TurbulenceType,
 )
+from .motion import PrescribedMotion
 
 
 # ============================================================================
@@ -158,13 +159,21 @@ class SloshingSetup:
     Models free-surface sloshing inside LNG cargo tanks or ballast tanks
     using the VOF method with mesh motion capability.
 
+    When ``motion`` is supplied, the case emits a ``constant/dynamicMeshDict``
+    that drives the whole (rigid) mesh with the prescribed single-DOF forcing —
+    the forced-roll rig for a ballast-tank sloshing study (#658). Without it the
+    case is a static-tank VOF setup.
+
     Attributes:
-        fill_level: Tank fill level as fraction of tank height (0-1).
+        fill_level: Tank fill level as fraction of tank height (0-1). Consumed by
+            the partial-fill setFields wrapper (#659).
         name: Case directory name.
+        motion: Optional ``motion.PrescribedMotion`` forced excitation.
     """
 
     fill_level: float = 0.5
     name: str = "sloshing"
+    motion: Optional["PrescribedMotion"] = None
 
     def __post_init__(self) -> None:
         cfg = SolverConfig(
@@ -182,6 +191,7 @@ class SloshingSetup:
             case_type=CaseType.SLOSHING,
             solver_config=cfg,
             turbulence_model=tm,
+            motion=self.motion,
         )
 
 
