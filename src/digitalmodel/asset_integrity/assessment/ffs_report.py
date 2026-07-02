@@ -119,7 +119,8 @@ class FFSReport:
             FFSReport._html_head(component_id, today),
             FFSReport._section_executive_summary(
                 component_id, today, verdict, verdict_color, criterion,
-                remaining_life, design_code, rsf, rsf_a
+                remaining_life, design_code, rsf, rsf_a,
+                rerated_mawp_psi=decision.get("rerated_mawp_psi"),
             ),
             FFSReport._section_component_data(
                 component_id, today, nominal_od_in, nominal_id, nominal_wt_in,
@@ -238,6 +239,7 @@ class FFSReport:
         design_code: str,
         rsf: float,
         rsf_a: float,
+        rerated_mawp_psi: float | None = None,
     ) -> str:
         rl_str = (
             f"{remaining_life:.1f} yr"
@@ -260,7 +262,13 @@ class FFSReport:
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td></tr>\n"
             f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td></tr>\n"
             f"<tr><td>Estimated Remaining Life</td><td>{rl_str}</td></tr>\n"
-            f"<tr><td>Governing Criterion</td><td>{html.escape(criterion)}</td></tr>\n"
+            + (
+                f"<tr><td>Re-rated MAWP (MAWP_r = MAWP &times; RSF/RSFa, "
+                f"&sect;2.4.2.2)</td><td>{rerated_mawp_psi:.0f} psi</td></tr>\n"
+                if verdict == "RE_RATE" and rerated_mawp_psi is not None
+                else ""
+            )
+            + f"<tr><td>Governing Criterion</td><td>{html.escape(criterion)}</td></tr>\n"
             "</table>\n"
             "</div>\n"
         )
