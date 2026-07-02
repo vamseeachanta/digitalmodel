@@ -121,3 +121,20 @@ on water depth only, one band per source dataset family.
 registry makes the in-context reconciliation test fail here until the table
 gains the row — a conscious update, never silent drift. Public issues, PRs
 and commit messages about this table family carry bands and handles only.
+
+## Assembly engine (#1280)
+
+`drilling_riser/assembly.py` turns component records + counts into a
+`RiserStackupModel` (parts from the public wed component vocabulary via
+`from_component_counts`, or caller/wiki-side records via `from_records`) with
+fail-closed aggregates — notably `gross_submerged_weight_and_uplift()`, which
+REFUSES to degrade to net weight when a buoyed joint lacks uplift data
+(non-conservative for the factored 16Q split). `minimum_top_tension_16q`
+applies the tensioner-system factor N/(Rf·(N−n)) and fleet-angle allowance to
+a minimum slip-ring tension; `check_rig_capability` evaluates the demand
+against a `rig_riser_interface` row (wireline rigs count wires, direct-acting
+count units; missing data → INSUFFICIENT_DATA, never guessed). The in-context
+golden asserts the chain against the RSU-0007 calc contract (machine-readable
+YAML on the private registry page — keys public, values wiki-side; tolerance
+abs ≤ 0.5 t / rel ≤ 0.15%, an order of magnitude tighter than any
+formula-omission error).
