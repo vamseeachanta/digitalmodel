@@ -1,0 +1,14 @@
+FoamFile { version 2.0; format ascii; class dictionary; object topoSetDict; }
+
+actions
+(
+    {
+        name    c0;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        // Kleefsman box: front face x = 0.8245 carries P1-P4 at y = 0.471
+        box     (0.6635 0.2955 0) (0.8245 0.6985 0.161);
+    }
+    { name c0; type cellSet; action invert; }
+);
