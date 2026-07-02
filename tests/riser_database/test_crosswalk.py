@@ -15,7 +15,7 @@ import pytest
 from digitalmodel.riser_database.loader import RiserDatabase
 
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),
+    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
     Path.home() / "workspace-hub" / "llm-wiki",
 )
 
