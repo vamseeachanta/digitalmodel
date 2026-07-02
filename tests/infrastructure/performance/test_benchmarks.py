@@ -24,6 +24,15 @@ except ImportError:
     pytest.skip("DigitalModel modules not available", allow_module_level=True)
 
 
+def _cpu_intensive_task(n):
+    """CPU-intensive task for parallelization tests.
+
+    Module-level so ProcessPoolExecutor can pickle it (locally defined
+    functions are never picklable).
+    """
+    return sum(i * i for i in range(n))
+
+
 class TestMathematicalOperationsBenchmarks:
     """Benchmark tests for mathematical operations."""
 
@@ -100,6 +109,12 @@ class TestDataProcessingBenchmarks:
     """Benchmark tests for data processing operations."""
 
     @pytest.mark.performance
+    # pandas-internal numpy cast warning when hashing IntervalIndex
+    # categories (pandas 2.x); escalated to an error by the repo-wide
+    # `filterwarnings = error` — not a defect in the code under test.
+    @pytest.mark.filterwarnings(
+        "ignore:invalid value encountered in cast:RuntimeWarning"
+    )
     def test_dataframe_operations_benchmark(self, benchmark_runner, load_test_data):
         """Benchmark pandas DataFrame operations."""
 
@@ -108,7 +123,9 @@ class TestDataProcessingBenchmarks:
             # Simulate data processing pipeline
             result = df.copy()
             result['new_col'] = result['x'] * result['y']
-            result = result.groupby(pd.cut(result['z'], bins=10)).agg({
+            result = result.groupby(
+                pd.cut(result['z'], bins=10), observed=False
+            ).agg({
                 'x': 'mean',
                 'y': 'std',
                 'new_col': 'sum'
@@ -207,33 +224,31 @@ class TestConcurrencyBenchmarks:
     @pytest.mark.performance
     def test_parallel_processing_speedup(self, benchmark_runner):
         """Test that parallel processing provides expected speedup."""
-        import multiprocessing as mp
         from concurrent.futures import ProcessPoolExecutor
-
-        def cpu_intensive_task(n):
-            """CPU-intensive task for testing parallelization."""
-            return sum(i * i for i in range(n))
 
         # Sequential processing
         def sequential_processing(tasks):
-            return [cpu_intensive_task(task) for task in tasks]
+            return [_cpu_intensive_task(task) for task in tasks]
 
-        # Parallel processing
-        def parallel_processing(tasks):
-            with ProcessPoolExecutor(max_workers=2) as executor:
-                return list(executor.map(cpu_intensive_task, tasks))
+        tasks = [200000] * 4  # 4 tasks heavy enough to dwarf IPC overhead
 
-        tasks = [50000] * 4  # 4 tasks of moderate size
+        # Reuse one executor (spawning a pool per iteration measures process
+        # startup, not parallel throughput) and warm it up before timing.
+        with ProcessPoolExecutor(max_workers=2) as executor:
+            list(executor.map(_cpu_intensive_task, [1000] * 2))  # warm-up
 
-        # Benchmark sequential
-        seq_stats = benchmark_runner.run_benchmark(
-            sequential_processing, iterations=5, tasks=tasks
-        )
+            def parallel_processing(tasks):
+                return list(executor.map(_cpu_intensive_task, tasks))
 
-        # Benchmark parallel
-        par_stats = benchmark_runner.run_benchmark(
-            parallel_processing, iterations=5, tasks=tasks
-        )
+            # Benchmark sequential
+            seq_stats = benchmark_runner.run_benchmark(
+                sequential_processing, iterations=5, tasks=tasks
+            )
+
+            # Benchmark parallel
+            par_stats = benchmark_runner.run_benchmark(
+                parallel_processing, iterations=5, tasks=tasks
+            )
 
         # Parallel should be faster (allowing for overhead)
         speedup = seq_stats['mean'] / par_stats['mean']

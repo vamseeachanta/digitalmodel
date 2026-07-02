@@ -123,13 +123,22 @@ class TestSchemaValidation:
         with pytest.raises(ValidationError):
             Water(depth=-1, density=1.025)
 
-    def test_invalid_water_depth_too_deep(self):
+    def test_invalid_water_depth_zero(self):
         from pydantic import ValidationError
 
         from digitalmodel.solvers.orcaflex.modular_generator.schema import Water
 
         with pytest.raises(ValidationError):
-            Water(depth=6000, density=1.025)
+            Water(depth=0, density=1.025)
+
+    def test_deep_water_depth_allowed(self):
+        # The schema deliberately has no upper depth bound (gt=0 only):
+        # real OrcaFlex models exceed 5000 m and the #495-#505 audit kept
+        # depth unbounded above.
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import Water
+
+        water = Water(depth=6000, density=1.025)
+        assert water.depth == 6000
 
     def test_invalid_wall_thickness(self):
         from pydantic import ValidationError

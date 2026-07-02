@@ -1,9 +1,16 @@
 # ABOUTME: Tests for skill versioning and dependency resolution
 # Tests skill loading, version compatibility, dependency resolution, and recommendations
+#
+# The tests run against a hermetic fixture skills directory built in tmp_path.
+# The repo's .claude/skills/ entries are symlinks into the machine-level
+# workspace-hub tree (broken in fresh clones and CI), so resolving the live
+# inventory is environment-dependent by design; the resolver behaviour is
+# what these tests pin down (see #1312).
 
 import json
+import textwrap
+
 import pytest
-from pathlib import Path
 
 from digitalmodel.skills.skill_resolver import (
     SkillResolver,
@@ -12,18 +19,138 @@ from digitalmodel.skills.skill_resolver import (
 )
 
 
+def _write_skill(
+    root,
+    name: str,
+    description: str,
+    category: str,
+    version: str,
+    triggers=(),
+    dependencies=None,
+    python_min_version=None,
+    orcaflex_version=None,
+):
+    skill_dir = root / name
+    skill_dir.mkdir()
+    trigger_lines = "\n".join(f"  - {t}" for t in triggers)
+    frontmatter = f"---\nname: {name}\ndescription: {description}\ncategory: {category}\n"
+    if triggers:
+        frontmatter += f"triggers:\n{trigger_lines}\n"
+    frontmatter += "---\n"
+
+    meta = {"version": version}
+    if python_min_version:
+        meta["python_min_version"] = python_min_version
+    if orcaflex_version:
+        meta["orcaflex_version"] = orcaflex_version
+    if dependencies:
+        meta["dependencies"] = dependencies
+
+    import yaml as _yaml
+
+    body = textwrap.dedent(
+        f"""
+        # {name}
+
+        {description}
+
+        ## Version Metadata
+
+        ```yaml
+        {{}}
+        ```
+        """
+    ).format(_yaml.safe_dump(meta).strip())
+
+    (skill_dir / "SKILL.md").write_text(frontmatter + body, encoding="utf-8")
+
+
+FIXTURE_SKILLS = [
+    "aqwa-analysis",
+    "hydrodynamics",
+    "signal-analysis",
+    "structural-analysis",
+    "fatigue-analysis",
+    "orcaflex-modeling",
+    "mooring-design",
+    "cad-engineering",
+]
+
+
+@pytest.fixture(scope="module")
+def skills_dir(tmp_path_factory):
+    """Build a self-contained skills directory exercising every resolver feature."""
+    root = tmp_path_factory.mktemp("skills")
+    _write_skill(
+        root, "aqwa-analysis",
+        description="Hydrodynamic diffraction analysis with ANSYS AQWA including RAO extraction",
+        category="hydrodynamics", version="3.1.2",
+        triggers=["AQWA", "RAO", "diffraction"],
+        dependencies={"hydrodynamics": ">=1.0.0"},
+    )
+    _write_skill(
+        root, "hydrodynamics",
+        description="Core hydrodynamics utilities and coefficients",
+        category="hydrodynamics", version="1.2.0",
+    )
+    _write_skill(
+        root, "signal-analysis",
+        description="Signal processing and spectral analysis",
+        category="signal-processing", version="1.0.3",
+        triggers=["signal", "spectral"],
+        python_min_version="3.10",
+    )
+    _write_skill(
+        root, "structural-analysis",
+        description="Structural capacity and stress analysis",
+        category="structural", version="1.4.0",
+        triggers=["structural", "stress"],
+    )
+    _write_skill(
+        root, "fatigue-analysis",
+        description="Fatigue damage and S-N curve analysis",
+        category="structural", version="2.0.1",
+        triggers=["fatigue", "S-N"],
+        dependencies={
+            "signal-analysis": ">=1.0.0",
+            "structural-analysis": ">=1.0.0",
+        },
+    )
+    _write_skill(
+        root, "orcaflex-modeling",
+        description="OrcaFlex model building and hydrodynamic simulation",
+        category="orcaflex", version="2.3.0",
+        triggers=["OrcaFlex", "simulation"],
+        orcaflex_version=">=11.0",
+    )
+    _write_skill(
+        root, "mooring-design",
+        description="Design and analyze mooring systems for floating structures",
+        category="marine", version="1.1.0",
+        triggers=["mooring", "design"],
+        dependencies={"hydrodynamics": ">=1.0.0"},
+    )
+    _write_skill(
+        root, "cad-engineering",
+        description="CAD geometry preparation and drawing automation",
+        category="cad", version="1.0.0",
+        triggers=["CAD", "geometry"],
+    )
+    return root
+
+
 @pytest.fixture
-def resolver():
-    """Create a skill resolver instance."""
-    return SkillResolver()
+def resolver(skills_dir):
+    """Create a skill resolver instance over the fixture skills directory."""
+    return SkillResolver(skills_directory=skills_dir)
 
 
 class TestSkillLoading:
     """Test skill metadata loading."""
 
     def test_loads_all_skills(self, resolver):
-        """Test that all skills are loaded."""
-        assert len(resolver.skills) >= 17  # We have 17 skills
+        """Test that every skill in the directory is loaded."""
+        assert set(resolver.skills) == set(FIXTURE_SKILLS)
 
     def test_skill_has_metadata(self, resolver):
         """Test that skills have required metadata fields."""
@@ -46,12 +173,13 @@ class TestSkillLoading:
         """Test listing all skill names."""
         skills = resolver.list_all_skills()
         assert isinstance(skills, list)
-        assert len(skills) >= 17
+        assert len(skills) == len(FIXTURE_SKILLS)
         assert "aqwa-analysis" in skills
         assert "orcaflex-modeling" in skills
 
-    def test_catalog_exists(self, resolver):
-        """Test that catalog file is created."""
+    def test_catalog_created_by_export(self, resolver):
+        """Test that catalog file is created by export_catalog()."""
+        resolver.export_catalog()
         assert resolver.catalog_path.exists()
 
         with open(resolver.catalog_path, 'r') as f:
@@ -59,7 +187,7 @@ class TestSkillLoading:
 
         assert "skills" in catalog
         assert "version" in catalog
-        assert len(catalog["skills"]) >= 17
+        assert len(catalog["skills"]) == len(FIXTURE_SKILLS)
 
 
 class TestVersionCompatibility:
@@ -206,37 +334,39 @@ class TestSkillRecommendation:
         """Test filtering by Python version."""
         # All skills should be compatible with Python 3.13.5
         recommendations = resolver.recommend_skills(
-            "analysis",
+            "spectral signal analysis",
             python_version="3.13.5"
         )
         assert len(recommendations) > 0
 
-        # Try incompatible Python version (should filter out)
+        # signal-analysis requires python >= 3.10, so 3.9.0 filters it out
         recommendations_old = resolver.recommend_skills(
-            "analysis",
+            "spectral signal analysis",
             python_version="3.9.0"
         )
-        # Should have fewer or same recommendations
-        assert len(recommendations_old) <= len(recommendations)
+        assert len(recommendations_old) < len(recommendations)
+        old_names = [r.skill.name for r in recommendations_old]
+        assert "signal-analysis" not in old_names
 
     def test_matched_keywords_included(self, resolver):
         """Test that matched keywords are included in recommendations."""
         recommendations = resolver.recommend_skills("AQWA diffraction")
-        if recommendations:
-            rec = recommendations[0]
-            assert isinstance(rec.matched_keywords, list)
+        assert recommendations
+        rec = recommendations[0]
+        assert isinstance(rec.matched_keywords, list)
+        assert rec.matched_keywords
 
     def test_dependencies_included(self, resolver):
         """Test that dependencies are included in recommendations."""
         recommendations = resolver.recommend_skills("fatigue analysis")
-        if recommendations:
-            rec = next(
-                (r for r in recommendations if r.skill.name == "fatigue-analysis"),
-                None
-            )
-            if rec:
-                # Should include dependency names
-                assert isinstance(rec.dependencies_included, list)
+        rec = next(
+            (r for r in recommendations if r.skill.name == "fatigue-analysis"),
+            None
+        )
+        assert rec is not None
+        # Should include dependency names
+        assert isinstance(rec.dependencies_included, list)
+        assert "signal-analysis" in rec.dependencies_included
 
 
 class TestOrcaFlexCompatibility:
@@ -296,6 +426,7 @@ class TestIntegration:
 
         # Resolve dependencies
         deps = resolver.resolve_dependencies(skill_name)
+        assert isinstance(deps, list)
 
         # Validate all dependencies
         validation = resolver.validate_dependencies(skill_name)

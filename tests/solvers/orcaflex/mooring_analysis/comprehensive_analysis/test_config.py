@@ -342,9 +342,9 @@ processing:
         
         warnings = config.validate()
         assert len(warnings) >= 3
-        assert any('tolerance' in w for w in warnings)
-        assert any('utilization' in w for w in warnings)
-        assert any('memory' in w for w in warnings)
+        assert any('tolerance' in w.lower() for w in warnings)
+        assert any('utilization' in w.lower() for w in warnings)
+        assert any('memory' in w.lower() for w in warnings)
 
 
 class TestCreateDefaultConfig:
