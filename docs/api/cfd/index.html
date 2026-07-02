@@ -43,13 +43,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <h1>CFD Verification Suite &mdash; digitalmodel</h1>
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
-<p style="margin-top:14px"><span class="badge">3 / 3 verification cases across laminar + turbulent regimes</span></p>
+<p style="margin-top:14px"><span class="badge">4 / 4 verification cases across laminar, turbulent + lift-generating regimes</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS</span></div>
-<div><b>Cases verified</b><span class="good">3 / 3</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Transient bluff body &middot; Turbulent RANS &middot; Lift-generating airfoil</span></div>
+<div><b>Cases verified</b><span class="good">4 / 4</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -104,6 +104,16 @@ reports.</p>
 <td class="good">~9%</td>
 <td><a href="turbulent-flat-plate-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>NACA0012 airfoil<br><span class="sub">#1174</span></td>
+<td>Lift-generating airfoil (RANS)</td>
+<td>simpleFoam + Spalart-Allmaras</td>
+<td>Lift-curve slope + drag polar</td>
+<td>slope 0.1037/deg<br>(&minus;2.2% vs experiment)</td>
+<td>thin-airfoil 2&pi;/rad;<br>NACA0012 experiment</td>
+<td class="good">&minus;2.2%</td>
+<td><a href="naca0012-airfoil-verification.html">View report &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -149,19 +159,26 @@ profile collapses onto the universal law of the wall (sublayer&nbsp;+&nbsp;log l
 The residual ~9% C<sub>f</sub> offset vs the empirical correlations sits within their own 5&ndash;10%
 mutual scatter and the resolved near-leading-edge transition; the law-of-the-wall collapse is the
 stronger verification.</div>
+<div class="callout key"><b>NACA0012 &mdash; lift generation.</b> Angle-of-attack polar by freestream
+rotation (wind-axis forces); lift-curve slope 0.1037/deg, within 2.2% of experiment and ~5% below the
+ideal 2&pi;/rad &mdash; the physically correct thickness/viscous deficit. The slope is
+incidence-independent, so the mesh's built-in geometric offset (recovered as a &minus;1.4&deg;
+zero-lift angle) doesn't affect the verification; the reference area uses the measured ~35-chord, not
+unit chord.</div>
 
 <h2>5&nbsp;&nbsp;Reproduce</h2>
 <p>Each report links to a reproducible OpenFOAM case under <code>cases/</code>
-(<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>) with a
-generator script and a README.
+(<code>flat_plate_blasius</code>, <code>cylinder_re100</code>, <code>turbulent_flat_plate</code>,
+<code>naca0012_polar</code>) with a generator script and a README.
 Reproduction requires a solver-capable host; check readiness first with
 <code>openfoam doctor</code>.</p>
 
 <h2>6&nbsp;&nbsp;Provenance &amp; roadmap</h2>
 <p>This suite is part of the digitalmodel <b>CFD epic&nbsp;#1161</b>, covering the foundational
-verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder) plus the first turbulent
-case <b>#1168</b> (turbulent flat plate, k-&omega; SST) &mdash; <b>now done</b>, so the turbulent
-milestone is reached. Remaining work:</p>
+verification cases <b>#1167</b> (flat plate) and <b>#1166</b> (cylinder), the first turbulent
+case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-generating case
+<b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras) &mdash; <b>now done</b>, so both the turbulent and
+the lift-generation milestones are reached. Remaining work:</p>
 <ul>
 <li>Aero / marine validation backlog (<b>#1169&ndash;#1177</b>).</li>
 <li>CAD&nbsp;&rarr;&nbsp;CFD pipeline (<b>#155</b>).</li>
