@@ -32,6 +32,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
+  - module: corrosion
+    entry_point: src/digitalmodel/corrosion/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/corrosion/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#corrosion
   - module: data_models
     entry_point: src/digitalmodel/data_models/
     maturity: development
