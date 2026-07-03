@@ -74,13 +74,29 @@ class SeaState:
 
 @dataclass(frozen=True)
 class CurrentProfile:
-    """Minimal current input for the sweep. #1282 refines to a depth profile."""
+    """Current input for the sweep.
+
+    The sweep uses the surface speed only (uniform static drag). Depth-resolved
+    fields (#1282) are carried but DORMANT: ``depths_m`` / ``speeds_mps`` /
+    ``directions_deg`` and ``current_type`` ("normal" or "loop") describe the
+    metocean profile so it round-trips through the schema, but the envelope's
+    ``drag_load_n_per_m`` still integrates only the surface speed — a
+    depth-integrated drag is a deferred engine edit. Kept as tuples so the
+    frozen dataclass stays hashable.
+    """
 
     surface_speed_mps: float
     profile: str = "uniform"
+    depths_m: tuple = ()
+    speeds_mps: tuple = ()
+    directions_deg: tuple = ()
+    current_type: str = "normal"
 
     def drag_load_n_per_m(self, diameter_m: float) -> float:
-        """Uniform static drag per unit length: w = 1/2 rho Cd D U^2 (SI)."""
+        """Uniform static drag per unit length: w = 1/2 rho Cd D U^2 (SI).
+
+        Uses the surface speed; the dormant depth profile is not yet integrated.
+        """
         return (
             0.5
             * _SEAWATER_DENSITY_KG_M3
