@@ -88,3 +88,48 @@ run_set_fields=True)` on `background/`) — the exact sequence the regression te
   generation/absorption, verified in #1170.
 - Newman, J.N. (1977). *Marine Hydrodynamics*, MIT Press — quasi-static long-wave response.
 - Goda, Y. & Suzuki, Y. (1976) — incident/reflected wave resolution from gauge arrays.
+
+## Heave-RAO sweep (#1324)
+
+The same case swept across wave period turns the single long-wave point into a
+**heave-RAO curve** — from the wave-follower limit (RAO → 1) through heave
+**resonance** (RAO peaks, reference ≈ 2.2 near T ≈ 0.87 s) into the short-wave
+roll-off. Report: [`../../wave-excited-body-rao-verification.html`](../../wave-excited-body-rao-verification.html).
+
+Each CFD point is spot-checked against a frozen **potential-flow diffraction
+reference** — the same physics the OrcaWave/AQWA pipeline implements, computed
+2D-consistently for the exact section:
+
+- `rao_reference_capytaine.csv` — the frozen reference curve (capytaine linear BEM,
+  Froude-Krylov + diffraction, finite depth 0.4 m, long box ≈ 2D slab, irregular
+  frequencies removed by an interior lid). Reproduces the #1302 CFD long-wave point
+  (RAO 1.017 at T = 3 s) from an independent method. Regenerate with
+  `generate_rao_reference.py` (needs `capytaine`; **not** a digitalmodel runtime
+  dependency — the CSV is committed like the Kleefsman MARIN data).
+
+Per-period drivers (module `digitalmodel.solvers.openfoam.validation.wave_excited_body_rao`):
+
+- `build_sweep_config(T)` adapts the verified geometry per period — background `nx`
+  (≥ 18 cells/wavelength), gauge array (spacing ≈ 0.2 λ so the split does not alias),
+  solve duration / analysis window (from the group velocity). `nz = 49` keeps the
+  0.4 m waterline on a cell face at every period.
+- `analyze_rao_sweep_point.py <T> <case_root> <out>` → per-period `results.json`
+  (incident split + heave RAO + reference RAO + band gate).
+- `aggregate_rao_sweep.py <results_root> <out.json>` folds the points (plus the
+  reused #1302 T = 3 s point) into one `sweep_results.json` for the report.
+
+Run one sweep point (parallel overset, 10× 2 m x-slabs keep the component in one slab):
+
+```
+# build via build_sweep_config, then the #1302 mesh+solve sequence per period;
+# see the module + analyze_rao_sweep_point.py. The long multi-solve regression is
+# opt-in: DIGITALMODEL_RUN_LONG_CFD=1 on a solver host.
+```
+
+**Gate.** Off resonance the CFD and the inviscid reference agree closely (±20 %);
+near resonance the band widens (±35 %) because potential flow has no viscous /
+vortex damping — the inviscid peak is an upper bound the CFD legitimately sits
+below. That gap is the physics CFD is run to capture, reported, not hidden.
+
+- Newman/Faltinsen seakeeping texts — heave frequency response of a floating section.
+- capytaine (linear BEM) — the in-repo potential-flow cross-check tier of #1161.
