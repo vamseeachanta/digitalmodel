@@ -1,0 +1,4 @@
+{
+  "kind": "library",
+  "note": "Within-case interpolation between solver grid points; accuracy is bounded by the solver grid density. No held-out recompute gate \u2014 the licensed solver is not re-run here."
+}

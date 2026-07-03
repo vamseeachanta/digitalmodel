@@ -143,6 +143,11 @@ LIBRARY_EXPECTATIONS: dict[str, dict[str, Any]] = {
         "solver_version": "STUB",
         "cases": ["operating-hs2", "storm-hs5", "extreme-hs8"],
     },
+    "drilling_riser_envelope": {
+        "solver_name": "OrcaFlex/OrcFxAPI",
+        "solver_version": "STUB",
+        "cases": ["drilling", "connected", "hang_off"],
+    },
 }
 
 
