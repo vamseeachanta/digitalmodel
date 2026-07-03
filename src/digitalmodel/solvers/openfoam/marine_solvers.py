@@ -165,8 +165,12 @@ class SloshingSetup:
     case is a static-tank VOF setup.
 
     Attributes:
-        fill_level: Tank fill level as fraction of tank height (0-1). Consumed by
-            the partial-fill setFields wrapper (#659).
+        fill_level: Still-water tank fill level as a fraction (0-1) of the tank's
+            internal height, measured from the tank floor. ``0.5`` is a
+            half-full tank. This is emitted end-to-end: the case builder writes a
+            partial-fill ``system/setFieldsDict`` that sets ``alpha.water 1``
+            below the fill height and ``0`` (air) above (#659). Run ``setFields``
+            after ``blockMesh`` and before ``interFoam``.
         name: Case directory name.
         motion: Optional ``motion.PrescribedMotion`` forced excitation.
     """
@@ -192,6 +196,7 @@ class SloshingSetup:
             solver_config=cfg,
             turbulence_model=tm,
             motion=self.motion,
+            fill_level=self.fill_level,
         )
 
 
