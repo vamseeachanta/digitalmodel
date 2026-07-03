@@ -150,10 +150,34 @@ finding**, not graded pass/fail against a reference that is not ground truth
 there. The reduction is consistent with the separation damping of a sharp-cornered
 bluff square that the BEM omits, but the present forced-wave setup cannot separate
 that from a residual gauge-to-body incident-wave decay or overset numerical
-damping. **Recommended follow-up:** a free-decay test (displace in still water,
-fit the decaying oscillation) measures the damped natural period and damping ratio
-directly — attributing the reduction cleanly and confirming the body's natural
-frequency.
+damping. The reduction was left an **open finding** for a free-decay test to attribute.
+
+## Free-decay resolution (#1332)
+
+The free-decay test was run (report
+[`../../wave-excited-body-decay-verification.html`](../../wave-excited-body-decay-verification.html);
+module `wave_excited_body_decay`, driver `analyze_decay_runs.py`). Releasing the
+body from a still-water heave displacement (`initial_heave_offset`, `wave_height = 0`)
+and fitting the ring-down at two amplitudes (30 mm, 15 mm):
+
+| release | ζ | ω_n (rad/s) | T_d (s) |
+|--------:|--:|------------:|--------:|
+| 30 mm | 0.129 | 7.40 | 0.857 |
+| 15 mm | 0.123 | 7.50 | 0.844 |
+
+- **Natural frequency ω_n ≈ 7.45 rad/s matches the reference resonance (7.48) to ~0.4 %**
+  → the body's mass, hydrostatic stiffness and added mass are correct (no setup error).
+- **ζ ≈ 0.13 is amplitude-independent** and only ~20 % above the potential-flow
+  radiation value (0.104) → **linear** damping, *not* the amplitude-dependent
+  separation drag that would flatten a resonance. With this damping the body would
+  still resonate to **peak RAO ≈ 1.8**.
+
+**Conclusion.** The #1324 near-resonance reduction is **not** body damping — the body
+is lightly, linearly damped and would resonate. It is a **forced-wave delivery /
+measurement artifact**: the short incident wave is under-delivered to the body over
+the fetch, and the RAO is normalised at a gauge ~3.5 m upstream. The overset body's
+own dynamics (natural frequency + damping) are **verified** and consistent with the
+potential-flow reference.
 
 - Newman/Faltinsen seakeeping texts — heave frequency response of a floating section.
 - capytaine (linear BEM) — the in-repo potential-flow cross-check tier of #1161.

@@ -128,6 +128,13 @@ from .wave_excited_body_rao import (
     reference_rao_at,
     summarize_sweep,
 )
+from .wave_excited_body_decay import (
+    analyze_ringdown,
+    attribution,
+    build_decay_config,
+    predict_peak_rao,
+    reference_damping_ratio,
+)
 from .wave_tank import (
     DISPERSION_TOLERANCE,
     REFLECTION_TOLERANCE,
@@ -297,12 +304,30 @@ WAVE_EXCITED_BODY_RAO_CASE = ValidationCase(
                      "finite depth 0.4 m, frozen in rao_reference_capytaine.csv; "
                      "reproduces the #1302 CFD long-wave point",
         "gate": "band gate applies OFF resonance (inviscid reference is ground "
-                "truth there — CFD passes within tolerance). In the resonance "
-                "region the CFD response is grid-independent and below the "
-                "inviscid peak: a documented open finding (cause not yet "
-                "attributed among bluff-body separation damping / gauge-to-body "
-                "incident decay / overset numerical damping) — free-decay test "
-                "is the recommended follow-up.",
+                "truth there — CFD passes within tolerance). The resonance-region "
+                "reduction was RESOLVED by the free-decay test #1332: the body's "
+                "natural frequency and damping are verified (near-inviscid), so "
+                "the reduction is a forced-wave delivery / measurement artifact, "
+                "not body damping.",
+    },
+)
+
+WAVE_EXCITED_BODY_DECAY_CASE = ValidationCase(
+    name="wave_excited_body_decay",
+    build=build_wave_excited_body_case,   # same case, still water + heave offset
+    reference={
+        # from the frozen potential-flow curve at the heave resonance:
+        "omega_n_rad_s": 7.476,           # reference resonance frequency
+        "zeta_radiation": 0.104,          # potential-flow radiation damping ratio
+    },
+    tolerance=0.05,                       # natural-frequency match tolerance
+    domain="marine (overset floating body, free-decay damping)",
+    metadata={
+        "issue": "#1332",
+        "resolves": "#1324 near-resonance open finding",
+        "result": "omega_n within ~0.4% of reference; zeta ~ 0.13 "
+                  "(amplitude-independent, ~20% above radiation) -> body dynamics "
+                  "verified; #1324 reduction is a forced-wave measurement artifact.",
     },
 )
 
@@ -333,6 +358,7 @@ FOUNDATIONAL_CASES = (
     KLEEFSMAN_CASE,
     WAVE_EXCITED_BODY_CASE,
     WAVE_EXCITED_BODY_RAO_CASE,
+    WAVE_EXCITED_BODY_DECAY_CASE,
     SLOSHING_2D_CASE,
 )
 
@@ -348,6 +374,7 @@ __all__ = [
     "KLEEFSMAN_CASE",
     "WAVE_EXCITED_BODY_CASE",
     "WAVE_EXCITED_BODY_RAO_CASE",
+    "WAVE_EXCITED_BODY_DECAY_CASE",
     "SLOSHING_2D_CASE",
     # Wave-excited body heave-RAO sweep (#1324)
     "RAO_SWEEP_BAND",
@@ -359,6 +386,12 @@ __all__ = [
     "reference_peak",
     "reference_rao_at",
     "summarize_sweep",
+    # Free-decay heave damping (#1332)
+    "analyze_ringdown",
+    "attribution",
+    "build_decay_config",
+    "predict_peak_rao",
+    "reference_damping_ratio",
     # Sloshing 2D (#639)
     "SLOSHING_FREQ_TOLERANCE",
     "SloshingForcedRollConfig",

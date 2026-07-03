@@ -178,6 +178,7 @@ class WaveExcitedBodyConfig:
     comp_nx: int = 50
     comp_nz: int = 42
     slab_thickness: float = 0.04
+    initial_heave_offset: float = 0.0
     end_time: float = 34.0
     write_interval: float = 1.0
     steady_window: Tuple[float, float] = (22.0, 34.0)
@@ -226,9 +227,14 @@ class WaveExcitedBodyConfig:
 
     @property
     def centre_of_mass(self) -> Tuple[float, float, float]:
-        """Initial centre of mass — at hydrostatic equilibrium."""
+        """Initial centre of mass.
+
+        At hydrostatic equilibrium by default; raised by
+        ``initial_heave_offset`` for a still-water free-decay test (release
+        from a displaced position — #1332).
+        """
         return (self.body_x, self.slab_thickness / 2.0,
-                self.equilibrium_com_height)
+                self.equilibrium_com_height + self.initial_heave_offset)
 
     @property
     def moment_of_inertia(self) -> Tuple[float, float, float]:
@@ -254,9 +260,15 @@ class WaveExcitedBodyConfig:
     # -- derived geometry ---------------------------------------------------
     @property
     def body_extent(self) -> Tuple[float, float, float, float]:
-        """Body box ``(x0, x1, z0, z1)`` floating at the Archimedes draft."""
+        """Body box ``(x0, x1, z0, z1)`` at the Archimedes draft.
+
+        Raised by ``initial_heave_offset`` (0 by default) for the free-decay
+        test — the body mesh, component mesh and centre of mass all shift
+        together so the body is released from a displaced position in still
+        water at the unchanged depth.
+        """
         x0 = self.body_x - self.body_beam / 2.0
-        z0 = self.depth - self.draft
+        z0 = self.depth - self.draft + self.initial_heave_offset
         return (x0, x0 + self.body_beam, z0, z0 + self.body_height)
 
     @property
@@ -265,8 +277,8 @@ class WaveExcitedBodyConfig:
         return (
             self.body_x - self.body_beam / 2.0 - self.comp_margin_x,
             self.body_x + self.body_beam / 2.0 + self.comp_margin_x,
-            self.comp_z0,
-            self.comp_z1,
+            self.comp_z0 + self.initial_heave_offset,
+            self.comp_z1 + self.initial_heave_offset,
         )
 
 
