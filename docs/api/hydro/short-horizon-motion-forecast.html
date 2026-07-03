@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Short-Horizon Motion Forecast &mdash; Bridge Console</title>
+<style>
+  /* Light-primary palette matched to digitalmodel capabilities page */
+  :root{
+    --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+    --ink:#13233f; --muted:#5b6b86; --faint:#8593ab;
+    --grid:rgba(19,35,63,.09);
+    --brand:#0b3d91; --accent:#0f8a7e;
+    --heave:#0b3d91; --pitch:#0f8a7e; --roll:#6d4fe0;
+    --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+    --zone:rgba(15,138,126,.06); --zone-edge:rgba(15,138,126,.42);
+    --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+    --r:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+      --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a;
+      --grid:rgba(140,170,200,.12);
+      --brand:#84a9e8; --accent:#3fb6c9;
+      --heave:#84a9e8; --pitch:#3fb6c9; --roll:#a893ff;
+      --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+      --zone:rgba(63,182,201,.08); --zone-edge:rgba(63,182,201,.45);
+      --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+    --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+    --brand:#0b3d91; --accent:#0f8a7e;
+    --heave:#0b3d91; --pitch:#0f8a7e; --roll:#6d4fe0;
+    --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+    --zone:rgba(15,138,126,.06); --zone-edge:rgba(15,138,126,.42);
+    --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  }
+  :root[data-theme="dark"]{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --heave:#84a9e8; --pitch:#3fb6c9; --roll:#a893ff;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --zone:rgba(63,182,201,.08); --zone-edge:rgba(63,182,201,.45);
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground);
+    color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  .lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+  .wrap{max-width:1240px; margin:0 auto; padding:22px clamp(14px,3vw,32px) 60px}
+
+  header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:20px}
+  .brand{display:flex; flex-direction:column; gap:6px}
+  .kicker{display:flex; align-items:center; gap:9px}
+  .dot{width:9px;height:9px;border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent); animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  h1{font-size:clamp(22px,3vw,31px); margin:0; font-weight:800; letter-spacing:-.015em; color:var(--brand); text-wrap:balance}
+  .tag{color:var(--muted); font-size:14px; max-width:56ch}
+  .theme-btn{background:var(--panel); color:var(--muted); border:1px solid var(--edge); border-radius:99px; padding:7px 13px; font-size:12px; cursor:pointer; display:flex; gap:7px; align-items:center}
+  .theme-btn:hover{color:var(--ink)}
+  .theme-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .console{display:grid; grid-template-columns:264px 1fr; gap:18px}
+  @media (max-width:860px){.console{grid-template-columns:1fr}}
+
+  .rail{display:flex; flex-direction:column; gap:14px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel)); border:1px solid var(--edge); border-radius:var(--r); box-shadow:var(--shadow)}
+  .rail .card{padding:14px}
+  .field{display:flex; flex-direction:column; gap:8px; margin-bottom:15px}
+  .field:last-child{margin-bottom:0}
+  .seg{display:flex; flex-direction:column; gap:6px}
+  .seg button, .segrow button{all:unset; cursor:pointer; padding:8px 10px; border-radius:8px; font-size:12.5px; color:var(--muted); border:1px solid transparent; background:var(--panel-2)}
+  .seg button[aria-pressed="true"], .segrow button[aria-pressed="true"]{color:var(--ink); border-color:var(--zone-edge); background:color-mix(in srgb,var(--accent) 12%,var(--panel-2))}
+  .seg button:focus-visible, .segrow button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  .segrow{display:flex; gap:6px}
+  .segrow button{flex:1; text-align:center}
+
+  .slideval{display:flex; align-items:baseline; justify-content:space-between}
+  .slideval .num{font-size:16px; font-weight:640}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px; background:var(--panel-2); outline:none; margin:4px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:16px;height:16px;border-radius:50%; background:var(--accent); border:2px solid var(--panel); cursor:pointer; box-shadow:0 0 0 1px var(--edge)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%; background:var(--accent); border:2px solid var(--panel); cursor:pointer}
+  input[type=range]:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+  .stage{display:flex; flex-direction:column; gap:14px}
+
+  /* status banner */
+  .status{position:relative; overflow:hidden; padding:16px 18px; display:grid; grid-template-columns:auto 1fr auto; gap:18px; align-items:center}
+  .status::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--verdict,var(--muted))}
+  .verdict-badge{display:flex; flex-direction:column; gap:2px; padding-left:6px}
+  .verdict-word{font-size:clamp(28px,5vw,44px); font-weight:760; letter-spacing:-.02em; line-height:1; color:var(--verdict,var(--ink))}
+  .verdict-sub{color:var(--muted); font-size:12.5px}
+  .countdown{text-align:right}
+  .countdown .big{font-size:clamp(24px,4.5vw,38px); font-weight:700; line-height:1; color:var(--ink)}
+  .countdown .cap{color:var(--muted)}
+  .lead-explain{font-size:13px; color:var(--muted); align-self:center; max-width:34ch}
+  .lead-explain b{color:var(--ink); font-weight:640}
+
+  .panel{padding:12px 14px 8px}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px}
+  .panel-title{display:flex; align-items:center; gap:9px}
+  .panel-title h3{margin:0; font-size:13.5px; font-weight:700; letter-spacing:.01em; color:var(--brand)}
+  .legend{display:flex; gap:12px; flex-wrap:wrap}
+  .lg{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted)}
+  .lg i{width:14px;height:3px;border-radius:2px; display:inline-block}
+  .readout{font-size:12px; color:var(--muted)}
+  .readout b{color:var(--ink); font-weight:650}
+  canvas{display:block; width:100%; height:auto}
+
+  /* transport */
+  .transport{display:flex; align-items:center; gap:14px; padding:12px 14px}
+  .play{all:unset; cursor:pointer; width:38px;height:38px;border-radius:50%; display:grid;place-items:center; background:var(--accent); color:#fff; font-size:12px}
+  .play:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+  .transport .scrub{flex:1}
+  .speed{display:flex; gap:6px}
+  .speed button{all:unset;cursor:pointer;padding:5px 9px;border-radius:6px;font-size:11.5px;color:var(--muted);background:var(--panel-2)}
+  .speed button[aria-pressed="true"]{color:var(--ink);background:color-mix(in srgb,var(--accent) 14%,var(--panel-2))}
+
+  footer{margin-top:26px; color:var(--faint); font-size:12px; line-height:1.65; border-top:1px solid var(--edge); padding-top:16px}
+  footer b{color:var(--muted)}
+  .pill{display:inline-block; padding:3px 11px; background:var(--panel); border:1px solid var(--edge); border-radius:20px; font-size:11px; letter-spacing:.02em; color:var(--muted)}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:.5em 0}
+  .chip{display:inline-block; padding:4px 11px; background:var(--panel); border:1px solid var(--edge); border-radius:20px; font-size:11.5px; color:var(--muted)}
+  .chip b{color:var(--brand); font-weight:700}
+  a{color:var(--accent)}
+  @media (prefers-reduced-motion: reduce){.dot{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="kicker"><span class="dot"></span><span class="lbl">Marine operations &middot; decision support</span></div>
+      <h1>Short-Horizon Motion Forecast</h1>
+      <div class="tag">Know the next few <em>motions</em>, not just the next few waves. A phase-resolved wave forecast, transferred through the asset's RAO, becomes a rolling go / no-go with lead time.</div>
+      <div style="margin-top:12px"><span class="pill">Interactive live page &middot; deterministic &middot; on AQWA / OrcaFlex RAOs</span></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle colour theme"><span id="themeIcon">&#x25D0;</span><span id="themeTxt">Theme</span></button>
+  </header>
+
+  <div class="console">
+    <!-- CONTROL RAIL -->
+    <aside class="rail">
+      <div class="card">
+        <div class="field">
+          <span class="lbl">Asset</span>
+          <div class="seg" id="assetSeg"></div>
+        </div>
+        <div class="field">
+          <span class="lbl">Operation</span>
+          <div class="seg" id="opSeg"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <div class="slideval"><span class="lbl">Sig. wave height H<sub>s</sub></span><span class="num mono" id="hsVal">2.5 m</span></div>
+          <input type="range" id="hs" min="0.5" max="5" step="0.1" value="2.5">
+        </div>
+        <div class="field">
+          <div class="slideval"><span class="lbl">Peak period T<sub>p</sub></span><span class="num mono" id="tpVal">9.0 s</span></div>
+          <input type="range" id="tp" min="5" max="16" step="0.2" value="9">
+        </div>
+        <div class="field">
+          <span class="lbl">Sea type &mdash; sets the predictable zone</span>
+          <div class="segrow" id="seaSeg"></div>
+        </div>
+      </div>
+      <div class="card" style="padding:12px 14px">
+        <span class="lbl">Forecast horizon</span>
+        <div class="slideval" style="margin-top:4px"><span class="readout">predictable&nbsp;zone</span><span class="num mono" id="horizonVal" style="color:var(--accent)">&mdash; s</span></div>
+        <div class="readout" style="margin-top:6px; line-height:1.5" id="horizonNote"></div>
+      </div>
+    </aside>
+
+    <!-- STAGE -->
+    <div class="stage">
+      <div class="card status" id="statusCard">
+        <div class="verdict-badge">
+          <span class="lbl">Operability</span>
+          <span class="verdict-word" id="verdictWord">&mdash;</span>
+          <span class="verdict-sub" id="verdictSub">&mdash;</span>
+        </div>
+        <div class="lead-explain" id="leadExplain"></div>
+        <div class="countdown">
+          <div class="big mono" id="cdBig">&mdash;</div>
+          <div class="cap lbl" id="cdCap">lead time</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="lbl">1 &middot; Sea surface</span><h3>Incident wave elevation &eta;(t)</h3></div>
+            <div class="readout">measured&nbsp;&middot;&nbsp;<b id="etaNow">&mdash;</b></div>
+          </div>
+          <canvas id="cvWave" height="150"></canvas>
+        </div>
+        <div class="panel" style="border-top:1px solid var(--edge)">
+          <div class="panel-head">
+            <div class="panel-title"><span class="lbl">2 &middot; Asset response</span><h3>Forecast 6-DOF motion</h3></div>
+            <div class="legend">
+              <span class="lg"><i style="background:var(--heave)"></i>Heave (m)</span>
+              <span class="lg"><i style="background:var(--pitch)"></i>Pitch (&deg;)</span>
+              <span class="lg"><i style="background:var(--roll)"></i>Roll (&deg;)</span>
+            </div>
+          </div>
+          <canvas id="cvMotion" height="164"></canvas>
+        </div>
+        <div class="panel" style="border-top:1px solid var(--edge)">
+          <div class="panel-head">
+            <div class="panel-title"><span class="lbl">3 &middot; Governing quantity</span><h3 id="govTitle">&mdash;</h3></div>
+            <div class="legend">
+              <span class="lg"><i style="background:var(--caution)"></i>caution</span>
+              <span class="lg"><i style="background:var(--nogo)"></i>limit</span>
+            </div>
+          </div>
+          <canvas id="cvGov" height="150"></canvas>
+        </div>
+        <div class="panel" style="border-top:1px solid var(--edge); padding-bottom:12px">
+          <div class="panel-head">
+            <div class="panel-title"><span class="lbl">4 &middot; Decision</span><h3>Rolling go / no-go across the horizon</h3></div>
+            <div class="legend">
+              <span class="lg"><i style="background:var(--go)"></i>go</span>
+              <span class="lg"><i style="background:var(--caution)"></i>caution</span>
+              <span class="lg"><i style="background:var(--nogo)"></i>no-go</span>
+            </div>
+          </div>
+          <canvas id="cvTimeline" height="42"></canvas>
+        </div>
+        <div class="transport" style="border-top:1px solid var(--edge)">
+          <button class="play" id="playBtn" aria-label="Play or pause">&#x275A;&#x275A;</button>
+          <input type="range" class="scrub" id="scrub" min="0" max="1000" value="0" aria-label="Scrub time">
+          <div class="speed" id="speedSeg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p style="margin:.2em 0 1em"><span class="pill">Illustrative tracer</span> &nbsp; Synthetic JONSWAP sea &middot; simplified analytic RAOs &middot; deterministic phases. Numbers demonstrate the workflow, not a certified vessel model.</p>
+    <p style="margin:.2em 0"><b>Honest horizon.</b> The forecast is bounded by the <b>predictable zone</b> &mdash; a group-velocity wedge set by spectral bandwidth. Realistic short-crested seas give tens of seconds to ~1&ndash;2 min, not the 4&ndash;5 min sometimes marketed.</p>
+    <p style="margin:.2em 0"><b>Where the value is.</b> The wave-sensing front-end (X-band radar / lidar / up-wave buoy &rarr; phase-resolved surface) is partner/licensed. This layer is the asset-motion transfer, the operability decision, and the learning loop &mdash; on AQWA / OrcaFlex RAOs.</p>
+    <p style="margin:.6em 0 .3em"><b>Criteria referenced.</b></p>
+    <div class="chips">
+      <span class="chip"><b>DNV-ST-N001</b> &mdash; lifts, DAF, snatch</span>
+      <span class="chip"><b>DNV-ST-0358 / Walk2Work</b> &mdash; gangways</span>
+      <span class="chip"><b>CAP 437 / HCA HMS</b> &mdash; helideck: incl. &gt; 1&deg;, heave vel. &gt; 0.4 m/s</span>
+      <span class="chip"><b>digitalmodel</b> &mdash; epic #1356 &middot; child #1361</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const g = 9.81, TWO_PI = Math.PI*2, DEG = 180/Math.PI;
+
+/* ---------- deterministic PRNG (fixed seed &rarr; reproducible sea) ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------- config ---------- */
+const ASSETS = {
+  hlv:  {name:"Heavy-lift / construction vessel", Th:10.5, zh:0.22, Tp_:12.5, zp:0.14, Tr:13.5, zr:0.06, Lpp:150, Lc:55, pitchGain:0.7, rollGain:1.2},
+  sov:  {name:"Walk-to-work SOV", Th:7.5, zh:0.20, Tp_:8.5, zp:0.13, Tr:9.5, zr:0.06, Lpp:85, Lc:28, pitchGain:0.85, rollGain:1.5},
+  fpso: {name:"FPSO / large hull", Th:13.5, zh:0.28, Tp_:15.0, zp:0.16, Tr:16.5, zr:0.07, Lpp:300, Lc:90, pitchGain:0.5, rollGain:0.8},
+};
+const OPS = {
+  crane:   {name:"Crane lift", gov:"Crane-tip vertical velocity", unit:"m/s", caution:0.35, limit:0.50, kind:"craneVel"},
+  gangway: {name:"Gangway transfer", gov:"Gangway-tip vertical velocity", unit:"m/s", caution:1.10, limit:1.55, kind:"gangVel"},
+  helideck:{name:"Helideck landing", gov:"Heave velocity (deck)", unit:"m/s", caution:0.30, limit:0.40, kind:"heaveVel"},
+};
+const SEAS = {
+  swell:   {name:"Swell (narrow)", gamma:6.0, horizon:105},
+  mixed:   {name:"Mixed", gamma:3.3, horizon:65},
+  wind:    {name:"Wind sea (broad)", gamma:1.3, horizon:34},
+};
+
+const state = {asset:"hlv", op:"crane", sea:"mixed", hs:2.5, tp:9.0, playing:true, speed:1, now:20};
+const PAST = 22;                 // seconds of "measured" shown left of now
+let horizon = 65;                // seconds forecastable (predictable zone)
+const T_MAX = 900;               // master timeline length
+
+/* ---------- wave field + RAO precompute ---------- */
+let comp = null; // {w[],k[],a[],phi[], Rh[],Ph[], Rp[],Pp[], Rr[],Pr[]}
+
+function jonswapS(f,Hs,Tp,gamma){
+  if(f<=0)return 0;
+  const fp=1/Tp, sigma = f<=fp?0.07:0.09;
+  const r=Math.exp(-((f-fp)**2)/(2*sigma*sigma*fp*fp));
+  return (Hs*Hs)*(fp**4/f**5)*Math.exp(-1.25*(fp/f)**4)*Math.pow(gamma,r);
+}
+function mech(w,Tn,z){const wn=TWO_PI/Tn, r=w/wn; return {amp:1/Math.sqrt((1-r*r)**2+(2*z*r)**2), ph:Math.atan2(2*z*r,1-r*r)};}
+
+function build(){
+  const A=ASSETS[state.asset], S=SEAS[state.sea];
+  const fp=1/state.tp, N=44, fmin=0.4*fp, fmax=3.2*fp, df=(fmax-fmin)/N;
+  const rand=mulberry32(20260703);
+  const w=[],k=[],a=[],phi=[],Rh=[],Ph=[],Rp=[],Pp=[],Rr=[],Pr=[];
+  let m0raw=0; const rawA=[];
+  for(let i=0;i<N;i++){const f=fmin+(i+0.5)*df; const Si=jonswapS(f,state.hs,state.tp,S.gamma); const ai=Math.sqrt(2*Si*df); rawA.push(ai); m0raw+=ai*ai/2;}
+  const scale=state.hs/(4*Math.sqrt(m0raw)||1);
+  for(let i=0;i<N;i++){
+    const f=fmin+(i+0.5)*df, wi=TWO_PI*f, ki=wi*wi/g, ai=rawA[i]*scale;
+    w.push(wi); k.push(ki); a.push(ai); phi.push(rand()*TWO_PI);
+    const wl=Math.exp(-((ki*A.Lpp*0.10)**2));            // long vessel averages short waves (gentle rolloff)
+    const h=mech(wi,A.Th,A.zh);  Rh.push(h.amp*wl);           Ph.push(h.ph);
+    const p=mech(wi,A.Tp_,A.zp); Rp.push(ki*p.amp*wl*A.pitchGain); Pp.push(p.ph+Math.PI/2);
+    const r=mech(wi,A.Tr,A.zr);  Rr.push(ki*r.amp*wl*A.rollGain);  Pr.push(r.ph+Math.PI/2);
+  }
+  comp={w,k,a,phi,Rh,Ph,Rp,Pp,Rr,Pr,N};
+  horizon=S.horizon;
+}
+
+/* evaluate state at time t &rarr; elevation + motions */
+function evalAt(t){
+  const c=comp; let eta=0,hv=0,pr=0,rr=0;
+  for(let i=0;i<c.N;i++){
+    const base=c.w[i]*t+c.phi[i];
+    eta+=c.a[i]*Math.cos(base);
+    hv +=c.a[i]*c.Rh[i]*Math.cos(base+c.Ph[i]);
+    pr +=c.a[i]*c.Rp[i]*Math.cos(base+c.Pp[i]);
+    rr +=c.a[i]*c.Rr[i]*Math.cos(base+c.Pr[i]);
+  }
+  return {eta, heave:hv, pitch:pr*DEG, roll:rr*DEG, pitchRad:pr};
+}
+/* governing signal value at t (physical units) */
+function govAt(t){
+  const A=ASSETS[state.asset], op=OPS[state.op], dt=0.12;
+  const s0=evalAt(t-dt), s1=evalAt(t+dt);
+  if(op.kind==="heaveVel") return (s1.heave-s0.heave)/(2*dt);
+  // crane / gangway tip vertical velocity = d/dt (heave + Lc*pitchRad)
+  const d0=s0.heave+A.Lc*s0.pitchRad, d1=s1.heave+A.Lc*s1.pitchRad;
+  return (d1-d0)/(2*dt);
+}
+
+/* ---------- canvas helpers ---------- */
+function fitCanvas(cv){const dpr=Math.min(window.devicePixelRatio||1,2); const w=cv.clientWidth, h=cv.getAttribute("height")*1;
+  cv.width=w*dpr; cv.height=h*dpr; const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+/* time-domain trace panel with now-line + predictable-zone shading */
+function drawTrace(cv, series, opts){
+  const {ctx,w,h}=fitCanvas(cv);
+  const padL=6,padR=6,padT=10,padB=12, x0=padL, x1=w-padR, y0=padT, y1=h-padB;
+  const t0=state.now-PAST, t1=state.now+horizon, span=t1-t0;
+  const X=t=>x0+(t-t0)/span*(x1-x0);
+  ctx.clearRect(0,0,w,h);
+  // predictable-zone shade (right of now)
+  ctx.fillStyle=css("--zone"); ctx.fillRect(X(state.now),y0,x1-X(state.now),y1-y0);
+  ctx.strokeStyle=css("--zone-edge"); ctx.setLineDash([3,4]); ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(X(state.now),y0);ctx.lineTo(X(state.now),y1);ctx.stroke(); ctx.setLineDash([]);
+  // zero grid
+  const amax=opts.amax; const Y=v=>y0+(1-(v+amax)/(2*amax))*(y1-y0);
+  ctx.strokeStyle=css("--grid"); ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(x1,Y(0));ctx.stroke();
+  // threshold bands
+  if(opts.limit){
+    for(const sgn of [1,-1]){
+      ctx.strokeStyle=css("--nogo"); ctx.globalAlpha=.8; ctx.setLineDash([5,4]);
+      ctx.beginPath();ctx.moveTo(x0,Y(sgn*opts.limit));ctx.lineTo(x1,Y(sgn*opts.limit));ctx.stroke();
+      ctx.strokeStyle=css("--caution");
+      ctx.beginPath();ctx.moveTo(x0,Y(sgn*opts.caution));ctx.lineTo(x1,Y(sgn*opts.caution));ctx.stroke();
+    }
+    ctx.globalAlpha=1; ctx.setLineDash([]);
+  }
+  // series: array of {color, fn, width, fill}
+  const step=span/260;
+  for(const s of series){
+    ctx.beginPath();
+    let first=true;
+    for(let t=t0;t<=t1;t+=step){const y=Y(s.fn(t)); const x=X(t); if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}
+    ctx.strokeStyle=s.color; ctx.lineWidth=s.width||1.7; ctx.lineJoin="round";
+    // measured (left of now) solid, forecast (right) same color but we already draw continuous; emphasize forecast via glow
+    ctx.stroke();
+  }
+  // "now" cap label
+  ctx.fillStyle=css("--muted"); ctx.font="600 9.5px ui-monospace,monospace";
+  ctx.fillText("NOW", X(state.now)+4, y0+9);
+  ctx.textAlign="right"; ctx.fillText("+"+Math.round(horizon)+"s", x1-1, y0+9); ctx.textAlign="left";
+}
+
+/* rolling go/no-go timeline strip */
+function drawTimeline(cv){
+  const {ctx,w,h}=fitCanvas(cv);
+  const x0=6,x1=w-6,y0=8,y1=h-8;
+  const op=OPS[state.op];
+  ctx.clearRect(0,0,w,h);
+  const n=Math.max(40,Math.floor(x1-x0));
+  for(let i=0;i<n;i++){
+    const t=state.now+(i/n)*horizon;
+    const v=Math.abs(govAt(t));
+    let col = v>=op.limit?css("--nogo") : v>=op.caution?css("--caution") : css("--go");
+    ctx.fillStyle=col;
+    const xa=x0+(i/n)*(x1-x0), wseg=(x1-x0)/n+0.6;
+    ctx.fillRect(xa,y0,wseg,y1-y0);
+  }
+  // frame + ticks
+  ctx.strokeStyle=css("--edge"); ctx.lineWidth=1; ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+  ctx.fillStyle=css("--muted"); ctx.font="600 9.5px ui-monospace,monospace";
+  ctx.fillText("now", x0, y1+9);
+  ctx.textAlign="right"; ctx.fillText("+"+Math.round(horizon)+"s horizon", x1, y1+9); ctx.textAlign="left";
+}
+
+/* ---------- verdict logic ---------- */
+function computeVerdict(){
+  const op=OPS[state.op];
+  const now=Math.abs(govAt(state.now));
+  // scan forward for first breach of limit
+  let firstBreach=null, firstCaution=null;
+  const dt=0.4;
+  for(let t=state.now; t<=state.now+horizon; t+=dt){
+    const v=Math.abs(govAt(t));
+    if(firstCaution===null && v>=op.caution) firstCaution=t-state.now;
+    if(v>=op.limit){firstBreach=t-state.now; break;}
+  }
+  let word,color,sub,lead,cap;
+  if(now>=op.limit){word="NO-GO";color="--nogo";sub="exceeds limit right now";lead="0";cap="over limit";}
+  else if(firstBreach!==null){
+    if(firstBreach<6){word="HOLD";color="--caution";sub="limit breach imminent";}
+    else {word="GO";color="--go";sub="clear window open now";}
+    lead=firstBreach.toFixed(0); cap="until first breach";
+  } else if(now>=op.caution){word="CAUTION";color="--caution";sub="in caution band, no breach ahead";lead=Math.round(horizon)+"+";cap="clear to horizon";}
+  else {word="GO";color="--go";sub="clear through the forecast horizon";lead=Math.round(horizon)+"+";cap="clear to horizon";}
+  return {word,color,sub,lead,cap,now,firstBreach,firstCaution};
+}
+
+/* ---------- render ---------- */
+const el=id=>document.getElementById(id);
+function render(){
+  const op=OPS[state.op];
+  // wave
+  drawTrace(el("cvWave"), [{color:css("--accent"), fn:t=>evalAt(t).eta, width:1.8}], {amax:Math.max(state.hs*0.9,1.2)});
+  // motions (heave m, pitch &deg;, roll &deg;) — scale to common axis by normalising to their own amax
+  const mProbe=[]; for(let t=state.now-PAST;t<=state.now+horizon;t+=0.5){const s=evalAt(t); mProbe.push(Math.max(Math.abs(s.heave),Math.abs(s.pitch),Math.abs(s.roll)));}
+  const mAmax=Math.max(1.0, ...mProbe)*1.05;
+  drawTrace(el("cvMotion"), [
+    {color:css("--heave"), fn:t=>evalAt(t).heave, width:1.8},
+    {color:css("--pitch"), fn:t=>evalAt(t).pitch, width:1.5},
+    {color:css("--roll"),  fn:t=>evalAt(t).roll,  width:1.5},
+  ], {amax:mAmax});
+  // governing
+  el("govTitle").textContent=op.gov+" ("+op.unit+")";
+  let gAmax=op.limit*1.4; for(let t=state.now-PAST;t<=state.now+horizon;t+=0.6){gAmax=Math.max(gAmax,Math.abs(govAt(t))*1.08);}
+  drawTrace(el("cvGov"), [{color:css("--accent"), fn:t=>govAt(t), width:1.8}], {amax:gAmax, limit:op.limit, caution:op.caution});
+  drawTimeline(el("cvTimeline"));
+  // verdict
+  const V=computeVerdict();
+  const card=el("statusCard"); card.style.setProperty("--verdict",css(V.color));
+  el("verdictWord").textContent=V.word; el("verdictWord").style.color=css(V.color);
+  el("verdictSub").textContent=V.sub;
+  el("cdBig").textContent = V.word==="NO-GO"?"now":(V.lead+" s");
+  el("cdCap").textContent = V.cap;
+  el("leadExplain").innerHTML = V.firstBreach!==null && V.word!=="NO-GO"
+    ? `Governing motion stays workable for <b>~${V.lead} s</b>, then crosses the ${op.name.toLowerCase()} limit. Time the operation into this window.`
+    : (V.word==="NO-GO" ? `Current motion is over the ${op.name.toLowerCase()} limit &mdash; wait for a lull.` : `No limit breach anywhere in the predictable zone for this sea state.`);
+  el("etaNow").textContent=evalAt(state.now).eta.toFixed(2)+" m";
+  el("horizonVal").textContent=Math.round(horizon)+" s";
+  el("hsVal").textContent=state.hs.toFixed(1)+" m";
+  el("tpVal").textContent=state.tp.toFixed(1)+" s";
+  el("horizonNote").innerHTML=`${SEAS[state.sea].name} spectrum &rarr; ${Math.round(horizon)} s wedge. Narrow swell forecasts further; broad wind-sea shrinks the zone.`;
+}
+
+/* ---------- controls ---------- */
+function makeSeg(host, dict, key, cb){
+  el(host).innerHTML="";
+  for(const [k,v] of Object.entries(dict)){
+    const b=document.createElement("button"); b.textContent=v.name; b.setAttribute("aria-pressed", state[key]===k);
+    b.onclick=()=>{state[key]=k; [...el(host).children].forEach(c=>c.setAttribute("aria-pressed", c===b)); cb&&cb(); };
+    el(host).appendChild(b);
+  }
+}
+makeSeg("assetSeg", ASSETS, "asset", ()=>{build();render();});
+makeSeg("opSeg", OPS, "op", render);
+makeSeg("seaSeg", SEAS, "sea", ()=>{build();render();});
+el("hs").oninput=e=>{state.hs=+e.target.value; build(); render();};
+el("tp").oninput=e=>{state.tp=+e.target.value; build(); render();};
+
+// transport
+const speeds={"1x":1,"2x":2,"4x":4};
+el("speedSeg").innerHTML="";
+for(const [k,v] of Object.entries(speeds)){const b=document.createElement("button");b.textContent=k;b.setAttribute("aria-pressed",state.speed===v);
+  b.onclick=()=>{state.speed=v;[...el("speedSeg").children].forEach(c=>c.setAttribute("aria-pressed",c===b));};el("speedSeg").appendChild(b);}
+const ICON_PAUSE="&#10074;&#10074;", ICON_PLAY="&#9654;";
+el("playBtn").onclick=()=>{state.playing=!state.playing; el("playBtn").innerHTML=state.playing?ICON_PAUSE:ICON_PLAY;};
+el("scrub").oninput=e=>{state.playing=false; el("playBtn").innerHTML=ICON_PLAY; state.now=PAST+(+e.target.value/1000)*(T_MAX-PAST-horizon);};
+
+// theme toggle
+const themeBtn=el("themeBtn");
+themeBtn.onclick=()=>{const cur=document.documentElement.getAttribute("data-theme");
+  const next = cur==="dark"?"light":cur==="light"?"dark":(matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next); el("themeTxt").textContent=next==="dark"?"Dark":"Light";};
+
+/* ---------- animation loop ---------- */
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+if(reduce){state.playing=false; el("playBtn").innerHTML=ICON_PLAY;}
+let last=null;
+function frame(ts){
+  if(last==null)last=ts; const d=(ts-last)/1000; last=ts;
+  if(state.playing){
+    state.now+=d*state.speed;
+    if(state.now>T_MAX-horizon) state.now=PAST;
+    el("scrub").value=Math.round((state.now-PAST)/(T_MAX-PAST-horizon)*1000);
+  }
+  render();
+  requestAnimationFrame(frame);
+}
+build();
+window.addEventListener("resize", render);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
