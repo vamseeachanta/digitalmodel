@@ -108,3 +108,21 @@ def test_degrees_and_grid_shape():
     assert r.angle_lower_deg == pytest.approx(math.degrees(r.angle_lower_rad))
     assert r.z_m.shape == r.deflection_m.shape == r.bending_moment_nm.shape
     assert r.z_m[0] == 0.0 and r.z_m[-1] == pytest.approx(_BASE["length_m"])
+
+
+# -- lower-flex-joint shear (feeds the conductor model, #1345) -----------------
+
+
+def test_shear_lower_matches_closed_form():
+    X, w = 30.0, _drag_load_n_per_m(1.0)
+    r = solve_static_response(top_offset_m=X, current_load_n_per_m=w, **_BASE)
+    expected = _BASE["tension_n"] * X / _BASE["length_m"] + w * _BASE["length_m"] / 2.0
+    assert r.shear_lower_n == pytest.approx(expected, rel=1e-9)
+
+
+def test_shear_lower_rises_with_offset_and_current():
+    base = solve_static_response(top_offset_m=15.0, current_load_n_per_m=_drag_load_n_per_m(0.5), **_BASE)
+    more_offset = solve_static_response(top_offset_m=45.0, current_load_n_per_m=_drag_load_n_per_m(0.5), **_BASE)
+    more_current = solve_static_response(top_offset_m=15.0, current_load_n_per_m=_drag_load_n_per_m(1.5), **_BASE)
+    assert more_offset.shear_lower_n > base.shear_lower_n > 0.0
+    assert more_current.shear_lower_n > base.shear_lower_n

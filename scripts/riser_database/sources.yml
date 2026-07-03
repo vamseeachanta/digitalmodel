@@ -183,8 +183,10 @@ stackup_rows:
 # rig_riser_interface (#1259): generic rig-class slugs; wed_rig_name joins the
 # worldenergydata 2,268-rig identity space and is populated ONLY for rows
 # sourced from public rig specifications (none in this slice). Capability
-# numerics are rig-class brochure-grade values; moonpool/drill-floor columns
-# ship empty until public-safe seeds exist.
+# numerics are rig-class brochure-grade values; moonpool/drill-floor and the
+# #1345 conductor_moment_capacity_kn_m / flexjoint_angle_rating_deg columns ship
+# empty until public-safe seeds exist (the latter two land via a paired wed
+# rig-spec sourcing issue; never seed from a wiki-side/client source).
 rig_rows:
   - rig_ref: drillship-6g-16x3600k-dat
     rig_type: drillship

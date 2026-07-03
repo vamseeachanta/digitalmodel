@@ -55,6 +55,13 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "assembly.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_assembly.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_assembly_golden.py",
+    # #1281 / #1345 operating-envelope + conductor analytical code: reproduces
+    # wellhead/conductor engagements, so it must carry no provenance tokens.
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "envelope.py",
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "riser_response.py",
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "conductor_response.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_envelope.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_conductor_response.py",
 )
 
 
@@ -123,3 +130,24 @@ def test_no_provenance_tokens_in_public_artifacts():
         "provenance tokens leaked into public artifacts (tokens not echoed): "
         f"{violations}"
     )
+
+
+def test_new_analytical_code_is_gated():
+    """#1345 [G-1]: the envelope + conductor analytical code must be inside the
+    scanned artifact set (it reproduces wellhead/conductor engagements)."""
+    scanned = {p.name for p in _PUBLIC_ARTIFACTS}
+    for required in ("envelope.py", "conductor_response.py", "riser_response.py"):
+        assert required in scanned, f"{required} is not gated by the provenance tripwire"
+
+
+def test_scan_would_catch_a_planted_token(tmp_path):
+    """Prove the scan mechanism catches a provenance token in a .py-style file
+    (the gate is only useful if it actually fires on the new file type)."""
+    names, _ = _provenance_tokens()
+    if not names:
+        pytest.skip("no name tokens in the private registry to plant")
+    planted = sorted(names)[0]
+    f = tmp_path / "conductor_like.py"
+    f.write_text(f'# soil calibration note from the {planted} job\nK = 5.0e6\n')
+    normalized = _normalize(f.read_text())
+    assert _normalize(planted) in normalized  # caught

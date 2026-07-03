@@ -69,6 +69,8 @@ RIG_COLUMNS = [
     "moonpool_length_ft",
     "moonpool_width_ft",
     "drill_floor_elev_ft",
+    "conductor_moment_capacity_kn_m",
+    "flexjoint_angle_rating_deg",
     "wed_rig_name",
     "wiki_path",
     "note",

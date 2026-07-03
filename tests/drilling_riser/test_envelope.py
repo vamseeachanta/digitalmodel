@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from digitalmodel.drilling_riser.envelope import (
+    ConductorInput,
     EnvelopeCriteria,
     EnvelopeResult,
     OperatingMode,
@@ -21,6 +22,11 @@ from digitalmodel.drilling_riser.envelope import (
     SeaState,
     compute_operating_envelope,
     resolve_envelope_criteria,
+)
+
+_CONDUCTOR = ConductorInput(
+    outer_diameter_m=0.762, wall_thickness_m=0.0254,
+    soil_modulus_n_per_m2=5.0e6, stand_off_m=18.0,
 )
 
 
@@ -182,3 +188,47 @@ def test_dynamic_out_of_coverage_escalates_von_mises():
     )
     assert np.isnan(dyn.per_limit_utilisation["von_mises"][0, 0, 0])
     assert dyn.dynamic_provenance["escalated_points"] == 1
+
+
+# -- #1345 wellhead/conductor moment + flex-joint hardware rating ---------------
+
+
+def test_wh_moment_rises_with_offset_and_current():
+    r = compute_operating_envelope(
+        **_BASE, offsets_pct=[1.0, 4.0], current_speeds_mps=[0.5, 1.5],
+        seastates=[SeaState(2.0, 9.0)], conductor=_CONDUCTOR,
+        rig_limits=RigEnvelopeLimits(conductor_moment_capacity_kn_m=8000.0),
+    )
+    whm = r.per_limit_utilisation["wh_moment"]
+    assert not np.isnan(whm).any()
+    assert whm[1, 0, 0] > whm[0, 0, 0]  # rises with offset (via lower-FJ shear)
+    assert whm[0, 1, 0] > whm[0, 0, 0]  # rises with current
+
+
+def test_wh_moment_nan_without_conductor_or_capacity():
+    # no conductor input -> NaN
+    a = compute_operating_envelope(
+        **_BASE, offsets_pct=[2.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(2.0, 9.0)],
+        rig_limits=RigEnvelopeLimits(conductor_moment_capacity_kn_m=8000.0),
+    )
+    assert np.isnan(a.per_limit_utilisation["wh_moment"]).all()
+    # conductor but no rated capacity (columns ship empty) -> NaN
+    b = compute_operating_envelope(
+        **_BASE, offsets_pct=[2.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(2.0, 9.0)], conductor=_CONDUCTOR,
+    )
+    assert np.isnan(b.per_limit_utilisation["wh_moment"]).all()
+
+
+def test_flexjoint_governing_min_uses_hardware_rating():
+    common = dict(offsets_pct=[3.0], current_speeds_mps=[1.0], seastates=[SeaState(5.0, 11.0)],
+                  rao_angle_deg_per_m=0.2)
+    no_rating = compute_operating_envelope(**_BASE, **common)
+    # a hardware rating tighter than the 4.0 deg operating max RAISES the
+    # utilisation (governing min picks the smaller limit -> larger util)
+    with_rating = compute_operating_envelope(
+        **_BASE, **common, rig_limits=RigEnvelopeLimits(flexjoint_angle_rating_deg=1.0),
+    )
+    assert (with_rating.per_limit_utilisation["flexjoint_angle"][0, 0, 0]
+            > no_rating.per_limit_utilisation["flexjoint_angle"][0, 0, 0])
