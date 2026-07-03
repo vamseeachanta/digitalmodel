@@ -352,3 +352,124 @@ def prismatic_tank_natural_frequency(
     omega_sq = gravity * k * math.tanh(k * fill_depth)
     omega = math.sqrt(omega_sq)
     return omega / (2.0 * math.pi)
+
+
+# ============================================================================
+# Wiring: measured-vs-analytical sloshing natural frequency
+# ============================================================================
+
+
+@dataclass
+class SloshingFrequencyResult:
+    """Measured fluid natural frequency cross-checked against the analytical value.
+
+    Combines the FFT-extracted dominant frequency of a sloshing time series with
+    the analytical prismatic-tank tanh dispersion relation, reporting the ratio
+    and percent error so a run can be regression-gated in one call.
+
+    Attributes:
+        measured_frequency: Dominant natural frequency from the FFT/Welch
+            spectrum (Hz).
+        analytical_frequency: Linear prismatic-tank natural frequency (Hz).
+        ratio: measured / analytical (dimensionless; 1.0 == perfect agreement).
+        percent_error: 100 * (measured - analytical) / analytical (signed %).
+        mode: Sloshing mode number the analytical value was computed for.
+        length: Tank length L used for the analytical value (m).
+        fill_depth: Still-water fill depth h used for the analytical value (m).
+        spectrum: The full SpectrumResult from the extraction (peaks, bins).
+    """
+
+    measured_frequency: float
+    analytical_frequency: float
+    ratio: float
+    percent_error: float
+    mode: int
+    length: float
+    fill_depth: float
+    spectrum: SpectrumResult
+
+    @property
+    def abs_percent_error(self) -> float:
+        """Unsigned percent error, convenient for tolerance assertions."""
+        return abs(self.percent_error)
+
+
+def sloshing_natural_frequency(
+    signal: NDArray[np.float64],
+    *,
+    length: float,
+    fill_depth: float,
+    times: NDArray[np.float64] | None = None,
+    sample_rate: float | None = None,
+    mode: int = 1,
+    gravity: float = GRAVITY,
+    method: Literal["fft", "welch"] = "fft",
+    n_peaks: int = 3,
+    min_frequency: float = 0.0,
+    detrend: Literal["constant", "linear", "none"] = "constant",
+) -> SloshingFrequencyResult:
+    """Extract the fluid natural frequency and cross-check it analytically.
+
+    Thin wiring over :func:`extract_natural_frequency` (FFT/Welch measurement)
+    and :func:`prismatic_tank_natural_frequency` (analytical tanh dispersion).
+    Given a free-surface-elevation or force/moment history plus the tank breadth
+    ``L`` and fill depth ``h``, it returns the measured natural frequency, the
+    analytical one, and their ratio / percent error in a single result.
+
+    Either ``times`` (from which the sample rate is inferred) or an explicit
+    ``sample_rate`` must be supplied.
+
+    Args:
+        signal: Real-valued 1-D time series (free-surface elevation or force).
+        length: Tank length L in the sloshing direction (m).
+        fill_depth: Still-water fill depth h (m).
+        times: Optional uniform time vector (s) used to infer ``sample_rate``.
+        sample_rate: Explicit sampling frequency (Hz); overrides ``times``.
+        mode: Sloshing mode number n (>= 1) for the analytical cross-check.
+        gravity: Gravitational acceleration (m/s^2).
+        method: Spectral method, ``'fft'`` (amplitude) or ``'welch'`` (PSD).
+        n_peaks: Number of peaks to keep in the returned spectrum.
+        min_frequency: Ignore peaks below this frequency (Hz).
+        detrend: Detrending mode applied before the transform.
+
+    Returns:
+        SloshingFrequencyResult with measured vs analytical frequency, ratio,
+        and percent error.
+
+    Raises:
+        ValueError: If neither ``times`` nor ``sample_rate`` is provided, or if
+            the analytical inputs are invalid (see
+            :func:`prismatic_tank_natural_frequency`).
+    """
+    spectrum = extract_natural_frequency(
+        signal,
+        times=times,
+        sample_rate=sample_rate,
+        method=method,
+        n_peaks=n_peaks,
+        min_frequency=min_frequency,
+        detrend=detrend,
+    )
+    measured = spectrum.dominant_frequency
+
+    analytical = prismatic_tank_natural_frequency(
+        length, fill_depth, mode=mode, gravity=gravity
+    )
+
+    if math.isfinite(measured) and analytical != 0.0:
+        ratio = measured / analytical
+        percent_error = 100.0 * (measured - analytical) / analytical
+    else:
+        ratio = float("nan")
+        percent_error = float("nan")
+
+    return SloshingFrequencyResult(
+        measured_frequency=measured,
+        analytical_frequency=analytical,
+        ratio=ratio,
+        percent_error=percent_error,
+        mode=mode,
+        length=length,
+        fill_depth=fill_depth,
+        spectrum=spectrum,
+    )
