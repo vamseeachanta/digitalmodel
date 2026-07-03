@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 
 _KIPS_TO_KN = 4.44822
+#: Public alias (#1280) — the single kips->kN constant for drilling_riser.
+KIPS_TO_KN = _KIPS_TO_KN
 _IN_TO_MM = 25.4
 _FT_TO_M = 0.3048
 _PSI_TO_MPA = 0.00689476
@@ -69,6 +71,10 @@ _SI_FLOAT_FIELDS: tuple[tuple[str, str, float, bool], ...] = (
     ("LENGTH_FT", "length_m", _FT_TO_M, True),
     ("WEIGHT_AIR_KIPS", "weight_air_kn", _KIPS_TO_KN, True),
     ("WEIGHT_WATER_KIPS", "submerged_weight_kn", _KIPS_TO_KN, False),
+    # Optional (#1280): gross buoyancy uplift force. WEIGHT_WATER_KIPS is
+    # NET of buoyancy; the 16Q factored split (f_wt*Ws - f_bt*Bn) needs the
+    # gross/uplift decomposition, so sources that have it can carry it.
+    ("BUOYANCY_UPLIFT_KIPS", "buoyancy_uplift_kn", _KIPS_TO_KN, True),
     ("BUOYANCY_OD_IN", "buoyancy_od_mm", _IN_TO_MM, True),
     ("PRESSURE_RATING_PSI", "pressure_mpa", _PSI_TO_MPA, True),
     ("BORE_SIZE_IN", "bore_size_mm", _IN_TO_MM, True),

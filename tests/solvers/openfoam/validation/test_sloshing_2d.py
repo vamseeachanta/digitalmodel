@@ -49,6 +49,27 @@ def test_default_analytical_frequency_matches_tanh() -> None:
     assert cfg.analytical_frequency() == pytest.approx(0.758, abs=0.01)
 
 
+# Real OpenFOAM v2312 free-decay runs (measured vs analytical first-mode freq)
+# bracketing the fill range — recorded here so the validated data points are
+# durable in-repo (the solver runs themselves are manual, not CI-gated):
+#   h/L = 0.3 (intermediate): measured 0.75587 vs analytical 0.75805 Hz -> 0.29 %
+#   h/L = 0.7 (deep/standing-wave): measured 0.87258 vs analytical 0.87260 Hz -> 0.002 %
+@pytest.mark.parametrize(
+    "tank_height,fill_level,expected_hz",
+    [(0.6, 0.5, 0.758), (1.0, 0.7, 0.8726)],  # h/L = 0.3 and 0.7
+)
+def test_analytical_frequency_across_fill_range(
+    tank_height, fill_level, expected_hz
+) -> None:
+    cfg = SloshingFreeDecayConfig(tank_height=tank_height, fill_level=fill_level)
+    # analytical_frequency() is the exact prismatic-tank tanh dispersion the CFD
+    # reproduced above; assert it stays consistent at both fill fractions.
+    assert cfg.analytical_frequency() == pytest.approx(
+        prismatic_tank_natural_frequency(cfg.breadth, cfg.fill_depth)
+    )
+    assert cfg.analytical_frequency() == pytest.approx(expected_hz, abs=0.005)
+
+
 def test_spheric_analytical_period_matches_published_T1() -> None:
     # SPHERIC Test 10, 18% fill: published first-mode period T1 = 1.9191 s.
     cfg = SloshingForcedRollConfig()

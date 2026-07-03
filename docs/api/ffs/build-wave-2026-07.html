@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FFS Build Wave — Shipped (digitalmodel epic #1057)</title>
+<style>
+  :root {
+    --ground:#eef1f4; --panel:#ffffff; --panel-2:#f5f7f9; --ink:#16212b; --ink-soft:#4a5b68;
+    --ink-faint:#7b8b98; --hair:#d9e0e6; --accent:#0d6b7a; --accent-ink:#0a5462; --accent-wash:#dcedf0;
+    --ok:#1f8a5b; --ok-wash:#dff2e8; --warn:#b3760f; --warn-wash:#f8ecd4;
+    --mono: ui-monospace,"SF Mono","SFMono-Regular","JetBrains Mono","Menlo",monospace;
+    --sans: ui-sans-serif,system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#0d141a; --panel:#141e26; --panel-2:#101a21; --ink:#e6edf2; --ink-soft:#a3b3bf;
+      --ink-faint:#6d808d; --hair:#223140; --accent:#38b6c9; --accent-ink:#7fd6e2; --accent-wash:#12303a;
+      --ok:#3fc487; --ok-wash:#113328; --warn:#e0a53c; --warn-wash:#3a2c11;
+    }
+  }
+  :root[data-theme="light"]{--ground:#eef1f4;--panel:#ffffff;--panel-2:#f5f7f9;--ink:#16212b;--ink-soft:#4a5b68;--ink-faint:#7b8b98;--hair:#d9e0e6;--accent:#0d6b7a;--accent-ink:#0a5462;--accent-wash:#dcedf0;--ok:#1f8a5b;--ok-wash:#dff2e8;--warn:#b3760f;--warn-wash:#f8ecd4;}
+  :root[data-theme="dark"]{--ground:#0d141a;--panel:#141e26;--panel-2:#101a21;--ink:#e6edf2;--ink-soft:#a3b3bf;--ink-faint:#6d808d;--hair:#223140;--accent:#38b6c9;--accent-ink:#7fd6e2;--accent-wash:#12303a;--ok:#3fc487;--ok-wash:#113328;--warn:#e0a53c;--warn-wash:#3a2c11;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px) 72px;}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .eyebrow::before{content:"";width:26px;height:2px;background:var(--accent);display:inline-block;}
+  h1{font-size:clamp(28px,4.4vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance;font-weight:680;}
+  .lede{font-size:clamp(15px,1.6vw,18px);color:var(--ink-soft);max-width:64ch;margin:0;}
+  .lede strong{color:var(--ink);font-weight:620;}
+  .banner{margin-top:26px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--hair);border-left:3px solid var(--ok);background:var(--panel);border-radius:10px;font-size:13.5px;color:var(--ink-soft);}
+  .banner b{color:var(--ink);font-weight:620;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:28px 0 40px;}
+  @media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:16px 18px;}
+  .stat .n{font-size:30px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  .stat .n.ok{color:var(--ok);} .stat .n.acc{color:var(--accent-ink);}
+  .stat .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-top:4px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin:8px 0 16px;}
+  .sec-head h2{font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin:0;font-weight:640;}
+  .sec-head .count{font-family:var(--mono);font-size:12px;color:var(--ink-faint);}
+  .sec-head .rule{flex:1;height:1px;background:var(--hair);}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+  @media (max-width:860px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:18px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:11px;}
+  .card::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--ok);}
+  .card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .pr{font-family:var(--mono);font-size:13px;color:var(--accent-ink);font-weight:600;}
+  .card h3{font-size:17px;margin:2px 0 0;letter-spacing:-.01em;line-height:1.15;}
+  .desc{font-size:13.5px;color:var(--ink-soft);margin:0;}
+  .std{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-wash);padding:3px 8px;border-radius:999px;align-self:flex-start;}
+  .chip{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;background:var(--ok-wash);color:var(--ok);}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;padding-top:10px;border-top:1px solid var(--hair);font-size:12.5px;color:var(--ink-soft);align-items:center;}
+  .meta .tests{font-variant-numeric:tabular-nums;} .meta b{color:var(--ok);font-weight:700;}
+  .sha{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);}
+  .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+  .links a{font-family:var(--mono);font-size:11.5px;font-weight:600;text-decoration:none;color:var(--accent-ink);background:var(--panel-2);border:1px solid var(--hair);padding:4px 10px;border-radius:8px;}
+  .links a:hover{border-color:var(--accent);}
+  .links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .note{background:var(--panel);border:1px solid var(--hair);border-left:3px solid var(--warn);border-radius:14px;padding:18px 22px;margin:8px 0 32px;font-size:13.5px;color:var(--ink-soft);}
+  .note b{color:var(--warn);} .note code{font-family:var(--mono);background:var(--panel-2);border:1px solid var(--hair);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--accent-ink);}
+  footer{border-top:1px solid var(--hair);padding-top:18px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);letter-spacing:.03em;}
+  footer .k{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">digitalmodel · FFS epic #1057 · build wave 2026-07</div>
+  <h1>Fitness-for-service build wave — shipped</h1>
+  <p class="lede">Six integrity-screening deliverables under one epic, plus a CI baseline fix. <strong>All merged to main; each issue auto-closed.</strong> Two new capability domains — corrosion and production chemistry — now live on the capabilities page.</p>
+
+  <div class="banner"><b>✓ Complete.</b> 7 PRs merged, 195 targeted tests verified, 5 issues closed. New explorers and one-pagers deploy with this page.</div>
+
+  <div class="stats">
+    <div class="stat"><div class="n ok">7</div><div class="k">PRs merged</div></div>
+    <div class="stat"><div class="n ok">195</div><div class="k">tests verified</div></div>
+    <div class="stat"><div class="n acc">2</div><div class="k">new explorers</div></div>
+    <div class="stat"><div class="n ok">5</div><div class="k">issues closed</div></div>
+  </div>
+
+  <div class="sec-head"><h2>Fitness-for-service assessments</h2><span class="count">3 PRs</span><span class="rule"></span></div>
+  <div class="grid">
+    <div class="card">
+      <div class="top"><div><span class="pr">#1326 · closes #1269</span><h3>Pitting assessment</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">API 579-1 Part 6</span>
+      <p class="desc">Pit-field characterization from UT grids; the FFS router now auto-activates PITTING morphology and bounds it Level-2 via equivalent-LTA, with an assessment-basis honesty note.</p>
+      <div class="meta"><span class="tests"><b>43/43</b> targeted · 591 suite</span><span class="sha">4faa44ceb</span></div>
+    </div>
+    <div class="card">
+      <div class="top"><div><span class="pr">#1328 · closes #1271</span><h3>Dent &amp; dent-gouge</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">API 579-1 Part 12</span>
+      <p class="desc">7% OD plain-dent screen (EPRG; B31.8 6% selectable), B31.8 App-R strain written out, dent-gouge always escalated to NEEDS_ASSESSMENT, on-weld / restrained modifiers.</p>
+      <div class="meta"><span class="tests"><b>23/23</b> targeted · 578 suite</span><span class="sha">25fbc1e1a</span></div>
+    </div>
+    <div class="card">
+      <div class="top"><div><span class="pr">#1327 · f/u #1292</span><h3>Weld FAD envelopes</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">BS 7910 Option-1 FAD</span>
+      <p class="desc">Riser-joint weld envelopes are now true FAD length-bisection per depth (was placeholder). Barlow hoop default, CVN 27 J Annex-J fallback, all overridable; explorer regenerated.</p>
+      <div class="meta"><span class="tests"><b>12/12</b> targeted · 558 suite</span><span class="sha">3b4cdd0f0</span></div>
+      <div class="links"><a href="../ffs/riser-joint-acceptance-explorer.html">Riser-joint explorer →</a></div>
+    </div>
+  </div>
+
+  <div class="sec-head"><h2>Risk &amp; new capability domains</h2><span class="count">3 PRs</span><span class="rule"></span></div>
+  <div class="grid">
+    <div class="card">
+      <div class="top"><div><span class="pr">#1340 · closes #1272</span><h3>RBI screening</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">API RP 580</span>
+      <p class="desc">Qualitative PoF proxy from FFS outputs × operator CoF class → 5×5 risk matrix and risk-band-capped inspection interval over the reused API 510/570/653 half-life rule.</p>
+      <div class="meta"><span class="tests"><b>27/27</b> tests</span><span class="sha">37e65ed17</span></div>
+    </div>
+    <div class="card">
+      <div class="top"><div><span class="pr">#1342 · closes #1294</span><h3>Galvanic compatibility</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">MIL-STD-889</span>
+      <p class="desc">Anodic-index dissimilar-metal screening, per-environment allowable ΔV, compatibility matrix + heatmap. New <code>corrosion</code> package; routing contract wired.</p>
+      <div class="meta"><span class="tests"><b>72/72</b> tests</span><span class="sha">ea0b14fa2</span></div>
+      <div class="links"><a href="../corrosion/galvanic-compatibility-explorer.html">Galvanic explorer →</a></div>
+    </div>
+    <div class="card">
+      <div class="top"><div><span class="pr">#1341 · closes #1295</span><h3>Mineral-scale SI</h3></div><span class="chip"><span class="dot"></span>merged</span></div>
+      <span class="std">Oddo–Tomson · SPE 21710</span>
+      <p class="desc">Saturation index per scale family, BH→WH trending, brine-mixing waterflood sweep. New <code>production_chemistry</code> package with a coefficient-honesty statement.</p>
+      <div class="meta"><span class="tests"><b>18/18</b> tests</span><span class="sha">5752b517b</span></div>
+      <div class="links"><a href="../production/scale-si-explorer.html">Scale-SI explorer →</a></div>
+    </div>
+  </div>
+
+  <div class="note"><b>CI baseline fix — #1343.</b> The wave surfaced a pre-existing main regression: the <code>riser-fatigue</code> atlas is stale (basis changed in an earlier riser_database PR without a rebuild), failing Atlas-staleness and one durable-workflow test; and a lone absolute path in <code>tests/drilling_riser/test_assembly_golden.py</code> failed the abs-path gate, skipping Quality Gates and the Pages deploy repo-wide. #1343 fixed the abs-path line (Quality Gates green again). The atlas staleness is unrelated to this wave and remains open for the riser_database owner.</div>
+
+  <div class="sec-head"><h2>Explore the capability</h2><span class="rule"></span></div>
+  <div class="links" style="margin-bottom:32px;">
+    <a href="../capabilities/#corrosion-production">Capabilities · Corrosion &amp; production →</a>
+    <a href="../capabilities/#ffs">Capabilities · Fitness-for-service →</a>
+    <a href="../corrosion/galvanic-compatibility-explorer.html">Galvanic explorer →</a>
+    <a href="../production/scale-si-explorer.html">Scale-SI explorer →</a>
+    <a href="../ffs/riser-joint-acceptance-explorer.html">Riser-joint explorer →</a>
+  </div>
+
+  <footer>
+    <span><span class="k">repo</span> vamseeachanta/digitalmodel</span>
+    <span><span class="k">epic</span> #1057 · fitness-for-service</span>
+    <span><span class="k">shipped</span> 2026-07-03</span>
+  </footer>
+</div>
+</body>
+</html>
