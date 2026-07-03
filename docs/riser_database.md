@@ -205,6 +205,22 @@ screening (single Winkler `k`, no conductor axial load; layered p-y = solver
 tier). **Deferred: the AMJIG per-category extreme/survival criteria (licensed)**;
 standard selection (16Q vs AMJIG) is a query-time *threshold*, not a sweep axis.
 
+**D (#1282, #1279 child D) — metocean inputs.**
+`drilling_riser/metocean_inputs.py` turns a metocean time-series record stream
+(from `data_systems.data_procurement.metocean.MetoceanClient` or a committed
+offline fixture) into the envelope's inputs: `reduce_to_scatter` bins the (Hs,
+Tp) stream into a reused `orcaflex.weather_window.ScatterDiagram` (no new scatter
+type); `scatter_to_seastates` emits `SeaState` at bin **midpoints** (bins are
+upper edges); `current_to_surface_speeds` extracts the sweep's surface speed(s).
+The engine's own `envelope.CurrentProfile` gains **dormant** depth fields
+(depth/speed/direction/`current_type` incl. loop) — the sweep still uses surface
+current; depth-integrated drag is a deferred engine edit. CI runs fully offline
+against a synthetic NDBC-format fixture; the live provider path is opt-in
+(`RUN_LIVE_METOCEAN=1`) and guarded by `tests/metocean/netskip.skip_on_network_error`
+(catches `requests.RequestException` — the retry-exhausted `RetryError`, not just
+`HTTPError` — and skips, never errors). Public-provider data only; the CMEMS
+client is a follow-up (#1365). No client-derived archive tables are read.
+
 **C3 (#1346, #1281c) — solver-backed dynamic tier STUB.**
 `scripts/parametric/build_drilling_riser_envelope_library.py` builds a
 `parametric.library` atlas (`drilling_riser_envelope`) keyed on **operating
