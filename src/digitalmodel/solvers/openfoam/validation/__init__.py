@@ -83,6 +83,8 @@ from .kleefsman import (
     load_experiment,
 )
 from .sloshing_2d import (
+    ROLL_MOMENT_FO_NAME,
+    ROLL_MOMENT_PATCHES,
     SLOSHING_FREQ_TOLERANCE,
     SloshingForcedRollConfig,
     SloshingFreeDecayConfig,
@@ -92,6 +94,14 @@ from .sloshing_2d import (
     cosine_mode_setfields_body,
     measure_natural_frequency,
     parse_interface_height,
+    parse_roll_moment,
+    roll_moment_function_object,
+)
+from .sloshing_sweep import (
+    CONTRACT_FIELDS,
+    SloshingSweep,
+    SloshingSweepConfig,
+    reduce_roll_moment,
 )
 from .wave_excited_body import (
     PERIOD_TOLERANCE,
@@ -306,6 +316,15 @@ __all__ = [
     "cosine_mode_setfields_body",
     "measure_natural_frequency",
     "parse_interface_height",
+    # Sloshing roll-moment + fill/frequency sweep (#641)
+    "ROLL_MOMENT_FO_NAME",
+    "ROLL_MOMENT_PATCHES",
+    "parse_roll_moment",
+    "roll_moment_function_object",
+    "CONTRACT_FIELDS",
+    "SloshingSweep",
+    "SloshingSweepConfig",
+    "reduce_roll_moment",
     # Wave-excited floating body (#1302)
     "PERIOD_TOLERANCE",
     "RAO_TOLERANCE",

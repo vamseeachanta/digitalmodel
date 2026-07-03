@@ -317,6 +317,7 @@ functions
         writeControl    timeStep;
         writeInterval   @SAMPLEEVERY@;
     }
+@EXTRAFUNCTIONS@
 }
 """
 
@@ -456,6 +457,63 @@ def _dynamic_mesh_dict_text(motion: PrescribedMotion) -> str:
     ) + "\n"
 
 
+# Default name of the tank roll-reaction moment forces functionObject (#641).
+ROLL_MOMENT_FO_NAME = "tankRollMoment"
+
+# Tank wall patches the roll moment integrates over (the atmosphere top patch is
+# excluded — it is the open free-surface lid, not a tank wall).
+ROLL_MOMENT_PATCHES = ("leftWall", "rightWall", "lowerWall")
+
+
+def roll_moment_function_object(
+    origin: Tuple[float, float, float],
+    *,
+    name: str = ROLL_MOMENT_FO_NAME,
+    patches: Tuple[str, ...] = ROLL_MOMENT_PATCHES,
+    write_interval: int = 1,
+) -> str:
+    """Render an OpenFOAM ``forces`` functionObject for the tank roll moment (#641).
+
+    Emits pressure + viscous force/moment on the tank wall patches about the roll
+    centre ``origin``. The 2D sloshing plane is x-y and the physical roll is
+    rotation about z (engine YAW), so the roll-reaction moment is the **z
+    component** of the moment vector the FO writes to
+    ``postProcessing/<name>/<t0>/moment.dat``. ``CofR`` (centre of rotation) is
+    the roll axis origin = the tank roll centre; the axis itself is implicitly z
+    (we take ``M_z``). For interFoam ``rho`` is the real density field, so we set
+    ``rho rho`` (the FO then treats ``p`` as dynamic pressure in Pa).
+
+    Args:
+        origin: Roll-axis origin ``(x y z)`` (m) — the tank roll centre; equal to
+            the ``PrescribedMotion.origin`` driving the forced roll.
+        name: FunctionObject name (its ``postProcessing`` subdirectory).
+        patches: Tank wall patches to integrate the moment over.
+        write_interval: ``timeStep`` write stride (1 = every step, densest fit).
+
+    Returns:
+        The functionObject dict body (to embed in ``controlDict`` ``functions``).
+    """
+    fmt = "{:.8g}".format
+    patch_list = " ".join(patches)
+    ox, oy, oz = origin
+    return (
+        f"    {name}\n"
+        "    {\n"
+        "        type            forces;\n"
+        "        libs            (forces);\n"
+        f"        patches         ( {patch_list} );\n"
+        "        // interFoam has a real rho field -> p is dynamic pressure (Pa).\n"
+        "        rho             rho;\n"
+        "        // Roll axis origin (tank roll centre); roll = rotation about z,\n"
+        "        // so the roll-reaction moment is moment.dat's z component.\n"
+        f"        CofR            ({fmt(ox)} {fmt(oy)} {fmt(oz)});\n"
+        "        writeControl    timeStep;\n"
+        f"        writeInterval   {int(write_interval)};\n"
+        "        log             no;\n"
+        "    }"
+    )
+
+
 # ---------------------------------------------------------------------------
 # setFields: first-mode cosine perturbation (free-decay)
 # ---------------------------------------------------------------------------
@@ -583,6 +641,7 @@ def build_free_decay_case(
         .replace("@PROBEX@", fmt(config.probe_x))
         .replace("@PROBEZ@", fmt(0.5 * _CASE_DEPTH))
         .replace("@SAMPLEEVERY@", str(config.sample_every))
+        .replace("@EXTRAFUNCTIONS@", "")
     )
     setfields = cosine_mode_setfields_body(config)
     return _write_common(
@@ -599,6 +658,9 @@ def build_free_decay_case(
 def build_forced_roll_case(
     config: SloshingForcedRollConfig | None = None,
     parent_dir: Path | str = ".",
+    *,
+    with_moment: bool = False,
+    moment_write_interval: int = 1,
 ) -> Path:
     """Generate the SPHERIC Test 10 forced-roll validation case.
 
@@ -606,11 +668,27 @@ def build_forced_roll_case(
     z), flat partial fill at 18%, ``movingWallVelocity`` walls. Run
     ``blockMesh`` -> ``setFields`` -> ``interFoam`` (dynamic mesh handled by the
     ``dynamicMeshDict``).
+
+    Args:
+        config: Forced-roll configuration (defaults to SPHERIC Test 10).
+        parent_dir: Parent directory for the generated case directory.
+        with_moment: If True, also emit the tank roll-reaction moment ``forces``
+            functionObject (#641) about the roll axis (origin = the motion's roll
+            centre, axis = z). Its ``moment.dat`` z-component is the roll moment
+            consumed by the fill/frequency sweep reduction.
+        moment_write_interval: ``timeStep`` stride for the moment FO (1 = every
+            step; a dense series improves the first-harmonic fit).
     """
     config = config or SloshingForcedRollConfig()
     case_dir = Path(parent_dir) / config.name
     fmt = "{:.6g}".format
     ny = config.ny
+
+    extra_functions = ""
+    if with_moment:
+        extra_functions = roll_moment_function_object(
+            config.roll_origin, write_interval=moment_write_interval
+        )
 
     blockmesh = _blockmesh(config, ny)
     control = (
@@ -624,6 +702,7 @@ def build_forced_roll_case(
         .replace("@PROBEX@", fmt(0.5 * config.breadth))
         .replace("@PROBEZ@", fmt(0.5 * _CASE_DEPTH))
         .replace("@SAMPLEEVERY@", "5")
+        .replace("@EXTRAFUNCTIONS@", extra_functions)
     )
 
     # Flat partial fill snapped onto a cell face (#659).
@@ -706,6 +785,64 @@ def parse_interface_height(
 def _variance(xs: List[float]) -> float:
     m = sum(xs) / len(xs)
     return sum((x - m) ** 2 for x in xs) / len(xs)
+
+
+def parse_roll_moment(
+    case_dir: Path | str,
+    fo_name: str = ROLL_MOMENT_FO_NAME,
+) -> Tuple[List[float], List[float]]:
+    """Parse the ``forces`` moment time history into ``(times, moment_z)`` (#641).
+
+    Reads ``postProcessing/<fo>/<t0>/moment.dat`` written by the roll-moment
+    functionObject and returns the **total** (pressure + viscous) moment z
+    component — the roll-reaction moment about the z axis for the 2D x-y sloshing
+    plane. Robust to the two ESI column layouts:
+
+    - modern (v2012+): ``time (total)(pressure)(viscous)[(porous)]`` — the first
+      vector is the total, so ``M_z = total_z``;
+    - legacy: ``time (pressure)(viscous)`` — ``M_z = pressure_z + viscous_z``.
+
+    Parentheses around the vectors are stripped and the columns split on the
+    3-vector count, mirroring :meth:`OpenFOAMPostProcessor.parse_force_file`.
+    """
+    case_dir = Path(case_dir)
+    base = case_dir / "postProcessing" / fo_name
+    dats = sorted(base.glob("*/moment.dat"))
+    if not dats:
+        raise FileNotFoundError(f"no moment.dat under {base}")
+
+    times: List[float] = []
+    moment_z: List[float] = []
+    for dat in dats:
+        for line in dat.read_text().splitlines():
+            s = line.strip()
+            if not s or s.startswith("#"):
+                continue
+            cleaned = s.replace("(", " ").replace(")", " ")
+            parts = cleaned.split()
+            try:
+                vals = [float(p) for p in parts]
+            except ValueError:
+                continue
+            if len(vals) < 4:
+                continue
+            t = vals[0]
+            rest = vals[1:]
+            n_vec = len(rest) // 3
+            if n_vec < 2:
+                continue
+            if n_vec == 2:
+                # legacy: (pressure, viscous) -> total_z = p_z + v_z
+                mz = rest[2] + rest[5]
+            else:
+                # modern: first vector is the total
+                mz = rest[2]
+            times.append(t)
+            moment_z.append(mz)
+
+    if not times:
+        raise RuntimeError(f"no numeric moment rows parsed from {base}")
+    return times, moment_z
 
 
 def _refine_peak_parabolic(freqs, amp, idx: int) -> float:

@@ -59,7 +59,9 @@ def test_severe_worstzone_runs_canonical_ffs_chain():
         str(DATA / "ut_grid_RJ-101-boxend_worstzone_fullres.csv"),
         input_units="mm",
     )
-    assert result.assessment_type in {"GML", "LML"}
+    # PITTING joined the routing set in #1269 — this scan's isolated sharp
+    # minima on a near-nominal background are detected as pit morphology.
+    assert result.assessment_type in {"GML", "LML", "PITTING"}
     assert result.t_measured_min_in == pytest.approx(15.02 / 25.4, abs=0.02)
     assert result.t_measured_avg_in < NOMINAL_WT_IN
     if result.rsf is not None:

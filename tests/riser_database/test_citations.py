@@ -88,6 +88,41 @@ def test_get_riser_scf_emits_c203_citation():
     assert "methodology" in cv.citation.note.lower()
 
 
+def test_get_tension_weight_factor_emits_16q_citation():
+    cv = getters.get_tension_weight_factor(repo_root=_fixture_repo_root())
+    assert cv.value == 1.05
+    assert cv.citation.code_id == "api-rp-16q"
+    assert cv.citation.publisher == "API"
+    assert cv.citation.revision == "1993"  # 1st Ed. 1993, not 2017
+    assert cv.citation.source_sibling == "generic"
+    assert "3.3" in cv.citation.section
+    assert cv.units == "dimensionless"
+
+
+def test_get_buoyancy_tension_factor_emits_16q_citation():
+    cv = getters.get_buoyancy_tension_factor(repo_root=_fixture_repo_root())
+    assert cv.value == 0.96
+    assert cv.citation.code_id == "api-rp-16q"
+    assert cv.citation.publisher == "API"
+    assert cv.citation.revision == "1993"
+    assert cv.citation.source_sibling == "generic"
+    assert "3.3" in cv.citation.section
+
+
+def test_16q_getters_are_in_parity_with_stackup_literals():
+    """The getters must return exactly the drilling_riser.stackup literals —
+    the calc still uses the module constants; the getters cite the same values.
+    """
+    from digitalmodel.drilling_riser import stackup
+
+    f_wt = getters.get_tension_weight_factor(repo_root=_fixture_repo_root())
+    f_bt = getters.get_buoyancy_tension_factor(repo_root=_fixture_repo_root())
+    assert f_wt.value == stackup.F_WT_DEFAULT == 1.05
+    assert f_bt.value == stackup.F_BT_DEFAULT == 0.96
+    # And no getter exists for the 1.25 top-tension factor (no 16Q provision).
+    assert not hasattr(getters, "get_tension_safety_factor")
+
+
 # -- defense (a): fail-closed ----------------------------------------------------
 
 
@@ -117,6 +152,20 @@ def test_user_override_wins_for_scf():
     assert "1.0" in cv.citation.note
 
 
+def test_user_override_wins_for_f_wt():
+    cv = getters.get_tension_weight_factor(override=1.1, repo_root=_fixture_repo_root())
+    assert cv.value == 1.1
+    assert "user override" in cv.citation.note
+    assert "1.05" in cv.citation.note  # standard value still cited
+
+
+def test_user_override_wins_for_f_bt():
+    cv = getters.get_buoyancy_tension_factor(override=0.9, repo_root=_fixture_repo_root())
+    assert cv.value == 0.9
+    assert "user override" in cv.citation.note
+    assert "0.96" in cv.citation.note
+
+
 # -- defenses (c)+(d) + pip-no-wiki path ------------------------------------------
 
 
@@ -140,6 +189,8 @@ def test_pip_no_wiki_helper_warns_once_and_degrades(_no_wiki_anywhere):
 
 def test_helper_returns_cited_values_in_context():
     cited = getters.riser_citations(repo_root=_fixture_repo_root())
-    assert set(cited) == {"dff", "scf"}
+    assert set(cited) == {"dff", "scf", "f_wt", "f_bt"}
     assert cited["dff"].value == 10.0
     assert cited["scf"].value == 1.0
+    assert cited["f_wt"].value == 1.05
+    assert cited["f_bt"].value == 0.96
