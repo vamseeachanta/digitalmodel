@@ -85,6 +85,15 @@ from .kleefsman import (
     extract_impact_metrics,
     load_experiment,
 )
+from .maccamy_fuchs import (
+    MACCAMY_FUCHS_FORCE_TOLERANCE,
+    PHASE_TOLERANCE_DEG,
+    CylinderWaveLoadingConfig,
+    analyze_cylinder_loading,
+    build_maccamy_fuchs_case,
+    maccamy_fuchs_force,
+    morison_inertia_force,
+)
 from .sloshing_2d import (
     ROLL_MOMENT_FO_NAME,
     ROLL_MOMENT_PATCHES,
@@ -349,6 +358,28 @@ SLOSHING_2D_CASE = ValidationCase(
     },
 )
 
+MACCAMY_FUCHS_CASE = ValidationCase(
+    name="maccamy_fuchs_cylinder",
+    build=build_maccamy_fuchs_case,
+    reference={
+        # frozen MacCamy-Fuchs closed form for the headline diffraction case:
+        "inline_force_N": CylinderWaveLoadingConfig().reference["F_amplitude"],
+        "force_lead_velocity_deg":
+            CylinderWaveLoadingConfig().reference["phase_lead_velocity_deg"],
+    },
+    tolerance=MACCAMY_FUCHS_FORCE_TOLERANCE,
+    domain="marine (wave-structure interaction, loading)",
+    metadata={
+        "issue": "#1171",
+        "reference": "MacCamy & Fuchs (1954) linear diffraction force on a "
+                     "surface-piercing vertical cylinder; Morison inertia limit "
+                     "(Cm=2) at small ka",
+        "regime": "ka = 0.955, D/L = 0.30 (diffraction); MacCamy-Fuchs force is "
+                  "0.72x the Morison estimate, so the case discriminates "
+                  "diffraction. Gate normalises by the MEASURED incident wave.",
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
@@ -360,6 +391,7 @@ FOUNDATIONAL_CASES = (
     WAVE_EXCITED_BODY_RAO_CASE,
     WAVE_EXCITED_BODY_DECAY_CASE,
     SLOSHING_2D_CASE,
+    MACCAMY_FUCHS_CASE,
 )
 
 __all__ = [
@@ -376,6 +408,15 @@ __all__ = [
     "WAVE_EXCITED_BODY_RAO_CASE",
     "WAVE_EXCITED_BODY_DECAY_CASE",
     "SLOSHING_2D_CASE",
+    "MACCAMY_FUCHS_CASE",
+    # Vertical-cylinder wave loading — MacCamy-Fuchs (#1171)
+    "MACCAMY_FUCHS_FORCE_TOLERANCE",
+    "PHASE_TOLERANCE_DEG",
+    "CylinderWaveLoadingConfig",
+    "analyze_cylinder_loading",
+    "build_maccamy_fuchs_case",
+    "maccamy_fuchs_force",
+    "morison_inertia_force",
     # Wave-excited body heave-RAO sweep (#1324)
     "RAO_SWEEP_BAND",
     "RAO_SWEEP_BAND_RESONANCE",
