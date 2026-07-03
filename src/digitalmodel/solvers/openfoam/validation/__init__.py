@@ -85,6 +85,27 @@ from .kleefsman import (
     extract_impact_metrics,
     load_experiment,
 )
+from .sloshing_2d import (
+    ROLL_MOMENT_FO_NAME,
+    ROLL_MOMENT_PATCHES,
+    SLOSHING_FREQ_TOLERANCE,
+    SloshingForcedRollConfig,
+    SloshingFreeDecayConfig,
+    analyze_free_decay,
+    build_forced_roll_case,
+    build_free_decay_case,
+    cosine_mode_setfields_body,
+    measure_natural_frequency,
+    parse_interface_height,
+    parse_roll_moment,
+    roll_moment_function_object,
+)
+from .sloshing_sweep import (
+    CONTRACT_FIELDS,
+    SloshingSweep,
+    SloshingSweepConfig,
+    reduce_roll_moment,
+)
 from .wave_excited_body import (
     PERIOD_TOLERANCE,
     RAO_TOLERANCE,
@@ -310,6 +331,24 @@ WAVE_EXCITED_BODY_DECAY_CASE = ValidationCase(
     },
 )
 
+SLOSHING_2D_CASE = ValidationCase(
+    name="sloshing_2d_free_decay",
+    build=build_free_decay_case,
+    reference={
+        # analytical first-mode sloshing frequency (Hz) for the default tank
+        "natural_frequency": SloshingFreeDecayConfig().analytical_frequency(),
+    },
+    tolerance=SLOSHING_FREQ_TOLERANCE,
+    domain="marine (internal tank sloshing / TLD)",
+    metadata={
+        "issue": "#639",
+        "reference": (
+            "linear tanh dispersion; SPHERIC Test 10 (Delorme et al. 2009) "
+            "forced-roll corroboration"
+        ),
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
@@ -320,6 +359,7 @@ FOUNDATIONAL_CASES = (
     WAVE_EXCITED_BODY_CASE,
     WAVE_EXCITED_BODY_RAO_CASE,
     WAVE_EXCITED_BODY_DECAY_CASE,
+    SLOSHING_2D_CASE,
 )
 
 __all__ = [
@@ -335,6 +375,7 @@ __all__ = [
     "WAVE_EXCITED_BODY_CASE",
     "WAVE_EXCITED_BODY_RAO_CASE",
     "WAVE_EXCITED_BODY_DECAY_CASE",
+    "SLOSHING_2D_CASE",
     # Wave-excited body heave-RAO sweep (#1324)
     "RAO_SWEEP_BAND",
     "RAO_SWEEP_BAND_RESONANCE",
@@ -351,6 +392,25 @@ __all__ = [
     "build_decay_config",
     "predict_peak_rao",
     "reference_damping_ratio",
+    # Sloshing 2D (#639)
+    "SLOSHING_FREQ_TOLERANCE",
+    "SloshingForcedRollConfig",
+    "SloshingFreeDecayConfig",
+    "analyze_free_decay",
+    "build_forced_roll_case",
+    "build_free_decay_case",
+    "cosine_mode_setfields_body",
+    "measure_natural_frequency",
+    "parse_interface_height",
+    # Sloshing roll-moment + fill/frequency sweep (#641)
+    "ROLL_MOMENT_FO_NAME",
+    "ROLL_MOMENT_PATCHES",
+    "parse_roll_moment",
+    "roll_moment_function_object",
+    "CONTRACT_FIELDS",
+    "SloshingSweep",
+    "SloshingSweepConfig",
+    "reduce_roll_moment",
     # Wave-excited floating body (#1302)
     "PERIOD_TOLERANCE",
     "RAO_TOLERANCE",

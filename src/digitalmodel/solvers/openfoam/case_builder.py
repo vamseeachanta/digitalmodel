@@ -19,6 +19,12 @@ from .initial_fields import (
     write_velocity_field,
 )
 from .models import OpenFOAMCase, TurbulenceType
+from .motion import render_dynamic_mesh_dict_body
+from .partial_fill import (
+    partial_fill_box,
+    render_set_fields_dict_body,
+    snap_fill_to_cell_face,
+)
 from .templates import (
     FV_SOLUTION_SOLVERS,
     PIMPLE_BLOCK,
@@ -123,6 +129,33 @@ class OpenFOAMCaseBuilder:
         self._write_fv_solution(system_dir)
         self._write_block_mesh_dict(system_dir)
         self._write_decompose_par_dict(system_dir)
+        if (
+            self._case.solver_config.is_multiphase
+            and self._case.fill_level is not None
+        ):
+            self._write_set_fields_dict(system_dir)
+
+    def _write_set_fields_dict(self, system_dir: Path) -> None:
+        """Write system/setFieldsDict for a VOF partial fill (#659).
+
+        The still-water level ``h = fill_level * tank_height`` is snapped onto a
+        vertical cell face (the block mesh is z-up, so the vertical extent is the
+        z direction) so the free surface never bisects a cell. ``alpha.water`` is
+        set to 1 (liquid) below ``h`` and defaults to 0 (air) above.
+        """
+        dc = self._case.domain
+        vertical_axis = 2  # block mesh is z-up (bottom = zmin face)
+        tank_height = dc.max_coords[vertical_axis] - dc.min_coords[vertical_axis]
+        n_cells = dc.cell_counts()[vertical_axis]
+        snap = snap_fill_to_cell_face(tank_height, n_cells, self._case.fill_level)
+        box_min, box_max = partial_fill_box(
+            dc.min_coords, dc.max_coords, snap.fill_height,
+            vertical_axis=vertical_axis,
+        )
+        content = _foam_header("dictionary", "setFieldsDict")
+        content += "\n" + render_set_fields_dict_body(box_min, box_max) + "\n"
+        content += _FOOTER
+        (system_dir / "setFieldsDict").write_text(content)
 
     def _write_control_dict(self, system_dir: Path) -> None:
         """Write system/controlDict."""
@@ -305,6 +338,15 @@ mergePatchPairs
         self._write_turbulence_properties(constant_dir)
         if self._case.solver_config.is_multiphase:
             self._write_gravity(constant_dir)
+        if self._case.motion is not None:
+            self._write_dynamic_mesh_dict(constant_dir)
+
+    def _write_dynamic_mesh_dict(self, constant_dir: Path) -> None:
+        """Write constant/dynamicMeshDict for a prescribed forced motion (#658)."""
+        content = _foam_header("dictionary", "dynamicMeshDict")
+        content += "\n" + render_dynamic_mesh_dict_body(self._case.motion) + "\n"
+        content += _FOOTER
+        (constant_dir / "dynamicMeshDict").write_text(content)
 
     def _write_transport_properties(self, constant_dir: Path) -> None:
         """Write constant/transportProperties for water and air."""

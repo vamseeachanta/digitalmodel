@@ -163,6 +163,7 @@
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
     <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
+    <div class="navgroup"><a class="navh" href="#corrosion-production">Corrosion &amp; production chemistry</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -326,6 +327,24 @@
     the NACE MR0175 sour-service screen and the connection-class tension efficiencies.</p>
     <div class="grid">
       <div class="card"><h3>Casing design explorer</h3><div class="std">API 5C3 · API 5CT · NACE MR0175</div><p>Eight candidate products checked against a reference frac'd well &mdash; per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2&quot; 23# P110 &rarr; 14,520 psi), the NACE sour-service screen and the connection-class table.</p><div class="actions"><a class="open" href="../well/casing-design-explorer.html">Open &rarr;</a><a class="sec" href="pdf/casing-design.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/casing-design.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="corrosion-production">
+    <div class="chanhead"><h2>Corrosion &amp; production chemistry</h2><a class="onepager" href="pdf/sec-corrosion-production.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Screening-level materials-compatibility and produced-water scaling checks that sit alongside
+    the integrity workflow &mdash; dissimilar-metal galvanic risk on the published anodic-index method, and
+    mineral-scale saturation tendency in the Oddo&ndash;Tomson framework, both driven from public constants
+    with every coefficient documented and overridable.</p>
+    <div class="fits">
+      <span><b>Materials selection</b> &mdash; MIL-STD-889 anodic-index couples, per-environment allowable &Delta;V</span>
+      <span><b>Produced water</b> &mdash; calcite / sulfate / halite saturation indices, BH&rarr;WH trending</span>
+      <span><b>Waterflood compatibility</b> &mdash; formation-water &times; seawater mixing sweeps</span>
+      <span><b>Public-constant basis</b> &mdash; parameterized defaults, calibrate before quantitative use</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Galvanic compatibility explorer</h3><div class="std">MIL-STD-889 anodic index</div><p>Dissimilar-metal couple screening (OK / marginal / protect) against the environment-dependent allowable potential difference, with the anodic member and area-ratio guidance &mdash; per-environment compatibility heatmap over the common construction metals.</p><div class="actions"><a class="open" href="../corrosion/galvanic-compatibility-explorer.html">Open &rarr;</a><a class="sec" href="pdf/galvanic-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/galvanic-explorer.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Mineral-scale saturation explorer</h3><div class="std">Oddo&ndash;Tomson · SPE 21710</div><p>Saturation index per scale family (calcite, sulfates, halite) swept over temperature and pressure, bottomhole&rarr;wellhead trending, and a formation-water&times;seawater mixing sweep for waterflood compatibility &mdash; conditional-solubility framework with documented, overridable coefficients.</p><div class="actions"><a class="open" href="../production/scale-si-explorer.html">Open &rarr;</a><a class="sec" href="pdf/scale-si-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/scale-si-explorer.html">API &rarr;</a></div></div>
     </div>
   </section>
 
