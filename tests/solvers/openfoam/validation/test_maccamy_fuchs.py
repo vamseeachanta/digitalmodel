@@ -97,6 +97,31 @@ def test_config_geometry_and_face_alignment() -> None:
     assert cfg.wavelength / dx >= 20.0
 
 
+def test_analysis_window_opens_after_wave_arrival() -> None:
+    # Regression for the "end_time too short" bug: the short wave (group
+    # velocity c_g) takes ramp + cylinder_x / c_g to reach the cylinder, and the
+    # force needs a few more periods to settle. The steady window must open
+    # AFTER that, or the harmonic fit reads a still-ramping force far too low.
+    from digitalmodel.solvers.openfoam.validation.wave_tank import (
+        GRAVITY, dispersion_wavenumber,
+    )
+
+    cfg = CylinderWaveLoadingConfig()
+    k = dispersion_wavenumber(cfg.wave_period, cfg.depth)
+    omega = 2.0 * math.pi / cfg.wave_period
+    c = omega / k
+    kh = k * cfg.depth
+    n = 0.5 * (1.0 + 2.0 * kh / math.sinh(2.0 * kh))
+    cg = n * c
+    arrival = cfg.ramp_time + cfg.cylinder_x / cg
+    w0, w1 = cfg.steady_window
+    # window opens at least ~2 periods after the wave arrives, and closes at end
+    assert w0 >= arrival + 2.0 * cfg.wave_period
+    assert w1 == cfg.end_time
+    # window spans >= ~6 periods for a clean single-harmonic force fit
+    assert (w1 - w0) >= 6.0 * cfg.wave_period - 1e-9
+
+
 def test_config_reference_matches_closed_form() -> None:
     cfg = CylinderWaveLoadingConfig()
     r = cfg.reference
