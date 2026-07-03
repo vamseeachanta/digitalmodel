@@ -28,12 +28,13 @@ from __future__ import annotations
 import csv
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
 from digitalmodel.fatigue.damage import miner_damage
 from digitalmodel.fatigue.sn_curves import get_sn_curve
+from digitalmodel.riser_database.getters import get_riser_dff
 from digitalmodel.riser_fatigue.touchdown import (
     RiserSection,
     TouchdownFatigueInput,
@@ -44,10 +45,27 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 SECONDS_PER_YEAR = 365.25 * 24.0 * 3600.0
 
 
+def resolve_dff(settings: dict, repo_root: Optional[Path] = None) -> float:
+    """Resolve the design fatigue factor (DFF) for a riser-fatigue run (#1246).
+
+    Precedence (fail-closed):
+
+    * an explicit ``dff`` in ``settings`` wins — validated exactly as before
+      (positive float); every existing config is behaviourally unchanged;
+    * when ``dff`` is absent, the cited standard default resolves via
+      :func:`digitalmodel.riser_database.getters.get_riser_dff` (DNV-OS-F201) —
+      10.0 where the llm-wiki resolves, and raises ``CitationResolutionError``
+      standalone. A pass/fail-driving input never silently defaults.
+    """
+    if settings.get("dff") is not None:
+        return _positive_float(settings, "dff")
+    return get_riser_dff(repo_root=repo_root).value
+
+
 def router(cfg: dict) -> dict:
     settings = cfg.get("riser_fatigue") or {}
     design_life_years = _positive_float(settings, "design_life_years")
-    dff = _positive_float(settings, "dff")
+    dff = resolve_dff(settings)
     default_curve, default_env = _curve_settings(settings)
 
     rows: list[dict[str, Any]] = []

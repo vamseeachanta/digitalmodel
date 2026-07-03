@@ -14,9 +14,11 @@ Two "top tension" answers coexist in this package by design:
 
 Provenance discipline: this module carries NO standards-derived numeric
 defaults — ``efficiency`` and ``fleet_angle_factor`` are required kwargs
-supplied by the caller/rig data (the 16Q citation getters arrive with #1246).
-Illustrative docstring numbers are deliberately disjoint from any documented
-project calculation.
+supplied by the caller/rig data. The 16Q §3.3 tension factors f_wt/f_bt that
+compose ``t_srmin_kn`` upstream now resolve as cited values via
+``riser_database.getters.get_tension_weight_factor`` /
+``get_buoyancy_tension_factor`` (#1246). Illustrative docstring numbers are
+deliberately disjoint from any documented project calculation.
 """
 from __future__ import annotations
 
@@ -185,7 +187,13 @@ def tensioner_system_factor(
     n_units: int | float, n_fail: int | float, efficiency: float
 ) -> float:
     """N / (Rf * (N - n)): the tensioner-system allowance for ``n_fail``
-    sudden unit/wire failures at mechanical efficiency ``Rf``."""
+    sudden unit/wire failures at mechanical efficiency ``Rf``.
+
+    Note on the 16Q mapping (§3.3.2): API RP 16Q folds the mechanical
+    efficiency and the fleet-angle allowance into a single reduction factor
+    Rf. This implementation splits them — ``efficiency`` here (the Rf in this
+    N/(Rf(N-n)) expression) and ``fleet_angle_factor`` in
+    :func:`minimum_top_tension_16q` — so a rig can vary them independently."""
     n = int(n_units)
     f = int(n_fail)
     if n < 1:
