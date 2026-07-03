@@ -40,7 +40,7 @@ _CHROME = os.environ.get("CHROME") or shutil.which("google-chrome") or shutil.wh
 # digitalmodel brand logo (native colors), inlined from the repo asset with any
 # XML prolog stripped so it drops cleanly into both the one-pager and API pages.
 _LOGO = re.sub(
-    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo.svg").read_text(
+    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo_compact.svg").read_text(
         encoding="utf-8"
     )
 ).strip()
