@@ -62,7 +62,8 @@ SPECS: list[dict] = [
          bullets=["Remaining-strength and inspector-verdict walkthrough across API 579-1, ASME B31G and DNV-RP-F101",
                   "Accept / re-rate / take-more-measurements / escalate driven by measurement sufficiency",
                   "UT / phased-array thickness-grid intake; remaining life and next-inspection interval per API 510 / 570 / 653",
-                  "RSTRENG effective-area and B31G screens validated to published worked examples"]),
+                  "RSTRENG effective-area and B31G screens validated to published worked examples",
+                  "API 579-1 Part 6 pitting (auto-routed from UT grids), Part 12 dent / dent-gouge, and BS 7910 Option-1 FAD weld-flaw envelopes"]),
     dict(id="sec-structural", kind="section", title="Ship structural strength",
          std="DNV-RP-C201 · IACS UR S11 · class rules", path="capabilities/#structural",
          blurb="Plate and stiffened-panel buckling for ship structure — plate-field, column and "
@@ -374,6 +375,41 @@ SPECS: list[dict] = [
          figures=[], bullets=["Per-well ML diagnosis rolled up to field status counts",
                               "Worst-wells ranking by severity and fillage",
                               "Fail-closed screening verdict (JSON summary + per-well CSV)"]),
+    # ---- Corrosion & production chemistry ----
+    dict(id="sec-corrosion-production", kind="section", title="Corrosion & production chemistry",
+         std="MIL-STD-889 · Oddo–Tomson (SPE 21710)", path="capabilities/#corrosion-production",
+         blurb="Screening-level materials-compatibility and produced-water scaling checks that sit "
+               "alongside the integrity workflow — dissimilar-metal galvanic risk on the published "
+               "anodic-index method, and mineral-scale saturation tendency in the Oddo–Tomson "
+               "conditional-solubility framework. Both run from public constants with every "
+               "coefficient documented and overridable; parameterized for calibration before "
+               "quantitative use.",
+         figures=[("3", "galvanic environment classes"), ("7", "scale families"),
+                  ("public", "constant basis")],
+         bullets=["Galvanic couple screen (OK / marginal / protect) vs per-environment allowable ΔV, MIL-STD-889 anodic index",
+                  "Mineral-scale saturation indices (calcite / sulfate / halite) with bottomhole→wellhead trending",
+                  "Formation-water × seawater mixing sweeps for waterflood compatibility",
+                  "Published anodic-index and thermodynamic constants only; no operator-proprietary data"]),
+    dict(id="galvanic-explorer", kind="work", title="Galvanic compatibility explorer",
+         std="MIL-STD-889 anodic index", path="corrosion/galvanic-compatibility-explorer.html",
+         blurb="Dissimilar-metal couple screening (OK / marginal / protect) against the "
+               "environment-dependent allowable potential difference, identifying the anodic "
+               "(sacrificial) member with area-ratio guidance — a per-environment compatibility "
+               "heatmap over the common construction metals.",
+         figures=[("0.15–0.50 V", "allowable ΔV by environment")],
+         bullets=["Couple verdict and anodic member from the published anodic-index table",
+                  "Per-environment compatibility matrix (harsh-marine / industrial / controlled-indoor)",
+                  "Area-ratio and coat-the-cathode guidance on flagged couples"]),
+    dict(id="scale-si-explorer", kind="work", title="Mineral-scale saturation explorer",
+         std="Oddo–Tomson · SPE 21710", path="production/scale-si-explorer.html",
+         blurb="Saturation index per scale family (calcite, sulfates, halite) swept over temperature "
+               "and pressure, bottomhole→wellhead trending, and a formation-water × seawater mixing "
+               "sweep for waterflood compatibility — the Oddo–Tomson conditional-solubility framework "
+               "with documented, overridable coefficients.",
+         figures=[("7", "scale families")],
+         bullets=["SI = log10(IAP / Ksp_cond) per family, supersaturation flagged at SI > 0",
+                  "T/P sweep and bottomhole→wellhead SI trending along the production string",
+                  "Waterflood mixing sweep (barium-rich formation water × sulfate-rich seawater)"]),
 ]
 
 
@@ -427,6 +463,8 @@ PROMPTS: dict[str, str] = {
     "dynacard-troubleshooting": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
     "dynacard-field-health": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
     "casing-design": "Check my production casing design (burst / collapse / tension / triaxial) per API 5C3 and give me the max frac surface pressure.",
+    "galvanic-explorer": "Screen this dissimilar-metal couple for galvanic compatibility in a marine environment (MIL-STD-889 anodic index) and tell me if it needs protection.",
+    "scale-si-explorer": "Compute produced-water mineral-scale saturation indices (Oddo-Tomson) over my T/P path and check formation-water vs seawater mixing for waterflood compatibility.",
 }
 
 

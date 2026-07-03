@@ -163,6 +163,7 @@
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
     <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
+    <div class="navgroup"><a class="navh" href="#corrosion-production">Corrosion &amp; production chemistry</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -235,8 +236,10 @@
     interactive: live charts, scrubbable animations (vortex street, dam break, wave tank, heave
     decay, wave-excited heave) and a member VIV lock-in screening calculator.</p>
     <div class="grid">
-      <div class="card"><h3>CFD verification suite</h3><div class="std">OpenFOAM · 9 cases</div><p>Landing page tying the nine verification cases together: philosophy, summary table, toolchain and engineering depth.</p><div class="actions"><a class="open" href="../cfd/">Open &rarr;</a></div></div>
+      <div class="card"><h3>CFD verification suite</h3><div class="std">OpenFOAM · 9 cases + RAO spot-check</div><p>Landing page tying the verification cases together: philosophy, summary table, toolchain and engineering depth.</p><div class="actions"><a class="open" href="../cfd/">Open &rarr;</a></div></div>
       <div class="card"><h3>Wave-excited floating body</h3><div class="std">overset · heave RAO · seakeeping</div><p>The suite's first wave-body interaction case: a floating box in the verified regular wave on a rigid overset mesh &mdash; heave RAO within 1.7% of the long-wave wave-follower limit, with an animated wave-riding sequence. The verified path to CFD RAO spot-checks against the diffraction pipeline.</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Heave-RAO frequency response</h3><div class="std">overset · RAO curve · vs potential flow</div><p>The #1302 case swept across wave period and spot-checked at each point against a frozen potential-flow (capytaine BEM) reference &mdash; the physics the OrcaWave/AQWA pipeline implements. Off resonance the CFD matches the diffraction curve within ~3%; near resonance the CFD response is shown (two-resolution study) to be grid-independent and well below the inviscid peak &mdash; a documented open finding whose clean attribution is a free-decay damping test (cf. the #1169 heave-decay case).</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-rao-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Free-decay heave damping (overset)</h3><div class="std">still water · ζ · attribution</div><p>Resolves the #1324 open finding. The overset body is released from a still-water heave displacement and rings down; the damped natural frequency (within ~0.4% of the potential-flow resonance) and the light, amplitude-independent damping ratio (ζ ≈ 0.13, near the radiation value) verify the body's dynamics — so the near-resonance forced-sweep reduction is a wave-delivery / measurement artifact, not body damping. The body would resonate to RAO ≈ 1.8.</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-decay-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>Flat-plate boundary layer</h3><div class="std">Blasius · laminar</div><p>Steady simpleFoam skin friction within 4.6% of the Blasius law; velocity profiles collapse onto the similarity solution.</p><div class="actions"><a class="open" href="../cfd/flat-plate-blasius-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>Cylinder vortex shedding (Re=100)</h3><div class="std">Williamson · transient · VIV</div><p>Transient pimpleFoam K&aacute;rm&aacute;n street on a body-fitted O-grid: mean drag within 0.5% and Strouhal within 0.9% of benchmark, with an animated vortex street and a VIV lock-in screening calculator.</p><div class="actions"><a class="open" href="../cfd/cylinder-re100-verification.html">Open &rarr;</a></div></div>
       <div class="card"><h3>Turbulent flat plate</h3><div class="std">k-&omega; SST · RANS</div><p>Wall-resolved k-&omega; SST (y&#8314;&asymp;0.13): the velocity profile collapses onto the universal law of the wall; skin friction within ~9% of turbulent correlations.</p><div class="actions"><a class="open" href="../cfd/turbulent-flat-plate-verification.html">Open &rarr;</a></div></div>
@@ -324,6 +327,24 @@
     the NACE MR0175 sour-service screen and the connection-class tension efficiencies.</p>
     <div class="grid">
       <div class="card"><h3>Casing design explorer</h3><div class="std">API 5C3 · API 5CT · NACE MR0175</div><p>Eight candidate products checked against a reference frac'd well &mdash; per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2&quot; 23# P110 &rarr; 14,520 psi), the NACE sour-service screen and the connection-class table.</p><div class="actions"><a class="open" href="../well/casing-design-explorer.html">Open &rarr;</a><a class="sec" href="pdf/casing-design.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/casing-design.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="corrosion-production">
+    <div class="chanhead"><h2>Corrosion &amp; production chemistry</h2><a class="onepager" href="pdf/sec-corrosion-production.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Screening-level materials-compatibility and produced-water scaling checks that sit alongside
+    the integrity workflow &mdash; dissimilar-metal galvanic risk on the published anodic-index method, and
+    mineral-scale saturation tendency in the Oddo&ndash;Tomson framework, both driven from public constants
+    with every coefficient documented and overridable.</p>
+    <div class="fits">
+      <span><b>Materials selection</b> &mdash; MIL-STD-889 anodic-index couples, per-environment allowable &Delta;V</span>
+      <span><b>Produced water</b> &mdash; calcite / sulfate / halite saturation indices, BH&rarr;WH trending</span>
+      <span><b>Waterflood compatibility</b> &mdash; formation-water &times; seawater mixing sweeps</span>
+      <span><b>Public-constant basis</b> &mdash; parameterized defaults, calibrate before quantitative use</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Galvanic compatibility explorer</h3><div class="std">MIL-STD-889 anodic index</div><p>Dissimilar-metal couple screening (OK / marginal / protect) against the environment-dependent allowable potential difference, with the anodic member and area-ratio guidance &mdash; per-environment compatibility heatmap over the common construction metals.</p><div class="actions"><a class="open" href="../corrosion/galvanic-compatibility-explorer.html">Open &rarr;</a><a class="sec" href="pdf/galvanic-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/galvanic-explorer.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Mineral-scale saturation explorer</h3><div class="std">Oddo&ndash;Tomson · SPE 21710</div><p>Saturation index per scale family (calcite, sulfates, halite) swept over temperature and pressure, bottomhole&rarr;wellhead trending, and a formation-water&times;seawater mixing sweep for waterflood compatibility &mdash; conditional-solubility framework with documented, overridable coefficients.</p><div class="actions"><a class="open" href="../production/scale-si-explorer.html">Open &rarr;</a><a class="sec" href="pdf/scale-si-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/scale-si-explorer.html">API &rarr;</a></div></div>
     </div>
   </section>
 

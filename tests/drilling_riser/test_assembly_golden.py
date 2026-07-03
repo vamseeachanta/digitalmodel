@@ -23,7 +23,7 @@ from digitalmodel.drilling_riser.assembly import (
 
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),
+    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
     Path.home() / "workspace-hub" / "llm-wiki",
 )
 
