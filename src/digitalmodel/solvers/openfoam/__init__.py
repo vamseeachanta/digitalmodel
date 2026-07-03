@@ -31,6 +31,18 @@ from .spectral_analysis import (
     extract_natural_frequency,
     prismatic_tank_natural_frequency,
 )
+from .pressure_taps import (
+    PressureTap,
+    PressureTapStatistics,
+    b1546_default_taps,
+    compute_tap_statistics,
+    point_tap_names,
+    read_tap_statistics,
+    render_patch_probes_entry,
+    render_pressure_tap_functions,
+    render_probes_entry,
+    render_surface_entry,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -54,4 +66,14 @@ __all__ = [
     "compute_welch_spectrum",
     "extract_natural_frequency",
     "prismatic_tank_natural_frequency",
+    "PressureTap",
+    "PressureTapStatistics",
+    "b1546_default_taps",
+    "compute_tap_statistics",
+    "point_tap_names",
+    "read_tap_statistics",
+    "render_patch_probes_entry",
+    "render_pressure_tap_functions",
+    "render_probes_entry",
+    "render_surface_entry",
 ]
