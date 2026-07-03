@@ -130,6 +130,12 @@ class RigRiserInterfaceRow:
     moonpool_length_ft: Optional[float]
     moonpool_width_ft: Optional[float]
     drill_floor_elev_ft: Optional[float]
+    #: Rated wellhead/conductor bending-moment capacity [kN.m] and flex-joint
+    #: hardware angular rating [deg] (#1345). Public rows carry only public-spec
+    #: rated values; client-/well-specific ratings stay wiki-side. Ship EMPTY in
+    #: this slice — populated by the paired worldenergydata rig-spec sourcing.
+    conductor_moment_capacity_kn_m: Optional[float]
+    flexjoint_angle_rating_deg: Optional[float]
     wed_rig_name: str
     wiki_path: str
     note: str
@@ -148,6 +154,8 @@ _NUMERIC_CONFIG_COLUMNS = (
     "moonpool_length_ft",
     "moonpool_width_ft",
     "drill_floor_elev_ft",
+    "conductor_moment_capacity_kn_m",
+    "flexjoint_angle_rating_deg",
 )
 #: Known tables: csv file, key column, row type. Anything else in the
 #: manifest is rejected (bounded reads: no discovery, no globbing).

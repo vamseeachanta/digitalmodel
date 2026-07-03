@@ -14,7 +14,7 @@ tables:
   rig_riser_interface:
     file: rig_riser_interface.csv
     rows: 3
-    sha256: a7602f37afc3bcda207cad9daba55f24a681d93972011d3f512f731053e2a59e
+    sha256: 56ea3f0707b51ee5d74f9add84e83a4e274ad88e1954630e7a9b7cd0b4e432a7
   riser_stackup:
     file: riser_stackup.csv
     rows: 9

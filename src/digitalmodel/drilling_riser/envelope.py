@@ -35,6 +35,7 @@ from typing import Optional, Sequence
 import numpy as np
 import yaml
 
+from digitalmodel.drilling_riser.conductor_response import solve_conductor_moment
 from digitalmodel.drilling_riser.operability import watch_circle_radius_m
 from digitalmodel.drilling_riser.riser_response import solve_static_response
 from digitalmodel.orcaflex.code_check_engine import APIRP2RDInput, check_api_rp_2rd
@@ -116,6 +117,28 @@ class RigEnvelopeLimits:
     tj_stroke_m: Optional[float] = None
     tensioner_stroke_m: Optional[float] = None
     moonpool_half_min_m: Optional[float] = None
+    #: Rated wellhead/conductor bending-moment capacity [kN.m] and flex-joint
+    #: hardware angular rating [deg] (#1345). None -> that limit is inactive
+    #: (the public data columns ship empty; the paired wed issue populates them).
+    conductor_moment_capacity_kn_m: Optional[float] = None
+    flexjoint_angle_rating_deg: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class ConductorInput:
+    """Below-mudline conductor properties for the wellhead-moment check (#1345)."""
+
+    outer_diameter_m: float
+    wall_thickness_m: float
+    soil_modulus_n_per_m2: float
+    stand_off_m: float
+    youngs_modulus_pa: float = 2.07e11
+
+    @property
+    def ei_nm2(self) -> float:
+        inner = self.outer_diameter_m - 2.0 * self.wall_thickness_m
+        second_moment = math.pi / 64.0 * (self.outer_diameter_m**4 - inner**4)
+        return self.youngs_modulus_pa * second_moment
 
 
 @dataclass(frozen=True)
@@ -209,6 +232,7 @@ def compute_operating_envelope(
     mode: OperatingMode = OperatingMode.DRILLING,
     dynamic: bool = False,
     atlas_root: Optional[Path] = None,
+    conductor: Optional["ConductorInput"] = None,
 ) -> EnvelopeResult:
     """Sweep offset x current x seastate → envelope surface. See module docstring.
 
@@ -233,7 +257,10 @@ def compute_operating_envelope(
     seas = tuple(seastates)
     shape = (offsets.size, currents.size, len(seas))
 
-    util = {k: np.full(shape, np.nan) for k in ("flexjoint_angle", "von_mises", "stroke", "moonpool")}
+    util = {
+        k: np.full(shape, np.nan)
+        for k in ("flexjoint_angle", "von_mises", "stroke", "moonpool", "wh_moment")
+    }
     diameter = section.outer_diameter_m
 
     for i, off_pct in enumerate(offsets):
@@ -250,14 +277,36 @@ def compute_operating_envelope(
             )
             static_angle_deg = max(abs(resp.angle_lower_deg), abs(resp.angle_upper_deg))
             vm = _von_mises_utilisation(section, resp, tension_n, criteria.von_mises_design_factor)
+            # Wellhead/conductor moment (#1345): the riser lower-flex-joint shear
+            # over the BOP/LMRP stand-off arm loads the conductor below mudline.
+            wh_moment_knm = None
+            if conductor is not None:
+                wh_moment_knm = (
+                    solve_conductor_moment(
+                        shear_n=resp.shear_lower_n,
+                        stand_off_m=conductor.stand_off_m,
+                        soil_modulus_n_per_m2=conductor.soil_modulus_n_per_m2,
+                        ei_nm2=conductor.ei_nm2,
+                    ).max_moment_nm
+                    / 1000.0
+                )
+            # Flex-joint max limit = governing min(16Q operating limit, per-rig
+            # hardware angular rating) when the rating is present (#1345).
+            fj_max_limit = criteria.flexjoint_angle_max_deg
+            if rig_limits.flexjoint_angle_rating_deg is not None:
+                fj_max_limit = min(fj_max_limit, rig_limits.flexjoint_angle_rating_deg)
             for k, sea in enumerate(seas):
                 dyn_angle = rao_angle_deg_per_m * sea.hs_m
                 total_angle = static_angle_deg + dyn_angle
                 # governing of the mean-limit (static) and max-limit (total) checks
                 util["flexjoint_angle"][i, j, k] = max(
                     static_angle_deg / criteria.flexjoint_angle_mean_deg,
-                    total_angle / criteria.flexjoint_angle_max_deg,
+                    total_angle / fj_max_limit,
                 )
+                if wh_moment_knm is not None and rig_limits.conductor_moment_capacity_kn_m:
+                    util["wh_moment"][i, j, k] = (
+                        wh_moment_knm / rig_limits.conductor_moment_capacity_kn_m
+                    )
                 util["von_mises"][i, j, k] = vm
                 if dyn_atlas is not None:
                     pred = dyn_atlas.predict({

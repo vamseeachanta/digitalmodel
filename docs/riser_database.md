@@ -103,9 +103,10 @@ attach the output to the PR as evidence.
   `riser_fatigue/workflow.py` DFF through `resolve_dff()`.
 * **#1247** — orcaflex riser citation surface (net-new; no parity baseline).
 * **#1281a** — *done*: operating-envelope analytical tier (beam-column response
-  model + sweep engine + von-Mises / flex-joint getters). See the
-  operating-envelope section below. **#1281b** (AMJIG + WH-moment + data
-  columns) and **#1281c** (solver-backed tier stub) follow.
+  model + sweep engine + von-Mises / flex-joint getters). **#1281c / #1346** —
+  *done*: solver-backed dynamic tier stub. **#1281b / #1345** — *done*:
+  wellhead/conductor moment + flex-joint hardware rating (AMJIG per-category
+  criteria still deferred). See the operating-envelope sections below.
 * **#1199d** (T3, frontier-gated) — de-identified ACE result precedent,
   `private_sidecar` route; extends the leak gate to those rows.
 * Future numeric response-surface atlases (metocean, VIV) live under
@@ -185,10 +186,24 @@ margin and moonpool clearance are **uncited project defaults** (no public
 standards provision identified — the Barlow / top-tension-SF precedent). No new
 public data columns, so the leak surface is unchanged.
 
-**Deferred:** the wellhead/conductor-moment limit (needs a net-new rig data
-column) and the AMJIG per-category extreme/survival criteria (licensed) are
-**#1281b**. Standard selection (16Q vs AMJIG) is a query-time *threshold*, not a
-sweep axis.
+**C2 (#1345, #1281b) — wellhead/conductor moment + flex-joint hardware rating.**
+`drilling_riser/conductor_response.py` models the conductor below the mudline as
+a Hetényi beam-on-elastic-foundation loaded by the riser lower-flex-joint shear
+`H` (added to `RiserResponse.shear_lower_n = T·X/L + w·L/2`) acting over the
+BOP/LMRP **stand-off** arm: the applied end moment `M0 = H·h_stack` dominates the
+soil-reaction peak, so the wellhead moment peaks at the mudline. The envelope
+gains a `wh_moment` limit (`M_conductor / conductor_moment_capacity`) and refines
+the flex-joint limit to the governing `min(operating-limit, hardware-rating)`.
+Two rated-capacity columns (`conductor_moment_capacity_kn_m`,
+`flexjoint_angle_rating_deg`) ship **empty** — a paired worldenergydata rig-spec
+issue populates them from public specs (client-specific ratings stay wiki-side).
+The allowable is a rated capacity (like `tensioner_capacity_kips`), **not** a
+cited getter — no wellhead-moment `code_id` is registered (ISO 13628-7 exists in
+the wiki but is unregistered/methodology-only). The analytical `envelope.py` +
+`conductor_response.py` are now inside the provenance-tripwire gate. Static
+screening (single Winkler `k`, no conductor axial load; layered p-y = solver
+tier). **Deferred: the AMJIG per-category extreme/survival criteria (licensed)**;
+standard selection (16Q vs AMJIG) is a query-time *threshold*, not a sweep axis.
 
 **C3 (#1346, #1281c) — solver-backed dynamic tier STUB.**
 `scripts/parametric/build_drilling_riser_envelope_library.py` builds a

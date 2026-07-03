@@ -11,12 +11,13 @@
 modes:
   drilling:
     # connected + drilling: the full operating limit set applies
-    active_limits: [flexjoint_angle, von_mises, stroke, moonpool]
+    active_limits: [flexjoint_angle, von_mises, stroke, moonpool, wh_moment]
   connected:
     # connected non-drilling / extreme: same physical limits, criteria escalate
     # (per-category ceilings are #1281b)
-    active_limits: [flexjoint_angle, von_mises, stroke, moonpool]
+    active_limits: [flexjoint_angle, von_mises, stroke, moonpool, wh_moment]
   hang_off:
-    # riser disconnected from the well and hung off: flex-joint angle and
-    # moonpool clearance are not the governing gates; tension/stroke dominate
+    # riser disconnected from the well and hung off: flex-joint angle, moonpool
+    # clearance and the wellhead-moment (well disconnected) are not the governing
+    # gates; tension/stroke dominate
     active_limits: [von_mises, stroke]

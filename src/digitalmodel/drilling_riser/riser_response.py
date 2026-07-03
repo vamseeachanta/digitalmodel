@@ -51,6 +51,10 @@ class RiserResponse:
     bending_moment_nm: np.ndarray
     angle_lower_rad: float
     angle_upper_rad: float
+    #: Lateral shear (transverse reaction) at the lower flex-joint, V(0) magnitude
+    #: [N]. A pinned end carries zero moment but non-zero shear; this is the
+    #: lateral load handed to the conductor model (#1345). Equals T*X/L + w*L/2.
+    shear_lower_n: float = 0.0
 
     @property
     def angle_lower_deg(self) -> float:
@@ -121,10 +125,16 @@ def solve_static_response(
     angle_lower = B - 0.0 - P * k * 1.0 + Q * k * eps
     angle_upper = B - w * L / T - P * k * eps + Q * k * 1.0
 
+    # Lateral shear at the lower flex-joint: V(0) = EI y'''(0) - T y'(0); the
+    # boundary-layer terms cancel (EI k^3 = T k), leaving V(0) = -T*B, so the
+    # magnitude is T*X/L + w*L/2 (rises with offset X and with current via w).
+    shear_lower = abs(T * B)
+
     return RiserResponse(
         z_m=z,
         deflection_m=y,
         bending_moment_nm=moment,
         angle_lower_rad=float(angle_lower),
         angle_upper_rad=float(angle_upper),
+        shear_lower_n=float(shear_lower),
     )
