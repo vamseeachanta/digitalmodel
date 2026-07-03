@@ -102,6 +102,10 @@ attach the output to the PR as evidence.
   `stackup.py` attribution comments (1.25 has no 16Q provision), and wired
   `riser_fatigue/workflow.py` DFF through `resolve_dff()`.
 * **#1247** — orcaflex riser citation surface (net-new; no parity baseline).
+* **#1281a** — *done*: operating-envelope analytical tier (beam-column response
+  model + sweep engine + von-Mises / flex-joint getters). See the
+  operating-envelope section below. **#1281b** (AMJIG + WH-moment + data
+  columns) and **#1281c** (solver-backed tier stub) follow.
 * **#1199d** (T3, frontier-gated) — de-identified ACE result precedent,
   `private_sidecar` route; extends the leak gate to those rows.
 * Future numeric response-surface atlases (metocean, VIV) live under
@@ -152,3 +156,37 @@ golden asserts the chain against the RSU-0007 calc contract (machine-readable
 YAML on the private registry page — keys public, values wiki-side; tolerance
 abs ≤ 0.5 t / rel ≤ 0.15%, an order of magnitude tighter than any
 formula-omission error).
+
+## Operating-envelope engine (#1281a, epic #1279 child C)
+
+Two-tier, split into grandchild slices C1/C2/C3.
+
+**C1 (this slice) — analytical screening tier.**
+`drilling_riser/riser_response.py` solves the static tensioned beam-column BVP
+`EI y'''' − T y'' = w(z)` (pinned flex-joint ends, top offset BC, uniform
+current-drag load) in stable closed form → deflection, flex-joint angles, and
+the bending moment `M(z)`. Provenance is standard tensioned-beam / beam-column
+marine-riser mechanics (NOT any licensed project material); it is a **static
+screening** model with no dynamic amplification.
+
+`drilling_riser/envelope.py` (`compute_operating_envelope`) sweeps
+**offset × current × seastate** and evaluates four limits — flex-joint angle,
+von Mises utilisation, tensioner/TJ stroke, moonpool clearance. Offset and
+current move the responses through the beam-column model (the von Mises check
+feeds `orcaflex.code_check_engine.check_api_rp_2rd` the model's `M(z)`, so it is
+bending-aware); seastate enters via a linear RAO motion contribution. The
+operating mode (`OperatingMode` drilling / connected / hang-off) selects the
+active limit set via `envelope_modes.yml`.
+
+Criteria are fail-closed cited getters: flex-joint angle limits (mean 2° / max
+4°) cite **API RP 16Q**; the von Mises design factor (0.67) cites **API STD
+2RD** — both resolve against existing wiki pages (no paired wiki PR). Stroke
+margin and moonpool clearance are **uncited project defaults** (no public
+standards provision identified — the Barlow / top-tension-SF precedent). No new
+public data columns, so the leak surface is unchanged.
+
+**Deferred:** the wellhead/conductor-moment limit (needs a net-new rig data
+column) and the AMJIG per-category extreme/survival criteria (licensed) are
+**#1281b**; the OrcaFlex-backed dynamic tier (dynamic per-seastate envelope,
+drift-off, recoil, VIV) is stubbed via `parametric.library` in **#1281c**.
+Standard selection (16Q vs AMJIG) is a query-time *threshold*, not a sweep axis.

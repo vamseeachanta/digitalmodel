@@ -166,6 +166,41 @@ def test_user_override_wins_for_f_bt():
     assert "0.96" in cv.citation.note
 
 
+# -- #1281a envelope criteria getters --------------------------------------------
+
+
+def test_get_von_mises_design_factor_emits_2rd_citation():
+    cv = getters.get_von_mises_design_factor(repo_root=_fixture_repo_root())
+    assert cv.value == 0.67
+    assert cv.citation.code_id == "api-std-2rd"
+    assert cv.citation.publisher == "API"
+    assert cv.citation.revision == "3e-2025"
+    assert cv.citation.source_sibling == "generic"
+    assert cv.units == "dimensionless"
+
+
+def test_get_flexjoint_angle_limit_mean_and_max():
+    mean = getters.get_flexjoint_angle_limit("mean", repo_root=_fixture_repo_root())
+    mx = getters.get_flexjoint_angle_limit("max", repo_root=_fixture_repo_root())
+    assert mean.value == 2.0 and mx.value == 4.0
+    assert mean.citation.code_id == mx.citation.code_id == "api-rp-16q"
+    assert mean.citation.revision == "1993"
+    assert mean.units == "degrees"
+
+
+def test_get_flexjoint_angle_limit_rejects_unknown_kind():
+    with pytest.raises(ValueError):
+        getters.get_flexjoint_angle_limit("median", repo_root=_fixture_repo_root())
+
+
+def test_von_mises_getter_matches_code_check_engine_default():
+    """Parity: the getter value equals the public APIRP2RDInput.design_factor."""
+    from digitalmodel.orcaflex.code_check_engine import APIRP2RDInput
+
+    cv = getters.get_von_mises_design_factor(repo_root=_fixture_repo_root())
+    assert cv.value == APIRP2RDInput().design_factor == 0.67
+
+
 # -- defenses (c)+(d) + pip-no-wiki path ------------------------------------------
 
 
@@ -189,8 +224,9 @@ def test_pip_no_wiki_helper_warns_once_and_degrades(_no_wiki_anywhere):
 
 def test_helper_returns_cited_values_in_context():
     cited = getters.riser_citations(repo_root=_fixture_repo_root())
-    assert set(cited) == {"dff", "scf", "f_wt", "f_bt"}
+    assert set(cited) == {"dff", "scf", "f_wt", "f_bt", "von_mises_df"}
     assert cited["dff"].value == 10.0
     assert cited["scf"].value == 1.0
     assert cited["f_wt"].value == 1.05
     assert cited["f_bt"].value == 0.96
+    assert cited["von_mises_df"].value == 0.67

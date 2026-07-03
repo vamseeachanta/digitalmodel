@@ -6,9 +6,11 @@ come through the citation getters (fail-closed against the private llm-wiki).
 """
 from digitalmodel.riser_database.getters import (
     get_buoyancy_tension_factor,
+    get_flexjoint_angle_limit,
     get_riser_dff,
     get_riser_scf,
     get_tension_weight_factor,
+    get_von_mises_design_factor,
     riser_citations,
 )
 from digitalmodel.riser_database.loader import (
@@ -32,8 +34,10 @@ __all__ = [
     "RiserStackupRow",
     "StandardsCrosswalkRow",
     "get_buoyancy_tension_factor",
+    "get_flexjoint_angle_limit",
     "get_riser_dff",
     "get_riser_scf",
     "get_tension_weight_factor",
+    "get_von_mises_design_factor",
     "riser_citations",
 ]
