@@ -145,3 +145,40 @@ def test_stroke_and_moonpool_populate_with_rig_data():
     # moonpool excursion grows with offset
     mp = r.per_limit_utilisation["moonpool"][:, 0, 0]
     assert mp[1] > mp[0]
+
+
+# -- #1346 solver-tier dynamic path (stub library) -----------------------------
+
+
+def test_dynamic_amplifies_von_mises_and_carries_stub_provenance():
+    common = dict(offsets_pct=[2.0], current_speeds_mps=[1.0], seastates=[SeaState(3.0, 12.0)])
+    static = compute_operating_envelope(**_BASE, **common)
+    dyn = compute_operating_envelope(**_BASE, dynamic=True, **common)
+    vs = static.per_limit_utilisation["von_mises"][0, 0, 0]
+    vd = dyn.per_limit_utilisation["von_mises"][0, 0, 0]
+    assert vd > vs  # DAF >= 1 amplifies the static von Mises
+    assert vd / vs == pytest.approx(1.20, rel=1e-3)  # the stub DAF at this point
+    # governance: a dynamically-amplified verdict never leaves without its marker
+    assert dyn.dynamic_provenance["solver_licensed"] is False
+    assert dyn.dynamic_provenance["solver_version"] == "STUB"
+    assert dyn.dynamic_provenance["applies_to"] == "von_mises"
+    assert "disclaimer" in dyn.dynamic_provenance
+
+
+def test_dynamic_false_is_a_noop():
+    common = dict(offsets_pct=[1.0, 3.0], current_speeds_mps=[0.5, 1.5],
+                  seastates=[SeaState(2.0, 10.0)])
+    a = compute_operating_envelope(**_BASE, **common)
+    b = compute_operating_envelope(**_BASE, dynamic=False, **common)
+    assert b.dynamic_provenance is None
+    assert np.array_equal(a.per_limit_utilisation["von_mises"], b.per_limit_utilisation["von_mises"])
+
+
+def test_dynamic_out_of_coverage_escalates_von_mises():
+    # offset 99% WD is outside the atlas grid -> von Mises escalates (NaN), counted
+    dyn = compute_operating_envelope(
+        **_BASE, dynamic=True, offsets_pct=[99.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(3.0, 12.0)],
+    )
+    assert np.isnan(dyn.per_limit_utilisation["von_mises"][0, 0, 0])
+    assert dyn.dynamic_provenance["escalated_points"] == 1

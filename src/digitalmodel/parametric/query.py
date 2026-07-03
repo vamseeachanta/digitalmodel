@@ -98,11 +98,19 @@ def _staleness(atlas: Atlas) -> str | None:
 
 
 def _provenance(atlas: Atlas) -> dict[str, Any]:
-    return {
+    prov = {
         "atlas_id": atlas.atlas_id,
         "code_version": atlas.provenance.get("code_version"),
         "standards": atlas.provenance.get("standards"),
     }
+    # Licensed-solver libraries (#831/#1346): surface the solver block so a
+    # STUB self-identifies at the query-result surface — a synthetic placeholder
+    # (solver.licensed False, version "STUB") must never read like a real cached
+    # solver value. (Additive; also closes this gap for the orcaflex/diffraction
+    # libraries.)
+    if atlas.provenance.get("kind") == "library":
+        prov["solver"] = atlas.provenance.get("solver")
+    return prov
 
 
 def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
@@ -318,6 +326,9 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     # interpolate freq x heading within it; an uncovered case escalates.
     "diffraction_library": _handle_value,
     "orcaflex_library": _handle_value,
+    # drilling-riser von-Mises dynamic-amplification library (#1346): exact-match
+    # the operating-mode key, interpolate offset x current x Hs x Tp within.
+    "drilling_riser_envelope": _handle_value,
 }
 
 

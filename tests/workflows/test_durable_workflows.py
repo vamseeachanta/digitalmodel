@@ -284,6 +284,18 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "drilling-riser-envelope-library-query":
+        result = cfg["parametric_query"]["result"]
+        # licensed-solver sparse library: covered operating mode interpolates
+        # offset x current x Hs x Tp; the DAF is a dimensionless multiplier >= 1.
+        assert result["in_range"] is True
+        assert result["response"] == "von_mises_daf"
+        assert result["value"] >= 1.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        # the STUB must self-identify at the query surface (#1346 governance fix)
+        assert result["provenance"]["solver"]["licensed"] is False
+        assert result["provenance"]["solver"]["version"] == "STUB"
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly

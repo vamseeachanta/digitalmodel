@@ -48,6 +48,8 @@ def _mode_active_limits() -> dict:
     cfg = yaml.safe_load(_MODE_CONFIG_PATH.read_text(encoding="utf-8"))
     return {m: set(v["active_limits"]) for m, v in cfg["modes"].items()}
 
+#: Solver-tier dynamic-amplification library atlas basename (#1346, stub).
+DYNAMIC_ATLAS_BASENAME: str = "drilling_riser_envelope"
 #: Uncited project defaults (no public standards provision identified).
 DEFAULT_MOONPOOL_CLEARANCE_MARGIN_M: float = 0.5
 #: Public hydrodynamic-coefficient values (AMJIG sub-critical Cd; seawater rho).
@@ -140,6 +142,10 @@ class EnvelopeResult:
     per_limit_utilisation: dict
     governing_limit: np.ndarray
     allowable_mask: np.ndarray
+    #: Populated only when the solver-tier dynamic path runs (#1346): carries the
+    #: solver provenance + disclaimer so a dynamically-amplified verdict can never
+    #: leave without its STUB/licensed marker. ``None`` for the pure C1 static path.
+    dynamic_provenance: Optional[dict] = None
 
     @property
     def operable_fraction(self) -> float:
@@ -201,9 +207,27 @@ def compute_operating_envelope(
     rao_angle_deg_per_m: float = 0.0,
     rao_heave_m_per_m: float = 0.0,
     mode: OperatingMode = OperatingMode.DRILLING,
+    dynamic: bool = False,
+    atlas_root: Optional[Path] = None,
 ) -> EnvelopeResult:
-    """Sweep offset x current x seastate → envelope surface. See module docstring."""
+    """Sweep offset x current x seastate → envelope surface. See module docstring.
+
+    ``dynamic=True`` engages the solver-tier (#1346): the von Mises utilisation
+    is multiplied by the dynamic amplification factor from the
+    ``drilling_riser_envelope`` library atlas (a STUB until a licensed OrcaFlex
+    run populates it), and ``EnvelopeResult.dynamic_provenance`` is populated
+    with the solver marker + disclaimer. A point outside the atlas coverage
+    ESCALATES (its von Mises → NaN), never extrapolates. ``dynamic=False``
+    (default) is the pure C1 static path, byte-for-byte unchanged.
+    """
     rig_limits = rig_limits or RigEnvelopeLimits()
+    dyn_atlas = None
+    dyn_escalated = 0
+    if dynamic:
+        from digitalmodel.parametric.atlas import Atlas
+        from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+        dyn_atlas = Atlas.load(atlas_root or DEFAULT_ATLAS_ROOT, DYNAMIC_ATLAS_BASENAME)
     offsets = np.asarray(offsets_pct, dtype=float)
     currents = np.asarray(current_speeds_mps, dtype=float)
     seas = tuple(seastates)
@@ -235,6 +259,19 @@ def compute_operating_envelope(
                     total_angle / criteria.flexjoint_angle_max_deg,
                 )
                 util["von_mises"][i, j, k] = vm
+                if dyn_atlas is not None:
+                    pred = dyn_atlas.predict({
+                        "mode": mode.value,
+                        "offset_pct": float(off_pct),
+                        "current_speed_mps": float(u),
+                        "hs_m": sea.hs_m,
+                        "tp_s": sea.tp_s,
+                    })
+                    if pred.in_range:
+                        util["von_mises"][i, j, k] = vm * pred.value
+                    else:
+                        util["von_mises"][i, j, k] = np.nan  # escalate, never extrapolate
+                        dyn_escalated += 1
                 heave = rao_heave_m_per_m * sea.hs_m
                 stroke_avail = rig_limits.tj_stroke_m or rig_limits.tensioner_stroke_m
                 if stroke_avail:
@@ -257,6 +294,20 @@ def compute_operating_envelope(
         governing = np.array(stacked_names, dtype=object)[gov_idx]
         allowable = np.nanmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1) <= 1.0
 
+    dynamic_provenance = None
+    if dyn_atlas is not None:
+        from digitalmodel.parametric.query import SCREENING_DISCLAIMER
+
+        solver = dyn_atlas.provenance.get("solver", {}) or {}
+        dynamic_provenance = {
+            "applies_to": "von_mises",
+            "atlas_id": dyn_atlas.atlas_id,
+            "solver_licensed": solver.get("licensed"),
+            "solver_version": solver.get("version"),
+            "escalated_points": dyn_escalated,
+            "disclaimer": SCREENING_DISCLAIMER,
+        }
+
     return EnvelopeResult(
         mode=mode,
         offsets_pct=offsets,
@@ -265,4 +316,5 @@ def compute_operating_envelope(
         per_limit_utilisation=util,
         governing_limit=governing,
         allowable_mask=allowable,
+        dynamic_provenance=dynamic_provenance,
     )

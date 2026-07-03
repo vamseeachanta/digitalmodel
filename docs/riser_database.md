@@ -187,6 +187,22 @@ public data columns, so the leak surface is unchanged.
 
 **Deferred:** the wellhead/conductor-moment limit (needs a net-new rig data
 column) and the AMJIG per-category extreme/survival criteria (licensed) are
-**#1281b**; the OrcaFlex-backed dynamic tier (dynamic per-seastate envelope,
-drift-off, recoil, VIV) is stubbed via `parametric.library` in **#1281c**.
-Standard selection (16Q vs AMJIG) is a query-time *threshold*, not a sweep axis.
+**#1281b**. Standard selection (16Q vs AMJIG) is a query-time *threshold*, not a
+sweep axis.
+
+**C3 (#1346, #1281c) — solver-backed dynamic tier STUB.**
+`scripts/parametric/build_drilling_riser_envelope_library.py` builds a
+`parametric.library` atlas (`drilling_riser_envelope`) keyed on **operating
+mode** (categorical) × offset/current/Hs/Tp (continuous), storing a **von Mises
+dynamic amplification factor** (DAF). It ships as a STUB (`solver.licensed=False`,
+`version="STUB"`) with synthetic values until a licensed OrcaFlex time-domain
+run per mode replaces them; bumping the `LIBRARY_EXPECTATIONS` version off "STUB"
+makes the committed stub read stale → the query escalates → a real run is
+prompted. `compute_operating_envelope(dynamic=True)` loads the atlas once,
+multiplies the **von Mises** utilisation by the DAF (the one response the static
+tier leaves untreated — flex-joint angle and stroke already carry a linear RAO
+term, so they are NOT re-amplified), escalates (never extrapolates) outside
+coverage, and populates `EnvelopeResult.dynamic_provenance` with the STUB marker
++ disclaimer so a dynamically-amplified verdict never leaves unlabeled. The
+`_provenance` surfacing of the solver block was extended for all library atlases
+(also closes the same gap for the OrcaFlex/diffraction libraries).
