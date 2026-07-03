@@ -39,6 +39,7 @@ of duplicating its detailed issue history.
 | `orcaflex` | `src/digitalmodel/orcaflex/` | `tests/orcaflex/` | `docs/domains/orcaflex/` | Public OrcaFlex APIs, reporting, model and post-processing utilities | OrcFxAPI where licensed, YAML |
 | `orcawave` | `src/digitalmodel/orcawave/` | `tests/orcawave/` | `docs/domains/orcawave/` | OrcaWave package utilities, reporting, hydrodynamic inputs/outputs | OrcaWave, hydrodynamics |
 | `power` | `src/digitalmodel/power/` | `tests/power/` | `docs/domains/README.md` | Generator controls, microgrid EMS, protection relays | IEEE/NFPA power standards |
+| `production_chemistry` | `src/digitalmodel/production_chemistry/` | `tests/production_chemistry/` | `docs/domains/README.md` | Mineral-scale saturation indices (Oddo-Tomson), brine mixing/waterflood compatibility | NumPy, pandas |
 | `production_engineering` | `src/digitalmodel/production_engineering/` | `tests/production_engineering/` | `docs/domains/README.md` | Well testing, nodal analysis, production quality scoring | petroleum engineering models |
 | `reservoir` | `src/digitalmodel/reservoir/` | `tests/reservoir/` | `docs/domains/reservoir/` | Reservoir engineering and production-support calculations | reservoir engineering models |
 | `signal_processing` | `src/digitalmodel/signal_processing/` | `tests/signal_processing/` | `docs/domains/signal_processing/` | Signal analysis, filters, time-series utilities | NumPy, SciPy |
@@ -54,6 +55,7 @@ of duplicating its detailed issue history.
 | `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
 | `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
 | `common` | `src/digitalmodel/common/` | `tests/common/` | `docs/domains/README.md` | Shared assumption-ledger and spec-authoring helpers | PyYAML |
+| `corrosion` | `src/digitalmodel/corrosion/` | `tests/corrosion/` | `docs/domains/README.md` | Galvanic (dissimilar-metal) compatibility screening, MIL-STD-889 anodic index | NumPy, pandas |
 | `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
 | `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
 | `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
