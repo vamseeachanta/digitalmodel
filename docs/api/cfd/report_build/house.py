@@ -31,6 +31,8 @@ _STYLE_EXTRA = """
 .calc .out{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
 .calc .out b{display:block;font-size:.68rem;text-transform:uppercase;color:var(--mut)}
 .calc .out span{font-weight:700;font-size:1.05rem}
+.bad{color:#d1242f;font-weight:700}
+.badge.warn{background:var(--warn)}
 </style>
 """
 
