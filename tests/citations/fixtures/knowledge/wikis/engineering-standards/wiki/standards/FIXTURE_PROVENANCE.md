@@ -97,3 +97,37 @@ same commit, then rerun:
 ```bash
 .venv/bin/python -m pytest tests/riser_database/ -q
 ```
+
+---
+
+# Fixture Provenance - `api-std-2rd.md` (#1281a)
+
+Vendored for the operating-envelope von Mises design-factor getter
+(`get_von_mises_design_factor`). Same contract as the fixtures above: resolver
+frontmatter and a short description only — no standard text, tables, formulas,
+or licensed source material.
+
+## Canonical source
+
+- **Repo:** `vamseeachanta/llm-wiki`
+- `wikis/engineering-standards/wiki/standards/api-std-2rd.md` —
+  canonical SHA at vendoring time: `74aeb6f3e47806c377fc614b152d80c31b61bb5e`
+  (revision `3e-2025`; the page was already citation-ready — no paired wiki PR
+  was needed for #1281a).
+
+## Vendored copy
+
+- **Vendored on:** 2026-07-03
+- **Used by:** `tests/riser_database/test_citations.py`,
+  `tests/drilling_riser/test_envelope.py`
+
+## Freshness contract
+
+Review monthly. If the canonical page frontmatter changes, update the fixture,
+the `_API_STD_2RD_CITATION_TEMPLATE` in
+`src/digitalmodel/riser_database/getters.py`, and this provenance file in the
+same commit, then rerun:
+
+```bash
+.venv/bin/python -m pytest tests/riser_database/ tests/drilling_riser/ -q
+```

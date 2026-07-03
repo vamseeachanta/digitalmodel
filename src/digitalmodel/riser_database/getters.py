@@ -61,6 +61,15 @@ _API_RP_16Q_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/api-rp-16q.md",
 }
 
+#: API STD 2RD, 3rd Edition 2025 (formerly API RP 2RD; API reclassified it as
+#: STD 2RD). Home of the von Mises equivalent-stress design factor.
+_API_STD_2RD_CITATION_TEMPLATE: Final = {
+    "code_id": "api-std-2rd",
+    "publisher": "API",
+    "revision": "3e-2025",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/api-std-2rd.md",
+}
+
 #: Matches riser_fatigue/touchdown.py TouchdownFatigueInput.dff — the live
 #: riser literal these getters must stay in parity with (#1246 wires the calc).
 RISER_DFF_DEFAULT: Final[float] = 10.0
@@ -73,6 +82,14 @@ RISER_F_WT_DEFAULT: Final[float] = 1.05
 #: Matches drilling_riser/stackup.py F_BT_DEFAULT — buoyancy loss and tolerance
 #: factor, API RP 16Q (1st Ed. 1993) §3.3.
 RISER_F_BT_DEFAULT: Final[float] = 0.96
+#: Von Mises equivalent-stress design factor (API STD 2RD): allowable = DF*SMYS.
+#: The well-known 2/3 operating design case; matches the public default in
+#: orcaflex/code_check_engine.py APIRP2RDInput.design_factor. Envelope: #1281a.
+RISER_VON_MISES_DESIGN_FACTOR: Final[float] = 0.67
+#: Drilling operating flex-joint angle limits (API RP 16Q): the well-known
+#: mean 2.0 deg / max 4.0 deg operating envelope. Envelope criteria (#1281a).
+RISER_FLEXJOINT_ANGLE_MEAN_DEG: Final[float] = 2.0
+RISER_FLEXJOINT_ANGLE_MAX_DEG: Final[float] = 4.0
 
 
 def get_riser_dff(
@@ -175,18 +192,75 @@ def get_buoyancy_tension_factor(
     return CitedValue(value=value, citation=citation, units="dimensionless")
 
 
+def get_von_mises_design_factor(
+    *, override: Optional[float] = None, repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Von Mises equivalent-stress design factor (API STD 2RD): allow = DF·SMYS.
+
+    The well-known operating design case (2/3). Consumed by the operating-
+    envelope engine (``drilling_riser.envelope``) and matches the public default
+    in ``orcaflex.code_check_engine.APIRP2RDInput.design_factor``. ``override``
+    wins when provided.
+    """
+    value = RISER_VON_MISES_DESIGN_FACTOR
+    note = "Von Mises equivalent-stress design factor (allowable = DF x SMYS)"
+    if override is not None:
+        value = float(override)
+        note = f"user override; standard value {RISER_VON_MISES_DESIGN_FACTOR}"
+    citation = Citation(
+        section="Sec.5 (dynamic riser design criteria)",
+        note=note,
+        **_API_STD_2RD_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=value, citation=citation, units="dimensionless")
+
+
+def get_flexjoint_angle_limit(
+    kind: str = "max",
+    *,
+    override: Optional[float] = None,
+    repo_root: Optional[Path] = None,
+) -> CitedValue:
+    """Drilling operating flex-joint angle limit (API RP 16Q), degrees.
+
+    ``kind`` selects the ``"mean"`` (2.0 deg) or ``"max"`` (4.0 deg) operating
+    limit — the well-known drilling operating envelope. ``override`` wins when
+    provided. Raises ``ValueError`` for an unknown ``kind``.
+    """
+    if kind not in ("mean", "max"):
+        raise ValueError(f"kind must be 'mean' or 'max', got {kind!r}")
+    standard = (
+        RISER_FLEXJOINT_ANGLE_MEAN_DEG if kind == "mean" else RISER_FLEXJOINT_ANGLE_MAX_DEG
+    )
+    value = standard
+    note = f"Drilling operating flex-joint {kind} angle limit"
+    if override is not None:
+        value = float(override)
+        note = f"user override; standard value {standard}"
+    citation = Citation(
+        section="operating limits (flex-joint angle)",
+        note=note,
+        **_API_RP_16Q_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=value, citation=citation, units="degrees")
+
+
 _CITATION_WARNED = False
 
 
 def riser_citations(repo_root: Optional[Path] = None) -> dict:
-    """Return ``{"dff", "scf", "f_wt", "f_bt"}`` CitedValues for the riser
-    design factors.
+    """Return ``{"dff", "scf", "f_wt", "f_bt", "von_mises_df"}`` CitedValues for
+    the riser design factors.
 
     Consumer-wrapper degradation (template:
     ``mooring_resilience.screening.safety_factor_citations``): where the wiki
     resolves, a missing or mismatched page fails closed (raises); in
     standalone mode (no resolvable wiki at all) it emits a one-shot
-    ``RuntimeWarning`` and returns ``{}``.
+    ``RuntimeWarning`` and returns ``{}``. (The parameterized flex-joint angle
+    operating limit is resolved via ``get_flexjoint_angle_limit``, not bundled
+    here.)
     """
     global _CITATION_WARNED
     try:
@@ -195,6 +269,7 @@ def riser_citations(repo_root: Optional[Path] = None) -> dict:
             "scf": get_riser_scf(repo_root=repo_root),
             "f_wt": get_tension_weight_factor(repo_root=repo_root),
             "f_bt": get_buoyancy_tension_factor(repo_root=repo_root),
+            "von_mises_df": get_von_mises_design_factor(repo_root=repo_root),
         }
     except CitationResolutionError as exc:
         if not _CITATION_WARNED:
