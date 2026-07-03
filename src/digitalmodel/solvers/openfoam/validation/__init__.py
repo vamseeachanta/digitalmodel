@@ -82,6 +82,17 @@ from .kleefsman import (
     extract_impact_metrics,
     load_experiment,
 )
+from .sloshing_2d import (
+    SLOSHING_FREQ_TOLERANCE,
+    SloshingForcedRollConfig,
+    SloshingFreeDecayConfig,
+    analyze_free_decay,
+    build_forced_roll_case,
+    build_free_decay_case,
+    cosine_mode_setfields_body,
+    measure_natural_frequency,
+    parse_interface_height,
+)
 from .wave_excited_body import (
     PERIOD_TOLERANCE,
     RAO_TOLERANCE,
@@ -244,6 +255,24 @@ WAVE_EXCITED_BODY_CASE = ValidationCase(
     },
 )
 
+SLOSHING_2D_CASE = ValidationCase(
+    name="sloshing_2d_free_decay",
+    build=build_free_decay_case,
+    reference={
+        # analytical first-mode sloshing frequency (Hz) for the default tank
+        "natural_frequency": SloshingFreeDecayConfig().analytical_frequency(),
+    },
+    tolerance=SLOSHING_FREQ_TOLERANCE,
+    domain="marine (internal tank sloshing / TLD)",
+    metadata={
+        "issue": "#639",
+        "reference": (
+            "linear tanh dispersion; SPHERIC Test 10 (Delorme et al. 2009) "
+            "forced-roll corroboration"
+        ),
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
@@ -252,6 +281,7 @@ FOUNDATIONAL_CASES = (
     FLOATING_BODY_CASE,
     KLEEFSMAN_CASE,
     WAVE_EXCITED_BODY_CASE,
+    SLOSHING_2D_CASE,
 )
 
 __all__ = [
@@ -265,6 +295,17 @@ __all__ = [
     "FLOATING_BODY_CASE",
     "KLEEFSMAN_CASE",
     "WAVE_EXCITED_BODY_CASE",
+    "SLOSHING_2D_CASE",
+    # Sloshing 2D (#639)
+    "SLOSHING_FREQ_TOLERANCE",
+    "SloshingForcedRollConfig",
+    "SloshingFreeDecayConfig",
+    "analyze_free_decay",
+    "build_forced_roll_case",
+    "build_free_decay_case",
+    "cosine_mode_setfields_body",
+    "measure_natural_frequency",
+    "parse_interface_height",
     # Wave-excited floating body (#1302)
     "PERIOD_TOLERANCE",
     "RAO_TOLERANCE",
