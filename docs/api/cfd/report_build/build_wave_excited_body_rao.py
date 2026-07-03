@@ -241,8 +241,8 @@ response. A two-resolution study answers the first half:</p>
 <p><b>The reduction is grid-independent.</b> Doubling the background resolution (18 &rarr; 36 cells per
 wavelength) recovers a larger incident amplitude at the gauges — but the heave amplitude grows in step, so
 the <b>RAO barely moves</b> and stays far below the inviscid reference. The near-resonance reduction is
-therefore <em>not</em> a wave-field resolution artifact; it lives in the body's dynamic response (its
-effective heave damping). What the present forced-wave setup <b>cannot yet separate</b> is the cause:</p>
+therefore <em>not</em> a wave-field resolution artifact. What the present forced-wave setup <b>cannot
+separate</b> is the cause:</p>
 <ul>
 <li><b>Physical bluff-body damping (expected).</b> The section is a sharp-cornered half-submerged square, not
 a faired ship section. Flow separation and vortex shedding at its bottom corners add heave damping the
@@ -255,12 +255,17 @@ inviscid peak, so this explains only part of the gap.</li>
 <li><b>Overset numerical damping (not yet bounded).</b> Interpolation across the overset fringe is mildly
 dissipative; refining the <em>background</em> grid does not bound it, so it is not ruled out here.</li>
 </ul>
-<p><b>Decisive next step (follow-up).</b> A <b>free-decay test</b> — displace the body in still water, release,
-and fit the decaying oscillation — measures the damped natural period and damping ratio directly, with no
-wave or gauge confound. Comparing that damping to the reference radiation damping <code>b<sub>33</sub></code>
-(and the decay period to the resonance period) attributes the reduction cleanly and independently confirms the
-body's natural frequency. That is the recommended next case; it is out of scope for this sweep and does not
-gate the off-resonance verification below.</p>
+<p><b>Resolved by the free-decay test (#1332).</b> A still-water free-decay run
+(<a href="wave-excited-body-decay-verification.html">report</a>) settles it. Released from a heave
+displacement, the body rings down with a damped natural frequency <b>within ~0.4% of the reference resonance
+frequency</b> (its mass, stiffness and added mass are correct — no setup error) and a <b>light, amplitude-
+independent damping ratio ζ ≈ 0.13</b> — only ~20% above the potential-flow radiation value (0.10), i.e.
+<em>linear</em> damping, not the amplitude-dependent separation drag that would flatten a resonance. With that
+measured damping the body would still resonate to <b>RAO ≈ 1.8</b> — far above the forced-sweep points here.
+So the resonance-region reduction is <b>not</b> body damping: it is dominated by the <b>gauge-to-body
+incident-wave decay</b> above (the short wave is under-delivered to the body over the fetch and the RAO is
+normalised at a gauge ~3.5 m upstream). The overset body's own dynamics are verified; the off-resonance gate
+below is unaffected.</p>
 """
 
 body = f"""
