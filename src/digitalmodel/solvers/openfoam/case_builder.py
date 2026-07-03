@@ -8,7 +8,7 @@ configuration. Does not require OpenFOAM to be installed.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -25,6 +25,7 @@ from .partial_fill import (
     render_set_fields_dict_body,
     snap_fill_to_cell_face,
 )
+from .pressure_taps import PressureTap, render_pressure_tap_functions
 from .templates import (
     FV_SOLUTION_SOLVERS,
     PIMPLE_BLOCK,
@@ -88,8 +89,16 @@ class OpenFOAMCaseBuilder:
         case_dir = builder.build(Path("/tmp/runs"))
     """
 
-    def __init__(self, case: OpenFOAMCase) -> None:
+    def __init__(
+        self,
+        case: OpenFOAMCase,
+        pressure_taps: Optional[List[PressureTap]] = None,
+        *,
+        tap_write_interval: int = 1,
+    ) -> None:
         self._case = case
+        self._pressure_taps: List[PressureTap] = list(pressure_taps or [])
+        self._tap_write_interval = tap_write_interval
 
     def build(self, parent_dir: Path) -> Path:
         """Build the full case directory tree under parent_dir.
@@ -170,6 +179,15 @@ class OpenFOAMCaseBuilder:
             else:
                 val_str = str(val)
             lines.append(f"{key:<24} {val_str};")
+
+        # Optional, additive: named wall pressure taps (dm#661). With no taps
+        # the controlDict is byte-for-byte identical to the taps-free build.
+        if self._pressure_taps:
+            block = render_pressure_tap_functions(
+                self._pressure_taps,
+                write_interval=self._tap_write_interval,
+            )
+            lines.append("\n" + block)
 
         lines.append("\n" + _FOOTER)
         (system_dir / "controlDict").write_text("\n".join(lines))
