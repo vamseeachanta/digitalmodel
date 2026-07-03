@@ -19,6 +19,7 @@ from .initial_fields import (
     write_velocity_field,
 )
 from .models import OpenFOAMCase, TurbulenceType
+from .motion import render_dynamic_mesh_dict_body
 from .templates import (
     FV_SOLUTION_SOLVERS,
     PIMPLE_BLOCK,
@@ -305,6 +306,15 @@ mergePatchPairs
         self._write_turbulence_properties(constant_dir)
         if self._case.solver_config.is_multiphase:
             self._write_gravity(constant_dir)
+        if self._case.motion is not None:
+            self._write_dynamic_mesh_dict(constant_dir)
+
+    def _write_dynamic_mesh_dict(self, constant_dir: Path) -> None:
+        """Write constant/dynamicMeshDict for a prescribed forced motion (#658)."""
+        content = _foam_header("dictionary", "dynamicMeshDict")
+        content += "\n" + render_dynamic_mesh_dict_body(self._case.motion) + "\n"
+        content += _FOOTER
+        (constant_dir / "dynamicMeshDict").write_text(content)
 
     def _write_transport_properties(self, constant_dir: Path) -> None:
         """Write constant/transportProperties for water and air."""
