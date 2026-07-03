@@ -10,11 +10,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from digitalmodel.asset_integrity.assessment.crack_fad import assess_crack_like_flaw
 from digitalmodel.asset_integrity.corroded_pipe import SMYS_PSI, modified_b31g
+from digitalmodel.asset_integrity.dnv_rp_f101 import SMTS_PSI
 from digitalmodel.asset_integrity.riser_joint_ffs import (
     COLLAPSE_DESIGN_FACTOR,
+    DEFAULT_WELD_CVN_JOULES,
     DEPTH_CAP_BASE_METAL,
     DEPTH_CAP_WELD,
+    MM_PER_IN,
+    PSI_PER_MPA,
     SEAWATER_PSI_PER_FT,
     acceptable_water_depth_ft,
     collapse_pressure_psi,
@@ -44,16 +49,76 @@ def test_envelope_monotone_and_capped():
             assert length == 0.0
 
 
-def test_weld_region_stricter_than_base():
-    base = level1_flaw_envelope(OD, WT, GRADE, P_DESIGN, region="base")
-    weld = level1_flaw_envelope(OD, WT, GRADE, P_DESIGN, region="weld")
+def test_weld_region_is_fad_envelope_capped_and_monotone():
+    """Weld region is the BS 7910 Option-1 fracture envelope (#1270), not the
+    metal-loss engine, with the 0.60*WT practice cap applied on top."""
+    p_gov = 3000.0  # high enough that physics (not the chart cap) governs
+    base = level1_flaw_envelope(OD, WT, GRADE, p_gov, region="base")
+    weld = level1_flaw_envelope(OD, WT, GRADE, p_gov, region="weld")
     assert weld["depth_cap_frac"] == DEPTH_CAP_WELD < DEPTH_CAP_BASE_METAL
-    for frac, b, w in zip(base["depth_frac"], base["max_acceptable_length_in"],
-                          weld["max_acceptable_length_in"]):
+    assert weld["method"] == "bs7910_option1_fad"
+    # documented basis: Barlow hoop membrane stress, Annex J default toughness
+    assert weld["weld_sigma_m_mpa"] == pytest.approx(
+        p_gov * OD / (2 * WT) / PSI_PER_MPA, abs=0.01)
+    assert weld["weld_cvn_joules"] == DEFAULT_WELD_CVN_JOULES
+    # practice cap still excludes depths beyond 0.60*WT
+    for frac, w in zip(weld["depth_frac"], weld["max_acceptable_length_in"]):
         if frac > DEPTH_CAP_WELD:
             assert w == 0.0
-        else:
-            assert w == b  # same strength physics inside the cap
+    # the fracture envelope genuinely differs from the metal-loss envelope
+    assert any(
+        w != b
+        for frac, b, w in zip(base["depth_frac"],
+                              base["max_acceptable_length_in"],
+                              weld["max_acceptable_length_in"])
+        if frac <= DEPTH_CAP_WELD)
+    # deeper flaw -> shorter acceptable length
+    nonzero = [v for v in weld["max_acceptable_length_in"] if v > 0]
+    assert nonzero == sorted(nonzero, reverse=True)
+
+
+def test_weld_campaign_end_envelope_is_stricter():
+    start = level1_flaw_envelope(OD, WT, GRADE, 3000.0, region="weld")
+    end = level1_flaw_envelope(
+        OD, WT, GRADE, 3000.0, region="weld",
+        corrosion_rate_in_per_yr=0.25 / MM_PER_IN, campaign_years=3.0,
+    )
+    assert all(e <= s for s, e in zip(start["max_acceptable_length_in"],
+                                      end["max_acceptable_length_in"]))
+    assert any(e < s for s, e in zip(start["max_acceptable_length_in"],
+                                     end["max_acceptable_length_in"]))
+
+
+def test_weld_tougher_metal_enlarges_envelope():
+    default = level1_flaw_envelope(OD, WT, GRADE, 3000.0, region="weld")
+    tough = level1_flaw_envelope(OD, WT, GRADE, 3000.0, region="weld",
+                                 weld_cvn_joules=100.0)
+    assert all(t >= d for d, t in zip(default["max_acceptable_length_in"],
+                                      tough["max_acceptable_length_in"]))
+    assert any(t > d for d, t in zip(default["max_acceptable_length_in"],
+                                     tough["max_acceptable_length_in"]))
+
+
+def test_weld_envelope_boundary_matches_direct_fad_check():
+    """A flaw just inside the weld envelope passes the direct Option-1 FAD
+    assessment; one beyond it fails — the chart is exactly crack_fad inverted."""
+    env = level1_flaw_envelope(OD, WT, GRADE, 3000.0, region="weld")
+    d, L = None, None
+    for frac, d, L in zip(env["depth_frac"], env["depth_in"],
+                          env["max_acceptable_length_in"]):
+        if 0 < L < 39.0:
+            break
+    assert L and 0 < L < 39.0
+    kwargs = dict(
+        a_mm=d * MM_PER_IN, t_mm=WT * MM_PER_IN,
+        sigma_m_mpa=env["weld_sigma_m_mpa"],
+        sigma_y_mpa=SMYS_PSI[GRADE] / PSI_PER_MPA,
+        sigma_u_mpa=SMTS_PSI[GRADE] / PSI_PER_MPA,
+        cvn_joules=DEFAULT_WELD_CVN_JOULES,
+    )
+    on = assess_crack_like_flaw(c_mm=0.995 * L * MM_PER_IN / 2, **kwargs)
+    beyond = assess_crack_like_flaw(c_mm=1.10 * L * MM_PER_IN / 2, **kwargs)
+    assert on.acceptable and not beyond.acceptable
 
 
 def test_campaign_end_envelope_is_stricter():

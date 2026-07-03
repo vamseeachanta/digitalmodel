@@ -44,25 +44,38 @@ raise with reason.
 ## Citation getters
 
 ```python
-from digitalmodel.riser_database import get_riser_dff, get_riser_scf, riser_citations
+from digitalmodel.riser_database import (
+    get_riser_dff, get_riser_scf,
+    get_tension_weight_factor, get_buoyancy_tension_factor, riser_citations,
+)
 
-get_riser_dff().value              # 10.0 — DNV-OS-F201 (allowable damage = 1/DFF)
-get_riser_scf().value              # 1.0  — DNV-RP-C203 methodology (neutral default)
-get_riser_dff(override=3.0)        # user override wins; note records both values
-riser_citations()                  # consumer helper: {} + one-shot RuntimeWarning standalone
+get_riser_dff().value                  # 10.0 — DNV-OS-F201 (allowable damage = 1/DFF)
+get_riser_scf().value                  # 1.0  — DNV-RP-C203 methodology (neutral default)
+get_tension_weight_factor().value      # 1.05 — API RP 16Q (1st Ed. 1993) §3.3, f_wt
+get_buoyancy_tension_factor().value    # 0.96 — API RP 16Q (1st Ed. 1993) §3.3, f_bt
+get_riser_dff(override=3.0)            # user override wins; note records both values
+riser_citations()                      # {dff, scf, f_wt, f_bt}; {} + RuntimeWarning standalone
 ```
 
 Direct getter calls are **fail-closed** (`CitationResolutionError` carrying the
 `code_id`); only the consumer helper degrades in standalone/`pip install` mode
 (one-shot `RuntimeWarning`) — same contract as the mooring pilot. Values match
-today's riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`) so #1246 wiring
-inherits day-one parity.
+the riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`; `stackup.py`
+`F_WT_DEFAULT=1.05`, `F_BT_DEFAULT=0.96`) so the #1246 wiring has day-one
+parity. `riser_fatigue/workflow.py` resolves DFF through `resolve_dff()`:
+an explicit `dff` in settings wins; an absent `dff` resolves the cited
+DNV-OS-F201 default in-context and **raises** standalone (never a silent
+default on a pass/fail input).
 
 Getter provenance discipline: a getter only cites a standard the code actually
-sources the value from. Hence this slice has **no** API RP 16Q getters (the
-wiki page's revision frontmatter is a not-citation-ready sentinel — fix it in
-llm-wiki first; deferred to #1246) and **no** Barlow-SF citation
-(`stackup.py` gives it no standards attribution; it is a project default).
+sources the value from. #1246 adds the two API RP 16Q **1st Ed. 1993**
+(reaffirmed 2001) §3.3 tension factors — the revision string is pinned to
+`1993` to match the 1993-numbered clause locators (a 2nd Edition, 2017,
+exists but is not the citation basis; the wiki page's `revision_note` records
+the drift, mirroring the DNV-RP-C203 2021-vs-2024-10 precedent). The
+top-tension safety factor (**1.25**) has **no** corresponding 16Q provision, so
+it carries no getter and stays a project default in `stackup.py`; the Barlow-SF
+likewise carries no standards attribution (generic formula, project default).
 
 ## Leak gate (suite 6 — hard merge gate)
 
@@ -84,9 +97,10 @@ attach the output to the PR as evidence.
 
 ## Extension map
 
-* **#1246** — wire `drilling_riser/stackup.py` + `riser_fatigue` dff to the
-  getters (user-override-wins; day-one parity), add the 16Q getters after the
-  llm-wiki frontmatter fix.
+* **#1246** — *done*: added the two API RP 16Q §3.3 tension-factor getters
+  (behind the llm-wiki `api-rp-16q` revision-`1993` pin), corrected the
+  `stackup.py` attribution comments (1.25 has no 16Q provision), and wired
+  `riser_fatigue/workflow.py` DFF through `resolve_dff()`.
 * **#1247** — orcaflex riser citation surface (net-new; no parity baseline).
 * **#1199d** (T3, frontier-gated) — de-identified ACE result precedent,
   `private_sidecar` route; extends the leak gate to those rows.
@@ -121,3 +135,20 @@ on water depth only, one band per source dataset family.
 registry makes the in-context reconciliation test fail here until the table
 gains the row — a conscious update, never silent drift. Public issues, PRs
 and commit messages about this table family carry bands and handles only.
+
+## Assembly engine (#1280)
+
+`drilling_riser/assembly.py` turns component records + counts into a
+`RiserStackupModel` (parts from the public wed component vocabulary via
+`from_component_counts`, or caller/wiki-side records via `from_records`) with
+fail-closed aggregates — notably `gross_submerged_weight_and_uplift()`, which
+REFUSES to degrade to net weight when a buoyed joint lacks uplift data
+(non-conservative for the factored 16Q split). `minimum_top_tension_16q`
+applies the tensioner-system factor N/(Rf·(N−n)) and fleet-angle allowance to
+a minimum slip-ring tension; `check_rig_capability` evaluates the demand
+against a `rig_riser_interface` row (wireline rigs count wires, direct-acting
+count units; missing data → INSUFFICIENT_DATA, never guessed). The in-context
+golden asserts the chain against the RSU-0007 calc contract (machine-readable
+YAML on the private registry page — keys public, values wiki-side; tolerance
+abs ≤ 0.5 t / rel ≤ 0.15%, an order of magnitude tighter than any
+formula-omission error).

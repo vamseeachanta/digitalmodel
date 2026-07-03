@@ -38,6 +38,11 @@ from .grid_parser import GridParser
 from .level1_screener import Level1Screener
 from .level2_engine import Level2Engine
 from .measurement_sufficiency import MeasurementSufficiency
+from .pitting import (
+    assess_pitting_level2_equivalent_lta,
+    characterize_pit_field,
+    screen_pitting_level1,
+)
 
 GridLike = Union[pd.DataFrame, np.ndarray, str, Path]
 
@@ -63,7 +68,7 @@ class FFSAssessmentResult:
     """Unified FFS result — the canonical record for downstream consumers."""
 
     component_id: str
-    assessment_type: str           # "GML" | "LML"
+    assessment_type: str           # "GML" | "LML" | "PITTING"
     level_reached: int             # 1 (screening sufficed) or 2 (RSF needed)
     t_nominal_in: float
     t_min_in: float
@@ -126,7 +131,8 @@ def assess_component(
         grid: wall-thickness measurement grid — a pandas DataFrame, a 2-D numpy
             array, or a path to a CSV.
         input_units: ``"in"`` (default) or ``"mm"`` — passed to GridParser.
-        force_type: override the GML/LML auto-classification ("GML"/"LML").
+        force_type: override the auto-classification
+            ("GML"/"LML"/"PITTING").
     """
     df = _to_grid_df(grid, input_units)
 
@@ -146,13 +152,37 @@ def assess_component(
     t_am = GridParser.mean_thickness(df)
     l1 = screener.evaluate(t_mm)
 
-    l2 = Level2Engine(
-        assessment_type=atype,
-        nominal_od_in=component.nominal_od_in,
-        nominal_wt_in=component.nominal_wt_in,
-        t_min_in=t_min,
-        rsf_a=component.rsf_a,
-    ).evaluate(df)
+    pit_char = None
+    if atype == "PITTING":
+        # API 579-1 Part 6 (tracer): characterize the pit field, apply the
+        # conservative closed-form Level 1 screen on top of the code t_min
+        # check, and bound Level 2 by an equivalent LTA run through the
+        # validated Part 5 engine (see assessment/pitting.py for the basis).
+        pit_char = characterize_pit_field(df, component.nominal_wt_in)
+        pit_l1 = screen_pitting_level1(
+            pit_char, t_min_in=t_min, fca_in=component.fca_in
+        )
+        combined_verdict = (
+            "ACCEPT"
+            if l1["verdict"] == "ACCEPT" and pit_l1["verdict"] == "ACCEPT"
+            else "FAIL_LEVEL_1"
+        )
+        l1 = {**l1, "verdict": combined_verdict, "pitting_screen": pit_l1}
+        l2 = assess_pitting_level2_equivalent_lta(
+            pit_char,
+            nominal_od_in=component.nominal_od_in,
+            nominal_wt_in=component.nominal_wt_in,
+            t_min_in=t_min,
+            rsf_a=component.rsf_a,
+        )
+    else:
+        l2 = Level2Engine(
+            assessment_type=atype,
+            nominal_od_in=component.nominal_od_in,
+            nominal_wt_in=component.nominal_wt_in,
+            t_min_in=t_min,
+            rsf_a=component.rsf_a,
+        ).evaluate(df)
 
     decision = FFSDecision.decide(
         level1_verdict=l1["verdict"],
@@ -199,7 +229,18 @@ def assess_component(
         level1=l1,
         level2=l2,
         decision=decision,
-        details={"router": route, "design_code": component.design_code},
+        details={
+            "router": route,
+            "design_code": component.design_code,
+            **(
+                {
+                    "pitting_characterization": pit_char.to_dict(),
+                    "assessment_basis": l2.get("assessment_basis"),
+                }
+                if pit_char is not None
+                else {}
+            ),
+        },
     )
 
 

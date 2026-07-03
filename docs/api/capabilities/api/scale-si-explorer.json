@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/production/scale-si-explorer.html",
+  "provenance": {
+    "basis": "Oddo\u2013Tomson \u00b7 SPE 21710",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/production/scale-si-explorer.html"
+  },
+  "surface": "digitalmodel:scale-si-explorer",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/production/scale-si-explorer.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Compute produced-water mineral-scale saturation indices (Oddo-Tomson) over my T/P path and check formation-water vs seawater mixing for waterflood compatibility.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Compute produced-water mineral-scale saturation indices (Oddo-Tomson) over my T/P path and check formation-water vs seawater mixing for waterflood compatibility."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/production/scale-si-explorer.html"
+    }
+  ]
+}

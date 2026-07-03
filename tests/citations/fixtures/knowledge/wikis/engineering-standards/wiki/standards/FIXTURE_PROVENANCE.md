@@ -64,3 +64,36 @@ and this provenance file in the same commit, then rerun:
 ```bash
 .venv/bin/python -m pytest tests/riser_database/ -q
 ```
+
+---
+
+# Fixture Provenance - `api-rp-16q.md` (#1246)
+
+Vendored for the riser-database 16Q tension-factor getters
+(`get_tension_weight_factor`, `get_buoyancy_tension_factor`). Same contract as
+the fixtures above: resolver frontmatter and a short description only — no
+standard text, tables, formulas, or licensed source material.
+
+## Canonical source
+
+- **Repo:** `vamseeachanta/llm-wiki`
+- `wikis/engineering-standards/wiki/standards/api-rp-16q.md` —
+  canonical SHA at vendoring time: `2252d2c3f9c69b11a70ccce011e33d9f306bb63e`
+  (the revision "1993" pin landed by llm-wiki PR #820; before that the page
+  carried the `public-metadata-required-before-citation-use` sentinel).
+
+## Vendored copy
+
+- **Vendored on:** 2026-07-02
+- **Used by:** `tests/riser_database/test_citations.py`
+
+## Freshness contract
+
+Review monthly. If the canonical page frontmatter changes, update the fixture,
+the `_API_RP_16Q_CITATION_TEMPLATE` in
+`src/digitalmodel/riser_database/getters.py`, and this provenance file in the
+same commit, then rerun:
+
+```bash
+.venv/bin/python -m pytest tests/riser_database/ -q
+```
