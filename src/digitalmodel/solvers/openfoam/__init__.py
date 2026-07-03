@@ -31,12 +31,14 @@ from .runner import (
     StageResult,
 )
 from .spectral_analysis import (
+    SloshingFrequencyResult,
     SpectralPeak,
     SpectrumResult,
     compute_fft_spectrum,
     compute_welch_spectrum,
     extract_natural_frequency,
     prismatic_tank_natural_frequency,
+    sloshing_natural_frequency,
 )
 from .sloshing_coupling import (
     CouplingStrengthReport,
@@ -68,12 +70,14 @@ __all__ = [
     "SolverConfig",
     "TurbulenceModel",
     "TurbulenceType",
+    "SloshingFrequencyResult",
     "SpectralPeak",
     "SpectrumResult",
     "compute_fft_spectrum",
     "compute_welch_spectrum",
     "extract_natural_frequency",
     "prismatic_tank_natural_frequency",
+    "sloshing_natural_frequency",
     "CouplingStrengthReport",
     "FillDampingResult",
     "MomentCoefficients",

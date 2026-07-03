@@ -12,10 +12,12 @@ import pytest
 
 from digitalmodel.solvers.openfoam.spectral_analysis import (
     GRAVITY,
+    SloshingFrequencyResult,
     SpectrumResult,
     compute_fft_spectrum,
     extract_natural_frequency,
     prismatic_tank_natural_frequency,
+    sloshing_natural_frequency,
 )
 
 
@@ -208,3 +210,129 @@ def test_analytical_validation(bad):
     L, h, mode = bad
     with pytest.raises(ValueError):
         prismatic_tank_natural_frequency(L, h, mode=mode)
+
+
+# ============================================================================
+# (d) sloshing_natural_frequency wiring = the regression gate (#660)
+# ============================================================================
+#
+# Tolerance rationale: the FFT resolves frequency onto discrete bins of width
+# df = fs / N. The measured dominant frequency can therefore differ from the
+# true/analytical value by up to ~one bin. We size each synthetic record so
+# that df is a small fraction of f_n and assert agreement within a stated
+# percent tolerance that is comfortably above the bin-quantisation floor.
+
+
+def test_sloshing_pipeline_pure_sinusoid_at_analytical_fn():
+    """Pure first-mode signal at the analytical f_n -> measured == analytical.
+
+    Regression gate: the wired pipeline must recover the analytical tanh
+    frequency from a clean sinusoid within the FFT bin resolution.
+    """
+    L, h = 2.0, 0.5
+    f_n = prismatic_tank_natural_frequency(L, h, mode=1)
+
+    fs = 100.0
+    duration = 200.0
+    t = _make_time(duration, fs)
+    eta = 0.02 * np.sin(2.0 * np.pi * f_n * t)
+
+    res = sloshing_natural_frequency(
+        eta, length=L, fill_depth=h, times=t, method="fft", min_frequency=0.05
+    )
+
+    bin_width = fs / eta.size  # ~0.005 Hz
+    tol_pct = 100.0 * bin_width / f_n  # bin-resolution floor as a percentage
+    assert isinstance(res, SloshingFrequencyResult)
+    assert res.analytical_frequency == pytest.approx(f_n, rel=1e-12)
+    # Measured recovers the analytical value within one FFT bin.
+    assert res.abs_percent_error <= max(tol_pct, 1.0)
+    assert res.ratio == pytest.approx(1.0, abs=max(tol_pct, 1.0) / 100.0)
+
+
+def test_sloshing_pipeline_decaying_signal_within_tolerance():
+    """Decaying sloshing-like transient at f_n -> recovered within <=3%.
+
+    A real free-decay sloshing record rings down; the exponential envelope
+    broadens the spectral peak. We assert the wired pipeline still recovers
+    the analytical natural frequency within 3% (well above the bin floor).
+    """
+    L, h = 3.0, 1.2
+    f_n = prismatic_tank_natural_frequency(L, h, mode=1)
+
+    fs = 100.0
+    duration = 240.0
+    t = _make_time(duration, fs)
+    # Decaying first-mode elevation: A * exp(-zeta*w*t) * cos(w t), light damping.
+    omega = 2.0 * np.pi * f_n
+    zeta = 0.01  # 1% critical -> lightly damped, peak stays sharp
+    eta = 0.03 * np.exp(-zeta * omega * t) * np.cos(omega * t)
+
+    res = sloshing_natural_frequency(
+        eta, length=L, fill_depth=h, times=t, method="fft", min_frequency=0.02
+    )
+
+    assert res.abs_percent_error <= 3.0
+    assert 0.97 <= res.ratio <= 1.03
+
+
+def test_sloshing_pipeline_accepts_sample_rate_without_times():
+    """dt/sample_rate path works without an explicit time vector."""
+    L, h = 2.5, 0.8
+    f_n = prismatic_tank_natural_frequency(L, h, mode=1)
+    fs = 80.0
+    t = _make_time(160.0, fs)
+    signal = np.cos(2.0 * np.pi * f_n * t)
+
+    res = sloshing_natural_frequency(
+        signal, length=L, fill_depth=h, sample_rate=fs, min_frequency=0.02
+    )
+    assert res.abs_percent_error <= 3.0
+
+
+def test_sloshing_pipeline_superposed_modes_locks_dominant():
+    """Two superposed modes (n=1 stronger) -> pipeline locks the n=1 analytical.
+
+    The stronger first-mode tone must dominate the spectrum and agree with the
+    n=1 analytical value; the weaker n=2 tone must not capture the report.
+    """
+    L, h = 4.0, 1.5
+    f1 = prismatic_tank_natural_frequency(L, h, mode=1)
+    f2 = prismatic_tank_natural_frequency(L, h, mode=2)
+
+    fs = 120.0
+    t = _make_time(240.0, fs)
+    eta = (
+        0.04 * np.sin(2.0 * np.pi * f1 * t)  # dominant first mode
+        + 0.015 * np.sin(2.0 * np.pi * f2 * t)  # weaker second mode
+    )
+
+    res = sloshing_natural_frequency(
+        eta, length=L, fill_depth=h, mode=1, times=t, min_frequency=0.02
+    )
+    # Dominant measured frequency is the first mode, matching the n=1 analytical.
+    assert res.abs_percent_error <= 3.0
+    # Second-mode analytical is materially higher, confirming we locked mode 1.
+    assert f2 > 1.5 * f1
+
+
+def test_sloshing_pipeline_percent_error_is_signed():
+    """percent_error carries the sign of (measured - analytical).
+
+    Drive the signal at a frequency deliberately ~10% above the analytical f_n
+    and confirm the reported percent_error is positive and ~+10%.
+    """
+    L, h = 2.0, 0.5
+    f_n = prismatic_tank_natural_frequency(L, h, mode=1)
+    f_drive = 1.10 * f_n  # 10% high on purpose
+
+    fs = 100.0
+    t = _make_time(200.0, fs)
+    signal = np.sin(2.0 * np.pi * f_drive * t)
+
+    res = sloshing_natural_frequency(
+        signal, length=L, fill_depth=h, times=t, min_frequency=0.02
+    )
+    assert res.percent_error > 0.0
+    assert res.percent_error == pytest.approx(10.0, abs=1.0)
+    assert res.ratio == pytest.approx(1.10, abs=0.01)
