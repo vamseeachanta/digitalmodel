@@ -30,6 +30,13 @@ from .measurement_sufficiency import (
     SufficiencyAction,
     SufficiencyResult,
 )
+from .pitting import (
+    PitFieldCharacterization,
+    assess_pitting,
+    assess_pitting_level2_equivalent_lta,
+    characterize_pit_field,
+    screen_pitting_level1,
+)
 from .ffs_coordinator import (
     FFSComponent,
     FFSAssessmentResult,
@@ -49,4 +56,9 @@ __all__ = [
     "FFSAssessmentResult",
     "assess_component",
     "FFSReport",
+    "PitFieldCharacterization",
+    "assess_pitting",
+    "assess_pitting_level2_equivalent_lta",
+    "characterize_pit_field",
+    "screen_pitting_level1",
 ]
