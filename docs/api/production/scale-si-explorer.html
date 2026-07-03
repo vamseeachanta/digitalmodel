@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mineral-Scale Saturation-Index Explorer</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  :root {
+    --navy: #0B3D91;
+    --teal: #0f8a7e;
+    --bg: #eef3fa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: #1c2a3a;
+    font-family: "Segoe UI", -apple-system, Roboto, Arial, sans-serif;
+  }
+  header {
+    background: var(--navy); color: #fff; padding: 22px 28px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.45rem; }
+  header p { margin: 0; opacity: 0.85; font-size: 0.95rem; max-width: 70rem; }
+  .badge {
+    display: inline-block; background: var(--teal); color: #fff;
+    border-radius: 4px; padding: 2px 8px; font-size: 0.75rem;
+    margin-left: 8px; vertical-align: middle;
+  }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 24px 40px; }
+  .panel {
+    background: #fff; border: 1px solid #d5e0ef; border-radius: 8px;
+    padding: 18px 20px; margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(11, 61, 145, 0.08);
+  }
+  .panel h2 { margin: 0 0 4px; color: var(--navy); font-size: 1.12rem; }
+  .panel p.sub { margin: 0 0 10px; color: #4a5a70; font-size: 0.88rem; }
+  .chart { width: 100%; min-height: 430px; }
+  .note {
+    background: #fff; border-left: 4px solid var(--teal);
+    border-radius: 0 8px 8px 0; padding: 14px 18px; margin-top: 22px;
+    font-size: 0.85rem; color: #33445c; line-height: 1.55;
+    border-top: 1px solid #d5e0ef; border-right: 1px solid #d5e0ef;
+    border-bottom: 1px solid #d5e0ef;
+  }
+  .note strong { color: var(--navy); }
+  code { background: #eef3fa; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Produced-Water Mineral-Scale Saturation-Index Explorer
+    <span class="badge">synthetic demo data</span></h1>
+  <p>SI = log<sub>10</sub>(IAP / K<sub>sp,cond</sub>) per scale family in the
+     Oddo&ndash;Tomson conditional-solubility framework &mdash; SI &gt; 0 means
+     supersaturated (scaling tendency). Bottomhole&rarr;wellhead trending for a
+     synthetic formation water, plus the classic seawater-injection mixing sweep.
+     All values precomputed by
+     <code>digitalmodel.production_chemistry.scale_si</code>; this page only draws.</p>
+</header>
+<main>
+  <div class="panel">
+    <h2>SI trending, bottomhole &rarr; wellhead</h2>
+    <p class="sub">Synthetic demo brine (TDS 89&thinsp;g/L, Ba 250&thinsp;mg/L,
+       HCO<sub>3</sub> 1500&thinsp;mg/L, 2&thinsp;mol% CO<sub>2</sub> in gas)
+       produced from 250&thinsp;&deg;F / 9000&thinsp;psia to
+       120&thinsp;&deg;F / 250&thinsp;psia. Calcite SI rises on drawdown as CO<sub>2</sub>
+       leaves solution; barite SI rises as the brine cools.</p>
+    <div id="profile-chart" class="chart"></div>
+  </div>
+  <div class="panel">
+    <h2>Brine-mixing sweep (waterflood compatibility)</h2>
+    <p class="sub">Synthetic Ba-rich formation water blended with standard
+       seawater (Millero et al. 2008 reference composition) at
+       100&thinsp;&deg;F / 150&thinsp;psia. Seawater sulfate meets formation-water
+       barium: barite SI peaks at an interior mixing fraction &mdash; the classic
+       incompatibility screen. Concentrations mix linearly by volume fraction
+       (ideal mixing, no precipitation en route).</p>
+    <div id="mixing-chart" class="chart"></div>
+  </div>
+  <div class="note">
+    <strong>Basis &amp; honesty note.</strong> Framework: Oddo, J.E. &amp; Tomson, M.B.,
+    &ldquo;Why Scale Forms in the Oil Field and Methods To Predict It&rdquo;,
+    <em>SPE Production &amp; Facilities</em> 9(1), 1994 (SPE-21710-PA) &mdash; saturation
+    indices from conditional solubility products correlated in temperature, pressure and
+    ionic strength, with the calcite carbonate system handled through CO<sub>2</sub>
+    partitioning (in-situ pH from the gas CO<sub>2</sub> fraction, not a surface pH).
+    <strong>The coefficient sets used here are configurable, physically-consistent
+    defaults</strong> anchored to standard 25&thinsp;&deg;C thermodynamic constants and
+    validated against qualitative behavior tests; <strong>they are not the coefficient
+    values printed in the 1994 paper</strong> &mdash; calibrate against a trusted dataset
+    before quantitative use. Both brines are synthetic demo compositions (the seawater
+    column uses the public standard-seawater reference composition of Millero, Feistel,
+    Wright &amp; McDougall, <em>Deep-Sea Research I</em> 55, 2008). No proprietary
+    (e.g. Pitzer-model workbook) data is used.
+  </div>
+</main>
+<script>
+const DATA = {"families": ["calcite", "gypsum", "hemihydrate", "anhydrite", "barite", "celestite", "halite"], "profile": {"step": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "t_f": [250.0, 239.2, 228.3, 217.5, 206.7, 195.8, 185.0, 174.2, 163.3, 152.5, 141.7, 130.8, 120.0], "p_psia": [9000.0, 8271.0, 7542.0, 6812.0, 6083.0, 5354.0, 4625.0, 3896.0, 3167.0, 2438.0, 1708.0, 979.0, 250.0], "si": {"calcite": [-0.5658, -0.587, -0.6048, -0.6185, -0.6273, -0.6297, -0.624, -0.6074, -0.5753, -0.5195, -0.4231, -0.2393, 0.2958], "gypsum": [-3.1589, -3.1662, -3.1707, -3.1724, -3.1713, -3.1674, -3.1607, -3.1511, -3.1387, -3.1235, -3.1055, -3.0847, -3.0611], "hemihydrate": [-2.4519, -2.5419, -2.6319, -2.7219, -2.8119, -2.9019, -2.9919, -3.0819, -3.1719, -3.2619, -3.3519, -3.4419, -3.5319], "anhydrite": [-2.2409, -2.2984, -2.3559, -2.4134, -2.4709, -2.5284, -2.5859, -2.6434, -2.7009, -2.7584, -2.8159, -2.8734, -2.9309], "barite": [-0.4778, -0.4173, -0.3522, -0.2823, -0.2077, -0.1285, -0.0446, 0.0441, 0.1374, 0.2354, 0.3382, 0.4456, 0.5577], "celestite": [-1.8745, -1.8779, -1.8812, -1.8845, -1.8879, -1.8912, -1.8945, -1.8979, -1.9012, -1.9045, -1.9079, -1.9112, -1.9145], "halite": [-1.3066, -1.3044, -1.3022, -1.3001, -1.2979, -1.2957, -1.2936, -1.2914, -1.2892, -1.2871, -1.2849, -1.2827, -1.2806]}, "dsi": {"calcite": [0.0, -0.0212, -0.039, -0.0528, -0.0615, -0.0639, -0.0582, -0.0416, -0.0095, 0.0462, 0.1427, 0.3265, 0.8616], "gypsum": [0.0, -0.0073, -0.0119, -0.0136, -0.0125, -0.0085, -0.0018, 0.0078, 0.0201, 0.0353, 0.0533, 0.0742, 0.0978], "hemihydrate": [0.0, -0.09, -0.18, -0.27, -0.36, -0.45, -0.54, -0.63, -0.72, -0.81, -0.9, -0.99, -1.08], "anhydrite": [0.0, -0.0575, -0.115, -0.1725, -0.23, -0.2875, -0.345, -0.4025, -0.46, -0.5175, -0.575, -0.6325, -0.69], "barite": [0.0, 0.0605, 0.1256, 0.1955, 0.2701, 0.3493, 0.4332, 0.5219, 0.6152, 0.7133, 0.816, 0.9234, 1.0355], "celestite": [0.0, -0.0033, -0.0067, -0.01, -0.0133, -0.0167, -0.02, -0.0233, -0.0267, -0.03, -0.0333, -0.0367, -0.04], "halite": [0.0, 0.0022, 0.0043, 0.0065, 0.0087, 0.0108, 0.013, 0.0152, 0.0173, 0.0195, 0.0217, 0.0238, 0.026]}}, "mixing": {"fraction_b": [0.0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675, 0.7, 0.725, 0.75, 0.775, 0.8, 0.825, 0.85, 0.875, 0.9, 0.925, 0.95, 0.975, 1.0], "si": {"calcite": [0.3671, 0.3264, 0.3187, 0.311, 0.3034, 0.2957, 0.2881, 0.2805, 0.2729, 0.2653, 0.2577, 0.2502, 0.2426, 0.235, 0.2275, 0.2199, 0.2123, 0.2047, 0.1971, 0.1896, 0.182, 0.1744, 0.1668, 0.1593, 0.1518, 0.1443, 0.137, 0.1297, 0.1227, 0.1159, 0.1095, 0.1036, 0.0986, 0.0948, 0.0928, 0.0936, 0.0989, 0.1117, 0.1382, 0.1924, 0.3178], "gypsum": [-3.0599, -2.1814, -1.9205, -1.7655, -1.6566, -1.5737, -1.5074, -1.4527, -1.4065, -1.3669, -1.3324, -1.3021, -1.2753, -1.2514, -1.2299, -1.2107, -1.1933, -1.1776, -1.1634, -1.1506, -1.1389, -1.1284, -1.119, -1.1105, -1.103, -1.0964, -1.0907, -1.0858, -1.0819, -1.0788, -1.0766, -1.0754, -1.0752, -1.0761, -1.0782, -1.0816, -1.0865, -1.0932, -1.1018, -1.1128, -1.1266], "hemihydrate": [-3.7479, -2.8694, -2.6085, -2.4535, -2.3446, -2.2617, -2.1954, -2.1407, -2.0945, -2.0549, -2.0204, -1.9901, -1.9633, -1.9394, -1.9179, -1.8987, -1.8813, -1.8656, -1.8514, -1.8386, -1.8269, -1.8164, -1.807, -1.7985, -1.791, -1.7844, -1.7787, -1.7738, -1.7699, -1.7668, -1.7646, -1.7634, -1.7632, -1.7641, -1.7662, -1.7696, -1.7745, -1.7812, -1.7898, -1.8008, -1.8146], "anhydrite": [-3.0869, -2.2084, -1.9475, -1.7925, -1.6836, -1.6007, -1.5344, -1.4797, -1.4335, -1.3939, -1.3594, -1.3291, -1.3023, -1.2784, -1.2569, -1.2377, -1.2203, -1.2046, -1.1904, -1.1776, -1.1659, -1.1554, -1.146, -1.1375, -1.13, -1.1234, -1.1177, -1.1128, -1.1089, -1.1058, -1.1036, -1.1024, -1.1022, -1.1031, -1.1052, -1.1086, -1.1135, -1.1202, -1.1288, -1.1398, -1.1536], "barite": [0.7147, 1.5908, 1.8494, 2.0019, 2.1081, 2.1883, 2.2517, 2.3033, 2.3462, 2.3825, 2.4133, 2.4398, 2.4626, 2.4821, 2.4989, 2.5133, 2.5254, 2.5354, 2.5435, 2.5498, 2.5543, 2.5571, 2.5581, 2.5573, 2.5546, 2.55, 2.5432, 2.5341, 2.5223, 2.5074, 2.489, 2.4663, 2.4384, 2.4038, 2.3605, 2.3053, 2.2327, 2.1325, 1.9816, 1.7065, -1.0639], "celestite": [-1.9705, -1.0942, -0.8354, -0.6826, -0.5762, -0.4957, -0.4321, -0.3801, -0.3368, -0.3003, -0.269, -0.2422, -0.219, -0.199, -0.1817, -0.1669, -0.1542, -0.1435, -0.1348, -0.1278, -0.1224, -0.1188, -0.1168, -0.1165, -0.1179, -0.1212, -0.1264, -0.1337, -0.1434, -0.1558, -0.1713, -0.1904, -0.2139, -0.2428, -0.2787, -0.3238, -0.3816, -0.4583, -0.5655, -0.7313, -1.0556], "halite": [-1.2766, -1.2906, -1.305, -1.3195, -1.3344, -1.3494, -1.3648, -1.3804, -1.3963, -1.4125, -1.429, -1.4458, -1.4629, -1.4804, -1.4983, -1.5165, -1.5352, -1.5542, -1.5737, -1.5936, -1.6139, -1.6348, -1.6562, -1.6781, -1.7006, -1.7237, -1.7474, -1.7718, -1.7969, -1.8227, -1.8493, -1.8768, -1.9052, -1.9345, -1.9648, -1.9963, -2.0289, -2.0628, -2.0981, -2.1349, -2.1733]}, "t_f": 100.0, "p_psia": 150.0}, "wellhead_basis": {"calcite": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): calcite gas-CO2 route SI = log10([Ca][HCO3]^2 / fCO2) + K(T,P,I) with in-situ pH from CO2 partitioning (fugacity coeff = 1.0); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "gypsum": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): sulfate conditional-solubility form SI = log10([CA][SO4]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "hemihydrate": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): sulfate conditional-solubility form SI = log10([CA][SO4]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "anhydrite": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): sulfate conditional-solubility form SI = log10([CA][SO4]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "barite": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): sulfate conditional-solubility form SI = log10([BA][SO4]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "celestite": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): sulfate conditional-solubility form SI = log10([SR][SO4]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use", "halite": "Oddo-Tomson conditional-solubility SI framework (SPE Prod & Facilities 9(1), 1994): halite conditional-solubility form SI = log10([NA][CL]) + pKsp_cond(T,P,I); coefficients are configurable physically-consistent defaults anchored to standard 25 degC constants, NOT verified paper values \u2014 calibrate before quantitative use"}, "brines": {"formation_water": {"label": "Synthetic formation water (Ba-rich, SO4-poor)", "tds_mg_l": 89000.0, "ba_mg_l": 250.0, "so4_mg_l": 10.0}, "seawater": {"label": "Standard seawater (Millero et al. 2008)", "tds_mg_l": 35170.0, "ba_mg_l": 0.01, "so4_mg_l": 2712.0}}};
+
+const NAVY = "#0B3D91", TEAL = "#0f8a7e";
+const FAMILY_COLORS = {
+  calcite: NAVY,
+  barite: TEAL,
+  celestite: "#c2571a",
+  gypsum: "#7a2048",
+  hemihydrate: "#b0779a",
+  anhydrite: "#4a6fa5",
+  halite: "#8a93a2",
+};
+const FAMILY_DASH = { hemihydrate: "dot", anhydrite: "dash", halite: "dot" };
+
+const baseLayout = {
+  paper_bgcolor: "#ffffff",
+  plot_bgcolor: "#ffffff",
+  font: { family: "Segoe UI, Arial, sans-serif", color: "#1c2a3a", size: 13 },
+  margin: { l: 62, r: 20, t: 12, b: 58 },
+  legend: { orientation: "h", y: -0.18 },
+  shapes: [{
+    type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0,
+    line: { color: "#9aa7b8", width: 1.5, dash: "dash" },
+  }],
+  annotations: [{
+    xref: "paper", x: 0.995, y: 0, yanchor: "bottom", xanchor: "right",
+    text: "SI = 0 (saturation)", showarrow: false,
+    font: { size: 11, color: "#66758a" },
+  }],
+};
+
+// Panel 1: SI vs depth step (bottomhole -> wellhead)
+const prof = DATA.profile;
+const profTraces = DATA.families.map((fam) => ({
+  x: prof.step,
+  y: prof.si[fam],
+  name: fam,
+  mode: "lines+markers",
+  line: { color: FAMILY_COLORS[fam], width: 2.4,
+           dash: FAMILY_DASH[fam] || "solid" },
+  marker: { size: 5 },
+  customdata: prof.step.map((_, i) => [prof.t_f[i], prof.p_psia[i],
+                                       prof.dsi[fam][i]]),
+  hovertemplate:
+    fam + " SI %{y:.2f} (&#916;SI %{customdata[2]:.2f})" +
+    "<br>%{customdata[0]:.0f} &#176;F, %{customdata[1]:.0f} psia" +
+    "<extra></extra>",
+}));
+Plotly.newPlot("profile-chart", profTraces, Object.assign({}, baseLayout, {
+  xaxis: {
+    title: "flow-path step (0 = bottomhole, " + (prof.step.length - 1) +
+           " = wellhead)",
+    tickmode: "array",
+    tickvals: prof.step,
+    ticktext: prof.step.map((s, i) =>
+      i === 0 ? "BH" : (i === prof.step.length - 1 ? "WH" : String(s))),
+    gridcolor: "#e3eaf4",
+  },
+  yaxis: { title: "saturation index, SI", gridcolor: "#e3eaf4",
+            zeroline: false },
+}), { responsive: true, displaylogo: false });
+
+// Panel 2: mixing sweep
+const mix = DATA.mixing;
+const mixTraces = DATA.families.map((fam) => ({
+  x: mix.fraction_b,
+  y: mix.si[fam],
+  name: fam,
+  mode: "lines",
+  line: { color: FAMILY_COLORS[fam], width: 2.4,
+           dash: FAMILY_DASH[fam] || "solid" },
+  hovertemplate: fam + " SI %{y:.2f} at %{x:.0%} seawater<extra></extra>",
+}));
+Plotly.newPlot("mixing-chart", mixTraces, Object.assign({}, baseLayout, {
+  xaxis: {
+    title: "seawater volume fraction (0 = formation water, 1 = seawater), " +
+           "at " + mix.t_f + " \u00B0F / " + mix.p_psia + " psia",
+    tickformat: ".0%", gridcolor: "#e3eaf4",
+  },
+  yaxis: { title: "saturation index, SI", gridcolor: "#e3eaf4",
+            zeroline: false },
+}), { responsive: true, displaylogo: false });
+</script>
+</body>
+</html>
