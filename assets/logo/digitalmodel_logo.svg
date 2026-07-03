@@ -1,19 +1,5 @@
 <svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <clipPath id="clip">
-      <rect x="0" y="0" width="800" height="220" rx="16"/>
-    </clipPath>
-    <!-- Diagonal lay-line pattern: mid-teal ridge + light-teal highlight, ~38deg.
-         Applied as an overlay on each rope shape so the strands run diagonally
-         across the rope width and read as a 6-strand laid steel wire rope. -->
-    <pattern id="lay-dm" patternUnits="userSpaceOnUse" width="11" height="11"
-             patternTransform="rotate(38)">
-      <rect width="11" height="11" fill="none"/>
-      <line x1="0" y1="0" x2="0" y2="11" stroke="#12A6B0" stroke-width="3.4"/>
-      <line x1="5.5" y1="0" x2="5.5" y2="11" stroke="#6FE8D4" stroke-width="1.6" opacity=".9"/>
-    </pattern>
-  </defs>
-  <g clip-path="url(#clip)">
+  <g>
     <!-- Icon -->
     <g transform="translate(20 10)">
       <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
@@ -22,30 +8,25 @@
       <!-- ===== Mooring rope tail draping off the cylinder base ===== -->
       <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
             fill="none" stroke="#12A6B0" stroke-width="11" stroke-linecap="round"/>
-      <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
-            fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
 
       <!-- ===== THREE plump wire-rope coils wrapping the cylinder =====
            Each coil: navy outline (rim) + teal core + diagonal lay overlay. -->
       <!-- bottom coil -->
       <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
       <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
-      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
       <!-- middle coil -->
       <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
       <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
-      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
       <!-- top coil -->
       <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
       <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
-      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
 
       <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
       <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
     </g>
 
     <!-- Wordmark -->
-    <g transform="translate(200 40)">
+    <g transform="translate(265 40)">
       <text x="0" y="70" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="600" fill="#0B3D91" letter-spacing="0.5">
         Digital <tspan fill="#2BB2A6">Model</tspan>
       </text>
