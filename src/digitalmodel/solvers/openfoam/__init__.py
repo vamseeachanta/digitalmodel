@@ -38,6 +38,14 @@ from .spectral_analysis import (
     extract_natural_frequency,
     prismatic_tank_natural_frequency,
 )
+from .sloshing_coupling import (
+    CouplingStrengthReport,
+    FillDampingResult,
+    MomentCoefficients,
+    SloshingCase,
+    SloshingCouplingModel,
+    TuningReport,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -66,4 +74,10 @@ __all__ = [
     "compute_welch_spectrum",
     "extract_natural_frequency",
     "prismatic_tank_natural_frequency",
+    "CouplingStrengthReport",
+    "FillDampingResult",
+    "MomentCoefficients",
+    "SloshingCase",
+    "SloshingCouplingModel",
+    "TuningReport",
 ]
