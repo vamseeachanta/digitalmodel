@@ -152,18 +152,25 @@ class CylinderWaveLoadingConfig:
     wave_period: float = 0.80
     depth: float = 0.40
     diameter: float = 0.30
-    tank_length: float = 10.0
+    tank_length: float = 6.0
     tank_height: float = 0.60
     y_half_width: float = 1.6           # far slip wall > 5 D from the axis
-    cylinder_x: float = 6.0             # established region, clear of inlet ramp
-    nx: int = 400
+    # Cylinder close to the inlet: the short wave (group velocity ~ 0.66 m/s)
+    # must travel the fetch AND establish a steady force before the analysis
+    # window. At x = 3.5 m the wave arrives ~ t = 7.3 s (ramp + x / c_g); the
+    # window opens well after that. (A far cylinder starves the run — the force
+    # is still ramping when a short run ends.)
+    cylinder_x: float = 3.5
+    nx: int = 240                       # ~ 40 cells/wavelength over the 6 m tank
     ny: int = 64
     nz: int = 60                        # depth 0.40 on a face: 0.40 / (0.60/60) = 40
     ramp_time: float = 2.0
-    gauges_x: Tuple[float, ...] = (2.0, 3.6, 4.0, 4.4, 4.8, 5.2, 8.0)
-    end_time: float = 12.0
+    gauges_x: Tuple[float, ...] = (1.5, 2.1, 2.4, 2.7, 3.0, 5.2)
+    end_time: float = 20.0
     write_interval: float = 0.5
-    steady_window: Tuple[float, float] = (8.0, 12.0)
+    # last ~ 8 wave periods, opened after wave arrival (~7.3 s) + a few periods
+    # of settling — sized from the group velocity like the #1324 sweep.
+    steady_window: Tuple[float, float] = (13.5, 20.0)
     name: str = "validation_maccamy_fuchs"
 
     @property
@@ -225,11 +232,12 @@ def provenance() -> Dict[str, Any]:
 # Cylinder, NO STL), inline force measured by a ``forces`` function object.
 # ---------------------------------------------------------------------------
 
-# Upstream gauge cluster used by the incident/reflected split at the cylinder.
-# The 5 gauges at x = 3.6..5.2 (config.gauges_x) span ~1.6 wavelengths ahead of
-# the cylinder (x = 6.0), so the Goda-Suzuki least-squares split cleanly
-# separates the incident wave from the cylinder-scattered (reflected) wave.
-MF_INCIDENT_SPLIT_X: Tuple[float, float] = (3.5, 5.3)
+# Upstream gauge window for the incident/reflected split at the cylinder.
+# The gauges at x = 2.1..3.0 (config.gauges_x) sit between the inlet evanescent
+# zone (> ~1.5 wavelengths from x = 0) and the cylinder (x = 3.5), so the
+# Goda-Suzuki least-squares split cleanly separates the incident wave from the
+# cylinder-scattered (reflected) wave.
+MF_INCIDENT_SPLIT_X: Tuple[float, float] = (2.0, 3.2)
 
 # Cylinder-axis z-extent margin: the searchableCylinder pokes just past the bed
 # and the tank top so snappyHexMesh cuts a clean through-hole (a pile blocking

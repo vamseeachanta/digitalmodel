@@ -36,19 +36,9 @@ import sys
 from pathlib import Path
 
 from digitalmodel.solvers.openfoam.validation.maccamy_fuchs import (
-    LOADING_PERIOD_TOLERANCE,
     CylinderWaveLoadingConfig,
     analyze_cylinder_loading,
-    morison_inertia_force,
 )
-
-
-def _g(d: dict, *keys, default=None):
-    """First present key (the analyzer may name a field either way)."""
-    for k in keys:
-        if k in d and d[k] is not None:
-            return d[k]
-    return default
 
 
 def main() -> None:
@@ -57,72 +47,22 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     cfg = CylinderWaveLoadingConfig()
+    # analyze_cylinder_loading already returns the report schema (nested
+    # config/incident/force/reference/gate/force_history) plus flat aliases,
+    # and normalises by the MEASURED incident wave. Write it verbatim.
     res = analyze_cylinder_loading(case_root, cfg)
+    (out_dir / "results.json").write_text(json.dumps(res, indent=2) + "\n")
 
-    # Reference recomputed at the MEASURED incident wave height so a small
-    # wave-generation error does not leak into the force verdict.
-    measured_H = float(_g(res, "measured_H", "incident_H", default=cfg.wave_height))
-    F_mf = float(_g(res, "force_reference", "F_maccamy_fuchs_N",
-                    default=cfg.reference["F_amplitude"] * measured_H / cfg.wave_height))
-    F_mor = float(_g(res, "morison_force", "F_morison_N",
-                     default=morison_inertia_force(measured_H, cfg.wave_period,
-                                                   cfg.depth, cfg.diameter)))
-    gamma_ref = float(_g(res, "force_lead_velocity_deg", "gamma_reference_deg",
-                         default=cfg.reference["phase_lead_velocity_deg"]))
-
-    period_error = float(_g(res, "period_error", default=0.0))
-    hist = _g(res, "force_history", default={}) or {}
-
-    out = {
-        "issue": "#1171",
-        "config": {
-            "wave": {"H": cfg.wave_height, "T": cfg.wave_period, "depth": cfg.depth},
-            "cylinder": {"D": cfg.diameter, "x": cfg.cylinder_x},
-            "regime": {"ka": cfg.ka, "D_over_L": cfg.diameter_over_wavelength},
-        },
-        "incident": {
-            "measured_H": measured_H,
-            "a_i": float(_g(res, "incident_amplitude", "a_i", default=measured_H / 2.0)),
-            "reflection_kr": float(_g(res, "reflection_kr", "kr", default=0.0)),
-        },
-        "force": {
-            "amplitude_N": float(_g(res, "force_amplitude", "amplitude_N", default=0.0)),
-            "phase_lead_velocity_deg": float(
-                _g(res, "force_lead_velocity_deg_cfd", "phase_lead_velocity_deg",
-                   "gamma_cfd_deg", default=gamma_ref)),
-            "period_s": float(_g(res, "force_period", "period_s",
-                                 default=cfg.wave_period)),
-            "mean_N": float(_g(res, "force_mean", "mean_N", default=0.0)),
-        },
-        "reference": {
-            "F_maccamy_fuchs_at_measured_H_N": F_mf,
-            "F_morison_N": F_mor,
-            "force_lead_velocity_deg": gamma_ref,
-        },
-        "gate": {
-            "force_rel_error": float(_g(res, "force_rel_error", default=0.0)),
-            "within_force_gate": bool(_g(res, "within_force_gate", default=False)),
-            "phase_lead_error_deg": float(_g(res, "phase_lead_error_deg", default=0.0)),
-            "within_phase_gate": bool(
-                _g(res, "within_phase_gate",
-                   default=abs(float(_g(res, "phase_lead_error_deg", default=99.0))) <= 15.0)),
-            "period_error": period_error,
-        },
-        "force_history": {
-            "t": list(map(float, hist.get("t", []))),
-            "fx": list(map(float, hist.get("fx", []))),
-        },
-    }
-    (out_dir / "results.json").write_text(json.dumps(out, indent=2) + "\n")
-
-    g = out["gate"]
-    within_period = period_error <= LOADING_PERIOD_TOLERANCE
-    print(f"F_cfd={out['force']['amplitude_N']:.2f} N  "
-          f"F_mf={F_mf:.2f} N  rel_err={g['force_rel_error']:+.1%}  "
+    g, f, ref = res["gate"], res["force"], res["reference"]
+    print(f"F_cfd={f['amplitude_N']:.2f} N  "
+          f"F_mf={ref['F_maccamy_fuchs_at_measured_H_N']:.2f} N (at measured "
+          f"H={res['incident']['measured_H']:.4f})  "
+          f"rel_err={g['force_rel_error']:+.1%}  "
           f"{'PASS' if g['within_force_gate'] else 'OUT'} force | "
-          f"γ_err={g['phase_lead_error_deg']:+.1f}° "
+          f"lead={f['phase_lead_velocity_deg']:.1f}° vs {ref['force_lead_velocity_deg']:.1f}° "
+          f"(err {g['phase_lead_error_deg']:+.1f}°) "
           f"{'PASS' if g['within_phase_gate'] else 'OUT'} phase | "
-          f"period {'PASS' if within_period else 'OUT'}")
+          f"period {'PASS' if g.get('within_period_gate') else 'OUT'}")
     print(f"wrote {out_dir / 'results.json'}")
 
 
