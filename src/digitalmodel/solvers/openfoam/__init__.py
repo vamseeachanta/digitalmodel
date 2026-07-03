@@ -16,6 +16,13 @@ from .models import (
 )
 from .case_builder import OpenFOAMCaseBuilder
 from .domain_builder import DomainBuilder
+from .motion import (
+    MotionType,
+    PrescribedMotion,
+    render_dynamic_mesh_dict,
+    render_dynamic_mesh_dict_body,
+    write_dynamic_mesh_dict,
+)
 from .runner import (
     OpenFOAMRunConfig,
     OpenFOAMRunner,
@@ -33,6 +40,14 @@ from .spectral_analysis import (
     prismatic_tank_natural_frequency,
     sloshing_natural_frequency,
 )
+from .sloshing_coupling import (
+    CouplingStrengthReport,
+    FillDampingResult,
+    MomentCoefficients,
+    SloshingCase,
+    SloshingCouplingModel,
+    TuningReport,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -40,8 +55,13 @@ __all__ = [
     "CaseType",
     "DomainConfig",
     "DomainBuilder",
+    "MotionType",
     "OpenFOAMCase",
     "OpenFOAMCaseBuilder",
+    "PrescribedMotion",
+    "render_dynamic_mesh_dict",
+    "render_dynamic_mesh_dict_body",
+    "write_dynamic_mesh_dict",
     "OpenFOAMRunConfig",
     "OpenFOAMRunner",
     "OpenFOAMRunResult",
@@ -58,4 +78,10 @@ __all__ = [
     "extract_natural_frequency",
     "prismatic_tank_natural_frequency",
     "sloshing_natural_frequency",
+    "CouplingStrengthReport",
+    "FillDampingResult",
+    "MomentCoefficients",
+    "SloshingCase",
+    "SloshingCouplingModel",
+    "TuningReport",
 ]

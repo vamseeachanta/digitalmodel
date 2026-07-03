@@ -19,6 +19,9 @@ Cases:
   box; impact pressures + water heights vs the official MARIN data.
 - Wave-excited floating body, #1302 — overInterDyMFoam 2D overset; heave
   RAO vs the long-wave (wave-follower) limit.
+- Wave-excited body heave-RAO sweep, #1324 — the #1302 case swept across
+  wave period (long-wave -> resonance -> roll-off); CFD heave RAO vs a frozen
+  potential-flow (capytaine BEM) reference at finite depth.
 """
 
 from __future__ import annotations
@@ -82,6 +85,27 @@ from .kleefsman import (
     extract_impact_metrics,
     load_experiment,
 )
+from .sloshing_2d import (
+    ROLL_MOMENT_FO_NAME,
+    ROLL_MOMENT_PATCHES,
+    SLOSHING_FREQ_TOLERANCE,
+    SloshingForcedRollConfig,
+    SloshingFreeDecayConfig,
+    analyze_free_decay,
+    build_forced_roll_case,
+    build_free_decay_case,
+    cosine_mode_setfields_body,
+    measure_natural_frequency,
+    parse_interface_height,
+    parse_roll_moment,
+    roll_moment_function_object,
+)
+from .sloshing_sweep import (
+    CONTRACT_FIELDS,
+    SloshingSweep,
+    SloshingSweepConfig,
+    reduce_roll_moment,
+)
 from .wave_excited_body import (
     PERIOD_TOLERANCE,
     RAO_TOLERANCE,
@@ -92,6 +116,17 @@ from .wave_excited_body import (
     harmonic_amplitude,
     incident_wave_split,
     response_period,
+)
+from .wave_excited_body_rao import (
+    RAO_SWEEP_BAND,
+    RAO_SWEEP_BAND_RESONANCE,
+    SWEEP_PERIODS,
+    analyze_sweep_point,
+    build_sweep_config,
+    load_reference_curve,
+    reference_peak,
+    reference_rao_at,
+    summarize_sweep,
 )
 from .wave_tank import (
     DISPERSION_TOLERANCE,
@@ -244,6 +279,51 @@ WAVE_EXCITED_BODY_CASE = ValidationCase(
     },
 )
 
+WAVE_EXCITED_BODY_RAO_CASE = ValidationCase(
+    name="wave_excited_body_rao",
+    build=build_wave_excited_body_case,   # same case, swept over wave period
+    reference={
+        # spot values from the frozen potential-flow (capytaine BEM) curve:
+        # long-wave -> 1, flank at T = 1 s, near-resonance peak (~T = 0.87 s)
+        "heave_rao_long_wave": 1.0,
+        "heave_rao_at_T1": 1.52,
+        "heave_rao_peak": 2.18,
+    },
+    tolerance=RAO_SWEEP_BAND,
+    domain="marine (wave-body interaction, frequency response / overset)",
+    metadata={
+        "issue": "#1324",
+        "reference": "capytaine linear BEM (Froude-Krylov + diffraction), "
+                     "finite depth 0.4 m, frozen in rao_reference_capytaine.csv; "
+                     "reproduces the #1302 CFD long-wave point",
+        "gate": "band gate applies OFF resonance (inviscid reference is ground "
+                "truth there — CFD passes within tolerance). In the resonance "
+                "region the CFD response is grid-independent and below the "
+                "inviscid peak: a documented open finding (cause not yet "
+                "attributed among bluff-body separation damping / gauge-to-body "
+                "incident decay / overset numerical damping) — free-decay test "
+                "is the recommended follow-up.",
+    },
+)
+
+SLOSHING_2D_CASE = ValidationCase(
+    name="sloshing_2d_free_decay",
+    build=build_free_decay_case,
+    reference={
+        # analytical first-mode sloshing frequency (Hz) for the default tank
+        "natural_frequency": SloshingFreeDecayConfig().analytical_frequency(),
+    },
+    tolerance=SLOSHING_FREQ_TOLERANCE,
+    domain="marine (internal tank sloshing / TLD)",
+    metadata={
+        "issue": "#639",
+        "reference": (
+            "linear tanh dispersion; SPHERIC Test 10 (Delorme et al. 2009) "
+            "forced-roll corroboration"
+        ),
+    },
+)
+
 FOUNDATIONAL_CASES = (
     FLAT_PLATE_CASE,
     CYLINDER_CASE,
@@ -252,6 +332,8 @@ FOUNDATIONAL_CASES = (
     FLOATING_BODY_CASE,
     KLEEFSMAN_CASE,
     WAVE_EXCITED_BODY_CASE,
+    WAVE_EXCITED_BODY_RAO_CASE,
+    SLOSHING_2D_CASE,
 )
 
 __all__ = [
@@ -265,6 +347,37 @@ __all__ = [
     "FLOATING_BODY_CASE",
     "KLEEFSMAN_CASE",
     "WAVE_EXCITED_BODY_CASE",
+    "WAVE_EXCITED_BODY_RAO_CASE",
+    "SLOSHING_2D_CASE",
+    # Wave-excited body heave-RAO sweep (#1324)
+    "RAO_SWEEP_BAND",
+    "RAO_SWEEP_BAND_RESONANCE",
+    "SWEEP_PERIODS",
+    "analyze_sweep_point",
+    "build_sweep_config",
+    "load_reference_curve",
+    "reference_peak",
+    "reference_rao_at",
+    "summarize_sweep",
+    # Sloshing 2D (#639)
+    "SLOSHING_FREQ_TOLERANCE",
+    "SloshingForcedRollConfig",
+    "SloshingFreeDecayConfig",
+    "analyze_free_decay",
+    "build_forced_roll_case",
+    "build_free_decay_case",
+    "cosine_mode_setfields_body",
+    "measure_natural_frequency",
+    "parse_interface_height",
+    # Sloshing roll-moment + fill/frequency sweep (#641)
+    "ROLL_MOMENT_FO_NAME",
+    "ROLL_MOMENT_PATCHES",
+    "parse_roll_moment",
+    "roll_moment_function_object",
+    "CONTRACT_FIELDS",
+    "SloshingSweep",
+    "SloshingSweepConfig",
+    "reduce_roll_moment",
     # Wave-excited floating body (#1302)
     "PERIOD_TOLERANCE",
     "RAO_TOLERANCE",

@@ -143,9 +143,10 @@ _TEMPLATE = """<!DOCTYPE html>
 <body>
 <h1>Riser-Joint Flaw-Acceptance Explorer</h1>
 <p class="sub">Level-1 acceptance chart for a marine drilling-riser main tube
-(__GEOM__) — maximum acceptable surface-flaw <b>length vs depth</b> from the
-validated Modified B31G remaining-strength engine, with base-metal / weld depth
-caps and a campaign-end growth allowance. Points are the real (anonymized)
+(__GEOM__) — maximum acceptable surface-flaw <b>length vs depth</b>: base metal
+from the validated Modified B31G remaining-strength engine, welds from the
+BS 7910 Option-1 failure-assessment diagram, with practice depth caps and a
+campaign-end growth allowance. Points are the real (anonymized)
 weld-flaw register; the side panel places the three real inspected joints in the
 string. Every number is precomputed in Python
 (<code>digitalmodel.asset_integrity.riser_joint_ffs</code>) — the page only draws.</p>
@@ -167,15 +168,20 @@ string. Every number is precomputed in Python
     <div id="depthchart" style="height:250px"></div></div>
 </div>
 
-<p class="note"><b>Basis.</b> Envelope: Modified B31G (0.85 dL) safe pressure ≥ design
-pressure, inverted by bisection; depth caps 0.85·WT (base metal) / 0.60·WT (weld) per
-the source integrity program; campaign-end curve assesses each depth at
+<p class="note"><b>Basis.</b> Base-metal envelope: Modified B31G (0.85 dL) safe
+pressure ≥ design pressure, inverted by bisection. Weld envelope: BS 7910:2013
+Option-1 failure-assessment diagram (<code>assessment.crack_fad</code>,
+digitalmodel#1270) — semi-elliptical surface flaw, Newman–Raju K, Annex P reference
+stress — inverted to max acceptable length at each depth; membrane stress is the
+Barlow hoop stress p·D/(2t) at the design pressure (through-wall bending taken as
+zero), toughness is the BS 7910 Annex J lower bound from a conservative CVN 27 J
+default (no weld-metal toughness test assumed — supply measured values to relax).
+Depth caps 0.85·WT (base metal) / 0.60·WT (weld) per the source integrity program
+apply on top of the computed envelopes; campaign-end curves assess each depth at
 d + rate × duration. Collapse depth: API RP 1111 elastic/yield interaction at the
 measured minimum wall, design factor 0.70, fully-evacuated riser (most conservative).
-Zone margins (top/bottom 3×, mid 1×) are practice parameters pending the
-crack-growth clock (digitalmodel#1270). Weld-region strength currently reuses the
-metal-loss engine inside the tighter cap — fracture-mechanics weld envelopes arrive
-with Part 9 (#1270).</p>
+Zone margins (top/bottom 3×, mid 1×) are practice parameters pending a fatigue
+crack-growth clock (follow-up to digitalmodel#1270).</p>
 
 <script>
 const DATA = __DATA__;
