@@ -125,6 +125,14 @@ class TestLoader:
         m = SloshingCouplingModel.from_sweep_manifest(p)
         assert m.n_cases == 9
 
+    def test_from_json_manifest_points_key(self, tmp_path, manifest_rows):
+        # The dm#641 sweep harness writes the rows under "points" — the loader
+        # must accept that wrapper key (regression: end-to-end sweep -> coupling).
+        p = tmp_path / "sweep_manifest.json"
+        p.write_text(json.dumps({"study": "s", "issue": "#641", "points": manifest_rows}))
+        m = SloshingCouplingModel.from_sweep_manifest(p)
+        assert m.n_cases == 9
+
     def test_from_csv_manifest(self, tmp_path, manifest_rows):
         import csv
 

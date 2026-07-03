@@ -335,8 +335,9 @@ class SloshingCouplingModel:
         """Load the dm#641 sweep manifest (``.json`` or ``.csv``).
 
         JSON may be either a top-level list of rows or an object with a
-        ``"cases"`` (or ``"rows"``) list. CSV must have a header row whose names
-        match the contract keys.
+        ``"points"`` (as written by the dm#641 harness), ``"cases"``, or
+        ``"rows"`` list. CSV must have a header row whose names match the
+        contract keys.
 
         Args:
             path: Path to the manifest written by the dm#641 harness.
@@ -359,7 +360,12 @@ class SloshingCouplingModel:
         else:
             data = json.loads(path.read_text())
             if isinstance(data, dict):
-                rows = data.get("cases") or data.get("rows") or []
+                rows = (
+                    data.get("points")
+                    or data.get("cases")
+                    or data.get("rows")
+                    or []
+                )
             else:
                 rows = data
         if not rows:
