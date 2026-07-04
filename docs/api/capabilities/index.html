@@ -157,12 +157,14 @@
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
     <div class="navgroup"><a class="navh" href="#cfd">Computational fluid dynamics</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
+    <div class="navgroup"><a class="navh" href="#wall-thickness">Wall thickness &amp; code checks</a></div>
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
     <div class="navgroup"><a class="navh" href="#wind">Floating wind</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
     <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
+    <div class="navgroup"><a class="navh" href="#cathodic">Cathodic protection</a></div>
     <div class="navgroup"><a class="navh" href="#corrosion-production">Corrosion &amp; production chemistry</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
@@ -264,6 +266,28 @@
     </div>
   </section>
 
+  <section class="chan" id="wall-thickness">
+    <div class="chanhead"><h2>Wall thickness &mdash; sizing &amp; code checks</h2></div>
+    <p class="lead">Pipeline and riser wall-thickness sizing and pressure-integrity code checks &mdash;
+    one geometry / material / loads spec dispatched across ten registered design codes (edition-aware:
+    DNV-OS-F101 2007 vs DNV-ST-F101 2021, API RP 1111 3rd vs 4th edition), with burst /
+    pressure-containment, collapse (solved from the cubic, not tabulated), propagation-buckling and
+    combined-loading utilizations, minimum-thickness solvers and cross-code comparison reports.
+    Every result carries a <code>code_reference</code> kept in sync with the codes register.</p>
+    <div class="fits">
+      <span><b>Submarine pipelines</b> &mdash; DNV-ST-F101 · API RP 1111 · PD 8010-2 · ISO 13623</span>
+      <span><b>Risers</b> &mdash; DNV-ST-F201 LRFD · API STD 2RD · API RP 2RD</span>
+      <span><b>Onshore &amp; transmission</b> &mdash; ASME B31.4 · ASME B31.8 location-class factors</span>
+      <span><b>Regulatory</b> &mdash; 30 CFR Part 250 burst &amp; minimum thickness</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Multi-code wall-thickness engine</h3><div class="std">DNV-ST-F101 · API RP 1111 · ASME B31.4 / B31.8 · PD 8010-2 · ISO 13623</div><p>Strategy-registry engine: ten design codes behind one <code>PipeGeometry</code> / <code>PipeMaterial</code> / <code>DesignLoads</code> spec &mdash; burst, collapse, propagation and combined-loading checks with edition-aware safety factors and a machine-readable clause / equation manifest.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/structural/analysis/wall_thickness_codes">Open &rarr;</a></div></div>
+      <div class="card"><h3>Cross-code comparison demo</h3><div class="std">same pipe · every code · one report</div><p>The same X65 line sized under every registered code side-by-side &mdash; per-code utilizations, the governing code and the utilization spread rendered into a single HTML report.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/examples/demos/gtm/demo_02_wall_thickness_multicode.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Wall-thickness quick check</h3><div class="std">screening · minimal input deck</div><p>Screening-level wall-thickness verdict and report from a minimal input deck &mdash; the fast first pass ahead of the full multi-code run.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/wall_thickness_quickcheck">Open &rarr;</a></div></div>
+      <div class="card"><h3>API RP 1111 installation screens</h3><div class="std">API RP 1111 · buckle arrestors</div><p>Functional API RP 1111 set for installation screening &mdash; burst, collapse, propagating-buckle pressure, transition water depth and buckle-arrestor-required verdicts by water depth.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/subsea/pipeline">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
   <section class="chan" id="subsea">
     <div class="chanhead"><h2>Subsea</h2><a class="onepager" href="pdf/sec-subsea.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">To-scale cross-section schematics for offshore cables, umbilicals and pipelines,
@@ -334,6 +358,27 @@
     </div>
   </section>
 
+  <section class="chan" id="cathodic">
+    <div class="chanhead"><h2>Cathodic protection</h2></div>
+    <p class="lead">Sacrificial-anode and impressed-current CP design across structure types &mdash;
+    current demand with coating breakdown, anode mass / resistance / output and spacing, protected
+    length, depletion &amp; retrofit remaining life, survey interpretation (CIS / DCVG) and
+    stray-current screens. Edition-aware DNV-RP-B401 (2017 / 2021) backed by doc-verified test
+    vectors &mdash; 500+ tests across the module.</p>
+    <div class="fits">
+      <span><b>Fixed structures</b> &mdash; jacket · monopile · manifold (DNV-RP-B401)</span>
+      <span><b>Pipelines</b> &mdash; DNV-RP-F103 protected length · ISO 15589-1 / -2 · bracelet anodes</span>
+      <span><b>Hulls</b> &mdash; FPSO (ABS) · seawater zones · calcareous-deposit correction</span>
+      <span><b>Onshore &amp; tanks</b> &mdash; API RP 1632 galvanic + ICCP rectifier &amp; ground-bed sizing</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Cathodic-protection design module</h3><div class="std">DNV-RP-B401 · ISO 15589-2 · API RP 1632 · NACE SP0169 / SP0176</div><p>Eighteen-module CP engine &mdash; current demand, coating breakdown, anode sizing on the McCoy / Dwight resistance formulas, depletion &amp; remaining life, ICCP rectifier / anode-bed / cable sizing, survey interpretation and AC / DC stray-current interference.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection">Open &rarr;</a></div></div>
+      <div class="card"><h3>Structure-type demo set</h3><div class="std">jacket · pipeline · manifold · monopile · FPSO hull</div><p>Six registered demo workflows sizing sacrificial-anode systems across structure types &mdash; each a durable registry workflow with pinned inputs, results and a registry CI test.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/cathodic-protection">Open &rarr;</a></div></div>
+      <div class="card"><h3>Parametric CP demos &mdash; design to retrofit</h3><div class="std">144-case sweeps · remaining life</div><p>Marine-structure, pipeline, ICCP and retrofit remaining-life demos swept across climates, design lives, ages and coating states into HTML reports &mdash; the aging-asset answer to &ldquo;how much anode life is left?&rdquo;.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/examples/demos/gtm/demo_06_marine_structure_cp.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Factory-applied coating selection</h3><div class="std">DNV-RP-F106</div><p>Factory-applied external pipeline coating selection and inspection subset, with the coating-selection method article and per-system breakdown factors feeding the CP current demand.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/articles/dnv_rp_f106_coating_selection.md">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
   <section class="chan" id="corrosion-production">
     <div class="chanhead"><h2>Corrosion &amp; production chemistry</h2><a class="onepager" href="pdf/sec-corrosion-production.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Screening-level materials-compatibility and produced-water scaling checks that sit alongside
@@ -365,6 +410,10 @@
         <tr><td>Line-pipe plain-end weight</td><td>NPS 8 STD (8.625×0.322)</td><td class="val">28.55 lb/ft</td><td class="pub">ASME B36.10M</td></tr>
         <tr><td>DNV-RP-F101 capacity</td><td>§8.2 worked pipe-1</td><td class="val">15.866 MPa</td><td class="pub">published (6 sig-figs)</td></tr>
         <tr><td>ASME B31G safe pressure</td><td>CRVL.BAS Example #1 (X52)</td><td class="val">1 093 psi</td><td class="pub">B31G-1991 App. A</td></tr>
+        <tr><td>API RP 1111 burst</td><td>12.75″ × 0.500″ X65 (D/t 25.5)</td><td class="val">36.0 MPa</td><td class="der">hand-derived closed form</td></tr>
+        <tr><td>DNV-ST-F201 pressure containment</td><td>riser worked case (t&#8321; 17.85 mm)</td><td class="val">p_b 69.47 MPa · util 0.339</td><td class="der">LRFD closed form</td></tr>
+        <tr><td>DNV-RP-B401 anode mass</td><td>Al-Zn-In, 1.48 A mean demand, 22 yr</td><td class="val">158.5 kg</td><td class="pub">§7.7.1 doc-verified vector</td></tr>
+        <tr><td>DNV-RP-F103 protected length</td><td>12″ riser, §5.6.7 Eq. 14</td><td class="val">3 829 m</td><td class="pub">doc-verified vector</td></tr>
         <tr><td>IACS S11 wave BM</td><td>L200·B32·Cb0.8 (hog / sag)</td><td class="val">+1.897 / −2.059 ×10⁶ kN·m</td><td class="der">IACS UR S11 formula</td></tr>
         <tr><td>Smith hull-girder ultimate</td><td>stocky box → first yield</td><td class="val">M_U = f_y·Z (rel 1e-6)</td><td class="der">analytic limit</td></tr>
         <tr><td>DNV-RP-C201 panel tripping</td><td>0119-015 worked example</td><td class="val">f_T = 215.61 MPa</td><td class="pub">validated example</td></tr>
@@ -385,7 +434,7 @@
 <footer>
   Built from validated digitalmodel solvers; 1-page PDFs and workflow-API artifacts by
   <code>scripts/capabilities/build_onepagers.py</code>. Method APIs live under
-  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, fatigue}/</code>
+  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, cathodic_protection, subsea/pipeline, fatigue}/</code>
   and validation records under <code>docs/domains/</code>. Every strength / FFS result carries a
   <code>code_reference</code> naming its governing code, kept in sync with the
   <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md">codes register</a>
