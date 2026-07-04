@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/structural/wall-thickness-explorer.html",
+  "provenance": {
+    "basis": "DNV-ST-F101 \u00b7 API RP 1111 \u00b7 ASME B31.4/8 \u00b7 PD 8010-2 \u00b7 ISO 13623",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/structural/wall-thickness-explorer.html"
+  },
+  "surface": "digitalmodel:wall-thickness-explorer",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/structural/wall-thickness-explorer.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Run the digitalmodel wall-thickness multi-code explorer and send me the report.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Run the digitalmodel wall-thickness multi-code explorer and send me the report."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/structural/wall-thickness-explorer.html"
+    }
+  ]
+}
