@@ -1,0 +1,19 @@
+# Minimal OrcaFlex-style displacement-RAO fixture for #1358 GridRAO.from_file
+# validation. Two headings x two periods, with known heave amplitude/phase so
+# the test can assert the parsed complex transfer at a grid node exactly.
+# Row = [period, surge_amp, surge_ph, sway_amp, sway_ph, heave_amp, heave_ph,
+#        roll_amp, roll_ph, pitch_amp, pitch_ph, yaw_amp, yaw_ph]  (deg phases).
+VesselTypes:
+  - Name: TestVessel
+    Draughts:
+      - Name: Loaded
+        DisplacementRAOs:
+          RAOs:
+            - RAODirection: 0.0
+              RAOPeriodOrFrequency:
+                - [10.0, 0.9, 0.0, 0.0, 0.0, 0.80, 30.0, 0.0, 0.0, 1.5, 90.0, 0.0, 0.0]
+                - [5.0,  0.7, 0.0, 0.0, 0.0, 0.40, 60.0, 0.0, 0.0, 2.0, 120.0, 0.0, 0.0]
+            - RAODirection: 90.0
+              RAOPeriodOrFrequency:
+                - [10.0, 0.0, 0.0, 0.9, 0.0, 0.85, 20.0, 3.0, 45.0, 0.0, 0.0, 0.0, 0.0]
+                - [5.0,  0.0, 0.0, 0.7, 0.0, 0.45, 50.0, 3.5, 80.0, 0.0, 0.0, 0.0, 0.0]
