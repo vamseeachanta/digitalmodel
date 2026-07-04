@@ -1,0 +1,47 @@
+{
+  "basename": "drilling_riser_operability",
+  "atlas_id": "b5a542c49bf7",
+  "physics": "linear",
+  "response": "governing_utilisation",
+  "axes": [
+    {
+      "name": "config",
+      "values": [
+        "rsu_a__drilling",
+        "rsu_a__connected",
+        "rsu_a__hang_off",
+        "rsu_b__drilling",
+        "rsu_b__connected",
+        "rsu_b__hang_off"
+      ]
+    },
+    {
+      "name": "offset_pct",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+        10.0
+      ]
+    },
+    {
+      "name": "current_speed_mps",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0
+      ]
+    }
+  ]
+}

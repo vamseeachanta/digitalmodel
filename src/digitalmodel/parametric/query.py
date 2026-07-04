@@ -329,6 +329,10 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     # drilling-riser von-Mises dynamic-amplification library (#1346): exact-match
     # the operating-mode key, interpolate offset x current x Hs x Tp within.
     "drilling_riser_envelope": _handle_value,
+    # drilling-riser operability exact node-cache (#1283): the atlas predicts the
+    # governing utilisation directly; threshold at 1.0 with the straddle rule so a
+    # marginal boundary point escalates to the exact analytical run.
+    "drilling_riser_operability": _handle_utilisation,
 }
 
 
