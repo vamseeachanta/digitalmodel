@@ -102,15 +102,21 @@ def router(cfg: Dict) -> Dict:
         "n_components": len(forecast.components),
     }
 
-    # Optional rolling go/no-go decision for a named operation (#1359).
+    # Criteria loaded once when a named operation is set; reused by the forecast
+    # decision (#1359) and the measured status (#1367).
     op = mf.get("operation")
+    crits = None
     if op:
         from .criteria import load_criteria
-        from .decision import rolling_decision
 
         crits = load_criteria(mf.get("criteria_path"))
         if op not in crits:
             raise ValueError(f"unknown operation {op!r}; have {sorted(crits)}")
+
+    # Optional rolling go/no-go decision for a named operation (#1359).
+    if op:
+        from .decision import rolling_decision
+
         dec = rolling_decision(motion, crits[op])
         mf["decision"] = {
             "operation": dec.operation,
@@ -141,7 +147,6 @@ def router(cfg: Dict) -> Dict:
                 "motion_forecast.measured must be a MeasuredMotion or {'csv': <path>}"
             )
         if op:
-            crits = load_criteria(mf.get("criteria_path"))
             md = measured_status(measured, crits[op])
             mf["measured_status"] = {
                 "operation": md.operation, "governing": md.governing,

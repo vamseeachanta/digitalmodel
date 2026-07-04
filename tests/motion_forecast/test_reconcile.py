@@ -96,6 +96,26 @@ def test_measured_status_classifies_latest_and_matches_classify():
     assert md.state is _classify(md.current_value, _VEL.caution, _VEL.limit)
 
 
+def test_overlap_error_no_overlap_raises():
+    fc = _forecast(np.linspace(100.0, 160.0, 61), heave=np.zeros(61))
+    m = _measured(np.linspace(200.0, 260.0, 61), heave=np.zeros(61))  # disjoint
+    with pytest.raises(ValueError, match="no time overlap"):
+        overlap_error(m, fc)
+
+
+def test_overlap_error_too_short_raises():
+    fc = _forecast(np.linspace(100.0, 160.0, 61), heave=np.zeros(61))
+    m = _measured(np.array([158.0, 159.5, 160.5, 162.0]), heave=np.zeros(4))  # 2 in overlap
+    with pytest.raises(ValueError, match="min_overlap"):
+        overlap_error(m, fc)
+
+
+def test_measured_status_single_sample_raises():
+    m = _measured(np.array([5.0]), heave=np.array([0.1]))
+    with pytest.raises(ValueError, match=">= 2 samples"):
+        measured_status(m, _VEL)
+
+
 def test_measured_status_nan_is_fail_closed():
     t = np.linspace(0.0, 20.0, 201)
     h = 0.1 * t

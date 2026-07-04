@@ -41,6 +41,8 @@ class MeasuredMotion:
         self.t = np.asarray(self.t, dtype=float)
         if self.t.ndim != 1 or self.t.size < 1:
             raise ValueError("MeasuredMotion.t must be a non-empty 1-D array")
+        if self.t.size >= 2 and not np.all(np.diff(self.t) > 0):
+            raise ValueError("MeasuredMotion.t must be strictly ascending (shared clock)")
         missing = [d for d in DOF_NAMES if d not in self.dof]
         if missing:
             raise ValueError(f"MeasuredMotion.dof missing DOFs: {missing}")

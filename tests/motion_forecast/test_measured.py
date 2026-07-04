@@ -37,6 +37,12 @@ def test_duck_types_through_derived():
     assert np.allclose(gs.values, 0.5, atol=1e-9)
 
 
+def test_non_monotonic_t_raises():
+    t = np.array([0.0, 3.0, 1.0, 2.0, 4.0])  # scrambled clock
+    with pytest.raises(ValueError, match="ascending"):
+        _measured(t, heave=t)
+
+
 def test_validation_missing_dof_and_shape():
     t = np.linspace(0, 10, 11)
     with pytest.raises(ValueError, match="missing DOFs"):

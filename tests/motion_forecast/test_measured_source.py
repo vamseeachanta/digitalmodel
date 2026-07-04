@@ -50,6 +50,13 @@ def test_csv_round_trip(tmp_path):
     assert np.allclose(m.dof["heave"], truth.dof["heave"], atol=1e-6)
 
 
+def test_csv_single_row(tmp_path):
+    p = tmp_path / "one.csv"
+    p.write_text("t," + ",".join(DOF_NAMES) + "\n5.0," + ",".join(["0.0"] * 6) + "\n")
+    m = from_csv(str(p))
+    assert m.t.shape == (1,) and m.now == 5.0  # atleast_1d guard on 0-d genfromtxt
+
+
 def test_csv_missing_column_raises(tmp_path):
     p = tmp_path / "bad.csv"
     p.write_text("t,heave\n0,0\n1,1\n")

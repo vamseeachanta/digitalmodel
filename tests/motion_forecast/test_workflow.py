@@ -67,6 +67,40 @@ def test_router_measured_mode_emits_status_and_reconciliation():
     assert set(out["reconciliation"]["seam_offset"]) == set(DOF_NAMES)
 
 
+def test_router_measured_without_operation_emits_reconciliation_only():
+    import numpy as np
+    from digitalmodel.motion_forecast.measured import MeasuredMotion
+    from digitalmodel.motion_forecast.models import DOF_NAMES
+
+    tm = np.linspace(0.0, 30.0, 121)
+    measured = MeasuredMotion(t=tm, dof={d: np.zeros_like(tm) for d in DOF_NAMES})
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 2.0, "tp": 9.0, "horizon": 60.0, "n_components": 24},
+            "rao": {"source": "analytic"},
+            "measured": measured,  # no "operation"
+        },
+    }
+    out = router(cfg)["motion_forecast"]
+    assert "measured_status" not in out          # needs an operation
+    assert "seam_offset" in out["reconciliation"]  # reconciliation still emitted
+
+
+def test_router_measured_bad_type_raises():
+    import pytest
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 2.0, "tp": 9.0, "horizon": 60.0, "n_components": 24},
+            "rao": {"source": "analytic"},
+            "measured": 123,  # neither MeasuredMotion nor {'csv': ...}
+        },
+    }
+    with pytest.raises(ValueError, match="must be a MeasuredMotion"):
+        router(cfg)
+
+
 def test_engine_dispatch_wired():
     """Guard: engine.py routes basename 'motion_forecast' to the workflow."""
     engine_src = (

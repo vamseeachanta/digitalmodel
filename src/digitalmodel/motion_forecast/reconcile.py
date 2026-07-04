@@ -85,7 +85,8 @@ def overlap_error(
         err = m - fc[d]
         rmse = float(np.sqrt(np.mean(err**2)))
         bias = float(np.mean(err))
-        if tq.size >= 2 and np.std(m) > 0 and np.std(fc[d]) > 0:
+        # tq.size >= min_overlap_samples already guaranteed above
+        if np.std(m) > 0 and np.std(fc[d]) > 0:
             corr = float(np.corrcoef(m, fc[d])[0, 1])
         else:
             corr = None
@@ -121,6 +122,10 @@ def measured_status(
     Uses the same ``decision._classify`` as the forecast mode, so measured and
     forecast classify identically (strict boundaries + NaN -> NO-GO).
     """
+    if measured.t.size < 2:
+        raise ValueError(
+            "measured_status requires >= 2 samples (a velocity governing needs a time base)"
+        )
     series = compute_governing(measured, criterion.governing, offset or criterion.poi_offset)
     v = series.values
     current = float(v[-1])
