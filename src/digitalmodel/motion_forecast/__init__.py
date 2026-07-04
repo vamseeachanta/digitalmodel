@@ -51,6 +51,15 @@ from .reconstruct import (
     vertical_motion_at,
     wavenumber,
 )
+from .wave_forecast import (
+    SyntheticWaveField,
+    WaveFieldSource,
+    coherence_horizon,
+    directional_spread,
+    dpz_horizon,
+    surface_elevation,
+    synthesize_directional_forecast,
+)
 from .wave_source import jonswap_spectrum, synthesize_forecast
 from .workflow import router
 
@@ -100,4 +109,11 @@ __all__ = [
     "holdout_report",
     "OperabilitySummary",
     "operability_summary",
+    "coherence_horizon",
+    "dpz_horizon",
+    "directional_spread",
+    "synthesize_directional_forecast",
+    "surface_elevation",
+    "WaveFieldSource",
+    "SyntheticWaveField",
 ]
