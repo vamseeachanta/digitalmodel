@@ -154,18 +154,23 @@
   <nav>
     <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
     <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
+    <div class="navgroup"><a class="navh" href="#fatigue">Fatigue &amp; fracture</a></div>
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
     <div class="navgroup"><a class="navh" href="#cfd">Computational fluid dynamics</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
     <div class="navgroup"><a class="navh" href="#wall-thickness">Wall thickness &amp; code checks</a></div>
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
+    <div class="navgroup"><a class="navh" href="#viv">Vortex-induced vibration</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
     <div class="navgroup"><a class="navh" href="#wind">Floating wind</a></div>
+    <div class="navgroup"><a class="navh" href="#field-development">Field development</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
     <div class="navgroup"><a class="navh" href="#naval-architecture">Naval architecture</a></div>
     <div class="navgroup"><a class="navh" href="#geotechnical">Geotechnical</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
+    <div class="navgroup"><a class="navh" href="#production-engineering">Production engineering</a></div>
     <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
+    <div class="navgroup"><a class="navh" href="#drilling-engineering">Drilling engineering</a></div>
     <div class="navgroup"><a class="navh" href="#cathodic">Cathodic protection</a></div>
     <div class="navgroup"><a class="navh" href="#corrosion-production">Corrosion &amp; production chemistry</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
@@ -211,6 +216,28 @@
     <div class="grid">
       <div class="card"><h3>Ship plate buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.</p><div class="actions"><a class="open" href="../buckling/ship-plate-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-plate.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/buckling-plate.html">API &rarr;</a></div></div>
       <div class="card"><h3>Stiffened-panel buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.</p><div class="actions"><a class="open" href="../buckling/ship-panel-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-panel.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/buckling-panel.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="fatigue">
+    <div class="chanhead"><h2>Fatigue &amp; fracture &mdash; S-N life and crack growth</h2></div>
+    <p class="lead">A code-referenced fatigue toolkit: a 221-curve S-N library spanning DNV-RP-C203,
+    API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004; Efthymiou stress-concentration factors for
+    tubular joints; rainflow counting into Miner's-rule damage; hotspot-stress extrapolation; and
+    Paris'-law crack growth. Every curve, SCF equation and read-out formula carries its clause
+    reference in-code, and the numeric checks are pinned to published tables and hand calculations.</p>
+    <div class="fits">
+      <span><b>S-N library</b> &mdash; 221 curves across 6 standards, 3 environments</span>
+      <span><b>Efthymiou SCF</b> &mdash; T/Y &amp; K tubular joints, DNV-RP-C203 App. B</span>
+      <span><b>Rainflow &rarr; Miner</b> &mdash; stress-range histogram to damage sum</span>
+      <span><b>Fracture</b> &mdash; hotspot-stress extrapolation + Paris'-law growth</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>S-N curve library (221 curves)</h3><div class="std">DNV-RP-C203 · API RP 2A-WSD · BS 7608 · EN 1993-1-9 · NORSOK N-004</div><p>A single lookup across 17 standard sets (14 DNV detail classes &times; 3 environments, plus API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004), each with slope / intercept, knee and thickness-correction metadata keyed by curve id (e.g. <code>DNV-RP-C203:D:air</code>).</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/sn_library.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Efthymiou SCF for tubular joints</h3><div class="std">Efthymiou (OTC 4829) · DNV-RP-C203 App. B · ISO 19902</div><p>Stress-concentration factors for T/Y and K joints under axial, in-plane and out-of-plane bending, plus DNV Appendix-D plate / weld SCFs &mdash; with chord / brace / governing values and the governing table reference.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/scf_library.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Weld-fatigue quick-check (rainflow &rarr; Miner)</h3><div class="std">DNV-RP-C203 · BS 7608</div><p>Takes a stress-range histogram and weld class, applies the DNV thickness correction, sums Palmgren-Miner damage over a design life, and returns pass/fail with per-bin damage and a life factor.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/weld_fatigue_quickcheck.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Hotspot-stress extrapolation</h3><div class="std">DNV-RP-C203 §4.3 · IIW-2259-15</div><p>Two- and three-point linear hotspot-stress extrapolation to the weld toe from surface stresses at the reference points, feeding the S-N read-out for welded-detail fatigue.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/hotspot_stress.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Crack growth (Paris' law)</h3><div class="std">BS 7910:2019</div><p>Paris'-law numerical integration from an initial to a critical crack size &mdash; the fracture-mechanics complement to the S-N route for assessing known or postulated flaws.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/crack_growth.py">Open &rarr;</a></div></div>
     </div>
   </section>
 
@@ -299,6 +326,29 @@
     </div>
   </section>
 
+  <section class="chan" id="viv">
+    <div class="chanhead"><h2>Vortex-induced vibration &mdash; screening, frequency &amp; fatigue</h2></div>
+    <p class="lead">A first-pass VIV toolkit for tubular members and risers: natural-frequency calculation
+    (Euler-Bernoulli beam + tension-controlled string, five boundary conditions, fluid added mass),
+    vortex-shedding frequency from the Strouhal relation, reduced-velocity lock-in screening with a
+    safety factor, and VIV-induced fatigue on DNV-RP-C203 S-N curves. Lock-in criteria follow
+    DNV-RP-C205 / DNV-RP-F105 / API RP 2A and beam eigenvalues follow Blevins &mdash; the full-member
+    generalization of the lock-in check the CFD Re=100 cylinder card already exposes. Backed by unit,
+    CLI and integration tests and a standalone CI workflow.</p>
+    <div class="fits">
+      <span><b>Screening</b> &mdash; reduced velocity V_r, lock-in band, safety factor</span>
+      <span><b>Frequency</b> &mdash; Euler-Bernoulli beam + string, 5 BCs, added mass</span>
+      <span><b>Fatigue</b> &mdash; 13 DNV-RP-C203 S-N curves, Miner sum</span>
+      <span><b>Tested</b> &mdash; unit + CLI + integration, dedicated CI workflow</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>VIV screening &amp; lock-in check</h3><div class="std">DNV-RP-C205 · DNV-RP-F105 · API RP 2A</div><p>Computes V_r = V/(f_n&middot;D), tests against the cross-flow lock-in band (default 4&ndash;8), and returns a safety factor, susceptibility flag and suppression recommendation &mdash; single/multiple modes and against a current profile.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/screening.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Vortex-shedding frequency (Strouhal)</h3><div class="std">Strouhal · DNV-RP-C205</div><p>f_s = St&middot;V/D with Reynolds- and surface-condition-based Strouhal selection (smooth 0.20, rough 0.21, straked 0.17, helical 0.16), plus current-profile sweeps with dominant and RMS shedding frequency.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/vortex_shedding.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>VIV fatigue damage (S-N)</h3><div class="std">DNV-RP-C203</div><p>Converts VIV amplitude (A/D) to bending stress range, then Palmgren-Miner damage and fatigue life across 13 tabulated DNV-RP-C203 curves (B1&ndash;W3), with optional thickness correction and cumulative multi-condition damage.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/fatigue.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Tubular-member VIV workflow</h3><div class="std">DNV-RP-C205 · Blevins</div><p>Config-driven natural-frequency, shedding-frequency and safety-factor run for tubular members, emitting CSV result tables &mdash; runnable end-to-end from the example input.yml.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/viv-analysis">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
   <section class="chan" id="installation">
     <div class="chanhead"><h2>Installation</h2><a class="onepager" href="pdf/sec-installation.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Marine-installation suitability &mdash; a crane-vessel pamphlet with lift envelopes,
@@ -319,6 +369,29 @@
     <div class="grid">
       <div class="card"><h3>Floating-wind sizing &amp; concept screening</h3><div class="std">semi-sub · spar · TLP · barge · IEA 15 MW</div><p>Parametric floater archetypes swept across site load cases and screened on stability, motion, modal separation and mooring offset &mdash; the closed-form first tier ahead of the licensed OrcaWave/OrcaFlex pass.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-sizing">Open &rarr;</a><a class="sec" href="pdf/wind-sizing.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/wind-sizing.html">API &rarr;</a></div></div>
       <div class="card"><h3>Floating-wind LCOE / TOTEX tradespace</h3><div class="std">LCOE · reliability · economies of scale</div><p>Levelised-cost engine with capex breakdown, availability / reliability scenarios, qualification levers and turbine- / farm-scale economies swept over the concept trade space.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics">Open &rarr;</a><a class="sec" href="pdf/wind-economics.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/wind-economics.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="field-development">
+    <div class="chanhead"><h2>Field development &mdash; concept screening, cost &amp; economics</h2></div>
+    <p class="lead">The oil-and-gas concept-select twin of the floating-wind LCOE work: screen an offshore
+    prospect across four decision axes (schedule, rig-days, driver-level CAPEX and lifecycle
+    intervention), rank host concepts (TLP / spar / semi / FPSO / subsea tieback), and run pre-tax
+    discounted-cash-flow economics on the survivors. All parameters are generic Gulf-of-Mexico defaults
+    from a reviewable YAML; every field is an INPUT &mdash; no reservoir, flow-assurance or structural
+    simulation is solved. Rig demand is reported in days, never $/day (live day-rates are a paid feed,
+    deliberately omitted).</p>
+    <div class="fits">
+      <span><b>Scope</b> &mdash; rule/parameter screening; rate &amp; well count are inputs</span>
+      <span><b>CAPEX</b> &mdash; GoM 10-field benchmark, 0.6-power scaling + depth factor</span>
+      <span><b>Economics</b> &mdash; DCF NPV/IRR/MIRR, 5 fiscal regimes, Arps decline</span>
+      <span><b>Honesty</b> &mdash; rig demand in days, not $/day</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Concept screening &amp; host selection</h3><div class="std">GoM benchmark params · SubseaIQ concept bands</div><p>Four-axis screen (schedule weeks, development rig-days, driver-level CAPEX, intervention index) over TLP / spar / semi / FPSO / subsea-tieback / dry-tree hosts, reusing the composite suitability score as a hard-gate prior. Parameters from a reviewable YAML.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/field_development">Open &rarr;</a></div></div>
+      <div class="card"><h3>CAPEX / OPEX estimators</h3><div class="std">GoM 10-field CAPEX benchmarks (2024 basis)</div><p>Low/base/high CAPEX ranges anchored to 10 GoM reference fields (Mars, Ursa, Perdido, Whale, Appomattox, Thunder Horse&hellip;), scaled by a 0.6-power capacity law and a depth factor, with distance-banded logic for subsea tiebacks. Paired annual OPEX estimator.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/field_development/capex_estimator.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Field economics (DCF)</h3><div class="std">DCF NPV/IRR/MIRR · 5 fiscal regimes</div><p>Pre-tax DCF returning NPV / IRR / MIRR / payback, with exponential, hyperbolic, harmonic or linear decline and an EUR-constrained decline-rate solver &mdash; over US / Norway / UK / Brazil / Nigeria fiscal regimes, plus a carbon-price sensitivity sweep.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/field_development/economics.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Field schematic generator &amp; reference catalog</h3><div class="std">layout schematics · benchmark field catalog</div><p>Generates field-development layout schematics and ships a structured catalog of worked reference developments (Johan Sverdrup, Liza, Mad Dog, Jack/St. Malo, Solveig) that ground the concept benchmarks.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/docs/domains/references/field_development/catalog">Open &rarr;</a></div></div>
     </div>
   </section>
 
@@ -391,6 +464,29 @@
     </div>
   </section>
 
+  <section class="chan" id="production-engineering">
+    <div class="chanhead"><h2>Production engineering &mdash; nodal analysis &amp; well deliverability</h2></div>
+    <p class="lead">A node-based well-performance engine: intersect an inflow (IPR) curve with a
+    vertical-lift (VLP) pressure traverse to find the operating point, then bound it with a confidence
+    band derived from the underlying test-quality score. The correlations are textbook (Vogel,
+    Fetkovich, Hagedorn-Brown, Beggs-Brill) and each is unit-tested against its published equation; the
+    distinctive layer is physics-based data reconciliation &mdash; GIGO divergence and nonlinearity flags
+    that catch a bad test record before it corrupts the nodal model. Distinct from the rod-pump dynacard
+    diagnostics under Artificial lift.</p>
+    <div class="fits">
+      <span><b>Inflow</b> &mdash; Vogel / Fetkovich / Klins-Clark / linear PI</span>
+      <span><b>Outflow</b> &mdash; Hagedorn-Brown &amp; Beggs-Brill traverse</span>
+      <span><b>Solver</b> &mdash; Brent-method IPR &cap; VLP operating point</span>
+      <span><b>QA</b> &mdash; physics-based GIGO divergence + nonlinearity flags</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Nodal-analysis solver</h3><div class="std">Vogel (1968) · Fetkovich (SPE 4529) · Hagedorn-Brown · Beggs-Brill</div><p>Finds the operating point by solving IPR(q)=VLP(q) with Brent's method, bracketing 0 to IPR absolute open flow. Returns rate, BHFP and a Green/Amber/Red confidence band (&plusmn;5/&plusmn;15/&plusmn;30%) keyed to test-quality score.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/nodal_solver.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>IPR &amp; VLP correlation library</h3><div class="std">Vogel · Fetkovich · Klins-Clark · Hagedorn-Brown · Beggs-Brill</div><p>Inflow models each expose flow_rate(Pwf) and its inverse; outflow uses an average-pressure single-pass traverse with Moody (Churchill / Colebrook-White) friction.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/production_engineering">Open &rarr;</a></div></div>
+      <div class="card"><h3>ESP pump hydraulics screen</h3><div class="std">ESP total-dynamic-head sizing · Hazen-Williams</div><p>Sizes an ESP from TDH (net lift + Hazen-Williams tubing friction + discharge head); stages = ceil(TDH / head-per-stage), brake power = stages &times; bhp &times; SG. Pass/fail on housing stage count, motor rating and operating range.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/esp_pump_hydraulics.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Test-to-model reconciliation</h3><div class="std">physics diagnosis · GIGO + nonlinearity flags</div><p>QC score &rarr; nonlinearity detection &rarr; GIGO comparison &rarr; confidence &rarr; recommendations. GIGO flags model/test rate divergence &ge;20% and diagnoses a physical cause; nonlinearity flags transient / slug / gas-lift-instability / high-watercut regimes.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/reconciliation_workflow.py">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
   <section class="chan" id="well">
     <div class="chanhead"><h2>Well construction &mdash; casing &amp; tubulars</h2><a class="onepager" href="pdf/sec-well.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Production-casing design checks on the API 5C3 / API 5CT product catalog &mdash; burst
@@ -399,6 +495,28 @@
     the NACE MR0175 sour-service screen and the connection-class tension efficiencies.</p>
     <div class="grid">
       <div class="card"><h3>Casing design explorer</h3><div class="std">API 5C3 · API 5CT · NACE MR0175</div><p>Eight candidate products checked against a reference frac'd well &mdash; per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2&quot; 23# P110 &rarr; 14,520 psi), the NACE sour-service screen and the connection-class table.</p><div class="actions"><a class="open" href="../well/casing-design-explorer.html">Open &rarr;</a><a class="sec" href="pdf/casing-design.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/casing-design.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="drilling-engineering">
+    <div class="chanhead"><h2>Drilling engineering &mdash; pore pressure, hydraulics &amp; well control</h2></div>
+    <p class="lead">Closed-form, license-free drilling-geomechanics and hydraulics engines: multi-method
+    pore-pressure prediction with explicit P10/P50/P90 uncertainty and a communicated safe mud-weight
+    window, swab/surge tripping limits, annular hydraulics and ECD, ROP models, and a real-time
+    dysfunction/kick detector. Every method is a published closed form (Eaton, Bowers, Burkhardt,
+    Bourgoyne-Young) with unit tests pinned to hand calcs and standard limiting cases &mdash; distinct
+    from the casing-design explorer under Well construction, which covers tubular strength.</p>
+    <div class="fits">
+      <span><b>Methods</b> &mdash; Eaton + Bowers pore pressure, Burkhardt swab/surge</span>
+      <span><b>Uncertainty</b> &mdash; P10/P50/P90 + kick/loss mud-weight window</span>
+      <span><b>Hydraulics</b> &mdash; Bingham annular ECD, Bourgoyne-Young ROP</span>
+      <span><b>License-free</b> &mdash; pure closed form, no proprietary solver</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Pore-pressure prediction with uncertainty</h3><div class="std">Eaton (1975) SPE 5544 · Bowers (1995) SPE 27488 · Mouchet &amp; Mitchell</div><p>Two independent predictors (Eaton log-departure, Bowers effective-stress/velocity) combined into a P10/P50/P90 distribution, rendered as a safe mud-weight window bounded by kick (pore) and loss (fracture) gradients.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/pore-pressure">Open &rarr;</a></div></div>
+      <div class="card"><h3>Swab / surge &amp; safe tripping speed</h3><div class="std">Burkhardt (1961) JPT · API RP 13D</div><p>Tripping swab/surge pressures from Burkhardt's mud clinging constant through the Bingham annular-friction model, converted to an equivalent mud-weight swing and solved for the max trip speed that keeps BHP inside the kick/loss window.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/swab-surge">Open &rarr;</a></div></div>
+      <div class="card"><h3>Wellbore hydraulics &amp; ROP models</h3><div class="std">API RP 13D (Bingham) · Bourgoyne-Young · Warren (1987) SPE-13919</div><p>Generalised annular hydraulics for arbitrary pipe-in-hole geometry (annular velocity, frictional pressure loss, ECD, cuttings-transport ratio) plus the Bourgoyne-Young 8-parameter and Warren power-law ROP models.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/well/drilling">Open &rarr;</a></div></div>
+      <div class="card"><h3>Real-time dysfunction &amp; kick detector</h3><div class="std">flow/pit kick criteria · stick-slip &amp; washout</div><p>Analyses a time-series window of surface parameters (WOB, RPM, torque, ROP, flow-in/out, pit volume, string weight) and flags stick-slip, washout, bit-balling, wellbore instability and kick events with severity and mitigation.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/well/drilling/dysfunction_detector.py">Open &rarr;</a></div></div>
     </div>
   </section>
 
@@ -473,6 +591,12 @@
         <tr><td>Whicker-Fehlner lift slope</td><td>rudder AR 1.80 (behind hull)</td><td class="val">a = 3.77 / rad</td><td class="der">6.13·AR/(AR+2.25)</td></tr>
         <tr><td>Turning circle (Nomoto)</td><td>SIROCCO 35° helm vs IMO 5·L</td><td class="val">TD = 3.21·L (PASS)</td><td class="der">R/L = 1/(K′·δ)</td></tr>
         <tr><td>Steerage threshold</td><td>laden, 20 kn beam wind, coasting</td><td class="val">U_min ≈ 2.9 kn</td><td class="der">rudder-vs-wind balance</td></tr>
+        <tr><td>Vortex-shedding frequency</td><td>f_s = St·V/D (D 0.5 m, V 1.0 m/s, St 0.2)</td><td class="val">0.40 Hz</td><td class="der">Strouhal relation</td></tr>
+        <tr><td>Vogel IPR absolute open flow</td><td>PI 2.0 bopd/psi, Pr 3000 psi</td><td class="val">q_max = 3 333.3 bopd</td><td class="der">Vogel q_max = PI·Pr/1.8</td></tr>
+        <tr><td>Burkhardt swab/surge factor</td><td>closed pipe, OD 5.0″ in 8.5″ hole</td><td class="val">0.529</td><td class="der">5.0²/(8.5²−5.0²)</td></tr>
+        <tr><td>Exponential production decline</td><td>D 0.10/yr, first post-plateau year</td><td class="val">0.9048 (= e⁻⁰·¹⁰)</td><td class="der">Arps q(t)=q_i·e^(−D·t)</td></tr>
+        <tr><td>Hotspot stress (linear extrapolation)</td><td>σ@0.4t 200 MPa, σ@1.0t 180 MPa</td><td class="val">σ_hs = 213.4 MPa</td><td class="der">DNV-RP-C203 Eq. 4.1 (1.67·200−0.67·180)</td></tr>
+        <tr><td>S-N curve lookup (DNV D, air)</td><td>curve id DNV-RP-C203:D:air</td><td class="val">log₁₀a = 12.164, m = 3.0</td><td class="pub">DNV-RP-C203 Table 2-1</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -482,7 +606,7 @@
 <footer>
   Built from validated digitalmodel solvers; 1-page PDFs and workflow-API artifacts by
   <code>scripts/capabilities/build_onepagers.py</code>. Method APIs live under
-  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, cathodic_protection, geotechnical, subsea/pipeline, fatigue}/</code>
+  <code>src/digitalmodel/{materials, well, naval_architecture, structural, asset_integrity, cathodic_protection, geotechnical, subsea, production_engineering, field_development, fatigue}/</code>
   and validation records under <code>docs/domains/</code>. Every strength / FFS result carries a
   <code>code_reference</code> naming its governing code, kept in sync with the
   <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md">codes register</a>
