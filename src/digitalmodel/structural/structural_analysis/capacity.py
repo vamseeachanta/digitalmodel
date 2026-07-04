@@ -11,6 +11,7 @@ from typing import Dict
 from .models import MaterialProperties, CapacityResult
 from .stress_calculator import StressCalculator
 from .buckling import PlateBucklingAnalyzer, ColumnBucklingAnalyzer
+from digitalmodel.codes import EUROCODE_3
 
 
 class MemberCapacityChecker:
@@ -63,7 +64,8 @@ class MemberCapacityChecker:
             utilization=util,
             governing_mode=governing,
             passes=util <= 1.0,
-            details={'N_pl': N_pl, 'N_u': N_u}
+            details={'N_pl': N_pl, 'N_u': N_u},
+            code_reference=EUROCODE_3.label,
         )
 
     def check_combined_loading(
@@ -126,5 +128,6 @@ class MemberCapacityChecker:
                 'util_My': util_My,
                 'util_Mz': util_Mz,
                 'chi': chi
-            }
+            },
+            code_reference=EUROCODE_3.label,
         )

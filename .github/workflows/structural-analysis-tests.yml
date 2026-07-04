@@ -12,6 +12,7 @@ on:
     paths:
       - 'src/digitalmodel/modules/structural_analysis/**'
       - 'tests/domains/structural_analysis/**'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -31,7 +32,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
     - name: Create virtual environment
       run: |
@@ -72,7 +76,10 @@ jobs:
         python-version: '3.11'
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
     - name: Create virtual environment
       run: |

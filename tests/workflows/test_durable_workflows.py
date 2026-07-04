@@ -1,3 +1,4 @@
+import json
 import math
 from pathlib import Path
 
@@ -190,6 +191,34 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results.sort_values("stress_range_MPa")[
             "allowable_cycles"
         ].is_monotonic_decreasing
+    elif workflow["id"] == "riser-fatigue":
+        summary = cfg["riser_fatigue"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+
+        results = pd.read_csv(results_path)
+        seg_summary = pd.read_csv(summary_path)
+
+        assert summary["governing_segment"] == "TDZ-sandwave"
+        assert 0.0 < summary["governing_damage"] < 1.0
+        assert summary["governing_wave_damage"] > 0.0
+        assert summary["governing_viv_damage"] > 0.0
+        assert summary["governing_damage"] == pytest.approx(
+            summary["governing_wave_damage"] + summary["governing_viv_damage"]
+        )
+        assert summary["governing_fatigue_life_years"] == pytest.approx(
+            summary["design_life_years"] / summary["governing_damage"]
+        )
+        assert summary["screening_status"] == (
+            "pass" if summary["governing_dff_margin"] >= 1.0 else "fail"
+        )
+        assert set(seg_summary["segment_id"]) == {"TDZ-sandwave", "hangoff"}
+        assert set(results["contribution"]) == {"wave", "viv"}
+        assert (results["stress_range_MPa"] > 0.0).all()
     elif workflow["id"] in {
         "mooring-fatigue-atlas-query",
         "synthetic-rope-atlas-query",
@@ -255,6 +284,18 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "drilling-riser-envelope-library-query":
+        result = cfg["parametric_query"]["result"]
+        # licensed-solver sparse library: covered operating mode interpolates
+        # offset x current x Hs x Tp; the DAF is a dimensionless multiplier >= 1.
+        assert result["in_range"] is True
+        assert result["response"] == "von_mises_daf"
+        assert result["value"] >= 1.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        # the STUB must self-identify at the query surface (#1346 governance fix)
+        assert result["provenance"]["solver"]["licensed"] is False
+        assert result["provenance"]["solver"]["version"] == "STUB"
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly
@@ -936,6 +977,35 @@ def test_workflow_registry(workflow, monkeypatch):
         assert row["transverse_force_N"] == pytest.approx(97417.402886)
         assert row["yaw_moment_Nm"] == pytest.approx(-4383783.129880)
         assert row["sign_convention"] == "port"
+    elif workflow["id"] == "naval-arch-maneuvering-envelope":
+        block = cfg["naval_arch"]["maneuvering_envelope"]
+        assert cfg["naval_arch"]["calculation"] == "maneuvering_envelope"
+        meta = block["result"]["metadata"]
+        rows = block["result"]["rows"]
+
+        # Full-form tanker is marginally course-unstable; IMO turning passes.
+        assert meta["course_stability_discriminant"] < 0
+        assert meta["rudder_lift_slope_per_rad"] == pytest.approx(3.77, abs=0.02)
+        assert meta["tactical_diameter_over_L"] == pytest.approx(3.2, abs=0.1)
+        assert meta["imo_turning"]["overall_pass"] is True
+
+        assert len(rows) == 2  # 1 loading x 2 current speeds
+        r3 = next(r for r in rows if r["current_speed_kn"] == pytest.approx(3.0))
+        r5 = next(r for r in rows if r["current_speed_kn"] == pytest.approx(5.0))
+
+        # 3 kn beam current holdable on the engine; 5 kn beyond authority -> tug.
+        assert r3["can_hold_heading"] is True
+        assert r5["can_hold_heading"] is False
+        assert r5["required_rudder_angle_deg"] is None
+        assert r3["utilisation"] < 1.0 < r5["utilisation"]
+        # Current yaw moment is quadratic in current speed.
+        assert r5["current_yaw_moment_MNm"] / r3["current_yaw_moment_MNm"] == pytest.approx(
+            (5.0 / 3.0) ** 2, rel=1e-6
+        )
+        # Frozen deterministic values.
+        assert r3["threshold_speed_engine_on_kn"] == pytest.approx(1.9054868442)
+        assert r3["current_yaw_moment_MNm"] == pytest.approx(37.864787106557)
+        assert r3["required_rudder_angle_deg"] == pytest.approx(33.407753387878)
     elif workflow["id"] == "rudder-stock-torque":
         row = cfg["naval_arch"]["rudder_stock_torque"]["result"]["rows"][0]
         assert cfg["naval_arch"]["calculation"] == "rudder_stock_torque"
@@ -1033,6 +1103,29 @@ def test_workflow_registry(workflow, monkeypatch):
         )
         assert result["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "casing-design":
+        summary = cfg["casing_design"]["summary"]
+        assert summary["product_count"] == 8
+        assert summary["passing_products"] == [
+            '5.5" 20# P110',
+            '5.5" 23# P110',
+            '5.5" 23# Q125',
+        ]
+        golden = next(p for p in summary["products"]
+                      if p["label"] == '5.5" 23# P110')
+        # Barlow worked example from the source deck: 14,520 psi API-rounded.
+        assert golden["burst_rating_psi"] == pytest.approx(14520.0)
+        assert golden["collapse_rating_psi"] == pytest.approx(14540.0)
+        assert golden["body_yield_lbf"] == pytest.approx(729000.0)
+        assert golden["max_frac_surface_pressure_psi"] == pytest.approx(
+            11616.0)
+        assert golden["passes_all"] is True
+        sour = summary["sour_service"]
+        # 100 ppm at 8,500 psia -> 0.85 psia partial pressure -> sour.
+        assert sour["is_sour"] is True
+        assert sour["h2s_partial_psia"] == pytest.approx(0.85)
+        assert "P110" in sour["acceptable_grades"]  # 180 F >= 175 F window
+        assert "Q125" not in sour["acceptable_grades"]  # needs >= 225 F
     elif workflow["id"] == "well-bore-design":
         block = cfg["well_bore_design"]
         summary = block["summary"]
@@ -1316,6 +1409,130 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["governing_check"] == "pump_stages"
         assert result["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "fowt-mooring":
+        result = cfg["fowt_mooring"]["result"]
+        assert result["mbr_limit_m"] == pytest.approx(4.5)
+        # governing bend radius comfortably exceeds the MBR limit -> passes
+        assert result["governing_bend_radius_m"] > result["mbr_limit_m"]
+        assert result["passes"] is True
+        assert result["margin_m"] == pytest.approx(
+            result["governing_bend_radius_m"] - result["mbr_limit_m"]
+        )
+    elif workflow["id"] == "fowt-mooring-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range point -> served interpolated utilisation, no escalation
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "lifting-lug-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range light-load / thick-plate point -> served utilisation, passes
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "esp-pump-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range moderate-rate / shallow-lift point -> served utilisation, passes
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "weather-window-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # value class: interpolated planned-operability percentage, no verdict
+        assert result["in_range"] is True
+        assert result["response"] == "operability_pct"
+        # operability is a percentage in (0, 100)
+        assert 0.0 < result["value"] < 100.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        assert "screening estimate" in result["disclaimer"].lower()
+        assert result["provenance"]["atlas_id"]
+    elif workflow["id"] == "span-rectification-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range short-span / moderate-current point -> span within allowable,
+        # served utilisation < 1 -> screen passes (no rectification needed)
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "mudmat-bearing-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range moderate-load / firm-clay point -> served utilisation, passes
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["screening_status"] == "pass"
+        assert 0.0 < result["value"] < 1.0
+    elif workflow["id"] == "inspection-planning-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # in-range point -> served interpolated remaining life (plain value).
+        # _handle_value has no screening_status; assert what it actually returns.
+        assert result["in_range"] is True
+        assert result["response"] == "remaining_life_years"
+        assert "screening_status" not in result
+        assert math.isfinite(result["value"]) and result["value"] > 0.0
+        band = result["confidence"]["band"]
+        assert band[0] <= result["value"] <= band[1]
+    elif workflow["id"] == "riser-fatigue-atlas-query":
+        result = cfg["parametric_query"]["result"]
+        # annual-damage class: interpolate annual damage -> life + DFF margin.
+        assert result["in_range"] is True
+        assert result["response"] == "fatigue_life_years"
+        assert result["annual_damage"] > 0.0
+        assert result["value"] > 0.0  # fatigue life (years)
+        assert result["screening_status"] in {"pass", "fail"}
+    elif workflow["id"] == "ffs-metal-loss":
+        # workflow-API adoption row (workspace-hub#3285): the `ffs` route parks the
+        # #1066 indexed 16-key FFSAssessmentResult.to_dict() on cfg["ffs"].
+        result = cfg["ffs"]
+        assert result["component_id"] == "LINE-001"
+        assert result["assessment_type"] == "LML"  # 2-cell deep local thin spot
+        assert result["verdict"] == "ACCEPT"
+        # the measurement-sufficiency catch: an L1-ACCEPT that is under-measured
+        assert result["sufficiency_status"] == "TAKE_MORE"
+        assert result["passes"] is True
+        assert result["t_nominal_in"] == pytest.approx(0.5)
+        assert result["t_measured_min_in"] == pytest.approx(0.3)
+        assert result["folias_factor"] >= 1.0
+        assert set(result) == {
+            "component_id", "assessment_type", "level_reached", "t_nominal_in",
+            "t_min_in", "t_measured_min_in", "t_measured_avg_in", "fca_in", "rsf",
+            "rsf_a", "folias_factor", "remaining_life_yr", "verdict",
+            "rerated_pressure_psi", "sufficiency_status", "passes", "code_reference",
+        }
+    elif workflow["id"] == "buckling-parametric":
+        # workflow-API adoption row (workspace-hub#3285-OWNED): the
+        # buckling_parametric route writes a byte-stable results.json.
+        result = cfg["buckling_parametric"]
+        assert result["standard"] == "DNV-RP-C201"
+        assert result["n_cases"] == 8  # 2 grades x 2 thk x 1 width x 1 length x 2 loads
+        results_json = Path(result["outputs"]["results_json"])
+        if not results_json.is_absolute():
+            results_json = REPO_ROOT / results_json
+        payload = json.loads(results_json.read_text())
+        assert payload["meta"]["n_cases"] == 8
+        assert payload["meta"]["standard"] == "DNV-RP-C201"
+        # timestamp=None => meta.generated_at omitted => byte-stable golden
+        assert "generated_at" not in payload["meta"]
+        assert len(payload["index"]) == 8
+        assert set(payload["meta"]["grades"]) == {"Grade A", "AH36"}
+    elif workflow["id"] == "mooring-design-mbl":
+        # workflow-API adoption row (workspace-hub#3285): NEW `mooring_mbl` basename
+        # (the reserved `mooring` arm is untouched). DNV-OS-E301 SF + citation sidecar.
+        result = cfg["mooring_mbl"]
+        assert result["condition"] == "intact"
+        assert result["safety_factor"] == pytest.approx(1.67)
+        assert set(result["results"]) == {"R4_84mm_chain", "160mm_polyester"}
+        for seg in result["results"].values():
+            assert seg["utilisation_with_sf"] == pytest.approx(
+                seg["utilisation_no_sf"] * result["safety_factor"], rel=1e-3
+            )
+        citations = result["citations"]
+        assert len(citations) == 1
+        assert citations[0]["code_id"] == "DNV-OS-E301"
+        assert citations[0]["publisher"] == "DNV"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
     else:

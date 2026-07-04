@@ -1,0 +1,16 @@
+basename: riser_fatigue
+
+riser_fatigue:
+  design_life_years: 25.0
+  dff: 10.0
+  sn_curve:
+    curve: F1
+    environment: seawater_cp
+  output_dir: results
+  segments: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

@@ -12,6 +12,11 @@ from digitalmodel.naval_architecture.rudder_stock_torque import (
     validate_rudder_stock_torque_input,
     write_rudder_stock_torque_results,
 )
+from digitalmodel.naval_architecture.maneuvering_envelope_workflow import (
+    run_maneuvering_envelope_sweep,
+    validate_maneuvering_envelope_input,
+    write_maneuvering_envelope_results,
+)
 from digitalmodel.naval_architecture.yaw_moment import (
     run_yaw_moment_sweep,
     validate_yaw_moment_input,
@@ -67,6 +72,7 @@ class NavalArchitectureWorkflow:
         calculation = workflow_cfg.get("calculation")
         handlers = {
             "yaw_moment": self._run_yaw_moment,
+            "maneuvering_envelope": self._run_maneuvering_envelope,
             "rudder_stock_torque": self._run_rudder_stock_torque,
             "damage_stability": self._run_damage_stability,
             "platform_stability": self._run_platform_stability,
@@ -96,6 +102,31 @@ class NavalArchitectureWorkflow:
         cfg["naval_arch"] = {
             "calculation": "yaw_moment",
             "yaw_moment": {
+                **input_payload,
+                "result": result,
+                "artifacts": _stringify_paths(manifest),
+            },
+        }
+        cfg.setdefault("outputs", {})["directory"] = str(output_dir)
+        return cfg
+
+    def _run_maneuvering_envelope(
+        self,
+        cfg: dict[str, Any],
+        workflow_cfg: dict[str, Any],
+    ) -> dict[str, Any]:
+        input_payload = workflow_cfg["maneuvering_envelope"]
+        config = validate_maneuvering_envelope_input(input_payload)
+        result = run_maneuvering_envelope_sweep(config)
+        output_dir = _resolve_dir(cfg, config.output_directory)
+        manifest = write_maneuvering_envelope_results(
+            result,
+            output_dir,
+            table_formats=config.table_formats,
+        )
+        cfg["naval_arch"] = {
+            "calculation": "maneuvering_envelope",
+            "maneuvering_envelope": {
                 **input_payload,
                 "result": result,
                 "artifacts": _stringify_paths(manifest),

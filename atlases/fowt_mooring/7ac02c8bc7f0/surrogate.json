@@ -1,0 +1,29 @@
+{
+  "basename": "fowt_mooring",
+  "atlas_id": "7ac02c8bc7f0",
+  "physics": "utilization_threshold",
+  "response": "mbr_utilisation",
+  "axes": [
+    {
+      "name": "watch_circle_radius",
+      "scale": "linear",
+      "grid": [
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        25.0,
+        30.0
+      ]
+    },
+    {
+      "name": "mbr_limit_m",
+      "scale": "linear",
+      "grid": [
+        4.0,
+        5.0,
+        6.0
+      ]
+    }
+  ]
+}

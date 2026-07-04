@@ -324,15 +324,253 @@ def _viv_safety_factor_inline(point: dict[str, Any]) -> float:
     return float(sf["safety_factor_inline"].min())
 
 
+def _span_rectification_utilisation(point: dict[str, Any]) -> float:
+    """DNV-RP-F105 free-span screening utilisation (as-surveyed span / allowable
+    span) for one (actual_span_length_m, current_velocity_ms) point, at a fixed
+    reference pipe + soil. UC <= 1 passes (span within allowable, no
+    rectification); UC > 1 fails and triggers the equal-sub-span support layout.
+    The allowable span is the SpanAllowableLength the span_rectification workflow
+    calls; the response is the raw screen ratio that crosses 1.0."""
+    from digitalmodel.subsea.pipeline.free_span.models import (
+        BoundaryConditionF105,
+        EnvironmentType,
+        PipeSpanInput,
+    )
+    from digitalmodel.subsea.pipeline.free_span.span_allowable_length import (
+        SpanAllowableLength,
+    )
+
+    inp = PipeSpanInput(
+        od_m=0.2731,
+        wt_m=0.0127,
+        span_length_m=34.0,
+        e_modulus_pa=207e9,
+        steel_density_kgm3=7850.0,
+        content_density_kgm3=900.0,
+        water_density_kgm3=1025.0,
+        current_velocity_ms=float(point["current_velocity_ms"]),
+        wave_velocity_ms=0.0,
+        seabed_gap_m=0.5,
+        bc=BoundaryConditionF105("pinned-pinned"),
+        sag_m=0.0,
+        structural_damping=0.005,
+        hydrodynamic_damping=0.010,
+        sn_curve_class="F",
+        environment=EnvironmentType("seawater_cp"),
+        gamma_on_IL=1.1,
+        gamma_on_CF=1.3,
+        gamma_k=1.15,
+    )
+    allowable = SpanAllowableLength(inp, submerged_weight_N_m=850.0).max_span_m()
+    return float(point["actual_span_length_m"]) / allowable
+
+
+def _fowt_mbr_utilisation(point: dict[str, Any]) -> float:
+    """FOWT watch-circle vs dynamic-cable MBR utilisation (mbr_limit / governing
+    bend radius) for one (watch_circle_radius, mbr_limit_m) point, at a fixed
+    reference cable geometry. UC <= 1 passes (governing radius >= MBR limit)."""
+    from digitalmodel.orcaflex.mooring_design_fowt import (
+        DynamicCableConfig,
+        check_watch_circle_vs_cable,
+    )
+
+    cable = DynamicCableConfig(
+        suspended_length=320.0,
+        hang_off_elevation=90.0,
+        nominal_horizontal_span=260.0,
+        mbr_limit_m=float(point["mbr_limit_m"]),
+    )
+    result = check_watch_circle_vs_cable(float(point["watch_circle_radius"]), cable)
+    return float(result.mbr_limit_m / result.governing_bend_radius_m)
+
+
+def _lifting_lug_utilisation(point: dict[str, Any]) -> float:
+    """AISC ASD lifting-lug / padeye governing utilisation (max of pin-bearing,
+    net-tension, shear-tear-out) for one (static_load_kN, plate_thickness_mm)
+    point, at a fixed reference padeye geometry. UC <= 1 passes."""
+    from digitalmodel.lifting_lug.workflow import design_load_kn, lug_checks
+
+    factored = design_load_kn(float(point["static_load_kN"]), 2.0, 1.1)
+    checks = lug_checks(
+        design_load_kn=factored,
+        total_thickness_mm=float(point["plate_thickness_mm"]),
+        pin_diameter_mm=75.0,
+        hole_diameter_mm=80.0,
+        outer_radius_mm=110.0,
+        yield_strength_mpa=355.0,
+    )
+    return float(max(c.utilization for c in checks))
+
+
+def _esp_pump_utilisation(point: dict[str, Any]) -> float:
+    """ESP governing screening utilisation (max of pump-stages / motor-power /
+    rate-within-range checks) for one (flow_rate_m3_per_day, dynamic_fluid_level_m)
+    point, at a fixed reference well + pump. UC <= 1 passes."""
+    from digitalmodel.production_engineering.esp_pump_hydraulics import size_esp
+
+    result = size_esp(
+        flow_rate_m3_per_day=float(point["flow_rate_m3_per_day"]),
+        dynamic_fluid_level_m=float(point["dynamic_fluid_level_m"]),
+        pump_setting_depth_m=2500.0,
+        wellhead_pressure_kpa=2000.0,
+        specific_gravity=0.85,
+        tubing_inner_diameter_m=0.076,
+        head_per_stage_m=6.0,
+        bhp_per_stage_hp=0.5,
+        max_stages=400,
+        motor_rating_hp=250.0,
+        min_rate_m3_per_day=600.0,
+        max_rate_m3_per_day=2000.0,
+        hazen_williams_c=120.0,
+    )
+    return float(max(c["utilization"] for c in result.checks))
+
+
+# Fixed reference hindcast baked into the weather-window atlas: a deterministic
+# one-year (3 h step) Hs record with a seasonal mean + synoptic (~weekly) and
+# fast modulation. A real screen replaces this with the site hindcast; the
+# record is a per-location property of the atlas, not an axis (mirrors the way
+# spectral_fatigue bakes its stress gain). No RNG -> reproducible across numpy
+# versions, so a refresh rebuilds an identical atlas.
+_WEATHER_WINDOW_TIME_STEP_HOURS = 3.0
+
+
+@lru_cache(maxsize=1)
+def _weather_window_reference_hs():
+    import numpy as np
+
+    n = 2920  # 365 d at 3 h steps
+    t = np.arange(n)
+    seasonal = 2.2 + 1.0 * np.sin(2.0 * math.pi * (t / n))  # winter-high mean
+    synoptic = 0.8 * np.sin(2.0 * math.pi * t / 56.0 + 0.7)  # ~weekly systems
+    fast = 0.4 * np.sin(2.0 * math.pi * t / 9.0 + 1.3)
+    hs = seasonal + synoptic + fast + 0.6 * np.abs(np.sin(0.013 * t + 0.2))
+    return np.clip(hs, 0.2, None)
+
+
+def _weather_window_operability_pct(point: dict[str, Any]) -> float:
+    """Planned-operability percentage for a marine operation needing a
+    continuous below-limit window of ``required_window_hours`` at an operational
+    ``hs_limit_m``, against a FIXED reference hindcast baked into the atlas.
+
+    operability = workability * P(window >= required), where workability is the
+    fraction of time Hs <= the limit and window durations are taken exponential
+    with the persistence mean window, so P(W >= D) = exp(-D / mean_window)
+    (DNV-RP-H103 / Noble Denton 0027 persistence). Both factors rise with the Hs
+    limit and the required-window factor falls with duration, so the surface is
+    smooth and monotone in both axes — atlas-able from two scalar axes with the
+    hindcast held fixed (an Hs time series is never an atlas axis)."""
+    from digitalmodel.orcaflex.weather_window import analyse_persistence
+
+    hs = _weather_window_reference_hs()
+    ts = _WEATHER_WINDOW_TIME_STEP_HOURS
+    persistence = analyse_persistence(hs, float(point["hs_limit_m"]), ts)
+    total_hours = len(hs) * ts
+    workability = persistence.total_hours_below / total_hours
+    mean_window = persistence.mean_window_hours
+    if mean_window <= 0.0:
+        return 0.0
+    return 100.0 * workability * math.exp(
+        -float(point["required_window_hours"]) / mean_window
+    )
+
+
+def _mudmat_bearing_utilisation(point: dict[str, Any]) -> float:
+    """Mudmat governing screening utilisation (max of bearing + sliding) for one
+    (vertical_load_kN, undrained_shear_strength_kpa) point, at a fixed reference
+    foundation geometry / soil weight / horizontal load (the example values).
+    UC <= 1 passes (allowable capacity, with FoS, covers the applied load)."""
+    from digitalmodel.geotechnical.mudmat import mudmat_bearing_capacity
+
+    fos = 2.0
+    applied_v = float(point["vertical_load_kN"])
+    applied_h = 200.0
+    result = mudmat_bearing_capacity(
+        width_b_m=6.0,
+        length_l_m=8.0,
+        embedment_depth_m=0.5,
+        condition="undrained",
+        submerged_unit_weight_kn_m3=6.0,
+        vertical_load_kn=applied_v,
+        moment_knm=0.0,
+        undrained_shear_strength_kpa=float(point["undrained_shear_strength_kpa"]),
+    )
+    allowable_v = result.vertical_capacity_kn / fos
+    allowable_h = result.sliding_capacity_kn / fos
+    bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
+    sliding_util = (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+    return float(max(bearing_util, sliding_util))
+
+
+def _inspection_remaining_life_years(point: dict[str, Any]) -> float:
+    """API 510/570/653 remaining life (yr) = corrosion_allowance / corrosion_rate
+    for one (corrosion_rate_mm_yr, current_wall_thickness_mm) point, at a fixed
+    reference t_min and code-max interval. Plain positive scalar served directly
+    (life from rate + allowance); the half-life / code-cap decision is applied at
+    query time, not baked into the grid."""
+    from digitalmodel.asset_integrity.inspection_planning import plan_inspection
+
+    plan = plan_inspection(
+        current_mm=float(point["current_wall_thickness_mm"]),
+        required_mm=6.0,
+        code_max_interval_years=10.0,
+        corrosion_rate=float(point["corrosion_rate_mm_yr"]),
+    )
+    return float(plan.remaining_life_years)
+
+
+def _riser_fatigue_annual_damage(point: dict[str, Any]) -> float:
+    """Combined wave + VIV annual fatigue damage (DNV-RP-C203) for the governing
+    touchdown-zone segment, for one (scf, viv_stress_scale) point. The reference
+    stress histogram + VIV cases are baked fixed (a per-riser property, like the
+    spectral_fatigue stress gain); scf scales the wave stress and viv_stress_scale
+    scales the VIV amplitudes. Evaluated at a 1-year basis -> annual damage rate
+    (design_life / dff are applied at query time by the annual-damage handler)."""
+    from digitalmodel.riser_fatigue.workflow import _evaluate_segment
+
+    viv_scale = float(point["viv_stress_scale"])
+    segment = {
+        "id": "TDZ-sandwave",
+        "material": "API 5L X65",
+        "outer_diameter_mm": 273.1,
+        "wall_thickness_mm": 22.2,
+        "wave": {
+            "scf": float(point["scf"]),
+            "histogram_period_years": 1.0,
+            "stress_ranges_MPa": [6.0, 10.0, 16.0, 24.0, 36.0],
+            "cycles": [4.0e6, 6.0e5, 45000.0, 2500.0, 90.0],
+        },
+        "viv_cases": [
+            {"stress_range_MPa": 9.0 * viv_scale, "frequency_hz": 0.42,
+             "exposure_fraction": 0.02},
+            {"stress_range_MPa": 12.0 * viv_scale, "frequency_hz": 0.55,
+             "exposure_hours_per_year": 40.0},
+        ],
+    }
+    _, summary = _evaluate_segment(
+        segment, design_life_years=1.0, dff=10.0,
+        default_curve="F1", default_env="seawater_cp",
+    )
+    return float(summary["total_damage"])
+
+
 RESPONSE_FUNCS: dict[str, Callable[..., float]] = {
     "mooring_fatigue": _mooring_fatigue_damage,
     "synthetic_rope_mooring_fatigue": _synthetic_rope_damage,
     "spectral_fatigue": _spectral_fatigue_annual_damage,
     "fpso_mooring_full": _fpso_max_line_tension_N,
+    "fowt_mooring": _fowt_mbr_utilisation,
+    "lifting_lug": _lifting_lug_utilisation,
+    "esp_pump_hydraulics": _esp_pump_utilisation,
+    "weather_window": _weather_window_operability_pct,
+    "mudmat_bearing_capacity": _mudmat_bearing_utilisation,
+    "inspection_planning": _inspection_remaining_life_years,
+    "riser_fatigue": _riser_fatigue_annual_damage,
     "viv_analysis": _viv_safety_factor_inline,
     "code_check": _code_check_utilisation,
     "rao_tabulation": _rao_heave,
     "free_span": _free_span_utilisation,
+    "span_rectification": _span_rectification_utilisation,
     "pile_capacity": _pile_capacity_kn,
     "anchor_capacity": _suction_anchor_capacity_kn,
 }

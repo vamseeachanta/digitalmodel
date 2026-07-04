@@ -32,6 +32,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
+  - module: corrosion
+    entry_point: src/digitalmodel/corrosion/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/corrosion/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#corrosion
   - module: data_models
     entry_point: src/digitalmodel/data_models/
     maturity: development
@@ -92,12 +98,36 @@ modules:
     owner_wiki: docs/domains/marine_ops/
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
+  - module: floating_wind
+    entry_point: src/digitalmodel/floating_wind/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/floating_wind/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#floating_wind
+  - module: hydrostatics
+    entry_point: src/digitalmodel/hydrostatics/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/hydrostatics/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrostatics
+  - module: mooring_resilience
+    entry_point: src/digitalmodel/mooring_resilience/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_resilience
   - module: naval_architecture
     entry_point: src/digitalmodel/naval_architecture/
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/naval_architecture/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#naval_architecture
+  - module: reporting
+    entry_point: src/digitalmodel/reporting/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/reporting/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#reporting
   - module: nde
     entry_point: src/digitalmodel/nde/
     maturity: development
@@ -122,6 +152,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/power/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#power
+  - module: production_chemistry
+    entry_point: src/digitalmodel/production_chemistry/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/production_chemistry/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#production_chemistry
   - module: production_engineering
     entry_point: src/digitalmodel/production_engineering/
     maturity: production
@@ -194,3 +230,129 @@ modules:
     owner_wiki: docs/domains/workflows/
     key_tests: [tests/workflows/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#workflows
+  - module: base_configs
+    entry_point: src/digitalmodel/base_configs/
+    maturity: stub
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#base_configs
+  - module: code_checks
+    entry_point: src/digitalmodel/code_checks/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/code_checks/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#code_checks
+  - module: compare_tool
+    entry_point: src/digitalmodel/compare_tool/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/compare_tool/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
+  - module: installation
+    entry_point: src/digitalmodel/installation/
+    maturity: beta
+    owner_wiki: docs/domains/installation/
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#installation
+  - module: lifting_lug
+    entry_point: src/digitalmodel/lifting_lug/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#lifting_lug
+  - module: mooring_fatigue
+    entry_point: src/digitalmodel/mooring_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_fatigue
+  - module: parametric
+    entry_point: src/digitalmodel/parametric/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/parametric/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#parametric
+  - module: parametrics
+    entry_point: src/digitalmodel/parametrics/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/parametrics/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#parametrics
+  - module: pipelay
+    entry_point: src/digitalmodel/pipelay/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/pipelay/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#pipelay
+  - module: rao_spectral_fatigue
+    entry_point: src/digitalmodel/rao_spectral_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+  - module: riser_database
+    entry_point: src/digitalmodel/riser_database/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_database/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_database
+  - module: riser_fatigue
+    entry_point: src/digitalmodel/riser_fatigue/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_fatigue/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_fatigue
+  - module: spectral_fatigue
+    entry_point: src/digitalmodel/spectral_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#spectral_fatigue
+  - module: synthetic_rope_mooring_fatigue
+    entry_point: src/digitalmodel/synthetic_rope_mooring_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#synthetic_rope_mooring_fatigue
+  - module: usecase_registry
+    entry_point: src/digitalmodel/usecase_registry/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/test_usecase_registry.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#usecase_registry
+  - module: vessel_seakeeping
+    entry_point: src/digitalmodel/vessel_seakeeping/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_seakeeping
+  - module: weather_window
+    entry_point: src/digitalmodel/weather_window/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#weather_window
+  - module: well_access
+    entry_point: src/digitalmodel/well_access/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/well_access/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#well_access
+  - module: common
+    entry_point: src/digitalmodel/common/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/common/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#common
+  - module: materials
+    entry_point: src/digitalmodel/materials/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/materials/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
+  - module: workflow_api
+    entry_point: src/digitalmodel/workflow_api/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/workflow_api/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#workflow_api

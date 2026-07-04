@@ -42,46 +42,74 @@ from ._compat import _FLAT_TO_GROUP, install_group_redirect, warn_flat_import
 
 install_group_redirect()
 
-# Expose modules at top level for backward compatibility with engine.py imports
-try:
-    from digitalmodel.hydrodynamics.aqwa.aqwa_router import Aqwa
-    from digitalmodel.subsea.mooring_analysis import MooringDesigner
-    from digitalmodel.solvers.orcaflex.orcaflex import OrcaFlex
-    from digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics import CTHydraulics
-    from digitalmodel.structural.pipe_capacity.pipe_capacity import PipeCapacity
-    from digitalmodel.subsea.pipeline.pipeline import Pipeline
-    from digitalmodel.hydrodynamics.rao_analysis.rao_analysis import RAOAnalysis
-    from digitalmodel.signal_processing.time_series.time_series_analysis import TimeSeriesAnalysis
-    from digitalmodel.infrastructure.transformation.transformation import Transformation
-    from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
-    from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
-except Exception as e:
-    # Optional compatibility imports should not make the package unimportable.
-    Aqwa = None
-    MooringDesigner = None
-    OrcaFlex = None
-    CTHydraulics = None
-    PipeCapacity = None
-    Pipeline = None
-    RAOAnalysis = None
-    TimeSeriesAnalysis = None
-    Transformation = None
-    vertical_riser = None
-    VIVAnalysis = None
-    warnings.warn(f"Could not import some digitalmodel modules: {e}")
-
-try:
-    from digitalmodel.specialized.digitalmarketing.digitalmarketing import DigitalMarketing
-except Exception:
-    DigitalMarketing = None
+# Backward-compatibility class re-exports, resolved LAZILY (PEP 562 __getattr__).
+#
+# These were previously imported eagerly here, which dragged the entire heavy
+# hydrodynamics / subsea / solver stack (xarray, scipy, scrapy, sympy, ...) into
+# EVERY `import digitalmodel` — Python runs this __init__ in full before any
+# submodule import, so a bare import took ~580s and every single-file pytest paid
+# it (issue #1142). Mapping name -> (module, attribute) and importing on first
+# access keeps `import digitalmodel` sub-second while `from digitalmodel import
+# OrcaFlex` (and `digitalmodel.OrcaFlex`) still work, resolved on demand.
+_LAZY_COMPAT_ATTRS = {
+    "Aqwa": ("digitalmodel.hydrodynamics.aqwa.aqwa_router", "Aqwa"),
+    "MooringDesigner": ("digitalmodel.subsea.mooring_analysis", "MooringDesigner"),
+    "OrcaFlex": ("digitalmodel.solvers.orcaflex.orcaflex", "OrcaFlex"),
+    "CTHydraulics": (
+        "digitalmodel.marine_ops.ct_hydraulics.ct_hydraulics",
+        "CTHydraulics",
+    ),
+    "PipeCapacity": (
+        "digitalmodel.structural.pipe_capacity.pipe_capacity",
+        "PipeCapacity",
+    ),
+    "Pipeline": ("digitalmodel.subsea.pipeline.pipeline", "Pipeline"),
+    "RAOAnalysis": (
+        "digitalmodel.hydrodynamics.rao_analysis.rao_analysis",
+        "RAOAnalysis",
+    ),
+    "TimeSeriesAnalysis": (
+        "digitalmodel.signal_processing.time_series.time_series_analysis",
+        "TimeSeriesAnalysis",
+    ),
+    "Transformation": (
+        "digitalmodel.infrastructure.transformation.transformation",
+        "Transformation",
+    ),
+    "vertical_riser": (
+        "digitalmodel.subsea.vertical_riser.vertical_riser",
+        "vertical_riser",
+    ),
+    "VIVAnalysis": ("digitalmodel.subsea.viv_analysis.viv_analysis", "VIVAnalysis"),
+    "DigitalMarketing": (
+        "digitalmodel.specialized.digitalmarketing.digitalmarketing",
+        "DigitalMarketing",
+    ),
+}
 
 
 def __getattr__(name):
-    """Redirect flat module access to grouped paths.
+    """Lazily resolve backward-compat re-exports and flat module redirects.
 
-    Catches `from digitalmodel import X` where X is a module that
-    has been moved to digitalmodel.<group>.X.
+    Catches both the compat class re-exports (``_LAZY_COMPAT_ATTRS``, imported on
+    first access — issue #1142) and ``from digitalmodel import X`` where X is a
+    module that has been moved to ``digitalmodel.<group>.X``.
     """
+    if name in _LAZY_COMPAT_ATTRS:
+        import importlib
+
+        module_path, attr = _LAZY_COMPAT_ATTRS[name]
+        try:
+            value = getattr(importlib.import_module(module_path), attr)
+        except Exception as e:  # noqa: BLE001
+            # Preserve the prior soft-fail contract: an optional/broken module
+            # must not make `from digitalmodel import X` raise — it yields None.
+            warnings.warn(f"Could not import digitalmodel.{name}: {e}")
+            value = None
+        # Cache on the module so __getattr__ is not re-invoked for this name.
+        globals()[name] = value
+        return value
+
     if name in _FLAT_TO_GROUP:
         import importlib
 
@@ -95,3 +123,7 @@ def __getattr__(name):
             warn_flat_import(name, group)
             return mod
     raise AttributeError(f"module 'digitalmodel' has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__) | set(_LAZY_COMPAT_ATTRS))

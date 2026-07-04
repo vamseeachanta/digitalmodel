@@ -55,6 +55,30 @@ data/vessels/
 | `support` | AHTS / PSV / CTV / SOV·W2W + metocean criteria | Operability limits |
 | `tanker` | VLCC / Suezmax / Aframax / LNGC / LPGC | Extends OCIMF coefficient corpus |
 
+## Vessel type taxonomy (OSV classes)
+
+`scope` is the coarse analysis bucket; `vessel_type` is the finer class within it.
+For offshore-support vessels prefer one of the controlled-vocabulary slugs below
+(also in `SCHEMA.yaml → vessel_type_vocabulary`) so the free-text field stays
+groupable. Non-OSV hulls use a descriptive slug (e.g. `semisub-crane-vessel`,
+`fpso-turret`, `drillship`).
+
+| Slug | Class | Role | Typical scope |
+|---|---|---|---|
+| `ahts` | Anchor Handling Tug Supply | Tow MODUs, position floating facilities, set/recover heavy mooring anchors in deep water | `support` |
+| `psv` | Platform Supply Vessel | Open-deck workhorse: deck cargo, drilling muds/fluids, equipment and personnel to platforms | `support` |
+| `mpsv` | Multipurpose Support Vessel | Flexible logistics + modular equipment spaces, cranes, helideck for varied subsea ops | `support` / `install` |
+| `dsv` | Diving Support Vessel | Saturation diving systems for deep subsea maintenance, repair, pipeline tie-ins | `support` / `install` |
+| `csv` | Construction Support Vessel | High-capacity cranes, A-frames, moonpools for subsea construction, well intervention, deepwater deployment | `install` |
+| `sov` | Service Operation Vessel | Offshore-wind floating accommodation + storage for turbine technicians (walk-to-work) | `support` |
+
+The boundary between MPSV / DSV / CSV is functional, not sharp — a hull carrying a
+heavy crane *and* a sat-diving spread is classed by its dominant mission. The
+naval-architecture **particulars** (LOA, beam, draft, displacement, block
+coefficient) and **mass properties** (LCG/VCG/TCG, kxx/kyy/kzz) that distinguish
+these hulls are captured per record under the layers below — the slug is only the
+mission label.
+
 ## Data layers (per vessel record)
 
 1. **Particulars** — LOA, LBP, beam, depth, draft(s), displacement, block coeff.

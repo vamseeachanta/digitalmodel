@@ -221,11 +221,19 @@ def run_l01_smoke_test() -> bool:
 
 def test_l00_smoke():
     """Pytest wrapper for L00 smoke test."""
+    import pytest
+
+    # OrcFxAPI is a licensed C-extension absent on CI runners; skip there. See #949.
+    pytest.importorskip("OrcFxAPI", reason="OrcFxAPI not available (licensed); see #949")
     assert run_l00_smoke_test(), "L00 smoke test failed"
 
 
 def test_l01_smoke():
     """Pytest wrapper for L01 smoke test."""
+    import pytest
+
+    # OrcFxAPI is a licensed C-extension absent on CI runners; skip there. See #949.
+    pytest.importorskip("OrcFxAPI", reason="OrcFxAPI not available (licensed); see #949")
     assert run_l01_smoke_test(), "L01 smoke test failed"
 
 

@@ -1,0 +1,51 @@
+# Floating-wind LCOE/TOTEX workflow — reproduces the Wood/OREC base case (~$184/MWh)
+# and a few cost-driver sensitivities.
+#
+#   uv run python -m digitalmodel examples/workflows/floating-wind-economics/input.yml
+#
+# Public references only (Wood/Whooley 2021, NREL 2019, ORE Catapult); no client data.
+basename: floating_wind_economics
+
+floating_wind_economics:
+  project:
+    name: wood_orec_base_case_2025
+    turbine_rating_mw: 15.0
+    turbine_count: 33          # -> 495 MW
+    capacity_factor: 0.50
+    water_depth_m: 100.0
+    distance_to_shore_km: 100.0
+    fabrication_region: Europe
+    financial:
+      discount_rate: 0.06
+      inflation_rate: 0.03
+      design_life_years: 25
+    capex:
+      turbine: 2356.0
+      substructure: 2278.0
+      mooring: 707.0
+      array_cable: 393.0
+      export_cable: 628.0
+      installation: 1100.0
+      development: 392.0
+    opex_per_kw_year: 140.0
+    decomex_per_kw: 250.0
+
+  # Optional: API 17N failure-rate reduction (deck slide 17).
+  reliability:
+    failure_rate_reduction: 0.50   # -> ~$162/MWh
+
+  # Optional: cost-driver sensitivities (deck slides 7, 15).
+  sensitivities:
+    - name: design_life_30yr
+      changes:
+        - {path: financial.design_life_years, value: 30}
+    - name: substructure_-50pct
+      changes:
+        - {path: capex.substructure, scale: 0.50}
+    - name: turbine_-25pct
+      changes:
+        - {path: capex.turbine, scale: 0.75}
+
+output:
+  summary_json: results/floating_wind_economics/summary.json
+  data_sheet_html: results/floating_wind_economics/lcoe_data_sheet.html

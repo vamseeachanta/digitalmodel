@@ -1,17 +1,23 @@
 """Drilling riser stackup calculations — tension, wall thickness, effective tension.
 
-Implements tension requirements per 2H-TNE-0050-03 §3.1 and API RP 16Q §3.3,
-wall thickness per Barlow's formula, and effective tension along riser string.
+Implements tension requirements (the 1.25 top-tension factor per
+2H-TNE-0050-03 §3.1, a project default; f_wt/f_bt per API RP 16Q, 1st Ed.
+1993, §3.3), wall thickness per Barlow's formula, and effective tension along
+the riser string.
 """
 
 from __future__ import annotations
 
 # ---------------------------------------------------------------------------
-# Tension safety factors (2H-TNE-0050-03 §3.1, API RP 16Q §3.3)
+# Tension safety factors
+#   F_WT / F_BT — API RP 16Q, 1st Ed. 1993 (reaffirmed 2001), §3.3; also
+#     resolvable as cited values via riser_database.getters (#1246).
+#   SAFETY_FACTOR_TENSION (1.25) — no corresponding provision identified in
+#     API RP 16Q; retained as a project/methodology default, uncited.
 # ---------------------------------------------------------------------------
-SAFETY_FACTOR_TENSION: float = 1.25  # [-] minimum top tension safety factor
-F_WT_DEFAULT: float = 1.05  # [-] submerged weight tolerance factor (§3.1.2)
-F_BT_DEFAULT: float = 0.96  # [-] buoyancy loss and tolerance factor (§3.1.2)
+SAFETY_FACTOR_TENSION: float = 1.25  # [-] min top-tension factor (project default, uncited)
+F_WT_DEFAULT: float = 1.05  # [-] submerged weight tolerance factor (API RP 16Q §3.3)
+F_BT_DEFAULT: float = 0.96  # [-] buoyancy loss and tolerance factor (API RP 16Q §3.3)
 
 # ---------------------------------------------------------------------------
 # Wall thickness (Barlow's formula)
@@ -25,7 +31,9 @@ def top_tension_required(
 ) -> float:
     """Calculate minimum required top tension for drilling riser.
 
-    Per 2H-TNE-0050-03 §3.1 and API RP 16Q §3.3.
+    Per 2H-TNE-0050-03 §3.1 (project methodology). The default 1.25
+    ``dynamic_factor`` has no API RP 16Q provision — see the module header;
+    the 16Q-sourced factors are f_wt/f_bt in :func:`minimum_slip_ring_tension`.
 
     Parameters
     ----------
@@ -112,6 +120,11 @@ def minimum_slip_ring_tension(
     f_bt: float = F_BT_DEFAULT,
 ) -> float:
     """Minimum tension at the slip ring per 2H-TNE-0050-03 Eq 3.2.
+
+    This T_SRmin formula matches API RP 16Q (1st Ed. 1993) §3.3.2; the f_wt /
+    f_bt factors are the 16Q §3.3 tension factors (parity with
+    ``riser_database.getters.get_tension_weight_factor`` /
+    ``get_buoyancy_tension_factor``, #1246).
 
     T_SRmin = Ws * fwt - Bn * fbt + Ai * (dm * Hm - dw * Hw)
 

@@ -98,11 +98,19 @@ def _staleness(atlas: Atlas) -> str | None:
 
 
 def _provenance(atlas: Atlas) -> dict[str, Any]:
-    return {
+    prov = {
         "atlas_id": atlas.atlas_id,
         "code_version": atlas.provenance.get("code_version"),
         "standards": atlas.provenance.get("standards"),
     }
+    # Licensed-solver libraries (#831/#1346): surface the solver block so a
+    # STUB self-identifies at the query-result surface — a synthetic placeholder
+    # (solver.licensed False, version "STUB") must never read like a real cached
+    # solver value. (Additive; also closes this gap for the orcaflex/diffraction
+    # libraries.)
+    if atlas.provenance.get("kind") == "library":
+        prov["solver"] = atlas.provenance.get("solver")
+    return prov
 
 
 def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
@@ -287,16 +295,40 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "synthetic_rope_mooring_fatigue": _handle_fatigue_bins,
     "code_check": _handle_utilisation,
     "free_span": _handle_utilisation,
+    # DNV-RP-F105 free-span screening utilisation (as-surveyed / allowable span):
+    # the atlas predicts utilisation directly, threshold at 1.0 (#982 pattern).
+    "span_rectification": _handle_utilisation,
+    # FOWT watch-circle vs dynamic-cable MBR utilisation (parametrics atlas #975):
+    # the atlas predicts utilisation directly, threshold at 1.0.
+    "fowt_mooring": _handle_utilisation,
+    # AISC lifting-lug / padeye governing utilisation atlas (#979 pattern).
+    "lifting_lug": _handle_utilisation,
+    # ESP pump-hydraulics governing screening utilisation atlas (#979 pattern).
+    "esp_pump_hydraulics": _handle_utilisation,
+    # Mudmat bearing-capacity governing screening utilisation atlas (#979 pattern).
+    "mudmat_bearing_capacity": _handle_utilisation,
+    # API 510/570/653 remaining-life (yr) plain-value atlas (#979 pattern):
+    # interpolate the scalar remaining life directly, report it with a band.
+    "inspection_planning": _handle_value,
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,
     "spectral_fatigue": _handle_annual_damage,
+    # Combined wave+VIV riser fatigue annual-damage atlas (#979 pattern): the
+    # atlas predicts annual damage; the handler derives life + DFF margin.
+    "riser_fatigue": _handle_annual_damage,
     "fpso_mooring_full": _handle_value,
     "viv_analysis": _handle_value,
+    # weather-window planned-operability % atlas (#979 pattern): a plain value,
+    # workability x persistence against a fixed reference hindcast.
+    "weather_window": _handle_value,
     # licensed-solver sparse library (#801): exact-match the case key, then
     # interpolate freq x heading within it; an uncovered case escalates.
     "diffraction_library": _handle_value,
     "orcaflex_library": _handle_value,
+    # drilling-riser von-Mises dynamic-amplification library (#1346): exact-match
+    # the operating-mode key, interpolate offset x current x Hs x Tp within.
+    "drilling_riser_envelope": _handle_value,
 }
 
 

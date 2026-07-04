@@ -1,0 +1,53 @@
+basename: riser_fatigue
+
+# Combined wave + VIV fatigue screening for a Steel Catenary Riser (SCR).
+# Offline-analytical and licence-free: each segment accumulates Palmgren-Miner
+# damage from a long-term wave stress-range histogram AND one or more
+# narrow-band VIV cases, both evaluated against a DNV-RP-C203 bilinear S-N
+# curve. The OrcaFlex / Shear7 stress front-ends that produce these histograms
+# are a deferred licensed follow-on (see README); here the response is supplied.
+riser_fatigue:
+  design_life_years: 25.0
+  dff: 10.0
+  sn_curve:
+    curve: F1
+    environment: seawater_cp
+  output_dir: results
+  segments:
+    - id: TDZ-sandwave
+      material: API 5L X65
+      outer_diameter_mm: 273.1
+      wall_thickness_mm: 22.2
+      # Wave (first/second-order) long-term stress-range histogram (annual).
+      wave:
+        scf: 1.15
+        histogram_period_years: 1.0
+        stress_ranges_MPa: [6.0, 10.0, 16.0, 24.0, 36.0]
+        cycles: [4.0e6, 6.0e5, 45000.0, 2500.0, 90.0]
+      # Narrow-band VIV cases (current-driven lock-in), annual exposure.
+      viv_cases:
+        - stress_range_MPa: 9.0
+          frequency_hz: 0.42
+          exposure_fraction: 0.02
+        - stress_range_MPa: 12.0
+          frequency_hz: 0.55
+          exposure_hours_per_year: 40.0
+    - id: hangoff
+      material: API 5L X65
+      outer_diameter_mm: 273.1
+      wall_thickness_mm: 25.4
+      wave:
+        scf: 1.10
+        histogram_period_years: 1.0
+        stress_ranges_MPa: [5.0, 9.0, 14.0, 21.0]
+        cycles: [5.0e6, 4.0e5, 25000.0, 900.0]
+      viv_cases:
+        - stress_range_MPa: 8.0
+          frequency_hz: 0.38
+          exposure_fraction: 0.015
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

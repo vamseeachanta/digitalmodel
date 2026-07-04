@@ -29,25 +29,29 @@ from digitalmodel.solvers.orcaflex.orcaflex_converter_enhanced import OrcaFlexCo
 TEST_EXAMPLES_DIR = Path(__file__).resolve().parents[3] / "docs/domains/orcaflex/examples/raw"
 
 
+# Module-level fixtures: shared by TestOrcaFlexConverterEnhanced, TestPerformance
+# and TestCLI (class-scoped fixture definitions are invisible to sibling classes).
+@pytest.fixture
+def temp_output_dir():
+    """Create temporary output directory for tests."""
+    temp_dir = tempfile.mkdtemp()
+    yield Path(temp_dir)
+    # Cleanup
+    shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@pytest.fixture
+def sample_dat_files():
+    """Get sample .dat files from repository examples."""
+    if TEST_EXAMPLES_DIR.exists():
+        dat_files = list(TEST_EXAMPLES_DIR.glob("**/*.dat"))[:5]  # First 5 files
+        return dat_files
+    else:
+        pytest.skip("Example files not found")
+
+
 class TestOrcaFlexConverterEnhanced:
     """Test suite for enhanced OrcaFlex converter."""
-
-    @pytest.fixture
-    def temp_output_dir(self):
-        """Create temporary output directory for tests."""
-        temp_dir = tempfile.mkdtemp()
-        yield Path(temp_dir)
-        # Cleanup
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-    @pytest.fixture
-    def sample_dat_files(self):
-        """Get sample .dat files from repository examples."""
-        if TEST_EXAMPLES_DIR.exists():
-            dat_files = list(TEST_EXAMPLES_DIR.glob("**/*.dat"))[:5]  # First 5 files
-            return dat_files
-        else:
-            pytest.skip("Example files not found")
 
     @pytest.fixture
     def converter_real(self, temp_output_dir):

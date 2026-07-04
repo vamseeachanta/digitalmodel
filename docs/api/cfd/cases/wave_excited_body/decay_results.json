@@ -1,0 +1,74 @@
+{
+  "summary": {
+    "issue": "#1332",
+    "resolves": "#1324 near-resonance open finding",
+    "reference": {
+      "omega_n": 7.476323821659569,
+      "period_n": 0.8404110706088793,
+      "zeta_radiation": 0.10385896025890538,
+      "a33": 90.6076033628206,
+      "b33": 327.06653947379164
+    },
+    "forced_rao_near_resonance": 0.744,
+    "zeta_mean": 0.12616373552028848,
+    "zeta_amplitude_independent": true,
+    "omega_n_mean": 7.44986353260532,
+    "omega_n_rel_error_vs_reference": -0.0035392112066615633,
+    "predicted_peak_rao": 1.8255877694346005,
+    "inviscid_peak_rao": 2.2008190538840093
+  },
+  "points": [
+    {
+      "offset_m": 0.015,
+      "fit": {
+        "z_eq": 0.3993372564191722,
+        "amp0": 0.014149855048401794,
+        "zeta": 0.12314526434284256,
+        "zeta_logdec": 0.10978828977393436,
+        "omega_d": 7.445350192563037,
+        "omega_n": 7.502453953042762,
+        "period_d": 0.8439072904127053,
+        "n_extrema": 11,
+        "rms": 0.00017975706466165638
+      },
+      "attribution": {
+        "omega_n_cfd": 7.502453953042762,
+        "omega_n_reference": 7.476323821659569,
+        "omega_n_rel_error": 0.003495050777160311,
+        "zeta_cfd": 0.12314526434284256,
+        "zeta_radiation": 0.10385896025890538,
+        "zeta_excess_ratio": 1.1856970649028182,
+        "predicted_peak_rao": 1.8688392799903064,
+        "inviscid_peak_rao": 2.2008190538840093,
+        "forced_rao_near_resonance": 0.744,
+        "peak_rao_prediction_error": 1.511880752675143
+      }
+    },
+    {
+      "offset_m": 0.03,
+      "fit": {
+        "z_eq": 0.39891570456447806,
+        "amp0": 0.03201313816894094,
+        "zeta": 0.12918220669773442,
+        "zeta_logdec": 0.10884552341653352,
+        "omega_d": 7.335290427660915,
+        "omega_n": 7.39727311216788,
+        "period_d": 0.8565693981912553,
+        "n_extrema": 10,
+        "rms": 0.00040180993203351844
+      },
+      "attribution": {
+        "omega_n_cfd": 7.39727311216788,
+        "omega_n_reference": 7.476323821659569,
+        "omega_n_rel_error": -0.010573473190483289,
+        "zeta_cfd": 0.12918220669773442,
+        "zeta_radiation": 0.10385896025890538,
+        "zeta_excess_ratio": 1.2438234156754684,
+        "predicted_peak_rao": 1.7842617565297996,
+        "inviscid_peak_rao": 2.2008190538840093,
+        "forced_rao_near_resonance": 0.744,
+        "peak_rao_prediction_error": 1.3982012856583328
+      }
+    }
+  ]
+}

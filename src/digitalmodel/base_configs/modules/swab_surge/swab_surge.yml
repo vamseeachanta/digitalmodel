@@ -1,0 +1,10 @@
+basename: swab_surge
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+swab_surge: {}

@@ -1,0 +1,56 @@
+{
+  "validation_case": "wave_excited_body",
+  "issue": "#1302",
+  "reference": "long-wave limit: freely heaving small body is a wave follower, heave RAO -> 1 (Newman 1977, ch. 6)",
+  "citations": [
+    "$FOAM_TUTORIALS/multiphase/overInterDyMFoam/floatingBody (ESI v2312) \u2014 overset mesh-merge/zoneID recipe and settings",
+    "$FOAM_TUTORIALS/multiphase/interFoam/laminar/waves/stokesII (ESI v2312) \u2014 wave generation/absorption, verified in #1170",
+    "Newman (1977), Marine Hydrodynamics \u2014 quasi-static long-wave response",
+    "Goda & Suzuki (1976) \u2014 incident/reflected split at the upstream gauge array"
+  ],
+  "wave": {
+    "H_m": 0.05,
+    "T_s": 3.0,
+    "depth_m": 0.4,
+    "wavelength_m": 5.7651268052574425,
+    "lambda_over_beam": 28.82563402628721
+  },
+  "body": {
+    "beam_m": 0.2,
+    "height_m": 0.2,
+    "density_kg_m3": 500.0,
+    "mass_kg": 0.8,
+    "draft_m": 0.1,
+    "x_m": 13.0,
+    "heave_natural_period_s": 0.6343739849219413
+  },
+  "tank": {
+    "length_m": 20.0,
+    "height_m": 0.7,
+    "mesh": [
+      375,
+      1,
+      49
+    ],
+    "component_mesh": [
+      50,
+      1,
+      42
+    ]
+  },
+  "gauges_x_m": [
+    2.0,
+    8.0,
+    8.8,
+    9.6,
+    10.4,
+    11.2,
+    12.0,
+    18.0
+  ],
+  "tolerances": {
+    "rao": 0.15,
+    "draft": 0.05,
+    "period": 0.05
+  }
+}
