@@ -81,6 +81,16 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "response_correction.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_response_correction.py",
     REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "response_residual_pairs.json",
+    # twin C #1375 drift-off screen: the analytical module, its banded generic
+    # config (vessel particulars — a fingerprinting surface), the stub build
+    # script, tests + synthetic fixture. Gated so any future edit is caught (same
+    # vessel/identity caveat — enforced by the config-banding + fixture identity-key
+    # assertions in test_drift_off.py + human review).
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "drift_off.py",
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "drift_off_config.yml",
+    REPO_ROOT / "scripts" / "parametric" / "build_drilling_riser_drift_off_library.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_drift_off.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "drift_off_sample.json",
 )
 
 
@@ -157,7 +167,7 @@ def test_new_analytical_code_is_gated():
     scanned = {p.name for p in _PUBLIC_ARTIFACTS}
     for required in ("envelope.py", "conductor_response.py", "riser_response.py",
                      "telemetry_inputs.py", "response_correction.py", "model.py",
-                     "skill.py"):
+                     "skill.py", "drift_off.py"):
         assert required in scanned, f"{required} is not gated by the provenance tripwire"
 
 
@@ -206,3 +216,34 @@ def test_no_provenance_tokens_in_operability_atlas():
             if re.search(rf"\b{num}\b", raw):
                 violations.append((path.name, f"project-number {num}"))
     assert not violations, f"provenance tokens leaked into the operability atlas: {violations}"
+
+
+def _drift_off_atlas_text_files():
+    """Resolve the drift-off STUB library's text files DYNAMICALLY via default.txt
+    (the atlas id is a content hash; never hardcode it) — #1375, mirrors the
+    operability-atlas scan."""
+    base = REPO_ROOT / "atlases" / "drilling_riser_drift_off"
+    default = base / "default.txt"
+    if not default.is_file():
+        return []
+    atlas_dir = base / default.read_text().strip()
+    return [atlas_dir / "manifest.yaml", atlas_dir / "surrogate.json"]
+
+
+def test_no_provenance_tokens_in_drift_off_atlas():
+    """The committed drift-off stub library's text files must carry no
+    private-registry name/number token. In-context gate (skips standalone)."""
+    names, numbers = _provenance_tokens()
+    violations = []
+    for path in _drift_off_atlas_text_files():
+        if not path.is_file():
+            continue
+        raw = path.read_text()
+        normalized = _normalize(raw)
+        for token in names:
+            if _normalize(token) in normalized:
+                violations.append((path.name, f"name-token #{sorted(names).index(token)}"))
+        for num in numbers:
+            if re.search(rf"\b{num}\b", raw):
+                violations.append((path.name, f"project-number {num}"))
+    assert not violations, f"provenance tokens leaked into the drift-off atlas: {violations}"
