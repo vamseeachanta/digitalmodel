@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drag-anchor holding-capacity explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:780px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ select{font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:80px}
+ .row{display:grid;grid-template-columns:130px 1fr 130px;align-items:center;gap:10px;margin:9px 0}
+ .row .name{font-size:12.5px;font-weight:700;color:var(--ink);text-align:right}
+ .track{position:relative;background:var(--soft);border:1px solid var(--line);border-radius:7px;height:26px;overflow:hidden}
+ .fill{position:absolute;top:0;left:0;height:100%;border-radius:6px 0 0 6px;
+       background:linear-gradient(90deg,var(--teal),var(--navy));transition:width .12s}
+ .glab{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;
+       color:#fff;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+ .uval{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;text-align:right;color:var(--navy)}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:8px}.foot a{color:var(--teal)}
+ .cap{font-size:12px;color:var(--muted);margin:2px 0 8px}
+</style></head><body>
+<h1>Drag-anchor holding capacity &mdash; explorer</h1>
+<p class="sub">Ultimate holding capacity of drag-embedment anchors on the DNV-RP-E302 efficiency
+method &mdash; the seabed side of a mooring problem, sizing the anchors the mooring-resilience
+screen assumes. Pick a seabed soil and drag the anchor (dry) weight to compare anchor types.
+Every value is a live <code>drag_anchor_capacity</code> evaluation.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label>Seabed soil</label><select id="soil"></select>
+    <label for="w">Anchor weight</label>
+    <input type="range" id="w" min="0" max="0" step="1">
+    <span class="wval" id="wval"></span>
+  </div>
+  <div class="cap">Ultimate holding capacity by anchor type (bar = kN); efficiency = holding / weight.</div>
+  <div id="bars"></div>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_anchor_holding_explorer.py</code> from
+<code>src/digitalmodel/geotechnical/anchors.py</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/anchors.py">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"soils":["sand","soft_clay","stiff_clay"],"anchors":["stevpris","bruce"],"efficiency":{"sand|stevpris":40.0,"sand|bruce":38.0,"soft_clay|stevpris":30.0,"soft_clay|bruce":28.0,"stiff_clay|stevpris":20.0,"stiff_clay|bruce":18.0},"weight_kn":[50.0,75.0,100.0,125.0,150.0,175.0,200.0,225.0,250.0,275.0,300.0,325.0,350.0,375.0,400.0,425.0,450.0,475.0,500.0],"standard":"DNV-RP-E302 (drag-embedment anchors)","labels":{"soft_clay":"soft clay","stiff_clay":"stiff clay","sand":"sand","stevpris":"Stevpris","bruce":"Bruce"}},"series":{"sand|stevpris":[{"w":50.0,"h":2000.0},{"w":75.0,"h":3000.0},{"w":100.0,"h":4000.0},{"w":125.0,"h":5000.0},{"w":150.0,"h":6000.0},{"w":175.0,"h":7000.0},{"w":200.0,"h":8000.0},{"w":225.0,"h":9000.0},{"w":250.0,"h":10000.0},{"w":275.0,"h":11000.0},{"w":300.0,"h":12000.0},{"w":325.0,"h":13000.0},{"w":350.0,"h":14000.0},{"w":375.0,"h":15000.0},{"w":400.0,"h":16000.0},{"w":425.0,"h":17000.0},{"w":450.0,"h":18000.0},{"w":475.0,"h":19000.0},{"w":500.0,"h":20000.0}],"sand|bruce":[{"w":50.0,"h":1900.0},{"w":75.0,"h":2850.0},{"w":100.0,"h":3800.0},{"w":125.0,"h":4750.0},{"w":150.0,"h":5700.0},{"w":175.0,"h":6650.0},{"w":200.0,"h":7600.0},{"w":225.0,"h":8550.0},{"w":250.0,"h":9500.0},{"w":275.0,"h":10450.0},{"w":300.0,"h":11400.0},{"w":325.0,"h":12350.0},{"w":350.0,"h":13300.0},{"w":375.0,"h":14250.0},{"w":400.0,"h":15200.0},{"w":425.0,"h":16150.0},{"w":450.0,"h":17100.0},{"w":475.0,"h":18050.0},{"w":500.0,"h":19000.0}],"soft_clay|stevpris":[{"w":50.0,"h":1500.0},{"w":75.0,"h":2250.0},{"w":100.0,"h":3000.0},{"w":125.0,"h":3750.0},{"w":150.0,"h":4500.0},{"w":175.0,"h":5250.0},{"w":200.0,"h":6000.0},{"w":225.0,"h":6750.0},{"w":250.0,"h":7500.0},{"w":275.0,"h":8250.0},{"w":300.0,"h":9000.0},{"w":325.0,"h":9750.0},{"w":350.0,"h":10500.0},{"w":375.0,"h":11250.0},{"w":400.0,"h":12000.0},{"w":425.0,"h":12750.0},{"w":450.0,"h":13500.0},{"w":475.0,"h":14250.0},{"w":500.0,"h":15000.0}],"soft_clay|bruce":[{"w":50.0,"h":1400.0},{"w":75.0,"h":2100.0},{"w":100.0,"h":2800.0},{"w":125.0,"h":3500.0},{"w":150.0,"h":4200.0},{"w":175.0,"h":4900.0},{"w":200.0,"h":5600.0},{"w":225.0,"h":6300.0},{"w":250.0,"h":7000.0},{"w":275.0,"h":7700.0},{"w":300.0,"h":8400.0},{"w":325.0,"h":9100.0},{"w":350.0,"h":9800.0},{"w":375.0,"h":10500.0},{"w":400.0,"h":11200.0},{"w":425.0,"h":11900.0},{"w":450.0,"h":12600.0},{"w":475.0,"h":13300.0},{"w":500.0,"h":14000.0}],"stiff_clay|stevpris":[{"w":50.0,"h":1000.0},{"w":75.0,"h":1500.0},{"w":100.0,"h":2000.0},{"w":125.0,"h":2500.0},{"w":150.0,"h":3000.0},{"w":175.0,"h":3500.0},{"w":200.0,"h":4000.0},{"w":225.0,"h":4500.0},{"w":250.0,"h":5000.0},{"w":275.0,"h":5500.0},{"w":300.0,"h":6000.0},{"w":325.0,"h":6500.0},{"w":350.0,"h":7000.0},{"w":375.0,"h":7500.0},{"w":400.0,"h":8000.0},{"w":425.0,"h":8500.0},{"w":450.0,"h":9000.0},{"w":475.0,"h":9500.0},{"w":500.0,"h":10000.0}],"stiff_clay|bruce":[{"w":50.0,"h":900.0},{"w":75.0,"h":1350.0},{"w":100.0,"h":1800.0},{"w":125.0,"h":2250.0},{"w":150.0,"h":2700.0},{"w":175.0,"h":3150.0},{"w":200.0,"h":3600.0},{"w":225.0,"h":4050.0},{"w":250.0,"h":4500.0},{"w":275.0,"h":4950.0},{"w":300.0,"h":5400.0},{"w":325.0,"h":5850.0},{"w":350.0,"h":6300.0},{"w":375.0,"h":6750.0},{"w":400.0,"h":7200.0},{"w":425.0,"h":7650.0},{"w":450.0,"h":8100.0},{"w":475.0,"h":8550.0},{"w":500.0,"h":9000.0}]}};
+const M = DATA.meta, W = M.weight_kn, LAB = M.labels;
+const lab = k => LAB[k] || k;
+const spec = document.getElementById('spec');
+spec.innerHTML = [['Standard', M.standard], ['Anchor types', M.anchors.length],
+  ['Soils', M.soils.length], ['Weight range', W[0]+'–'+W[W.length-1]+' kN']]
+  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+const selS = document.getElementById('soil');
+M.soils.forEach(s=>selS.add(new Option(lab(s), s)));
+const slider = document.getElementById('w');
+slider.max = W.length-1;
+
+function maxH(){ let mx=0; for(const k in DATA.series) for(const p of DATA.series[k]) if(p.h>mx) mx=p.h; return mx; }
+const MX = maxH();
+
+function render(){
+  const s = selS.value, idx = +slider.value, w = W[idx];
+  document.getElementById('wval').textContent = w.toLocaleString()+' kN';
+  document.getElementById('bars').innerHTML = M.anchors.map(a=>{
+    const key = s+'|'+a, ser = DATA.series[key];
+    if(!ser) return '';
+    const p = ser[idx], e = M.efficiency[key];
+    const pct = (p.h/MX*100).toFixed(1);
+    return `<div class="row"><div class="name">${lab(a)}</div>
+      <div class="track"><div class="fill" style="width:${pct}%"></div>
+      <div class="glab">${p.h.toLocaleString()} kN &middot; eff ${e}</div></div>
+      <div class="uval">${p.h.toLocaleString()} kN</div></div>`;
+  }).join('');
+}
+selS.value = M.soils.includes('soft_clay') ? 'soft_clay' : M.soils[0];
+let start = W.indexOf(200.0); if(start<0) start = Math.floor(W.length/2);
+slider.value = start; render();
+[selS, slider].forEach(el=>el.addEventListener('input', render));
+</script>
+</body></html>
