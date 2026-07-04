@@ -60,6 +60,13 @@ from .wave_forecast import (
     surface_elevation,
     synthesize_directional_forecast,
 )
+from .top_tension import (
+    LumpedLine,
+    TensionResult,
+    displacement_transmissibility,
+    dynamic_tension,
+    force_transmissibility,
+)
 from .wave_source import jonswap_spectrum, synthesize_forecast
 from .workflow import router
 
@@ -116,4 +123,9 @@ __all__ = [
     "surface_elevation",
     "WaveFieldSource",
     "SyntheticWaveField",
+    "LumpedLine",
+    "TensionResult",
+    "dynamic_tension",
+    "displacement_transmissibility",
+    "force_transmissibility",
 ]
