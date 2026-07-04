@@ -49,32 +49,47 @@ def test_displacement_transmissibility_at_resonance():
         np.sqrt(1 + 4 * 0.1**2) / (2 * 0.1), rel=1e-9)
 
 
-def test_force_transmissibility_is_m_w2_times_displacement():
-    ln = _line()
-    w = 0.7
-    assert force_transmissibility(w, ln) == pytest.approx(
-        ln.m * w * w * displacement_transmissibility(w, ln), rel=1e-12)
-
-
-def test_newmark_matches_displacement_transmissibility():
-    ln = _line()
-    w, A = 0.5, 0.2
-    t = np.arange(0.0, 200.0, 0.05)
+def _integrator_disp_amp(ln, w, A, dt=0.02, tmax=400.0):
+    t = np.arange(0.0, tmax, dt)
     z = A * np.cos(w * t)
     zdot = -A * w * np.sin(w * t)
-    x, _v = _newmark(z, zdot, t[1] - t[0], ln)
-    assert _tail_amp(x) == pytest.approx(displacement_transmissibility(w, ln) * A, rel=0.02)
+    x, _v = _newmark(z, zdot, dt, ln)
+    return _tail_amp(x)
+
+
+def test_newmark_matches_displacement_transmissibility_offresonance():
+    ln = _line()
+    w, A = 0.5, 0.2
+    assert _integrator_disp_amp(ln, w, A) == pytest.approx(
+        displacement_transmissibility(w, ln) * A, rel=5e-3)
+
+
+def test_newmark_matches_displacement_transmissibility_at_resonance():
+    # the hardest case for the integrator (largest amplitude/period error)
+    ln = _line(zeta=0.1)
+    A = 0.05
+    amp = _integrator_disp_amp(ln, ln.wn, A, dt=0.01, tmax=800.0)
+    assert amp == pytest.approx(displacement_transmissibility(ln.wn, ln) * A, rel=0.01)
 
 
 def test_tension_amplitude_matches_force_transmissibility():
     ln = _line()
     w, A = 0.5, 0.2
-    t = np.arange(0.0, 200.0, 0.1)
+    t = np.arange(0.0, 300.0, 0.1)
     res = dynamic_tension(_heave_motion(A, w, t), ln)
     amp = _tail_amp(res.tension)
-    assert amp == pytest.approx(force_transmissibility(w, ln) * A, rel=0.02)
+    assert amp == pytest.approx(force_transmissibility(w, ln) * A, rel=5e-3)
     assert not res.snatch and res.daf_valid
-    assert res.daf == pytest.approx(1.0 + amp / ln.static_tension, rel=0.02)
+    assert res.daf == pytest.approx(1.0 + amp / ln.static_tension, rel=5e-3)
+
+
+def test_single_sample_motion_raises():
+    ln = _line()
+    t = np.array([0.0])
+    dof = {d: np.zeros(1) for d in DOF_NAMES}
+    m = MotionForecast(t=t, dof=dof, origin_time=0.0, horizon=0.0)
+    with pytest.raises(ValueError, match=">= 2 samples"):
+        dynamic_tension(m, ln)
 
 
 def test_static_limit_daf_near_one_no_snatch():

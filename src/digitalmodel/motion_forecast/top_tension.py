@@ -148,16 +148,25 @@ def dynamic_tension(motion, line: LumpedLine, *, top_offset=(0.0, 0.0, 0.0)) -> 
     (``snatch``). Refines the time grid to ``<= Tn/20`` for integrator accuracy
     near a short natural period.
     """
+    if motion.t.size < 2 or not (float(motion.t[-1]) > float(motion.t[0])):
+        raise ValueError("dynamic_tension needs a motion with >= 2 samples spanning t1 > t0")
     z_coarse = vertical_motion_at(motion, top_offset)
     zdot_coarse = time_derivative(motion.t, z_coarse)
     t0, t1 = float(motion.t[0]), float(motion.t[-1])
 
     tn = 2.0 * np.pi / line.wn
-    dt_grid = (t1 - t0) / max(1, motion.t.size - 1)
+    dt_grid = (t1 - t0) / (motion.t.size - 1)
     dt = min(dt_grid, tn / 20.0)
     n = max(2, int(np.ceil((t1 - t0) / dt)) + 1)
+    if n > 2_000_000:
+        raise ValueError(
+            f"refined grid too large ({n} steps): line too stiff (Tn={tn:.3g}s) "
+            f"or record too long for this SDOF screen"
+        )
     t = np.linspace(t0, t1, n)
     z = np.interp(t, motion.t, z_coarse)
+    # Interpolate the coarse derivative (not re-differentiate the kinked interpolant);
+    # when refinement triggers, the screen's fidelity ceiling is the input sampling.
     zdot = np.interp(t, motion.t, zdot_coarse)
 
     x, v = _newmark(z, zdot, t[1] - t[0], line)
