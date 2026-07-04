@@ -62,6 +62,15 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "conductor_response.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_envelope.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_conductor_response.py",
+    # twin A #1373 telemetry ingestion: pure reducer over a synthetic fixture. It
+    # carries no provenance tokens by construction; gated (module + test + fixture)
+    # so any future edit that introduces one is caught. NOTE: the tripwire's tokens
+    # come from the private riser-projects registry, so it does NOT cover vessel /
+    # DP-vendor identifiers — that scrub is enforced by the fixture identity-key
+    # assertion in test_telemetry_inputs.py plus human review, not by this gate.
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "telemetry_inputs.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_telemetry_inputs.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "telemetry_snapshot_sample.json",
 )
 
 
@@ -136,7 +145,8 @@ def test_new_analytical_code_is_gated():
     """#1345 [G-1]: the envelope + conductor analytical code must be inside the
     scanned artifact set (it reproduces wellhead/conductor engagements)."""
     scanned = {p.name for p in _PUBLIC_ARTIFACTS}
-    for required in ("envelope.py", "conductor_response.py", "riser_response.py"):
+    for required in ("envelope.py", "conductor_response.py", "riser_response.py",
+                     "telemetry_inputs.py"):
         assert required in scanned, f"{required} is not gated by the provenance tripwire"
 
 
