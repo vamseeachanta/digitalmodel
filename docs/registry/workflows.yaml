@@ -642,6 +642,19 @@ workflows:
       - examples/workflows/drilling-riser-envelope-library-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drilling-riser-envelope-library-query]
     runtime: offline
+  - id: drilling-riser-operability-query
+    basename: parametric_query
+    title: Instant drilling-riser operability screen from the pre-computed operating-envelope atlas
+    # EXACT node-cache (#1283, epic #1279 child E): built offline by
+    # scripts/parametric/build_drilling_riser_operability_atlas.py from the open
+    # analytical operating envelope (compute_operating_envelope, dynamic=False).
+    # Predicts the governing utilisation; threshold at 1.0 with the straddle rule so
+    # a marginal boundary point escalates to the exact analytical run.
+    input: examples/workflows/drilling-riser-operability-query/input.yml
+    outputs:
+      - examples/workflows/drilling-riser-operability-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drilling-riser-operability-query]
+    runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
     title: Synthetic sucker-rod pump dynacard diagnostic with HTML report

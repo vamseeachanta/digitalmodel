@@ -161,3 +161,37 @@ def test_scan_would_catch_a_planted_token(tmp_path):
     f.write_text(f'# soil calibration note from the {planted} job\nK = 5.0e6\n')
     normalized = _normalize(f.read_text())
     assert _normalize(planted) in normalized  # caught
+
+
+def _operability_atlas_text_files():
+    """Resolve the operability atlas's text files DYNAMICALLY via default.txt.
+
+    The atlas id is a content hash that changes on every rebuild, so a hardcoded
+    path in _PUBLIC_ARTIFACTS would silently 404 (and skip) after a refresh. Glob
+    the basename dir instead so the scan can never orphan (#1283)."""
+    base = REPO_ROOT / "atlases" / "drilling_riser_operability"
+    default = base / "default.txt"
+    if not default.is_file():
+        return []
+    atlas_dir = base / default.read_text().strip()
+    return [atlas_dir / "manifest.yaml", atlas_dir / "surrogate.json"]
+
+
+def test_no_provenance_tokens_in_operability_atlas():
+    """The committed operability atlas's config tokens (echoed as text in
+    manifest.yaml + surrogate.json) must carry no private-registry name/number
+    token. In-context gate (skips standalone, like the rest of this file)."""
+    names, numbers = _provenance_tokens()
+    violations = []
+    for path in _operability_atlas_text_files():
+        if not path.is_file():
+            continue
+        raw = path.read_text()
+        normalized = _normalize(raw)
+        for token in names:
+            if _normalize(token) in normalized:
+                violations.append((path.name, f"name-token #{sorted(names).index(token)}"))
+        for num in numbers:
+            if re.search(rf"\b{num}\b", raw):
+                violations.append((path.name, f"project-number {num}"))
+    assert not violations, f"provenance tokens leaked into the operability atlas: {violations}"

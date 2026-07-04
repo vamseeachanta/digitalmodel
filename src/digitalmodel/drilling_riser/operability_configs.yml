@@ -1,0 +1,54 @@
+# Generic drilling-riser operability configurations (#1283, epic #1279 child E).
+#
+# The categorical `config` axis of the drilling_riser_operability atlas. Each
+# entry is a GENERIC, public, BANDED configuration — NOT a client rig/field.
+# Governance (T2): tokens are from the reviewed allowlist in
+# operability_atlas.ALLOWED_TOKENS; every numeric constant is on a coarse public
+# band grid (operability_atlas.BAND_GRID) so no real project depth/tension can be
+# fingerprinted (k-anonymity: each band is shared by many real assets). The
+# criteria are the published standard factors (API RP 16Q flex-joint operating
+# limits; API STD 2RD von-Mises design factor) — public values, not a licensed
+# table.
+provenance:
+  source: synthetic / generic — nominal banded riser configurations for a public operability screening atlas
+  licence: synthetic — no client, field, well or vendor data
+  standards:
+    - {id: API-RP-16Q, edition: "1993"}
+    - {id: API-STD-2RD, edition: "3e-2025"}
+  note: >
+    Generic nominal configurations (nominal 21-in riser, 500 m water-depth bands,
+    coarse MN tension bands). No real project values. Criteria are the published
+    public standard factors.
+
+# Public standard-factor criteria (same for every config here; API RP 16Q 2/4 deg
+# flex-joint operating limits, API STD 2RD 0.67 von-Mises design factor).
+criteria:
+  flexjoint_angle_mean_deg: 2.0
+  flexjoint_angle_max_deg: 4.0
+  von_mises_design_factor: 0.67
+
+# Continuous sweep axes (banded knots). offset % of water depth; surface current m/s.
+axes:
+  offset_pct: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+  current_speed_mps: [0.0, 0.5, 1.0, 1.5, 2.0]
+
+# Generic banded stack-ups. section = nominal riser OD/wt (m); water_depth/length (m);
+# tension (N); rig limits (m). If a moonpool_half_min_m is given it must be > 0.5 (DEFAULT_MOONPOOL_CLEARANCE_MARGIN_M); omitted here (see operability_atlas.governing_utilisation).
+stackups:
+  rsu_a:
+    outer_diameter_m: 0.5334      # nominal 21 in
+    wall_thickness_m: 0.0254      # nominal 1 in
+    water_depth_m: 1500.0         # 500 m band
+    length_m: 1500.0
+    tension_n: 3000000.0        # 0.5 MN band
+    tj_stroke_m: 12.0
+  rsu_b:
+    outer_diameter_m: 0.5334
+    wall_thickness_m: 0.0254
+    water_depth_m: 2000.0
+    length_m: 2000.0
+    tension_n: 4000000.0        # 0.5 MN band
+    tj_stroke_m: 15.0
+
+# The (stackup x mode) product forms the categorical config tokens "{stackup}__{mode}".
+modes: [drilling, connected, hang_off]

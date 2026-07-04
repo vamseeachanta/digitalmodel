@@ -296,6 +296,17 @@ def test_workflow_registry(workflow, monkeypatch):
         # the STUB must self-identify at the query surface (#1346 governance fix)
         assert result["provenance"]["solver"]["licensed"] is False
         assert result["provenance"]["solver"]["version"] == "STUB"
+    elif workflow["id"] == "drilling-riser-operability-query":
+        result = cfg["parametric_query"]["result"]
+        # exact operability node-cache (#1283): governing utilisation thresholded at
+        # 1.0; the example point is operable (a clean pass, not a boundary escalation).
+        assert result["in_range"] is True
+        assert result["response"] == "utilisation"
+        assert result["value"] > 0.0
+        assert result["screening_status"] in {"pass", "fail"}
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        assert result["provenance"]["atlas_id"]
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly
