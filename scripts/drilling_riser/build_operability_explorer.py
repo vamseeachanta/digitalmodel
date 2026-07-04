@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""Build the drilling-riser operability capabilities explorer (#1284, epic #1279).
+
+Renders the merged operability atlas (#1283, ``atlases/drilling_riser_operability``)
+as a PUBLIC, self-contained explorer:
+
+  * ``docs/api/drilling/results.json`` — the Deckhand O(1) index. For every one of
+    the 6x11x5 = 330 nodes it serialises the EXACT per-cell verdict
+    ``{uc, light in OPERABLE|INOPERABLE|ESCALATE}`` computed by
+    :func:`digitalmodel.drilling_riser.operability_screening.screen_operability`
+    (pure atlas lookup — no physics recompute), so the page equals the live screen.
+  * ``docs/api/drilling/drilling-riser-operability-explorer.html`` — a self-contained
+    inline-``<canvas>`` heatmap with the SAME data inline as ``const DATA``. Zero
+    external calls (no ``://`` anywhere): a page that renders the served grid must
+    not be able to exfiltrate it.
+
+The results.json schema is an explicit ALLOW-list (never spread ``atlas.provenance``
+/ ``atlas.validation`` / filesystem paths): ``response, atlas_id,
+content_fingerprint, offset_pct[], current_speed_mps[], configs{token:{uc,light}},
+max_rel_error, standards[{id,edition}]``. ``atlas_id`` + ``content_fingerprint`` are
+read dynamically from the loaded atlas so a rebuild can never render stale.
+
+Deterministic: ``python3 scripts/drilling_riser/build_operability_explorer.py`` twice
+produces byte-identical artifacts.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from digitalmodel.drilling_riser import operability_atlas as oa
+from digitalmodel.drilling_riser.operability_screening import screen_operability
+from digitalmodel.parametric.atlas import Atlas
+
+_OUT_DIR = oa.REPO_ROOT / "docs" / "api" / "drilling"
+_JSON = _OUT_DIR / "results.json"
+_HTML = _OUT_DIR / "drilling-riser-operability-explorer.html"
+
+#: Site-relative path used by the one-pager SPEC + index card (must match _OUT_DIR).
+SITE_PATH = "drilling/drilling-riser-operability-explorer.html"
+
+
+def build_results(atlas_root: Path | None = None) -> dict:
+    """Serialise the atlas as per-cell operability verdicts (allow-list schema)."""
+    root = atlas_root or (oa.REPO_ROOT / "atlases")
+    atlas = Atlas.load(root, oa.BASENAME)
+    cfg_axis = atlas.categorical_axis
+    offset = [ax for ax in atlas.axes if ax.name == "offset_pct"][0].grid
+    current = [ax for ax in atlas.axes if ax.name == "current_speed_mps"][0].grid
+
+    configs: dict[str, dict] = {}
+    for token in cfg_axis.values:
+        uc_grid: list[list[float]] = []
+        light_grid: list[list[str]] = []
+        for off in offset:  # i = offset index
+            uc_row: list[float] = []
+            light_row: list[str] = []
+            for cur in current:  # j = current index
+                s = screen_operability(token, off, cur, atlas_root=root)
+                uc_row.append(round(float(s.governing_utilisation), 6))
+                light_row.append(s.light)
+            uc_grid.append(uc_row)
+            light_grid.append(light_row)
+        configs[token] = {"uc": uc_grid, "light": light_grid}
+
+    prov = atlas.provenance
+    # EXPLICIT allow-list — do NOT spread atlas.provenance / validation / paths.
+    return {
+        "response": atlas.response,
+        "atlas_id": atlas.atlas_id,
+        "content_fingerprint": prov.get("content_fingerprint"),
+        "tier": prov.get("tier"),
+        "offset_pct": [float(v) for v in offset],
+        "current_speed_mps": [float(v) for v in current],
+        "configs": configs,
+        "max_rel_error": round(float(atlas.validation.get("max_rel_error", 0.0)), 6),
+        "standards": [
+            {"id": s["id"], "edition": str(s["edition"])} for s in (prov.get("standards") or [])
+        ],
+    }
+
+
+def render_html(data: dict) -> str:
+    """Self-contained inline-canvas explorer. MUST contain zero ``://``."""
+    inline = json.dumps(data, indent=2, sort_keys=False)
+    return _TEMPLATE.replace("__DATA__", inline)
+
+
+def main() -> int:
+    data = build_results()
+    _OUT_DIR.mkdir(parents=True, exist_ok=True)
+    _JSON.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n")
+    html = render_html(data)
+    if "://" in html:  # hard guard: no external-reference token may ship
+        raise SystemExit("explorer HTML contains '://' — external reference not allowed")
+    _HTML.write_text(html)
+    print(f"wrote {_JSON.relative_to(oa.REPO_ROOT)} + {_HTML.relative_to(oa.REPO_ROOT)} "
+          f"(atlas {data['atlas_id']}, {len(data['configs'])} configs)")
+    return 0
+
+
+# --- self-contained page (no external calls; canvas-only, no SVG namespace URL) ---
+_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drilling-riser operability envelope</title>
+<style>
+  :root{
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --ring:rgba(11,11,11,.10);
+    --operable:#2a78d6; --inoperable:#e34948; --mid:#f0efec; --escalate:#fab219;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --ring:rgba(255,255,255,.10);
+      --operable:#3987e5; --inoperable:#e66767; --mid:#383835; --escalate:#fab219;
+    }
+  }
+  :root[data-theme=dark]{
+    --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --ring:rgba(255,255,255,.10);
+    --operable:#3987e5; --inoperable:#e66767; --mid:#383835; --escalate:#fab219;
+  }
+  :root[data-theme=light]{
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --ring:rgba(11,11,11,.10);
+    --operable:#2a78d6; --inoperable:#e34948; --mid:#f0efec; --escalate:#fab219;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plane);color:var(--ink);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header{border-bottom:1px solid var(--grid);padding-bottom:18px;margin-bottom:24px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    font-weight:600}
+  h1{font-size:26px;margin:6px 0 8px;font-weight:650;letter-spacing:-.01em}
+  .sub{color:var(--ink2);max-width:62ch}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .meta code{font-family:ui-monospace,Menlo,monospace;color:var(--ink2)}
+  .panel{background:var(--surface);border:1px solid var(--ring);border-radius:12px;
+    padding:18px;margin-bottom:20px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .controls label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+    font-weight:600;margin-right:2px}
+  button.cfg{font:inherit;font-size:13px;padding:6px 11px;border:1px solid var(--ring);
+    border-radius:999px;background:transparent;color:var(--ink2);cursor:pointer}
+  button.cfg[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  button.cfg:focus-visible{outline:2px solid var(--operable);outline-offset:2px}
+  .plot{position:relative}
+  canvas{display:block;width:100%;height:auto;touch-action:none}
+  .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);
+    padding:7px 9px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .08s;
+    white-space:nowrap;z-index:3}
+  .tip b{font-weight:650}
+  .legend{display:flex;flex-wrap:wrap;gap:14px 20px;margin-top:14px;font-size:12.5px;color:var(--ink2)}
+  .legend .item{display:flex;align-items:center;gap:7px}
+  .sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--ring);flex:none}
+  .ramp{width:120px;height:12px;border-radius:3px;border:1px solid var(--ring);
+    background:linear-gradient(90deg,var(--operable),var(--mid),var(--inoperable))}
+  .toggle{margin-top:16px}
+  .toggle button{font:inherit;font-size:12.5px;padding:5px 10px;border:1px solid var(--ring);
+    border-radius:7px;background:transparent;color:var(--ink2);cursor:pointer}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:12px;
+    font-variant-numeric:tabular-nums}
+  th,td{border:1px solid var(--grid);padding:4px 7px;text-align:right}
+  th{color:var(--muted);font-weight:600}
+  td.esc{color:#8a5a00}
+  .note{font-size:12.5px;color:var(--muted);margin-top:10px;max-width:64ch}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Drilling riser &middot; operating envelope</div>
+    <h1>Operability envelope explorer</h1>
+    <p class="sub">Governing utilisation across vessel offset and surface current for a
+      generic drilling-riser stack-up, per operating mode. A point is operable when the
+      governing utilisation is at or below 1.0. Near the 1.0 boundary the screen
+      <b>escalates</b> to the exact analytical run rather than trusting an interpolated
+      verdict.</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="panel">
+    <div class="controls" id="cfgbar"><label>Configuration</label></div>
+    <div class="plot">
+      <canvas id="hm" width="720" height="420" role="img"
+        aria-label="Operability heatmap: offset percent versus surface current"></canvas>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="ramp"></span> operable &larr; utilisation &rarr; inoperable (mid = 1.0)</div>
+      <div class="item"><span class="sw" id="escsw"></span> escalate (recompute exact)</div>
+    </div>
+    <div class="toggle"><button id="tbtn" aria-expanded="false">Show data table</button></div>
+    <div id="tblwrap" hidden></div>
+    <p class="note" id="disc"></p>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow" style="margin-bottom:8px">Screen a live point</div>
+    <div class="controls">
+      <label for="inoff">Offset %</label>
+      <input id="inoff" type="number" min="0" max="10" step="0.1" value="2"
+        style="width:80px;font:inherit;padding:6px 8px;border:1px solid var(--ring);border-radius:7px;background:transparent;color:var(--ink)">
+      <label for="incur" style="margin-left:8px">Current m/s</label>
+      <input id="incur" type="number" min="0" max="2" step="0.1" value="0.5"
+        style="width:80px;font:inherit;padding:6px 8px;border:1px solid var(--ring);border-radius:7px;background:transparent;color:var(--ink)">
+      <button id="screenbtn" class="cfg" style="margin-left:8px">Screen</button>
+    </div>
+    <p id="verdict" class="note" style="color:var(--ink);font-size:14px"></p>
+    <p class="note">Nearest-node lookup from the pre-computed atlas. A point that falls
+      <b>between</b> an operable and an inoperable node, or whose governing utilisation
+      sits within the atlas's local error of 1.0, <b>escalates</b> to the exact analytical
+      run — that is where the escalate verdict genuinely appears.</p>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const OFF = DATA.offset_pct, CUR = DATA.current_speed_mps;
+const TOKENS = Object.keys(DATA.configs);
+let active = TOKENS[0];
+
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function hex(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function rgb(c){return 'rgb('+c[0]+','+c[1]+','+c[2]+')';}
+// diverging: gray(mid) at uc=1.0, blue(operable) toward 0, red(inoperable) toward 2 (clip).
+function ucColor(uc){
+  const op=hex(css('--operable')), ino=hex(css('--inoperable')), mid=hex(css('--mid'));
+  if(uc<=1){ const t=Math.max(0,Math.min(1,(1-uc)/1)); return rgb(mix(mid,op,t)); }
+  const t=Math.max(0,Math.min(1,(uc-1)/1)); return rgb(mix(mid,ino,t));
+}
+
+const cv=document.getElementById('hm'), ctx=cv.getContext('2d'), tip=document.getElementById('tip');
+const PADL=54, PADB=42, PADT=10, PADR=12;
+let cells=[]; // {x,y,w,h,i,j,uc,light}
+
+function draw(){
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||720, H=420; cv.width=W*dpr; cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const g=DATA.configs[active];
+  const gw=(W-PADL-PADR)/CUR.length, gh=(H-PADT-PADB)/OFF.length;
+  cells=[];
+  ctx.font='11px system-ui,sans-serif'; ctx.textBaseline='middle';
+  const gap=2;
+  for(let i=0;i<OFF.length;i++){         // offset rows (top=high offset)
+    for(let j=0;j<CUR.length;j++){        // current cols
+      const uc=g.uc[i][j], light=g.light[i][j];
+      const x=PADL+j*gw, y=PADT+(OFF.length-1-i)*gh;
+      const w=gw-gap, h=gh-gap;
+      if(light==='ESCALATE'){
+        ctx.fillStyle=css('--surface'); ctx.fillRect(x,y,w,h);
+        ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+        ctx.strokeStyle=css('--escalate'); ctx.lineWidth=2;
+        for(let d=-h;d<w;d+=7){ctx.beginPath();ctx.moveTo(x+d,y+h);ctx.lineTo(x+d+h,y);ctx.stroke();}
+        ctx.restore();
+        ctx.strokeStyle=css('--escalate'); ctx.lineWidth=2; ctx.strokeRect(x+1,y+1,w-2,h-2);
+      } else {
+        ctx.fillStyle=ucColor(uc); ctx.fillRect(x,y,w,h);
+      }
+      cells.push({x,y,w,h,i,j,uc,light});
+    }
+  }
+  // axes
+  ctx.fillStyle=css('--muted'); ctx.textAlign='right';
+  for(let i=0;i<OFF.length;i++){ if(i%2) continue;
+    const y=PADT+(OFF.length-1-i)*gh+gh/2; ctx.fillText(OFF[i].toFixed(0), PADL-8, y);}
+  ctx.textAlign='center';
+  for(let j=0;j<CUR.length;j++){ const x=PADL+j*gw+gw/2; ctx.fillText(CUR[j].toFixed(1), x, H-PADB+16);}
+  ctx.save(); ctx.translate(14,PADT+(H-PADT-PADB)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle=css('--ink2'); ctx.fillText('vessel offset  (% water depth)',0,0); ctx.restore();
+  ctx.textAlign='center'; ctx.fillStyle=css('--ink2');
+  ctx.fillText('surface current  (m/s)', PADL+(W-PADL-PADR)/2, H-6);
+}
+
+function pick(ev){
+  const r=cv.getBoundingClientRect(); const px=ev.clientX-r.left, py=ev.clientY-r.top;
+  const c=cells.find(c=>px>=c.x&&px<=c.x+c.w&&py>=c.y&&py<=c.y+c.h);
+  if(!c){tip.style.opacity=0;return;}
+  tip.innerHTML='<b>'+active+'</b><br>offset '+OFF[c.i].toFixed(0)+'% &middot; current '+
+    CUR[c.j].toFixed(1)+' m/s<br>utilisation <b>'+c.uc.toFixed(3)+'</b> &middot; '+c.light;
+  tip.style.opacity=1;
+  let tx=c.x+c.w+8, ty=c.y; if(tx>r.width-140)tx=c.x-140;
+  tip.style.left=tx+'px'; tip.style.top=ty+'px';
+}
+cv.addEventListener('mousemove',pick);
+cv.addEventListener('mouseleave',()=>tip.style.opacity=0);
+
+function buildTable(){
+  const g=DATA.configs[active]; let h='<table><thead><tr><th>offset % \\ current m/s</th>';
+  for(const c of CUR) h+='<th>'+c.toFixed(1)+'</th>'; h+='</tr></thead><tbody>';
+  for(let i=OFF.length-1;i>=0;i--){ h+='<tr><th>'+OFF[i].toFixed(0)+'</th>';
+    for(let j=0;j<CUR.length;j++){ const uc=g.uc[i][j],l=g.light[i][j];
+      const cls=l==='ESCALATE'?' class="esc"':''; h+='<td'+cls+'>'+uc.toFixed(3)+'<br>'+l+'</td>';}
+    h+='</tr>';}
+  return h+'</tbody></table>';
+}
+
+function setConfig(tok){
+  active=tok;
+  document.querySelectorAll('button.cfg').forEach(b=>b.setAttribute('aria-pressed', b.dataset.tok===tok));
+  draw(); if(!document.getElementById('tblwrap').hidden) document.getElementById('tblwrap').innerHTML=buildTable();
+}
+
+// header meta + config buttons + legend swatch + disclaimer
+(function init(){
+  const std=DATA.standards.map(s=>s.id+' ('+s.edition+')').join(' &middot; ');
+  document.getElementById('meta').innerHTML=
+    'Standards: '+std+' &nbsp; Tier: '+(DATA.tier||'analytical-static')+
+    ' &nbsp; Atlas <code>'+DATA.atlas_id+'</code> &nbsp; fingerprint <code>'+
+    (DATA.content_fingerprint||'').slice(0,12)+'</code> &nbsp; max interp. error '+
+    (DATA.max_rel_error*100).toFixed(1)+'%';
+  const bar=document.getElementById('cfgbar');
+  for(const tok of TOKENS){ const b=document.createElement('button');
+    b.className='cfg'; b.dataset.tok=tok; b.textContent=tok.replace('__',' \\u00b7 ');
+    b.setAttribute('aria-pressed', tok===active); b.onclick=()=>setConfig(tok); bar.appendChild(b);}
+  document.getElementById('escsw').style.background=css('--escalate');
+  document.getElementById('disc').textContent=
+    'Static analytical operability screen from a pre-computed atlas — not a certified '+
+    'deliverable. Marginal / out-of-range points escalate to the exact run. Dynamic '+
+    'amplification, drift-off and VIV are the solver tier. Governing utilisation is checked '+
+    'against cited code limits (limits unchanged; only the response is screened).';
+  const tb=document.getElementById('tbtn'), tw=document.getElementById('tblwrap');
+  tb.onclick=()=>{ const open=tw.hidden; tw.hidden=!open; tb.setAttribute('aria-expanded',open);
+    tb.textContent=open?'Hide data table':'Show data table'; if(open) tw.innerHTML=buildTable();};
+  setConfig(active);
+  // live-point screen: nearest-node lookup from the serialized per-cell data.
+  function nearest(arr,v){let bi=0,bd=1e9;for(let k=0;k<arr.length;k++){const d=Math.abs(arr[k]-v);if(d<bd){bd=d;bi=k;}}return bi;}
+  function screenPoint(){
+    const off=parseFloat(document.getElementById('inoff').value);
+    const cur=parseFloat(document.getElementById('incur').value);
+    const el=document.getElementById('verdict');
+    if(isNaN(off)||isNaN(cur)||off<OFF[0]||off>OFF[OFF.length-1]||cur<CUR[0]||cur>CUR[CUR.length-1]){
+      el.innerHTML='Out of range &rarr; <b>ESCALATE</b> (outside the atlas domain — recompute exact).';return;}
+    const i=nearest(OFF,off), j=nearest(CUR,cur), g=DATA.configs[active];
+    const uc=g.uc[i][j], light=g.light[i][j];
+    el.innerHTML=active+' &middot; nearest node offset '+OFF[i].toFixed(0)+'% / current '+
+      CUR[j].toFixed(1)+' m/s &rarr; utilisation <b>'+uc.toFixed(3)+'</b> &middot; <b>'+light+'</b>';
+  }
+  document.getElementById('screenbtn').onclick=screenPoint;
+  screenPoint();
+})();
+window.addEventListener('resize',()=>{draw();});
+</script>
+</body>
+</html>
+"""
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

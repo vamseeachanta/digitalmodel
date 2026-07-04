@@ -197,6 +197,16 @@ SPECS: list[dict] = [
          blurb="Sway-force and yaw-moment interaction validated against the published closed-form solution.",
          figures=[], bullets=["Sway-force and yaw-moment interaction",
                               "Validated against the Wang (1975) closed form"]),
+    dict(id="drilling-riser-operability", kind="work",
+         title="Drilling-riser operability envelope explorer",
+         std="API-RP-16Q · API-STD-2RD",
+         path="drilling/drilling-riser-operability-explorer.html",
+         blurb="Governing utilisation across vessel offset and surface current for a generic "
+               "drilling-riser stack-up per operating mode; operable when utilisation is at or "
+               "below 1.0, with near-boundary points escalating to the exact analytical screen.",
+         figures=[], bullets=["Offset x current operability envelope per operating mode",
+                              "Governing utilisation vs cited code limits (API RP 16Q / API STD 2RD)",
+                              "Near-boundary points escalate to the exact analytical run"]),
     dict(id="riser-validation", kind="work", title="Riser validation report",
          std="OrcaFlex · tier-2 fast library", path="orcaflex/riser-validation-report.html",
          blurb="Riser global-analysis results verified against reference cases from the tier-2 fast "
@@ -426,6 +436,7 @@ WORKFLOW_MAP: dict[str, str] = {
     "diffraction-deck-prep": "aqwa-diffraction-deck-prep",
     "dynacard-troubleshooting": "dynacard-diagnostics",
     "dynacard-field-health": "artificial-lift-field-health",
+    "drilling-riser-operability": "drilling-riser-operability-query",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
@@ -448,6 +459,7 @@ PROMPTS: dict[str, str] = {
     "unitbox-heatmap": "Show the cross-solver correlation heatmap for the unit-box diffraction benchmark.",
     "ocimf": "Give me OCIMF MEG3/MEG4 wind and current coefficients for my heading and loading condition.",
     "passing-ship": "Run the Wang (1975) passing-ship interaction benchmark - sway force and yaw moment.",
+    "drilling-riser-operability": "Screen my drilling-riser operability: governing utilisation across vessel offset and surface current per operating mode, against the API RP 16Q / API STD 2RD limits, and flag near-boundary points that need the exact analytical run.",
     "riser-validation": "Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).",
     "riser-mesh": "Run a riser mesh-density convergence study and quantify the discretisation effect on response.",
     "subsea-xsection": "Generate a layer-by-layer offshore cable / umbilical / pipeline cross-section with envelope geometry.",
