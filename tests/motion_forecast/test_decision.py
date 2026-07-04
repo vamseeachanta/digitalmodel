@@ -60,6 +60,33 @@ def test_caution_band_now_is_marginal():
     assert d.lead_time_to_no_go is None
 
 
+def test_boundary_value_equal_limit_is_marginal():
+    """value == limit -> MARGINAL (matches _check_criterion), lead_no_go None."""
+    t = np.linspace(0, 10, 201)
+    m = _motion(t, heave=np.full_like(t, 2.0))  # == limit
+    d = rolling_decision(m, _EXC)
+    assert d.state is DecisionState.MARGINAL
+    assert d.lead_time_to_no_go is None  # never strictly exceeds the limit
+
+
+def test_boundary_value_equal_caution_is_go():
+    t = np.linspace(0, 10, 201)
+    m = _motion(t, heave=np.full_like(t, 1.0))  # == caution
+    d = rolling_decision(m, _EXC)
+    assert d.state is DecisionState.GO
+    assert d.lead_time_to_caution is None
+
+
+def test_non_finite_governing_is_fail_closed_no_go():
+    t = np.linspace(0, 10, 201)
+    h = np.full_like(t, 0.5)
+    h[100] = np.nan
+    m = _motion(t, heave=h)
+    d = rolling_decision(m, _EXC)
+    assert d.state is DecisionState.NO_GO
+    assert d.lead_time_to_no_go == 0.0
+
+
 def test_downward_velocity_breach_is_no_go():
     """End-to-end sign guard: downward heave over the velocity limit -> NO-GO."""
     t = np.linspace(0, 10, 201)

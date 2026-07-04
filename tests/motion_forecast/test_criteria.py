@@ -55,3 +55,17 @@ def test_rejects_unknown_governing(tmp_path):
 def test_rejects_empty(tmp_path):
     with pytest.raises(ValueError, match="non-empty"):
         load_criteria(_write(tmp_path, "criteria: {}\n"))
+
+
+def test_rejects_nonpositive_caution(tmp_path):
+    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"
+            "    caution: 0.0\n    limit: 0.4\n    unit: m/s\n    poi_offset: [0,0,0]\n")
+    with pytest.raises(ValueError, match="caution"):
+        load_criteria(_write(tmp_path, body))
+
+
+def test_rejects_missing_key(tmp_path):
+    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"
+            "    caution: 0.2\n    unit: m/s\n    poi_offset: [0,0,0]\n")  # no limit
+    with pytest.raises(ValueError, match="malformed"):
+        load_criteria(_write(tmp_path, body))

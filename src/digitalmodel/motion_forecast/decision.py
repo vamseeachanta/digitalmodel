@@ -57,17 +57,28 @@ class RollingDecision:
 
 
 def _first_crossing(t: np.ndarray, v: np.ndarray, level: float, now: float) -> Optional[float]:
-    """Lead time (s) to the first sample with ``v >= level``, else None."""
-    idx = np.argmax(v >= level)
-    if v[idx] >= level:
-        return float(t[idx] - now)
-    return None
+    """Lead time (s) to the first sample with ``v > level`` (strict), else None.
+
+    Strict ``>`` keeps this consistent with :func:`_classify` and the reused
+    ``go_no_go._check_criterion`` band (``value == limit`` is still MARGINAL, so
+    it must not register as a NO-GO crossing).
+    """
+    mask = v > level
+    if not mask.any():
+        return None
+    return float(t[int(np.argmax(mask))] - now)
 
 
 def _classify(value: float, caution: float, limit: float) -> DecisionState:
+    """Classify a governing value, matching ``_check_criterion`` boundaries.
+
+    ``value > limit`` -> NO_GO (FAIL); ``value > caution`` -> MARGINAL (WARNING);
+    else GO (PASS). NaN is unsafe -> NO_GO (fail-closed)."""
+    if not np.isfinite(value):
+        return DecisionState.NO_GO
     if value > limit:
         return DecisionState.NO_GO
-    if value >= caution:
+    if value > caution:
         return DecisionState.MARGINAL
     return DecisionState.GO
 
@@ -91,10 +102,15 @@ def rolling_decision(
     current = float(v[0])
 
     state = _classify(current, criterion.caution, criterion.limit)
-    lead_caution = 0.0 if current >= criterion.caution else _first_crossing(
+    lead_caution = 0.0 if current > criterion.caution else _first_crossing(
         t, v, criterion.caution, now)
     lead_no_go = 0.0 if current > criterion.limit else _first_crossing(
         t, v, criterion.limit, now)
+
+    # Fail-closed: a non-finite governing value anywhere is unsafe -> NO-GO now.
+    if not np.all(np.isfinite(v)):
+        state = DecisionState.NO_GO
+        lead_caution = lead_no_go = 0.0
 
     crit = _check_criterion(
         name=criterion.label, value=current, limit=criterion.limit,

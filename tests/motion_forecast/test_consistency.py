@@ -20,6 +20,17 @@ from digitalmodel.motion_forecast.derived import (
 )
 
 
+def test_lever_arm_excursion_end_to_end():
+    """A pitch-only sea + non-zero offset exercises vertical_motion_at's lever
+    arm through reconstruct: z_tip = -rx*deg2rad(pitch), peak rx*deg2rad(a*|Hp|)."""
+    w0, a0, magp, rx = 0.6, 1.0, 2.0, 30.0  # Hp in deg/m
+    fc = WaveForecast([WaveComponent(w0, a0, 0.0, heading=0.0)], horizon=60.0)
+    rao = AnalyticRAO({"pitch": lambda w, b: magp + 0j})
+    m = reconstruct_motion(fc, rao, dt=0.02)
+    exc = vertical_excursion_magnitude(m, (rx, 0.0, 0.0))
+    assert abs(exc.max() - rx * np.deg2rad(a0 * magp)) < 1e-4
+
+
 def test_single_component_derived_peaks_match_closed_form():
     w0, a0, phi0 = 0.7, 1.4, 0.3
     mag, ang = 0.8, 0.5
