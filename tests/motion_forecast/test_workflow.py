@@ -101,6 +101,36 @@ def test_router_measured_bad_type_raises():
         router(cfg)
 
 
+def test_router_emits_skill_summary():
+    import numpy as np
+    from digitalmodel.motion_forecast.measured import MeasuredMotion
+    from digitalmodel.motion_forecast.models import DOF_NAMES, MotionForecast
+
+    def _pair(offset):
+        t = np.linspace(0.0, 40.0, 161)
+        fc = MotionForecast(
+            t=t, dof={d: (np.sin(t) if d == "heave" else np.zeros_like(t))
+                      for d in DOF_NAMES},
+            origin_time=0.0, horizon=40.0)
+        meas = MeasuredMotion(
+            t=t, dof={d: (np.sin(t) + offset if d == "heave" else np.zeros_like(t))
+                      for d in DOF_NAMES})
+        return (fc, meas)
+
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 2.0, "tp": 9.0, "horizon": 60.0, "n_components": 24},
+            "rao": {"source": "analytic"},
+            "skill": {"records": [_pair(0.1), _pair(0.2)]},
+        },
+    }
+    out = router(cfg)["motion_forecast"]
+    assert set(out["skill_summary"]) == set(DOF_NAMES)
+    assert out["skill_summary"]["heave"]["rmse"] > 0.0
+    assert out["skill_summary"]["heave"]["n_samples"] == 161 * 2
+
+
 def test_engine_dispatch_wired():
     """Guard: engine.py routes basename 'motion_forecast' to the workflow."""
     engine_src = (

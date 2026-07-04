@@ -15,6 +15,7 @@ from digitalmodel.motion_forecast.models import DOF_NAMES, MotionForecast
 from digitalmodel.motion_forecast.reconcile import (
     measured_status,
     overlap_error,
+    overlap_residuals,
     seam_offset,
 )
 
@@ -30,6 +31,19 @@ def _measured(t, **dofs):
     base = {d: np.zeros(len(t)) for d in DOF_NAMES}
     base.update(dofs)
     return MeasuredMotion(t=np.asarray(t, float), dof=base)
+
+
+def test_overlap_residuals_backs_overlap_error():
+    """overlap_error is a thin wrapper over overlap_residuals (regression)."""
+    t = np.linspace(100.0, 160.0, 61)
+    fc = _forecast(t, heave=np.sin(t))
+    m = _measured(t, heave=np.sin(t) + 0.1)
+    tq, res = overlap_residuals(m, fc)
+    _mm, _fcd, err = res["heave"]
+    assert np.allclose(err, 0.1, atol=1e-9)
+    assert tq.shape == err.shape
+    e = overlap_error(m, fc)["heave"]
+    assert e.rmse == pytest.approx(0.1) and e.bias == pytest.approx(0.1)
 
 
 def test_seam_offset_zero_when_identical_at_now():

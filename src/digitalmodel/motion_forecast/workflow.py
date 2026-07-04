@@ -158,4 +158,18 @@ def router(cfg: Dict) -> Dict:
         # (never against an unrelated default sea).
         if float(motion.t[0]) <= measured.now <= float(motion.t[-1]):
             mf["reconciliation"] = {"seam_offset": seam_offset(measured, motion)}
+
+    # Optional forecast-skill aggregation over a batch of records (#1360).
+    skill_cfg = mf.get("skill")
+    if skill_cfg and skill_cfg.get("records"):
+        from .skill import SkillRecord, aggregate_skill
+
+        recs = [r if isinstance(r, SkillRecord) else SkillRecord(*r)
+                for r in skill_cfg["records"]]
+        agg = aggregate_skill(recs)
+        mf["skill_summary"] = {
+            d: {"rmse": a.rmse, "bias": a.bias, "n_samples": a.n_samples,
+                "correlation_median": a.correlation_median}
+            for d, a in agg.items()
+        }
     return cfg
