@@ -317,6 +317,17 @@ SPECS: list[dict] = [
          figures=[], bullets=["Intact 1.67 / damaged 1.25 ASD factors per API RP 2SK",
                               "Anchor-foundation check at 1.5 per DNV-OS-E301 practice",
                               "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
+    dict(id="short-horizon-motion-forecast", kind="work",
+         title="Short-horizon motion forecast",
+         std="MMS / MRU feed · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437",
+         path="hydro/short-horizon-motion-forecast.html",
+         blurb="Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved "
+               "wave forecast transferred through the asset RAO to predict the next few motions — "
+               "a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and "
+               "helideck landings, bounded honestly by the predictable zone.",
+         figures=[], bullets=["Two data modes: measured (MMS/MRU) 'now' + predicted forecast",
+                              "6-DOF vessel & structure-interface motion via AQWA / OrcaFlex RAOs",
+                              "Rolling GO / CAUTION / NO-GO with lead-time to first breach"]),
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
          std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
          blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
