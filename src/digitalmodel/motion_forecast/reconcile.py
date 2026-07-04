@@ -58,14 +58,16 @@ class DofError:
     correlation: Optional[float]
 
 
-def overlap_error(
+def overlap_residuals(
     measured: MeasuredMotion, forecast, *, min_overlap_samples: int = 3
-) -> Dict[str, DofError]:
-    """Per-DOF RMSE / bias / correlation of forecast vs measured on their overlap.
+) -> Tuple[np.ndarray, Dict[str, Tuple[np.ndarray, np.ndarray, np.ndarray]]]:
+    """Per-DOF ``(measured, forecast_resampled, residual)`` on the time overlap.
 
     The forecast is interpolated onto the measured timestamps within the
-    absolute-time overlap ``[max(starts), min(ends)]``. Correlation is ``None``
-    on a zero-variance or too-short window (RMSE/bias remain defined).
+    absolute-time overlap ``[max(starts), min(ends)]``. Returns the absolute
+    query times ``tq`` and, per DOF, the aligned ``(m, fc, m - fc)`` arrays.
+    Raises on no overlap or fewer than ``min_overlap_samples``. This is the
+    primitive the #1360 skill layer pools across records.
     """
     mt = measured.t
     lo = max(mt[0], forecast.t[0])
@@ -79,15 +81,29 @@ def overlap_error(
             f"overlap has {tq.size} samples (< min_overlap_samples={min_overlap_samples})"
         )
     fc = _resample(forecast, tq)
-    out: Dict[str, DofError] = {}
+    res: Dict[str, Tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
     for d in DOF_NAMES:
         m = measured.dof[d][mask]
-        err = m - fc[d]
+        res[d] = (m, fc[d], m - fc[d])
+    return tq, res
+
+
+def overlap_error(
+    measured: MeasuredMotion, forecast, *, min_overlap_samples: int = 3
+) -> Dict[str, DofError]:
+    """Per-DOF RMSE / bias / correlation of forecast vs measured on their overlap.
+
+    Correlation is ``None`` on a zero-variance window (RMSE/bias remain defined).
+    Thin wrapper over :func:`overlap_residuals`.
+    """
+    _tq, res = overlap_residuals(measured, forecast, min_overlap_samples=min_overlap_samples)
+    out: Dict[str, DofError] = {}
+    for d in DOF_NAMES:
+        m, fc, err = res[d]
         rmse = float(np.sqrt(np.mean(err**2)))
         bias = float(np.mean(err))
-        # tq.size >= min_overlap_samples already guaranteed above
-        if np.std(m) > 0 and np.std(fc[d]) > 0:
-            corr = float(np.corrcoef(m, fc[d])[0, 1])
+        if np.std(m) > 0 and np.std(fc) > 0:
+            corr = float(np.corrcoef(m, fc)[0, 1])
         else:
             corr = None
         out[d] = DofError(rmse=rmse, bias=bias, correlation=corr)

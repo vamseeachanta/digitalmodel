@@ -17,12 +17,26 @@ from .criteria import Criterion, load_criteria
 from .decision import RollingDecision, rolling_decision
 from .measured import MeasuredMotion
 from .measured_source import MeasuredMotionSource, SyntheticMMS, from_csv
+from .feedback import OperabilitySummary, operability_summary
 from .reconcile import (
     DofError,
     MeasuredDecision,
     measured_status,
     overlap_error,
+    overlap_residuals,
     seam_offset,
+)
+from .recalibrate import (
+    Correction,
+    HoldoutResult,
+    fit_correction,
+    holdout_report,
+)
+from .skill import (
+    AggregateSkill,
+    SkillRecord,
+    aggregate_skill,
+    error_vs_lead_time,
 )
 from .derived import (
     GoverningSeries,
@@ -75,4 +89,15 @@ __all__ = [
     "measured_status",
     "MeasuredDecision",
     "DofError",
+    "overlap_residuals",
+    "SkillRecord",
+    "AggregateSkill",
+    "aggregate_skill",
+    "error_vs_lead_time",
+    "Correction",
+    "HoldoutResult",
+    "fit_correction",
+    "holdout_report",
+    "OperabilitySummary",
+    "operability_summary",
 ]
