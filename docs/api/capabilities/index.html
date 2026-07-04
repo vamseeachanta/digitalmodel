@@ -162,6 +162,8 @@
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
     <div class="navgroup"><a class="navh" href="#wind">Floating wind</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
+    <div class="navgroup"><a class="navh" href="#naval-architecture">Naval architecture</a></div>
+    <div class="navgroup"><a class="navh" href="#geotechnical">Geotechnical</a></div>
     <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
     <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
     <div class="navgroup"><a class="navh" href="#cathodic">Cathodic protection</a></div>
@@ -334,6 +336,48 @@
     </div>
   </section>
 
+  <section class="chan" id="naval-architecture">
+    <div class="chanhead"><h2>Naval architecture &mdash; stability, resistance &amp; hull strength</h2></div>
+    <p class="lead">A ship-design suite beyond the rudder / manoeuvring tools above: Holtrop-Mennen
+    resistance and powering, IMO intact and damage stability with GZ-curve area criteria, IACS
+    hull-girder longitudinal strength and class-rule scantlings. Every method carries its standard in
+    the code and is pinned to published worked examples &mdash; USNA EN400 hand calcs, Series 60 forms
+    and the IACS UR S11 wave-bending moment &mdash; in dedicated tests.</p>
+    <div class="fits">
+      <span><b>Engine</b> &mdash; pure-Python calcs, no external solver</span>
+      <span><b>Validated</b> &mdash; EN400 worked examples &amp; Series 60 forms</span>
+      <span><b>Standards</b> &mdash; IMO · IACS · DNV · ABS · ITTC cited in code</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Resistance &amp; powering (Holtrop-Mennen)</h3><div class="std">Holtrop-Mennen (1982/1984) · ITTC 1957 · Series 60</div><p>Statistical resistance prediction &mdash; frictional (ITTC 1957), form-factor, wave-making, appendage, bulbous-bow and transom components &mdash; plus wetted-surface approximation and shaft power, checked against Series 60 and tanker forms.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/holtrop_mennen.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Intact &amp; damage stability + GZ curves</h3><div class="std">IMO IS Code 2008 (MSC.267(85))</div><p>GZ righting-arm curves from cross-curves (GZ = KN &minus; KG&middot;sin&phi;), the lost-buoyancy damage method, and all six IMO intact-stability area / GM criteria &mdash; pinned to the EN400 DDG-51 and tanker worked conditions.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/damage_stability.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Hull-girder strength &amp; scantlings</h3><div class="std">IACS UR S11 / S11A · DNV-RU-SHIP · ABS · IACS CSR</div><p>IACS UR S11 vertical wave bending moment, permissible bending stress 175/k with material factors and the UR S11A partial-factor ultimate check, plus DNV / IACS prescriptive plate-thickness and lateral-pressure scantling checks.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/hull_girder_strength.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Seakeeping &amp; floating-platform stability</h3><div class="std">IMO IS Code · DNV-OS-C101 · API RP 2SK · SNAME PNA</div><p>Natural periods (heave / pitch / roll), simplified RAO estimation and spectral RMS response for seakeeping; intact and damaged stability (GM, GZ, wind-heel, area criteria) for FPSO, semi-sub, spar, TLP and barge platforms.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/floating_platform_stability.py">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="geotechnical">
+    <div class="chanhead"><h2>Geotechnical &mdash; pile, anchor &amp; foundation capacity</h2></div>
+    <p class="lead">Standards-referenced calculators for the seabed side of an offshore mooring or
+    foundation problem &mdash; the engines that size and check the anchors the mooring-resilience
+    atlases place. Pile axial capacity (API RP 2GEO &alpha;/&beta; method), drag- and suction-anchor
+    holding (DNV-RP-E302/E303, API RP 2SK), mudmat bearing and sliding (DNV-RP-C212 / Brinch Hansen),
+    plus Seed-Idriss liquefaction triggering and DNV-RP-F107 scour screening. Each function is a
+    dataclass-returning engine with input validation and its governing standard stamped on the result.</p>
+    <div class="fits">
+      <span><b>Piles</b> &mdash; API RP 2GEO &alpha;/&beta; skin friction + end bearing</span>
+      <span><b>Anchors</b> &mdash; DNV-RP-E302/E303 drag · suction caisson</span>
+      <span><b>Foundations</b> &mdash; DNV-RP-C212 mudmat bearing &amp; sliding</span>
+      <span><b>Hazards</b> &mdash; Seed-Idriss liquefaction · DNV-RP-F107 scour</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Pile axial capacity &mdash; &alpha; &amp; &beta; method</h3><div class="std">API RP 2GEO</div><p>Skin friction and end bearing for driven piles: &alpha; method in clay (Sec 7.3), &beta; method in sand (Sec 8.2), Nc&middot;Su and Nq&middot;&sigma;&prime;v end bearing, summed layer-by-layer with single- and multi-layer convenience calls.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/piles.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Anchor holding capacity &mdash; drag &amp; suction</h3><div class="std">DNV-RP-E302 · DNV-RP-E303 · API RP 2SK</div><p>Drag-anchor holding from empirical efficiency factors (Stevpris / Bruce / Vryhof across soft clay, stiff clay and sand); suction-caisson capacity from outer + inner skin friction plus reverse end bearing.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/anchors.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Mudmat bearing capacity &amp; sliding</h3><div class="std">DNV-RP-C212 · Brinch Hansen (1970)</div><p>General bearing-capacity equation for rectangular subsea mudmats with shape, depth and Meyerhof effective-area corrections, undrained or drained, plus a base-sliding check with the full factor breakdown.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/mudmat.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Liquefaction &amp; scour screening</h3><div class="std">Seed-Idriss / NCEER (Youd 2001) · DNV-RP-F107</div><p>Per-layer liquefaction factor of safety from CSR vs CRR ((N1)60cs) with rd, magnitude scaling and a non-liquefiable cap; plus equilibrium scour for pipelines and monopiles and rock-armour thickness.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/geotechnical">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
   <section class="chan" id="artificial-lift">
     <div class="chanhead"><h2>Artificial lift &mdash; rod-pump diagnostics</h2><a class="onepager" href="pdf/sec-artificial-lift.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Sucker-rod-pump dynamometer-card (dynacard) diagnostics &mdash; surface-to-downhole
@@ -418,6 +462,10 @@
         <tr><td>Smith hull-girder ultimate</td><td>stocky box → first yield</td><td class="val">M_U = f_y·Z (rel 1e-6)</td><td class="der">analytic limit</td></tr>
         <tr><td>DNV-RP-C201 panel tripping</td><td>0119-015 worked example</td><td class="val">f_T = 215.61 MPa</td><td class="pub">validated example</td></tr>
         <tr><td>Grillage overall mode</td><td>isotropic limit (k=4)</td><td class="val">σ_cr = 223.11 MPa</td><td class="der">Timoshenko long-plate</td></tr>
+        <tr><td>GZ from cross curves</td><td>EN400 Ex. 4.1 — DDG-51, KG 23.84 ft, 30° heel</td><td class="val">GZ = 3.10 ft</td><td class="pub">USNA EN400 worked example</td></tr>
+        <tr><td>IACS UR S11 wave bending moment</td><td>rule ship, hogging amidships</td><td class="val">1 896 960 kN·m</td><td class="der">IACS UR S11 formula</td></tr>
+        <tr><td>Pile end bearing (sand)</td><td>q = Nq·σ′v (Nq 40, σ′v 200 kPa)</td><td class="val">8 000 kPa</td><td class="der">API RP 2GEO §8.3</td></tr>
+        <tr><td>Drag-anchor holding</td><td>Stevpris soft clay (W 100 kN, eff 30)</td><td class="val">3 000 kN</td><td class="der">DNV-RP-E302 efficiency</td></tr>
         <tr><td>Efthymiou T/Y chord saddle</td><td>β0.5 γ12 τ0.5 θ90 (long / short)</td><td class="val">6.21 / 4.755</td><td class="pub">DNV-RP-C203 App. B</td></tr>
         <tr><td>Corrugation section modulus</td><td>a=c=800, φ45, t15</td><td class="val">Z = 4.525×10⁶ mm³</td><td class="der">IACS CSR closed form</td></tr>
         <tr><td>2D river-bottom RSTRENG</td><td>24″ X52 grid (MAX projection)</td><td class="val">p_f = 1 969.2 psi</td><td class="der">RSTRENG effective-area</td></tr>
@@ -434,7 +482,7 @@
 <footer>
   Built from validated digitalmodel solvers; 1-page PDFs and workflow-API artifacts by
   <code>scripts/capabilities/build_onepagers.py</code>. Method APIs live under
-  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, cathodic_protection, subsea/pipeline, fatigue}/</code>
+  <code>src/digitalmodel/{materials, well/tubulars, naval_architecture, structural, asset_integrity, cathodic_protection, geotechnical, subsea/pipeline, fatigue}/</code>
   and validation records under <code>docs/domains/</code>. Every strength / FFS result carries a
   <code>code_reference</code> naming its governing code, kept in sync with the
   <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md">codes register</a>
