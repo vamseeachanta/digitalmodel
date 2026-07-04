@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Well inflow-performance (IPR) explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:780px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ select{font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:110px}
+ .reads{display:flex;gap:26px;flex-wrap:wrap;margin:4px 0 2px}
+ .read{font-size:13px;color:var(--muted)}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:22px;color:var(--navy);font-weight:700}
+ .cap{font-size:12px;color:var(--muted);margin:8px 0}
+ .chart{margin-top:6px;display:flex;align-items:flex-end;gap:4px;height:210px;
+        border-bottom:2px solid var(--line);border-left:2px solid var(--line);padding-left:4px}
+ .bar{flex:1;background:linear-gradient(180deg,var(--teal),var(--navy));border-radius:3px 3px 0 0;
+      position:relative;min-height:1px;transition:height .12s}
+ .bar span{position:absolute;top:-15px;left:0;right:0;text-align:center;font-size:8.5px;color:var(--muted)}
+ .xax{display:flex;gap:4px;padding-left:6px;margin-top:4px}
+ .xax div{flex:1;text-align:center;font-size:9px;color:var(--muted)}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+</style></head><body>
+<h1>Well inflow performance (IPR) &mdash; Vogel explorer</h1>
+<p class="sub">The reservoir's deliverability: oil rate versus bottomhole flowing pressure on the
+Vogel two-phase inflow model. Pick a reservoir pressure and drag the productivity index to reshape
+the inflow curve &mdash; the absolute open-flow potential (rate at zero BHFP) rises with it. Every
+point is a live <code>VogelIpr.flow_rate</code> evaluation.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label>Reservoir pressure</label><select id="pr"></select>
+    <label for="pi">Productivity index</label>
+    <input type="range" id="pi" min="0" max="0" step="1">
+    <span class="wval" id="pival"></span>
+  </div>
+  <div class="reads">
+    <div class="read">Absolute open flow (AOF)<b id="rQ">&mdash;</b></div>
+    <div class="read">Rate at 50% drawdown<b id="rH">&mdash;</b></div>
+  </div>
+  <div class="cap">Oil rate q (bar height, bopd) at each bottomhole flowing pressure P<sub>wf</sub>, from reservoir pressure (left) down to zero (right).</div>
+  <div class="chart" id="chart"></div>
+  <div class="xax" id="xax"></div>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_ipr_explorer.py</code> from
+<code>src/digitalmodel/production_engineering/ipr_models.py</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/ipr_models.py">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"pr":[2000,3000,4000],"pi":[0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0],"npwf":11,"standard":"Vogel (1968) two-phase IPR"},"series":{"2000":{"0.5":{"qmax":555.6,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":95.6},{"pwf":1600.0,"q":182.2},{"pwf":1400.0,"q":260.0},{"pwf":1200.0,"q":328.9},{"pwf":1000.0,"q":388.9},{"pwf":800.0,"q":440.0},{"pwf":600.0,"q":482.2},{"pwf":400.0,"q":515.6},{"pwf":200.0,"q":540.0},{"pwf":0.0,"q":555.6}]},"1.0":{"qmax":1111.1,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":191.1},{"pwf":1600.0,"q":364.4},{"pwf":1400.0,"q":520.0},{"pwf":1200.0,"q":657.8},{"pwf":1000.0,"q":777.8},{"pwf":800.0,"q":880.0},{"pwf":600.0,"q":964.4},{"pwf":400.0,"q":1031.1},{"pwf":200.0,"q":1080.0},{"pwf":0.0,"q":1111.1}]},"1.5":{"qmax":1666.7,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":286.7},{"pwf":1600.0,"q":546.7},{"pwf":1400.0,"q":780.0},{"pwf":1200.0,"q":986.7},{"pwf":1000.0,"q":1166.7},{"pwf":800.0,"q":1320.0},{"pwf":600.0,"q":1446.7},{"pwf":400.0,"q":1546.7},{"pwf":200.0,"q":1620.0},{"pwf":0.0,"q":1666.7}]},"2.0":{"qmax":2222.2,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":382.2},{"pwf":1600.0,"q":728.9},{"pwf":1400.0,"q":1040.0},{"pwf":1200.0,"q":1315.6},{"pwf":1000.0,"q":1555.6},{"pwf":800.0,"q":1760.0},{"pwf":600.0,"q":1928.9},{"pwf":400.0,"q":2062.2},{"pwf":200.0,"q":2160.0},{"pwf":0.0,"q":2222.2}]},"2.5":{"qmax":2777.8,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":477.8},{"pwf":1600.0,"q":911.1},{"pwf":1400.0,"q":1300.0},{"pwf":1200.0,"q":1644.4},{"pwf":1000.0,"q":1944.4},{"pwf":800.0,"q":2200.0},{"pwf":600.0,"q":2411.1},{"pwf":400.0,"q":2577.8},{"pwf":200.0,"q":2700.0},{"pwf":0.0,"q":2777.8}]},"3.0":{"qmax":3333.3,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":573.3},{"pwf":1600.0,"q":1093.3},{"pwf":1400.0,"q":1560.0},{"pwf":1200.0,"q":1973.3},{"pwf":1000.0,"q":2333.3},{"pwf":800.0,"q":2640.0},{"pwf":600.0,"q":2893.3},{"pwf":400.0,"q":3093.3},{"pwf":200.0,"q":3240.0},{"pwf":0.0,"q":3333.3}]},"3.5":{"qmax":3888.9,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":668.9},{"pwf":1600.0,"q":1275.6},{"pwf":1400.0,"q":1820.0},{"pwf":1200.0,"q":2302.2},{"pwf":1000.0,"q":2722.2},{"pwf":800.0,"q":3080.0},{"pwf":600.0,"q":3375.6},{"pwf":400.0,"q":3608.9},{"pwf":200.0,"q":3780.0},{"pwf":0.0,"q":3888.9}]},"4.0":{"qmax":4444.4,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":764.4},{"pwf":1600.0,"q":1457.8},{"pwf":1400.0,"q":2080.0},{"pwf":1200.0,"q":2631.1},{"pwf":1000.0,"q":3111.1},{"pwf":800.0,"q":3520.0},{"pwf":600.0,"q":3857.8},{"pwf":400.0,"q":4124.4},{"pwf":200.0,"q":4320.0},{"pwf":0.0,"q":4444.4}]},"4.5":{"qmax":5000.0,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":860.0},{"pwf":1600.0,"q":1640.0},{"pwf":1400.0,"q":2340.0},{"pwf":1200.0,"q":2960.0},{"pwf":1000.0,"q":3500.0},{"pwf":800.0,"q":3960.0},{"pwf":600.0,"q":4340.0},{"pwf":400.0,"q":4640.0},{"pwf":200.0,"q":4860.0},{"pwf":0.0,"q":5000.0}]},"5.0":{"qmax":5555.6,"curve":[{"pwf":2000.0,"q":0.0},{"pwf":1800.0,"q":955.6},{"pwf":1600.0,"q":1822.2},{"pwf":1400.0,"q":2600.0},{"pwf":1200.0,"q":3288.9},{"pwf":1000.0,"q":3888.9},{"pwf":800.0,"q":4400.0},{"pwf":600.0,"q":4822.2},{"pwf":400.0,"q":5155.6},{"pwf":200.0,"q":5400.0},{"pwf":0.0,"q":5555.6}]}},"3000":{"0.5":{"qmax":833.3,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":143.3},{"pwf":2400.0,"q":273.3},{"pwf":2100.0,"q":390.0},{"pwf":1800.0,"q":493.3},{"pwf":1500.0,"q":583.3},{"pwf":1200.0,"q":660.0},{"pwf":900.0,"q":723.3},{"pwf":600.0,"q":773.3},{"pwf":300.0,"q":810.0},{"pwf":0.0,"q":833.3}]},"1.0":{"qmax":1666.7,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":286.7},{"pwf":2400.0,"q":546.7},{"pwf":2100.0,"q":780.0},{"pwf":1800.0,"q":986.7},{"pwf":1500.0,"q":1166.7},{"pwf":1200.0,"q":1320.0},{"pwf":900.0,"q":1446.7},{"pwf":600.0,"q":1546.7},{"pwf":300.0,"q":1620.0},{"pwf":0.0,"q":1666.7}]},"1.5":{"qmax":2500.0,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":430.0},{"pwf":2400.0,"q":820.0},{"pwf":2100.0,"q":1170.0},{"pwf":1800.0,"q":1480.0},{"pwf":1500.0,"q":1750.0},{"pwf":1200.0,"q":1980.0},{"pwf":900.0,"q":2170.0},{"pwf":600.0,"q":2320.0},{"pwf":300.0,"q":2430.0},{"pwf":0.0,"q":2500.0}]},"2.0":{"qmax":3333.3,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":573.3},{"pwf":2400.0,"q":1093.3},{"pwf":2100.0,"q":1560.0},{"pwf":1800.0,"q":1973.3},{"pwf":1500.0,"q":2333.3},{"pwf":1200.0,"q":2640.0},{"pwf":900.0,"q":2893.3},{"pwf":600.0,"q":3093.3},{"pwf":300.0,"q":3240.0},{"pwf":0.0,"q":3333.3}]},"2.5":{"qmax":4166.7,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":716.7},{"pwf":2400.0,"q":1366.7},{"pwf":2100.0,"q":1950.0},{"pwf":1800.0,"q":2466.7},{"pwf":1500.0,"q":2916.7},{"pwf":1200.0,"q":3300.0},{"pwf":900.0,"q":3616.7},{"pwf":600.0,"q":3866.7},{"pwf":300.0,"q":4050.0},{"pwf":0.0,"q":4166.7}]},"3.0":{"qmax":5000.0,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":860.0},{"pwf":2400.0,"q":1640.0},{"pwf":2100.0,"q":2340.0},{"pwf":1800.0,"q":2960.0},{"pwf":1500.0,"q":3500.0},{"pwf":1200.0,"q":3960.0},{"pwf":900.0,"q":4340.0},{"pwf":600.0,"q":4640.0},{"pwf":300.0,"q":4860.0},{"pwf":0.0,"q":5000.0}]},"3.5":{"qmax":5833.3,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":1003.3},{"pwf":2400.0,"q":1913.3},{"pwf":2100.0,"q":2730.0},{"pwf":1800.0,"q":3453.3},{"pwf":1500.0,"q":4083.3},{"pwf":1200.0,"q":4620.0},{"pwf":900.0,"q":5063.3},{"pwf":600.0,"q":5413.3},{"pwf":300.0,"q":5670.0},{"pwf":0.0,"q":5833.3}]},"4.0":{"qmax":6666.7,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":1146.7},{"pwf":2400.0,"q":2186.7},{"pwf":2100.0,"q":3120.0},{"pwf":1800.0,"q":3946.7},{"pwf":1500.0,"q":4666.7},{"pwf":1200.0,"q":5280.0},{"pwf":900.0,"q":5786.7},{"pwf":600.0,"q":6186.7},{"pwf":300.0,"q":6480.0},{"pwf":0.0,"q":6666.7}]},"4.5":{"qmax":7500.0,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":1290.0},{"pwf":2400.0,"q":2460.0},{"pwf":2100.0,"q":3510.0},{"pwf":1800.0,"q":4440.0},{"pwf":1500.0,"q":5250.0},{"pwf":1200.0,"q":5940.0},{"pwf":900.0,"q":6510.0},{"pwf":600.0,"q":6960.0},{"pwf":300.0,"q":7290.0},{"pwf":0.0,"q":7500.0}]},"5.0":{"qmax":8333.3,"curve":[{"pwf":3000.0,"q":0.0},{"pwf":2700.0,"q":1433.3},{"pwf":2400.0,"q":2733.3},{"pwf":2100.0,"q":3900.0},{"pwf":1800.0,"q":4933.3},{"pwf":1500.0,"q":5833.3},{"pwf":1200.0,"q":6600.0},{"pwf":900.0,"q":7233.3},{"pwf":600.0,"q":7733.3},{"pwf":300.0,"q":8100.0},{"pwf":0.0,"q":8333.3}]}},"4000":{"0.5":{"qmax":1111.1,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":191.1},{"pwf":3200.0,"q":364.4},{"pwf":2800.0,"q":520.0},{"pwf":2400.0,"q":657.8},{"pwf":2000.0,"q":777.8},{"pwf":1600.0,"q":880.0},{"pwf":1200.0,"q":964.4},{"pwf":800.0,"q":1031.1},{"pwf":400.0,"q":1080.0},{"pwf":0.0,"q":1111.1}]},"1.0":{"qmax":2222.2,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":382.2},{"pwf":3200.0,"q":728.9},{"pwf":2800.0,"q":1040.0},{"pwf":2400.0,"q":1315.6},{"pwf":2000.0,"q":1555.6},{"pwf":1600.0,"q":1760.0},{"pwf":1200.0,"q":1928.9},{"pwf":800.0,"q":2062.2},{"pwf":400.0,"q":2160.0},{"pwf":0.0,"q":2222.2}]},"1.5":{"qmax":3333.3,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":573.3},{"pwf":3200.0,"q":1093.3},{"pwf":2800.0,"q":1560.0},{"pwf":2400.0,"q":1973.3},{"pwf":2000.0,"q":2333.3},{"pwf":1600.0,"q":2640.0},{"pwf":1200.0,"q":2893.3},{"pwf":800.0,"q":3093.3},{"pwf":400.0,"q":3240.0},{"pwf":0.0,"q":3333.3}]},"2.0":{"qmax":4444.4,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":764.4},{"pwf":3200.0,"q":1457.8},{"pwf":2800.0,"q":2080.0},{"pwf":2400.0,"q":2631.1},{"pwf":2000.0,"q":3111.1},{"pwf":1600.0,"q":3520.0},{"pwf":1200.0,"q":3857.8},{"pwf":800.0,"q":4124.4},{"pwf":400.0,"q":4320.0},{"pwf":0.0,"q":4444.4}]},"2.5":{"qmax":5555.6,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":955.6},{"pwf":3200.0,"q":1822.2},{"pwf":2800.0,"q":2600.0},{"pwf":2400.0,"q":3288.9},{"pwf":2000.0,"q":3888.9},{"pwf":1600.0,"q":4400.0},{"pwf":1200.0,"q":4822.2},{"pwf":800.0,"q":5155.6},{"pwf":400.0,"q":5400.0},{"pwf":0.0,"q":5555.6}]},"3.0":{"qmax":6666.7,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":1146.7},{"pwf":3200.0,"q":2186.7},{"pwf":2800.0,"q":3120.0},{"pwf":2400.0,"q":3946.7},{"pwf":2000.0,"q":4666.7},{"pwf":1600.0,"q":5280.0},{"pwf":1200.0,"q":5786.7},{"pwf":800.0,"q":6186.7},{"pwf":400.0,"q":6480.0},{"pwf":0.0,"q":6666.7}]},"3.5":{"qmax":7777.8,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":1337.8},{"pwf":3200.0,"q":2551.1},{"pwf":2800.0,"q":3640.0},{"pwf":2400.0,"q":4604.4},{"pwf":2000.0,"q":5444.4},{"pwf":1600.0,"q":6160.0},{"pwf":1200.0,"q":6751.1},{"pwf":800.0,"q":7217.8},{"pwf":400.0,"q":7560.0},{"pwf":0.0,"q":7777.8}]},"4.0":{"qmax":8888.9,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":1528.9},{"pwf":3200.0,"q":2915.6},{"pwf":2800.0,"q":4160.0},{"pwf":2400.0,"q":5262.2},{"pwf":2000.0,"q":6222.2},{"pwf":1600.0,"q":7040.0},{"pwf":1200.0,"q":7715.6},{"pwf":800.0,"q":8248.9},{"pwf":400.0,"q":8640.0},{"pwf":0.0,"q":8888.9}]},"4.5":{"qmax":10000.0,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":1720.0},{"pwf":3200.0,"q":3280.0},{"pwf":2800.0,"q":4680.0},{"pwf":2400.0,"q":5920.0},{"pwf":2000.0,"q":7000.0},{"pwf":1600.0,"q":7920.0},{"pwf":1200.0,"q":8680.0},{"pwf":800.0,"q":9280.0},{"pwf":400.0,"q":9720.0},{"pwf":0.0,"q":10000.0}]},"5.0":{"qmax":11111.1,"curve":[{"pwf":4000.0,"q":0.0},{"pwf":3600.0,"q":1911.1},{"pwf":3200.0,"q":3644.4},{"pwf":2800.0,"q":5200.0},{"pwf":2400.0,"q":6577.8},{"pwf":2000.0,"q":7777.8},{"pwf":1600.0,"q":8800.0},{"pwf":1200.0,"q":9644.4},{"pwf":800.0,"q":10311.1},{"pwf":400.0,"q":10800.0},{"pwf":0.0,"q":11111.1}]}}}};
+const M = DATA.meta;
+const spec = document.getElementById('spec');
+spec.innerHTML = [['Model', M.standard], ['Reservoir pressures', M.pr.length],
+  ['PI range', M.pi[0]+'–'+M.pi[M.pi.length-1]+' bopd/psi']]
+  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+const selPr = document.getElementById('pr');
+M.pr.forEach(p=>selPr.add(new Option(p+' psi', p)));
+selPr.value = 3000;
+const slider = document.getElementById('pi');
+slider.max = M.pi.length-1;
+
+function maxQ(){ let mx=0; for(const pr in DATA.series) for(const pi in DATA.series[pr])
+  if(DATA.series[pr][pi].qmax>mx) mx=DATA.series[pr][pi].qmax; return mx; }
+const MX = maxQ();
+
+function render(){
+  const pr = selPr.value, pi = M.pi[+slider.value], d = DATA.series[pr][pi.toFixed(1)];
+  document.getElementById('pival').textContent = pi.toFixed(1)+' bopd/psi';
+  document.getElementById('rQ').textContent = d.qmax.toLocaleString()+' bopd';
+  const half = d.curve[Math.floor((d.curve.length-1)/2)];
+  document.getElementById('rH').textContent = half.q.toLocaleString()+' bopd';
+  document.getElementById('chart').innerHTML = d.curve.map(c=>
+    `<div class="bar" style="height:${(c.q/MX*100).toFixed(1)}%" title="Pwf ${c.pwf} psi: ${c.q} bopd"></div>`).join('');
+  document.getElementById('xax').innerHTML = d.curve.map((c,i)=>
+    `<div>${(i%2===0)?c.pwf:''}</div>`).join('');
+}
+let start = M.pi.indexOf(2.0); if(start<0) start = Math.floor(M.pi.length/2);
+slider.value = start; render();
+[selPr, slider].forEach(el=>el.addEventListener('input', render));
+</script>
+</body></html>
