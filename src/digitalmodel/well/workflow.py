@@ -301,3 +301,132 @@ def run_tubular_design(cfg: dict[str, Any]) -> dict[str, Any]:
     cfg["outputs"]["envelope_csv"] = str(csv_path)
     cfg["tubular_design"] = {**params, "summary": summary}
     return cfg
+
+
+def run_casing_design(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Run the production casing design-check screen over candidate products.
+
+    Config: a well (depths, gradients, reservoir, frac plan), a list of
+    candidate casing products (grade + OD + nominal weight) and optional
+    design-factor overrides.  Each product is checked for burst / collapse /
+    tension / triaxial design factors plus the maximum allowable frac surface
+    pressure, with an optional NACE MR0175 sour-service screen.
+
+    Source: Hansen (Devon Energy), EPA Hydraulic Fracturing Technical
+    Workshop Session 2, 2011; API 5C3 / API 5CT / NACE MR0175 (#1290, #1305).
+    """
+    from digitalmodel.well.tubulars.casing import casing as build_casing
+    from digitalmodel.well.tubulars.casing_design import (
+        DesignFactors,
+        ProductionCasingWell,
+        api_round_force_lbf,
+        api_round_pressure_psi,
+        burst_external_profile,
+        check_production_casing,
+        max_frac_surface_pressure,
+        sour_service_screen,
+    )
+
+    params = cfg.get("casing_design", {})
+    well = ProductionCasingWell(**params["well"])
+    factors = DesignFactors(**params.get("design_factors", {}))
+
+    external = burst_external_profile(
+        well.mud_ppg,
+        well.toc_ft,
+        well.outer_shoe_ft,
+        well.td_ft,
+        mix_water_ppg=well.mix_water_ppg,
+        pore_ppg=well.pore_ppg,
+    )
+
+    rows: list[dict[str, Any]] = []
+    for product_cfg in params["products"]:
+        product = build_casing(
+            product_cfg["grade"],
+            od_in=float(product_cfg["od_in"]),
+            weight_ppf=float(product_cfg["weight_ppf"]),
+        )
+        checks = check_production_casing(
+            product, float(product_cfg["weight_ppf"]), well, factors)
+        p_frac_max = max_frac_surface_pressure(
+            product, well.frac_fluid_ppg, external, well.td_ft, factors)
+        row: dict[str, Any] = {
+            "label": (f"{product.od_in:g}\" {product_cfg['weight_ppf']:g}# "
+                      f"{product.grade.name}"),
+            "grade": product.grade.name,
+            "od_in": product.od_in,
+            "weight_ppf": float(product_cfg["weight_ppf"]),
+            "wall_in": product.wt_in,
+            "burst_rating_psi": api_round_pressure_psi(product.burst_psi),
+            "collapse_rating_psi": api_round_pressure_psi(
+                product.collapse_psi),
+            "collapse_regime": product.collapse_regime,
+            "body_yield_lbf": api_round_force_lbf(product.body_yield_lbf),
+            "max_frac_surface_pressure_psi": round(p_frac_max, 1),
+            "passes_all": all(res.passes for res in checks.values()),
+        }
+        for mode, res in checks.items():
+            row[f"{mode}_df"] = (round(res.min_design_factor, 3)
+                                 if res.min_design_factor != float("inf")
+                                 else None)
+            row[f"{mode}_required_df"] = res.required_design_factor
+            row[f"{mode}_governing_depth_ft"] = res.governing_depth_ft
+            row[f"{mode}_passes"] = res.passes
+        rows.append(row)
+
+    summary: dict[str, Any] = {
+        "calculation": "casing_design",
+        "reference": ("Hansen (Devon Energy), EPA HF workshop 2011; "
+                      "API 5C3 / API 5CT / NACE MR0175"),
+        "well": params["well"],
+        "design_factors": {
+            "burst": factors.burst,
+            "burst_low_sicp": factors.burst_low_sicp,
+            "collapse": factors.collapse,
+            "tension": factors.tension,
+            "compression": factors.compression,
+            "triaxial": factors.triaxial,
+        },
+        "product_count": len(rows),
+        "passing_products": [r["label"] for r in rows if r["passes_all"]],
+        "products": rows,
+    }
+
+    sour_cfg = params.get("sour_service")
+    if sour_cfg:
+        assessment = sour_service_screen(
+            float(sour_cfg["h2s_ppm"]),
+            float(sour_cfg["total_pressure_psia"]),
+            well_type=sour_cfg.get("well_type", "gas"),
+            service_temp_f=sour_cfg.get("service_temp_f"),
+        )
+        summary["sour_service"] = {
+            "is_sour": assessment.is_sour,
+            "h2s_partial_psia": round(assessment.h2s_partial_psia, 4),
+            "acceptable_grades": list(assessment.acceptable_grades),
+            "reference": assessment.reference,
+        }
+
+    output_cfg = params.get("outputs", {})
+    summary["summary_json"] = str(
+        _write_summary(
+            cfg,
+            output_cfg,
+            summary,
+            "results/casing_design",
+            "casing_design_summary.json",
+        )
+    )
+
+    directory = Path(cfg["outputs"]["directory"])
+    csv_path = directory / output_cfg.get(
+        "products_csv", "casing_design_products.csv")
+    with csv_path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    cfg["outputs"]["products_csv"] = str(csv_path)
+
+    cfg["casing_design"] = {**params, "summary": summary}
+    return cfg

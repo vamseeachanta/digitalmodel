@@ -284,6 +284,18 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
+    elif workflow["id"] == "drilling-riser-envelope-library-query":
+        result = cfg["parametric_query"]["result"]
+        # licensed-solver sparse library: covered operating mode interpolates
+        # offset x current x Hs x Tp; the DAF is a dimensionless multiplier >= 1.
+        assert result["in_range"] is True
+        assert result["response"] == "von_mises_daf"
+        assert result["value"] >= 1.0
+        lo, hi = result["confidence"]["band"]
+        assert lo <= result["value"] <= hi
+        # the STUB must self-identify at the query surface (#1346 governance fix)
+        assert result["provenance"]["solver"]["licensed"] is False
+        assert result["provenance"]["solver"]["version"] == "STUB"
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
         # boundary class: utilisation predicted directly
@@ -1091,6 +1103,29 @@ def test_workflow_registry(workflow, monkeypatch):
         )
         assert result["screening_status"] == "fail"
         assert cfg["screening_status"] == "fail"
+    elif workflow["id"] == "casing-design":
+        summary = cfg["casing_design"]["summary"]
+        assert summary["product_count"] == 8
+        assert summary["passing_products"] == [
+            '5.5" 20# P110',
+            '5.5" 23# P110',
+            '5.5" 23# Q125',
+        ]
+        golden = next(p for p in summary["products"]
+                      if p["label"] == '5.5" 23# P110')
+        # Barlow worked example from the source deck: 14,520 psi API-rounded.
+        assert golden["burst_rating_psi"] == pytest.approx(14520.0)
+        assert golden["collapse_rating_psi"] == pytest.approx(14540.0)
+        assert golden["body_yield_lbf"] == pytest.approx(729000.0)
+        assert golden["max_frac_surface_pressure_psi"] == pytest.approx(
+            11616.0)
+        assert golden["passes_all"] is True
+        sour = summary["sour_service"]
+        # 100 ppm at 8,500 psia -> 0.85 psia partial pressure -> sour.
+        assert sour["is_sour"] is True
+        assert sour["h2s_partial_psia"] == pytest.approx(0.85)
+        assert "P110" in sour["acceptable_grades"]  # 180 F >= 175 F window
+        assert "Q125" not in sour["acceptable_grades"]  # needs >= 225 F
     elif workflow["id"] == "well-bore-design":
         block = cfg["well_bore_design"]
         summary = block["summary"]

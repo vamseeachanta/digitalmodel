@@ -3,11 +3,30 @@ import os
 import sys
 from typing import Any, Dict
 
+# Third party imports
+import pytest
+
 # Reader imports
 from assetutilities.modules.test_utilities.test_utilities import TestUtilities
 from digitalmodel.engine import engine
 
 tu = TestUtilities()
+
+# The input configs these tests feed to engine() were relocated off-repo at
+# the repo-slimming squash (2c185d2d) and engine has no basename routing arm
+# for mooring_tension_iteration yet. Skip until fixtures + routing are
+# restored — tracked in
+# https://github.com/vamseeachanta/digitalmodel/issues/1318.
+_TEST_DIR = os.path.dirname(__file__)
+_INPUT_FILES = [
+    os.path.join(_TEST_DIR, 'scripts', 'mooring_tension_iteration.yml'),
+    os.path.join(_TEST_DIR, 'single_line_iteration.yml'),
+    os.path.join(_TEST_DIR, 'multi_line_iteration.yml'),
+]
+pytestmark = pytest.mark.skipif(
+    not all(os.path.isfile(f) for f in _INPUT_FILES),
+    reason="input ymls relocated off-repo at repo slimming; restore tracked in #1318",
+)
 
 def run_process(input_file: str, expected_result: Dict[str, Any] = {}) -> None:
     """

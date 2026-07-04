@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/corrosion/galvanic-compatibility-explorer.html",
+  "provenance": {
+    "basis": "MIL-STD-889 anodic index",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/corrosion/galvanic-compatibility-explorer.html"
+  },
+  "surface": "digitalmodel:galvanic-explorer",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/corrosion/galvanic-compatibility-explorer.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Screen this dissimilar-metal couple for galvanic compatibility in a marine environment (MIL-STD-889 anodic index) and tell me if it needs protection.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Screen this dissimilar-metal couple for galvanic compatibility in a marine environment (MIL-STD-889 anodic index) and tell me if it needs protection."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/corrosion/galvanic-compatibility-explorer.html"
+    }
+  ]
+}

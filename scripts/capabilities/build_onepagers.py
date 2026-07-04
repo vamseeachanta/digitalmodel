@@ -40,7 +40,7 @@ _CHROME = os.environ.get("CHROME") or shutil.which("google-chrome") or shutil.wh
 # digitalmodel brand logo (native colors), inlined from the repo asset with any
 # XML prolog stripped so it drops cleanly into both the one-pager and API pages.
 _LOGO = re.sub(
-    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo.svg").read_text(
+    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo_compact.svg").read_text(
         encoding="utf-8"
     )
 ).strip()
@@ -54,11 +54,16 @@ SPECS: list[dict] = [
          std="API 579-1 · ASME B31G · DNV-RP-F101", path="capabilities/#ffs",
          blurb="Remaining-strength assessment of corroded and metal-loss components with an "
                "inspector decision layer — benchmarked to standard worked examples and published "
-               "ratings across the three governing FFS codes.",
-         figures=[],
+               "ratings across the three governing FFS codes. Built to slot behind inspection, "
+               "mechanical-integrity and RBI service programs: thickness and defect data in, "
+               "code-cited verdict and report out.",
+         figures=[("3", "governing FFS codes"), ("Part 4/5", "API 579-1 metal loss"),
+                  ("510/570/653", "interval planning")],
          bullets=["Remaining-strength and inspector-verdict walkthrough across API 579-1, ASME B31G and DNV-RP-F101",
                   "Accept / re-rate / take-more-measurements / escalate driven by measurement sufficiency",
-                  "RSTRENG effective-area and B31G screens validated to published worked examples"]),
+                  "UT / phased-array thickness-grid intake; remaining life and next-inspection interval per API 510 / 570 / 653",
+                  "RSTRENG effective-area and B31G screens validated to published worked examples",
+                  "API 579-1 Part 6 pitting (auto-routed from UT grids), Part 12 dent / dent-gouge, and BS 7910 Option-1 FAD weld-flaw envelopes"]),
     dict(id="sec-structural", kind="section", title="Ship structural strength",
          std="DNV-RP-C201 · IACS UR S11 · class rules", path="capabilities/#structural",
          blurb="Plate and stiffened-panel buckling for ship structure — plate-field, column and "
@@ -94,12 +99,24 @@ SPECS: list[dict] = [
                   "Self-contained, deterministic static output"]),
     dict(id="sec-installation", kind="section", title="Installation",
          std="DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444", path="capabilities/#installation",
-         blurb="Marine-installation suitability for a crane vessel — lift envelopes, splash-zone "
-               "operability and weather-window analysis, published as a Deckhand deliverable.",
+         blurb="Marine-installation suitability — a crane-vessel pamphlet with lift envelopes, "
+               "splash-zone operability and weather windows, a provenance-audited installation "
+               "fleet database with confidence-weighted suitability ranking, and a DNV 2.7-1 "
+               "offshore-container screen.",
          figures=[],
          bullets=["Crane lift suitability against the vessel's load chart",
                   "Operational and per-structure splash-zone Hs/Tp envelopes",
-                  "Weather-window operability with DP / mooring failure-risk"]),
+                  "Confidence-weighted vessel suitability ranking over the installation fleet",
+                  "DNV 2.7-1 (DNVGL-ST-E271) offshore-container utilization screen"]),
+    dict(id="sec-wind", kind="section", title="Floating wind",
+         std="semi-sub · spar · TLP · barge · LCOE", path="capabilities/#wind",
+         blurb="Floating-wind concept screening and economics — parametric floater archetypes "
+               "screened across site load cases as the licence-free first tier, and an LCOE / "
+               "TOTEX trade space with reliability, qualification and industrialisation levers.",
+         figures=[("4", "floater archetypes"), ("IEA 15 MW", "reference turbine")],
+         bullets=["Stability, motion, modal-separation and mooring-offset screens per variant",
+                  "LCOE / TOTEX engine with capex breakdown and reliability scenarios",
+                  "Qualification levers and turbine- / farm-scale economies of scale"]),
     dict(id="sec-validation", kind="section", title="Validated against published references",
          std="governing-code provenance · CI-guarded", path="capabilities/#validation",
          blurb="Every strength / FFS result reproduces a standard's worked example, a published "
@@ -123,6 +140,14 @@ SPECS: list[dict] = [
                "sufficiency on real defect data.",
          figures=[], bullets=["Decision verdict per defect from measurement sufficiency",
                               "Runs on real metal-loss defect data"]),
+    dict(id="riser-joint-acceptance", kind="work", title="Riser-joint flaw-acceptance explorer",
+         std="API 579-1 · Modified B31G · API RP 1111", path="ffs/riser-joint-acceptance-explorer.html",
+         blurb="Level-1 acceptable flaw length-vs-depth envelopes for a drilling-riser joint with "
+               "campaign-end growth allowance, collapse-limited water depth and string-zone "
+               "placement — demonstrated on real anonymized inspection data.",
+         figures=[], bullets=["Acceptance envelopes split base-metal / weld and campaign start / end",
+                              "Collapse-qualified water depth from the measured minimum wall (API RP 1111)",
+                              "String-zone placement verdict on the real 26-joint inspected fleet"]),
     dict(id="buckling-plate", kind="work", title="Ship plate buckling explorer",
          std="DNV-RP-C201", path="buckling/ship-plate-buckling.html",
          blurb="Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld "
@@ -203,12 +228,15 @@ SPECS: list[dict] = [
     dict(id="sec-manoeuvring", kind="section", title="Manoeuvring & station-keeping",
          std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="capabilities/#manoeuvring",
          blurb="Low-speed manoeuvring and station-keeping screens — turning circle against the IMO "
-               "criteria, minimum steerage speed by loading condition, and the rudder angle needed "
-               "to hold heading against a current, built on a researched rudder-type database.",
+               "criteria, minimum steerage speed by loading condition, the rudder angle needed "
+               "to hold heading against a current, built on a researched rudder-type database, "
+               "and a mooring-system resilience traffic-light composed from the pre-computed "
+               "mooring atlases.",
          figures=[],
          bullets=["Turning circle vs the 5·L IMO advance/tactical-diameter limit",
                   "Steerage-threshold speed vs wind (laden / ballast / kick-ahead)",
-                  "Engine-on rudder angle to balance the current yaw moment"]),
+                  "Engine-on rudder angle to balance the current yaw moment",
+                  "Mooring resilience traffic-light (intact / damaged / foundation / fatigue)"]),
     dict(id="rudder-explorer", kind="work", title="Rudder & low-speed manoeuvring explorer",
          std="IMO MSC.137(76) · Clarke 1983 · OCIMF", path="hydro/rudder-maneuvering-explorer.html",
          blurb="Interactive turning circle vs the 5·L limit, steerage-threshold speed vs wind "
@@ -226,6 +254,162 @@ SPECS: list[dict] = [
                "a class-rule area sizing check.",
          figures=[], bullets=["Nine rudder types with area / aspect ratios and lift coefficients",
                               "Class-rule (DNV/ABS) rudder-area sizing check"]),
+    dict(id="diffraction-deck-prep", kind="work",
+         title="Diffraction deck generation — spec to solver input",
+         std="AQWA · OrcaWave · canonical spec",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "aqwa-diffraction-deck-prep",
+         blurb="One canonical vessel spec (YAML) deterministically prepared into a solver-ready "
+               "AQWA diffraction deck offline; the OrcaWave solve runs on the licensed lane with "
+               "provenance carried through.",
+         figures=[], bullets=["Solver-ready AQWA .dat deck prepared offline from one spec",
+                              "OrcaWave solve on the licensed lane, same canonical spec",
+                              "Deterministic registry workflow, durable-workflow tested"]),
+    dict(id="vessel-suitability", kind="work",
+         title="Installation vessel database & suitability ranking",
+         std="DNV-RP-H103 · flag-don't-fake provenance",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels",
+         blurb="Curated + worldenergydata installation crane fleet (crane curves, deck, DP) with "
+               "cited / estimated / gap provenance on every field; ranks vessels for a lift by "
+               "capability margin weighted by data confidence.",
+         figures=[], bullets=["Every field cited, flagged estimated, or an explicit gap — never faked",
+                              "Confidence-weighted capability score per vessel for a lift requirement",
+                              "Defensibility flag on each ranking"]),
+    dict(id="container-utilization", kind="work",
+         title="Offshore container utilization — DNV 2.7-1",
+         std="DNVGL-ST-E271 (2017)",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/"
+              "offshore_container_utilization",
+         blurb="Clause-traced offshore-lift screening for CCUs — 2.5·R·g primary load, 3·R·g "
+               "pad-eye set, 0.85·Re allowable — swept into utilization curves across rating, "
+               "aspect ratio and sling angle.",
+         figures=[], bullets=["Clause-traced design loads per DNVGL-ST-E271 §4.2.3.1 / §4.2.1",
+                              "Utilization curves vs rating, aspect ratio and sling angle",
+                              "Screening tier ahead of the certified FEA + prototype tests"]),
+    dict(id="wind-sizing", kind="work", title="Floating-wind sizing & concept screening",
+         std="semi-sub · spar · TLP · barge · IEA 15 MW",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "floating-wind-sizing",
+         blurb="Parametric floater archetypes swept across site load cases and screened on "
+               "stability, motion, modal separation and mooring offset — the closed-form first "
+               "tier ahead of the licensed OrcaWave/OrcaFlex pass.",
+         figures=[("4", "floater archetypes")],
+         bullets=["Stability / motion / modal / mooring screen per design variant",
+                  "IEA 15 MW-class lumped turbine topside carried explicitly",
+                  "Licence-free closed-form tier; shortlist goes to OrcaWave/OrcaFlex"]),
+    dict(id="wind-economics", kind="work", title="Floating-wind LCOE / TOTEX tradespace",
+         std="LCOE · reliability · economies of scale",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "floating-wind-economics",
+         blurb="Levelised-cost engine with capex breakdown, availability / reliability scenarios, "
+               "qualification levers and turbine- / farm-scale economies swept over the concept "
+               "trade space.",
+         figures=[], bullets=["LCOE / TOTEX with an explicit capex breakdown",
+                              "Availability and reliability scenarios applied to the cost of energy",
+                              "Turbine- and farm-scale economies-of-scale sweeps"]),
+    dict(id="mooring-resilience", kind="work", title="Mooring resilience screen",
+         std="API RP 2SK · DNV-OS-E301",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/"
+              "mooring_resilience",
+         blurb="Intact / one-line-damaged tension, anchor-foundation and chain-fatigue checks "
+               "composed from the pre-computed mooring and anchor atlases into a single "
+               "traffic-light — out-of-range cases are escalated, never extrapolated.",
+         figures=[], bullets=["Intact 1.67 / damaged 1.25 ASD factors per API RP 2SK",
+                              "Anchor-foundation check at 1.5 per DNV-OS-E301 practice",
+                              "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
+    dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
+         std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
+         blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
+               "wave-equation solvers, an 18-mode failure-signature library plus a 336-card "
+               "example library, ML card classification with a CI drift-guard on every "
+               "published diagnosis, recommended controller setpoints & alarms, and a "
+               "field-wide health screen.",
+         figures=[("336", "example cards"), ("28", "guide entries"), ("2", "registered workflows")],
+         bullets=["Troubleshooting use cases: card signature → ML diagnosis → field response",
+                  "Example-card library: synthetic-verified, measured field wells, digitized archive",
+                  "POC setpoints & alarms recommended per well from its own card",
+                  "Field-wide per-well health ranking with a fail-closed screening verdict"]),
+    dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
+         std="Gibbs wave equation · Bezerra projections · 18 failure modes",
+         path="artificial-lift/dynacard-troubleshooting.html",
+         blurb="Seven curated rod-pump troubleshooting cases, a 336-card example library behind "
+               "phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting "
+               "guide, and recommended controller setpoints & alarms computed per well.",
+         figures=[("336", "example cards"), ("28", "phenomena in guide"), ("7/7", "CI-verified diagnoses")],
+         bullets=["Example-card library: synthetic-verified, measured field wells, digitized archive",
+                  "ML classification with confidence and top-3 differential",
+                  "Two-tier load / span / card-area alarm recipes computed per well",
+                  "Every published diagnosis re-verified against the live classifier in CI"]),
+    dict(id="sec-well", kind="section", title="Well construction — casing & tubulars",
+         std="API 5C3 · API 5CT · NACE MR0175", path="capabilities/#well",
+         blurb="Production-casing design checks on the API 5C3 / API 5CT product catalog — burst "
+               "(tubing leak + frac screen-out), full-evacuation collapse, buoyed-weight tension "
+               "and Von Mises triaxial against published operator design-factor minimums, plus the "
+               "maximum allowable frac surface pressure, the NACE MR0175 sour-service screen and "
+               "the connection-class tension efficiencies.",
+         figures=[("4", "design-check modes"), ("14,520 psi", "golden Barlow burst"),
+                  ("MR0175", "sour-service screen")],
+         bullets=["Burst / collapse / tension / triaxial design factors with governing depth per product",
+                  "API 5C3 ratings (4-regime collapse) computed from the API 5CT catalog, API-rounded",
+                  "Max allowable frac surface pressure at the burst design factor",
+                  "NACE MR0175 sour screen (0.05 psia H2S; 65 / 265 psia) with grade temperature windows"]),
+    dict(id="casing-design", kind="work", title="Casing design explorer",
+         std="API 5C3 · API 5CT · NACE MR0175",
+         path="well/casing-design-explorer.html",
+         blurb="Eight candidate products checked against a reference frac'd well — per-mode design "
+               "factors with governing depth and pass/fail, max allowable frac surface pressure, "
+               "the golden Barlow worked example (5-1/2\" 23# P110 → 14,520 psi), the NACE "
+               "sour-service screen and the connection-class table.",
+         figures=[("8", "candidate products"), ("14,520 psi", "golden Barlow burst")],
+         bullets=["Per-mode design factor, governing depth and pass/fail for every product",
+                  "Depth profiles for the tubing-leak and frac screen-out load cases vs the burst rating",
+                  "Max allowable frac surface pressure at DF 1.25 per product",
+                  "Every published margin re-verified against the live checks in CI"]),
+    dict(id="dynacard-field-health", kind="work", title="Field-wide dynacard health rollup",
+         std="per-well diagnosis · fail-closed screening",
+         path="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/"
+              "artificial-lift-field-health",
+         blurb="Every well's dynamometer card classified and ranked into normal / warning / "
+               "critical / failure, with the worst wells surfaced and a fail-closed field "
+               "screening verdict as JSON + CSV.",
+         figures=[], bullets=["Per-well ML diagnosis rolled up to field status counts",
+                              "Worst-wells ranking by severity and fillage",
+                              "Fail-closed screening verdict (JSON summary + per-well CSV)"]),
+    # ---- Corrosion & production chemistry ----
+    dict(id="sec-corrosion-production", kind="section", title="Corrosion & production chemistry",
+         std="MIL-STD-889 · Oddo–Tomson (SPE 21710)", path="capabilities/#corrosion-production",
+         blurb="Screening-level materials-compatibility and produced-water scaling checks that sit "
+               "alongside the integrity workflow — dissimilar-metal galvanic risk on the published "
+               "anodic-index method, and mineral-scale saturation tendency in the Oddo–Tomson "
+               "conditional-solubility framework. Both run from public constants with every "
+               "coefficient documented and overridable; parameterized for calibration before "
+               "quantitative use.",
+         figures=[("3", "galvanic environment classes"), ("7", "scale families"),
+                  ("public", "constant basis")],
+         bullets=["Galvanic couple screen (OK / marginal / protect) vs per-environment allowable ΔV, MIL-STD-889 anodic index",
+                  "Mineral-scale saturation indices (calcite / sulfate / halite) with bottomhole→wellhead trending",
+                  "Formation-water × seawater mixing sweeps for waterflood compatibility",
+                  "Published anodic-index and thermodynamic constants only; no operator-proprietary data"]),
+    dict(id="galvanic-explorer", kind="work", title="Galvanic compatibility explorer",
+         std="MIL-STD-889 anodic index", path="corrosion/galvanic-compatibility-explorer.html",
+         blurb="Dissimilar-metal couple screening (OK / marginal / protect) against the "
+               "environment-dependent allowable potential difference, identifying the anodic "
+               "(sacrificial) member with area-ratio guidance — a per-environment compatibility "
+               "heatmap over the common construction metals.",
+         figures=[("0.15–0.50 V", "allowable ΔV by environment")],
+         bullets=["Couple verdict and anodic member from the published anodic-index table",
+                  "Per-environment compatibility matrix (harsh-marine / industrial / controlled-indoor)",
+                  "Area-ratio and coat-the-cathode guidance on flagged couples"]),
+    dict(id="scale-si-explorer", kind="work", title="Mineral-scale saturation explorer",
+         std="Oddo–Tomson · SPE 21710", path="production/scale-si-explorer.html",
+         blurb="Saturation index per scale family (calcite, sulfates, halite) swept over temperature "
+               "and pressure, bottomhole→wellhead trending, and a formation-water × seawater mixing "
+               "sweep for waterflood compatibility — the Oddo–Tomson conditional-solubility framework "
+               "with documented, overridable coefficients.",
+         figures=[("7", "scale families")],
+         bullets=["SI = log10(IAP / Ksp_cond) per family, supersaturation flagged at SI > 0",
+                  "T/P sweep and bottomhole→wellhead SI trending along the production string",
+                  "Waterflood mixing sweep (barium-rich formation water × sulfate-rich seawater)"]),
 ]
 
 
@@ -239,6 +423,9 @@ WORKFLOW_MAP: dict[str, str] = {
     "rao-comparison": "rao-tabulation",
     "unitbox-report": "rao-tabulation",
     "riser-validation": "dnv-os-f201-riser",
+    "diffraction-deck-prep": "aqwa-diffraction-deck-prep",
+    "dynacard-troubleshooting": "dynacard-diagnostics",
+    "dynacard-field-health": "artificial-lift-field-health",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
@@ -249,6 +436,7 @@ _BOT = "https://t.me/the_deckhand_bot"
 # generic ask built from the title.
 PROMPTS: dict[str, str] = {
     "ffs-showcase": "Run an FFS remaining-strength assessment (API 579-1 / ASME B31G / DNV-RP-F101) on a corroded pipe and give me the inspector verdict.",
+    "riser-joint-acceptance": "Run the drilling-riser joint FFS screen: Level-1 flaw-acceptance envelope, collapse-limited water depth and string-zone placement for a corroded joint.",
     "ffs-field-dashboard": "Given my metal-loss measurements, tell me whether to accept, re-rate, take more measurements, or escalate.",
     "buckling-plate": "Check ship plate buckling per DNV-RP-C201 for an 800x2400x14 mm panel under in-plane compression.",
     "buckling-panel": "Check stiffened-panel buckling (plate / column / tripping) per DNV-RP-C201 for my scantlings.",
@@ -266,6 +454,17 @@ PROMPTS: dict[str, str] = {
     "installation-bokalift": "Assess crane-lift installation suitability and splash-zone weather windows for BokaLift 2.",
     "rudder-explorer": "Check turning circle vs the IMO 5.L limit and the minimum steerage speed for my vessel.",
     "rudder-database": "Show the rudder-type database with area ratios, aspect ratios and lift coefficients.",
+    "diffraction-deck-prep": "Prepare a solver-ready AQWA diffraction deck from my canonical vessel spec.",
+    "vessel-suitability": "Rank the installation fleet for my lift (weight, reach, water depth) with confidence-weighted suitability.",
+    "container-utilization": "Screen my offshore container (CCU) utilization per DNV 2.7-1 for rating, aspect ratio and sling angle.",
+    "wind-sizing": "Screen floating-wind floater variants (semi-sub / spar / TLP / barge) for my site load cases.",
+    "wind-economics": "Run the floating-wind LCOE / TOTEX tradespace with reliability and economies-of-scale levers.",
+    "mooring-resilience": "Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit.",
+    "dynacard-troubleshooting": "Diagnose this rod-pump dynamometer card - failure mode, confidence and what to do about it.",
+    "dynacard-field-health": "Screen my field's rod-pump dynacards and rank the worst wells by health status.",
+    "casing-design": "Check my production casing design (burst / collapse / tension / triaxial) per API 5C3 and give me the max frac surface pressure.",
+    "galvanic-explorer": "Screen this dissimilar-metal couple for galvanic compatibility in a marine environment (MIL-STD-889 anodic index) and tell me if it needs protection.",
+    "scale-si-explorer": "Compute produced-water mineral-scale saturation indices (Oddo-Tomson) over my T/P path and check formation-water vs seawater mixing for waterflood compatibility.",
 }
 
 
@@ -463,9 +662,9 @@ def _render_html(spec: dict) -> str:
     figs = ""
     if spec["figures"]:
         cells = "".join(
-            f'<div class="fig"><div class="v">{html.escape(v)}</div>'
-            f'<div class="l">{html.escape(l)}</div></div>'
-            for v, l in spec["figures"]
+            f'<div class="fig"><div class="v">{html.escape(value)}</div>'
+            f'<div class="l">{html.escape(label)}</div></div>'
+            for value, label in spec["figures"]
         )
         figs = f'<div class="figs">{cells}</div>'
     bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
@@ -498,6 +697,14 @@ def _to_pdf(html_text: str, out_pdf: Path) -> None:
 
 
 def main() -> None:
+    """Build all one-pagers, or only the spec ids passed as CLI args
+    (keeps the committed-PDF diff scoped when adding one capability)."""
+    import sys
+
+    only = set(sys.argv[1:])
+    unknown = only - {spec["id"] for spec in SPECS}
+    if unknown:
+        raise SystemExit(f"Unknown spec id(s): {sorted(unknown)}")
     if not _CHROME:
         raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
     _OUT.mkdir(parents=True, exist_ok=True)
@@ -508,6 +715,8 @@ def main() -> None:
     for spec in SPECS:
         assert spec["id"] not in ids, f"duplicate id {spec['id']}"
         ids.add(spec["id"])
+        if only and spec["id"] not in only:
+            continue
         _to_pdf(_render_html(spec), _OUT / f"{spec['id']}.pdf")
         n_pdf += 1
         # API artifacts: one self-contained workflow-API call per live work.

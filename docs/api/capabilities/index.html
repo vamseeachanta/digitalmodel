@@ -42,6 +42,10 @@
             background:#fff;border-radius:9px;padding:6px 11px;white-space:nowrap}
   .onepager:hover{border-color:var(--teal)}
   .chan .lead{color:var(--muted);font-size:14px;padding-left:16px;margin-bottom:18px;max-width:820px}
+  .fits{display:flex;flex-wrap:wrap;gap:8px;padding-left:16px;margin:-8px 0 18px;max-width:900px}
+  .fits span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+             border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+  .fits span b{color:var(--navy);font-weight:700}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
   .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
         border-radius:16px;padding:18px 18px 16px;box-shadow:0 1px 2px rgba(16,40,80,.04);
@@ -151,10 +155,15 @@
     <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
     <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
+    <div class="navgroup"><a class="navh" href="#cfd">Computational fluid dynamics</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
     <div class="navgroup"><a class="navh" href="#subsea">Subsea</a></div>
     <div class="navgroup"><a class="navh" href="#installation">Installation</a></div>
+    <div class="navgroup"><a class="navh" href="#wind">Floating wind</a></div>
     <div class="navgroup"><a class="navh" href="#manoeuvring">Manoeuvring &amp; station-keeping</a></div>
+    <div class="navgroup"><a class="navh" href="#artificial-lift">Artificial lift</a></div>
+    <div class="navgroup"><a class="navh" href="#well">Well construction</a></div>
+    <div class="navgroup"><a class="navh" href="#corrosion-production">Corrosion &amp; production chemistry</a></div>
     <div class="navgroup"><a class="navh" href="#validation">Validation</a></div>
   </nav>
   <a class="start" href="https://github.com/vamseeachanta/digitalmodel">Source on GitHub &rarr;</a>
@@ -163,6 +172,7 @@
 <main>
   <header class="hero">
     <h1>digitalmodel — Engineering Capabilities</h1>
+    <p style="font-style:italic;font-size:14px;margin-top:6px">Everyday complex engineering — made deterministically simple.</p>
     <p>Offshore &amp; ship structural strength, fitness-for-service, hydrodynamics &amp; diffraction,
     risers, pipelines and subsea cross-sections &mdash; each result computed by unit-tested domain
     code, checked against the governing code or an independent solver, and frozen into a static report.
@@ -173,10 +183,20 @@
   <section class="chan" id="ffs">
     <div class="chanhead"><h2>Fitness-for-service</h2><a class="onepager" href="pdf/sec-ffs.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Remaining-strength assessment of corroded and metal-loss components with an
-    inspector decision layer &mdash; benchmarked to standard worked examples and published ratings.</p>
+    inspector decision layer &mdash; benchmarked to standard worked examples and published ratings.
+    Built to slot behind inspection, mechanical-integrity and RBI service programs: your inspectors
+    capture the wall-thickness and defect data; this engine returns the code-cited verdict and report.</p>
+    <div class="fits">
+      <span><b>Vessels &amp; piping</b> &mdash; API 579-1 Part 4/5 metal-loss verdicts</span>
+      <span><b>Pipelines</b> &mdash; B31G · Modified B31G · RSTRENG · DNV-RP-F101</span>
+      <span><b>UT / phased-array grids</b> &mdash; direct thickness-grid intake, measurement sufficiency</span>
+      <span><b>API 510 / 570 / 653</b> &mdash; remaining life &amp; next-inspection intervals</span>
+      <span><b>RBI &amp; turnarounds</b> &mdash; margins for risk ranking and run / repair / re-rate calls</span>
+    </div>
     <div class="grid">
       <div class="card"><h3>FFS decision-layer showcase</h3><div class="std">API 579-1 · ASME B31G · DNV-RP-F101</div><p>Interactive remaining-strength and inspector-verdict walkthrough across the three governing FFS codes.</p><div class="actions"><a class="open" href="../ffs/ffs-showcase.html">Open &rarr;</a><a class="sec" href="pdf/ffs-showcase.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/ffs-showcase.html">API &rarr;</a></div></div>
       <div class="card"><h3>FFS inspector field dashboard</h3><div class="std">measurement sufficiency</div><p>Accept / re-rate / take-more-measurements / escalate, driven by measurement-sufficiency on real defect data.</p><div class="actions"><a class="open" href="../ffs/ffs-field-dashboard.html">Open &rarr;</a><a class="sec" href="pdf/ffs-field-dashboard.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/ffs-field-dashboard.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Riser-joint flaw-acceptance explorer</h3><div class="std">API 579-1 · Modified B31G · API RP 1111</div><p>Level-1 acceptable flaw length-vs-depth envelopes with campaign-end growth allowance, collapse-limited water depth and string-zone placement &mdash; on real anonymized drilling-riser inspection data.</p><div class="actions"><a class="open" href="../ffs/riser-joint-acceptance-explorer.html">Open &rarr;</a><a class="sec" href="pdf/riser-joint-acceptance.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/riser-joint-acceptance.html">API &rarr;</a></div></div>
     </div>
   </section>
 
@@ -203,6 +223,34 @@
       <div class="card"><h3>Solver correlation heatmap</h3><div class="std">WAMIT · AQWA · OrcaWave</div><p>Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.</p><div class="actions"><a class="open" href="../hydro/unit-box-benchmark/benchmark_heatmap.html">Open &rarr;</a><a class="sec" href="pdf/unitbox-heatmap.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/unitbox-heatmap.html">API &rarr;</a></div></div>
       <div class="card"><h3>OCIMF coefficient explorer</h3><div class="std">OCIMF MEG3 / MEG4</div><p>Wind &amp; current force / moment coefficients interpolated by heading and loading condition.</p><div class="actions"><a class="open" href="../hydro/ocimf-coefficient-explorer.html">Open &rarr;</a><a class="sec" href="pdf/ocimf.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/ocimf.html">API &rarr;</a></div></div>
       <div class="card"><h3>Passing-ship interaction benchmark</h3><div class="std">Wang (1975)</div><p>Sway-force and yaw-moment interaction validated against the published closed-form solution.</p><div class="actions"><a class="open" href="../hydro/passing-ship-benchmark.html">Open &rarr;</a><a class="sec" href="pdf/passing-ship.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/passing-ship.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Diffraction deck generation — spec to solver input</h3><div class="std">AQWA · OrcaWave · canonical spec</div><p>One canonical vessel spec (YAML) deterministically prepared into a solver-ready AQWA diffraction deck offline; the OrcaWave solve runs on the licensed lane with provenance carried through.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep">Open &rarr;</a><a class="sec" href="pdf/diffraction-deck-prep.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/diffraction-deck-prep.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="cfd">
+    <div class="chanhead"><h2>Computational fluid dynamics (CFD)</h2></div>
+    <p class="lead">Open-source CFD (OpenFOAM) verified against classical analytical and benchmark
+    solutions &mdash; known-answer verification across steady-laminar, transient-laminar,
+    turbulent (RANS), free-surface (VOF), wave-generation, 6-DOF floating-body and wave-body
+    interaction (overset) regimes, computed on real OpenFOAM v2312 (not mocked). Reports are
+    interactive: live charts, scrubbable animations (vortex street, dam break, wave tank, heave
+    decay, wave-excited heave) and a member VIV lock-in screening calculator.</p>
+    <div class="grid">
+      <div class="card"><h3>CFD verification suite</h3><div class="std">OpenFOAM · 9 cases + RAO spot-check</div><p>Landing page tying the verification cases together: philosophy, summary table, toolchain and engineering depth.</p><div class="actions"><a class="open" href="../cfd/">Open &rarr;</a></div></div>
+      <div class="card"><h3>Tank sloshing &mdash; forced roll (VOF)</h3><div class="std">interFoam · analytical tanh · SPHERIC forced-roll</div><p>Partially-filled rectangular tank under prescribed sinusoidal roll on a rigid moving mesh (ESI solidBody motion). First-mode sloshing natural frequency within 0.29% of the analytical tanh dispersion at intermediate fill and 0.002% at deep fill; the SPHERIC forced-roll benchmark runs stably with the expected wall run-up. Gates coupled tank-sloshing / roll work.</p><div class="actions"><a class="open" href="../cfd/tank-sloshing-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Ballast tank as a passive roll damper</h3><div class="std">fill/frequency sweep · reduced-order roll coupling</div><p>Sweeps partial fill (25/50/70%) &times; drive frequency, extracts the tank roll-reaction moment (in-phase / quadrature split) and reduces it to frequency-dependent added roll inertia and damping &mdash; the sloshing counter-moment a partially-filled ballast tank contributes as a passive tuned-liquid-damper. Answers which fill best damps roll near a target roll period.</p><div class="actions"><a class="open" href="../cfd/tank-sloshing-verification.html#roll-damper">Open &rarr;</a></div></div>
+      <div class="card"><h3>Wave-excited floating body</h3><div class="std">overset · heave RAO · seakeeping</div><p>The suite's first wave-body interaction case: a floating box in the verified regular wave on a rigid overset mesh &mdash; heave RAO within 1.7% of the long-wave wave-follower limit, with an animated wave-riding sequence. The verified path to CFD RAO spot-checks against the diffraction pipeline.</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Heave-RAO frequency response</h3><div class="std">overset · RAO curve · vs potential flow</div><p>The #1302 case swept across wave period and spot-checked at each point against a frozen potential-flow (capytaine BEM) reference &mdash; the physics the OrcaWave/AQWA pipeline implements. Off resonance the CFD matches the diffraction curve within ~3%; near resonance the CFD response is shown (two-resolution study) to be grid-independent and well below the inviscid peak &mdash; a documented open finding whose clean attribution is a free-decay damping test (cf. the #1169 heave-decay case).</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-rao-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Free-decay heave damping (overset)</h3><div class="std">still water · ζ · attribution</div><p>Resolves the #1324 open finding. The overset body is released from a still-water heave displacement and rings down; the damped natural frequency (within ~0.4% of the potential-flow resonance) and the light, amplitude-independent damping ratio (ζ ≈ 0.13, near the radiation value) verify the body's dynamics — so the near-resonance forced-sweep reduction is a wave-delivery / measurement artifact, not body damping. The body would resonate to RAO ≈ 1.8.</p><div class="actions"><a class="open" href="../cfd/wave-excited-body-decay-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Cylinder wave loading (MacCamy&ndash;Fuchs)</h3><div class="std">interFoam · inline force · diffraction</div><p>The suite's first wave-<b>loading</b> validation: a surface-piercing vertical cylinder (monopile) in a regular wave, with the inline force from an OpenFOAM <code>forces</code> function object compared to the exact MacCamy&ndash;Fuchs (1954) linear-diffraction closed form. At ka&nbsp;=&nbsp;0.96 the CFD force lands within <b>3.4%</b> of the analytical diffraction force at the correct phase (1.9&deg;) &mdash; and 0.72&times; the Morison estimate, so the case genuinely discriminates diffraction physics (a Morison prediction fails the gate). The CFD analogue of the OrcaWave/AQWA wave-load path, checked against analytical ground truth.</p><div class="actions"><a class="open" href="../cfd/maccamy-fuchs-cylinder-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Flat-plate boundary layer</h3><div class="std">Blasius · laminar</div><p>Steady simpleFoam skin friction within 4.6% of the Blasius law; velocity profiles collapse onto the similarity solution.</p><div class="actions"><a class="open" href="../cfd/flat-plate-blasius-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Cylinder vortex shedding (Re=100)</h3><div class="std">Williamson · transient · VIV</div><p>Transient pimpleFoam K&aacute;rm&aacute;n street on a body-fitted O-grid: mean drag within 0.5% and Strouhal within 0.9% of benchmark, with an animated vortex street and a VIV lock-in screening calculator.</p><div class="actions"><a class="open" href="../cfd/cylinder-re100-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Turbulent flat plate</h3><div class="std">k-&omega; SST · RANS</div><p>Wall-resolved k-&omega; SST (y&#8314;&asymp;0.13): the velocity profile collapses onto the universal law of the wall; skin friction within ~9% of turbulent correlations.</p><div class="actions"><a class="open" href="../cfd/turbulent-flat-plate-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Green-water impact (Kleefsman)</h3><div class="std">MARIN · SPHERIC Test 2 · slamming</div><p>The canonical violent-impact benchmark: dam-break surge striking an instrumented deck container. Impact-pressure peak within 1.5% of the official MARIN traces, water heights within 4% — with an animated impact sequence. Gates green-water and slamming work.</p><div class="actions"><a class="open" href="../cfd/kleefsman-impact-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Numerical wave tank</h3><div class="std">StokesII · dispersion · absorption</div><p>Digital wave basin: regular-wave generation, propagation and absorption verified against wave theory — dispersion +0.2%, height within 4.7%, reflection 1% — with an animated wave train. Gates all incident-wave loading work.</p><div class="actions"><a class="open" href="../cfd/wave-tank-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Floating-body heave decay</h3><div class="std">6-DOF · Archimedes · added mass</div><p>The numerical twin of a model-basin free-decay test: draft within 1.1% of Archimedes, 11 damped cycles, implied heave added mass Ca ≈ 0.39 — with an animated release-to-rest. Gates floating-structure motion work.</p><div class="actions"><a class="open" href="../cfd/floating-body-decay-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>Dam break (free surface)</h3><div class="std">Martin &amp; Moyce 1952 · VOF</div><p>interFoam VOF column collapse vs the canonical experiments: surge front within the 10% gate (mean 3.0%), mass conserved to 10&#8315;&#8310;, with a scrubbable animation of the collapse.</p><div class="actions"><a class="open" href="../cfd/dam-break-verification.html">Open &rarr;</a></div></div>
+      <div class="card"><h3>NACA0012 airfoil polar</h3><div class="std">thin-airfoil · lift</div><p>Angle-of-attack polar (Spalart-Allmaras RANS): lift-curve slope within 2.2% of experiment and a physical drag polar.</p><div class="actions"><a class="open" href="../cfd/naca0012-airfoil-verification.html">Open &rarr;</a></div></div>
     </div>
   </section>
 
@@ -227,21 +275,80 @@
 
   <section class="chan" id="installation">
     <div class="chanhead"><h2>Installation</h2><a class="onepager" href="pdf/sec-installation.pdf" download>Section 1-pager &darr;</a></div>
-    <p class="lead">Marine-installation suitability for a crane vessel &mdash; lift envelopes, splash-zone
-    operability and weather-window analysis, published as a Deckhand deliverable.</p>
+    <p class="lead">Marine-installation suitability &mdash; a crane-vessel pamphlet with lift envelopes,
+    splash-zone operability and weather windows, a provenance-audited installation fleet database with
+    confidence-weighted suitability ranking, and a DNV 2.7-1 offshore-container screen.</p>
     <div class="grid">
       <div class="card"><h3>Installation vessel pamphlet — BokaLift 2</h3><div class="std">DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444</div><p>Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability and DP/mooring failure-risk.</p><div class="actions"><a class="open" href="https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html">Open &rarr;</a><a class="sec" href="pdf/installation-bokalift.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/installation-bokalift.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Installation vessel database &amp; suitability ranking</h3><div class="std">DNV-RP-H103 · flag-don't-fake provenance</div><p>Curated + worldenergydata installation crane fleet (crane curves, deck, DP) with cited / estimated / gap provenance on every field; ranks vessels for a lift by capability margin weighted by data confidence.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels">Open &rarr;</a><a class="sec" href="pdf/vessel-suitability.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/vessel-suitability.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Offshore container utilization — DNV 2.7-1</h3><div class="std">DNVGL-ST-E271 (2017)</div><p>Clause-traced offshore-lift screening for CCUs &mdash; 2.5&middot;R&middot;g primary load, 3&middot;R&middot;g pad-eye set, 0.85&middot;Re allowable &mdash; swept into utilization curves across rating, aspect ratio and sling angle.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization">Open &rarr;</a><a class="sec" href="pdf/container-utilization.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/container-utilization.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="wind">
+    <div class="chanhead"><h2>Floating wind</h2><a class="onepager" href="pdf/sec-wind.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Floating-wind concept screening and economics &mdash; parametric floater archetypes
+    screened across site load cases as the licence-free first tier, and an LCOE / TOTEX trade space
+    with reliability, qualification and industrialisation levers.</p>
+    <div class="grid">
+      <div class="card"><h3>Floating-wind sizing &amp; concept screening</h3><div class="std">semi-sub · spar · TLP · barge · IEA 15 MW</div><p>Parametric floater archetypes swept across site load cases and screened on stability, motion, modal separation and mooring offset &mdash; the closed-form first tier ahead of the licensed OrcaWave/OrcaFlex pass.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-sizing">Open &rarr;</a><a class="sec" href="pdf/wind-sizing.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/wind-sizing.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Floating-wind LCOE / TOTEX tradespace</h3><div class="std">LCOE · reliability · economies of scale</div><p>Levelised-cost engine with capex breakdown, availability / reliability scenarios, qualification levers and turbine- / farm-scale economies swept over the concept trade space.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics">Open &rarr;</a><a class="sec" href="pdf/wind-economics.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/wind-economics.html">API &rarr;</a></div></div>
     </div>
   </section>
 
   <section class="chan" id="manoeuvring">
     <div class="chanhead"><h2>Manoeuvring &amp; station-keeping</h2><a class="onepager" href="pdf/sec-manoeuvring.pdf" download>Section 1-pager &darr;</a></div>
     <p class="lead">Low-speed manoeuvring and station-keeping screens &mdash; turning circle against the IMO
-    criteria, minimum steerage speed by loading condition, and the rudder angle needed to hold heading
-    against a current, built on a researched rudder-type database.</p>
+    criteria, minimum steerage speed by loading condition, the rudder angle needed to hold heading
+    against a current, built on a researched rudder-type database, and a mooring-system resilience
+    traffic-light composed from the pre-computed mooring atlases.</p>
     <div class="grid">
       <div class="card"><h3>Rudder &amp; low-speed manoeuvring explorer</h3><div class="std">IMO MSC.137(76) · Clarke 1983 · OCIMF</div><p>Interactive turning circle vs the 5&middot;L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and engine-on rudder angle to balance the current yaw moment.</p><div class="actions"><a class="open" href="../hydro/rudder-maneuvering-explorer.html">Open &rarr;</a><a class="sec" href="pdf/rudder-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/rudder-explorer.html">API &rarr;</a></div></div>
       <div class="card"><h3>Rudder-type database</h3><div class="std">Molland &amp; Turnock · Brix · DNV/ABS</div><p>Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml">Open &rarr;</a><a class="sec" href="pdf/rudder-database.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/rudder-database.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Mooring resilience screen</h3><div class="std">API RP 2SK · DNV-OS-E301</div><p>Intact / one-line-damaged tension, anchor-foundation and chain-fatigue checks composed from the pre-computed mooring and anchor atlases into a single traffic-light &mdash; out-of-range cases are escalated, never extrapolated.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience">Open &rarr;</a><a class="sec" href="pdf/mooring-resilience.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/mooring-resilience.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Short-horizon motion forecast</h3><div class="std">MMS / MRU feed · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437</div><p>Live vessel &amp; structure motions from an onboard MMS / motion-measurement system, plus a phase-resolved wave forecast transferred through the asset RAO to predict the next few <em>motions</em> &mdash; a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and helideck landings, bounded honestly by the predictable zone.</p><div class="actions"><a class="open" href="../hydro/short-horizon-motion-forecast.html">Open &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="artificial-lift">
+    <div class="chanhead"><h2>Artificial lift &mdash; rod-pump diagnostics</h2><a class="onepager" href="pdf/sec-artificial-lift.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Sucker-rod-pump dynamometer-card (dynacard) diagnostics &mdash; surface-to-downhole
+    wave-equation solvers, an 18-mode failure-signature library plus a 336-card example library
+    (synthetic-verified, measured field wells, digitized field archive), ML card classification with
+    a CI drift-guard on every published diagnosis, recommended controller setpoints &amp; alarms, and
+    a field-wide health screen.</p>
+    <div class="grid">
+      <div class="card"><h3>Dynacard troubleshooting explorer</h3><div class="std">Gibbs wave equation · Bezerra projections · 18 failure modes</div><p>Seven curated troubleshooting cases, a 336-card example library behind phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting guide, and controller setpoints &amp; alarms computed per well.</p><div class="actions"><a class="open" href="../artificial-lift/dynacard-troubleshooting.html">Open &rarr;</a><a class="sec" href="pdf/dynacard-troubleshooting.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-troubleshooting.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Field-wide dynacard health rollup</h3><div class="std">per-well diagnosis · fail-closed screening</div><p>Every well's card classified and ranked into normal / warning / critical / failure, with the worst wells surfaced and a fail-closed field screening verdict (JSON + CSV).</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health">Open &rarr;</a><a class="sec" href="pdf/dynacard-field-health.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/dynacard-field-health.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="well">
+    <div class="chanhead"><h2>Well construction &mdash; casing &amp; tubulars</h2><a class="onepager" href="pdf/sec-well.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Production-casing design checks on the API 5C3 / API 5CT product catalog &mdash; burst
+    (tubing leak + frac screen-out), full-evacuation collapse, buoyed-weight tension and Von Mises triaxial
+    against published operator design-factor minimums, plus the maximum allowable frac surface pressure,
+    the NACE MR0175 sour-service screen and the connection-class tension efficiencies.</p>
+    <div class="grid">
+      <div class="card"><h3>Casing design explorer</h3><div class="std">API 5C3 · API 5CT · NACE MR0175</div><p>Eight candidate products checked against a reference frac'd well &mdash; per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2&quot; 23# P110 &rarr; 14,520 psi), the NACE sour-service screen and the connection-class table.</p><div class="actions"><a class="open" href="../well/casing-design-explorer.html">Open &rarr;</a><a class="sec" href="pdf/casing-design.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/casing-design.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="corrosion-production">
+    <div class="chanhead"><h2>Corrosion &amp; production chemistry</h2><a class="onepager" href="pdf/sec-corrosion-production.pdf" download>Section 1-pager &darr;</a></div>
+    <p class="lead">Screening-level materials-compatibility and produced-water scaling checks that sit alongside
+    the integrity workflow &mdash; dissimilar-metal galvanic risk on the published anodic-index method, and
+    mineral-scale saturation tendency in the Oddo&ndash;Tomson framework, both driven from public constants
+    with every coefficient documented and overridable.</p>
+    <div class="fits">
+      <span><b>Materials selection</b> &mdash; MIL-STD-889 anodic-index couples, per-environment allowable &Delta;V</span>
+      <span><b>Produced water</b> &mdash; calcite / sulfate / halite saturation indices, BH&rarr;WH trending</span>
+      <span><b>Waterflood compatibility</b> &mdash; formation-water &times; seawater mixing sweeps</span>
+      <span><b>Public-constant basis</b> &mdash; parameterized defaults, calibrate before quantitative use</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Galvanic compatibility explorer</h3><div class="std">MIL-STD-889 anodic index</div><p>Dissimilar-metal couple screening (OK / marginal / protect) against the environment-dependent allowable potential difference, with the anodic member and area-ratio guidance &mdash; per-environment compatibility heatmap over the common construction metals.</p><div class="actions"><a class="open" href="../corrosion/galvanic-compatibility-explorer.html">Open &rarr;</a><a class="sec" href="pdf/galvanic-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/galvanic-explorer.html">API &rarr;</a></div></div>
+      <div class="card"><h3>Mineral-scale saturation explorer</h3><div class="std">Oddo&ndash;Tomson · SPE 21710</div><p>Saturation index per scale family (calcite, sulfates, halite) swept over temperature and pressure, bottomhole&rarr;wellhead trending, and a formation-water&times;seawater mixing sweep for waterflood compatibility &mdash; conditional-solubility framework with documented, overridable coefficients.</p><div class="actions"><a class="open" href="../production/scale-si-explorer.html">Open &rarr;</a><a class="sec" href="pdf/scale-si-explorer.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/scale-si-explorer.html">API &rarr;</a></div></div>
     </div>
   </section>
 

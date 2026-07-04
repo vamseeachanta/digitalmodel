@@ -305,6 +305,11 @@ class OpenFOAMCase:
         domain: Computational domain definition.
         boundary_conditions: List of boundary conditions.
         metadata: Free-form metadata dict.
+        motion: Optional prescribed single-DOF forced motion
+            (motion.PrescribedMotion); when set, a dynamic-mesh dict is emitted.
+        fill_level: Optional VOF partial-fill level as a fraction (0-1) of the
+            tank height; when set on a multiphase case the builder emits a
+            partial-fill ``system/setFieldsDict`` (#659).
     """
 
     name: str
@@ -316,6 +321,13 @@ class OpenFOAMCase:
     domain: DomainConfig = field(default_factory=DomainConfig)
     boundary_conditions: List[BoundaryCondition] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    # Optional prescribed single-DOF forced motion (motion.PrescribedMotion).
+    # Typed Any to avoid a models<-motion import cycle; when set, the case
+    # builder emits constant/dynamicMeshDict (#658).
+    motion: Optional[Any] = None
+    # Optional VOF partial-fill level (fraction 0-1 of tank height); when set on
+    # a multiphase case the builder emits a partial-fill setFieldsDict (#659).
+    fill_level: Optional[float] = None
 
     @classmethod
     def for_case_type(cls, case_type: CaseType, name: str) -> "OpenFOAMCase":

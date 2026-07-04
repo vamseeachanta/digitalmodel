@@ -1,0 +1,42 @@
+# Floating-wind TOTEX/LCOE base case — public Wood/OREC reference (~$184/MWh).
+#
+# Source: Wood plc / A. Whooley, "Translating Oil & Gas Cost Reduction Experience
+# into Floating Offshore Wind" (2021), base case; component cost split from NREL
+# 2019 Cost of Wind Energy Review and ORE Catapult floating-wind cost breakdown.
+# Public references only — no client or proprietary data.
+#
+# CAPEX component shares (of ~$7,854/kW overnight, first-of-kind 2025 floating):
+#   turbine 30% · substructure 29% · mooring 9% · array cable 5%
+#   export cable 8% · installation 14% · development 5%
+basename: floating_wind_economics
+
+floating_wind_economics:
+  name: wood_orec_base_case_2025
+
+  # --- physical / production ---
+  turbine_rating_mw: 15.0
+  turbine_count: 33          # -> 495 MW farm
+  capacity_factor: 0.50
+  water_depth_m: 100.0
+  distance_to_shore_km: 100.0
+  fabrication_region: Europe
+
+  # --- financial ---
+  financial:
+    discount_rate: 0.06
+    inflation_rate: 0.03
+    design_life_years: 25
+
+  # --- CAPEX ($/kW installed) ---
+  capex:
+    turbine: 2356.0
+    substructure: 2278.0
+    mooring: 707.0
+    array_cable: 393.0
+    export_cable: 628.0
+    installation: 1100.0
+    development: 392.0
+
+  # --- OPEX / DECOMEX ---
+  opex_per_kw_year: 140.0    # $/kW/yr, year-1 basis (escalated at inflation_rate)
+  decomex_per_kw: 250.0      # $/kW at end of life

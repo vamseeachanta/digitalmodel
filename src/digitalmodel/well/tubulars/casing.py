@@ -105,6 +105,24 @@ CASING_SIZES: dict[tuple[float, float], float] = {
 
 
 # ---------------------------------------------------------------------------
+# Tubing dimensions: (OD in, nominal weight ppf) -> wall thickness (in).
+# Standard API 5CT tubing sizes (API 5CT tubing dimension tables; walls match
+# the published API tubing tables, e.g. 2-3/8" 4.7# -> 0.190" (ID 1.995"),
+# 2-7/8" 6.5# -> 0.217" (ID 2.441"), 3-1/2" 9.3# -> 0.254" (ID 2.992"),
+# 4" 11.0# -> 0.262" (ID 3.476"), 4-1/2" 12.75# -> 0.271" (ID 3.958")).
+# Kept separate from CASING_SIZES: 4-1/2" exists in both catalogs with
+# different standard weights.
+# ---------------------------------------------------------------------------
+TUBING_SIZES: dict[tuple[float, float], float] = {
+    (2.375, 4.70): 0.190, (2.375, 5.95): 0.254,
+    (2.875, 6.50): 0.217, (2.875, 8.70): 0.308,
+    (3.5, 9.30): 0.254, (3.5, 12.95): 0.375,
+    (4.0, 11.00): 0.262,
+    (4.5, 12.75): 0.271,
+}
+
+
+# ---------------------------------------------------------------------------
 # API 5C3 performance formulas
 # ---------------------------------------------------------------------------
 def internal_yield_pressure(od_in: float, wt_in: float,
@@ -281,6 +299,52 @@ def casing(
         raise ValueError("Specify either weight_ppf or wt_in, not both")
     if weight_ppf is not None:
         wt = wall_for_size(od_in, weight_ppf)
+    elif wt_in is not None:
+        wt = wt_in
+    else:
+        raise ValueError("Provide weight_ppf or wt_in for the wall thickness")
+    return Casing(od_in=od_in, wt_in=wt, grade=g, weight_ppf=weight_ppf)
+
+
+def list_tubing_sizes() -> list[tuple[float, float]]:
+    """All tubing-catalog (OD, weight ppf) pairs, sorted."""
+    return sorted(TUBING_SIZES)
+
+
+def tubing_wall_for_size(od_in: float, weight_ppf: float) -> float:
+    """Wall thickness (in) for a tubing-catalog (OD, weight) pair."""
+    key = (od_in, weight_ppf)
+    if key not in TUBING_SIZES:
+        raise KeyError(
+            f"No tubing catalog wall for OD {od_in}, weight {weight_ppf}")
+    return TUBING_SIZES[key]
+
+
+def tubing(
+    grade: "str | CasingGrade",
+    *,
+    od_in: float,
+    weight_ppf: Optional[float] = None,
+    wt_in: Optional[float] = None,
+) -> Casing:
+    """Build a tubing product (a :class:`Casing`) from grade, OD and weight.
+
+    Tubing shares the API 5CT grades and the API 5C3 rating machinery with
+    casing — only the dimensional catalog differs — so this returns the same
+    :class:`Casing` product class with the wall looked up in
+    :data:`TUBING_SIZES`.
+
+    Args:
+        grade: API 5CT grade name or :class:`CasingGrade`.
+        od_in: Outside diameter (inches).
+        weight_ppf: Nominal weight (lb/ft); looks up the tubing-catalog wall.
+        wt_in: Explicit wall thickness (inches), instead of ``weight_ppf``.
+    """
+    g = grade if isinstance(grade, CasingGrade) else casing_grade(grade)
+    if weight_ppf is not None and wt_in is not None:
+        raise ValueError("Specify either weight_ppf or wt_in, not both")
+    if weight_ppf is not None:
+        wt = tubing_wall_for_size(od_in, weight_ppf)
     elif wt_in is not None:
         wt = wt_in
     else:

@@ -204,7 +204,11 @@ class TestEngineConfiguration:
 
         # Test quiet mode
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-            from digitalmodel.solvers.orcaflex.output_control import OutputController
+            # Use engine's own OutputController binding: sibling test modules
+            # replace sys.modules['...output_control'] with fresh mocks at
+            # collection time, so re-importing here yields a different object
+            # than the one engine compares against.
+            from digitalmodel.engine import OutputController
             mock_output.return_value = OutputController.QUIET
 
             with patch('digitalmodel.engine.Pipeline') as mock_mooring:

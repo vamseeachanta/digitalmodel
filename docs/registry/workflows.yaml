@@ -631,6 +631,17 @@ workflows:
       - examples/workflows/orcaflex-library-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-library-query]
     runtime: offline
+  - id: drilling-riser-envelope-library-query
+    basename: parametric_query
+    title: Instant von-Mises dynamic amplification from the sparse drilling-riser envelope library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#1346): built by scripts/parametric/build_drilling_riser_envelope_library.py
+    # from licensed OrcaFlex/OrcFxAPI runs (ships a STUB). Exact-match the operating-mode
+    # key, interpolate offset x current x Hs x Tp within; an uncovered mode/point escalates.
+    input: examples/workflows/drilling-riser-envelope-library-query/input.yml
+    outputs:
+      - examples/workflows/drilling-riser-envelope-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drilling-riser-envelope-library-query]
+    runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
     title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
@@ -924,6 +935,16 @@ workflows:
       - examples/workflows/liquefaction/results/input.yml
       - examples/workflows/liquefaction/results/liquefaction/liquefaction_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]
+    runtime: offline
+  - id: casing-design
+    basename: casing_design
+    title: Production casing design-factor screen (burst/collapse/tension/triaxial + frac limit + NACE sour)
+    input: examples/workflows/casing-design/input.yml
+    outputs:
+      - examples/workflows/casing-design/results/input.yml
+      - examples/workflows/casing-design/results/casing_design/casing_design_summary.json
+      - examples/workflows/casing-design/results/casing_design/casing_design_products.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[casing-design]
     runtime: offline
   - id: well-bore-design
     basename: well_bore_design

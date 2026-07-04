@@ -1,0 +1,36 @@
+basename: casing_design
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+casing_design:
+  well:
+    td_ft: 12000.0
+    mud_ppg: 10.0
+    toc_ft: 4000.0
+    outer_shoe_ft: 8000.0
+    reservoir_pressure_psi: 8500.0
+    packer_fluid_ppg: 9.0
+    frac_surface_pressure_psi: 9000.0
+    frac_fluid_ppg: 8.6
+    mix_water_ppg: 8.4
+  products:
+    - {grade: J55, od_in: 5.5, weight_ppf: 14.0}
+    - {grade: N80, od_in: 5.5, weight_ppf: 17.0}
+    - {grade: P110, od_in: 5.5, weight_ppf: 17.0}
+    - {grade: N80, od_in: 5.5, weight_ppf: 20.0}
+    - {grade: P110, od_in: 5.5, weight_ppf: 20.0}
+    - {grade: P110, od_in: 5.5, weight_ppf: 23.0}
+    - {grade: Q125, od_in: 5.5, weight_ppf: 23.0}
+    - {grade: P110, od_in: 7.0, weight_ppf: 26.0}
+  sour_service:
+    h2s_ppm: 100.0
+    total_pressure_psia: 8500.0
+    well_type: gas
+    service_temp_f: 180.0
+  outputs:
+    directory: results/casing_design

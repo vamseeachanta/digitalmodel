@@ -18,6 +18,7 @@ Tests:
 Note: ERA5 requires API key, tested separately if configured.
 """
 
+import os
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -26,11 +27,21 @@ import sys
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 
-from digitalmodel.data_procurement.metocean import (
+# #1282: corrected package path (was digitalmodel.data_procurement.metocean,
+# which does not exist on main -> the file failed collection).
+from digitalmodel.data_systems.data_procurement.metocean import (
     MetoceanClient,
     NOAAClient,
     OpenMeteoClient,
     GEBCOClient
+)
+
+# #1282: these hit live provider APIs. OPT-IN so offline CI never flakes on a
+# fetch; set RUN_LIVE_METOCEAN=1 to run them. When run, wrap each live call in
+# tests.metocean.netskip.skip_on_network_error so a 5xx/timeout SKIPS not errors.
+pytestmark = pytest.mark.skipif(
+    os.environ.get("RUN_LIVE_METOCEAN") != "1",
+    reason="live metocean API test — set RUN_LIVE_METOCEAN=1 to run (offline CI skips)",
 )
 
 

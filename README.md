@@ -1,10 +1,14 @@
 # digitalmodel
 
+> *Everyday complex engineering — made deterministically simple.*
+
 > **Part of the Deckhand API — the API for real-world work.**
 > The standard-mapped functions in this repo back **Deckhand API paths**: one call (`POST /api/run`)
 > runs an engineering workflow and returns a **standards-traceable HTML report URL** — deterministic,
 > built on real code mapped to industry codes and standards (same input, same output, every time).
 > Live API paths → https://aceengineer.com/api-catalog.html · API reference: deckhand `docs/deckhand/API.md`
+>
+> **Explore the capabilities** → https://vamseeachanta.github.io/digitalmodel/capabilities/ — every live surface with a 1-page PDF, a self-contained workflow-API call, and a ready-to-run starting prompt.
 
 Engineering calculation library for offshore, subsea, and marine analysis. Single source of truth from standard clause to validated code.
 

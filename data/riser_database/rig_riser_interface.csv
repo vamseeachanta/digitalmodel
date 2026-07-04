@@ -1,0 +1,4 @@
+rig_ref,rig_type,n_tensioners,tensioner_type,tensioner_capacity_kips,tensioner_stroke_ft,tj_stroke_ft,n_tension_wires,moonpool_length_ft,moonpool_width_ft,drill_floor_elev_ft,conductor_moment_capacity_kn_m,flexjoint_angle_rating_deg,wed_rig_name,wiki_path,note
+drillship-16w-wireline,drillship,,wireline,,,,16,,,,,,,wikis/riser-projects/wiki/datasets/stackup-registry.md,wireline-tensioner drillship class; two wires may fail per the tension criterion
+drillship-6g-16x3600k-dat,drillship,16,direct-acting,3600,,60,,,,,,,,wikis/riser-projects/wiki/datasets/stackup-registry.md,sixth-generation drillship class with direct-acting tensioners
+drillship-generic-market,drillship,,direct-acting,3500,50,65,,,,,,,,wikis/riser-projects/wiki/datasets/stackup-registry.md,market-typical capability figures for screening

@@ -2,17 +2,21 @@
 ABOUTME: Adapter that lets digitalmodel CONSUME the worldenergydata vessel fleet
 as the single source of truth (it owns the collection/PDF/scrape/dedup pipeline).
 
-worldenergydata curates the real fleet at
-``data/modules/vessel_fleet/curated/{drilling_rigs,construction_vessels}.csv``
-(~2,268 drilling rigs + 17 construction vessels, deduped by IMO). digitalmodel
-needs the engineering view of that fleet (crane curves for installation, hull
-particulars for diffraction) WITHOUT re-collecting it.
+worldenergydata curates the real fleet as
+``curated/{drilling_rigs,construction_vessels}.csv`` (~2,268 drilling rigs +
+165 construction vessels, deduped by IMO). digitalmodel needs the engineering
+view of that fleet (crane curves for installation, hull particulars for
+diffraction) WITHOUT re-collecting it.
 
 Path resolution (mirrors the OCIMF/LLM_WIKI_PATH precedence used elsewhere):
   1. WED_VESSEL_FLEET_PATH  — points at the curated dir (or its parent)
   2. WORLDENERGYDATA_ROOT   — repo root; curated dir derived from it
   3. local clone fallbacks  — a local worldenergydata checkout (analysis root,
                               ~/workspace-hub, or a sibling of the digitalmodel repo)
+Under each candidate root the curated dir is probed at the legacy location
+(``data/modules/vessel_fleet/curated/``) first, then at the packaged location
+(``packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/
+_data/curated/``) where the WED monorepo split moved it.
 Resolves to None (not an exception) when absent, so consumers degrade gracefully
 in environments where worldenergydata is not checked out (e.g. external installs).
 """
@@ -20,13 +24,37 @@ in environments where worldenergydata is not checked out (e.g. external installs
 from __future__ import annotations
 
 import csv
+import logging
 import os
 from pathlib import Path
 from typing import Optional
 
 from digitalmodel.marine_ops.vessel_db.loader import Record, parse_value
 
+logger = logging.getLogger(__name__)
+
 _CURATED_REL = Path("data") / "modules" / "vessel_fleet" / "curated"
+_CURATED_REL_PACKAGE = (
+    Path("packages") / "worldenergydata-vessel_fleet" / "src"
+    / "worldenergydata" / "vessel_fleet" / "_data" / "curated"
+)
+# Probe order under each candidate WED root: legacy first, then package layout.
+_CURATED_RELS = (_CURATED_REL, _CURATED_REL_PACKAGE)
+
+
+def _local_wed_roots() -> list[Path]:
+    """Candidate local worldenergydata checkouts (used when no env var is set)."""
+    roots = [
+        Path("/mnt/local-analysis/worldenergydata"),  # abs-path-allowed
+        Path.home() / "workspace-hub" / "worldenergydata",
+    ]
+    # Sibling of the digitalmodel repo (…/<parent>/worldenergydata).
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "digitalmodel").is_dir() or parent.name == "digitalmodel":
+            roots.append(parent.parent / "worldenergydata")
+            break
+    return roots
 
 
 def resolve_wed_curated_dir(require: bool = False) -> Optional[Path]:
@@ -41,23 +69,15 @@ def resolve_wed_curated_dir(require: bool = False) -> Optional[Path]:
     env_fleet = os.environ.get("WED_VESSEL_FLEET_PATH")
     if env_fleet:
         p = Path(env_fleet)
-        candidates += [p, p / "curated", p / _CURATED_REL]
+        candidates += [p, p / "curated", *(p / rel for rel in _CURATED_RELS)]
 
     env_root = os.environ.get("WORLDENERGYDATA_ROOT")
     if env_root:
-        candidates.append(Path(env_root) / _CURATED_REL)
+        candidates += [Path(env_root) / rel for rel in _CURATED_RELS]
 
-    # Local-clone fallbacks.
-    candidates += [
-        Path("/mnt/local-analysis/worldenergydata") / _CURATED_REL,  # abs-path-allowed
-        Path.home() / "workspace-hub" / "worldenergydata" / _CURATED_REL,
-    ]
-    # Sibling of the digitalmodel repo (…/<parent>/worldenergydata).
-    here = Path(__file__).resolve()
-    for parent in here.parents:
-        if (parent / "digitalmodel").is_dir() or parent.name == "digitalmodel":
-            candidates.append(parent.parent / "worldenergydata" / _CURATED_REL)
-            break
+    # Local-clone fallbacks (legacy layout first, then package layout, per root).
+    for root in _local_wed_roots():
+        candidates += [root / rel for rel in _CURATED_RELS]
 
     for c in candidates:
         if (c / "construction_vessels.csv").is_file() or (c / "drilling_rigs.csv").is_file():
@@ -66,10 +86,19 @@ def resolve_wed_curated_dir(require: bool = False) -> Optional[Path]:
     if require:
         raise FileNotFoundError(
             "worldenergydata curated vessel fleet not found. Set WED_VESSEL_FLEET_PATH "
-            "to <worldenergydata>/data/modules/vessel_fleet/curated (or WORLDENERGYDATA_ROOT "
-            "to the repo root). worldenergydata is the source of truth for vessel collection "
+            "to the curated dir (data/modules/vessel_fleet/curated or packages/"
+            "worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated "
+            "under <worldenergydata>), or WORLDENERGYDATA_ROOT to the repo root. "
+            "worldenergydata is the source of truth for vessel collection "
             "(https://github.com/vamseeachanta/worldenergydata)."
         )
+    logger.warning(
+        "worldenergydata curated vessel fleet not found (probed WED_VESSEL_FLEET_PATH, "
+        "WORLDENERGYDATA_ROOT and local-clone fallbacks for %s); WED-backed consumers "
+        "(construction_vessels/drilling_rigs/installation_vessels) will return 0 WED rows. "
+        "Set WED_VESSEL_FLEET_PATH to the curated dir to fix.",
+        " or ".join(str(rel) for rel in _CURATED_RELS),
+    )
     return None
 
 

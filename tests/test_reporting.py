@@ -9,7 +9,9 @@ import json
 import csv
 from datetime import datetime
 
-from digitalmodel.reporting import (
+# The "standard report" framework lives under visualization.reporting;
+# digitalmodel.reporting is the shared report *block* library (#1018).
+from digitalmodel.visualization.reporting import (
     StandardReport,
     ParameterSet,
     AnalysisResult,
