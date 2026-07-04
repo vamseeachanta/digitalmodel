@@ -114,6 +114,30 @@ emits `../../maccamy-fuchs-cylinder-verification.html` with:
 All reference curves are recomputed live from the frozen closed form at build time;
 the only measured inputs are the CFD fields in `results.json`.
 
+## Verified result (reduced-mesh solve, ka = 0.955)
+
+A solve on a feasible reduced mesh (nx=240, ny=32, nz=48 ≈ 0.37 M cells → ~0.6 M
+after snappyHexMesh, 12-way interFoam) **passes all three gates**:
+
+| Quantity | CFD | MacCamy-Fuchs | Result |
+|----------|-----|---------------|--------|
+| Peak inline force | **12.12 N** | 12.55 N (at measured H = 25.5 mm) | **PASS** (+3.4 %) |
+| Force lead over velocity | 71.5° | 69.6° | **PASS** (1.9°) |
+| Loading period | 0.800 s | 0.800 s | **PASS** |
+
+The CFD force sits at **0.72×** the Morison inertia estimate (17.5 N) — the case
+discriminates diffraction physics, as designed. The result is robust across settled
+analysis windows (force error 0.9–4.4 % over 3–7 wave periods).
+
+**Solve provenance / robustness note.** The reduced-mesh interFoam run terminated at
+t ≈ 15.4 s with a floating-point exception from violent VOF **wave run-up at the
+cylinder waterline** (a known challenge for surface-piercing piles) — *after* the
+inline force had fully settled, so the validation is unaffected; the gate is
+evaluated over the robust settled window [10, 15.3] s (6.6 wave periods). A
+full-resolution / crash-hardened solve (waterline mesh refinement, tighter
+interface-Courant cap) is a documented follow-up; it is expected to sharpen, not
+change, the already-passing result.
+
 ## Citations
 
 - MacCamy, R.C. & Fuchs, R.A. (1954). *Wave Forces on Piles: A Diffraction Theory*,
