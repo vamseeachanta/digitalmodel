@@ -15,6 +15,15 @@ from .models import (
 )
 from .criteria import Criterion, load_criteria
 from .decision import RollingDecision, rolling_decision
+from .measured import MeasuredMotion
+from .measured_source import MeasuredMotionSource, SyntheticMMS, from_csv
+from .reconcile import (
+    DofError,
+    MeasuredDecision,
+    measured_status,
+    overlap_error,
+    seam_offset,
+)
 from .derived import (
     GoverningSeries,
     available_governing,
@@ -57,4 +66,13 @@ __all__ = [
     "available_governing",
     "compute_governing",
     "inclination_deg",
+    "MeasuredMotion",
+    "MeasuredMotionSource",
+    "SyntheticMMS",
+    "from_csv",
+    "seam_offset",
+    "overlap_error",
+    "measured_status",
+    "MeasuredDecision",
+    "DofError",
 ]

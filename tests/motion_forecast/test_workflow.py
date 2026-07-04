@@ -43,6 +43,30 @@ def test_router_emits_decision_for_operation():
     assert dec["caution"] < dec["limit"]
 
 
+def test_router_measured_mode_emits_status_and_reconciliation():
+    import numpy as np
+    from digitalmodel.motion_forecast.measured import MeasuredMotion
+    from digitalmodel.motion_forecast.models import DOF_NAMES
+
+    tm = np.linspace(0.0, 30.0, 121)  # now=30 lies within the forecast horizon
+    measured = MeasuredMotion(
+        t=tm, dof={d: (0.2 * np.sin(tm) if d == "heave" else np.zeros_like(tm))
+                   for d in DOF_NAMES})
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 2.0, "tp": 9.0, "horizon": 60.0, "n_components": 32},
+            "rao": {"source": "analytic", "preset": "generic_vessel"},
+            "operation": "crane_lift",
+            "measured": measured,
+        },
+    }
+    out = router(cfg)["motion_forecast"]
+    assert out["measured_status"]["operation"] == "crane_lift"
+    assert out["measured_status"]["display"] in {"GO", "CAUTION", "NO-GO"}
+    assert set(out["reconciliation"]["seam_offset"]) == set(DOF_NAMES)
+
+
 def test_engine_dispatch_wired():
     """Guard: engine.py routes basename 'motion_forecast' to the workflow."""
     engine_src = (
