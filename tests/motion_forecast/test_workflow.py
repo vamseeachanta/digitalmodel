@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from digitalmodel.motion_forecast import DOF_NAMES
 from digitalmodel.motion_forecast.workflow import router
 
@@ -129,6 +131,40 @@ def test_router_emits_skill_summary():
     assert set(out["skill_summary"]) == set(DOF_NAMES)
     assert out["skill_summary"]["heave"]["rmse"] > 0.0
     assert out["skill_summary"]["heave"]["n_samples"] == 161 * 2
+
+
+def test_router_directional_forecaster():
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 2.5, "tp": 9.0, "forecaster": "directional",
+                    "n_freq": 24, "n_dir": 5, "spread_s": 12.0},
+            "rao": {"source": "analytic"},
+            "asset": {"dt": 0.5},
+        },
+    }
+    res = router(cfg)["motion_forecast"]["results"]
+    assert res["n_components"] == 24 * 5              # freq x dir set
+    assert 15.0 <= res["horizon"] <= 120.0           # physics predictable-zone
+    assert len(res["t"]) == len(res["dof"]["heave"])
+
+
+def test_router_synthetic_default_unchanged():
+    # no 'forecaster' key -> long-crested synthetic with the caller's horizon
+    cfg = {"basename": "motion_forecast",
+           "motion_forecast": {"sea": {"hs": 2.0, "tp": 9.0, "horizon": 70.0,
+                                       "n_components": 32},
+                               "rao": {"source": "analytic"}}}
+    res = router(cfg)["motion_forecast"]["results"]
+    assert res["n_components"] == 32 and res["horizon"] == 70.0
+
+
+def test_router_unknown_forecaster_raises():
+    cfg = {"basename": "motion_forecast",
+           "motion_forecast": {"sea": {"forecaster": "bogus"},
+                               "rao": {"source": "analytic"}}}
+    with pytest.raises(ValueError, match="unknown forecaster"):
+        router(cfg)
 
 
 def test_engine_dispatch_wired():

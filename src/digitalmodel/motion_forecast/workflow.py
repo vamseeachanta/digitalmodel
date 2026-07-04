@@ -72,6 +72,43 @@ def _build_rao(rao_cfg: Dict):
     return generic_vessel_rao()
 
 
+def _build_forecast(sea: Dict):
+    """Build the incident-wave forecast per ``sea['forecaster']``.
+
+    ``"synthetic"`` (default) — long-crested JONSWAP with a caller-set horizon
+    (``wave_source``, unchanged / backward-compatible). ``"directional"`` — the
+    #1357 short-crested forecaster with a physics predictable-zone horizon
+    (``coherence_horizon``, or ``dpz_horizon`` when a measurement ``aperture`` is
+    given).
+    """
+    kind = sea.get("forecaster", "synthetic")
+    if kind == "synthetic":
+        return synthesize_forecast(
+            hs=float(sea.get("hs", 2.5)),
+            tp=float(sea.get("tp", 9.0)),
+            gamma=float(sea.get("gamma", 3.3)),
+            heading=float(sea.get("heading", 0.0)),
+            n_components=int(sea.get("n_components", 48)),
+            horizon=float(sea.get("horizon", 90.0)),
+            seed=int(sea.get("seed", 20260704)),
+        )
+    if kind == "directional":
+        from .wave_forecast import synthesize_directional_forecast
+
+        aperture = sea.get("aperture")
+        return synthesize_directional_forecast(
+            float(sea.get("hs", 2.5)), float(sea.get("tp", 9.0)),
+            gamma=float(sea.get("gamma", 3.3)),
+            mean_heading=float(sea.get("mean_heading", sea.get("heading", 0.0))),
+            spread_s=float(sea.get("spread_s", 10.0)),
+            n_freq=int(sea.get("n_freq", sea.get("n_components", 32))),
+            n_dir=int(sea.get("n_dir", 7)),
+            aperture=(float(aperture) if aperture is not None else None),
+            seed=int(sea.get("seed", 20260704)),
+        )
+    raise ValueError(f"unknown forecaster {kind!r}; use 'synthetic' or 'directional'")
+
+
 def router(cfg: Dict) -> Dict:
     """Run a motion forecast and write results back into ``cfg``."""
     mf = cfg.setdefault("motion_forecast", {})
@@ -79,15 +116,7 @@ def router(cfg: Dict) -> Dict:
     rao_cfg = mf.get("rao", {})
     asset = mf.get("asset", {})
 
-    forecast = synthesize_forecast(
-        hs=float(sea.get("hs", 2.5)),
-        tp=float(sea.get("tp", 9.0)),
-        gamma=float(sea.get("gamma", 3.3)),
-        heading=float(sea.get("heading", 0.0)),
-        n_components=int(sea.get("n_components", 48)),
-        horizon=float(sea.get("horizon", 90.0)),
-        seed=int(sea.get("seed", 20260704)),
-    )
+    forecast = _build_forecast(sea)
     rao = _build_rao(rao_cfg)
     location = tuple(asset.get("location", (0.0, 0.0)))
     motion = reconstruct_motion(
