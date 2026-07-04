@@ -154,6 +154,7 @@
   <nav>
     <div class="navgroup"><a class="navh" href="#ffs">Fitness-for-service</a></div>
     <div class="navgroup"><a class="navh" href="#structural">Ship structural strength</a></div>
+    <div class="navgroup"><a class="navh" href="#fatigue">Fatigue &amp; fracture</a></div>
     <div class="navgroup"><a class="navh" href="#hydro">Hydrodynamics &amp; diffraction</a></div>
     <div class="navgroup"><a class="navh" href="#cfd">Computational fluid dynamics</a></div>
     <div class="navgroup"><a class="navh" href="#risers">Risers &amp; pipelines</a></div>
@@ -215,6 +216,28 @@
     <div class="grid">
       <div class="card"><h3>Ship plate buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.</p><div class="actions"><a class="open" href="../buckling/ship-plate-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-plate.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/buckling-plate.html">API &rarr;</a></div></div>
       <div class="card"><h3>Stiffened-panel buckling explorer</h3><div class="std">DNV-RP-C201</div><p>Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.</p><div class="actions"><a class="open" href="../buckling/ship-panel-buckling.html">Open &rarr;</a><a class="sec" href="pdf/buckling-panel.pdf" download>PDF &darr;</a><a class="sec api" data-tip="How to run — send the starting prompt to @the_deckhand_bot, or POST /api/run. Click for the prompt, request &amp; live report." href="api/buckling-panel.html">API &rarr;</a></div></div>
+    </div>
+  </section>
+
+  <section class="chan" id="fatigue">
+    <div class="chanhead"><h2>Fatigue &amp; fracture &mdash; S-N life and crack growth</h2></div>
+    <p class="lead">A code-referenced fatigue toolkit: a 221-curve S-N library spanning DNV-RP-C203,
+    API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004; Efthymiou stress-concentration factors for
+    tubular joints; rainflow counting into Miner's-rule damage; hotspot-stress extrapolation; and
+    Paris'-law crack growth. Every curve, SCF equation and read-out formula carries its clause
+    reference in-code, and the numeric checks are pinned to published tables and hand calculations.</p>
+    <div class="fits">
+      <span><b>S-N library</b> &mdash; 221 curves across 6 standards, 3 environments</span>
+      <span><b>Efthymiou SCF</b> &mdash; T/Y &amp; K tubular joints, DNV-RP-C203 App. B</span>
+      <span><b>Rainflow &rarr; Miner</b> &mdash; stress-range histogram to damage sum</span>
+      <span><b>Fracture</b> &mdash; hotspot-stress extrapolation + Paris'-law growth</span>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>S-N curve library (221 curves)</h3><div class="std">DNV-RP-C203 · API RP 2A-WSD · BS 7608 · EN 1993-1-9 · NORSOK N-004</div><p>A single lookup across 17 standard sets (14 DNV detail classes &times; 3 environments, plus API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004), each with slope / intercept, knee and thickness-correction metadata keyed by curve id (e.g. <code>DNV-RP-C203:D:air</code>).</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/sn_library.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Efthymiou SCF for tubular joints</h3><div class="std">Efthymiou (OTC 4829) · DNV-RP-C203 App. B · ISO 19902</div><p>Stress-concentration factors for T/Y and K joints under axial, in-plane and out-of-plane bending, plus DNV Appendix-D plate / weld SCFs &mdash; with chord / brace / governing values and the governing table reference.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/scf_library.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Weld-fatigue quick-check (rainflow &rarr; Miner)</h3><div class="std">DNV-RP-C203 · BS 7608</div><p>Takes a stress-range histogram and weld class, applies the DNV thickness correction, sums Palmgren-Miner damage over a design life, and returns pass/fail with per-bin damage and a life factor.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/weld_fatigue_quickcheck.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Hotspot-stress extrapolation</h3><div class="std">DNV-RP-C203 §4.3 · IIW-2259-15</div><p>Two- and three-point linear hotspot-stress extrapolation to the weld toe from surface stresses at the reference points, feeding the S-N read-out for welded-detail fatigue.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/hotspot_stress.py">Open &rarr;</a></div></div>
+      <div class="card"><h3>Crack growth (Paris' law)</h3><div class="std">BS 7910:2019</div><p>Paris'-law numerical integration from an initial to a critical crack size &mdash; the fracture-mechanics complement to the S-N route for assessing known or postulated flaws.</p><div class="actions"><a class="open" href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/crack_growth.py">Open &rarr;</a></div></div>
     </div>
   </section>
 
@@ -572,6 +595,8 @@
         <tr><td>Vogel IPR absolute open flow</td><td>PI 2.0 bopd/psi, Pr 3000 psi</td><td class="val">q_max = 3 333.3 bopd</td><td class="der">Vogel q_max = PI·Pr/1.8</td></tr>
         <tr><td>Burkhardt swab/surge factor</td><td>closed pipe, OD 5.0″ in 8.5″ hole</td><td class="val">0.529</td><td class="der">5.0²/(8.5²−5.0²)</td></tr>
         <tr><td>Exponential production decline</td><td>D 0.10/yr, first post-plateau year</td><td class="val">0.9048 (= e⁻⁰·¹⁰)</td><td class="der">Arps q(t)=q_i·e^(−D·t)</td></tr>
+        <tr><td>Hotspot stress (linear extrapolation)</td><td>σ@0.4t 200 MPa, σ@1.0t 180 MPa</td><td class="val">σ_hs = 213.4 MPa</td><td class="der">DNV-RP-C203 Eq. 4.1 (1.67·200−0.67·180)</td></tr>
+        <tr><td>S-N curve lookup (DNV D, air)</td><td>curve id DNV-RP-C203:D:air</td><td class="val">log₁₀a = 12.164, m = 3.0</td><td class="pub">DNV-RP-C203 Table 2-1</td></tr>
       </tbody>
     </table></div>
   </section>
