@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cathodic-protection anode explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--teal2:#12A6B0}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:780px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ select{font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);
+       font-size:16px;min-width:70px}
+ .row{display:grid;grid-template-columns:150px 1fr 120px;align-items:center;gap:10px;margin:8px 0}
+ .row .name{font-size:12.5px;font-weight:700;color:var(--ink);text-align:right}
+ .track{position:relative;background:var(--soft);border:1px solid var(--line);
+        border-radius:7px;height:26px;overflow:hidden}
+ .fill{position:absolute;top:0;left:0;height:100%;border-radius:6px 0 0 6px;
+       background:linear-gradient(90deg,var(--teal),var(--navy));transition:width .12s}
+ .glab{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;
+       font-weight:600;color:#fff;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+ .uval{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;text-align:right;color:var(--navy)}
+ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+ th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line)}
+ th{background:var(--soft);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+ td.n{font-family:ui-monospace,Menlo,monospace;text-align:right}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:8px}
+ .foot a{color:var(--teal)}
+ .hint{font-size:12px;color:var(--muted);margin:2px 0 8px}
+</style></head><body>
+<h1>Cathodic protection &mdash; sacrificial-anode explorer</h1>
+<p class="sub">DNV-RP-B401 sacrificial-anode design for a fixed offshore structure. Pick a structure and
+seawater climate, then drag the design life to watch the total anode mass grow &mdash; and see how much
+a better external coating cuts it. Every value is computed live by
+<code>marine_structure_current_demand</code> (current demand &rarr; anode mass &rarr; anode count),
+not mocked.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label>Structure</label><select id="struct"></select>
+    <label>Seawater climate</label><select id="climate"></select>
+  </div>
+  <div class="ctrl">
+    <label for="life">Design life</label>
+    <input type="range" id="life" min="0" max="0" step="1">
+    <span class="wval" id="lval"></span>
+  </div>
+  <div class="hint">Total sacrificial-anode mass by external-coating quality (bar = kg of Al-Zn-In anode).</div>
+  <div id="bars"></div>
+</div>
+
+<div class="panel">
+  <h3 style="font-size:15px;color:var(--navy);margin-bottom:6px">Design breakdown at selected life</h3>
+  <table><thead><tr><th>Coating</th><th>Mean current (A)</th><th>Final current (A)</th>
+    <th>Anode mass (kg)</th><th>Anodes (200 kg)</th></tr></thead><tbody id="tbody"></tbody></table>
+  <p class="foot">Anode: 200 kg net Al-Zn-In, 2000 A&middot;h/kg, utilization 0.90. Standard: DNV-RP-B401.</p>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_cathodic_protection_explorer.py</code> from
+<code>src/digitalmodel/cathodic_protection/</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"structures":["4-leg jacket","XL monopile"],"areas":{"4-leg jacket":{"splash":220.0,"tidal":180.0,"submerged":2400.0,"buried_mudline":320.0},"XL monopile":{"splash":120.0,"tidal":95.0,"submerged":760.0,"buried_mudline":540.0}},"climates":["temperate","tropical"],"coatings":["bare","aged-coating","good-coating","premium-coating"],"lives":[10.0,15.0,20.0,25.0,30.0,35.0,40.0],"anode_kg":200.0,"capacity":2000.0,"util":0.9,"standard":"DNV-RP-B401"},"series":{"4-leg jacket":{"temperate":{"bare":[{"l":10.0,"mass":12692.3,"n":64,"im":260.8,"if":312.4},{"l":15.0,"mass":19038.4,"n":96,"im":260.8,"if":312.4},{"l":20.0,"mass":25384.5,"n":127,"im":260.8,"if":312.4},{"l":25.0,"mass":31730.7,"n":159,"im":260.8,"if":312.4},{"l":30.0,"mass":38076.8,"n":191,"im":260.8,"if":312.4},{"l":35.0,"mass":44422.9,"n":223,"im":260.8,"if":312.4},{"l":40.0,"mass":50769.1,"n":254,"im":260.8,"if":312.4}],"aged-coating":[{"l":10.0,"mass":11898.0,"n":60,"im":244.48,"if":292.6},{"l":15.0,"mass":17847.0,"n":90,"im":244.48,"if":292.6},{"l":20.0,"mass":23796.0,"n":119,"im":244.48,"if":292.6},{"l":25.0,"mass":29745.1,"n":149,"im":244.48,"if":292.6},{"l":30.0,"mass":35694.1,"n":179,"im":244.48,"if":292.6},{"l":35.0,"mass":41643.1,"n":209,"im":244.48,"if":292.6},{"l":40.0,"mass":47592.1,"n":238,"im":244.48,"if":292.6}],"good-coating":[{"l":10.0,"mass":11103.8,"n":56,"im":228.16,"if":272.8},{"l":15.0,"mass":16655.7,"n":84,"im":228.16,"if":272.8},{"l":20.0,"mass":22207.6,"n":112,"im":228.16,"if":272.8},{"l":25.0,"mass":27759.5,"n":139,"im":228.16,"if":272.8},{"l":30.0,"mass":33311.4,"n":167,"im":228.16,"if":272.8},{"l":35.0,"mass":38863.2,"n":195,"im":228.16,"if":272.8},{"l":40.0,"mass":44415.2,"n":223,"im":228.16,"if":272.8}],"premium-coating":[{"l":10.0,"mass":7424.6,"n":38,"im":152.56,"if":181.9},{"l":15.0,"mass":11136.9,"n":56,"im":152.56,"if":181.9},{"l":20.0,"mass":14849.2,"n":75,"im":152.56,"if":181.9},{"l":25.0,"mass":18561.5,"n":93,"im":152.56,"if":181.9},{"l":30.0,"mass":22273.8,"n":112,"im":152.56,"if":181.9},{"l":35.0,"mass":25986.0,"n":130,"im":152.56,"if":181.9},{"l":40.0,"mass":29698.3,"n":149,"im":152.56,"if":181.9}]},"tropical":{"bare":[{"l":10.0,"mass":9013.1,"n":46,"im":185.2,"if":236.8},{"l":15.0,"mass":13519.6,"n":68,"im":185.2,"if":236.8},{"l":20.0,"mass":18026.1,"n":91,"im":185.2,"if":236.8},{"l":25.0,"mass":22532.7,"n":113,"im":185.2,"if":236.8},{"l":30.0,"mass":27039.2,"n":136,"im":185.2,"if":236.8},{"l":35.0,"mass":31545.7,"n":158,"im":185.2,"if":236.8},{"l":40.0,"mass":36052.3,"n":181,"im":185.2,"if":236.8}],"aged-coating":[{"l":10.0,"mass":8446.6,"n":43,"im":173.56,"if":221.68},{"l":15.0,"mass":12669.9,"n":64,"im":173.56,"if":221.68},{"l":20.0,"mass":16893.2,"n":85,"im":173.56,"if":221.68},{"l":25.0,"mass":21116.5,"n":106,"im":173.56,"if":221.68},{"l":30.0,"mass":25339.8,"n":127,"im":173.56,"if":221.68},{"l":35.0,"mass":29563.0,"n":148,"im":173.56,"if":221.68},{"l":40.0,"mass":33786.3,"n":169,"im":173.56,"if":221.68}],"good-coating":[{"l":10.0,"mass":7880.1,"n":40,"im":161.92,"if":206.56},{"l":15.0,"mass":11820.2,"n":60,"im":161.92,"if":206.56},{"l":20.0,"mass":15760.2,"n":79,"im":161.92,"if":206.56},{"l":25.0,"mass":19700.3,"n":99,"im":161.92,"if":206.56},{"l":30.0,"mass":23640.3,"n":119,"im":161.92,"if":206.56},{"l":35.0,"mass":27580.4,"n":138,"im":161.92,"if":206.56},{"l":40.0,"mass":31520.4,"n":158,"im":161.92,"if":206.56}],"premium-coating":[{"l":10.0,"mass":5295.9,"n":27,"im":108.82,"if":138.16},{"l":15.0,"mass":7943.9,"n":40,"im":108.82,"if":138.16},{"l":20.0,"mass":10591.8,"n":53,"im":108.82,"if":138.16},{"l":25.0,"mass":13239.8,"n":67,"im":108.82,"if":138.16},{"l":30.0,"mass":15887.7,"n":80,"im":108.82,"if":138.16},{"l":35.0,"mass":18535.7,"n":93,"im":108.82,"if":138.16},{"l":40.0,"mass":21183.6,"n":106,"im":108.82,"if":138.16}]}},"XL monopile":{"temperate":{"bare":[{"l":10.0,"mass":4594.1,"n":23,"im":94.4,"if":111.5},{"l":15.0,"mass":6891.2,"n":35,"im":94.4,"if":111.5},{"l":20.0,"mass":9188.3,"n":46,"im":94.4,"if":111.5},{"l":25.0,"mass":11485.3,"n":58,"im":94.4,"if":111.5},{"l":30.0,"mass":13782.4,"n":69,"im":94.4,"if":111.5},{"l":35.0,"mass":16079.5,"n":81,"im":94.4,"if":111.5},{"l":40.0,"mass":18376.5,"n":92,"im":94.4,"if":111.5}],"aged-coating":[{"l":10.0,"mass":4298.2,"n":22,"im":88.32,"if":104.09},{"l":15.0,"mass":6447.4,"n":33,"im":88.32,"if":104.09},{"l":20.0,"mass":8596.5,"n":43,"im":88.32,"if":104.09},{"l":25.0,"mass":10745.6,"n":54,"im":88.32,"if":104.09},{"l":30.0,"mass":12894.7,"n":65,"im":88.32,"if":104.09},{"l":35.0,"mass":15043.8,"n":76,"im":88.32,"if":104.09},{"l":40.0,"mass":17193.0,"n":86,"im":88.32,"if":104.09}],"good-coating":[{"l":10.0,"mass":4002.3,"n":21,"im":82.24,"if":96.68},{"l":15.0,"mass":6003.5,"n":31,"im":82.24,"if":96.68},{"l":20.0,"mass":8004.7,"n":41,"im":82.24,"if":96.68},{"l":25.0,"mass":10005.9,"n":51,"im":82.24,"if":96.68},{"l":30.0,"mass":12007.0,"n":61,"im":82.24,"if":96.68},{"l":35.0,"mass":14008.2,"n":71,"im":82.24,"if":96.68},{"l":40.0,"mass":16009.4,"n":81,"im":82.24,"if":96.68}],"premium-coating":[{"l":10.0,"mass":2800.3,"n":15,"im":57.54,"if":66.94},{"l":15.0,"mass":4200.4,"n":22,"im":57.54,"if":66.94},{"l":20.0,"mass":5600.6,"n":29,"im":57.54,"if":66.94},{"l":25.0,"mass":7000.7,"n":36,"im":57.54,"if":66.94},{"l":30.0,"mass":8400.8,"n":43,"im":57.54,"if":66.94},{"l":35.0,"mass":9801.0,"n":50,"im":57.54,"if":66.94},{"l":40.0,"mass":11201.1,"n":57,"im":57.54,"if":66.94}]},"tropical":{"bare":[{"l":10.0,"mass":3392.1,"n":17,"im":69.7,"if":86.8},{"l":15.0,"mass":5088.1,"n":26,"im":69.7,"if":86.8},{"l":20.0,"mass":6784.1,"n":34,"im":69.7,"if":86.8},{"l":25.0,"mass":8480.2,"n":43,"im":69.7,"if":86.8},{"l":30.0,"mass":10176.2,"n":51,"im":69.7,"if":86.8},{"l":35.0,"mass":11872.2,"n":60,"im":69.7,"if":86.8},{"l":40.0,"mass":13568.3,"n":68,"im":69.7,"if":86.8}],"aged-coating":[{"l":10.0,"mass":3179.4,"n":16,"im":65.33,"if":81.1},{"l":15.0,"mass":4769.1,"n":24,"im":65.33,"if":81.1},{"l":20.0,"mass":6358.8,"n":32,"im":65.33,"if":81.1},{"l":25.0,"mass":7948.5,"n":40,"im":65.33,"if":81.1},{"l":30.0,"mass":9538.2,"n":48,"im":65.33,"if":81.1},{"l":35.0,"mass":11127.9,"n":56,"im":65.33,"if":81.1},{"l":40.0,"mass":12717.6,"n":64,"im":65.33,"if":81.1}],"good-coating":[{"l":10.0,"mass":2966.7,"n":15,"im":60.96,"if":75.4},{"l":15.0,"mass":4450.1,"n":23,"im":60.96,"if":75.4},{"l":20.0,"mass":5933.4,"n":30,"im":60.96,"if":75.4},{"l":25.0,"mass":7416.8,"n":38,"im":60.96,"if":75.4},{"l":30.0,"mass":8900.2,"n":45,"im":60.96,"if":75.4},{"l":35.0,"mass":10383.5,"n":52,"im":60.96,"if":75.4},{"l":40.0,"mass":11866.9,"n":60,"im":60.96,"if":75.4}],"premium-coating":[{"l":10.0,"mass":2120.7,"n":11,"im":43.58,"if":52.98},{"l":15.0,"mass":3181.0,"n":16,"im":43.58,"if":52.98},{"l":20.0,"mass":4241.3,"n":22,"im":43.58,"if":52.98},{"l":25.0,"mass":5301.6,"n":27,"im":43.58,"if":52.98},{"l":30.0,"mass":6361.9,"n":32,"im":43.58,"if":52.98},{"l":35.0,"mass":7422.3,"n":38,"im":43.58,"if":52.98},{"l":40.0,"mass":8482.6,"n":43,"im":43.58,"if":52.98}]}}}};
+const M = DATA.meta, LIVES = M.lives, COATS = M.coatings;
+const spec = document.getElementById('spec');
+spec.innerHTML = [
+  ['Standard', M.standard], ['Anode', M.anode_kg+' kg Al-Zn-In'],
+  ['Capacity', M.capacity+' A·h/kg'], ['Utilization', M.util],
+  ['Coatings', COATS.length], ['Climates', M.climates.length],
+].map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+
+const selS = document.getElementById('struct'), selC = document.getElementById('climate');
+M.structures.forEach(s=>selS.add(new Option(s,s)));
+M.climates.forEach(c=>selC.add(new Option(c,c)));
+selC.value = 'temperate';
+const life = document.getElementById('life');
+life.max = LIVES.length-1;
+
+function maxMass(){
+  let mx = 0;
+  for(const s of M.structures) for(const c of M.climates) for(const k of COATS)
+    for(const p of DATA.series[s][c][k]) if(p.mass>mx) mx=p.mass;
+  return mx;
+}
+const MX = maxMass();
+
+function render(){
+  const s = selS.value, c = selC.value, idx = +life.value;
+  document.getElementById('lval').textContent = LIVES[idx].toFixed(1)+' yr';
+  document.getElementById('bars').innerHTML = COATS.map(k=>{
+    const p = DATA.series[s][c][k][idx];
+    const pct = (p.mass/MX*100).toFixed(1);
+    return `<div class="row"><div class="name">${k}</div>
+      <div class="track"><div class="fill" style="width:${pct}%"></div>
+      <div class="glab">${p.mass.toLocaleString()} kg &middot; ${p.n} anodes</div></div>
+      <div class="uval">${p.mass.toLocaleString()} kg</div></div>`;
+  }).join('');
+  document.getElementById('tbody').innerHTML = COATS.map(k=>{
+    const p = DATA.series[s][c][k][idx];
+    return `<tr><td>${k}</td><td class="n">${p.im.toFixed(2)}</td>
+      <td class="n">${p.if.toFixed(2)}</td>
+      <td class="n">${p.mass.toLocaleString()}</td><td class="n">${p.n}</td></tr>`;
+  }).join('');
+}
+let start = LIVES.indexOf(25.0); if(start<0) start = Math.floor(LIVES.length/2);
+life.value = start; render();
+[selS, selC, life].forEach(el=>el.addEventListener('input', render));
+</script>
+</body></html>
