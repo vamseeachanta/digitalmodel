@@ -1,12 +1,12 @@
-<svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g>
     <g transform="translate(20 10)">
-      <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
+      <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#FFFFFF"/>
       <path d="M38 72c20-32 64-32 84 0v76c-20 32-64 32-84 0z" fill="#2BB2A6" opacity=".85"/>
       <!-- tail -->
-      <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+      <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
       <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
-      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="15" stroke-linecap="round"/>
+      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round"/>
       <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="12" stroke-linecap="round"/>
       <line x1="33.7" y1="76.5" x2="29.2" y2="87.1" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
       <line x1="36.3" y1="79.9" x2="32.6" y2="90.7" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
@@ -60,7 +60,7 @@
       <line x1="130.3" y1="86.5" x2="134.3" y2="90.5" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="133.6" y1="83.3" x2="137.6" y2="87.3" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="136.6" y1="79.8" x2="140.6" y2="83.8" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="15" stroke-linecap="round"/>
+      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round"/>
       <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="12" stroke-linecap="round"/>
       <line x1="33.7" y1="106.5" x2="29.2" y2="117.1" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
       <line x1="36.3" y1="109.9" x2="32.6" y2="120.7" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
@@ -114,7 +114,7 @@
       <line x1="130.3" y1="116.5" x2="134.3" y2="120.5" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="133.6" y1="113.3" x2="137.6" y2="117.3" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="136.6" y1="109.8" x2="140.6" y2="113.8" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="15" stroke-linecap="round"/>
+      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round"/>
       <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="12" stroke-linecap="round"/>
       <line x1="33.7" y1="136.5" x2="29.2" y2="147.1" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
       <line x1="36.3" y1="139.9" x2="32.6" y2="150.7" stroke="#0E7E88" stroke-width="3" stroke-linecap="round"/>
@@ -168,11 +168,19 @@
       <line x1="130.3" y1="146.5" x2="134.3" y2="150.5" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="133.6" y1="143.3" x2="137.6" y2="147.3" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="136.6" y1="139.8" x2="140.6" y2="143.8" stroke="#B9F5E6" stroke-width="1.6" stroke-linecap="round"/>
-      <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
-      <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
+      <rect x="18" y="48" width="20" height="120" fill="#FFFFFF"/>
+      <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#FFFFFF"/>
     </g>
-    <g transform="translate(265 62)">
-      <text x="0" y="56" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="60" font-weight="600" fill="#0B3D91" letter-spacing="0.5">Digital <tspan fill="#2BB2A6">Model</tspan></text>
+    <g transform="translate(265 34)">
+      <text x="0" y="56" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="60" font-weight="600" fill="#FFFFFF" letter-spacing="0.5">Digital <tspan fill="#2BB2A6">Model</tspan></text>
+      <g transform="translate(4 96)" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+        <text x="0" y="0" font-size="16" font-weight="600" fill="#6FE8D4" letter-spacing="0.4">Engineering moored to</text>
+        <g font-size="16" font-weight="500" fill="#E6EDF7">
+          <g transform="translate(6 22)"><circle cx="6" cy="7" r="5" fill="#2BB2A6"/><text x="20" y="12">Traceable codes and standards</text></g>
+          <g transform="translate(6 46)"><circle cx="6" cy="7" r="5" fill="#FFFFFF"/><text x="20" y="12">Deterministic workflows</text></g>
+          <g transform="translate(6 70)"><circle cx="6" cy="7" r="5" fill="#6FE8D4"/><text x="20" y="12">Single source of truth (SSOT)</text></g>
+        </g>
+      </g>
     </g>
   </g>
 </svg>
