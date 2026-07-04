@@ -13,6 +13,14 @@ from .models import (
     WaveComponent,
     WaveForecast,
 )
+from .criteria import Criterion, load_criteria
+from .decision import RollingDecision, rolling_decision
+from .derived import (
+    GoverningSeries,
+    available_governing,
+    compute_governing,
+    inclination_deg,
+)
 from .rao_adapter import AnalyticRAO, GridRAO
 from .reconstruct import (
     reconstruct_motion,
@@ -41,4 +49,12 @@ __all__ = [
     "jonswap_spectrum",
     "synthesize_forecast",
     "router",
+    "Criterion",
+    "load_criteria",
+    "RollingDecision",
+    "rolling_decision",
+    "GoverningSeries",
+    "available_governing",
+    "compute_governing",
+    "inclination_deg",
 ]

@@ -101,4 +101,27 @@ def router(cfg: Dict) -> Dict:
         "horizon": motion.horizon,
         "n_components": len(forecast.components),
     }
+
+    # Optional rolling go/no-go decision for a named operation (#1359).
+    op = mf.get("operation")
+    if op:
+        from .criteria import load_criteria
+        from .decision import rolling_decision
+
+        crits = load_criteria(mf.get("criteria_path"))
+        if op not in crits:
+            raise ValueError(f"unknown operation {op!r}; have {sorted(crits)}")
+        dec = rolling_decision(motion, crits[op])
+        mf["decision"] = {
+            "operation": dec.operation,
+            "governing": dec.governing,
+            "unit": dec.unit,
+            "state": dec.state.value,
+            "display": dec.display,
+            "current_value": dec.current_value,
+            "caution": dec.caution,
+            "limit": dec.limit,
+            "lead_time_to_caution": dec.lead_time_to_caution,
+            "lead_time_to_no_go": dec.lead_time_to_no_go,
+        }
     return cfg

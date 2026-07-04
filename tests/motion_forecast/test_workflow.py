@@ -24,6 +24,25 @@ def test_router_produces_results():
     assert res["n_components"] == 32
 
 
+def test_router_emits_decision_for_operation():
+    cfg = {
+        "basename": "motion_forecast",
+        "motion_forecast": {
+            "sea": {"hs": 3.5, "tp": 8.0, "horizon": 60.0, "n_components": 48},
+            "rao": {"source": "analytic", "preset": "generic_vessel"},
+            "asset": {"location": [0.0, 0.0], "dt": 0.25},
+            "operation": "crane_lift",
+        },
+    }
+    out = router(cfg)
+    dec = out["motion_forecast"]["decision"]
+    assert dec["operation"] == "crane_lift"
+    assert dec["state"] in {"GO", "MARGINAL", "NO_GO"}
+    assert dec["display"] in {"GO", "CAUTION", "NO-GO"}
+    assert dec["unit"] == "m/s"
+    assert dec["caution"] < dec["limit"]
+
+
 def test_engine_dispatch_wired():
     """Guard: engine.py routes basename 'motion_forecast' to the workflow."""
     engine_src = (
