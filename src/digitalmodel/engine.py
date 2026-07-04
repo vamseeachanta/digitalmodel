@@ -278,6 +278,12 @@ def engine(
         )
 
         cfg_base = rao_tabulation(cfg_base)
+    elif basename == "motion_forecast":
+        from digitalmodel.motion_forecast.workflow import (
+            router as motion_forecast,
+        )
+
+        cfg_base = motion_forecast(cfg_base)
     elif basename == "installation":
         orc_install = OrcInstallation()
         if cfg_base["structure"]["flag"]:
