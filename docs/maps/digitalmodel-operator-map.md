@@ -39,6 +39,7 @@ of duplicating its detailed issue history.
 | `orcaflex` | `src/digitalmodel/orcaflex/` | `tests/orcaflex/` | `docs/domains/orcaflex/` | Public OrcaFlex APIs, reporting, model and post-processing utilities | OrcFxAPI where licensed, YAML |
 | `orcawave` | `src/digitalmodel/orcawave/` | `tests/orcawave/` | `docs/domains/orcawave/` | OrcaWave package utilities, reporting, hydrodynamic inputs/outputs | OrcaWave, hydrodynamics |
 | `power` | `src/digitalmodel/power/` | `tests/power/` | `docs/domains/README.md` | Generator controls, microgrid EMS, protection relays | IEEE/NFPA power standards |
+| `production_chemistry` | `src/digitalmodel/production_chemistry/` | `tests/production_chemistry/` | `docs/domains/README.md` | Mineral-scale saturation indices (Oddo-Tomson), brine mixing/waterflood compatibility | NumPy, pandas |
 | `production_engineering` | `src/digitalmodel/production_engineering/` | `tests/production_engineering/` | `docs/domains/README.md` | Well testing, nodal analysis, production quality scoring | petroleum engineering models |
 | `reservoir` | `src/digitalmodel/reservoir/` | `tests/reservoir/` | `docs/domains/reservoir/` | Reservoir engineering and production-support calculations | reservoir engineering models |
 | `signal_processing` | `src/digitalmodel/signal_processing/` | `tests/signal_processing/` | `docs/domains/signal_processing/` | Signal analysis, filters, time-series utilities | NumPy, SciPy |
@@ -53,6 +54,10 @@ of duplicating its detailed issue history.
 | `workflows` | `src/digitalmodel/workflows/` | `tests/workflows/` | `docs/domains/workflows/` | Multi-step issue workflows and agent/solver orchestration | repo workflow conventions |
 | `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
 | `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
+| `common` | `src/digitalmodel/common/` | `tests/common/` | `docs/domains/README.md` | Shared assumption-ledger and spec-authoring helpers | PyYAML |
+| `corrosion` | `src/digitalmodel/corrosion/` | `tests/corrosion/` | `docs/domains/README.md` | Galvanic (dissimilar-metal) compatibility screening, MIL-STD-889 anodic index | NumPy, pandas |
+| `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
+| `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
 | `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
 | `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
 | `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |
@@ -61,6 +66,7 @@ of duplicating its detailed issue history.
 | `parametrics` | `src/digitalmodel/parametrics/` | `tests/parametrics/` | `docs/domains/README.md` | Parametric sweep bridging into atlases and query handlers | NumPy, pandas |
 | `pipelay` | `src/digitalmodel/pipelay/` | `tests/pipelay/` | `docs/domains/README.md` | Pipelay analysis, lay tension and configuration checks | marine/subsea standards |
 | `rao_spectral_fatigue` | `src/digitalmodel/rao_spectral_fatigue/` | `tests/` | `docs/domains/README.md` | RAO-driven spectral fatigue workflow (closed-form) | fatigue/hydrodynamics standards |
+| `riser_database` | `src/digitalmodel/riser_database/` | `tests/riser_database/` | `docs/domains/README.md` | Public riser reference tables (config catalog, materials, crosswalk) | PyYAML, pandas |
 | `riser_fatigue` | `src/digitalmodel/riser_fatigue/` | `tests/riser_fatigue/` | `docs/domains/README.md` | Riser fatigue analysis and automation | fatigue standards, NumPy |
 | `spectral_fatigue` | `src/digitalmodel/spectral_fatigue/` | `tests/` | `docs/domains/README.md` | Spectral (frequency-domain) fatigue calculation | fatigue standards, SciPy |
 | `synthetic_rope_mooring_fatigue` | `src/digitalmodel/synthetic_rope_mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Synthetic-rope mooring fatigue analysis | fatigue standards, NumPy |

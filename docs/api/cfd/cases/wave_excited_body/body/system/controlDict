@@ -1,0 +1,12 @@
+FoamFile { version 2.0; format ascii; class dictionary; object controlDict; }
+
+// Mesh-prep-only sub-case: blockMesh -> topoSet -> subsetMesh. The
+// application entry satisfies the runner contract; nothing is solved here.
+application     blockMesh;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         1;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   1;

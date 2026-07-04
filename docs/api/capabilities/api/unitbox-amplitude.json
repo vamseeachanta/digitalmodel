@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_amplitude.html",
+  "provenance": {
+    "basis": "WAMIT \u00b7 AQWA \u00b7 OrcaWave",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_amplitude.html"
+  },
+  "surface": "digitalmodel:unitbox-amplitude",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_amplitude.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Show the RAO amplitude overlay for the unit-box 3-solver diffraction benchmark.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Show the RAO amplitude overlay for the unit-box 3-solver diffraction benchmark."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_amplitude.html"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "basename": "drilling_riser_envelope",
+  "atlas_id": "7ca25705d065",
+  "physics": "linear",
+  "response": "von_mises_daf",
+  "axes": [
+    {
+      "name": "mode",
+      "values": [
+        "drilling",
+        "connected",
+        "hang_off"
+      ]
+    },
+    {
+      "name": "offset_pct",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        2.0,
+        4.0,
+        6.0,
+        8.0
+      ]
+    },
+    {
+      "name": "current_speed_mps",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "name": "hs_m",
+      "scale": "linear",
+      "grid": [
+        1.0,
+        3.0,
+        5.0,
+        7.0
+      ]
+    },
+    {
+      "name": "tp_s",
+      "scale": "linear",
+      "grid": [
+        8.0,
+        12.0,
+        16.0
+      ]
+    }
+  ]
+}

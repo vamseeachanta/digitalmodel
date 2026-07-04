@@ -76,9 +76,10 @@ def test_engine_import_and_basic_functionality():
         # Now import and test the engine
         from digitalmodel.engine import engine
 
-        # Test with simple config
+        # Test with a simple config routed to a mocked handler (engine
+        # raises for unknown basenames like "test_module" by design)
         cfg = MockAttributeDict({
-            "basename": "test_module",
+            "basename": "transformation",
             "inputs": {"test": "value"}
         })
 

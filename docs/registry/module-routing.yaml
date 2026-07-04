@@ -32,6 +32,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
+  - module: corrosion
+    entry_point: src/digitalmodel/corrosion/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/corrosion/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#corrosion
   - module: data_models
     entry_point: src/digitalmodel/data_models/
     maturity: development
@@ -146,6 +152,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/power/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#power
+  - module: production_chemistry
+    entry_point: src/digitalmodel/production_chemistry/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/production_chemistry/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#production_chemistry
   - module: production_engineering
     entry_point: src/digitalmodel/production_engineering/
     maturity: production
@@ -278,6 +290,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+  - module: riser_database
+    entry_point: src/digitalmodel/riser_database/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_database/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_database
   - module: riser_fatigue
     entry_point: src/digitalmodel/riser_fatigue/
     maturity: beta
@@ -320,3 +338,21 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well_access/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#well_access
+  - module: common
+    entry_point: src/digitalmodel/common/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/common/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#common
+  - module: materials
+    entry_point: src/digitalmodel/materials/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/materials/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
+  - module: workflow_api
+    entry_point: src/digitalmodel/workflow_api/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/workflow_api/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#workflow_api

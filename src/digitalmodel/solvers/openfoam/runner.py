@@ -67,6 +67,23 @@ class OpenFOAMRunConfig:
             Read from the case's ``controlDict`` if left ``None``.
         mesh_utility: Mesh generator to run first (``blockMesh`` by default).
         run_snappy: Run ``snappyHexMesh -overwrite`` after blockMesh (3D from STL).
+        merge_meshes_source: Merge another case's mesh into this one right
+            after meshing (``mergeMeshes . <source> -overwrite``), *before*
+            topoSet — overset cases combine a background and a component
+            mesh this way (e.g. the wave-excited floating body). The path
+            is resolved relative to the case directory.
+        run_topo_set: Run ``topoSet`` after meshing — cases that carve a body
+            out of the background mesh (e.g. the floating-body decay case).
+        subset_mesh_set: Cell set for ``subsetMesh -overwrite <set> -patch
+            <subset_mesh_patch>`` after topoSet; both must be given together.
+        subset_mesh_patch: Patch that receives the exposed subset faces.
+        run_set_fields: Run ``setFields`` after meshing, before the solver —
+            required by VOF/multiphase cases that initialise a phase region
+            from ``system/setFieldsDict`` (e.g. the dam-break water column).
+        run_solver: Run the solver after the mesh stages. ``False`` turns
+            the run into mesh-prep only (used for overset component
+            sub-cases whose mesh is merged into another case); ``to_vtk``
+            is ignored when the solver is skipped.
         to_vtk: Run ``foamToVTK`` after the solver for PyVista/ParaView.
         timeout_seconds: Hard wall-clock cap on any single utility.
         dry_run: Skip execution; report DRY_RUN (used for plan/validation).
@@ -75,6 +92,12 @@ class OpenFOAMRunConfig:
     solver: Optional[str] = None
     mesh_utility: str = "blockMesh"
     run_snappy: bool = False
+    merge_meshes_source: Optional[str] = None
+    run_topo_set: bool = False
+    subset_mesh_set: Optional[str] = None
+    subset_mesh_patch: Optional[str] = None
+    run_set_fields: bool = False
+    run_solver: bool = True
     to_vtk: bool = True
     timeout_seconds: int = 7200
     dry_run: bool = False
@@ -173,9 +196,32 @@ class OpenFOAMRunner:
             stages.append(
                 (OpenFOAMRunStatus.MESHING, ["snappyHexMesh", "-overwrite"])
             )
-        stages.append((OpenFOAMRunStatus.RUNNING, [solver]))
-        if self._config.to_vtk:
-            stages.append((OpenFOAMRunStatus.RUNNING, ["foamToVTK"]))
+        if self._config.merge_meshes_source:
+            stages.append((
+                OpenFOAMRunStatus.MESHING,
+                ["mergeMeshes", ".", self._config.merge_meshes_source,
+                 "-overwrite"],
+            ))
+        if self._config.run_topo_set:
+            stages.append((OpenFOAMRunStatus.MESHING, ["topoSet"]))
+        if self._config.subset_mesh_set or self._config.subset_mesh_patch:
+            if not (self._config.subset_mesh_set and self._config.subset_mesh_patch):
+                result.status = OpenFOAMRunStatus.FAILED
+                result.error_message = (
+                    "subset_mesh_set and subset_mesh_patch must be given together"
+                )
+                return result
+            stages.append((
+                OpenFOAMRunStatus.MESHING,
+                ["subsetMesh", "-overwrite", self._config.subset_mesh_set,
+                 "-patch", self._config.subset_mesh_patch],
+            ))
+        if self._config.run_set_fields:
+            stages.append((OpenFOAMRunStatus.MESHING, ["setFields"]))
+        if self._config.run_solver:
+            stages.append((OpenFOAMRunStatus.RUNNING, [solver]))
+            if self._config.to_vtk:
+                stages.append((OpenFOAMRunStatus.RUNNING, ["foamToVTK"]))
 
         for status, argv in stages:
             result.status = status

@@ -202,6 +202,15 @@ def parametric_cmd(
     help="Run snappyHexMesh -overwrite after the mesh utility (3D from STL).",
 )
 @click.option(
+    "--set-fields/--no-set-fields",
+    default=False,
+    show_default=True,
+    help=(
+        "Run setFields after meshing, before the solver (VOF/multiphase "
+        "cases with a system/setFieldsDict phase region)."
+    ),
+)
+@click.option(
     "--vtk/--no-vtk",
     default=True,
     show_default=True,
@@ -218,6 +227,7 @@ def run_cmd(
     solver: str | None,
     mesh_utility: str,
     snappy: bool,
+    set_fields: bool,
     vtk: bool,
     dry_run: bool,
 ) -> None:
@@ -227,6 +237,7 @@ def run_cmd(
             solver=solver,
             mesh_utility=mesh_utility,
             run_snappy=snappy,
+            run_set_fields=set_fields,
             to_vtk=vtk,
             dry_run=dry_run,
         )

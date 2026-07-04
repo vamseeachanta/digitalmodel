@@ -1,0 +1,49 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/buckling/ship-panel-buckling.html",
+  "provenance": {
+    "basis": "DNV-RP-C201",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/run",
+    "body": {
+      "repo": "digitalmodel",
+      "workflow": "elastic-buckling"
+    }
+  },
+  "invocation": "uv run python -m digitalmodel examples/workflows/elastic-buckling/input.yml",
+  "workflow": "digitalmodel:elastic-buckling",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/buckling/ship-panel-buckling.html"
+    }
+  ],
+  "note": "Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.",
+  "prompt": "Check stiffened-panel buckling (plate / column / tripping) per DNV-RP-C201 for my scantlings.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Check stiffened-panel buckling (plate / column / tripping) per DNV-RP-C201 for my scantlings."
+    },
+    {
+      "via": "http",
+      "step": "POST /api/run with a scoped bearer token",
+      "body": {
+        "repo": "digitalmodel",
+        "workflow": "elastic-buckling"
+      }
+    },
+    {
+      "via": "cli",
+      "step": "uv run python -m digitalmodel examples/workflows/elastic-buckling/input.yml"
+    }
+  ]
+}
