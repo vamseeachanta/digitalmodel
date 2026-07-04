@@ -42,6 +42,12 @@ def test_coherence_horizon_clamped_to_realistic_band():
     assert 15.0 <= h <= 120.0   # never the vendor 4-5 min
 
 
+def test_zero_aperture_raises_not_silent_fallback():
+    # aperture=0.0 must fail loudly (not falsy-fall-back to coherence_horizon)
+    with pytest.raises(ValueError, match="aperture"):
+        synthesize_directional_forecast(2.5, 9.0, n_dir=1, aperture=0.0)
+
+
 def test_dpz_horizon_matches_formula():
     comps = [WaveComponent(0.5, 1.0, 0.0), WaveComponent(1.0, 1.0, 0.0)]
     L = 200.0

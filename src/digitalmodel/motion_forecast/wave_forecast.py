@@ -46,6 +46,10 @@ def coherence_horizon(
     ``nu = sqrt(max(0, m0*m2/m1^2 - 1))`` (spectral width); ``tau = k_coh /
     (nu * f_peak)`` clamped to ``[tau_min, tau_max]``. Narrow-band -> small nu ->
     longer horizon. Monochromatic (nu = 0) -> ``tau_max``.
+
+    Note: tau also scales with 1/f_peak, so "narrower -> longer" is a property of
+    nu at a *fixed peak period*; a narrow high-frequency sea can score shorter
+    than a broad low-frequency one.
     """
     m0, m1, m2 = _moments(components)
     if m0 <= 0 or m1 <= 0:
@@ -66,10 +70,12 @@ def dpz_horizon(
 ) -> float:
     """Rigorous group-velocity DPZ temporal width (seconds).
 
-    Over the band carrying the central ``energetic_fraction`` of variance,
-    ``tau = aperture * (1/cg_min - 1/cg_max)`` with deep-water group velocity
-    ``cg = 0.5 g / omega`` (the spread in group-arrival times across the
-    measurement aperture; Naaijen 2018).
+    Over the **highest-energy components summing to** ``energetic_fraction`` of
+    variance, ``tau = aperture * (1/cg_min - 1/cg_max)`` with deep-water group
+    velocity ``cg = 0.5 g / omega`` (the spread in group-arrival times across the
+    measurement aperture; Naaijen 2018). For a unimodal sea (the JONSWAP caller)
+    that set is contiguous around the peak; a bimodal sea would span both peaks
+    and overstate the group spread.
     """
     if aperture <= 0:
         raise ValueError("aperture must be > 0 for the DPZ horizon")
@@ -143,7 +149,7 @@ def synthesize_directional_forecast(
                 heading=float(headings[j])))
 
     horizon = (dpz_horizon(components, aperture=aperture)
-               if aperture else coherence_horizon(components))
+               if aperture is not None else coherence_horizon(components))
     return WaveForecast(
         components=components, horizon=horizon, origin_time=origin_time,
         phase_reference_location=phase_reference_location, water_depth=water_depth,
