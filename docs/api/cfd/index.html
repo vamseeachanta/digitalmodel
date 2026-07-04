@@ -44,6 +44,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 <p class="sub">Known-answer verification of the digitalmodel OpenFOAM CFD capability &middot;
 verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#1161</p>
 <p style="margin-top:14px"><span class="badge">9 / 9 known-answer cases &mdash; laminar, turbulent, lift, free surface, waves, floating body, green-water impact + wave-body interaction</span>
+<span class="badge">+ wave loading on a vertical cylinder vs MacCamy&ndash;Fuchs diffraction (#1171)</span>
 <span class="badge" style="background:#bc4c00">+ heave-RAO frequency-response spot-check vs potential flow (#1324)</span>
 <span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
@@ -51,7 +52,7 @@ verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#116
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
 <div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body &middot; Wave-body (overset)</span></div>
-<div><b>Cases verified</b><span class="good">9 / 9 + RAO spot-check</span></div>
+<div><b>Cases verified</b><span class="good">10 known-answer + RAO spot-check</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -189,6 +190,16 @@ reports.</p>
 <td>capytaine radiation a<sub>33</sub>/b<sub>33</sub><br>(resonance &omega;<sub>n</sub>, &zeta;<sub>rad</sub>)</td>
 <td class="good">body dynamics verified</td>
 <td><a href="wave-excited-body-decay-verification.html">View report &rarr;</a></td>
+</tr>
+<tr>
+<td>Cylinder wave loading<br><span class="sub">#1171</span></td>
+<td>Marine wave-structure loading (monopile)</td>
+<td>interFoam + forces FO (3D)</td>
+<td>Inline wave force + phase</td>
+<td>force within <b>3.4%</b> of MacCamy&ndash;Fuchs;<br>phase 1.9&deg;; 0.72&times; Morison (diffraction)</td>
+<td>MacCamy&ndash;Fuchs (1954)<br>linear diffraction, exact</td>
+<td class="good">within 15%</td>
+<td><a href="maccamy-fuchs-cylinder-verification.html">View report &rarr;</a></td>
 </tr>
 </tbody>
 </table>
