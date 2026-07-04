@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ship resistance &amp; powering explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:780px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ select{font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:70px}
+ .reads{display:flex;gap:26px;flex-wrap:wrap;margin:4px 0 2px}
+ .read{font-size:13px;color:var(--muted)}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:22px;color:var(--navy);font-weight:700}
+ .chart{margin-top:14px;display:flex;align-items:flex-end;gap:3px;height:200px;
+        border-bottom:2px solid var(--line);border-left:2px solid var(--line);padding-left:4px}
+ .bar{flex:1;background:linear-gradient(180deg,var(--teal),var(--navy));border-radius:3px 3px 0 0;
+      position:relative;min-height:1px;opacity:.5;transition:opacity .1s}
+ .bar.on{opacity:1;outline:2px solid var(--navy);outline-offset:1px}
+ .xax{display:flex;gap:3px;padding-left:6px;margin-top:4px}
+ .xax div{flex:1;text-align:center;font-size:9px;color:var(--muted)}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:8px}.foot a{color:var(--teal)}
+ .cap{font-size:12px;color:var(--muted);margin-top:8px}
+</style></head><body>
+<h1>Ship resistance &amp; powering &mdash; Holtrop-Mennen explorer</h1>
+<p class="sub">Calm-water resistance and effective power for representative merchant hull forms,
+by the Holtrop-Mennen statistical method. Pick a hull and drag the speed to trace the
+resistance-power curve &mdash; every point is a live <code>total_resistance</code> /
+<code>effective_power</code> evaluation, not mocked.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label>Hull form</label><select id="hull"></select>
+    <label for="v">Ship speed</label>
+    <input type="range" id="v" min="0" max="0" step="1">
+    <span class="wval" id="vval"></span>
+  </div>
+  <div class="reads">
+    <div class="read">Total resistance<b id="rR">&mdash;</b></div>
+    <div class="read">Effective power<b id="rP">&mdash;</b></div>
+    <div class="read">Froude number<b id="rF">&mdash;</b></div>
+  </div>
+  <div class="cap">Effective power P<sub>E</sub> = R<sub>T</sub>&middot;V (bar height); the selected speed is outlined.</div>
+  <div class="chart" id="chart"></div>
+  <div class="xax" id="xax"></div>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_ship_resistance_explorer.py</code> from
+<code>src/digitalmodel/naval_architecture/holtrop_mennen.py</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/holtrop_mennen.py">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"hulls":{"Handysize tanker":{"lwl":175.0,"beam":32.0,"draft":11.0,"cb":0.82},"Supramax bulker":{"lwl":190.0,"beam":32.2,"draft":12.5,"cb":0.84},"Feeder container":{"lwl":145.0,"beam":23.0,"draft":8.5,"cb":0.62}},"speed_kn":[6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0],"standard":"Holtrop-Mennen (1982/1984)"},"series":{"Handysize tanker":[{"v":6.0,"r":107.0,"p":330.4,"fn":0.075},{"v":6.5,"r":124.5,"p":416.3,"fn":0.081},{"v":7.0,"r":143.2,"p":515.8,"fn":0.087},{"v":7.5,"r":163.2,"p":629.7,"fn":0.093},{"v":8.0,"r":184.4,"p":759.1,"fn":0.099},{"v":8.5,"r":207.0,"p":905.2,"fn":0.106},{"v":9.0,"r":230.9,"p":1069.3,"fn":0.112},{"v":9.5,"r":256.4,"p":1253.2,"fn":0.118},{"v":10.0,"r":283.6,"p":1459.2,"fn":0.124},{"v":10.5,"r":312.9,"p":1690.3,"fn":0.13},{"v":11.0,"r":344.7,"p":1950.7,"fn":0.137},{"v":11.5,"r":379.6,"p":2245.6,"fn":0.143},{"v":12.0,"r":418.3,"p":2582.2,"fn":0.149},{"v":12.5,"r":461.7,"p":2969.1,"fn":0.155},{"v":13.0,"r":511.0,"p":3417.4,"fn":0.161},{"v":13.5,"r":567.4,"p":3940.7,"fn":0.168},{"v":14.0,"r":632.4,"p":4555.0,"fn":0.174},{"v":14.5,"r":707.7,"p":5279.4,"fn":0.18},{"v":15.0,"r":795.2,"p":6136.0,"fn":0.186},{"v":15.5,"r":896.7,"p":7150.5,"fn":0.192},{"v":16.0,"r":1014.3,"p":8348.8,"fn":0.199},{"v":16.5,"r":1150.2,"p":9763.1,"fn":0.205},{"v":17.0,"r":1308.2,"p":11441.4,"fn":0.211},{"v":17.5,"r":1490.9,"p":13422.0,"fn":0.217},{"v":18.0,"r":1695.9,"p":15703.8,"fn":0.224}],"Supramax bulker":[{"v":6.0,"r":125.6,"p":387.6,"fn":0.072},{"v":6.5,"r":146.1,"p":488.4,"fn":0.077},{"v":7.0,"r":168.0,"p":605.0,"fn":0.083},{"v":7.5,"r":191.4,"p":738.6,"fn":0.089},{"v":8.0,"r":216.3,"p":890.3,"fn":0.095},{"v":8.5,"r":242.8,"p":1061.5,"fn":0.101},{"v":9.0,"r":270.8,"p":1253.8,"fn":0.107},{"v":9.5,"r":300.6,"p":1469.1,"fn":0.113},{"v":10.0,"r":332.4,"p":1710.1,"fn":0.119},{"v":10.5,"r":366.6,"p":1980.0,"fn":0.125},{"v":11.0,"r":403.5,"p":2283.6,"fn":0.131},{"v":11.5,"r":444.0,"p":2626.6,"fn":0.137},{"v":12.0,"r":488.7,"p":3017.0,"fn":0.143},{"v":12.5,"r":538.7,"p":3464.4,"fn":0.149},{"v":13.0,"r":595.3,"p":3981.2,"fn":0.155},{"v":13.5,"r":659.8,"p":4582.3,"fn":0.161},{"v":14.0,"r":733.9,"p":5285.7,"fn":0.167},{"v":14.5,"r":819.4,"p":6112.6,"fn":0.173},{"v":15.0,"r":918.5,"p":7087.7,"fn":0.179},{"v":15.5,"r":1033.3,"p":8239.1,"fn":0.185},{"v":16.0,"r":1166.3,"p":9599.8,"fn":0.191},{"v":16.5,"r":1319.9,"p":11203.7,"fn":0.197},{"v":17.0,"r":1496.2,"p":13084.9,"fn":0.203},{"v":17.5,"r":1699.1,"p":15296.2,"fn":0.209},{"v":18.0,"r":1933.8,"p":17907.0,"fn":0.215}],"Feeder container":[{"v":6.0,"r":48.2,"p":148.8,"fn":0.082},{"v":6.5,"r":56.1,"p":187.6,"fn":0.089},{"v":7.0,"r":64.6,"p":232.5,"fn":0.095},{"v":7.5,"r":73.6,"p":283.9,"fn":0.102},{"v":8.0,"r":83.2,"p":342.3,"fn":0.109},{"v":8.5,"r":93.3,"p":408.2,"fn":0.116},{"v":9.0,"r":104.1,"p":482.1,"fn":0.123},{"v":9.5,"r":115.6,"p":564.8,"fn":0.13},{"v":10.0,"r":127.7,"p":656.9,"fn":0.136},{"v":10.5,"r":140.6,"p":759.4,"fn":0.143},{"v":11.0,"r":154.3,"p":873.4,"fn":0.15},{"v":11.5,"r":169.1,"p":1000.4,"fn":0.157},{"v":12.0,"r":185.0,"p":1142.1,"fn":0.164},{"v":12.5,"r":202.2,"p":1300.3,"fn":0.171},{"v":13.0,"r":220.9,"p":1477.5,"fn":0.177},{"v":13.5,"r":241.4,"p":1676.5,"fn":0.184},{"v":14.0,"r":263.9,"p":1900.3,"fn":0.191},{"v":14.5,"r":288.6,"p":2152.5,"fn":0.198},{"v":15.0,"r":315.8,"p":2437.2,"fn":0.205},{"v":15.5,"r":346.1,"p":2759.6,"fn":0.211},{"v":16.0,"r":379.6,"p":3124.4,"fn":0.218},{"v":16.5,"r":416.3,"p":3533.9,"fn":0.225},{"v":17.0,"r":456.2,"p":3990.0,"fn":0.232},{"v":17.5,"r":499.6,"p":4498.0,"fn":0.239},{"v":18.0,"r":547.6,"p":5071.1,"fn":0.246}]}};
+const M = DATA.meta, V = M.speed_kn, HULLS = Object.keys(DATA.series);
+const spec = document.getElementById('spec');
+spec.innerHTML = [['Method', M.standard], ['Hull forms', HULLS.length],
+  ['Speed range', V[0]+'–'+V[V.length-1]+' kn']]
+  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+const selH = document.getElementById('hull');
+HULLS.forEach(h=>selH.add(new Option(h,h)));
+const slider = document.getElementById('v');
+slider.max = V.length-1;
+
+function maxP(){ let mx=0; for(const h of HULLS) for(const p of DATA.series[h]) if(p.p>mx) mx=p.p; return mx; }
+const MXP = maxP();
+
+function render(){
+  const h = selH.value, idx = +slider.value, pts = DATA.series[h], p = pts[idx];
+  document.getElementById('vval').textContent = V[idx].toFixed(1)+' kn';
+  const g = M.hulls[h];
+  document.getElementById('rR').textContent = p.r.toLocaleString()+' kN';
+  document.getElementById('rP').textContent = p.p.toLocaleString()+' kW';
+  document.getElementById('rF').textContent = p.fn.toFixed(3);
+  document.getElementById('chart').innerHTML = pts.map((q,i)=>
+    `<div class="bar ${i===idx?'on':''}" style="height:${(q.p/MXP*100).toFixed(1)}%" title="${V[i]} kn: ${q.p} kW"></div>`).join('');
+  document.getElementById('xax').innerHTML = pts.map((q,i)=>
+    `<div>${(i%4===0)?V[i]:''}</div>`).join('');
+}
+let start = V.indexOf(14.0); if(start<0) start = Math.floor(V.length/2);
+slider.value = start; render();
+[selH, slider].forEach(el=>el.addEventListener('input', render));
+</script>
+</body></html>
