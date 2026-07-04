@@ -1,0 +1,21 @@
+# OrcaWave diffraction SOLVE — REQUIRES-LICENSE workflow.
+#
+# Single-input, lane-dispatchable: `python -m digitalmodel <this file>` converts
+# the canonical spec to an OrcaWave model AND runs the diffraction solve
+# end-to-end (issue #900). Needs an OrcaWave license (OrcFxAPI); on a license-free
+# host the run fails closed rather than silently dry-running. Registered
+# `runtime: requires-license` and skipped by the offline durable suite. Mirrors
+# the unit_box_rao canary fixture (#610): a 5-panel WAMIT GDF unit box solved at
+# 3 frequencies x 3 headings in seconds.
+basename: diffraction
+
+diffraction:
+  operation: run_orcawave
+  spec: spec.yml
+  output_directory: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

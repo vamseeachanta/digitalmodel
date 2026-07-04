@@ -6,15 +6,42 @@ Provides:
   Level1Screener   — compare t_mm to code-required t_min
   Level2Engine     — RSF/Folias-factor detailed assessment
   FFSDecision      — accept/reject/monitor/repair/replace verdict
+  MeasurementSufficiency — field guidance: sufficient / take more / escalate
   FFSReport        — self-contained HTML report generator
 """
 
+from .crack_fad import (
+    CrackFlawAssessment,
+    assess_crack_like_flaw,
+    critical_flaw_depth_mm,
+    fad_curve_option1,
+    kmat_from_charpy,
+    newman_raju_k,
+    reference_stress_surface_flaw,
+)
 from .ffs_decision import FFSDecision
 from .ffs_report import FFSReport
 from .ffs_router import FFSRouter
 from .grid_parser import GridParser
 from .level1_screener import Level1Screener
 from .level2_engine import Level2Engine
+from .measurement_sufficiency import (
+    MeasurementSufficiency,
+    SufficiencyAction,
+    SufficiencyResult,
+)
+from .pitting import (
+    PitFieldCharacterization,
+    assess_pitting,
+    assess_pitting_level2_equivalent_lta,
+    characterize_pit_field,
+    screen_pitting_level1,
+)
+from .ffs_coordinator import (
+    FFSComponent,
+    FFSAssessmentResult,
+    assess_component,
+)
 
 __all__ = [
     "GridParser",
@@ -22,5 +49,16 @@ __all__ = [
     "Level1Screener",
     "Level2Engine",
     "FFSDecision",
+    "MeasurementSufficiency",
+    "SufficiencyAction",
+    "SufficiencyResult",
+    "FFSComponent",
+    "FFSAssessmentResult",
+    "assess_component",
     "FFSReport",
+    "PitFieldCharacterization",
+    "assess_pitting",
+    "assess_pitting_level2_equivalent_lta",
+    "characterize_pit_field",
+    "screen_pitting_level1",
 ]

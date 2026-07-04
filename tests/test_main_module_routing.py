@@ -58,3 +58,13 @@ class TestMainRouting:
             with patch("digitalmodel.__main__.engine") as mock_engine:
                 main()
         mock_engine.assert_called_once()
+
+    @pytest.mark.parametrize("flag", ["--help", "-h"])
+    def test_help_prints_usage_and_exits_zero_without_engine(self, flag, capsys):
+        # `python -m digitalmodel --help` must exit 0 (the ace-win-2 licensed-run
+        # verify probe requires it) and never reach engine().
+        with patch.object(sys, "argv", ["digitalmodel", flag]):
+            with patch("digitalmodel.__main__.engine") as mock_engine:
+                assert main() == 0
+        mock_engine.assert_not_called()
+        assert "digitalmodel" in capsys.readouterr().out.lower()

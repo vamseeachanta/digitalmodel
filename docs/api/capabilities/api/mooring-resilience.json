@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience",
+  "provenance": {
+    "basis": "API RP 2SK \u00b7 DNV-OS-E301",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+  },
+  "surface": "digitalmodel:mooring-resilience",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Run the mooring resilience screen (intact / damaged / foundation / fatigue) for my spread-moored unit."
+    },
+    {
+      "via": "http",
+      "step": "GET https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+    }
+  ]
+}

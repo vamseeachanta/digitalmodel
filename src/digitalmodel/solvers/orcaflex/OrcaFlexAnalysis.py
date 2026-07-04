@@ -4,7 +4,7 @@ import sys
 
 
 try:
-    pass
+    import OrcFxAPI  # noqa: F401  (vendor module; optional at import time)
 except Exception:
     print("OrcaFlex license not available. Run on different computer")
 from matplotlib import rc
@@ -19,10 +19,9 @@ from custom.post_results.postProcess import postProcess
 from custom.post_results.postProcessPlotting import postProcessPlotting
 from dataManager.post_results.ymlInput import ymlInput
 
-try:
-    user_paths = os.environ["PYTHONPATH"]
-except KeyError:
-    user_paths = []
+# PYTHONPATH is always a string (os.pathsep-joined); split into a list so
+# downstream consumers see a uniform list type whether or not it is set.
+user_paths = os.environ.get("PYTHONPATH", "").split(os.pathsep)
 
 # Data preparation
 defaultYml = "dataManager\\post_results\\OrcaFlex.yml"

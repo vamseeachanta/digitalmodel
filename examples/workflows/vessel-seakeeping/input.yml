@@ -1,0 +1,35 @@
+basename: vessel_seakeeping
+
+vessel_seakeeping:
+  vessel: FPSO (illustrative)
+  spectrum_type: jonswap
+  gamma: 3.3
+  required_operability_pct: 95.0
+  output_dir: results
+  # Shared RAO frequency grid (rad/s). Motion RAOs and criteria below are
+  # illustrative; a real project supplies its own from a diffraction model.
+  rao_frequency_rad_s: [0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.10, 1.20]
+  sea_states:
+    - {hs: 1.5, tp: 8.0,  probability: 0.40}
+    - {hs: 2.5, tp: 10.0, probability: 0.40}
+    - {hs: 4.0, tp: 12.0, probability: 0.20}
+  dofs:
+    - name: heave
+      unit: m
+      rao_amplitude: [1.00, 1.00, 0.95, 0.85, 0.60, 0.35, 0.20, 0.10, 0.05, 0.02]
+      criterion: 2.5            # max significant heave amplitude (m)
+    - name: roll
+      unit: deg
+      # resonant peak near 0.5 rad/s (roll natural period ~ 12.6 s)
+      rao_amplitude: [2.0, 5.0, 9.0, 6.0, 3.0, 1.5, 0.8, 0.4, 0.2, 0.1]
+      criterion: 4.0            # max significant roll amplitude (deg)
+    - name: pitch
+      unit: deg
+      rao_amplitude: [0.5, 1.0, 1.5, 1.75, 1.5, 1.0, 0.5, 0.25, 0.15, 0.05]
+      criterion: 3.0            # max significant pitch amplitude (deg)
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

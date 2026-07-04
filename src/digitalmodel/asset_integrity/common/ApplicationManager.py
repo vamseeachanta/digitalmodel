@@ -123,9 +123,9 @@ class ApplicationRuns():
             run_file_updated = os.path.join("tests\\cfg\\", self.basename,
                                             'runs_added_to_db.csv')
 
-            ApplicationIDQuery = "SELECT TOP 1 ApplicationID from [dbo].[Application] WHERE ApplicationName = '{}'".format(
-                self.basename)
-            result_df = self.dbe.get_df_from_query(ApplicationIDQuery)
+            ApplicationIDQuery = "SELECT TOP 1 ApplicationID from [dbo].[Application] WHERE ApplicationName = :application_name"
+            result_df = self.dbe.get_df_from_query(
+                ApplicationIDQuery, params={"application_name": self.basename})
             self.ApplicationId = result_df['ApplicationID'].iloc[0]
 
             if os.path.isfile(run_file):
@@ -138,9 +138,9 @@ class ApplicationRuns():
                 logging.info("No Runs records to add to db")
 
     def getApplicatonRunsFromDB(self):
-        ApplicationRunsQuery = "SELECT * FROM [master].[dbo].[ApplicationRuns] WHERE ApplicationId={} and RunStatus=0".format(
-            self.ApplicationId)
-        run_df = self.dbe.get_df_from_query(ApplicationRunsQuery)
+        ApplicationRunsQuery = "SELECT * FROM [master].[dbo].[ApplicationRuns] WHERE ApplicationId=:application_id and RunStatus=0"
+        run_df = self.dbe.get_df_from_query(
+            ApplicationRunsQuery, params={"application_id": self.ApplicationId})
 
         return run_df
 
@@ -204,14 +204,14 @@ class ConfigureApplicationInputs():
 
         if os.path.isfile(self.ApplicationInputFile):
             with open(self.ApplicationInputFile, 'r') as ymlfile:
-                cfg = yaml.load(ymlfile, Loader=yaml.Loader)
+                cfg = yaml.safe_load(ymlfile)
         else:
             cfg = self.ApplicationInputFile_dict
 
         if self.customYaml is not None:
             try:
                 with open(self.customYaml, 'r') as ymlfile:
-                    cfgCustomValues = yaml.load(ymlfile, Loader=yaml.Loader)
+                    cfgCustomValues = yaml.safe_load(ymlfile)
                     default_yaml_file = cfgCustomValues.get(
                         'default_yaml', None)
 
@@ -234,14 +234,13 @@ class ConfigureApplicationInputs():
 
         if (self.customYaml is not None) or (self.CustomInputs is not None):
             if default_yaml_file is None:
-                cfgDefaultAndCustomValues = yaml.load(custom_file_data,
-                                                      Loader=yaml.Loader)
+                cfgDefaultAndCustomValues = yaml.safe_load(custom_file_data)
             else:
                 with open(default_yaml_file) as fp:
                     default_file_data = fp.read()
                 custom_and_default_yaml_data = custom_file_data + "\n" + default_file_data
-                cfgDefaultAndCustomValues = yaml.load(
-                    custom_and_default_yaml_data, Loader=yaml.Loader)
+                cfgDefaultAndCustomValues = yaml.safe_load(
+                    custom_and_default_yaml_data)
 
             cfg = update_deep_dictionary(cfg, cfgDefaultAndCustomValues)
 
@@ -342,15 +341,15 @@ class SaveApplicationResults():
             df = pd.DataFrame(columns=columns)
 
             ApplicationName = cfg.Analysis['basename']
-            ApplicationIDQuery = "SELECT TOP 1 ApplicationID from [dbo].[Application] WHERE ApplicationName = '{}'".format(
-                ApplicationName)
-            result_df = dbe.get_df_from_query(ApplicationIDQuery)
+            ApplicationIDQuery = "SELECT TOP 1 ApplicationID from [dbo].[Application] WHERE ApplicationName = :application_name"
+            result_df = dbe.get_df_from_query(
+                ApplicationIDQuery, params={"application_name": ApplicationName})
             ApplicationId = result_df['ApplicationID'].iloc[0]
 
             ProjectName = cfg.get('ProjectName', 'DigitalTwinFeed')
-            ProjectIDQuery = "SELECT TOP 1 ProjectId from [dbo].[Project] WHERE ProjectName = '{}'".format(
-                ProjectName)
-            result_df = dbe.get_df_from_query(ProjectIDQuery)
+            ProjectIDQuery = "SELECT TOP 1 ProjectId from [dbo].[Project] WHERE ProjectName = :project_name"
+            result_df = dbe.get_df_from_query(
+                ProjectIDQuery, params={"project_name": ProjectName})
             ProjectId = result_df['ProjectId'].iloc[0]
             if run_dict is not None:
                 RunName = run_dict['RunName']
@@ -366,8 +365,8 @@ class SaveApplicationResults():
                 if CustomInputFile is not None:
                     with open(CustomInputFile, 'r') as ymlfile:
                         try:
-                            CustomInputs = json.dumps(yaml.load(
-                                ymlfile, Loader=yaml.Loader),
+                            CustomInputs = json.dumps(yaml.safe_load(
+                                ymlfile),
                                                       default=str)
                         except:
                             CustomInputs = None
@@ -383,17 +382,26 @@ class SaveApplicationResults():
 
             ApplicationRunQuery = """
                 BEGIN TRAN
-                UPDATE [ApplicationRuns]  SET RunStatus={0}, RunTimeInSeconds={1} WHERE ApplicationId={2} and ProjectId={3} and RunName = '{4}' and RunStatus=0
+                UPDATE [ApplicationRuns]  SET RunStatus=:run_status, RunTimeInSeconds=:run_time_seconds WHERE ApplicationId=:application_id and ProjectId=:project_id and RunName = :run_name and RunStatus=0
                 IF @@rowcount = 0
                     BEGIN
-                        INSERT INTO [ApplicationRuns] (ApplicationId,ProjectId,RunName,RunStatus,DefaultInputFile,CustomInputFile,CustomInputs,AnalysisTime,RunTimeInSeconds) 
-                        VALUES ({2},{3},'{4}',{0},'{5}','{6}','{7}','{8}', {1})
+                        INSERT INTO [ApplicationRuns] (ApplicationId,ProjectId,RunName,RunStatus,DefaultInputFile,CustomInputFile,CustomInputs,AnalysisTime,RunTimeInSeconds)
+                        VALUES (:application_id,:project_id,:run_name,:run_status,:default_input_file,:custom_input_file,:custom_inputs,:analysis_time, :run_time_seconds)
                     END
                 COMMIT TRAN
-                """.format(RunStatus, RunTimeInSeconds, ApplicationId,
-                           ProjectId, RunName, DefaultInputFile,
-                           CustomInputFile, CustomInputs, AnalysisTime)
+                """
+            ApplicationRunParams = {
+                "run_status": RunStatus,
+                "run_time_seconds": RunTimeInSeconds,
+                "application_id": ApplicationId,
+                "project_id": ProjectId,
+                "run_name": RunName,
+                "default_input_file": DefaultInputFile,
+                "custom_input_file": CustomInputFile,
+                "custom_inputs": CustomInputs,
+                "analysis_time": AnalysisTime,
+            }
 
-            dbe.executeNoDataQuery(ApplicationRunQuery)
+            dbe.executeNoDataQuery(ApplicationRunQuery, params=ApplicationRunParams)
         except:
             print("Encountered error while saving application result to db")

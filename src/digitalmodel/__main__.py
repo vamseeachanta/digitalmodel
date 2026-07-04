@@ -59,6 +59,16 @@ def _resolve_cli(name: str):
 
 
 def main():
+    # -h/--help prints usage and exits 0. Without this, engine() treats
+    # "--help" as an input filename and raises, which also fails the ace-win-2
+    # licensed-run verify probe (`python -m digitalmodel --help` must exit 0 to
+    # write the go-live marker). Bare invocation still goes to engine() (#713
+    # contract); the engine contract `python -m digitalmodel <input.yml>` is
+    # unaffected: a real file still takes the path below.
+    argv = sys.argv[1:]
+    if argv and argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 0
     # An existing file always wins: `python -m digitalmodel <input.yml>` is
     # the engine contract and must stay unchanged (durable-workflow callers).
     if len(sys.argv) > 1 and not Path(sys.argv[1]).exists():

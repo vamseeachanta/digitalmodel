@@ -1,0 +1,16 @@
+FoamFile { version 2.0; format ascii; class volScalarField; object zoneID; }
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 0;
+boundaryField
+{
+    oversetPatch    { patchType overset; type zeroGradient; }
+    oversetBoundary { patchType overset; type zeroGradient; }
+    inlet  { type zeroGradient; }
+    outlet { type zeroGradient; }
+    ground { type zeroGradient; }
+    top    { type zeroGradient; }
+    sides  { type empty; }
+    bodyFrontBack { type empty; }
+    floatingObject { type zeroGradient; }
+}

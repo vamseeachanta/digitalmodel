@@ -1,10 +1,14 @@
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 import yaml
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+UNIT_BOX = REPO_ROOT / "examples" / "hydrodynamics" / "diffraction" / "unit_box_rao"
 
 
 def _workflow_cfg(tmp_path: Path, solver: str) -> dict:
@@ -59,3 +63,131 @@ def test_diffraction_workflow_generates_aqwa_deck(tmp_path: Path) -> None:
     assert content.count("HRTZ") == 15
     assert content.count("QPPL") == 5
     assert "could not be loaded" not in content
+
+
+# --- operation: run_orcawave (issue #900) -----------------------------------
+
+
+def _solve_cfg(
+    tmp_path: Path, dry_run: bool = True, operation: str = "run_orcawave"
+) -> dict:
+    return {
+        "basename": "diffraction",
+        "_config_dir_path": str(UNIT_BOX),
+        "Analysis": {"result_folder": str(tmp_path / "results")},
+        "diffraction": {
+            "operation": operation,
+            "spec": "spec.yml",
+            "output_directory": "out",
+            "dry_run": dry_run,
+        },
+    }
+
+
+def _fake_result(status_value: str):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunStatus
+
+    return SimpleNamespace(
+        status=RunStatus(status_value),
+        output_dir="out",
+        input_file="UnitBoxRAO.yml",
+        modular_files=[],
+        mesh_files=[],
+        error_message="boom",
+    )
+
+
+def test_run_orcawave_dry_run_offline(tmp_path: Path) -> None:
+    # Real runner, no license: converts + skips the solver -> DRY_RUN, records outputs.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=True))
+    settings = cfg["diffraction"]
+    assert settings["run_status"] == "dry_run"
+    assert "input_file" in settings["outputs"]
+
+
+def test_unsupported_operation_lists_supported(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with pytest.raises(ValueError, match="run_orcawave"):
+        DiffractionWorkflow().router(_solve_cfg(tmp_path, operation="bogus"))
+
+
+def test_run_orcawave_failed_status_raises(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_fake_result("failed"),
+    ):
+        with pytest.raises(RuntimeError, match="OrcaWave solve failed"):
+            DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+
+def test_run_orcawave_silent_dry_run_fallback_raises(tmp_path: Path) -> None:
+    # Solver unavailable: runner returns DRY_RUN although a real solve was requested.
+    # The lane must NOT read that as success.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_fake_result("dry_run"),
+    ):
+        with pytest.raises(RuntimeError, match="fell back to dry-run"):
+            DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+
+# --- operation: run_aqwa (issue #939) ---------------------------------------
+
+
+def _fake_aqwa_result(status):
+    from digitalmodel.hydrodynamics.diffraction.aqwa_runner import AQWARunStatus
+
+    return SimpleNamespace(
+        status=getattr(AQWARunStatus, status),
+        output_dir="out",
+        input_file="UnitBox.dat",
+        modular_files=[],
+        mesh_files=[],
+        error_message="boom",
+    )
+
+
+def test_run_aqwa_dry_run_offline(tmp_path: Path) -> None:
+    # Real runner, no license: prepares + skips the solver -> DRY_RUN, records outputs.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    cfg = DiffractionWorkflow().router(
+        _solve_cfg(tmp_path, dry_run=True, operation="run_aqwa")
+    )
+    settings = cfg["diffraction"]
+    assert settings["run_status"] == "dry_run"
+    assert "input_file" in settings["outputs"]
+
+
+def test_run_aqwa_failed_status_raises(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_runner.run_aqwa",
+        return_value=_fake_aqwa_result("FAILED"),
+    ):
+        with pytest.raises(RuntimeError, match="AQWA solve failed"):
+            DiffractionWorkflow().router(
+                _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
+            )
+
+
+def test_run_aqwa_silent_dry_run_fallback_raises(tmp_path: Path) -> None:
+    # AQWA solver unavailable: runner returns DRY_RUN despite a real solve request.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_runner.run_aqwa",
+        return_value=_fake_aqwa_result("DRY_RUN"),
+    ):
+        with pytest.raises(RuntimeError, match="fell back to dry-run"):
+            DiffractionWorkflow().router(
+                _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
+            )

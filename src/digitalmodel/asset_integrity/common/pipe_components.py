@@ -37,9 +37,8 @@ class PipeComponents:
         self.dbe.enable_connection_and_cursor()
 
     def get_material_data(self):
-        query = "SELECT TOP 1 * FROM [dbo].[Witsml] WITH (SNAPSHOT) WHERE WellID = {0} ORDER BY DateUpdatedInserted DESC".format(
-            self.well_id)
-        df = self.dbe.get_df_from_query(query)
+        query = "SELECT TOP 1 * FROM [dbo].[Witsml] WITH (SNAPSHOT) WHERE WellID = :well_id ORDER BY DateUpdatedInserted DESC"
+        df = self.dbe.get_df_from_query(query, params={"well_id": self.well_id})
         self.last_witsml = df
 
     def evaluate_pipe_capacity(self):

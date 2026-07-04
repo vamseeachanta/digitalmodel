@@ -1,0 +1,33 @@
+FoamFile { version 2.0; format ascii; class dictionary; object fvSchemes; }
+
+ddtSchemes      { default Euler; }
+gradSchemes     { default Gauss linear; }
+divSchemes
+{
+    div(rhoPhi,U)   Gauss linearUpwind grad(U);
+    div(U)          Gauss linear;
+    div(phi,alpha)  Gauss vanLeer;
+    div(phirb,alpha) Gauss linear;
+    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+}
+laplacianSchemes { default Gauss linear corrected; }
+interpolationSchemes { default linear; }
+snGradSchemes   { default corrected; }
+oversetInterpolation
+{
+    method              inverseDistance;
+    holeLayers          6;
+    useLayer            3;
+}
+oversetInterpolationSuppressed
+{
+    grad(p_rgh);
+    surfaceIntegrate(phiHbyA);
+}
+fluxRequired
+{
+    default         no;
+    p_rgh;
+    pcorr;
+    alpha.water;
+}

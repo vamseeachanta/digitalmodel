@@ -6,6 +6,9 @@ ABOUTME: Pydantic data models and constants for diffraction report data.
 Extracted from report_generator.py as part of WRK-591 God Object split.
 
 No imports from other report_* modules — this is the leaf dependency.
+The models inherit the shared ``ReportDataModel`` marker base from the
+reusable ``digitalmodel.reporting`` block library (#1018); this is a marker
+only and does not change validation or serialization behaviour.
 """
 
 from __future__ import annotations
@@ -13,14 +16,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from digitalmodel.reporting import ReportDataModel
 
 DOF_NAMES = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
 DOF_UNITS = ["m/m", "m/m", "m/m", "deg/m", "deg/m", "deg/m"]
 LOAD_RAO_UNITS = ["N/m", "N/m", "N/m", "N.m/m", "N.m/m", "N.m/m"]
 
 
-class HydrostaticData(BaseModel):
+class HydrostaticData(ReportDataModel):
     """Hydrostatic properties extracted from OrcaWave."""
 
     volume: float = Field(description="Displaced volume (m^3)")
@@ -43,7 +48,7 @@ class HydrostaticData(BaseModel):
         arbitrary_types_allowed = True
 
 
-class RollDampingData(BaseModel):
+class RollDampingData(ReportDataModel):
     """Roll critical damping analysis data."""
 
     frequencies_rad_s: List[float]
@@ -66,7 +71,7 @@ class RollDampingData(BaseModel):
         arbitrary_types_allowed = True
 
 
-class LoadRAOData(BaseModel):
+class LoadRAOData(ReportDataModel):
     """Wave excitation force/moment (load RAOs) from diffraction."""
 
     method: str = Field(description="Calculation method: diffraction or haskind")
@@ -84,7 +89,7 @@ class LoadRAOData(BaseModel):
         arbitrary_types_allowed = True
 
 
-class MeshQualityData(BaseModel):
+class MeshQualityData(ReportDataModel):
     """Panel mesh quality summary."""
 
     panel_count: int
@@ -98,7 +103,7 @@ class MeshQualityData(BaseModel):
         arbitrary_types_allowed = True
 
 
-class DiffractionReportData(BaseModel):
+class DiffractionReportData(ReportDataModel):
     """Complete data model for a standardized diffraction report."""
 
     schema_version: str = "1.0"

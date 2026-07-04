@@ -18,6 +18,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from digitalmodel.materials import legacy_pipeline_material_library_mpa
+
 
 # ---------------------------------------------------------------------------
 # Design constants — DNV-ST-F101 (2021)
@@ -127,12 +129,14 @@ class PipeMaterial:
 # Material library
 # ---------------------------------------------------------------------------
 
-#: Standard pipeline material grades: name -> PipeMaterial
+#: Standard pipeline material grades: name -> PipeMaterial.
+#: Sourced from the canonical grade matrix (issue #1089). Strengths are the
+#: legacy snapshot (X52 358, X60 413, X70 482 vs canonical ISO 360/415/485);
+#: preserved verbatim pending the convergence sign-off in
+#: docs/domains/grade-table-migration-2026-06-28.md.
 MATERIAL_LIBRARY: dict[str, PipeMaterial] = {
-    "X52": PipeMaterial(name="X52", SMYS=358.0, SMTS=455.0),
-    "X60": PipeMaterial(name="X60", SMYS=413.0, SMTS=517.0),
-    "X65": PipeMaterial(name="X65", SMYS=448.0, SMTS=531.0),
-    "X70": PipeMaterial(name="X70", SMYS=482.0, SMTS=565.0),
+    name: PipeMaterial(name=name, SMYS=v["smys"], SMTS=v["smts"])
+    for name, v in legacy_pipeline_material_library_mpa().items()
 }
 
 

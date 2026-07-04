@@ -28,6 +28,7 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     VesselSpec,
     WaveHeadingSpec,
 )
+
 # Physical constants are mirrored locally and the estimators + HullLookup are
 # imported lazily inside the functions that use them. Importing
 # parametric_spec_generator or hull_library at MODULE load pulls in
@@ -39,39 +40,74 @@ GRAVITY = 9.80665  # m/s^2
 
 
 class Outcome(str, Enum):
-    """Supported user outcomes for inverse resolution."""
+    """Supported user outcomes for inverse resolution.
+
+    Each outcome maps to a distinct OrcaWave/AQWA analysis configuration. The
+    QTF-family outcomes additionally select a second-order ``solve_type``.
+    """
 
     SHIP_RAOS = "ship_raos"
     ADDED_MASS_DAMPING = "added_mass_damping"
-    QTF = "qtf"
+    MEAN_DRIFT = "mean_drift"
+    DIAGONAL_QTF = "diagonal_qtf"
+    FULL_QTF = "full_qtf"
+    QTF = "qtf"  # legacy generic QTF (kept for back-compat)
 
+
+OUTCOME_DESCRIPTIONS: dict[Outcome, str] = {
+    Outcome.SHIP_RAOS: (
+        "First-order vessel motion RAOs (6-DOF response per wave frequency and "
+        "heading) -- the default seakeeping/motions request."
+    ),
+    Outcome.ADDED_MASS_DAMPING: (
+        "Frequency-dependent radiation coefficients (added mass and potential "
+        "damping matrices); no incident-wave loading needed."
+    ),
+    Outcome.MEAN_DRIFT: (
+        "Second-order mean wave-drift forces/moments (steady drift loads for "
+        "mooring/stationkeeping screening)."
+    ),
+    Outcome.DIAGONAL_QTF: (
+        "Diagonal (difference-frequency, omega_i == omega_j) quadratic transfer "
+        "functions -- slow-drift loads at lower cost than the full matrix."
+    ),
+    Outcome.FULL_QTF: (
+        "Full quadratic transfer function matrix (all frequency pairs) for "
+        "second-order sum/difference-frequency loads."
+    ),
+    Outcome.QTF: ("Generic QTF request (legacy); prefer 'diagonal_qtf' or 'full_qtf'."),
+}
+
+# Outcomes that select an explicit second-order OrcaWave solve type.
+OUTCOME_SOLVE_TYPE: dict[Outcome, str] = {
+    Outcome.MEAN_DRIFT: "mean_drift",
+    Outcome.DIAGONAL_QTF: "diagonal_qtf",
+    Outcome.FULL_QTF: "full_qtf",
+}
+
+# Outcomes that compute QTF terms (need the QTF calculation switched on for
+# downstream QTF-aware readers). Mean drift is a second-order *mean* force and
+# is deliberately excluded.
+QTF_OUTCOMES: frozenset[Outcome] = frozenset(
+    {Outcome.QTF, Outcome.DIAGONAL_QTF, Outcome.FULL_QTF}
+)
+
+_BASE_REQUIREMENTS: set[str] = {
+    "vessel.geometry.mesh_file",
+    "vessel.inertia.mass",
+    "vessel.inertia.centre_of_gravity",
+    "environment.water_depth",
+    "frequencies",
+    "wave_headings",
+}
 
 OUTCOME_REQUIREMENTS: dict[Outcome, set[str]] = {
-    Outcome.SHIP_RAOS: {
-        "vessel.geometry.mesh_file",
-        "vessel.inertia.mass",
-        "vessel.inertia.centre_of_gravity",
-        "environment.water_depth",
-        "frequencies",
-        "wave_headings",
-    },
-    Outcome.ADDED_MASS_DAMPING: {
-        "vessel.geometry.mesh_file",
-        "vessel.inertia.mass",
-        "vessel.inertia.centre_of_gravity",
-        "environment.water_depth",
-        "frequencies",
-        "wave_headings",
-    },
-    Outcome.QTF: {
-        "vessel.geometry.mesh_file",
-        "vessel.inertia.mass",
-        "vessel.inertia.centre_of_gravity",
-        "environment.water_depth",
-        "frequencies",
-        "wave_headings",
-        "solver_options.qtf_calculation",
-    },
+    Outcome.SHIP_RAOS: set(_BASE_REQUIREMENTS),
+    Outcome.ADDED_MASS_DAMPING: set(_BASE_REQUIREMENTS),
+    Outcome.MEAN_DRIFT: _BASE_REQUIREMENTS | {"solver_options.solve_type"},
+    Outcome.DIAGONAL_QTF: _BASE_REQUIREMENTS | {"solver_options.solve_type"},
+    Outcome.FULL_QTF: _BASE_REQUIREMENTS | {"solver_options.solve_type"},
+    Outcome.QTF: _BASE_REQUIREMENTS | {"solver_options.qtf_calculation"},
 }
 
 
@@ -93,6 +129,7 @@ ASSUMPTION_CONTROLLED_FIELDS: tuple[str, ...] = (
     "frequencies.range",
     "wave_headings.range",
     "solver_options.qtf_calculation",
+    "solver_options.solve_type",
 )
 
 
@@ -335,17 +372,52 @@ def _resolve_solver_options(
     ledger: AssumptionLedger,
 ) -> None:
     solver = _nested(data, "solver_options")
-    if outcome == Outcome.QTF and "qtf_calculation" not in solver:
-        solver["qtf_calculation"] = True
+
+    solve_type = OUTCOME_SOLVE_TYPE.get(outcome)
+    if solve_type is not None and "solve_type" not in solver:
+        solver["solve_type"] = solve_type
         ledger.record(
-            "solver_options.qtf_calculation",
-            True,
+            "solver_options.solve_type",
+            solve_type,
             AssumptionSource.ASSUMED_DEFAULT,
-            "QTF outcome requires QTF calculation",
+            f"{outcome.value} outcome requires solve type {solve_type!r}",
             Confidence.LOW,
-            reference="outcome:qtf",
+            reference=f"outcome:{outcome.value}",
             impact=4,
         )
+
+    if outcome in QTF_OUTCOMES:
+        # The legacy generic QTF outcome keeps its flat flag (no QTF solve type
+        # is selected, which the legacy flat path explicitly allows). The newer
+        # diagonal/full QTF outcomes set a QTF solve type, so they can opt into
+        # the clean nested QTF options without tripping the solve-type guard.
+        nested_qtf_supported = solver.get("solve_type") in (
+            "diagonal_qtf",
+            "full_qtf",
+        )
+        if nested_qtf_supported:
+            if solver.get("qtf") is None and "qtf_calculation" not in solver:
+                solver["qtf"] = {"enabled": True}
+                ledger.record(
+                    "solver_options.qtf",
+                    {"enabled": True},
+                    AssumptionSource.ASSUMED_DEFAULT,
+                    f"{outcome.value} outcome enables QTF calculation",
+                    Confidence.LOW,
+                    reference=f"outcome:{outcome.value}",
+                    impact=4,
+                )
+        elif "qtf_calculation" not in solver and solver.get("qtf") is None:
+            solver["qtf_calculation"] = True
+            ledger.record(
+                "solver_options.qtf_calculation",
+                True,
+                AssumptionSource.ASSUMED_DEFAULT,
+                "QTF outcome requires QTF calculation",
+                Confidence.LOW,
+                reference=f"outcome:{outcome.value}",
+                impact=4,
+            )
     SolverOptions.model_validate(solver)
 
 
@@ -571,9 +643,7 @@ def _derive_dimensions_from_mesh(
         beam *= 2.0
     submerged = [z for z in zs if z <= waterline + 1e-9]
     if not submerged:
-        raise ValueError(
-            "Cannot derive draft: mesh has no vertices below waterline_z"
-        )
+        raise ValueError("Cannot derive draft: mesh has no vertices below waterline_z")
     draft = waterline - min(submerged)
     if loa <= 0 or beam <= 0 or draft <= 0:
         raise ValueError(
@@ -644,9 +714,7 @@ def _unit_factor(units: str) -> float:
         "cm": 0.01,
     }
     if normalised not in factors:
-        raise ValueError(
-            f"Cannot derive dimensions: unknown length_units '{units}'"
-        )
+        raise ValueError(f"Cannot derive dimensions: unknown length_units '{units}'")
     return factors[normalised]
 
 
@@ -683,7 +751,10 @@ def _deep_copy(data: dict[str, Any]) -> dict[str, Any]:
 
 __all__ = [
     "ASSUMPTION_CONTROLLED_FIELDS",
+    "OUTCOME_DESCRIPTIONS",
     "OUTCOME_REQUIREMENTS",
+    "OUTCOME_SOLVE_TYPE",
+    "QTF_OUTCOMES",
     "Outcome",
     "PrincipalDimensions",
     "ResolverConfig",

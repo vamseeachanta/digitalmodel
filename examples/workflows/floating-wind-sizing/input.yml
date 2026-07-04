@@ -1,0 +1,79 @@
+basename: floating_wind_sizing
+
+# Floating-wind global sizing & concept screening (epic #1022, issues #1023/#1024
+# /#1028). Sweeps parametric floater variants across site load cases and screens
+# each on stability, motion, modal and mooring. Closed-form, licence-free:
+#   uv run python -m digitalmodel examples/workflows/floating-wind-sizing/input.yml
+# Preliminary screen only; the shortlist goes to the licensed OrcaWave/OrcaFlex
+# high-fidelity tier (#1025).
+floating_wind_sizing:
+
+  # Lumped turbine topside (IEA 15 MW class). Floating-wind pitch is dominated by
+  # this high, heavy mass, so it is carried explicitly.
+  topside:
+    rna_mass_t: 1017.0
+    tower_mass_t: 1263.0
+    hub_height_m: 150.0
+    tower_base_above_swl_m: 15.0
+
+  # Site sea states. steady_load_kN = steady horizontal environmental load
+  # (rated wind thrust + current drag) for the mooring offset proxy.
+  load_cases:
+    - {name: operational, hs_m: 2.5, tp_s: 8.0, steady_load_kN: 2400.0}
+    - {name: severe,      hs_m: 6.0, tp_s: 11.0, steady_load_kN: 2800.0}
+    - {name: extreme,     hs_m: 10.0, tp_s: 14.0, steady_load_kN: 3000.0}
+
+  # Acceptance thresholds.
+  criteria:
+    gm_min_m: 1.0
+    daf_limit: 2.0
+    damping_ratio: 0.05
+    modal_band_s: [5.0, 16.0]
+    mooring_stiffness_kN_per_m: 400.0
+    max_offset_m: 30.0
+
+  # One or more concept sweeps. base_params are the fixed model fields; each
+  # sweep varies one field (full-factorial across sweeps within a concept).
+  concepts:
+    - name: semi_screen
+      archetype: semi
+      base_params:
+        n_columns: 3
+        column_diameter: 12.5
+        column_radius: 51.75
+        draft: 20.0
+        pontoon_height: 7.0
+        pontoon_volume: 10000.0
+        steel_mass_t: 4000.0
+      sweeps:
+        - {name: column_diameter, values: [11.0, 12.5, 14.0]}
+        - {name: column_radius, values: [45.0, 51.75]}
+
+    - name: spar_screen
+      archetype: spar
+      base_params:
+        diameter: 20.0
+        draft: 120.0
+        steel_mass_t: 6000.0
+      sweeps:
+        - {name: draft, values: [100.0, 120.0, 140.0]}
+
+    - name: barge_screen
+      archetype: barge
+      base_params:
+        length: 60.0
+        beam: 60.0
+        draft: 12.0
+        steel_mass_t: 5000.0
+      sweeps:
+        - {name: beam, values: [55.0, 60.0, 65.0]}
+
+output:
+  summary_json: examples/workflows/floating-wind-sizing/results/floating_wind_sizing_summary.json
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true

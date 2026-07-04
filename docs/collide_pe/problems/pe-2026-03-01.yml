@@ -1,0 +1,23 @@
+id: pe-2026-03-01
+date: "2026-03-01"
+slug: pe-problem-of-the-day-3-1-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-3-1-2026
+title: "PE Problem of the Day 3/1/2026 — modified Archie for shaly sands"
+posted_by: Yogashri Pradhan
+tags: [upstream, reservoir-engineering, petrophysics]
+type: conceptual
+
+statement: >
+  What is the modified Archie's equation used to calculate water saturation in shaly, conductive formations? (one answer)
+
+find:
+  - "Name the equation"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "The Waxman-Smits equation - modified Archie that adds a clay-conductivity (CEC/Qv) term for shaly, conductive formations. (Related shaly-sand models: Simandoux, dual-water, Indonesia.)"
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/water-saturation-models.md

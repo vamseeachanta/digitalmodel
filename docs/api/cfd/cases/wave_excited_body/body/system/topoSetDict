@@ -1,0 +1,13 @@
+FoamFile { version 2.0; format ascii; class dictionary; object topoSetDict; }
+
+actions
+(
+    {
+        name    c0;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (12.9 -1 0.3) (13.1 1 0.5);
+    }
+    { name c0; type cellSet; action invert; }
+);

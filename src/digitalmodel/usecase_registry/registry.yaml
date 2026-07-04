@@ -1,0 +1,407 @@
+# Solver use-case registry — single source of truth for "every analysis run we
+# can prepare/dispatch" (digitalmodel #938 b). Each entry is one analysis
+# use-case for one solver, with the dispatchable template (if any) and readiness.
+#
+# readiness:
+#   ready    - a committed, dispatchable template exists (path must resolve)
+#   partial  - the code/options exist but no committed dispatchable template yet
+#   planned  - identified, not yet built
+#
+# solver: orcawave | aqwa | orcaflex | ansys | openfoam
+# Dispatch (licensed lane): uv run python -m digitalmodel <template>, where the
+# template sets `basename` (+ diffraction/ansys operation) per this entry.
+version: 1
+usecases:
+  # --- OrcaWave (diffraction / radiation) ----------------------------------
+  - id: orcawave-unit-box
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: examples/workflows/orcawave-diffraction-solve/spec.yml
+    analysis: [diffraction]
+    readiness: ready
+    notes: Canonical unit-box RAO solve (lane canary).
+  - id: orcawave-ship-raos
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: tests/hydrodynamics/diffraction/fixtures/spec_ship_raos.yml
+    analysis: [diffraction]
+    readiness: ready
+    notes: Single-body ship RAOs, 15x5 grid, finite depth.
+  - id: orcawave-fpso-turret-multibody
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: tests/hydrodynamics/diffraction/fixtures/spec_fpso_turret.yml
+    analysis: [diffraction, multibody]
+    readiness: ready
+    notes: Two-body FPSO + turret, connection + fixed DOFs.
+  - id: orcawave-semisub-qtf
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: tests/hydrodynamics/diffraction/fixtures/spec_semisub.yml
+    analysis: [diffraction, full_qtf, mean_drift]
+    readiness: ready
+    notes: OC4 semisub, full QTF + mean drift + QTF components.
+  - id: orcawave-fpso-parametric-deck
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: null
+    analysis: [diffraction]
+    readiness: partial
+    notes: Generated from vessel_db via vessel_deck_builder / fleet_decks (#929); per-run spec is generated, not committed.
+  - id: orcawave-mean-drift
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: examples/workflows/orcawave-mean-drift/spec.yml
+    analysis: [diffraction, mean_drift]
+    readiness: ready
+    notes: solve_type=mean_drift; converts offline via SpecConverter (#955).
+  - id: orcawave-field-points
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: examples/workflows/orcawave-field-points/spec.yml
+    analysis: [diffraction, field_points]
+    readiness: ready
+    notes: airgap/splash field points; converts offline via SpecConverter (#955).
+  - id: orcawave-control-surface-irreg-freq
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: examples/workflows/orcawave-control-surface/spec.yml
+    analysis: [diffraction]
+    readiness: ready
+    notes: irregular_frequency_method=control_surface; converts offline via SpecConverter (#955).
+  - id: orcawave-tandem-multibody
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: null
+    analysis: [diffraction, multibody]
+    readiness: planned
+    notes: Tandem / side-by-side; schema supports, no example (#942).
+  - id: orcawave-floatover-multibody
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: null
+    analysis: [diffraction, multibody]
+    readiness: planned
+    notes: Float-over barge + platform via external stiffness/damping (#942).
+  - id: orcawave-spar-tlp
+    domain: hydrodynamics/diffraction
+    solver: orcawave
+    basename: diffraction
+    operation: run_orcawave
+    template: null
+    analysis: [diffraction]
+    readiness: partial
+    notes: Spar/TLP need a supplied mesh (placeholder form); document supplied-mesh path (#942).
+
+  # --- AQWA (diffraction) --------------------------------------------------
+  - id: aqwa-diffraction-deck-prep
+    domain: hydrodynamics/diffraction
+    solver: aqwa
+    basename: diffraction
+    operation: run_aqwa
+    template: examples/workflows/aqwa-diffraction-deck-prep/spec.yml
+    analysis: [diffraction]
+    readiness: ready
+    notes: AQWA backend deck; run_aqwa op (#939). Lane allowlist=deckhand #490.
+
+  # --- OrcaFlex (global / strength / fatigue) ------------------------------
+  - id: orcaflex-strength-post
+    domain: orcaflex
+    solver: orcaflex
+    basename: orcaflex_post_process
+    operation: null
+    template: examples/workflows/orcaflex-strength-post/input.yml
+    analysis: [post_process, range_graph, code_check]
+    readiness: ready
+    notes: Range graphs + summary + code checks (lane canary).
+  - id: riser-scr
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/riser_input/riser_scr.yml
+    analysis: [static]
+    readiness: ready
+    notes: Steel catenary riser.
+  - id: riser-slwr
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/riser_input/riser_slwr.yml
+    analysis: [static]
+    readiness: ready
+    notes: Steel lazy-wave riser.
+  - id: riser-ttr
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/riser_input/riser_ttr.yml
+    analysis: [static]
+    readiness: ready
+    notes: Top-tensioned riser.
+  - id: riser-flexible
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/riser_input/riser_flexible.yml
+    analysis: [static]
+    readiness: ready
+    notes: Flexible riser.
+  - id: riser-drilling
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/riser_input/riser_drilling.yml
+    analysis: [static]
+    readiness: ready
+    notes: Drilling riser.
+  - id: jumper-installation
+    domain: orcaflex/installation
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/jumper-installation/input.yml
+    analysis: [static, dynamic]
+    readiness: ready
+    notes: Rigid jumper installation.
+  - id: weather-window
+    domain: orcaflex/installation
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/weather-window/input.yml
+    analysis: [operability]
+    readiness: ready
+    notes: Operability / weather-window assessment.
+  - id: installation-pamphlet
+    domain: marine/installation
+    solver: orcawave
+    basename: installation_pamphlet
+    operation: null
+    template: src/digitalmodel/base_configs/modules/installation_pamphlet/installation_pamphlet.yml
+    analysis: [screening, operability]
+    readiness: ready
+    notes: Deterministic installation-vessel pamphlet (crane suitability, seakeeping envelopes, weather-window operability, DP/mooring risk) with live monitor widget.
+  - id: free-span-f105
+    domain: subsea/pipeline
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/free-span-f105/input.yml
+    analysis: [viv, fatigue]
+    readiness: ready
+    notes: Free-span VIV fatigue (DNV-RP-F105).
+  - id: on-bottom-stability-f109
+    domain: subsea/pipeline
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/on-bottom-stability-f109/input.yml
+    analysis: [static]
+    readiness: ready
+    notes: On-bottom stability (DNV-RP-F109).
+  - id: pipeline-lateral-buckling
+    domain: subsea/pipeline
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/pipeline-lateral-buckling/input.yml
+    analysis: [static]
+    readiness: ready
+    notes: Lateral buckling.
+  - id: pipeline-upheaval-buckling
+    domain: subsea/pipeline
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/pipeline-upheaval-buckling/input.yml
+    analysis: [static]
+    readiness: ready
+    notes: Upheaval buckling.
+  - id: fpso-spread-mooring
+    domain: orcaflex/mooring
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/fpso-spread-mooring/input.yml
+    analysis: [static]
+    readiness: ready
+    notes: Spread mooring screening.
+  - id: api-2sk-mooring
+    domain: orcaflex/mooring
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/api-2sk-mooring/input.yml
+    analysis: [static, code_check]
+    readiness: ready
+    notes: Turret mooring (API RP 2SK).
+  - id: mooring-fatigue
+    domain: orcaflex/mooring
+    solver: orcaflex
+    basename: orcaflex
+    operation: null
+    template: examples/workflows/mooring-fatigue/input.yml
+    analysis: [fatigue]
+    readiness: ready
+    notes: Mooring tension-range fatigue.
+  - id: jlay-pipelay
+    domain: orcaflex/installation
+    solver: orcaflex
+    basename: pipelay
+    operation: null
+    template: examples/workflows/jlay-pipelay/input.yml
+    analysis: [static, dynamic]
+    readiness: ready
+    notes: J-lay; offline `pipelay` workflow, no license (#965).
+  - id: reel-lay-pipelay
+    domain: orcaflex/installation
+    solver: orcaflex
+    basename: pipelay
+    operation: null
+    template: examples/workflows/reel-lay-pipelay/input.yml
+    analysis: [static, dynamic]
+    readiness: ready
+    notes: Reel-lay reeling-strain/residual-curvature screen; offline `pipelay` workflow (#965).
+  - id: fowt-mooring
+    domain: orcaflex/mooring
+    solver: orcaflex
+    basename: fowt_mooring
+    operation: null
+    template: examples/workflows/fowt-mooring/input.yml
+    analysis: [dynamic]
+    readiness: ready
+    notes: FOWT watch-circle screen; offline `fowt_mooring` workflow, no license (#964).
+  - id: floating-wind-sizing
+    domain: orcaflex/floating-wind
+    solver: orcaflex
+    basename: floating_wind_sizing
+    operation: null
+    template: examples/workflows/floating-wind-sizing/input.yml
+    analysis: [static, stability, modal]
+    readiness: ready
+    notes: >-
+      Floating-wind global sizing & concept screening (semi/spar/TLP/barge) --
+      offline closed-form first tier (#1023/#1024/#1028). High-fidelity
+      OrcaWave/OrcaFlex solver tier is #1025.
+  - id: riser-fatigue
+    domain: orcaflex/riser
+    solver: orcaflex
+    basename: riser_fatigue
+    operation: null
+    template: examples/workflows/riser-fatigue/input.yml
+    analysis: [fatigue, viv]
+    readiness: ready
+    notes: Wave+VIV riser fatigue, Palmgren-Miner + DNV-RP-C203; offline `riser_fatigue` workflow (#966).
+  - id: extreme-value-post
+    domain: orcaflex
+    solver: orcaflex
+    basename: orcaflex_post_process
+    operation: null
+    template: examples/workflows/extreme-value-post/input.yml
+    analysis: [extreme]
+    readiness: ready
+    notes: Gumbel/Weibull return-period extremes; offline run.py demo + test over committed maxima; `python -m digitalmodel` router entry is a follow-on (#963).
+
+  # --- ANSYS (Mechanical APDL, structural FE) ------------------------------
+  - id: ansys-padeye
+    domain: ansys/structural
+    solver: ansys
+    basename: ansys
+    operation: run_ansys
+    template: examples/ansys/padeye/input.yml
+    analysis: [static_structural]
+    readiness: ready
+    notes: Padeye / lifting-lug screening FE (PLANE182 plate+pin-hole); generator + dispatchable template (#950).
+  - id: ansys-pressure-vessel
+    domain: ansys/structural
+    solver: ansys
+    basename: ansys
+    operation: run_ansys
+    template: examples/ansys/pressure-vessel/input.yml
+    analysis: [static_structural]
+    readiness: ready
+    notes: Pressure vessel FE; pressure_vessel.py generator (rewritten runnable) + dispatchable template (#956).
+  - id: ansys-mudmat
+    domain: ansys/structural
+    solver: ansys
+    basename: ansys
+    operation: run_ansys
+    template: examples/ansys/mudmat/input.yml
+    analysis: [static_structural]
+    readiness: ready
+    notes: Mudmat / foundation screening FE (SHELL181 on Winkler EFS soil); generator + dispatchable template (#954).
+  # --- OpenFOAM (CFD) ------------------------------------------------------
+  # Engine route digitalmodel #1161: basename openfoam (or cfd) -> case build
+  # (OpenFOAMCaseBuilder, license-free) + optional solve (OpenFOAMRunner,
+  # fail-closed). The per-run case is built from an inline `case_type` config,
+  # not a committed dispatchable template -> readiness: partial (template null).
+  - id: openfoam-current-loading
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [current_loading, drag]
+    readiness: partial
+    notes: Steady current-loading (simpleFoam) drag screening; case built from case_type, no committed template.
+  - id: openfoam-wave-loading
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [wave_loading, multiphase]
+    readiness: partial
+    notes: Wave-loading on a fixed/floating body (interFoam multiphase); case built from case_type.
+  - id: openfoam-greenwater
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [greenwater, multiphase]
+    readiness: partial
+    notes: Green-water on deck (interFoam); case built from case_type.
+  - id: openfoam-sloshing
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [sloshing, multiphase, spectral]
+    readiness: partial
+    notes: Prismatic-tank sloshing (interFoam) + natural-frequency spectral post; case built from case_type.
+  - id: openfoam-viv
+    domain: cfd/marine
+    solver: openfoam
+    basename: openfoam
+    operation: run_openfoam
+    template: null
+    analysis: [viv]
+    readiness: partial
+    notes: Vortex-induced vibration screening (pimpleFoam); case built from case_type.

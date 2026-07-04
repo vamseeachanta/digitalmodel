@@ -3,12 +3,12 @@
 import pytest
 
 from digitalmodel.fatigue.fatigue_reporting import (
-    generate_report,
-    report_to_markdown,
-    report_to_dict,
-    damage_barchart_data,
-    inspection_recommendations,
     FatigueCheckLocation,
+    damage_barchart_data,
+    generate_report,
+    inspection_recommendations,
+    report_to_dict,
+    report_to_markdown,
 )
 
 
@@ -130,3 +130,52 @@ class TestInspectionRecommendations:
         locs = _sample_locations()
         recs = inspection_recommendations(locs)
         assert recs[0]["utilisation"] >= recs[1]["utilisation"]
+
+
+# --- HTML report on the shared backbone (#1020 tracer-bullet) --------------
+
+
+def test_report_to_html_is_provenance_gated_and_views_the_ssot():
+    from digitalmodel.fatigue.fatigue_reporting import generate_report, report_to_html
+    from digitalmodel.reporting import Provenance, ProvenanceError
+
+    report = generate_report(_sample_locations(), project="P", structure="Jacket")
+
+    # Mandatory provenance: an empty Provenance fails closed.
+    with pytest.raises(ProvenanceError):
+        report_to_html(report, provenance=Provenance())
+
+    prov = Provenance().add("analysis_store", "fatigue/run_7", digest="abc")
+    html = report_to_html(report, provenance=prov)
+    assert "<!DOCTYPE html>" in html
+    assert 'id="provenance"' in html and "fatigue/run_7" in html
+    # view over the SSOT: a location id + result read straight from the report
+    assert "Frame-12-Brace-3" in html
+    assert "FAIL" in html  # the failing location surfaces
+    # inspection recommendations section present
+    assert 'id="inspection"' in html
+
+
+def test_report_to_html_writes_file(tmp_path):
+    from digitalmodel.fatigue.fatigue_reporting import generate_report, report_to_html
+    from digitalmodel.reporting import Provenance
+
+    report = generate_report(_sample_locations(), structure="Jacket")
+    out = tmp_path / "fatigue.html"
+    written = report_to_html(
+        report, provenance=Provenance().add("file", "f.json"), output_path=out
+    )
+    assert written == out and out.exists()
+
+
+def test_markdown_output_unchanged_regression():
+    # The pre-existing markdown path is untouched by the HTML migration.
+    from digitalmodel.fatigue.fatigue_reporting import (
+        generate_report,
+        report_to_markdown,
+    )
+
+    md = report_to_markdown(generate_report(_sample_locations(), structure="Jacket"))
+    assert "# Fatigue Assessment Report" in md
+    assert "## Location Details" in md
+    assert "Frame-12-Brace-3" in md

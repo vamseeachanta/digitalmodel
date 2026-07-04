@@ -1,0 +1,20 @@
+FoamFile { version 2.0; format ascii; class volScalarField; object p_rgh; }
+
+dimensions      [1 -1 -2 0 0 0 0];
+internalField   uniform 0;
+boundaryField
+{
+    oversetPatch    { type overset; }
+    oversetBoundary { patchType overset; type fixedFluxPressure; }
+    inlet  { type fixedFluxPressure; value uniform 0; }
+    outlet { type fixedFluxPressure; value uniform 0; }
+    ground { type fixedFluxPressure; value uniform 0; }
+    top
+    {
+        type totalPressure; rho rho; psi none; gamma 1;
+        p0 uniform 0; value uniform 0;
+    }
+    sides  { type empty; }
+    bodyFrontBack { type empty; }
+    floatingObject { type fixedFluxPressure; value uniform 0; }
+}

@@ -1,0 +1,53 @@
+# OrcaWave mean-drift use-case template (issue #953, epic #942/#938).
+#
+# Exercises the mean-drift solve type: solver_options.solve_type = mean_drift
+# emits SolveType "Potential and source + mean drift (momentum conservation)"
+# and the outputs request the mean_drift load component. Self-contained: reuses
+# the committed 5-panel WAMIT GDF unit box so the spec converts offline (no
+# OrcaWave license) at 3 frequencies x 3 headings.
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBoxMeanDrift"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1025.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  solve_type: mean_drift
+  irregular_frequency_method: interior_panels
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping, mean_drift]
+
+metadata:
+  project: "orcawave_gap_specs"
+  author: "digitalmodel"
+  description: "Mean-drift (momentum conservation) unit-box template (issue #953)"
+  tags: [example, orcawave, mean_drift, "issue-953"]

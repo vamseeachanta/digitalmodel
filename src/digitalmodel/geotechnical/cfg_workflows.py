@@ -207,3 +207,121 @@ class ScourWorkflow:
         )
         cfg["scour"] = payload
         return cfg
+
+
+class MudmatBearingCapacityWorkflow:
+    """Run mudmat (shallow foundation) bearing-capacity screening from cfg."""
+
+    def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        from digitalmodel.geotechnical.mudmat import mudmat_bearing_capacity
+
+        workflow_cfg = cfg.get("mudmat_bearing_capacity", {})
+        foundation = workflow_cfg["foundation"]
+        soil = workflow_cfg["soil"]
+        loads = workflow_cfg["loads"]
+
+        result = mudmat_bearing_capacity(
+            width_b_m=float(foundation["width_B_m"]),
+            length_l_m=float(foundation["length_L_m"]),
+            embedment_depth_m=float(foundation.get("embedment_depth_m", 0.0)),
+            condition=str(soil["condition"]),
+            submerged_unit_weight_kn_m3=float(soil["submerged_unit_weight_kN_m3"]),
+            vertical_load_kn=float(loads["vertical_kN"]),
+            moment_knm=float(loads.get("moment_kNm", 0.0)),
+            undrained_shear_strength_kpa=(
+                None
+                if soil.get("undrained_shear_strength_kpa") is None
+                else float(soil["undrained_shear_strength_kpa"])
+            ),
+            friction_angle_deg=(
+                None
+                if soil.get("friction_angle_deg") is None
+                else float(soil["friction_angle_deg"])
+            ),
+            effective_cohesion_kpa=float(soil.get("effective_cohesion_kpa", 0.0)),
+            interface_friction_angle_deg=(
+                None
+                if soil.get("interface_friction_angle_deg") is None
+                else float(soil["interface_friction_angle_deg"])
+            ),
+        )
+
+        fos = float(workflow_cfg.get("design", {}).get("factor_of_safety", 2.0))
+        applied_v = float(loads["vertical_kN"])
+        applied_h = float(loads.get("horizontal_kN", 0.0))
+        allowable_v = result.vertical_capacity_kn / fos
+        allowable_h = result.sliding_capacity_kn / fos
+        bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
+        sliding_util = (
+            (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+        )
+        governing = "bearing" if bearing_util >= sliding_util else "sliding"
+        passes = bearing_util <= 1.0 and sliding_util <= 1.0
+
+        design = {
+            "factor_of_safety": fos,
+            "allowable_vertical_capacity_kn": allowable_v,
+            "allowable_sliding_capacity_kn": allowable_h,
+            "bearing_utilization": bearing_util,
+            "sliding_utilization": sliding_util,
+            "governing_check": governing,
+            "screening_status": "pass" if passes else "fail",
+        }
+        payload = {
+            **workflow_cfg,
+            "standard": result.standard,
+            "result": asdict(result),
+            "design": design,
+        }
+        payload["summary_json"] = str(
+            _write_summary(
+                cfg,
+                workflow_cfg.get("outputs", {}),
+                "results/mudmat_bearing_capacity",
+                "mudmat_bearing_capacity_summary.json",
+                payload,
+            )
+        )
+        cfg["mudmat_bearing_capacity"] = payload
+        cfg["screening_status"] = design["screening_status"]
+        return cfg
+
+
+class LiquefactionWorkflow:
+    """Run Seed-Idriss simplified liquefaction-triggering screening from cfg."""
+
+    def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        from digitalmodel.geotechnical.liquefaction import assess_liquefaction
+
+        workflow_cfg = cfg.get("liquefaction", {})
+        seismic = workflow_cfg["seismic"]
+        design = workflow_cfg.get("design", {})
+
+        result = assess_liquefaction(
+            pga_g=float(seismic["pga_g"]),
+            magnitude=float(seismic["magnitude"]),
+            layers=workflow_cfg["layers"],
+            required_factor_of_safety=float(
+                design.get("required_factor_of_safety", 1.2)
+            ),
+            k_sigma=float(design.get("k_sigma", 1.0)),
+        )
+
+        payload = {
+            **workflow_cfg,
+            "standard": result.standard,
+            "result": asdict(result),
+            "screening_status": result.screening_status,
+        }
+        payload["summary_json"] = str(
+            _write_summary(
+                cfg,
+                workflow_cfg.get("outputs", {}),
+                "results/liquefaction",
+                "liquefaction_summary.json",
+                payload,
+            )
+        )
+        cfg["liquefaction"] = payload
+        cfg["screening_status"] = result.screening_status
+        return cfg

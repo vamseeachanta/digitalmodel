@@ -33,6 +33,15 @@ DERIVED_TRANSFORMS: dict[str, Any] = {
 }
 
 
+def _interval_index(grid: list[float], val: float) -> int:
+    """Index i of the grid interval [grid[i], grid[i+1]] containing val,
+    clamped to [0, len(grid)-2]."""
+    import bisect
+
+    i = bisect.bisect_right(grid, val) - 1
+    return max(0, min(i, len(grid) - 2))
+
+
 @dataclass
 
 
@@ -188,6 +197,38 @@ class Atlas:
         if math.isnan(raw_value):
             return Prediction(math.nan, False, "interpolation returned NaN")
         return Prediction(self._untransform_response(raw_value), True)
+
+    def local_error(self, point: dict[str, Any]) -> float:
+        """Per-point error estimate (#828): the held-out error of the grid
+        interval the query falls into, taken over the worst continuous axis.
+        Tighter than the global max_rel_error in smooth regions, wider near a
+        feature. Falls back to the global error if no local map is present (an
+        older atlas) or on any miss — so it is always at least as honest."""
+        slice_map = (self.validation.get("local_error_map") or {})
+        if not slice_map:
+            return self.max_rel_error
+        cat = self.categorical_axis
+        cat_key = str(point.get(cat.name)) if cat is not None else ""
+        per_axis = slice_map.get(cat_key)
+        if per_axis is None:
+            return self.max_rel_error
+        errs = []
+        for ax in self.continuous_axes:
+            if ax.name in point:
+                val = float(point[ax.name])
+            elif ax.derived is not None:
+                try:
+                    val = ax.derived_value(point)
+                except Exception:
+                    return self.max_rel_error
+            else:
+                return self.max_rel_error
+            intervals = per_axis.get(ax.name)
+            if not intervals:
+                return self.max_rel_error
+            idx = _interval_index([float(k) for k in ax.grid], val)
+            errs.append(intervals[min(idx, len(intervals) - 1)])
+        return max(errs) if errs else self.max_rel_error
 
     # -- persistence -----------------------------------------------------
     def surrogate_spec(self) -> dict[str, Any]:

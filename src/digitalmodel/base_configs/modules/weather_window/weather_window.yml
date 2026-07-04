@@ -1,0 +1,10 @@
+basename: weather_window
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+weather_window: {}

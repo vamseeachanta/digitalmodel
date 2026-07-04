@@ -154,6 +154,21 @@ class RAOSet:
             }
         }
 
+    @classmethod
+    def from_dict(cls, d: Dict) -> "RAOSet":
+        comps = d['raos']
+        components = {name: _rao_component_from_dict(comps[name]) for name in
+                     ('surge', 'sway', 'heave', 'roll', 'pitch', 'yaw')}
+        return cls(
+            vessel_name=d['vessel_name'],
+            analysis_tool=d['analysis_tool'],
+            water_depth=float(d['water_depth']),
+            created_date=d.get('created_date', ''),
+            source_file=d.get('source_file'),
+            notes=d.get('notes'),
+            **components,
+        )
+
     @staticmethod
     def _component_to_dict(component: RAOComponent) -> Dict:
         """Convert RAO component to dictionary"""
@@ -216,6 +231,10 @@ class AddedMassSet:
     source_file: Optional[str] = None
     notes: Optional[str] = None
 
+    @classmethod
+    def from_dict(cls, d: Dict) -> "AddedMassSet":
+        return _matrix_set_from_dict(cls, d)
+
     def get_matrix_at_frequency(self, freq: float) -> Optional[HydrodynamicMatrix]:
         """Get added mass matrix at specific frequency"""
         for matrix in self.matrices:
@@ -254,6 +273,10 @@ class DampingSet:
     created_date: str
     source_file: Optional[str] = None
     notes: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, d: Dict) -> "DampingSet":
+        return _matrix_set_from_dict(cls, d)
 
     def get_matrix_at_frequency(self, freq: float) -> Optional[HydrodynamicMatrix]:
         """Get damping matrix at specific frequency"""
@@ -303,6 +326,18 @@ class HydrostaticResults:
             'stiffness_matrix': self.stiffness_matrix.tolist()
         }
 
+    @classmethod
+    def from_dict(cls, d: Dict) -> "HydrostaticResults":
+        return cls(
+            vessel_name=d['vessel_name'],
+            displacement_volume=float(d['displacement_volume']),
+            mass=float(d['mass']),
+            centre_of_gravity=list(d['centre_of_gravity']),
+            centre_of_buoyancy=list(d['centre_of_buoyancy']),
+            waterplane_area=float(d['waterplane_area']),
+            stiffness_matrix=np.asarray(d['stiffness_matrix'], dtype=float),
+        )
+
 
 @dataclass
 class DiffractionResults:
@@ -344,6 +379,83 @@ class DiffractionResults:
         if self.hydrostatics:
             res['hydrostatics'] = self.hydrostatics.to_dict()
         return res
+
+    @classmethod
+    def from_dict(cls, d: Dict) -> "DiffractionResults":
+        """Reconstruct results from ``to_dict()`` output.
+
+        License-free loader for Linux-side postprocessing: a licensed run on the
+        host exports ``DiffractionResults.to_dict()`` as JSON, which this rebuilds
+        into the full object (no OrcFxAPI, no heavy binaries). Round-trips
+        ``to_dict()`` losslessly.
+        """
+        hydro = d.get('hydrostatics')
+        return cls(
+            vessel_name=d['vessel_name'],
+            analysis_tool=d['analysis_tool'],
+            water_depth=float(d['water_depth']),
+            raos=RAOSet.from_dict(d['raos']),
+            added_mass=AddedMassSet.from_dict(d['added_mass']),
+            damping=DampingSet.from_dict(d['damping']),
+            hydrostatics=HydrostaticResults.from_dict(hydro) if hydro else None,
+            created_date=d.get('created_date', ''),
+            analysis_date=d.get('analysis_date'),
+            source_files=d.get('source_files'),
+            notes=d.get('notes'),
+            phase_convention=d.get('phase_convention', 'unknown'),
+            unit_system=d.get('unit_system', 'SI'),
+        )
+
+
+# from_dict reconstruction helpers (reverse of the to_dict() serializers above) --
+
+def _frequency_from_dict(d: Dict) -> "FrequencyData":
+    values = np.asarray(d['values'], dtype=float)
+    # __post_init__ recomputes count/min/max/periods from values.
+    return FrequencyData(values=values, periods=None, count=0,
+                         min_freq=0.0, max_freq=0.0,
+                         unit=d.get('unit', Unit.FREQUENCY.value))
+
+
+def _heading_from_dict(d: Dict) -> "HeadingData":
+    values = np.asarray(d['values'], dtype=float)
+    return HeadingData(values=values, count=0, min_heading=0.0, max_heading=0.0,
+                       unit=d.get('unit', Unit.HEADING.value))
+
+
+def _rao_component_from_dict(d: Dict) -> "RAOComponent":
+    return RAOComponent(
+        dof=DOF[d['dof']],
+        magnitude=np.asarray(d['magnitude'], dtype=float),
+        phase=np.asarray(d['phase'], dtype=float),
+        frequencies=_frequency_from_dict(d['frequencies']),
+        headings=_heading_from_dict(d['headings']),
+        unit=d.get('unit', ''),  # __post_init__ resets from dof
+    )
+
+
+def _matrix_from_dict(d: Dict) -> "HydrodynamicMatrix":
+    return HydrodynamicMatrix(
+        matrix=np.asarray(d['matrix'], dtype=float),
+        frequency=float(d['frequency']),
+        matrix_type=d['matrix_type'],
+        units=d.get('units', {}),
+    )
+
+
+def _matrix_set_from_dict(cls, d: Dict):
+    """Shared from_dict for AddedMassSet / DampingSet (identical layout)."""
+    return cls(
+        vessel_name=d['vessel_name'],
+        analysis_tool=d['analysis_tool'],
+        water_depth=float(d['water_depth']),
+        matrices=[_matrix_from_dict(m) for m in d['matrices']],
+        frequencies=_frequency_from_dict(
+            {'values': d['frequencies']['values'], 'unit': Unit.FREQUENCY.value}),
+        created_date=d.get('created_date', ''),
+        source_file=d.get('source_file'),
+        notes=d.get('notes'),
+    )
 
 
 # Schema validation utilities

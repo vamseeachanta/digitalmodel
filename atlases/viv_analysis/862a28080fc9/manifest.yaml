@@ -26,7 +26,7 @@ validation:
   passes: true
 provenance:
   basename: viv_analysis
-  code_version: aad6b6cb
+  code_version: a3a67b4b
   standards:
   - id: DNV-RP-F105
     edition: 2017-06

@@ -1,0 +1,11 @@
+# Mudmat / shallow-foundation screening FE — dispatchable through the
+# licensed-run lane (#940/#952). Runs mudmat.inp on a licensed MAPDL host:
+#   uv run python -m digitalmodel examples/ansys/mudmat/input.yml
+# Off-license this fails closed (dry-run fallback raises). Regenerate mudmat.inp
+# with: uv run python examples/ansys/mudmat/build.py
+basename: ansys
+ansys:
+  operation: run_ansys
+  script: mudmat.inp
+  output_directory: results
+  dry_run: false

@@ -147,6 +147,36 @@ class TestLinearIpr:
 
 
 # ---------------------------------------------------------------------------
+# Regression: Collide "PE Problem of the Day" 6/19/2026 (productivity index)
+# https://app.collide.io/posts/pe-problem-of-the-day-6-19-2026
+# Pins a real community problem to LinearIpr so the calc stays a reusable "dot".
+# ---------------------------------------------------------------------------
+
+class TestCollidePeProblem20260619:
+    """PI = 1.5 BBL/PSI-D, Pr = 2800 psi. Q1 @ Pwf=1600; Q2 @ Pwf=1400."""
+
+    def setup_method(self):
+        res = make_reservoir(
+            reservoir_pressure_psi=2800.0,
+            bubble_point_psi=0.0,  # stays above bubble point — linear PI holds
+            productivity_index_bopd_psi=1.5,
+        )
+        self.model = LinearIpr(reservoir=res, pi_bopd_psi=1.5)
+
+    def test_q1_current_rate(self):
+        # q = 1.5 * (2800 - 1600) = 1800 BBL/d
+        assert self.model.flow_rate(pwf_psi=1600.0) == pytest.approx(1800.0, rel=1e-6)
+
+    def test_q2_rate_after_tubing_mod(self):
+        # FBHP lowered to 1400 psi -> q = 1.5 * (2800 - 1400) = 2100 BBL/d
+        assert self.model.flow_rate(pwf_psi=1400.0) == pytest.approx(2100.0, rel=1e-6)
+
+    def test_uplift_from_drawdown_increase(self):
+        gain = self.model.flow_rate(pwf_psi=1400.0) - self.model.flow_rate(pwf_psi=1600.0)
+        assert gain == pytest.approx(300.0, rel=1e-6)
+
+
+# ---------------------------------------------------------------------------
 # Composite IPR — Klins-Clark: linear above Pb, Vogel below Pb
 # ---------------------------------------------------------------------------
 

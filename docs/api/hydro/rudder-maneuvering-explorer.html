@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rudder &amp; low-speed manoeuvring explorer — digitalmodel</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<style>
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
+        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--warn:#b7791f;--bad:#d1242f;--side:330px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+       color:var(--ink);line-height:1.45}
+  code{font-family:ui-monospace,Menlo,monospace;background:var(--soft);border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:12px}
+  a{color:var(--teal);text-decoration:none}
+  .side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:#fff;
+        border-right:1px solid var(--line);padding:20px 18px;overflow-y:auto;z-index:20}
+  .side h1{font-size:17px;font-weight:800;letter-spacing:-.2px;margin-bottom:2px;color:var(--navy)}
+  .side .sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .ctl{margin-bottom:15px}
+  .ctl label{display:block;font-size:12.5px;font-weight:600;color:#34466a;margin-bottom:5px}
+  .ctl .val{float:right;color:var(--teal);font-family:ui-monospace,Menlo,monospace}
+  input[type=range]{width:100%;accent-color:var(--teal)}
+  .seg{display:flex;gap:6px;margin-top:4px}
+  .seg button{flex:1;background:var(--soft);border:1px solid var(--line);color:var(--muted);
+              padding:7px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .seg button.on{background:linear-gradient(135deg,var(--teal),#3cc6b3);color:#fff;border-color:transparent}
+  .verdict{margin-top:8px;padding:10px 12px;border-radius:10px;font-size:12.5px;border:1px solid var(--line);background:var(--soft)}
+  .verdict b{font-size:13px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+  .pill.ok{background:rgba(31,157,87,.14);color:var(--ok)}
+  .pill.warn{background:rgba(183,121,31,.16);color:var(--warn)}
+  .pill.bad{background:rgba(209,36,47,.12);color:var(--bad)}
+  main{margin-left:var(--side);padding:18px 24px 70px;max-width:1180px}
+  .hero h2{font-size:20px;font-weight:800;color:var(--navy)}
+  .hero p{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:840px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px;box-shadow:0 1px 3px rgba(16,40,80,.05)}
+  .card .ttl{font-size:13px;font-weight:700;color:#34466a;padding:8px 10px 2px}
+  .card .ttl span{font-weight:500;color:var(--muted)}
+  .plot{width:100%;height:330px}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(16,40,80,.05)}
+  .stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  .stat .v{font-size:20px;font-weight:800;margin-top:3px;font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
+  .note{color:var(--muted);font-size:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  @media(max-width:900px){:root{--side:0px}.side{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line)}
+    main{margin-left:0}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside class="side">
+  <h1>Rudder &amp; manoeuvring</h1>
+  <div class="sub">Low-speed turning, threshold speed &amp; heading-hold under current</div>
+
+  <div class="ctl">
+    <label>Vessel</label>
+    <select id="sel-vessel" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:12.5px;font-weight:600"></select>
+    <div class="sub" id="vessel-meta" style="margin:5px 0 0"></div>
+  </div>
+
+  <div class="ctl">
+    <label>Loading condition</label>
+    <div class="seg" id="seg-load">
+      <button data-load="laden" class="on">Laden <span id="lbl-laden"></span></button>
+      <button data-load="ballast">Ballast <span id="lbl-ballast"></span></button>
+    </div>
+  </div>
+
+  <div class="ctl">
+    <label>Ship speed <span class="val"><span id="v-spd">3.0</span> kn</span></label>
+    <input type="range" id="r-spd" min="0" max="8" step="0.1" value="3.0">
+  </div>
+  <div class="ctl">
+    <label>Rudder helm angle <span class="val"><span id="v-rud">35</span>&deg;</span></label>
+    <input type="range" id="r-rud" min="0" max="35" step="1" value="35">
+  </div>
+  <div class="ctl">
+    <label>Current speed <span class="val"><span id="v-cur">3.0</span> kn</span></label>
+    <input type="range" id="r-cur" min="0" max="5" step="0.1" value="3.0">
+  </div>
+  <div class="ctl">
+    <label>Current heading off bow <span class="val"><span id="v-hdg">90</span>&deg;</span></label>
+    <input type="range" id="r-hdg" min="0" max="90" step="5" value="90">
+  </div>
+  <div class="ctl">
+    <label>Beam wind <span class="val"><span id="v-wnd">20</span> kn</span></label>
+    <input type="range" id="r-wnd" min="0" max="50" step="1" value="20">
+  </div>
+  <div class="ctl">
+    <label>Ahead thrust (engine) <span class="val"><span id="v-thr">500</span> kN</span></label>
+    <input type="range" id="r-thr" min="0" max="1500" step="25" value="500">
+  </div>
+
+  <div class="verdict" id="verdict"></div>
+  <div class="sub" style="margin-top:14px">All curves recomputed in-browser from the verified
+  digitalmodel equations (Clarke 1983, Whicker&amp;Fehlner, Nomoto, Söding/Brix, OCIMF, IMO MSC.137(76)).</div>
+</aside>
+
+<main>
+  <div class="hero">
+    <h2>Low-speed manoeuvring &amp; station-keeping explorer</h2>
+    <p>Pick a vessel in the sidebar — from a VLCC to a harbour tug (two are published
+    manoeuvring-benchmark hulls; the rest are class-typical estimates).
+    Answers three operational questions —
+    <b>can I turn within the channel?</b> (turning circle vs the IMO 5L limit),
+    <b>do I still have steerage?</b> (threshold speed vs wind, by loading),
+    and <b>can I hold heading on the engine?</b> (rudder angle to balance the current yaw moment,
+    and the current at which a tug is needed). Drag the controls.</p>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="grid">
+    <div class="card"><div class="ttl">1 · Turning circle <span>— trajectory vs IMO 5·L tactical-diameter limit</span></div><div id="p-turn" class="plot"></div></div>
+    <div class="card"><div class="ttl">2 · Steerage threshold <span>— min speed to hold control vs wind</span></div><div id="p-thresh" class="plot"></div></div>
+    <div class="card"><div class="ttl">3 · Heading-hold on engine <span>— rudder angle to balance current yaw moment</span></div><div id="p-hold" class="plot"></div></div>
+    <div class="card"><div class="ttl">4 · Current load <span>— yaw moment &amp; lateral force vs heading</span></div><div id="p-curr" class="plot"></div></div>
+  </div>
+
+  <div class="note">
+    <b>Method &amp; scope.</b> Screening-level. Turning circle from the Nomoto relation R/L = 1/(K'·δ)
+    (K' calibrated to the Lyster &amp; Knights 1979 sea-trial regression, TD/L ≈ 3.2 laden at 35°);
+    threshold speed from a rudder-vs-beam-wind force balance
+    U<sub>min</sub> = (V<sub>w</sub>/c)·√(ρ<sub>air</sub>·A<sub>L</sub>·C<sub>Y</sub> / (ρ<sub>w</sub>·A<sub>Re</sub>·a·sinδ));
+    engine-on rudder authority from the Söding/Brix slipstream model
+    (yaw ∝ C<sub>rp</sub>·F<sub>prop</sub>·[1+1/√(1+C<sub>th</sub>)]·sinδ);
+    current load from the OCIMF form N = C<sub>XYc</sub>·½ρV<sub>c</sub>²·L²·T, F<sub>y</sub> = C<sub>Yc</sub>·½ρV<sub>c</sub>²·L·T.
+    Not a class/IMO compliance proof and not a full MMG/6-DOF model. Per-vessel K'
+    (turning), windage and ballast rudder-emergence are screening estimates derived
+    from each vessel's geometry. Ducted/gate/twin-rudder vessels carry system side
+    force the bare-rudder lift slope under-predicts.
+    Source: <code>naval_architecture/maneuvering_envelope.py</code> and <code>data/rudder_database.yml</code>.
+  </div>
+</main>
+
+<script>
+// ---- Constants & reference-tanker particulars (generic ~225 m single-screw tanker) ----
+const KN = 0.514444, RHO_W = 1025, RHO_AIR = 1.225, DEG = Math.PI/180;
+const C_RP = 0.5, T_DED = 0.2, W_WAKE = 0.25, D_PROP = 7.0; // nominal single-screw propulsion
+const KT = [0.35, -0.30];                          // K_T = 0.35 - 0.30 J  (representative)
+
+// Vessel library (geometry from research; benchmark hulls carry published data,
+// others are class-typical estimates — see rudder_database.yml seed_vessels).
+// Derived screening quantities (K', windage A_L, ballast effective rudder area)
+// are computed from the geometry below via documented rules in applyVessel().
+const VESSELS = {
+  generic:      {name:'Generic single-screw tanker (~225 m)', L:225.5,area:44.94,span:9.0,Tlad:12.2,Tbal:7.0,type:'spade / semi-balanced'},
+  esso_osaka:   {name:'Esso Osaka — VLCC (benchmark)',        L:325.0,area:119.8,span:12.0,Tlad:21.8,Tbal:9.0,type:'semi-balanced horn', bench:true},
+  kvlcc2:       {name:'KVLCC2 — VLCC (benchmark)',            L:320.0,area:136.7,span:15.0,Tlad:20.8,Tbal:8.5,type:'semi-balanced horn', bench:true},
+  suezmax:      {name:'Suezmax crude tanker',                 L:264.0,area:82.0,span:10.5,Tlad:17.0,Tbal:8.0,type:'semi-balanced horn'},
+  aframax:      {name:'Aframax crude tanker',                 L:239.0,area:66.0,span:9.5,Tlad:14.9,Tbal:7.5,type:'spade'},
+  lr1:          {name:'LR1 / Panamax product tanker',         L:225.0,area:43.0,span:8.5,Tlad:12.5,Tbal:7.0,type:'spade'},
+  handysize:    {name:'Handysize product tanker',             L:176.0,area:31.0,span:7.0,Tlad:11.0,Tbal:6.0,type:'spade'},
+  capesize:     {name:'Capesize bulk carrier',                L:279.0,area:84.0,span:10.5,Tlad:18.2,Tbal:8.5,type:'semi-balanced horn'},
+  container:    {name:'Post-Panamax container ship',          L:320.0,area:67.0,span:11.0,Tlad:14.5,Tbal:9.0,type:'twisted spade'},
+  gate:         {name:'Feeder w/ gate rudder (Shigenobu-type)',L:165.0,area:30.0,span:6.5,Tlad:8.6,Tbal:5.5,type:'gate rudder', sys:true},
+  ropax:        {name:'ROPAX ferry (twin-screw)',             L:195.0,area:14.0,span:5.5,Tlad:7.1,Tbal:6.3,type:'flap / Becker', twin:true},
+  tug_schilling:{name:'Escort tug (Schilling)',               L:28.0,area:5.5,span:2.6,Tlad:4.2,Tbal:4.0,type:'Schilling', sys:true},
+  tug_nozzle:   {name:'Harbour tug (Kort nozzle)',            L:26.0,area:4.0,span:2.2,Tlad:3.8,Tbal:3.6,type:'Kort nozzle', sys:true},
+};
+// Mutable per-vessel state (set by applyVessel).
+let L, X_R, KP, COND, VESSEL;
+function applyVessel(id){
+  const v = VESSELS[id]; VESSEL = v;
+  L = v.L; X_R = 0.6 * v.L;                          // Barrass rudder lever ~0.6 Lpp
+  const arRatio = v.area / (v.L * v.Tlad);           // rudder area ratio A_R/(L*T)
+  KP = Math.max(0.6, Math.min(1.6, 1.02 * arRatio / 0.0163)); // K' tied to area ratio (screening)
+  const aReBal = v.area * 0.78;                      // ballast rudder emergence (~78%, screening)
+  const aLlad = v.L * v.Tlad * 0.75;                 // windage ~= 0.75x underwater lateral area (screening)
+  COND = {
+    laden:   {T:v.Tlad, A_Re:v.area,  span:v.span, A_L:aLlad, label:'Laden'},
+    ballast: {T:v.Tbal, A_Re:aReBal, span:v.span, A_L:aLlad + v.L*(v.Tlad-v.Tbal), label:'Ballast'}
+  };
+}
+applyVessel('generic');
+// Plot palette tuned for a LIGHT background (matches capabilities house style).
+const CLR = {teal:'#0f8a7e', blue:'#1f6feb', red:'#d1242f', amber:'#b7791f',
+             now:'#0B3D91', ship:'#7a1fa2'};
+// OCIMF-style current coefficients vs heading off bow (deg): peak near beam.
+function CYc(hdgDeg){ return 0.75*Math.sin(hdgDeg*DEG); }                 // ~0 head/stern, ~0.75 beam
+function CXYc(hdgDeg){ return 0.05*Math.sin(2*hdgDeg*DEG); }             // zero at 0/90, peak ~45
+
+// ---- Physics (mirror of maneuvering_envelope.py) -------------------------
+function liftSlope(area, span){ const arEff = 2*span*span/area; return 6.13*arEff/(arEff+2.25); }
+function thresholdSpeed(Vw, A_L, A_Re, span, Cy, c){
+  const a = liftSlope(A_Re, span), d = 35*DEG;
+  return (Vw/c)*Math.sqrt((RHO_AIR*A_L*Cy)/(RHO_W*A_Re*a*Math.sin(d)));
+}
+function currentYaw(cxy, Vc, T){ return cxy*0.5*RHO_W*Vc*Vc*L*L*T; }
+function currentSway(cy, Vc, T){ return cy*0.5*RHO_W*Vc*Vc*L*T; }
+// Söding/Brix engine-on rudder yaw moment at helm angle delta (deg)
+function sodingYaw(Fprop_N, Vs, deltaDeg){
+  if (Fprop_N<=0 || Vs<=0) return 0;
+  const Va = Vs*(1-W_WAKE);
+  const Adisc = Math.PI/4*D_PROP*D_PROP;
+  const Cth = Fprop_N/(0.5*RHO_W*Va*Va*Adisc);
+  const bracket = 1 + 1/Math.sqrt(1+Math.max(Cth,-0.999));
+  const Flift = C_RP*Fprop_N*bracket*Math.sin(deltaDeg*DEG);
+  return Flift*X_R;
+}
+function steadyRoverL(Kp, deltaDeg){ const d=deltaDeg*DEG; return d>0 ? 1/(Kp*d) : Infinity; }
+
+// ---- State ---------------------------------------------------------------
+let S = {load:'laden', spd:3.0, rud:35, cur:3.0, hdg:90, wnd:20, thr:500};
+const plotCfg = {displayModeBar:false, responsive:true};
+const baseLayout = {paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+  font:{color:'#5b6b86', size:11}, margin:{l:48,r:14,t:8,b:40},
+  legend:{orientation:'h', y:1.12, font:{size:10}}, showlegend:true};
+const axStyle = {gridcolor:'#dbe4f0', zerolinecolor:'#c5d2e6', linecolor:'#c5d2e6'};
+
+function recompute(){
+  const c = COND[S.load];
+  const Kp = S.load==='laden' ? KP : KP*Math.sqrt(c.A_Re/COND.laden.A_Re);
+  const RoverL = steadyRoverL(Kp, S.rud), TDoverL = 2*RoverL;
+  const TD = TDoverL*L;
+  const Vs = S.spd*KN, Vc = S.cur*KN, Vw = S.wnd*KN, Fprop = S.thr*1000;
+  // threshold (kick-ahead if any thrust commanded)
+  const cFac = S.thr>50 ? 1.5 : 1.0;
+  const Umin = thresholdSpeed(Vw, c.A_L, c.A_Re, c.span, 0.8, cFac)/KN; // kn
+  // heading hold under current at selected heading
+  const Ncur = currentYaw(CXYc(S.hdg), Vc, c.T);
+  const Fy = currentSway(CYc(S.hdg), Vc, c.T);
+  const authority = sodingYaw(Fprop, Math.max(Vs,0.3), 35);
+  const util = authority>0 ? Math.abs(Ncur)/authority : Infinity;
+  let reqDeg = null;
+  if (util<=1){ reqDeg = Math.asin(Math.min(1,util*Math.sin(35*DEG)))/DEG; }
+  return {c,Kp,RoverL,TDoverL,TD,Vs,Vc,Vw,Fprop,Umin,Ncur,Fy,authority,util,reqDeg};
+}
+
+function fmt(x,d=1){ return (x===null||!isFinite(x))?'—':x.toFixed(d); }
+
+function render(){
+  const m = recompute();
+  // ----- readout stats -----
+  const imoPass = m.TDoverL<=5.0;
+  document.getElementById('readout').innerHTML = `
+    <div class="stat"><div class="k">Tactical diameter</div><div class="v">${fmt(m.TD,0)} m</div>
+      <div style="font-size:11px;color:var(--muted)">${fmt(m.TDoverL,2)}·L · IMO ≤5L
+      <span class="pill ${imoPass?'ok':'bad'}">${imoPass?'PASS':'FAIL'}</span></div></div>
+    <div class="stat"><div class="k">Steerage threshold</div><div class="v">${fmt(m.Umin,1)} kn</div>
+      <div style="font-size:11px;color:var(--muted)">${S.thr>50?'engine-on (kick)':'coasting'} · now ${fmt(S.spd,1)} kn
+      <span class="pill ${S.spd>=m.Umin?'ok':'bad'}">${S.spd>=m.Umin?'STEERAGE':'NO CONTROL'}</span></div></div>
+    <div class="stat"><div class="k">Current yaw moment</div><div class="v">${fmt(m.Ncur/1e6,1)} MN·m</div>
+      <div style="font-size:11px;color:var(--muted)">Fy ${fmt(m.Fy/1e6,2)} MN · ${S.hdg}° off bow</div></div>
+    <div class="stat"><div class="k">Hold heading on engine</div><div class="v">${m.reqDeg===null?'tug':fmt(m.reqDeg,0)+'°'}</div>
+      <div style="font-size:11px;color:var(--muted)">authority ${fmt(m.authority/1e6,0)} MN·m
+      <span class="pill ${m.reqDeg!==null?(m.util<0.8?'ok':'warn'):'bad'}">${m.reqDeg!==null?(m.util<0.8?'HOLDS':'NEAR LIMIT'):'TUG NEEDED'}</span></div></div>`;
+
+  // ----- verdict -----
+  let v='';
+  if (S.spd < m.Umin) v=`<b>⚠ Below steerage threshold.</b> At ${fmt(S.spd,1)} kn the rudder cannot beat the ${S.wnd} kn beam wind in ${m.c.label.toLowerCase()} trim (need ${fmt(m.Umin,1)} kn). Use a kick-ahead or tug.`;
+  else if (m.reqDeg===null) v=`<b>⚠ Current beyond rudder authority.</b> The ${fmt(m.Ncur/1e6,0)} MN·m current yaw moment exceeds the ${fmt(m.authority/1e6,0)} MN·m engine-on authority — tug or more thrust required.`;
+  else v=`<b>✓ Controllable.</b> ${fmt(m.reqDeg,0)}° of carried helm holds heading against the current; turning circle ${fmt(m.TDoverL,2)}·L ${imoPass?'meets':'exceeds'} the IMO 5L limit.`;
+  document.getElementById('verdict').innerHTML = v;
+
+  drawTurn(m); drawThresh(m); drawHold(m); drawCurr(m);
+}
+
+// Panel 1: turning-circle trajectory + IMO limit ring
+function drawTurn(m){
+  const R = m.RoverL*L, n=80, path={x:[],y:[]};
+  for(let i=0;i<=n;i++){const th=Math.PI*i/n; path.x.push(R*Math.sin(th)); path.y.push(R-R*Math.cos(th));}
+  const Rimo=5.0*L/2, imo={x:[],y:[]};
+  for(let i=0;i<=n;i++){const th=Math.PI*i/n; imo.x.push(Rimo*Math.sin(th)); imo.y.push(Rimo-Rimo*Math.cos(th));}
+  Plotly.react('p-turn',[
+    {x:imo.x,y:imo.y,mode:'lines',name:'IMO 5·L limit',line:{color:CLR.amber,dash:'dot',width:1.5}},
+    {x:path.x,y:path.y,mode:'lines',name:`${m.c.label} TD ${m.TDoverL.toFixed(2)}·L`,line:{color:CLR.teal,width:2.5}},
+    {x:[0],y:[0],mode:'markers',name:'start',marker:{color:CLR.now,size:8}}
+  ],Object.assign({},baseLayout,{
+    xaxis:Object.assign({title:'transfer (m)',scaleanchor:'y',scaleratio:1},axStyle),
+    yaxis:Object.assign({title:'advance (m)'},axStyle)}),plotCfg);
+}
+
+// Panel 2: threshold speed vs wind, both loadings + coasting/kick, current op point
+function drawThresh(m){
+  const winds=[];for(let w=0;w<=50;w+=2)winds.push(w);
+  const mk=(cond,cFac)=>winds.map(w=>thresholdSpeed(w*KN,cond.A_L,cond.A_Re,cond.span,0.8,cFac)/KN);
+  Plotly.react('p-thresh',[
+    {x:winds,y:mk(COND.laden,1.0),mode:'lines',name:'laden · coasting',line:{color:CLR.blue,width:2}},
+    {x:winds,y:mk(COND.ballast,1.0),mode:'lines',name:'ballast · coasting',line:{color:CLR.red,width:2}},
+    {x:winds,y:mk(COND.ballast,1.5),mode:'lines',name:'ballast · kick-ahead',line:{color:CLR.amber,width:1.8,dash:'dash'}},
+    {x:[S.wnd],y:[m.Umin],mode:'markers',name:'now',marker:{color:CLR.now,size:11,symbol:'diamond'}},
+    {x:[S.wnd],y:[S.spd],mode:'markers',name:'ship speed',marker:{color:CLR.ship,size:9,symbol:'x'}}
+  ],Object.assign({},baseLayout,{
+    xaxis:Object.assign({title:'beam wind (kn)'},axStyle),
+    yaxis:Object.assign({title:'min steerage speed (kn)',rangemode:'tozero'},axStyle)}),plotCfg);
+}
+
+// Panel 3: required rudder angle vs current speed for selected heading, + helm/authority limits
+function drawHold(m){
+  const curs=[];for(let v=0;v<=5;v+=0.1)curs.push(v);
+  const req=curs.map(v=>{
+    const N=currentYaw(CXYc(S.hdg),v*KN,m.c.T);
+    const util=m.authority>0?Math.abs(N)/m.authority:Infinity;
+    return util<=1?Math.asin(Math.min(1,util*Math.sin(35*DEG)))/DEG:null;
+  });
+  Plotly.react('p-hold',[
+    {x:curs,y:req,mode:'lines',name:`carried helm (${S.hdg}° off bow)`,line:{color:CLR.teal,width:2.5},connectgaps:false},
+    {x:[0,5],y:[35,35],mode:'lines',name:'35° helm limit',line:{color:CLR.red,dash:'dot',width:1.5}},
+    {x:[S.cur],y:[m.reqDeg],mode:'markers',name:'now',marker:{color:CLR.now,size:11,symbol:'diamond'}}
+  ],Object.assign({},baseLayout,{
+    xaxis:Object.assign({title:'current speed (kn)'},axStyle),
+    yaxis:Object.assign({title:'rudder angle to hold (deg)',range:[0,40]},axStyle)}),plotCfg);
+}
+
+// Panel 4: current yaw moment & lateral force vs heading (at selected current speed)
+function drawCurr(m){
+  const h=[];for(let a=0;a<=90;a+=5)h.push(a);
+  const N=h.map(a=>currentYaw(CXYc(a),m.Vc,m.c.T)/1e6);
+  const Fy=h.map(a=>currentSway(CYc(a),m.Vc,m.c.T)/1e6);
+  Plotly.react('p-curr',[
+    {x:h,y:N,mode:'lines',name:'yaw moment (MN·m)',line:{color:CLR.teal,width:2.5}},
+    {x:h,y:Fy,mode:'lines',name:'lateral force (MN)',yaxis:'y2',line:{color:CLR.blue,width:2,dash:'dash'}},
+    {x:[S.hdg],y:[currentYaw(CXYc(S.hdg),m.Vc,m.c.T)/1e6],mode:'markers',name:'now',marker:{color:CLR.now,size:10,symbol:'diamond'}}
+  ],Object.assign({},baseLayout,{
+    xaxis:Object.assign({title:'current heading off bow (deg)'},axStyle),
+    yaxis:Object.assign({title:'yaw moment (MN·m)'},axStyle),
+    yaxis2:{title:'lateral force (MN)',overlaying:'y',side:'right',gridcolor:'rgba(0,0,0,0)',color:CLR.blue}}),plotCfg);
+}
+
+// ---- Wire controls -------------------------------------------------------
+function bind(id,key,disp,d=1){const el=document.getElementById(id);el.addEventListener('input',()=>{
+  S[key]=parseFloat(el.value);document.getElementById(disp).textContent=S[key].toFixed(d===0?0:1);render();});}
+bind('r-spd','spd','v-spd');bind('r-rud','rud','v-rud',0);bind('r-cur','cur','v-cur');
+bind('r-hdg','hdg','v-hdg',0);bind('r-wnd','wnd','v-wnd',0);bind('r-thr','thr','v-thr',0);
+document.querySelectorAll('#seg-load button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#seg-load button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');S.load=b.dataset.load;render();}));
+
+// Vessel picker
+function updateVesselUI(){
+  const v = VESSEL;
+  document.getElementById('lbl-laden').textContent = `(T ${v.Tlad} m)`;
+  document.getElementById('lbl-ballast').textContent = `(T ${v.Tbal} m)`;
+  const tag = v.bench ? 'published geometry' : 'class-typical estimate';
+  let flag = v.twin ? ' · twin-screw (single-screw model approximates)' :
+             v.sys ? ' · system side force (bare-rudder lift under-predicts)' : '';
+  document.getElementById('vessel-meta').innerHTML =
+    `Lpp ${v.L} m · rudder ${v.area} m² / ${v.span} m span · ${v.type} · <em>${tag}</em>${flag}`;
+}
+const sel = document.getElementById('sel-vessel');
+sel.innerHTML = Object.keys(VESSELS).map(k=>`<option value="${k}">${VESSELS[k].name}</option>`).join('');
+sel.value = 'generic';
+sel.addEventListener('change', ()=>{ applyVessel(sel.value); updateVesselUI(); render(); });
+updateVesselUI();
+render();
+window.addEventListener('resize',()=>['p-turn','p-thresh','p-hold','p-curr'].forEach(p=>Plotly.Plots.resize(p)));
+</script>
+</body>
+</html>

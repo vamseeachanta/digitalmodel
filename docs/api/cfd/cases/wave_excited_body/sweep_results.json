@@ -1,0 +1,213 @@
+{
+  "issue": "#1324",
+  "reference": {
+    "method": "capytaine linear BEM (Froude-Krylov + diffraction), finite depth 0.4 m, long box ~ 2D slab",
+    "peak_period_s": 0.86,
+    "peak_rao": 2.20081905388401,
+    "curve": {
+      "period_s": [
+        0.62,
+        0.66,
+        0.7,
+        0.74,
+        0.77,
+        0.8,
+        0.82,
+        0.84,
+        0.86,
+        0.88,
+        0.9,
+        0.92,
+        0.94,
+        0.97,
+        1.0,
+        1.05,
+        1.1,
+        1.15,
+        1.2,
+        1.3,
+        1.4,
+        1.5,
+        1.6,
+        1.8,
+        2.0,
+        2.2,
+        2.5,
+        3.0,
+        3.5
+      ],
+      "rao_heave": [
+        0.1774845661929824,
+        0.29464990739696517,
+        0.46289108152230957,
+        0.7599846463204486,
+        1.1033719025812538,
+        1.5760467548840031,
+        1.9118750268965043,
+        2.160311768963908,
+        2.20081905388401,
+        2.1679797748608065,
+        2.052891450469233,
+        1.922604027089399,
+        1.7639705123239924,
+        1.6284655237074876,
+        1.5239076455057112,
+        1.397210993527275,
+        1.3118826246576907,
+        1.2512893963264404,
+        1.2003282845257803,
+        1.1444193886807004,
+        1.1097935082495172,
+        1.0867033488856743,
+        1.0703474475286163,
+        1.0496247950024062,
+        1.0371690206436202,
+        1.029051497862134,
+        1.0211970460435107,
+        1.0138333955422767,
+        1.0098026548576502
+      ]
+    }
+  },
+  "band": {
+    "off_resonance": 0.2,
+    "resonance_guard": 0.12
+  },
+  "summary": {
+    "n_points": 4,
+    "reference_peak": {
+      "period_s": 0.86,
+      "rao": 2.20081905388401
+    },
+    "cfd_peak": {
+      "period_s": 1.5,
+      "rao": 1.0555081934889465
+    },
+    "all_within_band": false,
+    "points": [
+      {
+        "period_s": 0.9,
+        "wavelength_m": 1.2237321820166869,
+        "lambda_over_beam": 6.118660910083434,
+        "nx": 589,
+        "cells_per_wavelength": 36.038912760391426,
+        "incident_amplitude": 0.005777780518216474,
+        "reflection_kr": 0.022754704119073616,
+        "rao_cfd": 0.743754019769238,
+        "rao_reference": 2.052891450469233,
+        "rao_rel_error": 0.6377041661899674,
+        "band": 0.35,
+        "within_band": false,
+        "heave_amplitude": 0.0042972474857678935,
+        "response_period_s": 0.8908958042425377,
+        "draft_error": -0.005322953915875561,
+        "gauges_excluded_x": [],
+        "steady_window": [
+          23.8,
+          31.0
+        ]
+      },
+      {
+        "period_s": 1.0,
+        "wavelength_m": 1.4637347044885476,
+        "lambda_over_beam": 7.3186735224427375,
+        "nx": 492,
+        "cells_per_wavelength": 36.00787373041827,
+        "incident_amplitude": 0.011395343498272977,
+        "reflection_kr": 0.09759667739479164,
+        "rao_cfd": 0.992345452558404,
+        "rao_reference": 1.5239076455057112,
+        "rao_rel_error": 0.3488152280848407,
+        "band": 0.2,
+        "within_band": false,
+        "heave_amplitude": 0.011308117300852164,
+        "response_period_s": 0.9974383059486901,
+        "draft_error": -0.0032936090482243996,
+        "gauges_excluded_x": [],
+        "steady_window": [
+          22.0,
+          30.0
+        ]
+      },
+      {
+        "period_s": 1.5,
+        "wavelength_m": 2.6158421834182937,
+        "lambda_over_beam": 13.079210917091467,
+        "nx": 250,
+        "cells_per_wavelength": 32.69802729272867,
+        "incident_amplitude": 0.01986633457976884,
+        "reflection_kr": 0.17386817053465217,
+        "rao_cfd": 1.0555081934889465,
+        "rao_reference": 1.0867033488856743,
+        "rao_rel_error": 0.02870622919190953,
+        "band": 0.2,
+        "within_band": true,
+        "heave_amplitude": 0.0209690789235388,
+        "response_period_s": 1.4984413575887383,
+        "draft_error": 0.00946554255736587,
+        "gauges_excluded_x": [],
+        "steady_window": [
+          19.0,
+          31.0
+        ]
+      },
+      {
+        "period_s": 3.0,
+        "rao_cfd": 1.017,
+        "rao_reference": 1.0138333955422767,
+        "rao_rel_error": 0.0031233972678809466,
+        "band": 0.2,
+        "within_band": true,
+        "cells_per_wavelength": null,
+        "reused_from": "#1302 (verified)",
+        "heave": null
+      }
+    ]
+  },
+  "convergence": [
+    {
+      "period_s": 0.9,
+      "reference_rao": 2.052891450469233,
+      "resolutions": [
+        {
+          "cells_per_wavelength": 18.05004968474613,
+          "nx": 295,
+          "incident_amplitude": 0.004035190708311037,
+          "rao_cfd": 0.682372078394636,
+          "rao_rel_error": 0.6676044034190579,
+          "within_band": false
+        },
+        {
+          "cells_per_wavelength": 36.038912760391426,
+          "nx": 589,
+          "incident_amplitude": 0.005777780518216474,
+          "rao_cfd": 0.743754019769238,
+          "rao_rel_error": 0.6377041661899674,
+          "within_band": false
+        }
+      ]
+    },
+    {
+      "period_s": 1.0,
+      "reference_rao": 1.5239076455057112,
+      "resolutions": [
+        {
+          "cells_per_wavelength": 18.296683806106845,
+          "nx": 250,
+          "incident_amplitude": 0.01056996764601677,
+          "rao_cfd": 0.9928913106921751,
+          "rao_rel_error": 0.3484570317496619,
+          "within_band": false
+        },
+        {
+          "cells_per_wavelength": 36.00787373041827,
+          "nx": 492,
+          "incident_amplitude": 0.011395343498272977,
+          "rao_cfd": 0.992345452558404,
+          "rao_rel_error": 0.3488152280848407,
+          "within_band": false
+        }
+      ]
+    }
+  ]
+}

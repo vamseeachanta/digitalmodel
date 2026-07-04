@@ -106,7 +106,7 @@ class OrcaflexIterativeRuns:
         iterate_cfg_yml = iterate_cfg["name"]
         if os.path.isfile(iterate_cfg_yml):
             with open(iterate_cfg_yml, "r") as ymlfile:
-                iterative_yml = yaml.load(ymlfile, Loader=yaml.Loader)
+                iterative_yml = yaml.safe_load(ymlfile)
         else:
             data = pkgutil.get_data("digitalmodel", iterate_cfg["name"])
             iterative_yml = yaml.safe_load(data)

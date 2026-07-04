@@ -19,6 +19,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from pydantic import BaseModel, Field
 
+from digitalmodel.materials import legacy_riser_pipe_grades_mpa
+
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -47,13 +49,11 @@ class PipeGrade(str, Enum):
 # Pipe material library
 # ---------------------------------------------------------------------------
 
-PIPE_GRADES: Dict[str, Dict[str, float]] = {
-    "X52": {"smys_mpa": 358, "smts_mpa": 455, "E_gpa": 207, "density_kg_m3": 7850},
-    "X60": {"smys_mpa": 414, "smts_mpa": 517, "E_gpa": 207, "density_kg_m3": 7850},
-    "X65": {"smys_mpa": 448, "smts_mpa": 531, "E_gpa": 207, "density_kg_m3": 7850},
-    "X70": {"smys_mpa": 483, "smts_mpa": 565, "E_gpa": 207, "density_kg_m3": 7850},
-    "X80": {"smys_mpa": 552, "smts_mpa": 621, "E_gpa": 207, "density_kg_m3": 7850},
-}
+# Sourced from the canonical grade matrix (issue #1089). Strengths are the
+# legacy snapshot (X52 SMYS 358 vs canonical ISO 360); E and density come from
+# the canonical record. Preserved verbatim pending the convergence sign-off in
+# docs/domains/grade-table-migration-2026-06-28.md.
+PIPE_GRADES: Dict[str, Dict[str, float]] = legacy_riser_pipe_grades_mpa()
 
 
 # ---------------------------------------------------------------------------

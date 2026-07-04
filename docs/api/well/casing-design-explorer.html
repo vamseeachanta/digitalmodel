@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casing design explorer — digitalmodel</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<style>
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
+        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;
+        --ok:#1f9d57;--bad:#b91c1c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+       color:var(--ink);line-height:1.5;padding:26px 22px 60px}
+  main{max-width:1160px;margin:0 auto}
+  a{color:var(--navy)}
+  h1{font-size:26px;color:var(--navy);letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:14.5px;margin:8px 0 4px;max-width:900px}
+  .crumb{font-size:12.5px;margin-bottom:14px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 16px}
+  .tab{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink);
+       background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:8px 13px;cursor:pointer}
+  .tab:hover{border-color:var(--teal)}
+  .tab.active{color:#fff;background:linear-gradient(135deg,var(--teal),var(--navy));border-color:transparent}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .tab.active .dot{outline:2px solid rgba(255,255,255,.7)}
+  .layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:18px}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
+  #chart{width:100%;height:470px}
+  .verdict{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:#fff;
+        border-radius:9px;padding:5px 11px}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+  @media(max-width:520px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  .m{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .m .v{font-size:16px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+  .m .l{font-size:10.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);
+        border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{background:var(--soft);color:var(--muted);font-weight:700;font-size:11px;
+     text-transform:uppercase;letter-spacing:.4px}
+  tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .pass{color:var(--ok);font-weight:700}
+  .fail{color:var(--bad);font-weight:700}
+  .tablewrap{overflow-x:auto;margin-top:26px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .worked{background:var(--soft);border:1px solid var(--line);border-radius:10px;
+          padding:11px 13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+          font-size:12.5px;line-height:1.7;margin-top:8px}
+  .facts li{font-size:13px;list-style:none;position:relative;padding:5px 0 5px 22px;
+            border-bottom:1px solid var(--line)}
+  .facts li:last-child{border-bottom:none}
+  .facts li:before{content:"";position:absolute;left:3px;top:12px;width:8px;height:8px;
+                   border-radius:50%;background:var(--teal)}
+  .prov{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:15px 18px;font-size:12.5px;color:var(--muted)}
+  .prov b{color:var(--ink)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);
+       border:1px solid var(--line);padding:1px 5px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../capabilities/">&larr; digitalmodel capabilities</a></div>
+  <h1>Casing design explorer</h1>
+  <p class="sub">Production-casing design study on a reference frac'd well — TD 12,000 ft TVD, 10.0 ppg mud,
+  TOC 4,000 ft, outer shoe 8,000 ft, reservoir 8,500 psi, 9.0 ppg packer fluid, 9,000 psi frac surface
+  pressure on 8.6 ppg fluid. Eight candidate API 5CT products are checked for burst (tubing leak + frac
+  screen-out), full-evacuation collapse, buoyed-weight tension and Von Mises triaxial against the published
+  operator design-factor minimums. Ratings per API 5C3; sour-service screen per NACE MR0175.
+  Source: Hansen (Devon Energy), EPA Hydraulic Fracturing Technical Workshop — Session 2: Well Design, 2011.</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Pressure vs depth — load cases &amp; burst rating</h2>
+      <div id="chart"></div>
+    </div>
+    <div class="panel">
+      <h2>Design-factor verdict</h2>
+      <div id="verdict"></div>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Product</th><th>Verdict</th><th>Burst</th><th>Collapse (regime)</th>
+        <th>Body yield</th><th>DF burst</th><th>DF collapse</th><th>DF tension</th>
+        <th>DF triaxial</th><th>Max frac P<sub>surf</sub> @ DF 1.25</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>Golden worked example — Barlow burst, 5-1/2&quot; 23# P110</h2>
+      <p style="font-size:13px">API 5C3 internal yield with the 0.875 factor covering the 12.5%
+      wall tolerance:</p>
+      <div class="worked" id="barlow"></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Pressure ratings round to the nearest
+      10 psi and axial ratings to the nearest 1,000 lbf (API published-rating convention).</p>
+    </div>
+    <div class="panel">
+      <h2>Design-factor minimums (DF = rating / load)</h2>
+      <table id="dftable"></table>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px">Published operator practice from the
+      source presentation; every minimum is configurable in
+      <code>DesignFactors</code>. This well's SICP is <span id="sitp"></span> psi, so the full
+      burst minimum applies.</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>Sour-service screen — NACE MR0175 / ISO 15156</h2>
+      <p style="font-size:13px">Sour service requires H<sub>2</sub>S partial pressure &gt;
+      <b id="th-pp"></b> psia <i>and</i> total pressure &gt; <b id="th-gas"></b> psia (gas well) /
+      <b id="th-oil"></b> psia (oil well).</p>
+      <div class="worked" id="sour-example"></div>
+      <table id="nacetable" style="margin-top:12px"></table>
+    </div>
+    <div class="panel">
+      <h2>Connection classes — tension efficiency vs pipe body</h2>
+      <table id="conntable"></table>
+      <ul class="facts" id="connfacts" style="margin-top:12px"></ul>
+    </div>
+  </div>
+
+  <div class="prov">
+    <b>Provenance.</b> Ratings, load profiles and design factors are produced by
+    <code>digitalmodel.well.tubulars.casing</code> (API 5C3 / API 5CT product catalog) and
+    <code>digitalmodel.well.tubulars.casing_design</code> (load cases, design factors, frac allowable,
+    NACE sour screen, connections) and frozen by
+    <code>scripts/capabilities/build_casing_design_explorer.py</code>; a CI test re-runs every product
+    through the live checks so a published margin cannot silently drift. This page's JavaScript only reads
+    the frozen JSON — no physics is re-implemented client-side. Design-factor minimums, the Barlow worked
+    example, the NACE thresholds / grade windows and the connection-class facts follow
+    <b>Hansen (Devon Energy), EPA Hydraulic Fracturing Technical Workshop — Session 2: Well Design, 2011</b>; rating formulas per <b>API 5C3 / API 5CT</b>; sour limits per
+    <b>NACE MR0175 / ISO 15156</b>.
+    Source: <a href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/well/tubulars">well/tubulars module</a> ·
+    data: <a href="casing-design-explorer.json">frozen JSON</a>.
+  </div>
+</main>
+
+<script id="case-data" type="application/json">{"source":"Hansen (Devon Energy), EPA Hydraulic Fracturing Technical Workshop \u2014 Session 2: Well Design, 2011","standards":"API 5C3 \u00b7 API 5CT \u00b7 NACE MR0175","well":{"td_ft":12000.0,"mud_ppg":10.0,"toc_ft":4000.0,"outer_shoe_ft":8000.0,"reservoir_pressure_psi":8500.0,"packer_fluid_ppg":9.0,"frac_surface_pressure_psi":9000.0,"frac_fluid_ppg":8.6},"sitp_psi":7300.0,"design_factors":{"burst":1.25,"burst_low_sicp":1.1,"sicp_threshold_psi":5000.0,"collapse":1.1,"tension":1.4,"compression":1.2,"triaxial":1.25},"frac_allowable_df":1.25,"profiles":{"depth_ft":[0.0,200.0,400.0,600.0,800.0,1000.0,1200.0,1400.0,1600.0,1800.0,2000.0,2200.0,2400.0,2600.0,2800.0,3000.0,3200.0,3400.0,3600.0,3800.0,4000.0,4200.0,4400.0,4600.0,4800.0,5000.0,5200.0,5400.0,5600.0,5800.0,6000.0,6200.0,6400.0,6600.0,6800.0,7000.0,7200.0,7400.0,7600.0,7800.0,8000.0,8200.0,8400.0,8600.0,8800.0,9000.0,9200.0,9400.0,9600.0,9800.0,10000.0,10200.0,10400.0,10600.0,10800.0,11000.0,11200.0,11400.0,11600.0,11800.0,12000.0],"tubing_leak_internal_psi":[7300.0,7393.6,7487.2,7580.8,7674.4,7768.0,7861.6,7955.2,8048.8,8142.4,8236.0,8329.6,8423.2,8516.8,8610.4,8704.0,8797.6,8891.2,8984.8,9078.4,9172.0,9265.6,9359.2,9452.8,9546.4,9640.0,9733.6,9827.2,9920.8,10014.4,10108.0,10201.6,10295.2,10388.8,10482.4,10576.0,10669.6,10763.2,10856.8,10950.4,11044.0,11137.6,11231.2,11324.8,11418.4,11512.0,11605.6,11699.2,11792.8,11886.4,11980.0,12073.6,12167.2,12260.8,12354.4,12448.0,12541.6,12635.2,12728.8,12822.4,12916.0],"frac_internal_psi":[9000.0,9089.4,9178.9,9268.3,9357.8,9447.2,9536.6,9626.1,9715.5,9805.0,9894.4,9983.8,10073.3,10162.7,10252.2,10341.6,10431.0,10520.5,10609.9,10699.4,10788.8,10878.2,10967.7,11057.1,11146.6,11236.0,11325.4,11414.9,11504.3,11593.8,11683.2,11772.6,11862.1,11951.5,12041.0,12130.4,12219.8,12309.3,12398.7,12488.2,12577.6,12667.0,12756.5,12845.9,12935.4,13024.8,13114.2,13203.7,13293.1,13382.6,13472.0,13561.4,13650.9,13740.3,13829.8,13919.2,14008.6,14098.1,14187.5,14277.0,14366.4],"external_psi":[0.0,104.0,208.0,312.0,416.0,520.0,624.0,728.0,832.0,936.0,1040.0,1144.0,1248.0,1352.0,1456.0,1560.0,1664.0,1768.0,1872.0,1976.0,2080.0,2167.4,2254.7,2342.1,2429.4,2516.8,2604.2,2691.5,2778.9,2866.2,2953.6,3041.0,3128.3,3215.7,3303.0,3390.4,3477.8,3565.1,3652.5,3739.8,3827.2,3914.6,4001.9,4089.3,4176.6,4264.0,4351.4,4438.7,4526.1,4613.4,4700.8,4788.2,4875.5,4962.9,5050.2,5137.6,5225.0,5312.3,5399.7,5487.0,5574.4],"tubing_leak_net_psi":[7300.0,7289.6,7279.2,7268.8,7258.4,7248.0,7237.6,7227.2,7216.8,7206.4,7196.0,7185.6,7175.2,7164.8,7154.4,7144.0,7133.6,7123.2,7112.8,7102.4,7092.0,7098.2,7104.5,7110.7,7117.0,7123.2,7129.4,7135.7,7141.9,7148.2,7154.4,7160.6,7166.9,7173.1,7179.4,7185.6,7191.8,7198.1,7204.3,7210.6,7216.8,7223.0,7229.3,7235.5,7241.8,7248.0,7254.2,7260.5,7266.7,7273.0,7279.2,7285.4,7291.7,7297.9,7304.2,7310.4,7316.6,7322.9,7329.1,7335.4,7341.6],"frac_net_psi":[9000.0,8985.4,8970.9,8956.3,8941.8,8927.2,8912.6,8898.1,8883.5,8869.0,8854.4,8839.8,8825.3,8810.7,8796.2,8781.6,8767.0,8752.5,8737.9,8723.4,8708.8,8710.9,8713.0,8715.0,8717.1,8719.2,8721.3,8723.4,8725.4,8727.5,8729.6,8731.7,8733.8,8735.8,8737.9,8740.0,8742.1,8744.2,8746.2,8748.3,8750.4,8752.5,8754.6,8756.6,8758.7,8760.8,8762.9,8765.0,8767.0,8769.1,8771.2,8773.3,8775.4,8777.4,8779.5,8781.6,8783.7,8785.8,8787.8,8789.9,8792.0]},"products":[{"label":"5-1/2\" 14# J55","grade":"J55","od_in":5.5,"weight_ppf":14.0,"wall_in":0.244,"id_in":5.012,"d_over_t":22.54,"ratings":{"burst_psi":4270.0,"collapse_psi":3120.0,"body_yield_lbf":222000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":4270.0,"max_load":9000.0,"min_design_factor":0.4744,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":false},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":3120.0,"max_load":6240.0,"min_design_factor":0.5,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":false},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":222000.0,"max_load":142311.9,"min_design_factor":1.56,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":55000.0,"max_load":79072.6,"min_design_factor":0.6956,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":false}},"passes_all":false,"max_frac_surface_pressure_psi":3416.0},{"label":"5-1/2\" 17# N80","grade":"N80","od_in":5.5,"weight_ppf":17.0,"wall_in":0.304,"id_in":4.892,"d_over_t":18.09,"ratings":{"burst_psi":7740.0,"collapse_psi":6290.0,"body_yield_lbf":397000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":7740.0,"max_load":9000.0,"min_design_factor":0.86,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":false},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":6290.0,"max_load":6240.0,"min_design_factor":1.008,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":false},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":397000.0,"max_load":172807.3,"min_design_factor":2.2974,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":80000.0,"max_load":62741.7,"min_design_factor":1.2751,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":false,"max_frac_surface_pressure_psi":6192.0},{"label":"5-1/2\" 17# P110","grade":"P110","od_in":5.5,"weight_ppf":17.0,"wall_in":0.304,"id_in":4.892,"d_over_t":18.09,"ratings":{"burst_psi":10640.0,"collapse_psi":7480.0,"body_yield_lbf":546000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":10640.0,"max_load":9000.0,"min_design_factor":1.1822,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":false},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":7480.0,"max_load":6240.0,"min_design_factor":1.1987,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":true},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":546000.0,"max_load":172807.3,"min_design_factor":3.1596,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":110000.0,"max_load":62741.7,"min_design_factor":1.7532,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":false,"max_frac_surface_pressure_psi":8512.0},{"label":"5-1/2\" 20# N80","grade":"N80","od_in":5.5,"weight_ppf":20.0,"wall_in":0.361,"id_in":4.778,"d_over_t":15.24,"ratings":{"burst_psi":9190.0,"collapse_psi":8830.0,"body_yield_lbf":466000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":9190.0,"max_load":9000.0,"min_design_factor":1.0211,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":false},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":8830.0,"max_load":6240.0,"min_design_factor":1.4151,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":true},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":466000.0,"max_load":203302.8,"min_design_factor":2.2921,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":80000.0,"max_load":52255.5,"min_design_factor":1.5309,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":false,"max_frac_surface_pressure_psi":7352.0},{"label":"5-1/2\" 20# P110","grade":"P110","od_in":5.5,"weight_ppf":20.0,"wall_in":0.361,"id_in":4.778,"d_over_t":15.24,"ratings":{"burst_psi":12640.0,"collapse_psi":11100.0,"body_yield_lbf":641000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":12640.0,"max_load":9000.0,"min_design_factor":1.4044,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":true},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":11100.0,"max_load":6240.0,"min_design_factor":1.7788,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":true},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":641000.0,"max_load":203302.8,"min_design_factor":3.1529,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":110000.0,"max_load":52255.5,"min_design_factor":2.105,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":true,"max_frac_surface_pressure_psi":10112.0},{"label":"5-1/2\" 23# P110","grade":"P110","od_in":5.5,"weight_ppf":23.0,"wall_in":0.415,"id_in":4.67,"d_over_t":13.25,"ratings":{"burst_psi":14520.0,"collapse_psi":14540.0,"body_yield_lbf":729000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":14520.0,"max_load":9000.0,"min_design_factor":1.6133,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":true},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":14540.0,"max_load":6240.0,"min_design_factor":2.3301,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":true},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":729000.0,"max_load":233798.2,"min_design_factor":3.1181,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":110000.0,"max_load":44978.4,"min_design_factor":2.4456,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":true,"max_frac_surface_pressure_psi":11616.0},{"label":"5-1/2\" 23# Q125","grade":"Q125","od_in":5.5,"weight_ppf":23.0,"wall_in":0.415,"id_in":4.67,"d_over_t":13.25,"ratings":{"burst_psi":16510.0,"collapse_psi":16060.0,"body_yield_lbf":829000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":16510.0,"max_load":9000.0,"min_design_factor":1.8344,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":true},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":16060.0,"max_load":6240.0,"min_design_factor":2.5737,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":true},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":829000.0,"max_load":233798.2,"min_design_factor":3.5458,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":125000.0,"max_load":44978.4,"min_design_factor":2.7791,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":true,"max_frac_surface_pressure_psi":13208.0},{"label":"7\" 26# P110","grade":"P110","od_in":7.0,"weight_ppf":26.0,"wall_in":0.362,"id_in":6.276,"d_over_t":19.34,"ratings":{"burst_psi":9960.0,"collapse_psi":6230.0,"body_yield_lbf":830000.0,"collapse_regime":"plastic"},"checks":{"burst":{"mode":"burst","load_case":"injection down casing (screen-out)","rating":9960.0,"max_load":9000.0,"min_design_factor":1.1067,"governing_depth_ft":0.0,"required_design_factor":1.25,"passes":false},"collapse":{"mode":"collapse","load_case":"mud to surface","rating":6230.0,"max_load":6240.0,"min_design_factor":0.9984,"governing_depth_ft":12000.0,"required_design_factor":1.1,"passes":false},"tension":{"mode":"tension","load_case":"buoyed weight + adders","rating":830000.0,"max_load":264293.6,"min_design_factor":3.1404,"governing_depth_ft":0.0,"required_design_factor":1.4,"passes":true},"triaxial":{"mode":"triaxial","load_case":"tubing leak (SITP on packer fluid)","rating":110000.0,"max_load":67311.5,"min_design_factor":1.6342,"governing_depth_ft":12000.0,"required_design_factor":1.25,"passes":true}},"passes_all":false,"max_frac_surface_pressure_psi":7968.0}],"barlow":{"label":"5-1/2\" 23# P110","od_in":5.5,"wall_in":0.415,"min_yield_psi":110000,"raw_psi":14525.0,"rounded_psi":14520.0},"sour":{"thresholds":{"h2s_partial_psia":0.05,"total_pressure_gas_psia":65.0,"total_pressure_oil_psia":265.0},"min_service_temp_f":{"C90":0.0,"C95":150.0,"H40":0.0,"J55":0.0,"K55":0.0,"L80":0.0,"M65":0.0,"N80":175.0,"N80Q":150.0,"P110":175.0,"Q125":225.0,"T95":0.0},"example":{"h2s_ppm":100.0,"total_pressure_psia":10000.0,"well_type":"gas","h2s_partial_psia":1.0,"is_sour":true,"acceptable_grades":["C90","H40","J55","K55","L80","M65","T95"]}},"connections":[{"name":"STC","full_name":"API short thread & coupled","threads_per_inch":8,"tension_efficiency":[0.6,0.8],"strength_basis":"ultimate","notes":"8 round threads/in, rounded crests and roots."},{"name":"LTC","full_name":"API long thread & coupled","threads_per_inch":8,"tension_efficiency":[0.7,0.9],"strength_basis":"ultimate","notes":"Longer thread section than STC \u2014 better sealability and tensile strength."},{"name":"BTC","full_name":"API buttress thread & coupled","threads_per_inch":5,"tension_efficiency":[0.85,1.0],"strength_basis":"ultimate","notes":"5 threads/in; asymmetric load and stab flanks."},{"name":"MTC","full_name":"Metal-to-metal seal thread & coupled (premium)","threads_per_inch":null,"tension_efficiency":[1.0,1.0],"strength_basis":"yield","notes":"Burst, collapse and tension ratings generally equal the pipe body."},{"name":"IJ","full_name":"Integral joint (premium)","threads_per_inch":null,"tension_efficiency":[0.7,0.8],"strength_basis":"yield","notes":"Half the leak paths of T&C; smaller connection OD; metal seal."},{"name":"FJ","full_name":"Flush joint (premium)","threads_per_inch":null,"tension_efficiency":[0.45,0.6],"strength_basis":"yield","notes":"Connection OD within ~2% of the pipe body; lowest joint strength."}],"connection_facts":["Connections are less than 3% of the string length","\u2026but account for more than 90% of pipe failures","\u2026and 10\u201350% of the tubular cost","API connection ratings (STC / LTC / BTC) are ultimate-strength based; premium connection ratings are yield based \u2014 not directly comparable"]}</script>
+<script>
+(function(){
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("case-data").textContent);
+  var P = DATA.products, PR = DATA.profiles;
+  var MODES = ["burst", "collapse", "tension", "triaxial"];
+  var active = 0;
+
+  function fmt(n, dp){
+    n = Number(n);
+    return n.toLocaleString("en-US", {minimumFractionDigits: dp || 0,
+                                      maximumFractionDigits: dp || 0});
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(ch){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch];
+    });
+  }
+  function verdictHtml(ok){
+    return ok ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
+  }
+
+  // ---- chart (Plotly; traces come straight from the frozen profiles) ----
+  function ratingTrace(p){
+    return {
+      x: [p.ratings.burst_psi, p.ratings.burst_psi],
+      y: [PR.depth_ft[0], PR.depth_ft[PR.depth_ft.length - 1]],
+      mode: "lines", name: "Burst rating " + p.label,
+      line: {color: "#b91c1c", width: 2.5, dash: "dash"},
+      hovertemplate: "burst rating %{x:,.0f} psi<extra></extra>"
+    };
+  }
+  function drawChart(idx){
+    var p = P[idx];
+    var traces = [
+      {x: PR.tubing_leak_internal_psi, y: PR.depth_ft, mode: "lines",
+       name: "Internal — tubing leak", line: {color: "#2563C4", width: 2.5},
+       hovertemplate: "%{x:,.0f} psi @ %{y:,.0f} ft<extra>tubing leak internal</extra>"},
+      {x: PR.frac_internal_psi, y: PR.depth_ft, mode: "lines",
+       name: "Internal — frac screen-out", line: {color: "#7c3aed", width: 2.5},
+       hovertemplate: "%{x:,.0f} psi @ %{y:,.0f} ft<extra>frac internal</extra>"},
+      {x: PR.external_psi, y: PR.depth_ft, mode: "lines",
+       name: "External backup", line: {color: "#0B8F80", width: 2},
+       hovertemplate: "%{x:,.0f} psi @ %{y:,.0f} ft<extra>external</extra>"},
+      {x: PR.tubing_leak_net_psi, y: PR.depth_ft, mode: "lines",
+       name: "Net — tubing leak", line: {color: "#2563C4", width: 1.5, dash: "dot"},
+       hovertemplate: "%{x:,.0f} psi @ %{y:,.0f} ft<extra>tubing leak net</extra>"},
+      {x: PR.frac_net_psi, y: PR.depth_ft, mode: "lines",
+       name: "Net — frac screen-out", line: {color: "#7c3aed", width: 1.5, dash: "dot"},
+       hovertemplate: "%{x:,.0f} psi @ %{y:,.0f} ft<extra>frac net</extra>"},
+      ratingTrace(p)
+    ];
+    var layout = {
+      margin: {t: 8, r: 14, b: 46, l: 64},
+      xaxis: {title: {text: "Pressure (psi)", font: {size: 12}}, gridcolor: "#e5ecf6",
+              zerolinecolor: "#c9d6e8", tickformat: ",.0f"},
+      yaxis: {title: {text: "Depth (ft TVD)", font: {size: 12}}, autorange: "reversed",
+              gridcolor: "#e5ecf6", tickformat: ",.0f"},
+      legend: {orientation: "h", y: -0.16, font: {size: 11}},
+      paper_bgcolor: "#ffffff", plot_bgcolor: "#ffffff",
+      font: {family: '-apple-system,"Segoe UI",Roboto,Arial,sans-serif', color: "#13233f"}
+    };
+    Plotly.react("chart", traces, layout,
+                 {displayModeBar: false, responsive: true});
+  }
+
+  // ---- verdict panel ----
+  function drawVerdict(idx){
+    var p = P[idx];
+    var rows = MODES.map(function(m){
+      var c = p.checks[m];
+      return "<tr><td>" + esc(m) + "</td>" +
+        '<td class="num">' + fmt(c.rating) + (m === "tension" ? " lbf" :
+          m === "triaxial" ? " psi" : " psi") + "</td>" +
+        '<td class="num">' + fmt(c.max_load) + "</td>" +
+        '<td class="num">' + c.min_design_factor.toFixed(3) + "</td>" +
+        '<td class="num">' + fmt(c.governing_depth_ft) + " ft</td>" +
+        '<td class="num">' + c.required_design_factor.toFixed(2) + "</td>" +
+        "<td>" + verdictHtml(c.passes) + "</td></tr>";
+    }).join("");
+    document.getElementById("verdict").innerHTML =
+      '<div class="verdict"><span class="chip" style="background:' +
+        (p.passes_all ? "var(--ok)" : "var(--bad)") + '">' +
+        (p.passes_all ? "\u2713 PASSES ALL MODES" : "\u2715 FAILS") + "</span>" +
+        "<b>" + esc(p.label) + "</b></div>" +
+      '<div class="metrics">' +
+        '<div class="m"><div class="v">' + fmt(p.ratings.burst_psi) + '</div><div class="l">Burst (psi)</div></div>' +
+        '<div class="m"><div class="v">' + fmt(p.ratings.collapse_psi) + '</div><div class="l">Collapse (psi, ' + esc(p.ratings.collapse_regime) + ')</div></div>' +
+        '<div class="m"><div class="v">' + fmt(p.ratings.body_yield_lbf) + '</div><div class="l">Body yield (lbf)</div></div>' +
+        '<div class="m"><div class="v">' + p.id_in.toFixed(3) + '"</div><div class="l">ID</div></div>' +
+        '<div class="m"><div class="v">' + p.d_over_t.toFixed(2) + '</div><div class="l">D/t</div></div>' +
+        '<div class="m"><div class="v">' + fmt(p.max_frac_surface_pressure_psi) + '</div><div class="l">Max frac P (psi) @ DF ' + DATA.frac_allowable_df.toFixed(2) + '</div></div>' +
+      "</div>" +
+      "<table><thead><tr><th>Mode</th><th>Rating</th><th>Max load</th><th>Min DF</th>" +
+      "<th>Governing depth</th><th>Req'd</th><th></th></tr></thead><tbody>" + rows +
+      "</tbody></table>" +
+      '<p style="font-size:12px;color:var(--muted);margin-top:8px">Governing burst case: ' +
+      esc(p.checks.burst.load_case) + ". Collapse assumes full evacuation against a " +
+      DATA.well.mud_ppg.toFixed(1) + " ppg external column.</p>";
+  }
+
+  function select(idx){
+    active = idx;
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t, i){
+      t.classList.toggle("active", i === idx);
+    });
+    drawChart(idx); drawVerdict(idx);
+  }
+
+  // ---- tabs ----
+  var tabs = document.getElementById("tabs");
+  P.forEach(function(p, i){
+    var b = document.createElement("button");
+    b.className = "tab"; b.type = "button";
+    b.innerHTML = '<span class="dot" style="background:' +
+      (p.passes_all ? "var(--ok)" : "var(--bad)") + '"></span>' + esc(p.label);
+    b.addEventListener("click", function(){ select(i); });
+    tabs.appendChild(b);
+  });
+
+  // ---- summary table ----
+  var tbody = document.getElementById("tbody");
+  P.forEach(function(p, i){
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td><a href=\"#\" data-i=\"" + i + "\">" + esc(p.label) + "</a></td>" +
+      "<td>" + verdictHtml(p.passes_all) + "</td>" +
+      '<td class="num">' + fmt(p.ratings.burst_psi) + " psi</td>" +
+      '<td class="num">' + fmt(p.ratings.collapse_psi) + " psi (" + esc(p.ratings.collapse_regime) + ")</td>" +
+      '<td class="num">' + fmt(p.ratings.body_yield_lbf) + " lbf</td>" +
+      MODES.map(function(m){
+        var c = p.checks[m];
+        return '<td class="num ' + (c.passes ? "pass" : "fail") + '">' +
+               c.min_design_factor.toFixed(2) + "</td>";
+      }).join("") +
+      '<td class="num">' + fmt(p.max_frac_surface_pressure_psi) + " psi</td>";
+    tr.querySelector("a").addEventListener("click", function(ev){
+      ev.preventDefault(); select(i); window.scrollTo({top: 0, behavior: "smooth"});
+    });
+    tbody.appendChild(tr);
+  });
+
+  // ---- Barlow worked example ----
+  var B = DATA.barlow;
+  document.getElementById("barlow").innerHTML =
+    "P<sub>iy</sub> = 0.875 &times; 2 &times; Y<sub>p</sub> &times; t / D<br>" +
+    "&nbsp;&nbsp;&nbsp;&nbsp;= 0.875 &times; 2 &times; " + fmt(B.min_yield_psi) +
+    " &times; " + B.wall_in.toFixed(3) + " / " + B.od_in.toFixed(1) + "<br>" +
+    "&nbsp;&nbsp;&nbsp;&nbsp;= " + fmt(B.raw_psi) +
+    " psi &nbsp;&rarr;&nbsp; <b>" + fmt(B.rounded_psi) +
+    " psi</b> (API rounding to the nearest 10 psi)";
+
+  // ---- design-factor minimums ----
+  var DF = DATA.design_factors;
+  document.getElementById("dftable").innerHTML =
+    "<thead><tr><th>Mode</th><th>Minimum DF</th></tr></thead><tbody>" +
+    '<tr><td>Burst</td><td class="num">' + DF.burst.toFixed(2) + "</td></tr>" +
+    '<tr><td>Burst (SICP &lt; ' + fmt(DF.sicp_threshold_psi) + ' psi)</td><td class="num">' +
+      DF.burst_low_sicp.toFixed(2) + "</td></tr>" +
+    '<tr><td>Collapse</td><td class="num">' + DF.collapse.toFixed(2) + "</td></tr>" +
+    '<tr><td>Tension (on yield)</td><td class="num">' + DF.tension.toFixed(2) + "</td></tr>" +
+    '<tr><td>Compression</td><td class="num">' + DF.compression.toFixed(2) + "</td></tr>" +
+    '<tr><td>Triaxial (Von Mises)</td><td class="num">' + DF.triaxial.toFixed(2) + "</td></tr>" +
+    "</tbody>";
+  document.getElementById("sitp").textContent = fmt(DATA.sitp_psi);
+
+  // ---- NACE sour panel ----
+  var S = DATA.sour;
+  document.getElementById("th-pp").textContent = S.thresholds.h2s_partial_psia;
+  document.getElementById("th-gas").textContent = fmt(S.thresholds.total_pressure_gas_psia);
+  document.getElementById("th-oil").textContent = fmt(S.thresholds.total_pressure_oil_psia);
+  var E = S.example;
+  document.getElementById("sour-example").innerHTML =
+    "Example: " + fmt(E.h2s_ppm) + " ppm H<sub>2</sub>S at " + fmt(E.total_pressure_psia) +
+    " psia (" + esc(E.well_type) + " well)<br>" +
+    "p<sub>H2S</sub> = " + fmt(E.h2s_ppm) + " &times; " + fmt(E.total_pressure_psia) +
+    " / 10<sup>6</sup> = " + E.h2s_partial_psia.toFixed(1) + " psia &gt; " +
+    S.thresholds.h2s_partial_psia + " psia &rarr; <b>" +
+    (E.is_sour ? "SOUR" : "not sour") + "</b><br>" +
+    "SSC-acceptable grades (all temperatures): " + E.acceptable_grades.join(", ");
+  var naceRows = Object.keys(S.min_service_temp_f).map(function(g){
+    var t = S.min_service_temp_f[g];
+    return "<tr><td>" + esc(g) + '</td><td class="num">' +
+      (t === 0 ? "all temperatures" : "&ge; " + fmt(t) + " &deg;F") + "</td></tr>";
+  }).join("");
+  document.getElementById("nacetable").innerHTML =
+    "<thead><tr><th>Grade</th><th>SSC-acceptable service temperature (NACE MR0175 Table A.3)</th></tr></thead>" +
+    "<tbody>" + naceRows + "</tbody>";
+
+  // ---- connections ----
+  var connRows = DATA.connections.map(function(c){
+    return "<tr><td><b>" + esc(c.name) + "</b> — " + esc(c.full_name) + "</td>" +
+      '<td class="num">' + (c.threads_per_inch === null ? "—" : c.threads_per_inch) + "</td>" +
+      '<td class="num">' + Math.round(c.tension_efficiency[0] * 100) + "–" +
+        Math.round(c.tension_efficiency[1] * 100) + "%</td>" +
+      "<td>" + esc(c.strength_basis) + "</td></tr>";
+  }).join("");
+  document.getElementById("conntable").innerHTML =
+    "<thead><tr><th>Connection</th><th>Threads/in</th><th>Tension efficiency</th>" +
+    "<th>Rating basis</th></tr></thead><tbody>" + connRows + "</tbody>";
+  document.getElementById("connfacts").innerHTML =
+    DATA.connection_facts.map(function(f){ return "<li>" + esc(f) + "</li>"; }).join("");
+
+  select(5); // open on the worked-example product, 5-1/2" 23# P110
+})();
+</script>
+</body>
+</html>

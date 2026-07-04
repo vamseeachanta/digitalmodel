@@ -1,0 +1,57 @@
+# OrcaWave control-surface use-case template (issue #953, epic #942/#938).
+#
+# Exercises irregular_frequency_method = control_surface: the body carries a
+# control-surface mesh, so OrcaWave removes irregular frequencies via the
+# control surface (BodyAddInteriorSurfacePanels: No +
+# BodyControlSurfaceMeshFileName). Self-contained: reuses the committed unit
+# box for the hull and a copy of it as the control-surface mesh so the spec
+# converts offline (no OrcaWave license).
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBoxControlSurface"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  control_surface:
+    type: mesh
+    mesh_file: "control_surface.gdf"
+  inertia:
+    mass: 1025.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  solve_type: potential_and_source
+  irregular_frequency_method: control_surface
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+
+metadata:
+  project: "orcawave_gap_specs"
+  author: "digitalmodel"
+  description: "Control-surface irregular-frequency-removal unit-box template (issue #953)"
+  tags: [example, orcawave, control_surface, irregular_frequency, "issue-953"]

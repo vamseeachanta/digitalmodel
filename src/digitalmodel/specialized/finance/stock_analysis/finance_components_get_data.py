@@ -188,7 +188,12 @@ class FinanceGetData():
     def get_data_from_iex(self):
         days_rolling_array = self.days_rolling_array
         import os
-        os.environ["IEX_API_KEY"] = self.cfg.default['data_sources']['iex']['api_key']
+        # SECURITY: do not stamp the API key into the global process
+        # environment (it would leak to child processes and /proc/<pid>/environ).
+        # Prefer an externally-provided IEX_API_KEY; fall back to config, and
+        # pass the key directly to pandas_datareader.
+        iex_api_key = os.environ.get("IEX_API_KEY") or self.cfg.default[
+            'data_sources']['iex']['api_key']
         # {'tiingo': {'flag': None}}
         from datetime import datetime, timedelta
 
@@ -199,7 +204,8 @@ class FinanceGetData():
         self.stock_data_array = []
         for stock_info in self.cfg.stocks:
             stock_ticker = stock_info['ticker']
-            df = web.DataReader(stock_ticker, 'iex', start_date, end_date)
+            df = web.DataReader(stock_ticker, 'iex', start_date, end_date,
+                                api_key=iex_api_key)
             df['date'] = [index_value for index_value in df.index]
             for days_rolling in days_rolling_array:
                 df[str(days_rolling) + '_day_rolling'] = df.close.rolling(window=days_rolling).mean()

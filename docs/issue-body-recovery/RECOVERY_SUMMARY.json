@@ -1,0 +1,65 @@
+[
+  {
+    "issue": 13,
+    "title": "OrcaFlex | Installation | Modal Analysis",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-13.md",
+    "note": "recovered from revision edited 2024-12-29T13:12:30Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 17,
+    "title": "code_dnvrph103 | discretized model at an angle",
+    "recovered": false,
+    "note": "no edit history available",
+    "live_clobbered": false
+  },
+  {
+    "issue": 18,
+    "title": "OrcaFlex | SeastateRAOs | Filtering for analysis",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-18.md",
+    "note": "recovered from revision edited 2024-12-29T13:19:07Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 19,
+    "title": "OrcaFlex | Postprocess | Visualizations | For a/ QA and b/ Report",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-19.md",
+    "note": "recovered from revision edited 2024-12-29T12:55:01Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 20,
+    "title": "code_dnvrph103 | If CoV is same as CoG, leave it null",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-20.md",
+    "note": "recovered from revision edited 2024-12-29T12:48:54Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 23,
+    "title": "dnvrph103 | Create common functions from rectangular and circular files",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-23.md",
+    "note": "recovered from revision edited 2023-11-05T18:10:41Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 28,
+    "title": "engg debt | Fatigue | ship design | spectral-based fatigue analysis",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-28.md",
+    "note": "recovered from revision edited 2023-12-08T15:59:50Z",
+    "live_clobbered": true
+  },
+  {
+    "issue": 29,
+    "title": "engg debt | fatigue | SN Curve module",
+    "recovered": true,
+    "file": "docs/issue-body-recovery/issue-29.md",
+    "note": "recovered from revision edited 2023-12-08T16:12:41Z",
+    "live_clobbered": true
+  }
+]

@@ -597,8 +597,8 @@ class TestCatenaryRiserSummary:
         # Use relative path from test file location
         test_dir = os.path.dirname(os.path.abspath(__file__))
         source_file = os.path.join(
-            test_dir, '..', 'src', 'digitalmodel', 'modules', 'catenary',
-            'catenary_riser_summary.py'
+            test_dir, '..', 'src', 'digitalmodel', 'subsea', 'catenary_riser',
+            'legacy', 'catenary_riser_summary.py'
         )
         source_file = os.path.normpath(source_file)
 

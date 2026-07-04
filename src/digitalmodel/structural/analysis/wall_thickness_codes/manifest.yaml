@@ -29,3 +29,11 @@ functions:
     description: "Propagation buckling check"
     inputs: [PipeGeometry, PipeMaterial, DesignLoads]
     outputs: [utilisation, details]
+  - name: DnvStF201Strategy.run_checks
+    standard: "DNV-ST-F201 (Dynamic risers, 2021)"
+    clause: "Sec. 5 (Bursting / pressure containment)"
+    equation: "(gamma_dyn*(p_li-p_e)) <= p_b(t1)/(gamma_m*gamma_SC); p_b=(2t/(D-t))*(2/sqrt3)*min(SMYS*alpha_U, SMTS*alpha_U/1.15)"
+    description: "Dynamic-riser LRFD pressure-containment (burst) limit state"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads, DesignFactors]
+    outputs: [Dict of utilisation results]
+    assumed_factors: "alpha_U=0.96, gamma_m=1.15, gamma_dyn=1.0, gamma_SC={low:1.046, normal:1.138, high:1.308} (all overridable)"

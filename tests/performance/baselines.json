@@ -28,5 +28,10 @@
     "max_time_ms": 20.0,
     "max_memory_mb": 75.0,
     "target_throughput": 5000.0
+  },
+  "dummy_calculation": {
+    "mean": 7.039627991616725e-05,
+    "p95": 8.397083729505539e-05,
+    "timestamp": 1782478375.0184073
   }
 }

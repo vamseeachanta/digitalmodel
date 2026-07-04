@@ -10,6 +10,23 @@ from digitalmodel.drilling_riser.operability import (
     significant_wave_height_limit,
     watch_circle_radius_m,
 )
+from digitalmodel.drilling_riser.section import (
+    SectionProperties,
+    cross_sectional_area,
+    moment_of_inertia,
+    polar_moment_of_inertia,
+    section_properties,
+    section_properties_imperial,
+    shear_modulus,
+)
+from digitalmodel.drilling_riser.assembly import (
+    RigCapabilityCheck,
+    RiserStackupModel,
+    StackupItem,
+    check_rig_capability,
+    minimum_top_tension_16q,
+    tensioner_system_factor,
+)
 from digitalmodel.drilling_riser.stackup import (
     effective_tension,
     minimum_slip_ring_tension,
@@ -17,6 +34,7 @@ from digitalmodel.drilling_riser.stackup import (
     wall_thickness_required,
 )
 from digitalmodel.drilling_riser.adapter import (
+    KIPS_TO_KN,
     compute_riser_string_weight_kn,
     normalize_riser_component_record,
     register_riser_components,
@@ -44,4 +62,11 @@ __all__ = [
     "normalize_riser_component_record",
     "register_riser_components",
     "compute_riser_string_weight_kn",
+    "SectionProperties",
+    "cross_sectional_area",
+    "moment_of_inertia",
+    "polar_moment_of_inertia",
+    "shear_modulus",
+    "section_properties",
+    "section_properties_imperial",
 ]

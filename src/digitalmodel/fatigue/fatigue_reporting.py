@@ -19,13 +19,20 @@ References
 - NORSOK N-004 (2013), Annex C — Fatigue analysis reporting requirements
 """
 
-from typing import Dict, List, Optional, Union
+import html
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:  # avoid importing the reporting library at module load
+    from digitalmodel.reporting import Provenance
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
+
 
 class FatigueCheckLocation(BaseModel):
     """Single fatigue assessment location.
@@ -57,6 +64,7 @@ class FatigueCheckLocation(BaseModel):
     notes : str
         Additional notes.
     """
+
     location_id: str
     description: str = ""
     sn_curve: str = ""
@@ -84,6 +92,7 @@ class FatigueReport(BaseModel):
     locations : list[FatigueCheckLocation]
     summary : dict
     """
+
     project: str = ""
     structure: str = ""
     analyst: str = ""
@@ -96,6 +105,7 @@ class FatigueReport(BaseModel):
 # ---------------------------------------------------------------------------
 # Report generation
 # ---------------------------------------------------------------------------
+
 
 def generate_report(
     locations: List[FatigueCheckLocation],
@@ -130,7 +140,9 @@ def generate_report(
         "pass_count": n_pass,
         "fail_count": n_fail,
         "max_utilisation": round(max_util, 4),
-        "min_calculated_life_years": round(min_life, 2) if min_life != float("inf") else "inf",
+        "min_calculated_life_years": (
+            round(min_life, 2) if min_life != float("inf") else "inf"
+        ),
         "overall_status": "PASS" if n_fail == 0 else "FAIL",
     }
 
@@ -158,7 +170,7 @@ def report_to_markdown(report: FatigueReport) -> str:
         Markdown-formatted report.
     """
     lines = []
-    lines.append(f"# Fatigue Assessment Report")
+    lines.append("# Fatigue Assessment Report")
     lines.append("")
     if report.project:
         lines.append(f"**Project:** {report.project}  ")
@@ -179,7 +191,9 @@ def report_to_markdown(report: FatigueReport) -> str:
     lines.append(f"- Passed: **{s.get('pass_count', 0)}**")
     lines.append(f"- Failed: **{s.get('fail_count', 0)}**")
     lines.append(f"- Maximum utilisation: **{s.get('max_utilisation', 0):.4f}**")
-    lines.append(f"- Minimum calculated life: **{s.get('min_calculated_life_years', 'inf')} years**")
+    lines.append(
+        f"- Minimum calculated life: **{s.get('min_calculated_life_years', 'inf')} years**"
+    )
     lines.append(f"- Overall status: **{s.get('overall_status', 'N/A')}**")
     lines.append("")
 
@@ -312,11 +326,128 @@ def inspection_recommendations(
             interval = base_interval_years * 2.0
             priority = "LOW"
 
-        recs.append({
-            "location_id": loc.location_id,
-            "utilisation": round(u, 4),
-            "interval_years": round(interval, 1),
-            "priority": priority,
-        })
+        recs.append(
+            {
+                "location_id": loc.location_id,
+                "utilisation": round(u, 4),
+                "interval_years": round(interval, 1),
+                "priority": priority,
+            }
+        )
 
     return sorted(recs, key=lambda r: r["utilisation"], reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# HTML report on the shared backbone (report-as-backbone, #1018/#1019/#1020)
+# ---------------------------------------------------------------------------
+#
+# Tracer-bullet migration of a non-diffraction reporter onto the shared
+# ``digitalmodel.reporting`` block library. Every section is a *view* over the
+# ``FatigueReport`` single-source-of-truth (read here, never copied/pasted), and
+# provenance is mandatory (a required argument; ``assemble_report`` also fails
+# closed). The existing markdown/dict/chart helpers are unchanged.
+
+
+def _sec_fatigue_summary(report: "FatigueReport", **_) -> str:
+    s = report.summary
+    meta_rows = "".join(
+        f"<tr><td>{html.escape(k)}</td><td>{html.escape(str(v))}</td></tr>"
+        for k, v in (
+            ("Project", report.project),
+            ("Structure", report.structure),
+            ("Analyst", report.analyst),
+            ("Date", report.date),
+            ("Standard", report.standard),
+        )
+        if v
+    )
+    summary_rows = "".join(
+        f"<tr><td>{html.escape(str(k))}</td><td>{html.escape(str(v))}</td></tr>"
+        for k, v in s.items()
+    )
+    return (
+        '<div class="section" id="summary"><h2>Summary</h2>'
+        f"<table><tbody>{meta_rows}</tbody></table>"
+        f"<table><tbody>{summary_rows}</tbody></table></div>"
+    )
+
+
+def _sec_fatigue_locations(report: "FatigueReport", **_) -> str:
+    rows = []
+    for loc in report.locations:
+        life = (
+            "inf"
+            if loc.calculated_life_years == float("inf")
+            else f"{loc.calculated_life_years:.1f}"
+        )
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(loc.location_id)}</td>"
+            f"<td>{html.escape(loc.sn_curve)}</td>"
+            f"<td>{html.escape(f'{loc.utilisation:.3f}')}</td>"
+            f"<td>{html.escape(life)}</td>"
+            f"<td>{html.escape(loc.pass_fail)}</td>"
+            "</tr>"
+        )
+    body = "".join(rows) or '<tr><td colspan="5"><em>No locations.</em></td></tr>'
+    return (
+        '<div class="section" id="locations"><h2>Fatigue check locations</h2>'
+        "<table><thead><tr><th>Location</th><th>S-N curve</th>"
+        "<th>Utilisation</th><th>Calc. life (yr)</th><th>Result</th></tr></thead>"
+        f"<tbody>{body}</tbody></table></div>"
+    )
+
+
+def _sec_fatigue_inspection(report: "FatigueReport", **_) -> str:
+    recs = inspection_recommendations(report.locations)
+    rows = "".join(
+        "<tr>"
+        f"<td>{html.escape(str(r['location_id']))}</td>"
+        f"<td>{html.escape(str(r['utilisation']))}</td>"
+        f"<td>{html.escape(str(r['interval_years']))}</td>"
+        f"<td>{html.escape(str(r['priority']))}</td>"
+        "</tr>"
+        for r in recs
+    )
+    body = rows or '<tr><td colspan="4"><em>No locations.</em></td></tr>'
+    return (
+        '<div class="section" id="inspection"><h2>Inspection recommendations</h2>'
+        "<table><thead><tr><th>Location</th><th>Utilisation</th>"
+        "<th>Interval (yr)</th><th>Priority</th></tr></thead>"
+        f"<tbody>{body}</tbody></table></div>"
+    )
+
+
+def report_to_html(
+    report: "FatigueReport",
+    *,
+    provenance: "Provenance",
+    output_path: Optional[Union[str, Path]] = None,
+) -> Union[str, Path]:
+    """Render a FatigueReport as a provenance-gated HTML report (#1020).
+
+    Assembles from the shared ``digitalmodel.reporting`` block library; each
+    section is a view over ``report`` (the SSOT). ``provenance`` is mandatory --
+    declare where the fatigue results came from. Returns the HTML string, or
+    writes to ``output_path`` and returns it.
+    """
+    from digitalmodel.reporting import ReportSection, SectionMode, assemble_report
+
+    sections = [
+        ReportSection("summary", "Summary", SectionMode.ALWAYS, _sec_fatigue_summary),
+        ReportSection(
+            "locations", "Locations", SectionMode.ALWAYS, _sec_fatigue_locations
+        ),
+        ReportSection(
+            "inspection", "Inspection", SectionMode.ALWAYS, _sec_fatigue_inspection
+        ),
+    ]
+    title = f"Fatigue assessment - {report.structure or report.project or 'report'}"
+    return assemble_report(
+        title,
+        provenance=provenance,
+        sections=sections,
+        data=report,
+        output_path=output_path,
+    )

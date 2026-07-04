@@ -6,35 +6,41 @@ referencing coating names from the VarDataBuilder via context.
 
 from typing import Any
 
+from digitalmodel.materials import smys_kn_m2
+
 from .base import BaseBuilder
 from .registry import BuilderRegistry
 
 
-# Default material properties by grade
+# Default material properties by grade. The DNV-ST-F101 yield (kN/m2) is sourced
+# from the canonical grade matrix (issue #1089) — these grades already used the
+# canonical ISO SMYS (X52 360, X60 415, X65 450, X70 485 MPa), so smys_kn_m2()
+# reproduces the legacy literals exactly. E / density / Poisson are OrcaFlex
+# modelling defaults (PoissonRatio 0.293 is intentionally not the canonical nu).
 MATERIAL_PROPERTIES = {
     "X65": {
         "MaterialDensity": 7.85,  # te/m3
         "E": 207e6,  # kN/m2
         "PoissonRatio": 0.293,
-        "DNVSTF101Fy": 450e3,  # kN/m2
+        "DNVSTF101Fy": smys_kn_m2("X65"),  # kN/m2
     },
     "X70": {
         "MaterialDensity": 7.85,
         "E": 207e6,
         "PoissonRatio": 0.293,
-        "DNVSTF101Fy": 485e3,
+        "DNVSTF101Fy": smys_kn_m2("X70"),
     },
     "X52": {
         "MaterialDensity": 7.85,
         "E": 207e6,
         "PoissonRatio": 0.293,
-        "DNVSTF101Fy": 360e3,
+        "DNVSTF101Fy": smys_kn_m2("X52"),
     },
     "X60": {
         "MaterialDensity": 7.85,
         "E": 207e6,
         "PoissonRatio": 0.293,
-        "DNVSTF101Fy": 415e3,
+        "DNVSTF101Fy": smys_kn_m2("X60"),
     },
 }
 

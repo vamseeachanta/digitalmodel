@@ -9,7 +9,11 @@ class TestBuilderRegistry:
     """Test the builder registry system."""
 
     def test_all_builders_registered(self):
-        """Verify all 13 builders are registered (10 original + 3 S-lay)."""
+        """Verify all 19 builders are registered.
+
+        10 original + 3 S-lay + 5 riser (drilling-riser automation epic #807)
+        + 1 generic-object builder (#495-#505 spec-to-YAML overhaul).
+        """
         from digitalmodel.solvers.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
         )
@@ -17,7 +21,7 @@ class TestBuilderRegistry:
         import digitalmodel.solvers.orcaflex.modular_generator.builders  # noqa: F401
 
         ordered = BuilderRegistry.get_ordered_builders()
-        assert len(ordered) == 13
+        assert len(ordered) == 19
         file_names = [name for name, _ in ordered]
         assert "01_general.yml" in file_names
         assert "10_groups.yml" in file_names
@@ -25,6 +29,14 @@ class TestBuilderRegistry:
         assert "04_vessel_types.yml" in file_names
         assert "06_vessels.yml" in file_names
         assert "11_winches.yml" in file_names
+        # Riser builders (#807)
+        assert "04_riser_clump_types.yml" in file_names
+        assert "05_riser_line_types.yml" in file_names
+        assert "06_riser_vessels.yml" in file_names
+        assert "07_riser_lines.yml" in file_names
+        assert "08_riser_links.yml" in file_names
+        # Generic-object builder (#495-#505)
+        assert "20_generic_objects.yml" in file_names
 
     def test_execution_order(self):
         """Verify builders execute in correct dependency order."""
@@ -65,15 +77,21 @@ class TestBuilderRegistry:
             "02_var_data.yml",
             "03_environment.yml",
             "04_vessel_types.yml",
+            "04_riser_clump_types.yml",
             "05_line_types.yml",
+            "05_riser_line_types.yml",
+            "06_riser_vessels.yml",
             "06_vessels.yml",
             "13_supports.yml",
             "14_morison.yml",
             "09_shapes.yml",
             "08_buoys.yml",
             "07_lines.yml",
+            "07_riser_lines.yml",
+            "08_riser_links.yml",
             "11_winches.yml",
             "10_groups.yml",
+            "20_generic_objects.yml",
         ]
 
     def test_get_specific_builder(self):
