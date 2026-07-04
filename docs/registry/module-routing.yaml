@@ -350,6 +350,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/materials/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
+  - module: tug
+    entry_point: src/digitalmodel/tug/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/tug/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#tug
   - module: workflow_api
     entry_point: src/digitalmodel/workflow_api/
     maturity: development
