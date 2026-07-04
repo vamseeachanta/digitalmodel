@@ -1,0 +1,32 @@
+basename: weather_window
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+weather_window:
+  case:
+    id: registry_weather_window
+    description: Marine-operation weather-window screening — workability and window fit vs Hs limit
+  operation:
+    hs_limit_m: 2.0               # operational sea-state limit
+    required_duration_hours: 48.0 # continuous window the operation needs
+    required_workability_pct: 50.0
+  metocean:
+    time_step_hours: 3.0
+    # Illustrative 7-day Hs record (m) at 3 h steps; a real screen uses hindcast.
+    hs_timeseries_m: [
+      1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5,
+      2.8, 2.8, 2.8,
+      1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8,
+      3.0, 3.0, 3.0, 3.0,
+      1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6,
+      2.5, 2.5, 2.5,
+      1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9,
+      3.2, 3.2, 3.2, 3.2, 3.2]
+  outputs:
+    directory: results/weather_window
+    summary_json: weather_window_summary.json

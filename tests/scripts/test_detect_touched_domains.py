@@ -577,3 +577,163 @@ def test_quality_gate_workflows_parse() -> None:
         Path(".github/workflows/quality-gates-by-domain.yml"),
     ):
         assert yaml.safe_load(workflow.read_text())
+
+
+BOGUS_SHA = "0123456789abcdef0123456789abcdef01234567"
+ZERO_SHA = "0000000000000000000000000000000000000000"
+
+
+def _repo_with_single_domain_change(tmp_path: Path) -> tuple[Path, str, str]:
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    test_file = tmp_path / "tests" / "citations" / "test_registry.py"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("def test_old():\n    assert True\n")
+    base = commit_all(tmp_path, "base")
+    test_file.write_text("def test_new():\n    assert True\n")
+    head = commit_all(tmp_path, "head")
+    return domains_file, base, head
+
+
+def test_touched_mode_unreachable_base_errors_by_default(tmp_path: Path) -> None:
+    """Without --on-missing-base, an unreachable base is still a hard error (exit 2)."""
+    domains_file, _base, head = _repo_with_single_domain_change(tmp_path)
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        BOGUS_SHA,
+        "--head",
+        head,
+        "--output-format",
+        "json-matrix",
+    )
+
+    assert result.returncode == 2, result.stdout
+    assert "detect_touched_domains.py" in result.stderr
+
+
+def test_touched_mode_unreachable_base_falls_back_to_full(tmp_path: Path) -> None:
+    """--on-missing-base full makes an unreachable base fail SAFE to the full matrix."""
+    domains_file, _base, head = _repo_with_single_domain_change(tmp_path)
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        BOGUS_SHA,
+        "--head",
+        head,
+        "--on-missing-base",
+        "full",
+        "--output-format",
+        "json-matrix",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert [item["domain"] for item in json.loads(result.stdout)["include"]] == [
+        "asset-integrity",
+        "citations",
+        "structural",
+        "workflows",
+    ]
+
+
+def test_zero_sha_base_falls_back_to_full(tmp_path: Path) -> None:
+    """New-branch zero-SHA base fails SAFE to the full matrix under the flag."""
+    domains_file, _base, head = _repo_with_single_domain_change(tmp_path)
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        ZERO_SHA,
+        "--head",
+        head,
+        "--on-missing-base",
+        "full",
+        "--output-format",
+        "json-matrix",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert [item["domain"] for item in json.loads(result.stdout)["include"]] == [
+        "asset-integrity",
+        "citations",
+        "structural",
+        "workflows",
+    ]
+
+
+def test_on_missing_base_full_does_not_alter_happy_path(tmp_path: Path) -> None:
+    """The flag is inert when the base is reachable: still scopes to the touched domain."""
+    domains_file, base, head = _repo_with_single_domain_change(tmp_path)
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--on-missing-base",
+        "full",
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["citations"]
+
+
+def test_push_like_pr_scopes_single_domain(tmp_path: Path) -> None:
+    """A single-domain push diff routes to one leg, mirroring the PR touched path."""
+    domains_file, base, head = _repo_with_single_domain_change(tmp_path)
+
+    result = run_detector(
+        tmp_path,
+        domains_file,
+        "--mode",
+        "touched",
+        "--base",
+        base,
+        "--head",
+        head,
+        "--output-format",
+        "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["citations"]
+
+
+def test_workflow_routes_push_to_touched_mode() -> None:
+    """Structural guard: the workflow routes push -> touched (--on-missing-base full),
+    and --mode full is reachable only from the schedule/dispatch (else) arm."""
+    workflow_text = Path(
+        ".github/workflows/quality-gates-by-domain.yml"
+    ).read_text()
+
+    # push routes to touched mode with the fail-safe flag
+    assert 'EVENT_NAME" = "push"' in workflow_text
+    assert "--on-missing-base full" in workflow_text
+
+    # before/after SHAs are wired into the detect step env
+    assert "github.event.before" in workflow_text
+    assert "github.event.after" in workflow_text
+
+    # the --mode full arm must not be reached from the push branch: it lives in the
+    # final else (schedule + workflow_dispatch). Assert the push arm precedes full.
+    push_idx = workflow_text.index('EVENT_NAME" = "push"')
+    full_idx = workflow_text.index("--mode full")
+    assert push_idx < full_idx, "push arm must precede the --mode full (else) arm"

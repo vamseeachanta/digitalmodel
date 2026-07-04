@@ -1,0 +1,23 @@
+basename: rao_spectral_fatigue
+
+rao_spectral_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  # Damage estimator: dirlik (default, wide-band) | narrow_band |
+  # wirsching_light | benasciutti_tovo. Reuses the spectral_fatigue damage chain.
+  method: dirlik
+  # S-N curve: slope m and log10 intercept a (N = a * S^-m). Default is the
+  # DNV-RP-C203 D-curve in air (m = 3.0, log10 a = 12.164).
+  sn_curve:
+    slope: 3.0
+    log_intercept: 12.164
+  output_dir: results
+  # Each location carries a stress RAO H(f) (MPa per m of wave amplitude) and a
+  # set of sea states, each a parametric wave spectrum weighted by occurrence.
+  locations: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

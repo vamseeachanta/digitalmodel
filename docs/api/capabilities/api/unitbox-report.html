@@ -1,0 +1,178 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit-box 3-way diffraction benchmark — API call</title>
+<style>
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#eef3fa;line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px}
+  .top{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--navy);padding-bottom:12px}
+  .top svg{height:28px} .kind{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700}
+  h1{font-size:23px;color:var(--navy);margin:18px 0 2px}
+  .std{color:var(--teal);font-weight:700;font-size:12.5px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .panel h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  pre{background:#0e1726;color:#d6e2f5;border-radius:9px;padding:12px;font:12px/1.5 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre-wrap;word-break:break-word}
+  .verb{display:inline-block;font:700 11px ui-monospace,monospace;background:var(--teal);color:#fff;padding:2px 8px;border-radius:6px;margin-bottom:8px}
+  a.btn{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:#fff;
+        background:linear-gradient(135deg,#0f8a7e,#0B3D91);padding:8px 14px;border-radius:9px;text-decoration:none}
+  .reportwrap{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .reportwrap .bar{font-size:12px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+  iframe{width:100%;height:560px;border:0;display:block;background:#fff}
+  .note{color:var(--muted);font-size:12.5px;margin-top:6px}
+  a{color:var(--navy)}
+  .bigpanel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px}
+  .bigpanel h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .prompt{display:flex;gap:10px;align-items:flex-start}
+  .prompt .q{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;color:var(--ink)}
+  .copy{font:700 12px Arial;color:#fff;background:linear-gradient(135deg,#0f8a7e,#0B3D91);border:0;border-radius:9px;padding:10px 13px;cursor:pointer;white-space:nowrap}
+  .how ol{margin:8px 0 0 18px} .how li{font-size:13.5px;margin:7px 0;color:var(--ink)}
+  .how code{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}
+</style></head>
+<body><div class="wrap">
+  <div class="top"><svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clip">
+      <rect x="0" y="0" width="800" height="220" rx="16"/>
+    </clipPath>
+    <!-- Diagonal lay-line pattern: mid-teal ridge + light-teal highlight, ~38deg.
+         Applied as an overlay on each rope shape so the strands run diagonally
+         across the rope width and read as a 6-strand laid steel wire rope. -->
+    <pattern id="lay-dm" patternUnits="userSpaceOnUse" width="11" height="11"
+             patternTransform="rotate(38)">
+      <rect width="11" height="11" fill="none"/>
+      <line x1="0" y1="0" x2="0" y2="11" stroke="#12A6B0" stroke-width="3.4"/>
+      <line x1="5.5" y1="0" x2="5.5" y2="11" stroke="#6FE8D4" stroke-width="1.6" opacity=".9"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#clip)">
+    <!-- Icon -->
+    <g transform="translate(20 10)">
+      <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
+      <path d="M38 72c20-32 64-32 84 0v76c-20 32-64 32-84 0z" fill="#2BB2A6" opacity=".85"/>
+
+      <!-- ===== Mooring rope tail draping off the cylinder base ===== -->
+      <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
+            fill="none" stroke="#12A6B0" stroke-width="11" stroke-linecap="round"/>
+      <path d="M118 150c10 14 8 30 -6 40c-12 9 -16 18 -10 28"
+            fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+
+      <!-- ===== THREE plump wire-rope coils wrapping the cylinder =====
+           Each coil: navy outline (rim) + teal core + diagonal lay overlay. -->
+      <!-- bottom coil -->
+      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+      <path d="M30 140c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+      <!-- middle coil -->
+      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+      <path d="M30 110c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+      <!-- top coil -->
+      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#0B3D91" stroke-width="14" stroke-linecap="round"/>
+      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="#2BB2A6" stroke-width="11" stroke-linecap="round"/>
+      <path d="M30 80c12 16 31 26 55 26s43-10 55-26" fill="none" stroke="url(#lay-dm)" stroke-width="11" stroke-linecap="round"/>
+
+      <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
+      <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
+    </g>
+
+    <!-- Wordmark -->
+    <g transform="translate(200 40)">
+      <text x="0" y="70" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="600" fill="#0B3D91" letter-spacing="0.5">
+        Digital <tspan fill="#2BB2A6">Model</tspan>
+      </text>
+      <g transform="translate(72 96)" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="500" fill="#1C3557">
+        <g transform="translate(0 0)">
+          <circle cx="8" cy="8" r="6" fill="#2BB2A6" opacity=".9"/>
+          <text x="24" y="12">Asset Lifecycle</text>
+        </g>
+        <g transform="translate(-21 32)">
+          <circle cx="8" cy="8" r="6" fill="#0B3D91" opacity=".9"/>
+          <text x="24" y="12">Offshore · Subsea · Marine</text>
+        </g>
+        <g transform="translate(-40 64)" font-size="17">
+          <circle cx="8" cy="8" r="6" fill="#6FE8D4" opacity=".9"/>
+          <text x="24" y="12">Automation: ASCII Data to Engineering Insights</text>
+        </g>
+      </g>
+    </g>
+
+  </g>
+</svg><div class="kind">Workflow-API · self-contained call</div></div>
+  <h1>Unit-box 3-way diffraction benchmark</h1><div class="std">WAMIT · AQWA · OrcaWave</div>
+
+  <div class="bigpanel">
+    <h2>Starting prompt — fire it at Deckhand</h2>
+    <div class="prompt">
+      <div class="q" id="prompt">Run the unit-box 3-way diffraction benchmark across WAMIT, AQWA and OrcaWave.</div>
+      <button class="copy" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(document.getElementById('prompt').innerText)">Copy</button>
+      <a class="copy" href="https://t.me/the_deckhand_bot" style="text-decoration:none">Run on Deckhand &rarr;</a>
+    </div>
+    <div class="how"><h2 style="margin-top:14px">How to run the API</h2><ol><li><b>Telegram.</b> Open @the_deckhand_bot and send: Run the unit-box 3-way diffraction benchmark across WAMIT, AQWA and OrcaWave.</li><li><b>HTTP.</b> POST /api/run with a scoped bearer token</li><li><b>CLI.</b> uv run python -m digitalmodel examples/workflows/rao-tabulation/input.yml</li></ol></div>
+  </div>
+
+  <div class="row">
+    <div class="panel"><h2>Request — input</h2><span class="verb">POST /api/run</span><pre>curl -X POST https://api.deckhand/run \
+  -H 'content-type: application/json' \
+  -d '{&quot;repo&quot;: &quot;digitalmodel&quot;, &quot;workflow&quot;: &quot;rao-tabulation&quot;}'
+
+# or run locally (deterministic):
+# uv run python -m digitalmodel examples/workflows/rao-tabulation/input.yml</pre></div>
+    <div class="panel"><h2>Response — ResultEnvelope</h2><pre>{
+  &quot;schema&quot;: &quot;deckhand.workflow_api.ResultEnvelope/2&quot;,
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;repo&quot;: &quot;digitalmodel&quot;,
+  &quot;report_url&quot;: &quot;https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_report.html&quot;,
+  &quot;provenance&quot;: {
+    &quot;basis&quot;: &quot;WAMIT \u00b7 AQWA \u00b7 OrcaWave&quot;,
+    &quot;deterministic&quot;: true,
+    &quot;source&quot;: &quot;validated digitalmodel solver&quot;
+  },
+  &quot;request&quot;: {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;path&quot;: &quot;/api/run&quot;,
+    &quot;body&quot;: {
+      &quot;repo&quot;: &quot;digitalmodel&quot;,
+      &quot;workflow&quot;: &quot;rao-tabulation&quot;
+    }
+  },
+  &quot;invocation&quot;: &quot;uv run python -m digitalmodel examples/workflows/rao-tabulation/input.yml&quot;,
+  &quot;workflow&quot;: &quot;digitalmodel:rao-tabulation&quot;,
+  &quot;outputs&quot;: [
+    {
+      &quot;kind&quot;: &quot;report&quot;,
+      &quot;url&quot;: &quot;https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_report.html&quot;
+    }
+  ],
+  &quot;note&quot;: &quot;Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.&quot;,
+  &quot;prompt&quot;: &quot;Run the unit-box 3-way diffraction benchmark across WAMIT, AQWA and OrcaWave.&quot;,
+  &quot;how_to_run&quot;: [
+    {
+      &quot;via&quot;: &quot;telegram&quot;,
+      &quot;bot&quot;: &quot;@the_deckhand_bot&quot;,
+      &quot;deep_link&quot;: &quot;https://t.me/the_deckhand_bot&quot;,
+      &quot;step&quot;: &quot;Open @the_deckhand_bot and send: Run the unit-box 3-way diffraction benchmark across WAMIT, AQWA and OrcaWave.&quot;
+    },
+    {
+      &quot;via&quot;: &quot;http&quot;,
+      &quot;step&quot;: &quot;POST /api/run with a scoped bearer token&quot;,
+      &quot;body&quot;: {
+        &quot;repo&quot;: &quot;digitalmodel&quot;,
+        &quot;workflow&quot;: &quot;rao-tabulation&quot;
+      }
+    },
+    {
+      &quot;via&quot;: &quot;cli&quot;,
+      &quot;step&quot;: &quot;uv run python -m digitalmodel examples/workflows/rao-tabulation/input.yml&quot;
+    }
+  ]
+}</pre>
+      <a class="btn" href="unitbox-report.json" download>Download envelope JSON &darr;</a></div>
+  </div>
+  <p class="note">Deterministic registry workflow (docs/registry/workflows.yaml). POST to the Deckhand workflow-API, or run the invocation locally; the embedded page is a representative live output of the workflow.</p>
+  <div class="reportwrap">
+    <div class="bar"><span>Comprehensive report (live output)</span><a href="https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_report.html">open full report &rarr;</a></div>
+    <iframe src="https://vamseeachanta.github.io/digitalmodel/hydro/unit-box-benchmark/benchmark_report.html" loading="lazy" title="Unit-box 3-way diffraction benchmark report"></iframe>
+  </div>
+</div></body></html>

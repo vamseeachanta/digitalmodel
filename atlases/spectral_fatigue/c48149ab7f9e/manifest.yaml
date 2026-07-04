@@ -32,7 +32,7 @@ validation:
   passes: true
 provenance:
   basename: spectral_fatigue
-  code_version: 1c01a6ac
+  code_version: a3a67b4b
   standards:
   - id: DNV-RP-C203
     edition: 2021-09

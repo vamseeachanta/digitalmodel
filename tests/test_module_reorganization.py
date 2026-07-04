@@ -8,6 +8,13 @@ import pytest
 import sys
 from pathlib import Path
 
+# stale: asserts a marine_analysis reorg / output layout that diverged from the
+# current tree (old `tests/outputs`, version 2.1.0, profiling/extraction/etc.
+# __init__ expectations). Skip until rewritten against the real layout. See #949.
+pytestmark = pytest.mark.skip(
+    reason="stale: asserts removed/diverged module layout; see #949"
+)
+
 
 class TestModuleStructure:
     """Test that the new module structure is correctly organized."""

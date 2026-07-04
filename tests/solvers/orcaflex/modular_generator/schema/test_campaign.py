@@ -152,8 +152,14 @@ class TestApplyDottedOverride:
     def test_apply_dotted_override_pydantic_validates_type_error(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
         spec = _make_base_spec()
-        with pytest.raises(ValidationError):
+        # #535: invalid sweep value is re-raised as a ValueError whose message
+        # names the dotted path + offending value, with the original
+        # ValidationError preserved on __cause__.
+        with pytest.raises(ValueError) as excinfo:
             apply_dotted_override(spec, "environment.waves.trains.0.height", "not-a-float")
+        assert "environment.waves.trains.0.height" in str(excinfo.value)
+        assert "not-a-float" in str(excinfo.value)
+        assert isinstance(excinfo.value.__cause__, ValidationError)
 
     def test_apply_dotted_override_unresolvable_path_raises(self):
         from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import apply_dotted_override
@@ -340,6 +346,40 @@ class TestApplyOverridesWithSweeps:
         combo = {"water_depth": 50, "environment.water.depth": 200}
         result = _apply_overrides(spec, combo, matrix)
         assert result.environment.water.depth == 200
+
+    def test_apply_overrides_unknown_environment_raises_value_error(self):
+        # #534: a hand-built combo naming an environment absent from
+        # matrix.environments must raise ValueError, not StopIteration.
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, EnvironmentVariation,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            environments=[
+                EnvironmentVariation(
+                    name="calm",
+                    waves={"type": "airy", "height": 0.5, "period": 5, "direction": 180},
+                    current={"speed": 0.3, "direction": 270},
+                    wind={"speed": 3, "direction": 270},
+                ),
+            ],
+        )
+        with pytest.raises(ValueError, match="environment 'storm' not in matrix.environments"):
+            _apply_overrides(spec, {"environment": "storm"}, matrix)
+
+    def test_apply_overrides_unknown_soil_raises_value_error(self):
+        # #534: same guard for the soil branch.
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            _apply_overrides, CampaignMatrix, SoilVariation,
+        )
+        spec = _make_base_spec()
+        matrix = CampaignMatrix(
+            soils=[
+                SoilVariation(name="clay", stiffness={"normal": 500, "shear": 50}, friction_coefficient=0.3),
+            ],
+        )
+        with pytest.raises(ValueError, match="soil 'sand' not in matrix.soils"):
+            _apply_overrides(spec, {"soil": "sand"}, matrix)
 
     def test_validate_output_naming_warns_on_sweep_axis_without_alias(self, caplog):
         import logging

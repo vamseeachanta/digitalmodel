@@ -1,5 +1,14 @@
 # Quality Gates Configuration
 # Domain-divided test gates surface full pytest failure counts without --maxfail ceilings.
+#
+# NOTE (#1142): every gate runs `uv run --no-sources` (CI has no sibling
+# ../assetutilities checkout, so sources are disabled and assetutilities resolves
+# from PyPI). The engine embed-port (workspace-hub#3285) calls the assetutilities
+# `configure(root_folder=...)` API, which ships on assetutilities git main (0.1.1)
+# but NOT on the published PyPI 0.1.0 — so PyPI resolution raises TypeError across
+# every domain shard. Each command therefore overlays assetutilities from git main
+# via `--with`. REMOVE the `--with 'assetutilities @ git+...@main'` overlay once
+# assetutilities >=0.1.1 is published to PyPI and the dependency pin is bumped.
 
 gates:
   # Gate 1: Domain test shards. Keep these names aligned with tests/DOMAINS.md.
@@ -8,8 +17,8 @@ gates:
     order: 1
     description: "Domain tests for asset-integrity"
     domain: "asset-integrity"
-    test_roots: ["tests/asset_integrity/", "tests/engineering_validation/", "tests/test_wall_thickness.py", "tests/test_wall_thickness_api_rp_2rd.py", "tests/test_wall_thickness_api_std_2rd.py", "tests/test_wall_thickness_codes/", "tests/test_wall_thickness_comparison.py", "tests/test_wall_thickness_dnv_editions.py", "tests/test_wall_thickness_editions.py", "tests/test_wall_thickness_interactive_report.py", "tests/test_wall_thickness_lookup.py", "tests/test_wall_thickness_mt_report.py", "tests/test_wall_thickness_parametric.py", "tests/test_wall_thickness_phases.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/asset_integrity/ tests/engineering_validation/ tests/test_wall_thickness.py tests/test_wall_thickness_api_rp_2rd.py tests/test_wall_thickness_api_std_2rd.py tests/test_wall_thickness_codes/ tests/test_wall_thickness_comparison.py tests/test_wall_thickness_dnv_editions.py tests/test_wall_thickness_editions.py tests/test_wall_thickness_interactive_report.py tests/test_wall_thickness_lookup.py tests/test_wall_thickness_mt_report.py tests/test_wall_thickness_parametric.py tests/test_wall_thickness_phases.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/asset_integrity/", "tests/engineering_validation/", "tests/materials/", "tests/test_wall_thickness.py", "tests/test_wall_thickness_api_rp_2rd.py", "tests/test_wall_thickness_api_std_2rd.py", "tests/test_wall_thickness_codes/", "tests/test_wall_thickness_comparison.py", "tests/test_wall_thickness_dnv_editions.py", "tests/test_wall_thickness_editions.py", "tests/test_wall_thickness_interactive_report.py", "tests/test_wall_thickness_lookup.py", "tests/test_wall_thickness_mt_report.py", "tests/test_wall_thickness_parametric.py", "tests/test_wall_thickness_phases.py"]
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/asset_integrity/ tests/engineering_validation/ tests/materials/ tests/test_wall_thickness.py tests/test_wall_thickness_api_rp_2rd.py tests/test_wall_thickness_api_std_2rd.py tests/test_wall_thickness_codes/ tests/test_wall_thickness_comparison.py tests/test_wall_thickness_dnv_editions.py tests/test_wall_thickness_editions.py tests/test_wall_thickness_interactive_report.py tests/test_wall_thickness_lookup.py tests/test_wall_thickness_mt_report.py tests/test_wall_thickness_parametric.py tests/test_wall_thickness_phases.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -19,7 +28,7 @@ gates:
     description: "Domain tests for cathodic-protection"
     domain: "cathodic-protection"
     test_roots: ["tests/cathodic_protection/"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/cathodic_protection/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/cathodic_protection/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -29,7 +38,7 @@ gates:
     description: "Domain tests for citations"
     domain: "citations"
     test_roots: ["tests/citations/", "tests/orcaflex/test_mooring_design_citations.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/citations/ tests/orcaflex/test_mooring_design_citations.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/citations/ tests/orcaflex/test_mooring_design_citations.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -39,7 +48,7 @@ gates:
     description: "Domain tests for contracts"
     domain: "contracts"
     test_roots: ["tests/contracts/", "tests/compat/", "tests/cross_repo/", "tests/docs/", "tests/test_apistd2rd_migration.py", "tests/test_module_reorganization.py", "tests/test_restructure_compat.py", "tests/test_units.py", "tests/test_validation_utils.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/contracts/ tests/compat/ tests/cross_repo/ tests/docs/ tests/test_apistd2rd_migration.py tests/test_module_reorganization.py tests/test_restructure_compat.py tests/test_units.py tests/test_validation_utils.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/contracts/ tests/compat/ tests/cross_repo/ tests/docs/ tests/test_apistd2rd_migration.py tests/test_module_reorganization.py tests/test_restructure_compat.py tests/test_units.py tests/test_validation_utils.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -49,7 +58,7 @@ gates:
     description: "Domain tests for field-development"
     domain: "field-development"
     test_roots: ["tests/field_development/", "tests/test_field_development_schematic.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/field_development/ tests/test_field_development_schematic.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/field_development/ tests/test_field_development_schematic.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -59,7 +68,7 @@ gates:
     description: "Domain tests for hydrodynamics-diffraction"
     domain: "hydrodynamics-diffraction"
     test_roots: ["tests/hydrodynamics/aqwa/", "tests/hydrodynamics/bemrosetta/", "tests/hydrodynamics/capytaine/", "tests/hydrodynamics/diffraction/", "tests/orcawave/", "tests/solvers/orcawave/", "tests/solver/test_diffraction_pipeline_e2e.py", "tests/test_acoustic_scattering_loader.py", "tests/test_aqwa.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/hydrodynamics/aqwa/ tests/hydrodynamics/bemrosetta/ tests/hydrodynamics/capytaine/ tests/hydrodynamics/diffraction/ tests/orcawave/ tests/solvers/orcawave/ tests/solver/test_diffraction_pipeline_e2e.py tests/test_acoustic_scattering_loader.py tests/test_aqwa.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/hydrodynamics/aqwa/ tests/hydrodynamics/bemrosetta/ tests/hydrodynamics/capytaine/ tests/hydrodynamics/diffraction/ tests/orcawave/ tests/solvers/orcawave/ tests/solver/test_diffraction_pipeline_e2e.py tests/test_acoustic_scattering_loader.py tests/test_aqwa.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -69,7 +78,7 @@ gates:
     description: "Domain tests for hydrodynamics-passing-ship"
     domain: "hydrodynamics-passing-ship"
     test_roots: ["tests/hydrodynamics/passing_ship/"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/hydrodynamics/passing_ship/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/hydrodynamics/passing_ship/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -79,7 +88,7 @@ gates:
     description: "Domain tests for hydrodynamics-other"
     domain: "hydrodynamics-other"
     test_roots: ["tests/hydrodynamics/hull_library/", "tests/hydrodynamics/parametric_hull_analysis/", "tests/hydrodynamics/rao_analysis/", "tests/hydrodynamics/test_hydrodynamics_cli.py", "tests/hydrodynamics/test_hydrodynamics_unit.py", "tests/hydrodynamics/test_seakeeping.py", "tests/hydrodynamics/test_shear_flow_loader.py", "tests/unit/hydrodynamics/", "tests/test_attenuation_formula_check.py", "tests/test_ht_integration.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -89,7 +98,7 @@ gates:
     description: "Domain tests for infrastructure-core"
     domain: "infrastructure-core"
     test_roots: ["tests/infrastructure/common/", "tests/infrastructure/contracts/", "tests/infrastructure/core/", "tests/infrastructure/factories/", "tests/infrastructure/property/", "tests/infrastructure/security/", "tests/infrastructure/unit/", "tests/infrastructure/utils/", "tests/infrastructure/validation/", "tests/data_systems/", "tests/benchmarks/", "tests/test_cache.py", "tests/test_config.py", "tests/test_config_registry.py", "tests/test_performance_baselines.py", "tests/test_pint_benchmark.py", "tests/test_quality_metrics.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/infrastructure/common/ tests/infrastructure/contracts/ tests/infrastructure/core/ tests/infrastructure/factories/ tests/infrastructure/property/ tests/infrastructure/security/ tests/infrastructure/unit/ tests/infrastructure/utils/ tests/infrastructure/validation/ tests/data_systems/ tests/benchmarks/ tests/test_cache.py tests/test_config.py tests/test_config_registry.py tests/test_performance_baselines.py tests/test_pint_benchmark.py tests/test_quality_metrics.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/infrastructure/common/ tests/infrastructure/contracts/ tests/infrastructure/core/ tests/infrastructure/factories/ tests/infrastructure/property/ tests/infrastructure/security/ tests/infrastructure/unit/ tests/infrastructure/utils/ tests/infrastructure/validation/ tests/data_systems/ tests/benchmarks/ tests/test_cache.py tests/test_config.py tests/test_config_registry.py tests/test_performance_baselines.py tests/test_pint_benchmark.py tests/test_quality_metrics.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -99,7 +108,7 @@ gates:
     description: "Domain tests for infrastructure-other"
     domain: "infrastructure-other"
     test_roots: ["tests/infrastructure/installation/", "tests/infrastructure/performance/", "tests/infrastructure/__init__.py", "tests/integration/", "tests/performance/", "tests/output/", "tests/test_failure_recovery_temp/", "tests/test_configs/", "tests/test_data/", "tests/fixtures/", "tests/conftest.py", "tests/test_baseline.json", "tests/baseline_test_20250824_202344.json", "tests/engine_coverage_report.json", "tests/performance_metrics.json", "tests/coverage_analysis.py", "tests/establish_baseline.py", "tests/final_coverage_report.py", "tests/test_hook_capture.txt", "tests/test_integration_phase1.py", "tests/test_level1_minimal.py", "tests/test_memory_lifecycle.py", "tests/test_reporting.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/infrastructure/installation/ tests/infrastructure/performance/ tests/infrastructure/__init__.py tests/integration/ tests/performance/ tests/output/ tests/test_failure_recovery_temp/ tests/test_configs/ tests/test_data/ tests/fixtures/ tests/conftest.py tests/coverage_analysis.py tests/establish_baseline.py tests/final_coverage_report.py tests/test_integration_phase1.py tests/test_level1_minimal.py tests/test_memory_lifecycle.py tests/test_reporting.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/infrastructure/installation/ tests/infrastructure/performance/ tests/infrastructure/__init__.py tests/integration/ tests/performance/ tests/output/ tests/test_failure_recovery_temp/ tests/test_configs/ tests/test_data/ tests/fixtures/ tests/conftest.py tests/coverage_analysis.py tests/establish_baseline.py tests/final_coverage_report.py tests/test_integration_phase1.py tests/test_level1_minimal.py tests/test_memory_lifecycle.py tests/test_reporting.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -109,7 +118,7 @@ gates:
     description: "Domain tests for marine-engineering"
     domain: "marine-engineering"
     test_roots: ["tests/marine_ops/marine_engineering/"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/marine_ops/marine_engineering/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/marine_ops/marine_engineering/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -119,7 +128,7 @@ gates:
     description: "Domain tests for marine-ops-other"
     domain: "marine-ops-other"
     test_roots: ["tests/marine_ops/artificial_lift/", "tests/marine_ops/installation/", "tests/marine_ops/marine_analysis/", "tests/marine_ops/reservoir/", "tests/marine_ops/__init__.py", "tests/production_engineering/", "tests/reservoir/", "tests/well/", "tests/test_fluids_integration.py", "tests/test_reservoir_framework.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/marine_ops/artificial_lift/ tests/marine_ops/installation/ tests/marine_ops/marine_analysis/ tests/marine_ops/reservoir/ tests/marine_ops/__init__.py tests/production_engineering/ tests/reservoir/ tests/well/ tests/test_fluids_integration.py tests/test_reservoir_framework.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/marine_ops/artificial_lift/ tests/marine_ops/installation/ tests/marine_ops/marine_analysis/ tests/marine_ops/reservoir/ tests/marine_ops/__init__.py tests/production_engineering/ tests/reservoir/ tests/well/ tests/test_fluids_integration.py tests/test_reservoir_framework.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -129,7 +138,7 @@ gates:
     description: "Domain tests for naval-architecture"
     domain: "naval-architecture"
     test_roots: ["tests/naval_architecture/", "tests/unit/hull_library/", "tests/test_propeller_rudder_interaction.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/naval_architecture/ tests/unit/hull_library/ tests/test_propeller_rudder_interaction.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/naval_architecture/ tests/unit/hull_library/ tests/test_propeller_rudder_interaction.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -139,7 +148,7 @@ gates:
     description: "Domain tests for orcaflex"
     domain: "orcaflex"
     test_roots: ["tests/orcaflex/", "tests/test_orcaflex_agent.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/orcaflex/ tests/test_orcaflex_agent.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/orcaflex/ tests/test_orcaflex_agent.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -149,7 +158,7 @@ gates:
     description: "Domain tests for orcaflex-solver"
     domain: "orcaflex-solver"
     test_roots: ["tests/solvers/orcaflex/"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/solvers/orcaflex/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/solvers/orcaflex/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -159,7 +168,7 @@ gates:
     description: "Domain tests for solver-smoke"
     domain: "solver-smoke"
     test_roots: ["tests/solver/__init__.py", "tests/solver/conftest.py", "tests/solver/smoke_test.py", "tests/solver/test_parametric_spec_generator.py", "tests/solvers/__init__.py", "tests/solvers/blender_automation/", "tests/solvers/calculix/", "tests/solvers/fea/", "tests/solvers/gmsh_meshing/", "tests/solvers/openfoam/", "tests/solvers/test_base_solvers.py", "tests/solvers/test_config_migration.py", "tests/solvers/test_integration_solvers.py", "tests/solvers/test_solver_concurrency.py", "tests/solvers/test_solver_performance.py", "tests/solvers/test_solver_stress.py", "tests/test_meshio_integration.py", "tests/test_parametric_coordinator.py", "tests/test_sectionproperties_integration.py", "tests/test_solver_benchmarks.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/solver/__init__.py tests/solver/conftest.py tests/solver/smoke_test.py tests/solver/test_parametric_spec_generator.py tests/solvers/__init__.py tests/solvers/blender_automation/ tests/solvers/calculix/ tests/solvers/fea/ tests/solvers/gmsh_meshing/ tests/solvers/openfoam/ tests/solvers/test_base_solvers.py tests/solvers/test_config_migration.py tests/solvers/test_integration_solvers.py tests/solvers/test_solver_concurrency.py tests/solvers/test_solver_performance.py tests/solvers/test_solver_stress.py tests/test_meshio_integration.py tests/test_parametric_coordinator.py tests/test_sectionproperties_integration.py tests/test_solver_benchmarks.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/solver/__init__.py tests/solver/conftest.py tests/solver/smoke_test.py tests/solver/test_parametric_spec_generator.py tests/solvers/__init__.py tests/solvers/blender_automation/ tests/solvers/calculix/ tests/solvers/fea/ tests/solvers/gmsh_meshing/ tests/solvers/openfoam/ tests/solvers/test_base_solvers.py tests/solvers/test_config_migration.py tests/solvers/test_integration_solvers.py tests/solvers/test_solver_concurrency.py tests/solvers/test_solver_performance.py tests/solvers/test_solver_stress.py tests/test_meshio_integration.py tests/test_parametric_coordinator.py tests/test_sectionproperties_integration.py tests/test_solver_benchmarks.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -169,7 +178,7 @@ gates:
     description: "Domain tests for specialized"
     domain: "specialized"
     test_roots: ["tests/specialized/", "tests/geotechnical/", "tests/gis/", "tests/nde/", "tests/power/", "tests/signal_processing/", "tests/visualization/", "tests/web/", "tests/naming_convention_validation/", "tests/test_geopandas_integration.py", "tests/test_geotechnical_anchors.py", "tests/test_geotechnical_piles.py", "tests/test_geotechnical_scour.py", "tests/test_pygmt_integration.py", "tests/test_pyvista_integration.py", "tests/test_skill_resolver.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/specialized/ tests/geotechnical/ tests/gis/ tests/nde/ tests/power/ tests/signal_processing/ tests/visualization/ tests/web/ tests/naming_convention_validation/ tests/test_geopandas_integration.py tests/test_geotechnical_anchors.py tests/test_geotechnical_piles.py tests/test_geotechnical_scour.py tests/test_pygmt_integration.py tests/test_pyvista_integration.py tests/test_skill_resolver.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/specialized/ tests/geotechnical/ tests/gis/ tests/nde/ tests/power/ tests/signal_processing/ tests/visualization/ tests/web/ tests/naming_convention_validation/ tests/test_geopandas_integration.py tests/test_geotechnical_anchors.py tests/test_geotechnical_piles.py tests/test_geotechnical_scour.py tests/test_pygmt_integration.py tests/test_pyvista_integration.py tests/test_skill_resolver.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -179,7 +188,7 @@ gates:
     description: "Domain tests for structural"
     domain: "structural"
     test_roots: ["tests/structural/", "tests/fatigue/", "tests/ansys/", "tests/unit/structural/", "tests/rainflow_comparison_results/", "tests/test_complete_fatigue_pipeline.py", "tests/test_fatigue_basic.py", "tests/test_plate_buckling_units.py", "tests/test_plate_capacity.py", "tests/test_rainflow_with_effective_tension.py", "tests/test_sections.py", "tests/test_spectral_fatigue.py", "tests/test_spectral_fatigue_validation.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/structural/ tests/fatigue/ tests/ansys/ tests/unit/structural/ tests/rainflow_comparison_results/ tests/test_complete_fatigue_pipeline.py tests/test_fatigue_basic.py tests/test_plate_buckling_units.py tests/test_plate_capacity.py tests/test_rainflow_with_effective_tension.py tests/test_sections.py tests/test_spectral_fatigue.py tests/test_spectral_fatigue_validation.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/structural/ tests/fatigue/ tests/ansys/ tests/unit/structural/ tests/rainflow_comparison_results/ tests/test_complete_fatigue_pipeline.py tests/test_fatigue_basic.py tests/test_plate_buckling_units.py tests/test_plate_capacity.py tests/test_rainflow_with_effective_tension.py tests/test_sections.py tests/test_spectral_fatigue.py tests/test_spectral_fatigue_validation.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -189,7 +198,7 @@ gates:
     description: "Domain tests for subsea"
     domain: "subsea"
     test_roots: ["tests/subsea/", "tests/drilling_riser/", "tests/check_catenary_geometry.py", "tests/solve_catenary_correct.py", "tests/solve_general_catenary.py", "tests/test_catenary_module.py", "tests/test_catenary_riser_summary.py", "tests/test_lazy_wave_catenary.py", "tests/test_lazy_wave_legacy_comparison.py", "tests/test_on_bottom_stability.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -199,7 +208,7 @@ gates:
     description: "Domain tests for workflows"
     domain: "workflows"
     test_roots: ["tests/workflows/", "tests/test_automation/", "tests/domains/", "tests/specs/", "tests/scripts/", "tests/DOMAINS.md", "tests/test_agent_dashboard.py", "tests/test_workflow_checkpoints.py", "tests/test_workflow_executor.py", "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py -rfE -p asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py -rfE -p asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -209,7 +218,7 @@ gates:
     description: "Domain tests for misc"
     domain: "misc"
     test_roots: ["tests/CATENARY_SOLVER_STATUS.md", "tests/TESTING_GUIDE.md", "tests/TEST_BASELINE.md", "tests/__init__.py", "tests/additional_engine_tests.py", "tests/simple_engine_test.py", "tests/test_engine.py", "tests/test_engine_isolated.py"]
-    command: "uv run --no-sources --with-editable . python -m pytest tests/__init__.py tests/additional_engine_tests.py tests/simple_engine_test.py tests/test_engine.py tests/test_engine_isolated.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/__init__.py tests/additional_engine_tests.py tests/simple_engine_test.py tests/test_engine.py tests/test_engine_isolated.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

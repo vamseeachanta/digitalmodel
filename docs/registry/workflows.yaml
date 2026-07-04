@@ -1,4 +1,12 @@
-schema_version: 1
+# schema_version 2 (deckhand versioned routing): a workflow row MAY carry an
+# algorithm-version triple — all optional; absence means v1 / stable / latest:
+#   version: <int >= 1>   algorithm revision; bump when the method or curve changes
+#   status:  stable | deprecated | experimental | retired   (default: stable)
+#   latest:  true         the latest-stable resolution target for this id
+# Multiple rows may share one `id`, differing by `version` (each with its own
+# input/outputs/test). Deckhand resolves an unpinned `<repo>:<id>` to the latest
+# stable version; a pinned `<repo>:<id>@N` resolves that exact version.
+schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
   - id: cathodic-protection
@@ -83,6 +91,32 @@ workflows:
       - examples/workflows/jumper-installation/results/input_jumper_installation_cases.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jumper-installation]
     runtime: offline
+  - id: riser-fatigue
+    basename: riser_fatigue
+    title: Combined wave + VIV riser fatigue damage (DNV-RP-C203)
+    input: examples/workflows/riser-fatigue/input.yml
+    outputs:
+      - examples/workflows/riser-fatigue/results/input.yml
+      - examples/workflows/riser-fatigue/results/input_riser_fatigue.csv
+      - examples/workflows/riser-fatigue/results/input_riser_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-fatigue]
+    runtime: offline
+    parametric:
+      physics: log_log
+      response: annual_damage
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: scf, scale: linear, grid: [1.0, 1.1, 1.2, 1.3, 1.4]}
+        - {name: viv_stress_scale, scale: linear, grid: [0.8, 1.0, 1.2, 1.4, 1.6]}
+      atlas: atlases/riser_fatigue
+  - id: riser-fatigue-atlas-query
+    basename: parametric_query
+    title: Instant interpolated riser fatigue life from the pre-computed annual-damage atlas
+    input: examples/workflows/riser-fatigue-atlas-query/input.yml
+    outputs:
+      - examples/workflows/riser-fatigue-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-fatigue-atlas-query]
+    runtime: offline
   - id: mooring-fatigue
     basename: mooring_fatigue
     title: Metallic mooring-line fatigue damage from tension-range bins
@@ -93,17 +127,44 @@ workflows:
       - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
     runtime: offline
+    version: 1
+    status: stable
+    latest: true
     parametric:
       physics: log_log
       response: damage
       response_kwargs: {environment: seawater_cp}
       tolerance: {metric: max_rel_error, threshold: 0.10}
+      # damage depends on (tension,area) only through stress = T*1000/A, so the
+      # atlas grids on a DERIVED stress axis (#830) — collapses the old
+      # tension x area grid (~16x fewer cells). The query supplies raw
+      # tension_range_kN + area_mm2 and the stress is derived at lookup.
       axes:
-        - {name: tension_range_kN, scale: log, grid: [100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450]}
+        - name: stress_MPa
+          scale: log
+          grid: [11, 14, 18, 22, 27, 33, 40, 50, 62, 78, 98, 122, 150]
+          derived: {fn: stress_from_tension_area, inputs: [tension_range_kN, area_mm2]}
         - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000]}
-        - {name: area_mm2, scale: log, grid: [3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]}
         - {name: sn_curve, values: [B1, B2, C, C1, C2, D, E, F]}
       atlas: atlases/mooring_fatigue
+  # Versioned-routing canary (schema v2): a second algorithm version of the same
+  # id. v2 assesses against the DNV-RP-C203 free-corrosion S-N basis (single
+  # slope, no endurance limit, no cathodic-protection credit) — more conservative
+  # than v1's seawater-CP bilinear curve. Shipped `experimental` so unpinned
+  # routing stays on v1 (latest-stable); pin `digitalmodel:mooring-fatigue@2`
+  # to opt in.
+  - id: mooring-fatigue
+    version: 2
+    status: experimental
+    basename: mooring_fatigue
+    title: Metallic mooring-line fatigue — conservative free-corrosion S-N basis
+    input: examples/workflows/mooring-fatigue-v2/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue-v2/results/input.yml
+      - examples/workflows/mooring-fatigue-v2/results/input_mooring_fatigue.csv
+      - examples/workflows/mooring-fatigue-v2/results/input_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
+    runtime: offline
   - id: mooring-fatigue-atlas-query
     basename: parametric_query
     title: Instant interpolated mooring fatigue life from the pre-computed atlas
@@ -169,6 +230,26 @@ workflows:
     outputs:
       - examples/workflows/spectral-fatigue-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue-atlas-query]
+    runtime: offline
+  - id: rao-spectral-fatigue
+    basename: rao_spectral_fatigue
+    title: Spectral fatigue from a stress RAO and a wave spectrum (S_stress=|H|^2 S_wave, DNV-RP-C203)
+    input: examples/workflows/rao-spectral-fatigue/input.yml
+    outputs:
+      - examples/workflows/rao-spectral-fatigue/results/input.yml
+      - examples/workflows/rao-spectral-fatigue/results/input_spectral_fatigue.csv
+      - examples/workflows/rao-spectral-fatigue/results/input_spectral_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-spectral-fatigue]
+    runtime: offline
+  - id: vessel-seakeeping
+    basename: vessel_seakeeping
+    title: Vessel seakeeping operability from motion RAOs and a sea state (S_response=|RAO|^2 S_wave)
+    input: examples/workflows/vessel-seakeeping/input.yml
+    outputs:
+      - examples/workflows/vessel-seakeeping/results/input.yml
+      - examples/workflows/vessel-seakeeping/results/input_vessel_seakeeping.csv
+      - examples/workflows/vessel-seakeeping/results/input_vessel_seakeeping_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[vessel-seakeeping]
     runtime: offline
   - id: time-series
     basename: time_series
@@ -435,6 +516,30 @@ workflows:
       - examples/workflows/free-span-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-atlas-query]
     runtime: offline
+  - id: fowt-mooring
+    basename: fowt_mooring
+    title: FOWT watch-circle vs dynamic-cable MBR feasibility screen
+    input: examples/workflows/fowt-mooring/input.yml
+    outputs:
+      - examples/workflows/fowt-mooring/results/fowt_mooring_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fowt-mooring]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: mbr_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: watch_circle_radius, scale: linear, grid: [5, 10, 15, 20, 25, 30]}
+        - {name: mbr_limit_m, scale: linear, grid: [4.0, 5.0, 6.0]}
+      atlas: atlases/fowt_mooring
+  - id: fowt-mooring-atlas-query
+    basename: parametric_query
+    title: Instant interpolated FOWT MBR utilisation from the pre-computed atlas
+    input: examples/workflows/fowt-mooring-atlas-query/input.yml
+    outputs:
+      - examples/workflows/fowt-mooring-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fowt-mooring-atlas-query]
+    runtime: offline
   - id: pipeline-lateral-buckling
     basename: lateral_buckling
     title: HP/HT subsea pipeline lateral buckling screening
@@ -453,6 +558,31 @@ workflows:
       - examples/workflows/pipeline-upheaval-buckling/results/input_upheaval_buckling.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-upheaval-buckling]
     runtime: offline
+  - id: span-rectification
+    basename: span_rectification
+    title: Free-span rectification — intermediate supports for an over-long span (DNV-RP-F105)
+    input: examples/workflows/span-rectification/input.yml
+    outputs:
+      - examples/workflows/span-rectification/results/input.yml
+      - examples/workflows/span-rectification/results/span_rectification/span_rectification_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: actual_span_length_m, scale: linear, grid: [8, 10.5, 13, 15.5, 18]}
+        - {name: current_velocity_ms, scale: linear, grid: [0.4, 0.6, 0.8, 1.0, 1.2]}
+      atlas: atlases/span_rectification
+  - id: span-rectification-atlas-query
+    basename: parametric_query
+    title: Instant interpolated free-span screening utilisation from the pre-computed atlas
+    input: examples/workflows/span-rectification-atlas-query/input.yml
+    outputs:
+      - examples/workflows/span-rectification-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[span-rectification-atlas-query]
+    runtime: offline
   - id: orcawave-input-prep
     basename: diffraction
     title: OrcaWave diffraction input YAML preparation from a canonical spec
@@ -462,6 +592,14 @@ workflows:
       - examples/workflows/orcawave-input-prep/results/prepared/RegistryShip.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-input-prep]
     runtime: offline
+  - id: orcawave-diffraction-solve
+    basename: diffraction
+    title: OrcaWave diffraction solve (RAOs) from a canonical spec — needs OrcaWave license
+    input: examples/workflows/orcawave-diffraction-solve/input.yml
+    outputs:
+      - examples/workflows/orcawave-diffraction-solve/results/UnitBoxRAO.owr
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-diffraction-solve]
+    runtime: requires-license
   - id: aqwa-diffraction-deck-prep
     basename: diffraction
     title: AQWA diffraction deck preparation from a canonical spec
@@ -470,6 +608,39 @@ workflows:
       - examples/workflows/aqwa-diffraction-deck-prep/results/input.yml
       - examples/workflows/aqwa-diffraction-deck-prep/results/prepared/registry_ship_diffraction.dat
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[aqwa-diffraction-deck-prep]
+    runtime: offline
+  - id: diffraction-library-query
+    basename: parametric_query
+    title: Instant heave RAO from the sparse diffraction library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#801): built by scripts/parametric/build_diffraction_library.py
+    # from licensed OrcaWave/AQWA runs (ships a STUB). Exact-match the vessel/draft
+    # case, interpolate freq x heading within; an uncovered case escalates.
+    input: examples/workflows/diffraction-library-query/input.yml
+    outputs:
+      - examples/workflows/diffraction-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[diffraction-library-query]
+    runtime: offline
+  - id: orcaflex-library-query
+    basename: parametric_query
+    title: Instant max mooring tension from the sparse OrcaFlex library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#832): built by scripts/parametric/build_orcaflex_library.py
+    # from licensed OrcaFlex/OrcFxAPI runs (ships a STUB). Exact-match the load-case
+    # key, interpolate heading within; an uncovered case escalates.
+    input: examples/workflows/orcaflex-library-query/input.yml
+    outputs:
+      - examples/workflows/orcaflex-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-library-query]
+    runtime: offline
+  - id: drilling-riser-envelope-library-query
+    basename: parametric_query
+    title: Instant von-Mises dynamic amplification from the sparse drilling-riser envelope library (licensed-run coverage)
+    # Sparse atlas LIBRARY (#1346): built by scripts/parametric/build_drilling_riser_envelope_library.py
+    # from licensed OrcaFlex/OrcFxAPI runs (ships a STUB). Exact-match the operating-mode
+    # key, interpolate offset x current x Hs x Tp within; an uncovered mode/point escalates.
+    input: examples/workflows/drilling-riser-envelope-library-query/input.yml
+    outputs:
+      - examples/workflows/drilling-riser-envelope-library-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drilling-riser-envelope-library-query]
     runtime: offline
   - id: dynacard-diagnostics
     basename: artificial_lift
@@ -549,6 +720,8 @@ workflows:
       - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wall-thickness-quickcheck]
     runtime: offline
+    result:                             # workflow-API result descriptor (#3282 shape; #3295-reserved slot)
+      kind: files                       # extract_result globs the injected embed root; EXCLUDES the save_cfg dump
   - id: api579-pipe-ffs-b314
     basename: API579
     title: API 579 FFS for a 12.75 inch B31.4 oil pipe
@@ -564,6 +737,31 @@ workflows:
     outputs:
       - examples/workflows/api579-pipe-ffs-b318/results/input.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b318]
+    runtime: offline
+  - id: inspection-planning
+    basename: inspection_planning
+    title: Inspection planning — remaining life + next-inspection interval (API 510/570/653)
+    input: examples/workflows/inspection-planning/input.yml
+    outputs:
+      - examples/workflows/inspection-planning/results/input.yml
+      - examples/workflows/inspection-planning/results/inspection_planning/inspection_planning_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: remaining_life_years
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: corrosion_rate_mm_yr, scale: linear, grid: [0.1, 0.3, 0.5, 0.7, 0.9]}
+        - {name: current_wall_thickness_mm, scale: linear, grid: [8, 10, 12, 14, 16]}
+      atlas: atlases/inspection_planning
+  - id: inspection-planning-atlas-query
+    basename: parametric_query
+    title: Instant interpolated remaining-life (yr) from the pre-computed inspection-planning atlas
+    input: examples/workflows/inspection-planning-atlas-query/input.yml
+    outputs:
+      - examples/workflows/inspection-planning-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[inspection-planning-atlas-query]
     runtime: offline
   - id: jacket-member-joint-checks
     basename: jacket_checks
@@ -604,6 +802,16 @@ workflows:
       - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.csv
       - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rudder-stock-torque]
+    runtime: offline
+  - id: naval-arch-maneuvering-envelope
+    basename: naval_arch
+    title: Low-speed manoeuvring & station-keeping envelope screen
+    input: examples/workflows/naval-arch-maneuvering-envelope/input.yml
+    outputs:
+      - examples/workflows/naval-arch-maneuvering-envelope/results/input.yml
+      - examples/workflows/naval-arch-maneuvering-envelope/results/naval_arch_maneuvering_envelope/maneuvering_envelope_sweep.csv
+      - examples/workflows/naval-arch-maneuvering-envelope/results/naval_arch_maneuvering_envelope/maneuvering_envelope_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[naval-arch-maneuvering-envelope]
     runtime: offline
   - id: pile-axial-capacity
     basename: geotechnical
@@ -693,6 +901,50 @@ workflows:
       - examples/workflows/scour-assessment/results/input.yml
       - examples/workflows/scour-assessment/results/scour/scour_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]
+    runtime: offline
+  - id: mudmat-bearing-capacity
+    basename: mudmat_bearing_capacity
+    title: Mudmat (shallow foundation) bearing-capacity screening (DNV-RP-C212 / Brinch Hansen)
+    input: examples/workflows/mudmat-bearing-capacity/input.yml
+    outputs:
+      - examples/workflows/mudmat-bearing-capacity/results/input.yml
+      - examples/workflows/mudmat-bearing-capacity/results/mudmat_bearing_capacity/mudmat_bearing_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: vertical_load_kN, scale: linear, grid: [1500, 2000, 2500, 3000, 3500]}
+        - {name: undrained_shear_strength_kpa, scale: linear, grid: [12, 16, 20, 24, 28]}
+      atlas: atlases/mudmat_bearing_capacity
+  - id: mudmat-bearing-atlas-query
+    basename: parametric_query
+    title: Instant interpolated mudmat bearing-capacity utilisation from the pre-computed atlas
+    input: examples/workflows/mudmat-bearing-atlas-query/input.yml
+    outputs:
+      - examples/workflows/mudmat-bearing-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-atlas-query]
+    runtime: offline
+  - id: liquefaction-triggering
+    basename: liquefaction
+    title: Seed-Idriss simplified liquefaction-triggering screening (CSR vs CRR, Youd 2001)
+    input: examples/workflows/liquefaction/input.yml
+    outputs:
+      - examples/workflows/liquefaction/results/input.yml
+      - examples/workflows/liquefaction/results/liquefaction/liquefaction_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]
+    runtime: offline
+  - id: casing-design
+    basename: casing_design
+    title: Production casing design-factor screen (burst/collapse/tension/triaxial + frac limit + NACE sour)
+    input: examples/workflows/casing-design/input.yml
+    outputs:
+      - examples/workflows/casing-design/results/input.yml
+      - examples/workflows/casing-design/results/casing_design/casing_design_summary.json
+      - examples/workflows/casing-design/results/casing_design/casing_design_products.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[casing-design]
     runtime: offline
   - id: well-bore-design
     basename: well_bore_design
@@ -866,6 +1118,31 @@ workflows:
       - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
     runtime: offline
+  - id: esp-pump-hydraulics
+    basename: esp_pump_hydraulics
+    title: ESP hydraulics — total dynamic head, stage count and motor sizing
+    input: examples/workflows/esp-pump-hydraulics/input.yml
+    outputs:
+      - examples/workflows/esp-pump-hydraulics/results/input.yml
+      - examples/workflows/esp-pump-hydraulics/results/esp_pump_hydraulics/esp_pump_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-hydraulics]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: flow_rate_m3_per_day, scale: linear, grid: [700, 1000, 1300, 1600, 1900]}
+        - {name: dynamic_fluid_level_m, scale: linear, grid: [1200, 1500, 1800, 2100, 2400]}
+      atlas: atlases/esp_pump_hydraulics
+  - id: esp-pump-atlas-query
+    basename: parametric_query
+    title: Instant interpolated ESP screening utilisation from the pre-computed atlas
+    input: examples/workflows/esp-pump-atlas-query/input.yml
+    outputs:
+      - examples/workflows/esp-pump-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[esp-pump-atlas-query]
+    runtime: offline
   - id: rigging
     basename: rigging
     title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)
@@ -875,3 +1152,93 @@ workflows:
       - examples/workflows/rigging/results/rigging/rigging_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rigging]
     runtime: offline
+  - id: lifting-lug-design
+    basename: lifting_lug
+    title: Lifting lug / padeye strength screening (bearing, net tension, shear tear-out; AISC / DNV-ST-0378)
+    input: examples/workflows/lifting-lug-design/input.yml
+    outputs:
+      - examples/workflows/lifting-lug-design/results/input.yml
+      - examples/workflows/lifting-lug-design/results/lifting_lug/lifting_lug_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-design]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: governing_utilisation
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: static_load_kN, scale: linear, grid: [200, 300, 400, 500, 600]}
+        - {name: plate_thickness_mm, scale: linear, grid: [30, 40, 50, 60, 70]}
+      atlas: atlases/lifting_lug
+  - id: lifting-lug-atlas-query
+    basename: parametric_query
+    title: Instant interpolated lifting-lug utilisation from the pre-computed atlas
+    input: examples/workflows/lifting-lug-atlas-query/input.yml
+    outputs:
+      - examples/workflows/lifting-lug-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[lifting-lug-atlas-query]
+    runtime: offline
+  - id: weather-window
+    basename: weather_window
+    title: Weather-window (workability) screening — persistence of Hs vs an operational limit (DNV-OS-H101)
+    input: examples/workflows/weather-window/input.yml
+    outputs:
+      - examples/workflows/weather-window/results/input.yml
+      - examples/workflows/weather-window/results/weather_window/weather_window_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: operability_pct
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      # axes are scalars; the Hs hindcast is a FIXED reference baked into the
+      # response function (an Hs time series is never an atlas axis).
+      axes:
+        - {name: hs_limit_m, scale: linear, grid: [2.0, 2.5, 3.0, 3.5, 4.0]}
+        - {name: required_window_hours, scale: linear, grid: [12, 24, 36, 48, 72]}
+      atlas: atlases/weather_window
+  - id: weather-window-atlas-query
+    basename: parametric_query
+    title: Instant interpolated weather-window operability from the pre-computed atlas
+    input: examples/workflows/weather-window-atlas-query/input.yml
+    outputs:
+      - examples/workflows/weather-window-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window-atlas-query]
+    runtime: offline
+  # ---- workflow-API adoption rows (workspace-hub#3285) ---------------------
+  # FULL durable workflows (input/outputs/test/runtime + the #3282 result: slot):
+  # tests/workflows/test_durable_workflows.py parametrizes over EVERY row and reads
+  # input/outputs, so these are real CLI-exercised workflows, not descriptor-only.
+  - id: ffs-metal-loss                  # NEW basename `ffs` -- legacy api579-* rows untouched
+    basename: ffs
+    title: API 579 L1/L2 metal-loss FFS coordinator (measurement-sufficiency aware, #1066)
+    input: examples/workflows/ffs-metal-loss/input.yml
+    outputs:
+      - examples/workflows/ffs-metal-loss/results/input.yml   # save_cfg dump carrying cfg["ffs"] = to_dict()
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ffs-metal-loss]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: ffs                          # cfg["ffs"] = FFSAssessmentResult.to_dict() (16-key indexed shape)
+  - id: buckling-parametric             # #3285-OWNED; bare in-repo id; #3283 references golden illustratively
+    basename: buckling_parametric
+    title: DNV-RP-C201 plate-buckling parametric sweep (results.json + O(1) index)
+    input: examples/workflows/buckling-parametric/input.yml
+    outputs:
+      - examples/workflows/buckling-parametric/results/input.yml     # save_cfg dump
+      - examples/workflows/buckling-parametric/results/results.json  # write_outputs (meta.generated_at omitted -> byte-stable)
+      - examples/workflows/buckling-parametric/results/cases.csv     # write_outputs cases table
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[buckling-parametric]
+    runtime: offline
+    result:
+      kind: files                       # results.json {meta,lookup,index,index_status,curves} + cases.csv
+  - id: mooring-design-mbl              # NEW basename `mooring_mbl` -- reserved `mooring` arm untouched
+    basename: mooring_mbl
+    title: DNV-OS-E301 mooring MBL safety-factor check (calc-citation pilot #2685)
+    input: examples/workflows/mooring-design-mbl/input.yml
+    outputs:
+      - examples/workflows/mooring-design-mbl/results/input.yml      # save_cfg dump carrying cfg["mooring_mbl"]
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-design-mbl]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: mooring_mbl

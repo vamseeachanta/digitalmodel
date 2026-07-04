@@ -22,24 +22,59 @@ from scipy.interpolate import RegularGridInterpolator
 PHYSICS_CLASSES = {"linear", "log_log", "utilization_threshold"}
 
 
+# Registry of pure derived-axis transforms (raw input fields -> the axis value).
+# Keeps the axis a single physically-meaningful coordinate while the query stays
+# in the user's raw terms (e.g. collapse tension+area -> stress). No eval().
+DERIVED_TRANSFORMS: dict[str, Any] = {
+    # stress range (MPa) from a tension range (kN) over a cross-section (mm^2)
+    "stress_from_tension_area": lambda tension_range_kN, area_mm2: (
+        float(tension_range_kN) * 1000.0 / float(area_mm2)
+    ),
+}
+
+
+def _interval_index(grid: list[float], val: float) -> int:
+    """Index i of the grid interval [grid[i], grid[i+1]] containing val,
+    clamped to [0, len(grid)-2]."""
+    import bisect
+
+    i = bisect.bisect_right(grid, val) - 1
+    return max(0, min(i, len(grid) - 2))
+
+
+@dataclass
+
+
 @dataclass
 class Axis:
     """One atlas dimension. Continuous axes carry ``grid`` + ``scale``;
-    categorical axes carry ``values`` and are sliced, never interpolated."""
+    categorical axes carry ``values`` and are sliced, never interpolated.
+    A continuous axis may be ``derived``: its value is computed from raw input
+    fields via a registered transform, so the grid is in the derived coordinate
+    while the query supplies the raw inputs."""
 
     name: str
     scale: str = "linear"  # linear | log  (ignored for categorical axes)
     grid: list[float] | None = None
     values: list[Any] | None = None
+    derived: dict[str, Any] | None = None  # {"fn": <name>, "inputs": [<field>, ...]}
 
     @property
     def is_categorical(self) -> bool:
         return self.values is not None
 
+    def derived_value(self, point: dict[str, Any]) -> float:
+        """Compute this derived axis's value from the point's raw inputs."""
+        fn = DERIVED_TRANSFORMS[self.derived["fn"]]
+        return float(fn(*[point[k] for k in self.derived["inputs"]]))
+
     def to_dict(self) -> dict[str, Any]:
         if self.is_categorical:
             return {"name": self.name, "values": list(self.values)}
-        return {"name": self.name, "scale": self.scale, "grid": list(self.grid)}
+        out = {"name": self.name, "scale": self.scale, "grid": list(self.grid)}
+        if self.derived is not None:
+            out["derived"] = self.derived
+        return out
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Axis":
@@ -49,6 +84,7 @@ class Axis:
             name=data["name"],
             scale=data.get("scale", "linear"),
             grid=[float(v) for v in data["grid"]],
+            derived=data.get("derived"),
         )
 
 
@@ -134,9 +170,19 @@ class Atlas:
 
         query = []
         for ax in self.continuous_axes:
-            if ax.name not in point:
+            # direct value if supplied (generation/holdout); else derive it from
+            # the point's raw inputs (query path for a derived axis).
+            if ax.name in point:
+                raw = float(point[ax.name])
+            elif ax.derived is not None:
+                try:
+                    raw = ax.derived_value(point)
+                except KeyError as missing:
+                    return Prediction(
+                        math.nan, False,
+                        f"missing input {missing.args[0]} for derived axis {ax.name}")
+            else:
                 return Prediction(math.nan, False, f"missing axis {ax.name}")
-            raw = float(point[ax.name])
             lo, hi = min(ax.grid), max(ax.grid)
             if raw < lo or raw > hi:
                 return Prediction(
@@ -151,6 +197,38 @@ class Atlas:
         if math.isnan(raw_value):
             return Prediction(math.nan, False, "interpolation returned NaN")
         return Prediction(self._untransform_response(raw_value), True)
+
+    def local_error(self, point: dict[str, Any]) -> float:
+        """Per-point error estimate (#828): the held-out error of the grid
+        interval the query falls into, taken over the worst continuous axis.
+        Tighter than the global max_rel_error in smooth regions, wider near a
+        feature. Falls back to the global error if no local map is present (an
+        older atlas) or on any miss — so it is always at least as honest."""
+        slice_map = (self.validation.get("local_error_map") or {})
+        if not slice_map:
+            return self.max_rel_error
+        cat = self.categorical_axis
+        cat_key = str(point.get(cat.name)) if cat is not None else ""
+        per_axis = slice_map.get(cat_key)
+        if per_axis is None:
+            return self.max_rel_error
+        errs = []
+        for ax in self.continuous_axes:
+            if ax.name in point:
+                val = float(point[ax.name])
+            elif ax.derived is not None:
+                try:
+                    val = ax.derived_value(point)
+                except Exception:
+                    return self.max_rel_error
+            else:
+                return self.max_rel_error
+            intervals = per_axis.get(ax.name)
+            if not intervals:
+                return self.max_rel_error
+            idx = _interval_index([float(k) for k in ax.grid], val)
+            errs.append(intervals[min(idx, len(intervals) - 1)])
+        return max(errs) if errs else self.max_rel_error
 
     # -- persistence -----------------------------------------------------
     def surrogate_spec(self) -> dict[str, Any]:

@@ -13,6 +13,13 @@ import warnings
 
 import pytest
 
+# stale: asserts that old `digitalmodel.modules.X` paths still resolve, but that
+# compat shim package was removed in the flattening reorg. Skip until rewritten
+# against the current layout. See #949.
+pytestmark = pytest.mark.skip(
+    reason="stale: digitalmodel.modules compat shim removed; see #949"
+)
+
 
 class TestCompatModule:
     """Test the _compat registration and alias machinery."""

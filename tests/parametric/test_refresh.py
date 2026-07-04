@@ -51,3 +51,27 @@ def test_tampered_basis_is_stale_and_escalates(tmp_path):
     assert result["in_range"] is False
     assert result["stale"] is True
     assert "stale" in result["reason"]
+
+
+# -- CI drift gate (#833) ----------------------------------------------------
+
+def test_ci_gate_is_green_on_the_committed_state():
+    # the real committed atlases are all current -> exit 0
+    assert refresh.main([]) == 0
+
+
+def test_ci_gate_fails_on_a_stale_computed_atlas(monkeypatch):
+    monkeypatch.setattr(refresh, "parametric_workflow_ids", lambda: ["w"])
+    monkeypatch.setattr(refresh, "refresh_status",
+                        lambda wid: {"stale": True, "reason": "basis changed"})
+    monkeypatch.setattr(refresh, "LIBRARY_EXPECTATIONS", {})
+    assert refresh.main([]) == 1
+
+
+def test_ci_gate_reports_but_does_not_fail_on_a_stale_library(monkeypatch):
+    monkeypatch.setattr(refresh, "parametric_workflow_ids", lambda: [])
+    monkeypatch.setattr(refresh, "LIBRARY_EXPECTATIONS", {"diffraction_library": {}})
+    monkeypatch.setattr(refresh, "library_status",
+                        lambda b: {"stale": True, "reason": "needs licensed run"})
+    assert refresh.main([]) == 0                       # report-only by default
+    assert refresh.main(["--strict-libraries"]) == 1   # enforced under --strict

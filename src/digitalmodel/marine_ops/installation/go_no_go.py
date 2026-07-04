@@ -88,31 +88,49 @@ def evaluate_go_no_go(
     jumper_name: str,
     results: Dict,
     *,
+    conditions: Optional[Dict] = None,
     crane_swl_uc_limit: float = 0.70,
     sling_wll_margin_limit: float = 1.5,
     daf_min: float = 1.1,
     daf_max: float = 1.3,
-    min_bend_radius_factor: float = 50.0,
+    min_bend_radius_factor: float = 4.0,
+    splash_zone_hs_limit_m: float = 1.0,
     total_lift_capacity_margin: float = 0.0,
 ) -> GoNoGoDecision:
     """Evaluate Go/No-Go decision for a jumper installation.
 
-    Implements DNV-RP-H103 compliant decision criteria.
+    Implements DNV-RP-H103 / DNV-ST-N001 compliant decision criteria
+    (see issue #472 criteria table).
 
     Args:
         jumper_name: Name of jumper for the decision report.
         results: Output dict from run_jumper_analysis().
+        conditions: Optional dict of operational/metocean conditions for the
+            planned weather window. Recognised keys:
+              - ``hs_m`` (float): significant wave height in the splash zone (m).
+            When omitted, the splash-zone Hs check uses a benign default
+            (0.0 m) so existing callers remain unaffected (backward compatible).
         crane_swl_uc_limit: Max allowable crane utilisation ratio (lift/SWL).
         sling_wll_margin_limit: Min allowable sling WLL ratio.
         daf_min: Min dynamic amplification factor allowed.
         daf_max: Max dynamic amplification factor allowed.
         min_bend_radius_factor: Minimum bend radius as multiplier of pipe OD.
+            Issue #472 tabulates ``>= 50 x OD`` (the flexible-pipe / umbilical
+            marine-warranty convention). That rule does NOT apply to rigid
+            steel jumpers, whose MBR is governed by an absolute spec radius
+            (see the separate "Minimum bend radius compliance" criterion).
+            The default here (4.0 x OD) reflects rigid-pipe practice so the
+            check is not spuriously failed for a rigid jumper; pass
+            ``min_bend_radius_factor=50.0`` for flexible product.
+        splash_zone_hs_limit_m: Max allowable splash-zone significant wave
+            height (DNV-ST-N001; issue #472: ``< 1.0 m``).
         total_lift_capacity_margin: Extra margin on total lift vs vessel capacity.
 
     Returns:
         GoNoGoDecision with all criteria evaluated.
     """
     criteria: List[CriterionResult] = []
+    conditions = conditions or {}
 
     # Extract data from results dict (handles multiple format variants)
     cranes = results.get("crane", {})
@@ -252,6 +270,35 @@ def evaluate_go_no_go(
         reference="DNV-ST-N001 Section 5, Ballymore jumper specification",
     ))
 
+    # 7b. Minimum Bend Radius as multiple of OD (issue #472: >= 50 x OD)
+    # Marine-warranty / jumper-spec convention: the routed bend radius must be
+    # at least min_bend_radius_factor times the pipe outside diameter.
+    mbr_factor_actual = bend_radius_m / pipe_od_m if pipe_od_m > 0 else 0.0
+    criteria.append(_check_criterion(
+        name="Minimum bend radius factor (R/OD)",
+        value=mbr_factor_actual, limit=min_bend_radius_factor, unit="x OD",
+        above_is_safe=True,
+        description=(
+            f"Bend radius {bend_radius_m:.4f} m / OD {pipe_od_m:.5f} m = "
+            f"{mbr_factor_actual:.2f}x OD (min {min_bend_radius_factor:.1f}x OD; "
+            f"issue #472 cites 50x OD for flexible product)"
+        ),
+        reference="DNV-RP-H103 / Jumper spec (issue #472: >= 50 x OD flexible)",
+    ))
+
+    # 7c. Splash-zone significant wave height (DNV-ST-N001; issue #472: < 1.0 m)
+    splash_zone_hs_m = float(conditions.get("hs_m", 0.0))
+    criteria.append(_check_criterion(
+        name="Splash zone Hs",
+        value=splash_zone_hs_m, limit=splash_zone_hs_limit_m, unit="m",
+        above_is_safe=False, warning_factor=0.9,
+        description=(
+            f"Planned splash-zone Hs {splash_zone_hs_m:.2f} m vs limit "
+            f"{splash_zone_hs_limit_m:.2f} m"
+        ),
+        reference="DNV-ST-N001 (marine operations weather limit)",
+    ))
+
     # 8. Vessel Deck Payload Utilisation
     vessel_deck_capacity_te = 14_000.0  # Saipem 7000 deck capacity
     deck_utilisation = total_weight_te / vessel_deck_capacity_te
@@ -313,6 +360,7 @@ def evaluate_go_no_go(
     summary += f"\n  DZ crane UC: {dz_uc:.3f} (limit: {crane_swl_uc_limit})"
     summary += f"\n  Bend radius: {bend_radius_m:.4f} m (required: 1.270 m)"
     summary += f"\n  Sling safety margin: {sling_safety:.2f}x (min: {sling_wll_margin_limit}x)"
+    summary += f"\n  Splash-zone Hs: {splash_zone_hs_m:.2f} m (limit: {splash_zone_hs_limit_m} m)"
     summary += f"\n  Spreader bar ratio: {spreader_ratio:.3f} (min: 0.30)"
 
     return GoNoGoDecision(

@@ -1,8 +1,48 @@
+# Plate buckling — DNV-RP-C201 worked example
+#
+# Solver: src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py
+#         (class PlateBuckling, routed by engine.py when basename == "plate_buckling")
+#
+# UNITS (per the solver source — get_plate_properties / get_FEA_stress /
+#        get_buckling_coefficient):
+#   length, breadth, thickness ... METRES (solver converts to ft via /0.3048)
+#   water_depth ................. METRES
+#   yield_strength, young_modulus, *_stress ... MPa (stress units)
+#   poisson_ratio ............... dimensionless
+#
+# NOTE: the key is spelled "longtudinal_stress" (no "i") on purpose — this
+#       matches the solver source exactly. Do NOT "correct" it or the key
+#       will not be read.
+#
+# MATERIAL: marine grade AH36 (higher-strength hull steel)
+#   yield_strength = 355 MPa, young_modulus = 206000 MPa, poisson_ratio = 0.3
+#
+# EXAMPLE: a single stiffened-panel plate field of a ship hull,
+#   2.4 m (length) x 0.8 m (breadth) x 0.012 m (thickness), at 100 m water depth,
+#   under 120 MPa longitudinal compression + 40 MPa shear.
+
 basename: plate_buckling
 
 calculation_type: DNV_rp_C201
 
-groups: []
+groups:
+  - # AH36 ship hull plate — 2.4 m x 0.8 m x 12 mm panel
+    # Geometry (metres)
+    length: 2.4
+    breadth: 0.8
+    thickness: 0.012
+    # Material — marine grade AH36 (MPa)
+    yield_strength: 355
+    young_modulus: 206000
+    poisson_ratio: 0.3
+    # Environment (metres)
+    water_depth: 100
+    # Applied FEA stresses (MPa) — note "longtudinal" spelling matches solver
+    longtudinal_stress: 120
+    transverse_stress: 0
+    shear_stress: 40
+    # Longitudinal buckling coefficient (simply supported plate, k ~= 4.0)
+    buckling_coefficient: 4.0
 
 default:
   log_level: INFO

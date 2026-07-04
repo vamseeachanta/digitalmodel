@@ -102,9 +102,11 @@ class TestGoMReferenceBenchmarks:
             distance_to_infra_km=distance,
             fluid_type=fluid,
         )
+        from digitalmodel.field_development.concept_selection import LEGACY_HOST_TYPES
+
         assert len(result.ranked_options) == 5
         types_seen = {opt.host_type for opt in result.ranked_options}
-        assert types_seen == set(HostType)
+        assert types_seen == set(LEGACY_HOST_TYPES)
 
     @pytest.mark.parametrize("name,depth,reservoir,distance,fluid", [
         ("Perdido", 2438, 100, 80, "oil"),
@@ -391,9 +393,11 @@ class TestCAPEXEstimates:
 
     def test_capex_same_for_same_host(self):
         """CAPEX ranges should not change with different inputs (they are lookup constants)."""
+        from digitalmodel.field_development.concept_selection import LEGACY_HOST_TYPES
+
         r1 = concept_selection(800, 100, 20, "oil")
         r2 = concept_selection(2000, 300, 80, "gas")
-        for host in HostType:
+        for host in LEGACY_HOST_TYPES:
             c1 = [o for o in r1.ranked_options if o.host_type == host][0].capex_estimate_usd_bn
             c2 = [o for o in r2.ranked_options if o.host_type == host][0].capex_estimate_usd_bn
             assert c1 == c2

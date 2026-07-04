@@ -12,22 +12,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from digitalmodel.materials import legacy_smys_table_mpa
 from digitalmodel.units import Q_
 from .rsf_calculations import check_ffs_level1
 
 SKILL_NAME = "pipeline_integrity"
 
 # ---------------------------------------------------------------------------
-# Material grade table — SMYS in MPa (API 5L PSL2 / ISO 3183)
+# Material grade table — SMYS in MPa (US-customary ksi values).
+# Sourced from the canonical grade matrix (issue #1089). These US-customary
+# values sit 1-3 MPa below the canonical ISO SMYS (e.g. X52 359 vs ISO 360);
+# the legacy values are preserved verbatim pending the convergence sign-off in
+# docs/domains/grade-table-migration-2026-06-28.md.
 # ---------------------------------------------------------------------------
-SMYS_TABLE: dict[str, float] = {
-    "X52": 359.0,
-    "X60": 414.0,
-    "X65": 448.0,
-    "X70": 483.0,
-    "X80": 552.0,
-    "X100": 690.0,
-}
+SMYS_TABLE: dict[str, float] = legacy_smys_table_mpa()
 
 # Hoop stress design factor (ASME B31.4 / B31.8 onshore buried pipelines)
 HOOP_DESIGN_FACTOR = 0.72

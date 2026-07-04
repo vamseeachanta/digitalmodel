@@ -285,6 +285,107 @@ def test_viv_safety_factor_atlas_is_log_log_exact():
     assert atlas.predict(point).value == pytest.approx(truth, rel=1e-6)
 
 
+def test_adaptive_densifies_a_coarse_seed_to_pass():
+    from digitalmodel.parametric.generate import generate_atlas_adaptive
+
+    atlas = generate_atlas_adaptive(
+        basename="mooring_fatigue", physics="log_log", response="damage",
+        axes=[
+            Axis(name="tension_range_kN", scale="log", grid=[100, 250, 450]),
+            Axis(name="n_cycles", scale="log", grid=[1e4, 1e6]),
+            Axis(name="area_mm2", scale="log", grid=[3000, 9000]),
+            Axis(name="sn_curve", values=["D"]),
+        ],
+        response_kwargs={"environment": "seawater_cp"}, tolerance=0.10, max_rounds=15,
+    )
+    assert atlas.validation["passes"]
+    log = atlas.validation["densification_log"]
+    assert log  # the coarse seed required densification
+    # refinement targets the offending axes (the S-N knee bends tension + area),
+    # never the exactly-log-linear n_cycles axis
+    assert all(step["axis"] in {"tension_range_kN", "area_mm2"} for step in log)
+
+
+def test_adaptive_is_a_noop_on_an_already_passing_seed():
+    from digitalmodel.parametric.generate import generate_atlas_adaptive
+
+    atlas = generate_atlas_adaptive(
+        basename="rao_tabulation", physics="linear", response="heave_m",
+        axes=[
+            Axis(name="frequency_rad_s", scale="linear",
+                 grid=[0.349066, 0.448799, 0.628319, 1.047198]),
+            Axis(name="heading_deg", scale="linear", grid=[0.0, 90.0]),
+        ],
+        response_kwargs={"database_path": "examples/workflows/rao-tabulation/input.yml"},
+        tolerance=0.05,
+    )
+    assert atlas.validation["passes"]
+    assert atlas.validation["densification_log"] == []  # nothing to densify
+
+
+def test_derived_axis_collapses_raw_inputs():
+    # mooring damage depends on (tension,area) only via stress; a derived stress
+    # axis lets the query pass raw tension+area and look up on stress (#830)
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = generate_atlas(
+        basename="mooring_fatigue",
+        physics="log_log",
+        response="damage",
+        axes=[
+            Axis(name="stress_MPa", scale="log",
+                 grid=[11, 18, 27, 40, 62, 98, 150],
+                 derived={"fn": "stress_from_tension_area",
+                          "inputs": ["tension_range_kN", "area_mm2"]}),
+            Axis(name="n_cycles", scale="log", grid=[1e4, 1e5, 1e6]),
+            Axis(name="sn_curve", values=["D", "F"]),
+        ],
+        response_kwargs={"environment": "seawater_cp"},
+        tolerance=0.10,
+    )
+    # (gate density is exercised by the committed 13-knot atlas; here the point
+    # is on a knot so interpolation is exact regardless)
+    # query in RAW terms: stress = 320*1000/8000 = 40 MPa (a grid knot) -> exact
+    raw = {"tension_range_kN": 320.0, "area_mm2": 8000.0, "n_cycles": 1e5, "sn_curve": "D"}
+    truth = RESPONSE_FUNCS["mooring_fatigue"]({"stress_MPa": 40.0, "n_cycles": 1e5,
+                                               "sn_curve": "D"}, environment="seawater_cp")
+    assert atlas.predict(raw).value == pytest.approx(truth, rel=1e-9)
+    # out-of-range reported on the DERIVED axis (tiny area -> huge stress)
+    oor = atlas.predict({"tension_range_kN": 320.0, "area_mm2": 1000.0,
+                         "n_cycles": 1e5, "sn_curve": "D"})
+    assert oor.in_range is False and "stress_MPa" in oor.reason
+
+
+def test_local_error_map_is_present_and_tighter_than_global():
+    from digitalmodel.parametric import refresh
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "code_check")
+    m = atlas.validation.get("local_error_map")
+    assert m, "regenerated atlas should carry a local_error_map (#828)"
+    all_errs = [e for slc in m.values() for per in slc.values() for e in per]
+    assert all_errs
+    g = atlas.max_rel_error
+    # the global figure is exactly the worst per-interval error...
+    assert max(all_errs) == pytest.approx(g, rel=1e-9)
+    # ...but most regions are strictly tighter than that worst case
+    assert min(all_errs) < g
+
+
+def test_query_band_uses_local_not_global_error():
+    from digitalmodel.parametric import refresh
+    from digitalmodel.parametric.query import _handle_value
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "fpso_mooring_full")
+    point = {"Hs": 3.5, "Tp": 11.0, "water_depth_m": 1000.0}
+    local = atlas.local_error(point)
+    assert local <= atlas.max_rel_error + 1e-12
+    result = _handle_value(atlas, point)
+    v, (lo, hi) = result["value"], result["confidence"]["band"]
+    # band half-width reflects the LOCAL error at this point
+    assert hi - v == pytest.approx(v * local, rel=1e-6)
+    assert "local interp error" in result["confidence"]["basis"]
+
+
 def test_save_load_roundtrip(tmp_path):
     atlas = _small_atlas()
     atlas.save(tmp_path)

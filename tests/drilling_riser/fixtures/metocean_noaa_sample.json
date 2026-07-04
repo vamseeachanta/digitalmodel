@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "source": "synthetic (NDBC WVHT/DPD record format); representative offline sample for CI",
+    "licence": "synthetic — no third-party data redistributed",
+    "format_reference": "NOAA NDBC standard meteorological (public schema)",
+    "note": "Offline fixture so the reducer->adapter->envelope chain runs with no network. Live provider data flows only through the guarded opt-in path. Contains no authentication material of any kind.",
+    "captured_offline": true
+  },
+  "records": [
+    {"timestamp": "2026-01-01T00:00:00", "wave_height": 1.2, "dominant_wave_period": 6.4},
+    {"timestamp": "2026-01-01T01:00:00", "wave_height": 1.4, "dominant_wave_period": 6.9},
+    {"timestamp": "2026-01-01T02:00:00", "wave_height": 2.1, "dominant_wave_period": 7.8},
+    {"timestamp": "2026-01-01T03:00:00", "wave_height": 2.6, "dominant_wave_period": 8.6},
+    {"timestamp": "2026-01-01T04:00:00", "wave_height": 3.3, "dominant_wave_period": 9.4},
+    {"timestamp": "2026-01-01T05:00:00", "wave_height": 1.1, "dominant_wave_period": 5.9},
+    {"timestamp": "2026-01-01T06:00:00", "wave_height": 4.2, "dominant_wave_period": 10.7},
+    {"timestamp": "2026-01-01T07:00:00", "wave_height": 2.4, "dominant_wave_period": 8.1},
+    {"timestamp": "2026-01-01T08:00:00", "wave_height": null, "dominant_wave_period": 7.0},
+    {"timestamp": "2026-01-01T09:00:00", "wave_height": 1.9, "dominant_wave_period": 7.3}
+  ]
+}

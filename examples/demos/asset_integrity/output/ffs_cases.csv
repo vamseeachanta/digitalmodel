@@ -1,0 +1,205 @@
+domain,method,grade,D_in,t_in,d_in,L_in,safe_pressure_psi,verdict,acceptable,governing,allowable_pressure_psi,length_mm,width_mm,thickness_mm,sigma_x_mpa,metal_loss_mm,utilization
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.1,2.0,2017.3279,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.1,4.0,1955.9259,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.1,8.0,1884.798,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.1,16.0,1646.0432,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.2,2.0,1964.9432,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.2,4.0,1832.5004,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.2,8.0,1691.1702,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.2,16.0,1234.5324,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.3,2.0,1893.9057,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.3,4.0,1679.4222,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.3,8.0,1472.6449,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X52,20.0,0.5,0.3,16.0,823.0216,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.1,2.0,2521.6599,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.1,4.0,2444.9074,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.1,8.0,2355.9975,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.1,16.0,2057.554,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.2,2.0,2456.179,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.2,4.0,2290.6255,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.2,8.0,2113.9628,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.2,16.0,1543.1655,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.3,2.0,2367.3821,ACCEPTABLE,True,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.3,4.0,2099.2777,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.3,8.0,1840.8062,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,b31g,X65,20.0,0.5,0.3,16.0,1028.777,UNACCEPTABLE,False,b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.1,2.0,2182.9398,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.1,4.0,2104.3308,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.1,8.0,2005.4443,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.1,16.0,1936.5016,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.2,2.0,2115.0097,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.2,4.0,1938.5408,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.2,8.0,1739.7739,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.2,16.0,1614.3675,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.3,2.0,2009.1072,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.3,4.0,1710.2976,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.3,8.0,1420.9244,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X52,20.0,0.5,0.3,16.0,1259.4792,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.1,2.0,2640.653,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.1,4.0,2545.5614,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.1,8.0,2425.9407,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.1,16.0,2342.5422,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.2,2.0,2558.4794,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.2,4.0,2345.0091,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.2,8.0,2104.5651,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.2,16.0,1952.864,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.3,2.0,2430.3717,ACCEPTABLE,True,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.3,4.0,2068.9084,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.3,8.0,1718.8602,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,modified_b31g,X65,20.0,0.5,0.3,16.0,1523.5635,UNACCEPTABLE,False,modified_b31g,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.1,2.0,2172.7798,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.1,4.0,2078.4517,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.1,8.0,1961.8291,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.1,16.0,1881.8325,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.2,2.0,2083.3568,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.2,4.0,1866.7356,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.2,8.0,1634.0833,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.2,16.0,1493.102,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.3,2.0,1924.9131,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.3,4.0,1550.7993,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.3,8.0,1224.8374,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X52,20.0,0.5,0.3,16.0,1056.5843,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.1,2.0,2628.3627,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.1,4.0,2514.2561,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.1,8.0,2373.1804,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.1,16.0,2276.4103,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.2,2.0,2520.1896,ACCEPTABLE,True,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.2,4.0,2258.1479,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.2,8.0,1976.7137,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.2,16.0,1806.1718,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.3,2.0,2328.5239,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.3,4.0,1875.9669,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.3,8.0,1481.6582,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,rstreng,X65,20.0,0.5,0.3,16.0,1278.1262,UNACCEPTABLE,False,rstreng,,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.1,2.0,,ACCEPTABLE,True,dnv_f101,2428.3045,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.1,4.0,,ACCEPTABLE,True,dnv_f101,2355.3575,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.1,8.0,,ACCEPTABLE,True,dnv_f101,2228.1939,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.1,16.0,,ACCEPTABLE,True,dnv_f101,2111.4842,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.2,2.0,,ACCEPTABLE,True,dnv_f101,2372.9581,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.2,4.0,,ACCEPTABLE,True,dnv_f101,2195.7479,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.2,8.0,,ACCEPTABLE,True,dnv_f101,1922.9328,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.2,16.0,,UNACCEPTABLE,False,dnv_f101,1705.9322,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.3,2.0,,ACCEPTABLE,True,dnv_f101,2269.504,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.3,4.0,,ACCEPTABLE,True,dnv_f101,1933.6784,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.3,8.0,,UNACCEPTABLE,False,dnv_f101,1509.368,,,,,,
+pipe_corroded_strength,dnv_f101,X52,20.0,0.5,0.3,16.0,,UNACCEPTABLE,False,dnv_f101,1232.486,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.1,2.0,,ACCEPTABLE,True,dnv_f101,2825.1339,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.1,4.0,,ACCEPTABLE,True,dnv_f101,2740.266,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.1,8.0,,ACCEPTABLE,True,dnv_f101,2592.3216,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.1,16.0,,ACCEPTABLE,True,dnv_f101,2456.5393,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.2,2.0,,ACCEPTABLE,True,dnv_f101,2760.7428,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.2,4.0,,ACCEPTABLE,True,dnv_f101,2554.5732,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.2,8.0,,UNACCEPTABLE,False,dnv_f101,2237.1752,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.2,16.0,,UNACCEPTABLE,False,dnv_f101,1984.7128,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.3,2.0,,ACCEPTABLE,True,dnv_f101,2640.3825,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.3,4.0,,UNACCEPTABLE,False,dnv_f101,2249.6768,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.3,8.0,,UNACCEPTABLE,False,dnv_f101,1756.0263,,,,,,
+pipe_corroded_strength,dnv_f101,X65,20.0,0.5,0.3,16.0,,UNACCEPTABLE,False,dnv_f101,1433.8968,,,,,,
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,0.0,0.7536
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,2.0,0.9883
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,4.0,1.5442
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,6.0,2.7452
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,0.0,1.1304
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,2.0,1.4824
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,4.0,2.3162
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,6.0,4.1178
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,0.0,1.5071
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,2.0,1.9765
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,4.0,3.0883
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,6.0,5.4904
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,0.0,0.6096
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,2.0,0.6592
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,4.0,0.7536
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,6.0,0.9883
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,0.0,0.9144
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,2.0,0.9887
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,4.0,1.1304
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,6.0,1.4824
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,0.0,1.2192
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,2.0,1.3183
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,4.0,1.5071
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,6.0,1.9765
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,0.0,0.5601
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,2.0,0.5797
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,4.0,0.6096
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,6.0,0.6592
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,0.0,0.8401
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,2.0,0.8695
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,4.0,0.9144
+plate_metal_loss,,Grade A,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,6.0,0.9887
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,0.0,1.1201
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,2.0,1.1594
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,4.0,1.2192
+plate_metal_loss,,Grade A,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,6.0,1.3183
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,0.0,0.6863
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,2.0,0.9883
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,4.0,1.5442
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,6.0,2.7452
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,0.0,1.0294
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,2.0,1.4824
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,4.0,2.3162
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,6.0,4.1178
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,0.0,1.3726
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,2.0,1.9765
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,4.0,3.0883
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,6.0,5.4904
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,0.0,0.4614
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,2.0,0.5303
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,4.0,0.6863
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,6.0,0.9883
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,0.0,0.6921
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,2.0,0.7954
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,4.0,1.0294
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,6.0,1.4824
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,200.0,0.0,0.9228
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,2.0,1.0606
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,4.0,1.3726
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,6.0,1.9765
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,0.0,0.4003
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,2.0,0.4237
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,4.0,0.4614
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,6.0,0.5303
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,0.0,0.6004
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,2.0,0.6355
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,4.0,0.6921
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,6.0,0.7954
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,0.0,0.8005
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,2.0,0.8474
+plate_metal_loss,,AH36,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,4.0,0.9228
+plate_metal_loss,,AH36,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,6.0,1.0606
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,0.0,0.6863
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,12.0,100.0,2.0,0.9883
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,4.0,1.5442
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,100.0,6.0,2.7452
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,0.0,1.0294
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,2.0,1.4824
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,4.0,2.3162
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,150.0,6.0,4.1178
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,0.0,1.3726
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,2.0,1.9765
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,4.0,3.0883
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,12.0,200.0,6.0,5.4904
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,0.0,0.4383
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,2.0,0.515
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,4.0,0.6863
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,100.0,6.0,0.9883
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,0.0,0.6575
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,150.0,2.0,0.7726
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,4.0,1.0294
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,150.0,6.0,1.4824
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,16.0,200.0,0.0,0.8767
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,2.0,1.0301
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,4.0,1.3726
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,16.0,200.0,6.0,1.9765
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,0.0,0.373
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,2.0,0.3977
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,4.0,0.4383
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,100.0,6.0,0.515
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,0.0,0.5595
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,2.0,0.5966
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,4.0,0.6575
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,150.0,6.0,0.7726
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,0.0,0.746
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,2.0,0.7955
+plate_metal_loss,,EH40,,,,,,ACCEPTABLE,True,plate_buckling,,2400.0,800.0,20.0,200.0,4.0,0.8767
+plate_metal_loss,,EH40,,,,,,UNACCEPTABLE,False,plate_buckling,,2400.0,800.0,20.0,200.0,6.0,1.0301

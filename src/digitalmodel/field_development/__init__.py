@@ -56,6 +56,25 @@ from .workflow import (
     evaluate_field_development,
     compare_concepts,
 )
+from .concept_screening import (
+    ProspectSpec,
+    AxisScores,
+    ConceptScreenResult,
+    ScreeningResult,
+    DEFAULT_WEIGHTS,
+    screen_concepts,
+    estimate_schedule_weeks,
+    estimate_rig_days,
+    capex_line_items,
+    intervention_index,
+    load_params,
+)
+from .concept_comparison_note import (
+    SensitivityRow,
+    weight_sensitivity_sweep,
+    render_comparison_note,
+    build_comparison_note,
+)
 
 __all__ = [
     # Schematics (WRK-192)
@@ -101,4 +120,21 @@ __all__ = [
     "ConceptComparison",
     "evaluate_field_development",
     "compare_concepts",
+    # Concept screening — four axes (W6)
+    "ProspectSpec",
+    "AxisScores",
+    "ConceptScreenResult",
+    "ScreeningResult",
+    "DEFAULT_WEIGHTS",
+    "screen_concepts",
+    "estimate_schedule_weeks",
+    "estimate_rig_days",
+    "capex_line_items",
+    "intervention_index",
+    "load_params",
+    # Concept comparison note (W6)
+    "SensitivityRow",
+    "weight_sensitivity_sweep",
+    "render_comparison_note",
+    "build_comparison_note",
 ]

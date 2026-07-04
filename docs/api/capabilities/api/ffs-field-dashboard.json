@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html",
+  "provenance": {
+    "basis": "measurement sufficiency",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html"
+  },
+  "surface": "digitalmodel:ffs-field-dashboard",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Given my metal-loss measurements, tell me whether to accept, re-rate, take more measurements, or escalate.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Given my metal-loss measurements, tell me whether to accept, re-rate, take more measurements, or escalate."
+    },
+    {
+      "via": "http",
+      "step": "GET https://vamseeachanta.github.io/digitalmodel/ffs/ffs-field-dashboard.html"
+    }
+  ]
+}

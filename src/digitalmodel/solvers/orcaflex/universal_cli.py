@@ -33,8 +33,9 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()
-@click.option('--pattern', '-p', 
+@click.option('--pattern', '-p',
               default='*.yml',
+              show_default=True,
               help='File pattern to match (e.g., "*.yml", "fsts_*.dat")')
 @click.option('--input-dir', '-i',
               type=click.Path(exists=False),
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 @click.option('--workers', '-w',
               type=int,
               default=30,
+              show_default=True,
               help='Maximum number of parallel workers')
 @click.option('--mock',
               is_flag=True,

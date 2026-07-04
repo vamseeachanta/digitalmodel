@@ -34,12 +34,22 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "span_rectification": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "fowt_mooring": [{"id": "DNV-RP-0360", "edition": "2021-09"}],
+    "lifting_lug": [{"id": "AISC-360-ASD", "edition": "2016"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
     "anchor_capacity": [{"id": "DNV-RP-E303", "edition": "2005"}],
     "spectral_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"},
                          {"id": "DNV-RP-C205", "edition": "2021-09"}],
     "fpso_mooring_full": [{"id": "DNV-OS-E301", "edition": "2018-07"}],
     "viv_analysis": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
+    "weather_window": [{"id": "DNV-OS-H101", "edition": "2011-10"},
+                       {"id": "DNV-RP-H103", "edition": "2014-04"}],
+    "mudmat_bearing_capacity": [{"id": "DNV-RP-C212", "edition": "2021-09"}],
+    "inspection_planning": [{"id": "API-510", "edition": "2014"},
+                            {"id": "API-570", "edition": "2016"},
+                            {"id": "API-653", "edition": "2014"}],
+    "riser_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
 }
 
 # Response-relevant source files per basename: the code whose change would
@@ -71,6 +81,36 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
         "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
     ],
+    # response is the as-surveyed/allowable screen ratio; track the allowable-
+    # length engine the workflow calls plus the workflow module itself.
+    "span_rectification": [
+        "src/digitalmodel/subsea/pipeline/span_rectification.py",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
+    ],
+    "fowt_mooring": [
+        "src/digitalmodel/orcaflex/mooring_design_fowt.py",
+    ],
+    "lifting_lug": [
+        "src/digitalmodel/lifting_lug/workflow.py",
+    ],
+    "esp_pump_hydraulics": [
+        "src/digitalmodel/production_engineering/esp_pump_hydraulics.py",
+    ],
+    # response is workability x persistence against a fixed reference hindcast;
+    # the persistence/window math lives in the orcaflex weather_window module.
+    "weather_window": [
+        "src/digitalmodel/orcaflex/weather_window.py",
+    ],
+    "mudmat_bearing_capacity": [
+        "src/digitalmodel/geotechnical/mudmat.py",
+    ],
+    "inspection_planning": [
+        "src/digitalmodel/asset_integrity/inspection_planning.py",
+    ],
+    "riser_fatigue": [
+        "src/digitalmodel/riser_fatigue/workflow.py",
+    ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
     "spectral_fatigue": [
@@ -84,6 +124,30 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/subsea/viv_analysis/viv_analysis.py",
         "src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py",
     ],
+}
+
+# Expected state of each licensed-solver library (#801/#831). A library is NOT
+# code-computable, so its staleness is judged against what the operator declares
+# as current here — not a re-run. Stale = the committed library's recorded
+# solver name/version or covered case set no longer matches this expectation
+# (e.g. bump `version` once real OrcaWave runs replace the stub, and the stub
+# library immediately reads stale -> escalate -> prompts a real run).
+LIBRARY_EXPECTATIONS: dict[str, dict[str, Any]] = {
+    "diffraction_library": {
+        "solver_name": "OrcaWave/AQWA",
+        "solver_version": "STUB",
+        "cases": ["fpso-design-draft", "fpso-ballast-draft", "semisub-operating"],
+    },
+    "orcaflex_library": {
+        "solver_name": "OrcaFlex/OrcFxAPI",
+        "solver_version": "STUB",
+        "cases": ["operating-hs2", "storm-hs5", "extreme-hs8"],
+    },
+    "drilling_riser_envelope": {
+        "solver_name": "OrcaFlex/OrcFxAPI",
+        "solver_version": "STUB",
+        "cases": ["drilling", "connected", "hang_off"],
+    },
 }
 
 
@@ -160,6 +224,49 @@ def refresh_status(
     }
 
 
+def library_drift(atlas: Any) -> list[str]:
+    """Reasons the given library atlas no longer matches its declared
+    expectation (solver name/version, covered case set), or [] if current."""
+    expected = LIBRARY_EXPECTATIONS.get(atlas.basename)
+    if expected is None:
+        return []
+    solver = atlas.provenance.get("solver", {})
+    cases = (atlas.provenance.get("coverage", {}) or {}).get("covered_cases", [])
+    reasons = []
+    if solver.get("name") != expected["solver_name"]:
+        reasons.append(f"solver name {solver.get('name')!r} != {expected['solver_name']!r}")
+    if solver.get("version") != expected["solver_version"]:
+        reasons.append(
+            f"solver version {solver.get('version')!r} != {expected['solver_version']!r}")
+    if set(cases) != set(expected["cases"]):
+        reasons.append(f"covered cases {sorted(cases)} != {sorted(expected['cases'])}")
+    return reasons
+
+
+def library_status(
+    basename: str, atlas_root: Path = DEFAULT_ATLAS_ROOT
+) -> dict[str, Any]:
+    """Staleness of a licensed-solver library vs LIBRARY_EXPECTATIONS. Not
+    code-recomputable, so a stale library is reported for an operator run, never
+    auto-regenerated."""
+    from digitalmodel.parametric.atlas import Atlas
+
+    try:
+        atlas = Atlas.load(atlas_root, basename)
+    except FileNotFoundError:
+        return {"basename": basename, "kind": "library", "stale": True,
+                "reason": "no library built"}
+    reasons = library_drift(atlas)
+    stub = atlas.provenance.get("solver", {}).get("licensed") is False
+    return {
+        "basename": basename,
+        "kind": "library",
+        "stale": bool(reasons),
+        "reason": "; ".join(reasons) if reasons else ("current (STUB)" if stub else "current"),
+        "atlas_id": atlas.atlas_id,
+    }
+
+
 def _git_sha(repo_root: Path) -> str:
     try:
         return subprocess.check_output(
@@ -170,31 +277,46 @@ def _git_sha(repo_root: Path) -> str:
 
 
 def main(argv: list[str]) -> int:
+    """CI drift gate (#833). Exit non-zero when a COMPUTED atlas is stale — a
+    code/standard/template change that wasn't regenerated. Libraries (#801) are
+    reported but do NOT fail the build (CI can't run a licensed solve) unless
+    --strict-libraries is given. --apply regenerates stale computed atlases."""
     apply = "--apply" in argv
-    ids = parametric_workflow_ids()
+    strict_libraries = "--strict-libraries" in argv
+
     stale_ids = []
-    for wid in ids:
+    for wid in parametric_workflow_ids():
         status = refresh_status(wid)
-        flag = "STALE" if status["stale"] else "ok"
-        print(f"[{flag:5}] {wid}  ({status['reason']})")
+        print(f"[{'STALE' if status['stale'] else 'ok':5}] {wid}  ({status['reason']})")
         if status["stale"]:
             stale_ids.append(wid)
 
-    if not stale_ids:
+    stale_libs = []
+    for basename in LIBRARY_EXPECTATIONS:
+        status = library_status(basename)
+        print(f"[{'STALE' if status['stale'] else 'ok':5}] {basename} (library)  ({status['reason']})")
+        if status["stale"]:
+            stale_libs.append(basename)
+
+    if stale_libs:
+        print(f"\n{len(stale_libs)} stale library(ies) — need a licensed run "
+              f"(operator); not auto-regenerated: {stale_libs}")
+
+    if apply and stale_ids:
+        from digitalmodel.parametric.build import build_atlas_from_registry
+        for wid in stale_ids:
+            print(f"refreshing {wid} ...")
+            atlas = build_atlas_from_registry(wid)
+            if not atlas.validation["passes"]:
+                print(f"  WARNING: {wid} regenerated but failed validation gate")
+        stale_ids = []  # regenerated; commit the result
+
+    if not stale_ids and not stale_libs:
         print("all atlases current")
-        return 0
-    if not apply:
-        print(f"\n{len(stale_ids)} stale atlas(es); run with --apply to regenerate")
-        return 1
-
-    from digitalmodel.parametric.build import build_atlas_from_registry
-
-    for wid in stale_ids:
-        print(f"refreshing {wid} ...")
-        atlas = build_atlas_from_registry(wid)
-        if not atlas.validation["passes"]:
-            print(f"  WARNING: {wid} regenerated but failed validation gate")
-    return 0
+    fail = bool(stale_ids) or (strict_libraries and bool(stale_libs))
+    if stale_ids and not apply:
+        print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
+    return 1 if fail else 0
 
 
 if __name__ == "__main__":

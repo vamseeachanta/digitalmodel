@@ -1,0 +1,36 @@
+{
+  "schema": "deckhand.workflow_api.ResultEnvelope/2",
+  "status": "ok",
+  "repo": "digitalmodel",
+  "report_url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics",
+  "provenance": {
+    "basis": "LCOE \u00b7 reliability \u00b7 economies of scale",
+    "deterministic": true,
+    "source": "validated digitalmodel solver"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+  },
+  "surface": "digitalmodel:wind-economics",
+  "outputs": [
+    {
+      "kind": "report",
+      "url": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+    }
+  ],
+  "note": "Published report surface \u2014 the deterministic output is served as a self-contained page; GET the report_url to consume it.",
+  "prompt": "Run the floating-wind LCOE / TOTEX tradespace with reliability and economies-of-scale levers.",
+  "how_to_run": [
+    {
+      "via": "telegram",
+      "bot": "@the_deckhand_bot",
+      "deep_link": "https://t.me/the_deckhand_bot",
+      "step": "Open @the_deckhand_bot and send: Run the floating-wind LCOE / TOTEX tradespace with reliability and economies-of-scale levers."
+    },
+    {
+      "via": "http",
+      "step": "GET https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+    }
+  ]
+}

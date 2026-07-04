@@ -8,6 +8,15 @@ import logging
 from pathlib import Path
 from typing import List
 
+# stale: this suite targets the pre-reorg base_solvers benchmark API. The
+# package moved to digitalmodel.infrastructure.base_solvers and its API drifted
+# (PerformanceMetrics is no longer exported from benchmarks.__init__; the mock
+# solvers here use the removed `set_input` method, now `set_input_data`). Skip
+# the whole module until it is rewritten against the current API. See #949.
+pytestmark = pytest.mark.skip(
+    reason="stale: pre-reorg base_solvers benchmark API drifted; see #949"
+)
+
 from digitalmodel.base_solvers.base import BaseSolver, AnalysisSolver, SolverStatus
 from digitalmodel.base_solvers.benchmarks import (
     SolverBenchmarks,

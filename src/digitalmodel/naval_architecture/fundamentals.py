@@ -6,6 +6,18 @@ Naval architecture engineering fundamentals.
 Covers unit conversions, water properties, and basic buoyancy calculations
 from USNA EN400 Chapter 1.
 """
+from __future__ import annotations
+
+import warnings
+from pathlib import Path
+from typing import Optional
+
+from digitalmodel.citations.registry import get_en400_reference
+from digitalmodel.citations.schema import CitationResolutionError
+
+# One-shot guard so standalone mode warns once, not per call (mirrors the
+# DNV-OS-E301 mooring pilot's degradation behavior).
+_EN400_STANDALONE_WARNED = False
 
 G = 32.17  # ft/s², gravitational acceleration
 GAMMA_SW = 64.0  # lb/ft³, specific weight of salt water
@@ -35,6 +47,45 @@ def mass_to_weight(mass_slug: float) -> float:
     W = m * g
     """
     return mass_slug * G
+
+
+def mass_to_weight_cited(
+    mass_slug: float, *, repo_root: Optional[Path] = None
+) -> dict:
+    """`mass_to_weight` with an EN400 provenance sidecar.
+
+    Mirrors the DNV-OS-E301 mooring pilot's opt-in-by-name design: the legacy
+    `mass_to_weight` stays unchanged; callers opt into citation emission by name.
+    Returns ``{"value", "units", "citations"}``.
+
+    Fail-closed: a configured-but-missing/stale wiki page raises
+    CitationResolutionError. Standalone mode (resolver unconfigured) degrades
+    gracefully with a one-shot RuntimeWarning and an empty ``citations`` list.
+    """
+    global _EN400_STANDALONE_WARNED
+    weight = mass_to_weight(mass_slug)
+    citations: list = []
+    try:
+        cited = get_en400_reference(
+            "Chapter 1 — Fundamentals (W = m·g, g = 32.17 ft/s²)",
+            note="mass-to-weight unit conversion",
+            repo_root=repo_root,
+        )
+        citations = [cited.citation]
+    except CitationResolutionError as exc:
+        if exc.reason.startswith("resolver_unconfigured"):
+            if not _EN400_STANDALONE_WARNED:
+                warnings.warn(
+                    "digitalmodel standalone mode: EN400 citation unavailable; "
+                    "proceeding without a provenance sidecar.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                _EN400_STANDALONE_WARNED = True
+            citations = []
+        else:
+            raise
+    return {"value": weight, "units": "lb", "citations": citations}
 
 
 def displaced_volume_to_weight_lt(

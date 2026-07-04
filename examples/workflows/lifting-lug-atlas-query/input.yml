@@ -1,0 +1,21 @@
+basename: parametric_query
+
+# Instant interpolated AISC lifting-lug / padeye governing utilisation from the
+# pre-computed atlas (atlases/lifting_lug). Offline, no licence:
+#   uv run python -m digitalmodel examples/workflows/lifting-lug-atlas-query/input.yml
+# Out-of-range points (outside the atlas grid box) escalate to a real run.
+parametric_query:
+  atlas: lifting_lug
+  point:
+    static_load_kN: 300.0
+    plate_thickness_mm: 55.0
+  policy:
+    on_out_of_range: escalate
+    confidence: required
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -1,0 +1,103 @@
+# ABOUTME: Generic GoM-default parameters for concept screening (W6).
+# ABOUTME: PUBLIC, neutral. NO client calibration here — see private-overlay TODO.
+#
+# concept_params.yml
+# ==================
+# Parameter table for the four concept-screening axes. Every number here is a
+# GENERIC Gulf-of-Mexico default with a stated source/basis. Client-specific
+# calibration is injected at runtime from a PRIVATE overlay file and must
+# NEVER be committed to this public repo.
+#
+# Axes:
+#   schedule      -> weeks from concept to first oil (phase weeks x concept mult + per-well weeks)
+#   rig_days      -> rig-days demanded = wells x per-well rig-days x concept factor
+#   capex         -> driver-level CAPEX line-item split (fractions of base estimate_capex)
+#   intervention  -> intervention index = access-factor prior x workover frequency
+#
+# Sources (all public):
+#   - Schedule phase basis: digitalmodel field_development.timeline P50 inter-phase
+#     durations (concept->FEED->FID->first oil), GoM deepwater analogues.
+#   - Per-well rig-days: GoM deepwater development-well drilling+completion benchmark
+#     (BSEE well_rig_days analytic in worldenergydata; default used here when no
+#     live BSEE benchmark is supplied).
+#   - CAPEX line-item split: generic deepwater host topsides/hull/SURF/drilling
+#     allocation; eng/PM and contingency uplifts are industry-standard ranges.
+#   - Access / workover: generic deepwater access-factor priors (dry-tree continuous
+#     well access vs subsea mobilisation-gated access).
+
+meta:
+  basis: generic_gom_2024
+  units:
+    schedule: weeks
+    rig_days: rig-days
+    capex: USD billions (driver split as fractions of base estimate_capex)
+  notes: >-
+    Marketing/screening grade, not contractual. Rig-day economics are kept in DAYS,
+    not $/day: live rig day-rates are a PAID feed (Clarksons/IHS-Petrodata) and are
+    deliberately omitted. Where FrPS (dry-tree unit) has no direct operating analog,
+    its multipliers are ENGINEERING ASSUMPTIONS, flagged as input, not result.
+
+# ---------------------------------------------------------------------------
+# SCHEDULE axis: concept->first-oil duration in weeks.
+# weeks = base_phase_weeks * concept_schedule_mult + well_count * per_well_weeks
+# base_phase_weeks anchored on timeline.py concept_to_first_oil P50 (~years*52).
+# ---------------------------------------------------------------------------
+schedule:
+  base_phase_weeks: 260.0          # ~5.0 yr concept->first oil, GoM deepwater host P50
+  per_well_weeks: 9.0              # incremental schedule weeks per development well (parallel-limited)
+  concept_schedule_mult:
+    TLP: 1.00
+    Spar: 1.05
+    Semi: 1.10
+    FPSO: 1.20                      # ship conversion / newbuild lead time
+    Subsea_Tieback: 0.55           # fastest: no new host
+    Dry_Tree_Unit: 1.15            # column-stabilised dry-tree unit; FrPS-class assumption
+
+# ---------------------------------------------------------------------------
+# RIG-DAYS axis: development drilling+completion rig-days demanded.
+# rig_days = well_count * per_well_rig_days * concept_rig_factor
+# per_well_rig_days default from GoM deepwater benchmark; override via bsee_benchmark.
+# ---------------------------------------------------------------------------
+rig_days:
+  per_well_rig_days: 95.0          # GoM deepwater dev well drill+complete (BSEE well_rig_days default)
+  concept_rig_factor:
+    TLP: 1.00                       # dry-tree from platform: efficient batch drilling
+    Spar: 1.02
+    Semi: 1.05
+    FPSO: 1.10                      # subsea wells under FPSO: more MODU dependence
+    Subsea_Tieback: 1.15           # all subsea wells, MODU + intervention vessel
+    Dry_Tree_Unit: 0.98            # continuous dry-tree access; assumption pending operating analog
+
+# ---------------------------------------------------------------------------
+# CAPEX axis: driver-level line items as fractions of the base estimate_capex.
+# Fractions are concept-specific and must sum ~1.0 BEFORE eng/PM + contingency.
+# eng_pm and contingency are uplifts applied on top.
+# ---------------------------------------------------------------------------
+capex:
+  eng_pm_uplift: 0.04              # engineering + project management, industry-standard
+  contingency_uplift: 0.15        # P50 contingency, deepwater host
+  line_item_fractions:
+    TLP:            {hull: 0.22, topsides: 0.30, surf: 0.18, drilling_completion: 0.25, installation: 0.05}
+    Spar:           {hull: 0.25, topsides: 0.28, surf: 0.18, drilling_completion: 0.24, installation: 0.05}
+    Semi:           {hull: 0.20, topsides: 0.32, surf: 0.20, drilling_completion: 0.23, installation: 0.05}
+    FPSO:           {hull: 0.30, topsides: 0.28, surf: 0.22, drilling_completion: 0.15, installation: 0.05}
+    Subsea_Tieback: {hull: 0.00, topsides: 0.10, surf: 0.55, drilling_completion: 0.28, installation: 0.07}
+    Dry_Tree_Unit:  {hull: 0.26, topsides: 0.29, surf: 0.14, drilling_completion: 0.26, installation: 0.05}
+
+# ---------------------------------------------------------------------------
+# INTERVENTION axis: intervention index = access_factor_prior * workover_frequency.
+# Lower index = lower lifecycle intervention burden (better). access_factor < 1
+# for subsea (mobilisation-gated), ~1 for dry-tree (continuous well access).
+# ---------------------------------------------------------------------------
+intervention:
+  # access factor: relative cost/difficulty of reaching a well for workover.
+  # 1.0 = continuous dry-tree access; >1 = mobilisation-gated subsea penalty.
+  access_factor_prior:
+    TLP: 1.00                       # dry-tree, surface trees, continuous access
+    Spar: 1.05                      # dry-tree but deeper / heave considerations
+    Semi: 1.45                      # wet trees, semi host: MODU/vessel-gated
+    FPSO: 1.50                      # subsea wells, vessel-gated
+    Subsea_Tieback: 1.70           # fully subsea, longest mobilisation chain
+    Dry_Tree_Unit: 1.00            # continuous dry-tree access; FrPS thesis (ASSUMPTION)
+  # default decade workover frequency per well if spec omits it
+  default_workover_frequency_per_well_decade: 1.5

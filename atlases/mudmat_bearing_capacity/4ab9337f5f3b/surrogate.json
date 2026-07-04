@@ -1,0 +1,30 @@
+{
+  "basename": "mudmat_bearing_capacity",
+  "atlas_id": "4ab9337f5f3b",
+  "physics": "utilization_threshold",
+  "response": "governing_utilisation",
+  "axes": [
+    {
+      "name": "vertical_load_kN",
+      "scale": "linear",
+      "grid": [
+        1500.0,
+        2000.0,
+        2500.0,
+        3000.0,
+        3500.0
+      ]
+    },
+    {
+      "name": "undrained_shear_strength_kpa",
+      "scale": "linear",
+      "grid": [
+        12.0,
+        16.0,
+        20.0,
+        24.0,
+        28.0
+      ]
+    }
+  ]
+}

@@ -214,6 +214,7 @@ catenary-riser = "digitalmodel.subsea.catenary_riser.cli:main"
 signal-analysis = "digitalmodel.signal_processing.signal_analysis.cli:main"
 hydrodynamics = "digitalmodel.hydrodynamics.cli:main"
 gmsh-meshing = "digitalmodel.solvers.gmsh_meshing.cli:main"
+openfoam = "digitalmodel.solvers.openfoam.cli:main"
 workflow-automation = "digitalmodel.workflows.workflow_automation.cli:main"
 bemrosetta = "digitalmodel.hydrodynamics.bemrosetta.cli:main"
 dynacard = "digitalmodel.marine_ops.artificial_lift.dynacard.cli:main"
@@ -232,6 +233,8 @@ digitalmodel = [
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
     "naval_architecture/data/*.yml",
+    "field_development/data/*.yml",
+    "usecase_registry/*.yaml",
 ]
 
 [tool.black]

@@ -1,0 +1,90 @@
+# Vessel record schema — single source of truth.
+# Every numeric field is either a cited real value, an estimated:<basis> string,
+# or the literal "gap". See README.md "flag, don't fake".
+
+vessel_record:
+  # --- identity ---
+  vessel_id: str            # stable slug, e.g. hlv_sleipnir
+  name: str                 # as published
+  scope: enum[install, floating, support, tanker]
+  vessel_type: str          # controlled vocab — see vessel_type_vocabulary below;
+                            # e.g. ahts, psv, mpsv, dsv, csv, sov, semisub-crane-vessel, fpso-turret
+  owner_operator: str|gap
+  builder: str|gap
+  year_built: int|gap
+  class_society: str|gap     # DNV / ABS / BV / LR
+
+  # --- layer 1: particulars (length units = m, mass = tonnes) ---
+  particulars:
+    loa: float|gap
+    lbp: float|gap
+    beam: float|gap
+    depth: float|gap
+    draft_operating: float|gap
+    draft_transit: float|gap
+    displacement: float|gap
+    block_coefficient: float|estimated|gap
+
+  # --- layer 2: mass properties ---
+  mass_properties:
+    lcg: float|gap            # m from aft perp or amidships (state datum in provenance)
+    vcg: float|gap            # m above keel
+    tcg: float|gap
+    kxx_roll: float|estimated|gap   # radius of gyration, m
+    kyy_pitch: float|estimated|gap
+    kzz_yaw: float|estimated|gap
+    loading_condition: str    # e.g. operating / ballast / full-load
+    provenance: str           # datum + estimation basis if estimated
+
+  # --- layer 3: RAOs ---
+  rao:
+    available: bool
+    kind: enum[model_test, computed, benchmark, none]
+    dof_covered: list         # subset of surge,sway,heave,roll,pitch,yaw
+    headings_deg: str|gap
+    source_dataset: str|gap   # name of the published dataset/paper
+    url: str|gap
+    notes: str
+
+  # --- layer 4: crane & deck (install scope) ---
+  crane_deck:
+    cranes:                   # list; one per crane
+      - crane_id: str
+        type: str             # main / aux / tub-mounted / mast
+        swl_tonnes: float|gap
+        swl_radius_curve:     # list of [radius_m, swl_tonnes] points if published
+          - [float, float]
+        max_radius_m: float|gap
+        hook_height_m: float|gap
+    deck_area_m2: float|gap
+    deck_strength_t_m2: float|gap
+    dp_class: str|gap         # DP2 / DP3 / none
+
+  # --- layer 5: wind/current coefficients (tanker/gas scope) ---
+  coefficients:
+    ocimf_applicable: bool
+    source: str|gap           # MEG4 Annex ref or wind-tunnel study
+    notes: str
+
+  # --- provenance (required) ---
+  citations:                  # bind fields to sources
+    - fields: list            # which fields this citation supports
+      source: str             # publication / brochure / database name
+      url: str
+      access_date: str        # YYYY-MM-DD
+      access: enum[public, paywalled, brochure-pdf, estimated]
+  gaps: list                  # field paths with no public source
+
+# --- vessel_type controlled vocabulary ---
+# Recognised offshore-support-vessel (OSV) classes. Prefer one of these slugs for
+# vessel_type so the free-text field stays groupable; fall back to a descriptive
+# slug (e.g. semisub-crane-vessel, fpso-turret, drillship) for non-OSV hulls.
+# `scope` is the analysis bucket (install/floating/support/tanker); `vessel_type`
+# is the finer class within it. See README.md "Vessel type taxonomy (OSV classes)".
+vessel_type_vocabulary:
+  ahts:  { name: "Anchor Handling Tug Supply",   scope: support,          role: "tow MODUs, position floating facilities, set/recover heavy mooring anchors in deep water" }
+  psv:   { name: "Platform Supply Vessel",        scope: support,          role: "open-deck cargo, drilling muds/fluids, equipment and personnel to platforms" }
+  mpsv:  { name: "Multipurpose Support Vessel",    scope: [support, install], role: "flexible logistics + modular equipment spaces, cranes, helideck for varied subsea ops" }
+  dsv:   { name: "Diving Support Vessel",          scope: [support, install], role: "saturation diving systems for deep subsea maintenance, repair, pipeline tie-ins" }
+  csv:   { name: "Construction Support Vessel",    scope: install,          role: "high-capacity cranes, A-frames, moonpools for subsea construction, well intervention, deepwater deployment" }
+  sov:   { name: "Service Operation Vessel",       scope: support,          role: "offshore-wind floating accommodation + storage for turbine technicians (walk-to-work)" }

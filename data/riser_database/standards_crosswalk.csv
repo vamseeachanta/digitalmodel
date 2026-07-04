@@ -1,0 +1,5 @@
+code_id,family_key,publisher,section,topic,wiki_path,registry_revision,note
+api-rp-16q,api-rp-16q,API,Sec.3.3,marine drilling riser design and operation,wikis/engineering-standards/wiki/standards/api-rp-16q.md,public-metadata-required-before-citation-use,wiki revision metadata pending; citation getters deferred to issue 1246
+api-std-2rd,api-std-2rd,API,Sec.5,dynamic riser design criteria,wikis/engineering-standards/wiki/standards/api-std-2rd.md,3e-2025,formerly API RP 2RD; API reclassified it as STD 2RD
+dnv-os-f201,dnv-os-f201,DNV,Sec.5,dynamic risers; design fatigue factors,wikis/engineering-standards/wiki/standards/dnv-os-f201.md,2010,value getter get_riser_dff
+dnv-rp-c203,dnv-rp-c203,DNV,Sec.2,fatigue design; S-N curves and SCF methodology,wikis/engineering-standards/wiki/standards/dnv-rp-c203.md,2024-10,code implements the 2021 edition tables; drift vs wiki revision recorded

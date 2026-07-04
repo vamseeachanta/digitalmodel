@@ -1,0 +1,12 @@
+n_citations,n_swl_radius_anchors,deck_strength_t_per_m2,vessel_type,name,deck_area_m2,dp_class,tandem_swl_te,max_single_crane_swl_te,vessel_id
+2,1,10.0,Semi-submersible crane vessel (SSCV),SSCV Sleipnir,12000.0,"Lloyd's Register IMO Class 3, DP(AAA)",20000.0,20000.0,install_sscv_sleipnir
+3,1,,Semi-submersible crane vessel (SSCV),SSCV Thialf,,Class III dynamic positioning,14200.0,14200.0,install_sscv_thialf
+2,1,,Semi-submersible crane and J-lay pipelay vessel (SSCV),Saipem 7000,,DP Class 3 (12 thrusters),14000.0,14000.0,install_saipem_7000
+2,0,,Monohull self-propelled DP derrick crane ship,Saipem 3000,,DP Class 3,,2400.0,install_saipem_3000
+2,0,,Heavy-lift / topsides installation & S-lay pipelay catamaran vessel,Pioneering Spirit,,Kongsberg K-Pos DP-22 (DP class 2/3),,25000.0,install_pioneering_spirit
+3,3,,Monohull heavy-lift crane vessel (converted drillship),BokaLift 2,7500.0,DP2,,4000.0,install_bokalift_2
+1,0,,Deepwater heavy-lift construction & pipelay vessel (J-lay/S-lay),Seven Borealis,5500.0,DP2/DP3 (or 8-point mooring),,5000.0,install_seven_borealis
+2,0,,Deepwater construction vessel (heavy-lift + J-lay/reel-lay),DCV Aegir,,DP3,,5000.0,install_dcv_aegir
+2,0,,Derrick lay vessel (heavy-lift + deepwater S-lay),DLV 2000 (Derrick Lay Vessel 2000),4000.0,DP Class 3,,2200.0,install_dlv_2000_derrick_lay_vessel_2000
+3,0,,S-lay pipelay vessel,Solitaire,,"LR DP(AAA), fully redundant Kongsberg K-Pos DP-22 / DP-12",,,install_solitaire
+2,0,,"S-lay (and J-lay capable) pipelay vessel, DP3",Castorone,4300.0,DP Class 3 (NMD Class 3 + ABS); 8 side + 2 bow + 6 azimuth thrusters,,,install_castorone

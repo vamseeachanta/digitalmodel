@@ -1,0 +1,17 @@
+# Dispatchable field-points OrcaWave workflow (issue #953).
+# `python -m digitalmodel <this file>` converts spec.yml to an OrcaWave model
+# and runs the diffraction solve. dry_run keeps it runnable on a license-free
+# host (offline convert only); drop dry_run for a real licensed solve.
+basename: diffraction
+
+diffraction:
+  operation: run_orcawave
+  spec: spec.yml
+  output_directory: out
+  dry_run: true
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

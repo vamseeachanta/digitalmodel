@@ -67,11 +67,23 @@ def _staleness(atlas: Atlas) -> str | None:
     """Return a reason string if the atlas is stale (its build basis has moved
     since it was generated), else None. Detectable per the refresh contract
     (#799): a stale atlas must escalate, not serve a superseded answer."""
+    from digitalmodel.parametric import refresh
+
+    # licensed-solver libraries (#831): staleness judged vs the declared
+    # operator expectation, not a recompute.
+    if atlas.provenance.get("kind") == "library":
+        try:
+            reasons = refresh.library_drift(atlas)  # checks THIS atlas, no re-load
+        except Exception:
+            return None
+        if reasons:
+            return f"library stale: {'; '.join(reasons)} — licensed run required"
+        return None
+
     workflow_id = atlas.provenance.get("workflow_id")
     stored = atlas.provenance.get("content_fingerprint")
     if not workflow_id or not stored:
         return None  # atlas predates fingerprinting; nothing to check against
-    from digitalmodel.parametric import refresh
 
     try:
         current = refresh.content_fingerprint(workflow_id)
@@ -86,11 +98,19 @@ def _staleness(atlas: Atlas) -> str | None:
 
 
 def _provenance(atlas: Atlas) -> dict[str, Any]:
-    return {
+    prov = {
         "atlas_id": atlas.atlas_id,
         "code_version": atlas.provenance.get("code_version"),
         "standards": atlas.provenance.get("standards"),
     }
+    # Licensed-solver libraries (#831/#1346): surface the solver block so a
+    # STUB self-identifies at the query-result surface — a synthetic placeholder
+    # (solver.licensed False, version "STUB") must never read like a real cached
+    # solver value. (Additive; also closes this gap for the orcaflex/diffraction
+    # libraries.)
+    if atlas.provenance.get("kind") == "library":
+        prov["solver"] = atlas.provenance.get("solver")
+    return prov
 
 
 def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
@@ -136,7 +156,9 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     required_life = design_life * dff
     dff_margin = math.inf if math.isinf(life) else life / required_life
 
-    e = atlas.max_rel_error
+    # local error of the worst bin (#828) — tighter than the global figure
+    e = max((atlas.local_error({**shared, **b}) for b in bins),
+            default=atlas.max_rel_error)
     if math.isinf(life):
         band = [math.inf, math.inf]
     else:
@@ -149,7 +171,7 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
         "total_damage": total_damage,
         "dff_margin": dff_margin,
         "screening_status": "pass" if dff_margin >= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -157,7 +179,7 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _utilisation_result(atlas: Atlas, u: float, band: list[float]) -> dict[str, Any]:
+def _utilisation_result(atlas: Atlas, u: float, band: list[float], e: float) -> dict[str, Any]:
     # straddle rule: if the confidence band crosses the limit, the verdict is
     # not decidable from the atlas -> escalate even though it is in range.
     if band[0] < 1.0 < band[1]:
@@ -169,7 +191,7 @@ def _utilisation_result(atlas: Atlas, u: float, band: list[float]) -> dict[str, 
         "response": "utilisation",
         "value": u,
         "screening_status": "pass" if u <= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {atlas.max_rel_error:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -184,8 +206,8 @@ def _handle_utilisation(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
     u = prediction.value
-    e = atlas.max_rel_error
-    return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)])
+    e = atlas.local_error(point)
+    return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)], e)
 
 
 def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
@@ -201,11 +223,11 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
         return _escalation(atlas, "non-positive capacity")
     demand = float(point["demand_kN"])
     fos = float(point.get("factor_of_safety", 1.0))
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     u = demand * fos / capacity
     # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
     band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
-    result = _utilisation_result(atlas, u, band)
+    result = _utilisation_result(atlas, u, band, e)
     if result["in_range"]:
         result["capacity_kN"] = capacity
     return result
@@ -218,12 +240,12 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
     v = prediction.value
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     return {
         "response": atlas.response,
         "value": v,
         "confidence": {"band": [v * (1 - e), v * (1 + e)],
-                       "basis": f"holdout max_rel_error = {e:.4f}"},
+                       "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -251,7 +273,7 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
     dff = float(point["dff"])
     life = math.inf if annual <= 0 else 1.0 / annual
     dff_margin = math.inf if math.isinf(life) else life / (design_life * dff)
-    e = atlas.max_rel_error
+    e = atlas.local_error(point)
     band = ([math.inf, math.inf] if math.isinf(life)
             else [1.0 / (annual * (1 + e)), 1.0 / (annual * (1 - e))])
     return {
@@ -260,7 +282,7 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
         "annual_damage": annual,
         "dff_margin": dff_margin,
         "screening_status": "pass" if dff_margin >= 1.0 else "fail",
-        "confidence": {"band": band, "basis": f"holdout max_rel_error = {e:.4f}"},
+        "confidence": {"band": band, "basis": f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -273,12 +295,40 @@ _HANDLERS: dict[str, Callable[[Atlas, dict[str, Any]], dict[str, Any]]] = {
     "synthetic_rope_mooring_fatigue": _handle_fatigue_bins,
     "code_check": _handle_utilisation,
     "free_span": _handle_utilisation,
+    # DNV-RP-F105 free-span screening utilisation (as-surveyed / allowable span):
+    # the atlas predicts utilisation directly, threshold at 1.0 (#982 pattern).
+    "span_rectification": _handle_utilisation,
+    # FOWT watch-circle vs dynamic-cable MBR utilisation (parametrics atlas #975):
+    # the atlas predicts utilisation directly, threshold at 1.0.
+    "fowt_mooring": _handle_utilisation,
+    # AISC lifting-lug / padeye governing utilisation atlas (#979 pattern).
+    "lifting_lug": _handle_utilisation,
+    # ESP pump-hydraulics governing screening utilisation atlas (#979 pattern).
+    "esp_pump_hydraulics": _handle_utilisation,
+    # Mudmat bearing-capacity governing screening utilisation atlas (#979 pattern).
+    "mudmat_bearing_capacity": _handle_utilisation,
+    # API 510/570/653 remaining-life (yr) plain-value atlas (#979 pattern):
+    # interpolate the scalar remaining life directly, report it with a band.
+    "inspection_planning": _handle_value,
     "rao_tabulation": _handle_rao,
     "pile_capacity": _handle_capacity_demand,
     "anchor_capacity": _handle_capacity_demand,
     "spectral_fatigue": _handle_annual_damage,
+    # Combined wave+VIV riser fatigue annual-damage atlas (#979 pattern): the
+    # atlas predicts annual damage; the handler derives life + DFF margin.
+    "riser_fatigue": _handle_annual_damage,
     "fpso_mooring_full": _handle_value,
     "viv_analysis": _handle_value,
+    # weather-window planned-operability % atlas (#979 pattern): a plain value,
+    # workability x persistence against a fixed reference hindcast.
+    "weather_window": _handle_value,
+    # licensed-solver sparse library (#801): exact-match the case key, then
+    # interpolate freq x heading within it; an uncovered case escalates.
+    "diffraction_library": _handle_value,
+    "orcaflex_library": _handle_value,
+    # drilling-riser von-Mises dynamic-amplification library (#1346): exact-match
+    # the operating-mode key, interpolate offset x current x Hs x Tp within.
+    "drilling_riser_envelope": _handle_value,
 }
 
 

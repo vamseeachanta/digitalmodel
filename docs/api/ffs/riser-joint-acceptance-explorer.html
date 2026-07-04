@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser-Joint Flaw-Acceptance Explorer — drilling riser FFS</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+       color:var(--ink);line-height:1.5;padding:26px 30px 60px;max-width:1180px;margin:0 auto}
+  h1{font-size:24px;color:var(--navy);letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:900px}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;background:var(--panel);
+            border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+  .ctl label{display:block;font-size:11px;font-weight:700;color:var(--muted);
+             text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  select{font-size:13.5px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;
+         background:var(--soft);color:var(--ink)}
+  .row{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .panel h2{font-size:13px;color:var(--navy);padding:4px 8px 8px}
+  #verdict{font-size:13.5px;padding:10px 14px}
+  #verdict .v{font-size:16px;font-weight:800}
+  #verdict .ACCEPT{color:#1f9d57}.RESTRICTED{color:#b7791f}.REPAIR{color:#c0392b}
+  #verdict table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  #verdict td{padding:3px 6px;border-bottom:1px solid var(--line)}
+  .note{color:var(--muted);font-size:12px;margin-top:14px;max-width:960px}
+  .note b{color:var(--navy)}
+  a{color:var(--teal)}
+  @media(max-width:900px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>Riser-Joint Flaw-Acceptance Explorer</h1>
+<p class="sub">Level-1 acceptance chart for a marine drilling-riser main tube
+(21.25" OD × 0.875" WT X80, the real inspected fleet) — maximum acceptable surface-flaw <b>length vs depth</b>: base metal
+from the validated Modified B31G remaining-strength engine, welds from the
+BS 7910 Option-1 failure-assessment diagram, with practice depth caps and a
+campaign-end growth allowance. Points are the real (anonymized)
+weld-flaw register; the side panel places the three real inspected joints in the
+string. Every number is precomputed in Python
+(<code>digitalmodel.asset_integrity.riser_joint_ffs</code>) — the page only draws.</p>
+
+<div class="controls">
+  <div class="ctl"><label>Design pressure (psi)</label><select id="pres"></select></div>
+  <div class="ctl"><label>Corrosion rate (mm/yr)</label><select id="rate"></select></div>
+  <div class="ctl"><label>Campaign duration (yr)</label><select id="dur"></select></div>
+  <div class="ctl"><label>Joint (real inspection)</label><select id="joint"></select></div>
+  <div class="ctl"><label>Campaign water depth (ft)</label><select id="wdep">
+    <option>2500</option><option selected>5000</option></select></div>
+</div>
+
+<div class="row">
+  <div class="panel"><h2>Acceptable surface-flaw dimensions — campaign start vs end</h2>
+    <div id="chart" style="height:430px"></div></div>
+  <div class="panel"><h2>String placement & collapse-limited depth</h2>
+    <div id="verdict"></div>
+    <div id="depthchart" style="height:250px"></div></div>
+</div>
+
+<p class="note"><b>Basis.</b> Base-metal envelope: Modified B31G (0.85 dL) safe
+pressure ≥ design pressure, inverted by bisection. Weld envelope: BS 7910:2013
+Option-1 failure-assessment diagram (<code>assessment.crack_fad</code>,
+digitalmodel#1270) — semi-elliptical surface flaw, Newman–Raju K, Annex P reference
+stress — inverted to max acceptable length at each depth; membrane stress is the
+Barlow hoop stress p·D/(2t) at the design pressure (through-wall bending taken as
+zero), toughness is the BS 7910 Annex J lower bound from a conservative CVN 27 J
+default (no weld-metal toughness test assumed — supply measured values to relax).
+Depth caps 0.85·WT (base metal) / 0.60·WT (weld) per the source integrity program
+apply on top of the computed envelopes; campaign-end curves assess each depth at
+d + rate × duration. Collapse depth: API RP 1111 elastic/yield interaction at the
+measured minimum wall, design factor 0.70, fully-evacuated riser (most conservative).
+Zone margins (top/bottom 3×, mid 1×) are practice parameters pending a fatigue
+crack-growth clock (follow-up to digitalmodel#1270).</p>
+
+<script>
+const DATA = {"geometry":{"od_in":21.25,"wt_in":0.875,"wt_mm":22.225,"grade":"X80"},"pressures":[500,1500,3000],"rates_mm":[0.08,0.12,0.25],"durations":[0.0,1.0,3.0,5.0],"envelopes":{"500|0.08|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"500|0.08|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0]},"500|0.08|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.08|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.08|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.08|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.08|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.08|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.12|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"500|0.12|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0]},"500|0.12|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.12|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.12|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.12|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.12|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.12|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.25|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"500|0.25|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0]},"500|0.25|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.25|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.25|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"500|0.25|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0]},"500|0.25|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0]},"500|0.25|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.08|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"1500|0.08|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,592.2,393.8,0.0,0.0,0.0,0.0,0.0]},"1500|0.08|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.08|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,569.7,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.08|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.08|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,530.4,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.08|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.08|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,949.8,497.0,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.12|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"1500|0.12|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,592.2,393.8,0.0,0.0,0.0,0.0,0.0]},"1500|0.12|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.12|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,559.3,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.12|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.12|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,985.8,504.9,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.12|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.12|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,806.1,461.7,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.25|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0]},"1500|0.25|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,592.2,393.8,0.0,0.0,0.0,0.0,0.0]},"1500|0.25|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.25|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,528.2,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.25|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0]},"1500|0.25|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,726.5,438.9,0.0,0.0,0.0,0.0,0.0,0.0]},"1500|0.25|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,0.0,0.0]},"1500|0.25|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,554.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.08|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,572.2,357.2,263.2,207.7,169.7,141.1]},"3000|0.08|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,200.3,109.0,79.2,66.0,58.9,54.6,0.0,0.0,0.0,0.0,0.0]},"3000|0.08|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,546.9,348.1,258.3,204.5,167.4,0.0]},"3000|0.08|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,188.5,105.8,78.0,65.3,58.5,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.08|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,503.5,331.4,249.0,198.3,162.9,0.0]},"3000|0.08|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,692.5,168.6,100.1,75.5,64.1,57.8,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.08|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1002.5,467.2,316.4,240.3,192.5,158.6,0.0]},"3000|0.08|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,472.1,152.7,95.1,73.4,62.9,57.1,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.12|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,572.2,357.2,263.2,207.7,169.7,141.1]},"3000|0.12|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,200.3,109.0,79.2,66.0,58.9,54.6,0.0,0.0,0.0,0.0,0.0]},"3000|0.12|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,535.3,343.8,255.9,202.9,166.2,0.0]},"3000|0.12|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,183.1,104.3,77.3,65.0,58.3,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.12|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,475.7,320.0,242.4,194.0,159.6,0.0]},"3000|0.12|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,512.5,156.4,96.3,73.9,63.2,57.3,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.12|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,843.9,429.3,299.3,230.3,185.6,153.4,0.0]},"3000|0.12|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,339.7,136.9,89.7,70.9,61.6,56.3,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.25|0|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,572.2,357.2,263.2,207.7,169.7,141.1]},"3000|0.25|0|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,200.3,109.0,79.2,66.0,58.9,54.6,0.0,0.0,0.0,0.0,0.0]},"3000|0.25|1|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,501.0,330.5,248.4,198.0,162.6,0.0]},"3000|0.25|1|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,672.7,167.5,99.7,75.4,64.0,57.7,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.25|3|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,738.1,405.1,287.8,223.2,180.7,149.7,0.0]},"3000|0.25|3|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,281.5,127.1,86.2,69.3,60.8,55.8,0.0,0.0,0.0,0.0,0.0,0.0]},"3000|0.25|5|base":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,1016.0,530.0,341.8,254.8,202.2,165.7,0.0,0.0]},"3000|0.25|5|weld":{"depth_mm":[1.11,2.22,3.34,4.44,5.56,6.67,7.78,8.89,10.0,11.11,12.23,13.33,14.44,15.56,16.67,17.78,18.89],"length_mm":[1016.0,1016.0,1016.0,1016.0,990.7,180.6,103.6,77.0,64.8,58.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}},"depth_curve":{"wt_min_mm":[14.0,14.25,14.5,14.75,15.0,15.25,15.5,15.75,16.0,16.25,16.5,16.75,17.0,17.25,17.5,17.75,18.0,18.25,18.5,18.75,19.0,19.25,19.5,19.75,20.0,20.25,20.5,20.75,21.0,21.25,21.5,21.75,22.0,22.25,22.5,22.75,23.0,23.25],"depth_ft":[1746.0,1837.0,1930.0,2026.0,2124.0,2225.0,2329.0,2435.0,2544.0,2655.0,2769.0,2885.0,3004.0,3125.0,3248.0,3374.0,3502.0,3632.0,3764.0,3898.0,4035.0,4173.0,4313.0,4455.0,4599.0,4744.0,4891.0,5040.0,5190.0,5341.0,5494.0,5648.0,5803.0,5959.0,6117.0,6275.0,6434.0,6594.0]},"joints":{"RJ-101":{"wt_min_mm":15.02,"scan":"Box End","label":"RJ-101 (severe)"},"RJ-102":{"wt_min_mm":15.11,"scan":"Box End","label":"RJ-102 (moderate)"},"RJ-103":{"wt_min_mm":15.42,"scan":"Pin End","label":"RJ-103 (mild)"}},"placements":{"RJ-101|2500|1":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for bottom/mid/top but only collapse-qualified to 2132 ft"},"RJ-101|2500|3":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for mid but only collapse-qualified to 2132 ft"},"RJ-101|2500|5":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"REPAIR","reason":"remaining life below one campaign for every zone"},"RJ-101|5000|1":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2132 ft)"},"RJ-101|5000|3":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2132 ft)"},"RJ-101|5000|5":{"joint":"RJ-101 (severe)","min_life_years":3.46,"acceptable_depth_ft":2132.1,"zones":[],"verdict":"REPAIR","reason":"unfit for low-fatigue band and not collapse-qualified at 50% campaign depth"},"RJ-102|2500|1":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for bottom/mid/top but only collapse-qualified to 2168 ft"},"RJ-102|2500|3":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for mid but only collapse-qualified to 2168 ft"},"RJ-102|2500|5":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for mid but only collapse-qualified to 2168 ft"},"RJ-102|5000|1":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2168 ft)"},"RJ-102|5000|3":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2168 ft)"},"RJ-102|5000|5":{"joint":"RJ-102 (moderate)","min_life_years":8.7,"acceptable_depth_ft":2168.2,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2168 ft)"},"RJ-103|2500|1":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for bottom/mid/top but only collapse-qualified to 2295 ft"},"RJ-103|2500|3":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for bottom/mid/top but only collapse-qualified to 2295 ft"},"RJ-103|2500|5":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"RESTRICTED","reason":"life-fit for bottom/mid/top but only collapse-qualified to 2295 ft"},"RJ-103|5000|1":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2295 ft)"},"RJ-103|5000|3":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2295 ft)"},"RJ-103|5000|5":{"joint":"RJ-103 (mild)","min_life_years":30.73,"acceptable_depth_ft":2295.3,"zones":[],"verdict":"REPAIR","reason":"not collapse-qualified at 50% campaign depth (qualifies to 2295 ft)"}},"flaws":[{"joint":"RJ-200","weld":"A","length_mm":23.0,"depth_mm":2.0,"type":"ext"},{"joint":"RJ-108","weld":"A","length_mm":17.0,"depth_mm":1.9,"type":"emb"},{"joint":"RJ-104","weld":"B","length_mm":16.0,"depth_mm":2.3,"type":"int"}],"rollup":{"component":"Main","n_joints":26,"campaign_years":3.0,"min_high_fatigue_joints":12,"campaigns":[{"campaign":1,"horizon_years":3.0,"fit_joints":25,"high_fatigue_qualified":23,"repair_joints":1,"high_fatigue_shortfall":0},{"campaign":2,"horizon_years":6.0,"fit_joints":24,"high_fatigue_qualified":18,"repair_joints":2,"high_fatigue_shortfall":0},{"campaign":3,"horizon_years":9.0,"fit_joints":23,"high_fatigue_qualified":7,"repair_joints":3,"high_fatigue_shortfall":5},{"campaign":4,"horizon_years":12.0,"fit_joints":20,"high_fatigue_qualified":0,"repair_joints":6,"high_fatigue_shortfall":12}]}};
+const $ = id => document.getElementById(id);
+function fill(sel, vals){ $(sel).innerHTML = vals.map(v=>`<option>${v}</option>`).join(""); }
+fill("pres", DATA.pressures); fill("rate", DATA.rates_mm); fill("dur", DATA.durations);
+fill("joint", Object.keys(DATA.joints));
+$("pres").value = "3000"; $("rate").value = "0.25"; $("dur").value = "3";
+
+const C = {base:"#0B3D91", weld:"#0f8a7e", baseEnd:"#7d97c9", weldEnd:"#7fc4bd"};
+
+function envTrace(key, name, color, dashed){
+  const e = DATA.envelopes[key];
+  const pts = e.length_mm.map((L,i)=>[L, e.depth_mm[i]]).filter(p=>p[0]>0);
+  return {x: pts.map(p=>p[0]), y: pts.map(p=>p[1]), name, mode:"lines",
+          line:{color, width:2.5, dash: dashed?"dash":"solid"}};
+}
+
+function draw(){
+  const p=$("pres").value, r=$("rate").value, T=$("dur").value;
+  const traces = [
+    envTrace(`${p}|${r}|0|base`, "base metal — campaign start", C.base, false),
+    envTrace(`${p}|${r}|${T}|base`, "base metal — campaign end", C.baseEnd, true),
+    envTrace(`${p}|${r}|0|weld`, "weld — campaign start", C.weld, false),
+    envTrace(`${p}|${r}|${T}|weld`, "weld — campaign end", C.weldEnd, true),
+  ];
+  const endKey = `${p}|${r}|${T}|weld`, env = DATA.envelopes[endKey];
+  const accept = f => {
+    // acceptable if under the weld campaign-end curve (register flaws are weld flaws)
+    let ok=false;
+    for(let i=0;i<env.depth_mm.length;i++)
+      if(f.depth_mm<=env.depth_mm[i] && f.length_mm<=env.length_mm[i]) ok=true;
+    return ok;
+  };
+  traces.push({x:DATA.flaws.map(f=>f.length_mm), y:DATA.flaws.map(f=>f.depth_mm),
+    mode:"markers+text", name:"flaw register (real)", text:DATA.flaws.map(f=>f.joint),
+    textposition:"top center", textfont:{size:10},
+    marker:{size:11, symbol:"diamond",
+            color:DATA.flaws.map(f=>accept(f)?"#1f9d57":"#c0392b"),
+            line:{color:"#13233f",width:1}}});
+  Plotly.newPlot("chart", traces, {
+    margin:{l:60,r:10,t:10,b:45}, paper_bgcolor:"#fff", plot_bgcolor:"#fff",
+    xaxis:{title:"flaw length (mm)", gridcolor:"#e5ebf5", rangemode:"tozero"},
+    yaxis:{title:"flaw depth (mm)", gridcolor:"#e5ebf5",
+           range:[0, DATA.geometry.wt_mm], autorange:false},
+    legend:{orientation:"h", y:-0.18}, font:{size:12}
+  }, {displayModeBar:false, responsive:true});
+  verdict();
+}
+
+function verdict(){
+  const jid=$("joint").value, d=$("wdep").value, T=$("dur").value;
+  const key=`${jid}|${d}|${T==="0" ? "1" : T}`;
+  const pl = DATA.placements[key] || DATA.placements[`${jid}|${d}|3`];
+  const j = DATA.joints[jid];
+  $("verdict").innerHTML = `
+    <div><span class="v ${pl.verdict}">${pl.verdict}</span>
+      &nbsp;<span style="color:#5b6b86">${pl.reason || "eligible zones: " +
+        (pl.zones.join(", ") || "—")}</span></div>
+    <table>
+      <tr><td>joint</td><td><b>${pl.joint}</b> (${j.scan}, measured min wall
+        ${j.wt_min_mm} mm)</td></tr>
+      <tr><td>governing remaining life</td><td>${pl.min_life_years} yr</td></tr>
+      <tr><td>collapse-qualified depth</td><td>${pl.acceptable_depth_ft.toLocaleString()} ft
+        (evacuated basis)</td></tr>
+      <tr><td>eligible string zones</td><td>${pl.zones.join(", ") || "none"}</td></tr>
+    </table>`;
+  const dc = DATA.depth_curve;
+  Plotly.newPlot("depthchart", [
+    {x:dc.wt_min_mm, y:dc.depth_ft, mode:"lines", name:"qualified depth",
+     line:{color:"#0B3D91",width:2.5}},
+    {x:[j.wt_min_mm], y:[pl.acceptable_depth_ft], mode:"markers", name:jid,
+     marker:{size:11,color:"#c0392b",symbol:"diamond"}},
+  ], {
+    margin:{l:60,r:10,t:8,b:42}, paper_bgcolor:"#fff", plot_bgcolor:"#fff",
+    xaxis:{title:"measured min wall (mm)", gridcolor:"#e5ebf5"},
+    yaxis:{title:"qualified water depth (ft)", gridcolor:"#e5ebf5"},
+    showlegend:false, font:{size:11.5}
+  }, {displayModeBar:false, responsive:true});
+}
+
+["pres","rate","dur"].forEach(id=>$(id).addEventListener("change", draw));
+["joint","wdep"].forEach(id=>$(id).addEventListener("change", verdict));
+draw();
+</script>
+</body>
+</html>

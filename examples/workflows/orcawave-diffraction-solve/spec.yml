@@ -1,0 +1,52 @@
+# Canonical diffraction spec — runnable example (issue #712).
+#
+# Smallest complete spec that drives the full DigitalModel -> OrcaWave chain:
+# a 5-panel WAMIT GDF unit box (committed next to this file) solved at
+# 3 frequencies x 3 headings, so a licensed solve finishes in seconds.
+# Mirrors the issue #610 acceptance fixture; see README.md for run commands.
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBoxRAO"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: xz
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1025.0
+    centre_of_gravity: [0.0, 0.0, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.80665
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  remove_irregular_frequencies: false
+  qtf_calculation: false
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+
+metadata:
+  project: "canonical_example"
+  author: "digitalmodel"
+  description: "Canonical runnable unit-box diffraction example (issue #712)"
+  tags: [example, canonical, "issue-712"]

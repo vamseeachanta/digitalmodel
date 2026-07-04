@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Diffraction Report - golden_benchmark</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, Arial, sans-serif;
+    margin: 0; padding: 0; color: #333; background: #f8f9fa;
+    font-size: 14px; line-height: 1.5;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }
+  .report-header {
+    background: #2c3e50; color: #fff; padding: 1.2em 2em;
+    margin-bottom: 1.5em; border-radius: 6px;
+  }
+  .report-header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
+  .report-header .subtitle { font-size: 1.1em; opacity: 0.9; margin-bottom: 0.5em; font-weight: 300; }
+  .report-header .meta { font-size: 0.9em; opacity: 0.85; }
+  .nav-bar {
+    margin-top: 1.2em; padding-top: 1em; border-top: 1px solid rgba(255,255,255,0.15);
+    display: flex; gap: 1.5em; font-size: 0.9em;
+  }
+  .nav-bar a { color: #fff; text-decoration: none; opacity: 0.8; }
+  .nav-bar a:hover { opacity: 1; text-decoration: underline; }
+  .nav-bar .active { opacity: 1; font-weight: 600; border-bottom: 2px solid #3498db; }
+  .section {
+    background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.5em; padding: 1.2em 1.5em;
+  }
+  .section h2 {
+    margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em;
+  }
+  table {
+    border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ddd; padding: 0.45em 0.7em; text-align: left;
+  }
+  th {
+    background: #34495e; color: #fff; font-weight: 600;
+    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:hover { background: #ebf5fb; }
+  td { vertical-align: top; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .matrix-table td { text-align: right; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .matrix-table th { text-align: center; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .highlight { background: #ffeaa7 !important; font-weight: 600; }
+  .plot-container { margin: 1em 0; }
+
+  /* Benchmark-specific styles */
+  .report-header .consensus-overall {
+    display: inline-block; padding: 4px 12px; border-radius: 4px;
+    font-weight: 700; margin-left: 1em; font-size: 0.85em;
+  }
+  .input-table .param-label { font-weight: 600; }
+  .section-row td {
+    background: #2c3e50 !important; color: #fff;
+    font-weight: 700; font-size: 0.8em; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0.5em 0.7em;
+  }
+  .file-viewer { margin-bottom: 1.5em; }
+  .file-viewer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #34495e; color: #fff; padding: 0.5em 1em;
+    border-radius: 4px 4px 0 0; font-size: 0.85em;
+  }
+  .file-viewer-header .file-path {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em; word-break: break-all;
+  }
+  .file-viewer-header .solver-label {
+    font-weight: 700; margin-right: 0.8em; white-space: nowrap;
+  }
+  .file-viewer-header button {
+    background: #3498db; color: #fff; border: none; padding: 4px 12px;
+    border-radius: 3px; cursor: pointer; font-size: 0.85em; white-space: nowrap;
+  }
+  .file-viewer-header button:hover { background: #2980b9; }
+  .file-content {
+    max-height: 400px; overflow-y: auto; overflow-x: auto;
+    border: 1px solid #ddd; border-top: none;
+    border-radius: 0 0 4px 4px; background: #fafafa; margin: 0;
+  }
+  .file-content pre {
+    margin: 0; padding: 0.8em 1em; font-size: 12px; line-height: 1.5;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    counter-reset: line;
+  }
+  .file-content pre .line { display: block; }
+  .file-content pre .line::before {
+    counter-increment: line; content: counter(line);
+    display: inline-block; width: 3.5em; text-align: right;
+    margin-right: 1em; color: #999; font-size: 0.85em;
+    border-right: 1px solid #ddd; padding-right: 0.5em;
+    -webkit-user-select: none; user-select: none;
+  }
+  .dof-section { border-top: 2px solid #ecf0f1; padding-top: 1em; margin-top: 1em; }
+  .dof-section:first-child { border-top: none; margin-top: 0; }
+  .dof-title { font-size: 1.1em; color: #2c3e50; margin: 0 0 0.6em; }
+  .dof-grid { display: grid; grid-template-columns: 45% 55%; gap: 1em; align-items: start; }
+  .dof-text { font-size: 0.85em; }
+  .dof-plot { min-height: 340px; }
+  .consensus-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 3px;
+    color: #fff; font-size: 0.8em; font-weight: 700; margin-bottom: 0.5em;
+  }
+  .mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', 'Fira Code', monospace; }
+  .stats-table { width: 100%; margin-bottom: 0.6em; }
+  .stats-table td:last-child {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .solver-table { width: 100%; margin-bottom: 0.5em; }
+  .solver-table th { font-size: 0.75em; text-align: center; padding: 0.3em 0.4em; }
+  .solver-table td {
+    text-align: right; font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8em; padding: 0.25em 0.4em;
+  }
+  .solver-table td:first-child { text-align: left; font-family: inherit; font-weight: 600; }
+  .dof-text h4 {
+    margin: 0.7em 0 0.3em; font-size: 0.9em; color: #2c3e50;
+    border-bottom: 1px solid #ddd; padding-bottom: 0.15em;
+  }
+  .observations p { margin: 0.3em 0; line-height: 1.4; }
+  .skipped-note {
+    font-size: 0.8em; color: #888; font-style: italic; margin-top: 0.5em;
+    padding: 0.3em 0.5em; background: #fef9e7;
+    border-left: 3px solid #f0c674; border-radius: 2px;
+  }
+  .plot-links { column-count: 2; font-size: 0.85em; }
+  .plot-links li { margin-bottom: 0.3em; }
+  @media (max-width: 900px) { .dof-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="section" id="toc">
+  <h2>Table of Contents</h2>
+  <ul style="list-style:none;padding:0;column-count:2;font-size:0.9em;">
+    <li><a href="#header">0. Header & Identification</a></li><li><a href="#executive-summary">1. Executive Summary</a></li><li><a href="#hull-mesh">2. Hull Description & Mesh Quality</a></li><li><a href="#input-config">3. Input Configuration</a></li><li><a href="#hydrostatics">4. Hydrostatic Properties & Stability</a></li><li><a href="#natural-periods">5. Natural Period Estimates</a></li><li><a href="#hydro-coefficients">6. Hydrodynamic Coefficients</a></li><li><a href="#load-raos">7. Wave Excitation Forces (Load RAOs)</a></li><li><a href="#displacement-raos">8. Displacement RAOs (Motion Response)</a></li><li><a href="#roll-damping">9. Roll Damping Assessment</a></li><li><a href="#raw-data">10. Raw Data & Overlay Plots</a></li><li><a href="#appendices">11. Appendices</a></li>
+  </ul>
+</div>
+<div class="report-header">
+  <h1>Diffraction Analysis Report &mdash; golden_benchmark</h1>
+  
+  <div class="meta">
+    Generated: 2026-01-01 00:00:00 |
+    Frequencies: 3 |
+    Headings: 3 (0.0, 90.0, 180.0&deg;) |
+    Solver(s): OrcaWave, AQWA |
+    Source: bench.owr
+  </div>
+  
+</div>
+<div class="section" id="executive-summary">
+  <h2>Executive Summary</h2>
+  
+  
+  
+  
+</div>
+<div class="section" id="hull-mesh">
+<h2>Hull Description & Mesh Quality</h2>
+<h3>Hull Metadata</h3>
+<table style="max-width:600px;"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Vessel Name</td><td>golden_benchmark</td></tr><tr><td>Solver(s)</td><td>OrcaWave, AQWA</td></tr><tr><td>Source File</td><td>bench.owr</td></tr></tbody></table>
+</div><div class="section"><h2>Mesh</h2><p>BENCH_MESH</p></div><div class="section"><h2>Input Comparison</h2><p>BENCH_INPUT</p></div><div class="section"><h2>Input Files</h2><p>BENCH_FILES</p></div><div class="section"><h2>Coefficients</h2><p>BENCH_COEFFS</p></div><div class="section"><h2>Consensus</h2><p>BENCH_CONSENSUS</p></div><div class="section"><h2>Per-DOF</h2><p>BENCH_DOF</p></div><div class="section"><h2>Raw Data</h2><p>BENCH_RAW</p></div><div class="section"><h2>Overlay</h2><p>BENCH_OVERLAY</p></div><div class="section"><h2>Notes</h2><ul><li>Note one</li>
+<li>Note two</li></ul></div><div class="section">
+  <h3>Phase Interpretation Guide</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li><strong>Phase = 0 deg</strong>: Response in-phase with wave (crest at origin = peak response)</li>
+    <li><strong>Phase = -90 deg</strong>: Lagging (response peaks after wave crest passes)</li>
+    <li><strong>Phase = +90 deg</strong>: Leading (response peaks before wave crest arrives)</li>
+    <li><strong>~180 deg jump near resonance</strong>: Transition from quasi-static to resonant regime</li>
+    <li><strong>Phase at near-zero amplitude</strong>: Physically meaningless -- ignore phase when amplitude is insignificant</li>
+  </ul>
+</div>
+<div class="section" id="appendices">
+  <h2>Appendices</h2>
+
+  <h3>A. Notation & Conventions</h3>
+  <table style="max-width:600px;font-size:0.85em;">
+    <thead><tr><th>Symbol</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>DOF 1-6</td><td>Surge, Sway, Heave, Roll, Pitch, Yaw</td></tr>
+      <tr><td>Coordinate System</td><td>x-forward, z-up, right-hand rule</td></tr>
+      <tr><td>A_ii(omega)</td><td>Frequency-dependent added mass (diagonal)</td></tr>
+      <tr><td>B_ii(omega)</td><td>Frequency-dependent radiation damping (diagonal)</td></tr>
+      <tr><td>C_ii</td><td>Hydrostatic restoring stiffness (diagonal)</td></tr>
+      <tr><td>GM_T</td><td>Transverse metacentric height (metres)</td></tr>
+      <tr><td>T_n</td><td>Natural period (seconds)</td></tr>
+      <tr><td>zeta</td><td>Critical damping ratio (%)</td></tr>
+      <tr><td>RAO</td><td>Response Amplitude Operator</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:1em;">B. Key Formulas</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li>T_n = 2pi * sqrt((M_ii + A_ii(omega_n)) / C_ii)</li>
+    <li>zeta(omega) = B_ii(omega) / (2 * sqrt((M_ii + A_ii(omega)) * C_ii))</li>
+    <li>GM_T = C_44 / (rho * g * V), where rho=1025 kg/m3, g=9.81 m/s2</li>
+    <li>BM_T = I_xx / V; GM_T = KB + BM_T - KG (cross-check)</li>
+  </ul>
+
+  <h3 style="margin-top:1em;">C. References</h3>
+  <ol style="font-size:0.85em;color:#555;">
+    <li>Newman, J.N. (1977). <em>Marine Hydrodynamics</em>. MIT Press.</li>
+    <li>Faltinsen, O.M. (1990). <em>Sea Loads on Ships and Offshore Structures</em>. Cambridge.</li>
+    <li>Journee, J.M.J. & Massie, W.W. (2001). <em>Offshore Hydromechanics</em>. TU Delft.</li>
+    <li>Lee, C.H. (1995). <em>WAMIT Theory Manual</em>. MIT.</li>
+    <li>Chakrabarti, S.K. (2005). <em>Handbook of Offshore Engineering</em>. Elsevier.</li>
+    <li>DNV-RP-C205 (2021). <em>Environmental Conditions and Environmental Loads</em>.</li>
+    <li>DNV-OS-C301. <em>Stability and Watertight Integrity</em>.</li>
+  </ol>
+</div>
+
+</div>
+</body>
+</html>

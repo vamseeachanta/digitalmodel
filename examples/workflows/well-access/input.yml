@@ -1,0 +1,77 @@
+# ABOUTME: W7 well-access example — neutral deepwater GoM well program, dry-tree vs subsea.
+# ABOUTME: PUBLIC. No client names. Run: uv run python -m digitalmodel input.yml
+#
+# Neutral deepwater GoM well program: 8 wells, 25-year life, run primarily as a
+# dry-tree TLP and compared against a subsea hub-and-spoke architecture. Calibration
+# is read from the sibling calibration.yml (DOCUMENTED real-anchored generic profile;
+# authoritative BSEE extraction is worldenergydata-side).
+
+basename: well_access
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+well_access:
+  case:
+    id: gom_deepwater_well_access_analogue
+    description: Neutral deepwater GoM well-access lifecycle screen (dry-tree vs subsea)
+
+  well_program:
+    n_wells: 8
+    field_life_years: 25
+    access_class: dry_tree_tlp
+    first_production_year: 0
+    facility_availability: 0.95
+
+  # Calibration read from sibling file. Replace with the worldenergydata BSEE
+  # extract to calibrate against live history.
+  calibration_path: calibration.yml
+
+  # Per-architecture access multiplier m_access (1.0 = continuous dry-tree access;
+  # < 1.0 = subsea mobilisation-gated -> deferred backlog). Per intervention type.
+  # NOTE: dry_tree_frps multipliers are ENGINEERING ASSUMPTIONS (no operating analog).
+  access_multiplier:
+    dry_tree_tlp:
+      light_well_intervention: 1.00
+      workover: 1.00
+      recompletion: 1.00
+    dry_tree_spar:
+      light_well_intervention: 1.00
+      workover: 1.00
+      recompletion: 1.00
+    dry_tree_frps:                 # ASSUMPTION (input, not result)
+      light_well_intervention: 1.00
+      workover: 0.98
+      recompletion: 0.95
+    subsea_hub_spoke:              # access-suppressed: some demand cannot be met
+      light_well_intervention: 0.80
+      workover: 0.60
+      recompletion: 0.45
+
+  # Resource pools. Subsea workovers use a MODU with a long mobilisation lead and
+  # campaign batching; light intervention uses a quicker LWI vessel.
+  resources:
+    - resource_class: modu
+      available_days_per_year: 120.0
+      mobilisation_lead_days: 45.0
+      batch_campaign: true
+    - resource_class: lwi_vessel
+      available_days_per_year: 200.0
+      mobilisation_lead_days: 10.0
+      batch_campaign: false
+
+  # Production-days lost per DEFERRED event (well runs degraded/shut until access).
+  deferred_loss_per_event_days: 90.0
+
+  # Dry-tree vs subsea comparison block.
+  comparison:
+    dry_tree_class: dry_tree_tlp
+    subsea_class: subsea_hub_spoke
+
+  outputs:
+    directory: results/well_access
+    summary_json: well_access_summary.json
+    note_md: well_access_lifecycle_note.md

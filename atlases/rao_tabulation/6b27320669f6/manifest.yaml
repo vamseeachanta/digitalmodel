@@ -22,7 +22,7 @@ validation:
   passes: true
 provenance:
   basename: rao_tabulation
-  code_version: bb8ce47f
+  code_version: a3a67b4b
   standards: []
   response_kwargs:
     database_path: examples/workflows/rao-tabulation/input.yml

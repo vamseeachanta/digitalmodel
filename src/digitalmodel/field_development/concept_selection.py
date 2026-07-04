@@ -45,6 +45,12 @@ class HostType(str, Enum):
     SEMI = "Semi"
     FPSO = "FPSO"
     SUBSEA_TIEBACK = "Subsea_Tieback"
+    # Dry-tree unit: column-stabilised floating production unit carrying surface
+    # (dry) trees for continuous well access (FrPS / floating-production-spar
+    # class variant). Added for concept screening (W6). Depth/CAPEX bands sit
+    # between Spar and Semi; its differentiator is dry-tree continuous access,
+    # rewarded by the intervention axis. Bands here are GENERIC GoM defaults.
+    DRY_TREE_UNIT = "Dry_Tree_Unit"
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +109,7 @@ _DEPTH_LIMITS: dict[HostType, tuple[float, float]] = {
     HostType.SEMI:           (600.0,   2500.0),
     HostType.FPSO:           (600.0,   3000.0),
     HostType.SUBSEA_TIEBACK: (100.0,   3000.0),
+    HostType.DRY_TREE_UNIT:  (900.0,   2600.0),   # dry-tree FPU band (Spar/Semi overlap)
 }
 
 # Indicative CAPEX ranges (low_bn, high_bn) from GoM benchmarks
@@ -112,6 +119,7 @@ _CAPEX_RANGES: dict[HostType, tuple[float, float]] = {
     HostType.SEMI:           (4.0, 10.0),
     HostType.FPSO:           (5.0, 12.0),
     HostType.SUBSEA_TIEBACK: (0.2,  1.2),
+    HostType.DRY_TREE_UNIT:  (3.5,  8.0),          # between Spar and Semi
 }
 
 # Reservoir size thresholds (MMbbl)
@@ -126,6 +134,19 @@ _TIEBACK_MAX_VIABLE_KM = 60.0
 
 # Valid fluid types
 _VALID_FLUID_TYPES = {"oil", "gas", "condensate"}
+
+# Core host types ranked by the legacy :func:`concept_selection` API. DRY_TREE_UNIT
+# is a screening-only extension (W6) — fully scored via the shared helpers, but
+# deliberately excluded from the legacy ranker so its established 5-option contract
+# and downstream consumers (subsea_bridge) are unchanged. W6's screen_concepts()
+# opts DRY_TREE_UNIT in explicitly via its own candidate list.
+LEGACY_HOST_TYPES: tuple[HostType, ...] = (
+    HostType.TLP,
+    HostType.SPAR,
+    HostType.SEMI,
+    HostType.FPSO,
+    HostType.SUBSEA_TIEBACK,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +166,7 @@ def _depth_score(host: HostType, depth: float) -> float:
         HostType.SEMI:           (1000.0, 2200.0),
         HostType.FPSO:           (800.0,  2500.0),
         HostType.SUBSEA_TIEBACK: (100.0,  2000.0),
+        HostType.DRY_TREE_UNIT:  (1100.0, 2400.0),
     }
     opt_lo, opt_hi = _OPTIMAL[host]
     if opt_lo <= depth <= opt_hi:
@@ -216,6 +238,7 @@ def _fluid_score(host: HostType, fluid_type: str) -> float:
             HostType.SPAR:           75.0,
             HostType.TLP:            65.0,
             HostType.SUBSEA_TIEBACK: 70.0,
+            HostType.DRY_TREE_UNIT:  75.0,
         }
     else:  # oil
         weights = {
@@ -224,6 +247,7 @@ def _fluid_score(host: HostType, fluid_type: str) -> float:
             HostType.SPAR:           85.0,
             HostType.FPSO:           80.0,
             HostType.SUBSEA_TIEBACK: 80.0,
+            HostType.DRY_TREE_UNIT:  88.0,        # dry-tree oil field strength
         }
     return weights[host]
 
@@ -351,8 +375,10 @@ def concept_selection(
         )
 
     # --- Score all host types ---
+    # Iterate the legacy core set (5) so this API's contract is stable; W6's
+    # concept_screening opts DRY_TREE_UNIT in via its own candidate list.
     options: list[ConceptOption] = []
-    for host in HostType:
+    for host in LEGACY_HOST_TYPES:
         score = _composite_score(
             host=host,
             depth=water_depth,

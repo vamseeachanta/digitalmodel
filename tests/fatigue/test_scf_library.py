@@ -123,6 +123,85 @@ class TestEfthymiouTYJoint:
         assert scf_low.governing != scf_high.governing
 
 
+# -- Test: Efthymiou T/Y axial golden values (published exponents) -------------
+
+class TestEfthymiouTYAxialGolden:
+    """Golden SCFs vs published Efthymiou (1988, OTC 4829) / DNV-RP-C203 App. B.
+
+    The chord-saddle term is ``gamma * tau^1.1 * (1.11 - 3(beta-0.52)^2) *
+    sin(theta)^1.6`` (the published ``tau^1.1`` form). For short chords
+    (``alpha < 12``) the saddle SCFs (chord saddle + brace saddle) are reduced
+    by the short-chord correction factor F1 (fixed chord ends). The default
+    geometry uses ``L = 2.5*D`` -> ``alpha = 5`` (< 12), so F1 applies: the
+    chord-saddle golden for beta=0.5, gamma=12, tau=0.5, theta=90 is the
+    F1-corrected 4.755 (= 6.207 uncorrected * F1=0.766), and likewise matches
+    structural_analysis.connection_scf.efthymiou_chord_saddle_axial_scf.
+    """
+
+    def test_chord_saddle_golden_g12(self):
+        """beta=0.5, gamma=12, tau=0.5, alpha=5, theta=90 -> 6.207*F1 = 4.755."""
+        # D=1200, T=50 -> gamma=12; d=600 -> beta=0.5; t=25 -> tau=0.5; alpha=5.
+        # F1 = 1 - (0.83*0.5 - 0.56*0.25 - 0.02)*12^0.23*exp(-0.21*12^-1.16*5^2.5)
+        #    = 0.766 -> 6.207 * 0.766 = 4.755.
+        geom = TubularJointGeometry(D=1200, T=50, d=600, t=25, theta=90)
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(4.755, abs=0.01)
+
+    def test_long_chord_no_f1_recovers_uncorrected(self):
+        """alpha >= 12 (long chord) -> F1 = 1.0, chord saddle = uncorrected 6.21."""
+        # L = 6*D -> alpha = 12 -> no short-chord reduction.
+        geom = TubularJointGeometry(D=1200, T=50, d=600, t=25, theta=90, L=7200)
+        assert geom.alpha == pytest.approx(12.0)
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(6.207, abs=0.01)
+
+    def test_typical_axial_golden_values(self):
+        """beta=0.5, gamma=10, tau=0.5, alpha=5, theta=90 (F1=0.808 applied)."""
+        geom = TubularJointGeometry(D=1000, T=50, d=500, t=25, theta=90)
+        result = efthymiou_ty_axial(geom)
+        # chord saddle = 10*0.5^1.1*(1.11-3*0.0004)*1 = 5.173; *F1(0.808) = 4.178
+        assert result.scf_chord == pytest.approx(4.178, abs=0.01)
+        # brace saddle 5.029 * F1 = 4.062 (governs over brace crown 2.413)
+        assert result.scf_brace == pytest.approx(4.062, abs=0.01)
+        assert result.governing == pytest.approx(4.178, abs=0.01)
+
+    def test_chord_saddle_theta45_golden(self):
+        """theta=45 scales chord saddle by sin(45)^1.6 then F1 -> 2.971*0.808=2.400."""
+        geom = TubularJointGeometry(D=1000, T=50, d=500, t=25, theta=45)
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(2.400, abs=0.01)
+
+    def test_chord_saddle_matches_connection_scf(self):
+        """scf_library chord saddle equals the connection_scf published form.
+
+        Both apply the F1 short-chord factor at the default alpha=5, so they
+        agree on the F1-corrected 4.755 (not the uncorrected 6.21).
+        """
+        from digitalmodel.structural.structural_analysis.connection_scf import (
+            efthymiou_chord_saddle_axial_scf,
+        )
+        geom = TubularJointGeometry(D=1200, T=50, d=600, t=25, theta=90)
+        ref = efthymiou_chord_saddle_axial_scf(
+            beta=0.5, gamma=12.0, tau=0.5, theta_deg=90.0, alpha=5.0
+        )
+        result = efthymiou_ty_axial(geom)
+        assert result.scf_chord == pytest.approx(round(ref, 3), abs=0.01)
+
+    def test_short_chord_factor_f1_value(self):
+        """F1 published form at beta=0.5, gamma=12, alpha=5 -> 0.766; >=12 -> 1.0."""
+        from digitalmodel.fatigue.scf_library import short_chord_factor_f1
+
+        f1 = short_chord_factor_f1(0.5, 12.0, 5.0)
+        expected = 1.0 - (
+            0.83 * 0.5 - 0.56 * 0.5**2 - 0.02
+        ) * 12.0**0.23 * math.exp(-0.21 * 12.0 ** (-1.16) * 5.0**2.5)
+        assert f1 == pytest.approx(expected, rel=1e-12)
+        assert f1 == pytest.approx(0.766, abs=0.001)
+        # long chord: no reduction
+        assert short_chord_factor_f1(0.5, 12.0, 12.0) == pytest.approx(1.0)
+        assert short_chord_factor_f1(0.5, 12.0, 20.0) == pytest.approx(1.0)
+
+
 # -- Test: K-joint SCF --------------------------------------------------------
 
 class TestEfthymiouKJoint:

@@ -1,4 +1,8 @@
-"""Failure Assessment Diagram (FAD) construction and evaluation."""
+"""Failure Assessment Diagram (FAD) construction and evaluation.
+
+Per BS 7910 (Guide to methods for assessing the acceptability of flaws in
+metallic structures) — the Level 2/3 FAD failure-assessment curve.
+"""
 
 class FAD():
     def __init__(self, cfg):

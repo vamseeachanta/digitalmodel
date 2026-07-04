@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Diffraction Report - golden_barge</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, Arial, sans-serif;
+    margin: 0; padding: 0; color: #333; background: #f8f9fa;
+    font-size: 14px; line-height: 1.5;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 1.5em 2em; }
+  .report-header {
+    background: #2c3e50; color: #fff; padding: 1.2em 2em;
+    margin-bottom: 1.5em; border-radius: 6px;
+  }
+  .report-header h1 { margin: 0 0 0.3em; font-size: 1.6em; }
+  .report-header .subtitle { font-size: 1.1em; opacity: 0.9; margin-bottom: 0.5em; font-weight: 300; }
+  .report-header .meta { font-size: 0.9em; opacity: 0.85; }
+  .nav-bar {
+    margin-top: 1.2em; padding-top: 1em; border-top: 1px solid rgba(255,255,255,0.15);
+    display: flex; gap: 1.5em; font-size: 0.9em;
+  }
+  .nav-bar a { color: #fff; text-decoration: none; opacity: 0.8; }
+  .nav-bar a:hover { opacity: 1; text-decoration: underline; }
+  .nav-bar .active { opacity: 1; font-weight: 600; border-bottom: 2px solid #3498db; }
+  .section {
+    background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.5em; padding: 1.2em 1.5em;
+  }
+  .section h2 {
+    margin: 0 0 0.8em; font-size: 1.2em; color: #2c3e50;
+    border-bottom: 2px solid #3498db; padding-bottom: 0.3em;
+  }
+  table {
+    border-collapse: collapse; margin: 0.5em 0; font-size: 0.85em;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ddd; padding: 0.45em 0.7em; text-align: left;
+  }
+  th {
+    background: #34495e; color: #fff; font-weight: 600;
+    font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:hover { background: #ebf5fb; }
+  td { vertical-align: top; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .matrix-table td { text-align: right; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .matrix-table th { text-align: center; padding: 0.3em 0.5em; font-size: 0.8em; }
+  .highlight { background: #ffeaa7 !important; font-weight: 600; }
+  .plot-container { margin: 1em 0; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="section" id="toc">
+  <h2>Table of Contents</h2>
+  <ul style="list-style:none;padding:0;column-count:2;font-size:0.9em;">
+    <li><a href="#header">0. Header & Identification</a></li><li><a href="#executive-summary">1. Executive Summary</a></li><li><a href="#hull-mesh">2. Hull Description & Mesh Quality</a></li><li><a href="#hydrostatics">4. Hydrostatic Properties & Stability</a></li><li><a href="#natural-periods">5. Natural Period Estimates</a></li><li><a href="#hydro-coefficients">6. Hydrodynamic Coefficients</a></li><li><a href="#load-raos">7. Wave Excitation Forces (Load RAOs)</a></li><li><a href="#displacement-raos">8. Displacement RAOs (Motion Response)</a></li><li><a href="#roll-damping">9. Roll Damping Assessment</a></li><li><a href="#raw-data">10. Raw Data & Overlay Plots</a></li><li><a href="#appendices">11. Appendices</a></li>
+  </ul>
+</div>
+<div class="report-header">
+  <h1>Diffraction Analysis Report &mdash; golden_barge</h1>
+  <div class="subtitle">Characterization fixture</div>
+  <div class="meta">
+    Generated: 2026-01-01 00:00:00 |
+    Frequencies: 4 |
+    Headings: 3 (0.0, 45.0, 90.0&deg;) |
+    Solver(s): OrcaWave |
+    Source: golden.owr
+  </div>
+  
+</div>
+<div class="section" id="executive-summary">
+  <h2>Executive Summary</h2>
+  <table style="max-width:700px;"><thead><tr><th>Item</th><th>Value</th><th>Status</th></tr></thead><tbody><tr><td>Mesh Quality</td><td>520 panels, ratio 4.0</td><td style='color:#27ae60;font-weight:bold'>PASS</td></tr><tr><td>GM_T (transverse)</td><td>10.000 m</td><td style='color:#27ae60;font-weight:bold'>OK</td></tr><tr><td>GM_L (longitudinal)</td><td>155.000 m</td><td>-</td></tr></tbody></table>
+  
+  <div style="background:#fef9e7;border-left:4px solid #f39c12;padding:0.8em 1em;margin-top:1em;border-radius:4px;"><strong>Warnings & Alerts</strong><ul style="margin:0.3em 0;"><li style="margin:0.3em 0;">NOTE: Example warning for characterization.</li></ul></div>
+  
+</div>
+<div class="section" id="hull-mesh">
+<h2>Hull Description & Mesh Quality</h2>
+<h3>Hull Metadata</h3>
+<p><strong>Hull Type:</strong> barge</p>
+<table style="max-width:600px;"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Vessel Name</td><td>golden_barge</td></tr><tr><td>Solver(s)</td><td>OrcaWave</td></tr><tr><td>Source File</td><td>golden.owr</td></tr></tbody></table>
+<h3 style="margin-top:1em;">Mesh Quality Assessment</h3>
+<table style="max-width:600px;">
+  <thead><tr><th>Property</th><th>Value</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Panel Count</td><td>520</td>
+        <td style="color:#27ae60;font-weight:bold">PASS</td></tr>
+    <tr><td>Vertex Count</td><td>1100</td><td>-</td></tr>
+    <tr><td>Mean Panel Area</td><td>1.250000 m2</td><td>-</td></tr>
+    <tr><td>Min Panel Area</td><td>0.600000 m2</td><td>-</td></tr>
+    <tr><td>Max Panel Area</td><td>2.400000 m2</td><td>-</td></tr>
+    <tr><td>Area Ratio (max/min)</td><td>4.00</td><td>-</td></tr>
+  </tbody>
+</table>
+<p style="font-size:0.85em;color:#666;margin-top:0.5em;">
+  Mesh quality directly affects accuracy of added mass, damping, and wave excitation forces.
+  The key metric is the <strong>adjacent panel ratio</strong> (size ratio between neighboring panels) --
+  gradual size variation is acceptable even with a large global min/max ratio.
+  Only abrupt transitions between adjacent panels degrade BEM solver accuracy.
+  Advanced mesh quality metrics (Jacobian, aspect ratio, skewness, orthogonality)
+  are available via the gmsh meshing tool.
+</p>
+</div><div class="section" id="hydrostatics">
+  <h2>Hydrostatic Properties & Stability</h2>
+  <h3>Hydrostatic Properties</h3>
+<table style="max-width:600px;">
+  <thead><tr><th>Property</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Displaced Volume</td><td>16000.0000 m3</td></tr>
+    <tr><td>Mass</td><td>16400000.0000</td></tr>
+    <tr><td>Centre of Buoyancy (x, y, z)</td><td>0.0000, 0.0000, -4.0000</td></tr>
+    <tr><td>Centre of Mass (x, y, z)</td><td>0.0000, 0.0000, -3.0000</td></tr>
+    <tr><td>Waterplane Area (Awp)</td><td>2000.0000 m2</td></tr>
+    <tr><td>Waterplane I_xx</td><td>266666.6670</td></tr>
+    <tr><td>Waterplane I_yy</td><td>6666666.6670</td></tr>
+    <tr><td>Centre of Floatation (x, y)</td><td>0.0000, 0.0000</td></tr>
+  </tbody>
+</table>
+  <h3 style="margin-top:1em;">Stability Assessment</h3><table style="max-width:700px;"><thead><tr><th>Parameter</th><th>Value</th><th>Status</th></tr></thead><tbody><tr><td>GM_T (transverse metacentric height)</td><td>10.0000 m</td><td style='color:#27ae60;font-weight:bold'>OK</td></tr><tr><td>GM_L (longitudinal metacentric height)</td><td>155.0000 m</td><td>-</td></tr><tr><td>BM_T (transverse)</td><td>16.6700 m</td><td>-</td></tr><tr><td>BM_L (longitudinal)</td><td>416.6700 m</td><td>-</td></tr><tr><td>KB (vertical centre of buoyancy)</td><td>-4.0000 m</td><td>-</td></tr></tbody></table><p style="font-size:0.85em;color:#666;">Reference: DNV-OS-C301 requires GM_T &gt; 1.0m for intact stability of mobile offshore units.</p><p style="font-size:0.85em;color:#666;margin-top:0.5em;">Cross-check: KB + BM_T - KG = -4.000 + 16.670 - (-3.000) = 15.670 m (vs GM_T = 10.000 m, diff = 5.6700 m)</p>
+  <h3 style="margin-top:1em;">Radii of Gyration</h3><table style="max-width:400px;"><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody><tr><td>r_xx (roll)</td><td>7.8100 m</td></tr><tr><td>r_yy (pitch)</td><td>30.2400 m</td></tr><tr><td>r_zz (yaw)</td><td>29.2100 m</td></tr></tbody></table>
+  <h3 style="margin-top:1em;">Restoring Matrix C (Hydrostatic Stiffness)</h3>
+<table class="matrix-table">
+  <thead><tr><th></th><th>Surge</th><th>Sway</th><th>Heave</th><th>Roll</th><th>Pitch</th><th>Yaw</th></tr></thead>
+  <tbody><tr><th>Surge</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+<tr><th>Sway</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+<tr><th>Heave</th><td class=''>0.0000</td><td class=''>0.0000</td><td class='highlight'>20110500.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+<tr><th>Roll</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class='highlight'>1608000000.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+<tr><th>Pitch</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class='highlight'>25000000000.0000</td><td class=''>0.0000</td></tr>
+<tr><th>Yaw</th><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td><td class=''>0.0000</td></tr>
+</tbody>
+</table>
+<p style="font-size:0.85em;color:#666;">
+  Heave (C_33), Roll (C_44), and Pitch (C_55) have hydrostatic restoring.
+  Surge, Sway, and Yaw are neutrally stable -- restoring comes from mooring (not modelled in diffraction).
+</p>
+  <h3 style="margin-top:1em;">Inertia Matrix</h3>
+<table class="matrix-table">
+  <thead><tr><th></th><th>Surge</th><th>Sway</th><th>Heave</th><th>Roll</th><th>Pitch</th><th>Yaw</th></tr></thead>
+  <tbody><tr><th>Surge</th><td class='highlight'>1.6400e+07</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td></tr>
+<tr><th>Sway</th><td class=''>0.0000e+00</td><td class='highlight'>1.6400e+07</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td></tr>
+<tr><th>Heave</th><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class='highlight'>1.6400e+07</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td></tr>
+<tr><th>Roll</th><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class='highlight'>1.0000e+09</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td></tr>
+<tr><th>Pitch</th><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class='highlight'>1.5000e+10</td><td class=''>0.0000e+00</td></tr>
+<tr><th>Yaw</th><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class=''>0.0000e+00</td><td class='highlight'>1.4000e+10</td></tr>
+</tbody>
+</table>
+  <div style="background:#eaf2f8;border-left:4px solid #3498db;padding:0.6em 1em;margin-top:0.8em;border-radius:4px;font-size:0.85em;"><strong>Hull Type Note (barge):</strong> Wide beam typically gives large GM_T. Resonance peaks at roll natural period are the primary concern, not stability.</div>
+</div>
+<div class="section">
+  <h3>Phase Interpretation Guide</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li><strong>Phase = 0 deg</strong>: Response in-phase with wave (crest at origin = peak response)</li>
+    <li><strong>Phase = -90 deg</strong>: Lagging (response peaks after wave crest passes)</li>
+    <li><strong>Phase = +90 deg</strong>: Leading (response peaks before wave crest arrives)</li>
+    <li><strong>~180 deg jump near resonance</strong>: Transition from quasi-static to resonant regime</li>
+    <li><strong>Phase at near-zero amplitude</strong>: Physically meaningless -- ignore phase when amplitude is insignificant</li>
+  </ul>
+</div>
+<div class="section" id="appendices">
+  <h2>Appendices</h2>
+
+  <h3>A. Notation & Conventions</h3>
+  <table style="max-width:600px;font-size:0.85em;">
+    <thead><tr><th>Symbol</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>DOF 1-6</td><td>Surge, Sway, Heave, Roll, Pitch, Yaw</td></tr>
+      <tr><td>Coordinate System</td><td>x-forward, z-up, right-hand rule</td></tr>
+      <tr><td>A_ii(omega)</td><td>Frequency-dependent added mass (diagonal)</td></tr>
+      <tr><td>B_ii(omega)</td><td>Frequency-dependent radiation damping (diagonal)</td></tr>
+      <tr><td>C_ii</td><td>Hydrostatic restoring stiffness (diagonal)</td></tr>
+      <tr><td>GM_T</td><td>Transverse metacentric height (metres)</td></tr>
+      <tr><td>T_n</td><td>Natural period (seconds)</td></tr>
+      <tr><td>zeta</td><td>Critical damping ratio (%)</td></tr>
+      <tr><td>RAO</td><td>Response Amplitude Operator</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:1em;">B. Key Formulas</h3>
+  <ul style="font-size:0.85em;color:#555;">
+    <li>T_n = 2pi * sqrt((M_ii + A_ii(omega_n)) / C_ii)</li>
+    <li>zeta(omega) = B_ii(omega) / (2 * sqrt((M_ii + A_ii(omega)) * C_ii))</li>
+    <li>GM_T = C_44 / (rho * g * V), where rho=1025 kg/m3, g=9.81 m/s2</li>
+    <li>BM_T = I_xx / V; GM_T = KB + BM_T - KG (cross-check)</li>
+  </ul>
+
+  <h3 style="margin-top:1em;">C. References</h3>
+  <ol style="font-size:0.85em;color:#555;">
+    <li>Newman, J.N. (1977). <em>Marine Hydrodynamics</em>. MIT Press.</li>
+    <li>Faltinsen, O.M. (1990). <em>Sea Loads on Ships and Offshore Structures</em>. Cambridge.</li>
+    <li>Journee, J.M.J. & Massie, W.W. (2001). <em>Offshore Hydromechanics</em>. TU Delft.</li>
+    <li>Lee, C.H. (1995). <em>WAMIT Theory Manual</em>. MIT.</li>
+    <li>Chakrabarti, S.K. (2005). <em>Handbook of Offshore Engineering</em>. Elsevier.</li>
+    <li>DNV-RP-C205 (2021). <em>Environmental Conditions and Environmental Loads</em>.</li>
+    <li>DNV-OS-C301. <em>Stability and Watertight Integrity</em>.</li>
+  </ol>
+</div>
+
+</div>
+</body>
+</html>

@@ -121,9 +121,14 @@ class YAMLConfigParser:
         self._setup_yaml_constructors()
     
     def _setup_yaml_constructors(self):
-        """Set up custom YAML tag constructors."""
-        yaml.add_constructor('!eval', self._eval_constructor)
-        yaml.add_constructor('!var', self._var_constructor)
+        """Set up custom YAML tag constructors.
+
+        Constructors are registered on SafeLoader so parsing can use
+        yaml.safe-style loading (no arbitrary !!python/object instantiation)
+        while still supporting this module's own !var / !eval tags.
+        """
+        yaml.add_constructor('!eval', self._eval_constructor, Loader=yaml.SafeLoader)
+        yaml.add_constructor('!var', self._var_constructor, Loader=yaml.SafeLoader)
     
     def _eval_constructor(self, loader, node):
         """Evaluate mathematical expressions in YAML."""
@@ -218,7 +223,7 @@ class YAMLConfigParser:
         self._extract_variables(raw_text)
 
         # Second pass: full parse with custom tag constructors
-        data = yaml.load(raw_text, Loader=yaml.Loader)
+        data = yaml.load(raw_text, Loader=yaml.SafeLoader)
 
         # Remove variables section from config data
         if isinstance(data, dict) and 'variables' in data:
@@ -233,7 +238,7 @@ class YAMLConfigParser:
         self._extract_variables(yaml_string)
 
         # Second pass: full parse with custom tag constructors
-        data = yaml.load(yaml_string, Loader=yaml.Loader)
+        data = yaml.load(yaml_string, Loader=yaml.SafeLoader)
 
         # Remove variables section from config data
         if isinstance(data, dict) and 'variables' in data:

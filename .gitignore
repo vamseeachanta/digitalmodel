@@ -370,3 +370,8 @@ src/digitalmodel/base_configs/modules/*/logs/
 # epic #3084: keep repo-scoped agent memory tracked despite blanket memory/ rule
 !.claude/memory/
 !.claude/memory/**
+
+# Local-only agent config + ecosystem-propagated markers (machine/user-specific)
+CLAUDE.local.md
+.claude/skills/.ecosystem-propagated
+.claude/skills/guidelines

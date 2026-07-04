@@ -1,0 +1,218 @@
+{
+  "scope": "floating",
+  "sources": [
+    {
+      "name": "Transocean Rig Specifications (deepwater.com/our-fleet)",
+      "url": "https://www.deepwater.com/our-fleet",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "brochure-pdf",
+      "format": "Per-rig PDF spec sheets (binary/scanned) + HTML fleet pages",
+      "freshness": "Current fleet; spec sheets updated per rig; quarterly Fleet Status Reports",
+      "reliability": "high",
+      "notes": "Authoritative owner data for drillships and semisubmersibles (e.g., Transocean Barents, Development Driller III). Each PDF gives LOA/beam/draft/displacement, variable deck load (VDL), crane capacities, water-depth/drilling capability. PDFs are image-based so need OCR for scraping. Named real units. Example: https://www.deepwater.com/documents/RigSpecs/Transocean%20Barents.pdf"
+    },
+    {
+      "name": "Valaris Fleet (valaris.com/our-fleet)",
+      "url": "https://www.valaris.com/our-fleet/default.aspx",
+      "layers_covered": [
+        "principal particulars",
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML per-vessel pages + downloadable spec sheets",
+      "freshness": "Current fleet, kept current",
+      "reliability": "high",
+      "notes": "Drillships and semisubmersibles with design class (Samsung, F&G ExD Millennium), water depth, dimensions, VDL, drilling/crane specs. Named real units (VALARIS DS-4, MS-1, DPS-1)."
+    },
+    {
+      "name": "Heerema Marine Contractors Equipment Folder / Fleet",
+      "url": "https://www.heerema.com/heerema-marine-contractors/fleet",
+      "layers_covered": [
+        "crane capacity curves & deck data",
+        "principal particulars"
+      ],
+      "access": "brochure-pdf",
+      "format": "HTML fleet pages + Equipment Folder PDFs (per-vessel data sheets)",
+      "freshness": "Current; folder dated ~2020-2021",
+      "reliability": "high",
+      "notes": "Authoritative crane load charts (capacity vs radius) for SSCV Sleipnir (20,000t tandem; 20,000t @27-48m, 7,000t @62m, 4,000t @82m) and Thialf (14,200t tandem). Equipment folder PDFs include main/aux hoist curves, deck dimensions, hull particulars. Example: https://www.heerema.com/hubfs/HMC%20Equipment%20Folder_20211108.pdf"
+    },
+    {
+      "name": "Saipem Fleet (Saipem 7000 etc.)",
+      "url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/saipem-7000",
+      "layers_covered": [
+        "crane capacity curves & deck data",
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML vessel pages + brochure PDFs",
+      "freshness": "Current fleet",
+      "reliability": "high",
+      "notes": "Semisubmersible crane vessel particulars and lift capacity (2x7,000t cranes, 14,000t @42m). Owner-authoritative for heavy-lift / crane-curve layer."
+    },
+    {
+      "name": "BSEE Data Center - Platform/Rig Information (Gulf of Mexico)",
+      "url": "https://www.data.bsee.gov/Main/Platform.aspx",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "Queryable database, downloadable tables/shapefiles, mapping (TIMS)",
+      "freshness": "Continuously updated (US federal OCS)",
+      "reliability": "high",
+      "notes": "US Gulf of Mexico federal OCS structures incl. floating production. Location, structure type, install/abandon, production status, manning, heliport. Strong for identifying real named units and complexes; structural particulars are limited (no RAOs/mass properties). Metadata: https://www.data.bsee.gov/Mapping/Files/platform_meta.html"
+    },
+    {
+      "name": "Sokkeldirektoratet (Norwegian Offshore Directorate) FactPages / FactMaps",
+      "url": "https://factpages.sodir.no/en/facility",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "Web database + open-data downloads (NLOD licence), ~30,000 datasets",
+      "freshness": "Synced daily; very current",
+      "reliability": "high",
+      "notes": "Norwegian continental shelf facilities incl. FPSOs/semis/spars (e.g., Aasta Hansteen spar). Facility name, type, operator, water depth, in-service dates. Free open-government data; good for named NCS units. No mass props/RAOs."
+    },
+    {
+      "name": "Offshore Magazine - Worldwide FPSO Survey / Posters",
+      "url": "https://www.offshore-mag.com/vessels/document/14287001/2022-worldwide-survey-of-floating-production-storage-and-offloading-fpso-units",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "Downloadable survey poster PDF (tabular)",
+      "freshness": "Annual/periodic surveys (2022 latest free; newer behind EMA)",
+      "reliability": "medium",
+      "notes": "Free industry survey listing FPSO units worldwide with owner, operator, field, location, storage capacity, status. Good fleet census/cross-reference. Data sourced from Energy Maritime Associates (commercial). Storage/topsides detail; no engineering particulars like RAOs."
+    },
+    {
+      "name": "Wikipedia (vessel/platform articles + lists)",
+      "url": "https://en.wikipedia.org/wiki/Floating_production_storage_and_offloading",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML articles with infoboxes; per-unit pages",
+      "freshness": "Continuously edited; variable per article",
+      "reliability": "medium",
+      "notes": "Per-unit pages (SSCV Sleipnir, SSCV Thialf, Saipem 7000, Aasta Hansteen spar, Pioneering Spirit) give LOA/beam/draft/displacement/crane capacity with citations. Useful seed/cross-check layer; verify against primary sources. Covers all unit types incl. spars, drillships, FSRUs."
+    },
+    {
+      "name": "Excelerate Energy & BW LNG fleet pages (FSRU)",
+      "url": "https://excelerateenergy.com/our-operations/floating-lng-terminals/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML pages + fact sheets/PDFs",
+      "freshness": "Current fleet",
+      "reliability": "high",
+      "notes": "Owner-authoritative FSRU particulars: storage capacity (125,000-263,000 m3), regas rate (MMscf/d), LOA up to ~290m, beam ~49m, draft 11-12m. Combine with BW LNG, Exmar, Hoegh LNG fleet pages for named-unit FSRU coverage."
+    },
+    {
+      "name": "NOAA National Data Buoy Center (NDBC)",
+      "url": "https://www.ndbc.noaa.gov/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "Real-time + historical time series (text/NetCDF), API/THREDDS",
+      "freshness": "Real-time + multi-decade archive",
+      "reliability": "high",
+      "notes": "Free US buoy observations: Hs, Tp, wind, currents, water level. Foundation for site metocean characterization (GoM, US coasts). Observations not design criteria; combine with hindcast."
+    },
+    {
+      "name": "Copernicus Marine Service (CMEMS) + ECMWF ERA5",
+      "url": "https://marine.copernicus.eu/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "registration",
+      "format": "Gridded reanalysis/hindcast NetCDF; API (free account)",
+      "freshness": "ERA5 hourly since 1940; CMEMS operational + reanalysis",
+      "reliability": "high",
+      "notes": "Global/regional winds, waves, currents, water levels for extreme-value design metocean. Free with registration. Known caveat: ERA5 underestimates peak winds/extreme Hs (design risk) - apply corrections or regional hindcasts (NORA3 for North/Norwegian Sea). ERA5 via Copernicus CDS: https://cds.climate.copernicus.eu/"
+    },
+    {
+      "name": "BOEM Metocean Characterization Recommended Practices",
+      "url": "https://www.boem.gov/sites/default/files/environmental-stewardship/Environmental-Studies/Renewable-Energy/Metocean-Recommended-Practices.pdf",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "PDF guidance document",
+      "freshness": "Recent recommended-practice doc",
+      "reliability": "high",
+      "notes": "US government recommended practice for metocean characterization (data sources, extreme-value methods). Methodology reference rather than dataset; aligns design metocean workflow with regulator expectations."
+    },
+    {
+      "name": "DNV / ABS / Lloyd's Register rules & guidance (offshore units)",
+      "url": "https://www.dnv.com/maritime/Offshore/vessels/fpso/",
+      "layers_covered": [
+        "principal particulars",
+        "mass properties",
+        "metocean criteria"
+      ],
+      "access": "mixed",
+      "format": "HTML + free rule/standard PDFs (e.g., DNV-OS-C103, DNV-RP-C205)",
+      "freshness": "Standards revised periodically; current",
+      "reliability": "high",
+      "notes": "Class rules define required stability/mass-property documentation and environmental (metocean) load bases. DNV-RP-C205 gives environmental conditions/loads; useful for criteria framing and unit-type definitions. Does not publish per-unit mass props/RAOs - those are confidential class deliverables."
+    },
+    {
+      "name": "Academic / open-access RAO papers (ResearchGate, SCIRP, arXiv)",
+      "url": "https://www.scirp.org/pdf/eng_2019090914344054.pdf",
+      "layers_covered": [
+        "motion RAOs",
+        "mass properties"
+      ],
+      "access": "mixed",
+      "format": "Open-access PDFs with RAO plots/tables for example geometries",
+      "freshness": "Per-paper; ongoing",
+      "reliability": "medium",
+      "notes": "Generic/representative RAOs for FPSO, spar, semisub, TLP geometries (6-DOF, added mass/damping). NOT real named-unit data - useful as validation/benchmark and method reference only. Confirms RAO/mass-property layer has no public per-unit fleet source."
+    },
+    {
+      "name": "Cranepedia - crane/vessel load charts",
+      "url": "https://cranepedia.com/spec/crane-vessel/heerema-sleipnir/",
+      "layers_covered": [
+        "crane capacity curves & deck data"
+      ],
+      "access": "public",
+      "format": "HTML spec pages + downloadable load-chart PDFs",
+      "freshness": "Variable; not authoritative",
+      "reliability": "low",
+      "notes": "Aggregator offering load-chart PDFs (capacity vs radius, boom length) for crane vessels. Convenient cross-reference but secondary - validate against owner (Heerema/Saipem) data sheets before use."
+    }
+  ],
+  "paywalled_gaps": [
+    "S&P Global Commodity Insights (formerly IHS Markit) Petrodata RigBase / RigPoint - the authoritative offshore rig & floating-unit fleet database (drillships, semis, FPSOs); detailed particulars, specs, contracts. PAID subscription.",
+    "Clarksons Research (World Fleet Register / Offshore Intelligence Network) - comprehensive vessel/unit particulars, owners, specs for FPSOs, FSRUs, MODUs. PAID.",
+    "Enverus (incl. legacy RigData) and Rystad Energy - floating production/rig fleet analytics and particulars. PAID.",
+    "Energy Maritime Associates (EMA) Guide to Floating Production Systems / FPS database - the most complete FPSO/FPU/spar/semi census with engineering and contract detail; only summary survey posters are free via Offshore Magazine. PAID.",
+    "Mass properties (lightship weight, VCG/LCG/TCG, radii of gyration, weight distribution) - essentially NOT public for any named unit; held by owners/yards/class. No free or paid open dataset found; would require per-project data or estimation.",
+    "Motion RAOs per named unit (6-DOF transfer functions, added mass/damping, QTFs) - NOT public; confidential naval-architecture deliverables. Only generic academic examples exist. Largest engineering gap.",
+    "Full hydrodynamic panel models / GDF meshes and stability booklets for specific units - confidential to operator/class/yard; not publicly available."
+  ],
+  "recommended_priority": [
+    "Transocean Rig Specifications (deepwater.com/our-fleet)",
+    "Valaris Fleet (valaris.com/our-fleet)",
+    "Heerema Marine Contractors Equipment Folder / Fleet",
+    "Saipem Fleet (Saipem 7000 etc.)",
+    "BSEE Data Center - Platform/Rig Information (Gulf of Mexico)",
+    "Sokkeldirektoratet (Norwegian Offshore Directorate) FactPages / FactMaps",
+    "Excelerate Energy & BW LNG fleet pages (FSRU)",
+    "Offshore Magazine - Worldwide FPSO Survey / Posters",
+    "Copernicus Marine Service (CMEMS) + ECMWF ERA5",
+    "NOAA National Data Buoy Center (NDBC)",
+    "DNV / ABS / Lloyd's Register rules & guidance (offshore units)",
+    "BOEM Metocean Characterization Recommended Practices",
+    "Wikipedia (vessel/platform articles + lists)",
+    "Academic / open-access RAO papers (ResearchGate, SCIRP, arXiv)",
+    "Cranepedia - crane/vessel load charts"
+  ]
+}

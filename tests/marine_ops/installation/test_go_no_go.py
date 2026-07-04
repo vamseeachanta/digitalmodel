@@ -180,3 +180,92 @@ class TestPrintDecision:
         output = gng.print_decision(decision)
         assert "NO_GO" in output
         assert "FAIL" in output
+
+
+class TestIssue472Criteria:
+    """Issue #472: DNV weather/limit Go/No-Go threshold logic.
+
+    Exercises the splash-zone Hs (DNV-ST-N001, < 1.0 m) and bend-radius
+    (R/OD) criteria added for #472, plus governing-constraint reporting,
+    boundary convention, and multiple-violation handling.
+    """
+
+    def setup_method(self):
+        cfg = jl.KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
+        self.results = jl.run_jumper_analysis(cfg)
+
+    # ----- helpers --------------------------------------------------------
+    def _criterion(self, decision, name):
+        match = [c for c in decision.criteria if c.name == name]
+        assert len(match) == 1, f"expected exactly one '{name}'"
+        return match[0]
+
+    # ----- GO case (all within limits) ------------------------------------
+    def test_go_all_within_limits(self):
+        """Calm weather window (Hs 0.5 m) -> splash-zone PASS, no FAILs."""
+        decision = gng.evaluate_go_no_go(
+            "calm-window", self.results, conditions={"hs_m": 0.5}
+        )
+        splash = self._criterion(decision, "Splash zone Hs")
+        assert splash.state == gng.CriterionState.PASS
+        fails = [c for c in decision.criteria if c.state == gng.CriterionState.FAIL]
+        assert fails == []
+        assert decision.overall_state in (
+            gng.DecisionState.GO, gng.DecisionState.MARGINAL
+        )
+
+    # ----- NO-GO case (one limit exceeded, governing reported) ------------
+    def test_no_go_splash_zone_exceeded_is_governing(self):
+        """Hs 1.5 m > 1.0 m limit -> NO_GO with splash-zone the governing FAIL."""
+        decision = gng.evaluate_go_no_go(
+            "rough-window", self.results, conditions={"hs_m": 1.5}
+        )
+        assert decision.overall_state == gng.DecisionState.NO_GO
+        fails = [c for c in decision.criteria if c.state == gng.CriterionState.FAIL]
+        assert len(fails) == 1
+        assert fails[0].name == "Splash zone Hs"
+        assert fails[0].value == 1.5
+        assert fails[0].limit == 1.0
+        assert fails[0].margin < 0  # negative margin = over the limit
+
+    # ----- boundary case (exactly at limit) -------------------------------
+    def test_boundary_exactly_at_limit_is_inclusive(self):
+        """Hs == 1.0 m (exactly at limit) is allowed (inclusive: <= limit).
+
+        Convention: a value EQUAL to a not-to-exceed limit is not a FAIL
+        (value <= limit). Being exactly at the limit lands in the WARNING
+        band (>= warning_factor * limit) rather than PASS.
+        """
+        decision = gng.evaluate_go_no_go(
+            "boundary-window", self.results, conditions={"hs_m": 1.0}
+        )
+        splash = self._criterion(decision, "Splash zone Hs")
+        assert splash.state != gng.CriterionState.FAIL
+        assert splash.state == gng.CriterionState.WARNING
+        assert splash.margin == 0.0  # limit - value == 0 at the boundary
+
+    # ----- multiple violations: ordering / count -------------------------
+    def test_multiple_violations_reported_in_criteria_order(self):
+        """Two limits breached (Hs and R/OD) -> both reported, source order."""
+        decision = gng.evaluate_go_no_go(
+            "multi-violation", self.results,
+            conditions={"hs_m": 2.0},
+            min_bend_radius_factor=50.0,  # rigid jumper is only ~4.65x OD -> FAIL
+        )
+        assert decision.overall_state == gng.DecisionState.NO_GO
+        fail_names = [
+            c.name for c in decision.criteria
+            if c.state == gng.CriterionState.FAIL
+        ]
+        assert "Minimum bend radius factor (R/OD)" in fail_names
+        assert "Splash zone Hs" in fail_names
+        # R/OD criterion is appended before the splash-zone criterion
+        assert fail_names.index("Minimum bend radius factor (R/OD)") < \
+            fail_names.index("Splash zone Hs")
+
+    def test_default_conditions_backward_compatible(self):
+        """No conditions dict -> splash-zone defaults to benign 0.0 m PASS."""
+        decision = gng.evaluate_go_no_go("legacy-call", self.results)
+        splash = self._criterion(decision, "Splash zone Hs")
+        assert splash.value == 0.0
+        assert splash.state == gng.CriterionState.PASS

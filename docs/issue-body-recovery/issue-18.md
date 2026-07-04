@@ -1,0 +1,14 @@
+- [x] Existing filtering process (using python and manual process) is below:
+  - Convert vessel .dat file with Seastate RAOs to .yml file
+  - Run the digitalmodel program and provide the CoG and the structures dimensions relative to .yml. Coordinates should be the model coordinates of the vessel.
+  - Run the program with the .yml file and the digitalmodel output file.
+  - Copy digitalmodel output file into suitable format with a key and the output as value.
+  - Copy this into the main file to get the reduced seastate RAO file for further analysis.
+- [ ] Automate process. 
+  - [ ] Currently, analysis has many manual operations with formatting and copy and paste which is prone to errors at somepoint.
+  - [ ] Trim the SSRAOs grid for a structure being installed with defined tolerance.
+  - [ ] Trim SSRAOs is necessary to improve run times.
+  - [ ] More automated if SSRAOs trimming occur in OrcaWave using different windows and can be redefined in OrcaFlex?
+- [ ] seastate RAOs analysis 
+  - [ ] at various locations and help identify trends
+  - [ ] Pick 8 corners (surface and at depth)

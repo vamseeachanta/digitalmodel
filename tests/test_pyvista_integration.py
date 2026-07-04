@@ -73,6 +73,10 @@ def test_create_cylinder():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skip(
+    reason="SIGSEGV in headless CI native viz (VTK OpenGL render); no GL context "
+    "on the runner. Narrowly scoped to the rendering tests only. See #949."
+)
 def test_offscreen_plotter():
     """Plotter(off_screen=True) can be created and closed without error."""
     plotter = pv.Plotter(off_screen=True)
@@ -81,6 +85,10 @@ def test_offscreen_plotter():
     plotter.close()
 
 
+@pytest.mark.skip(
+    reason="SIGSEGV in headless CI native viz (VTK OpenGL render/screenshot); no GL "
+    "context on the runner. Narrowly scoped to the rendering tests only. See #949."
+)
 def test_screenshot_png(tmp_path):
     """plotter.screenshot() produces a valid PNG file."""
     out_file = tmp_path / "screenshot.png"

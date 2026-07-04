@@ -139,12 +139,16 @@ class CADImporter:
         import Mesh
         import tempfile
 
+        # SECURITY: use NamedTemporaryFile(delete=False) instead of the
+        # deprecated, race-prone tempfile.mktemp() (TOCTOU symlink class).
+        # The handle is created atomically; we remove it in finally so it
+        # never leaks on the exception path.
+        tf = tempfile.NamedTemporaryFile(suffix=".stl", delete=False)
+        tf.close()
+        temp_stl = Path(tf.name)
         try:
             # Open STEP/IGES in FreeCAD
             doc = FreeCAD.open(str(file_path))
-
-            # Export to STL (intermediate format)
-            temp_stl = Path(tempfile.mktemp(suffix=".stl"))
 
             # Get all shapes and export
             shapes = []
@@ -169,9 +173,6 @@ class CADImporter:
                 output_blend
             )
 
-            # Cleanup temp file
-            temp_stl.unlink(missing_ok=True)
-
             if cleanup and result["success"]:
                 self._cleanup_mesh(output_blend or temp_stl)
 
@@ -183,6 +184,9 @@ class CADImporter:
                 "success": False,
                 "error": str(e)
             }
+        finally:
+            # Always remove the intermediate temp file (success or exception).
+            temp_stl.unlink(missing_ok=True)
 
     def _cleanup_mesh(self, blend_file: Path) -> None:
         """
@@ -245,16 +249,22 @@ if bpy.context.selected_objects:
                 else:
                     # Subsequent imports append to existing scene
                     if merge:
-                        # Import CAD file to temp blend, then append to output
+                        # Import CAD file to temp blend, then append to output.
+                        # SECURITY: NamedTemporaryFile(delete=False) instead of
+                        # the deprecated, race-prone tempfile.mktemp().
                         import tempfile
-                        temp_blend = Path(tempfile.mktemp(suffix=".blend"))
+                        _tf = tempfile.NamedTemporaryFile(
+                            suffix=".blend", delete=False)
+                        _tf.close()
+                        temp_blend = Path(_tf.name)
 
-                        # Import CAD file to temporary blend file
-                        result = self.import_file(file_path, temp_blend)
+                        try:
+                            # Import CAD file to temporary blend file
+                            result = self.import_file(file_path, temp_blend)
 
-                        if result["success"]:
-                            # Append all objects from temp blend to output blend
-                            script = f"""
+                            if result["success"]:
+                                # Append all objects from temp blend to output
+                                script = f"""
 import bpy
 import os
 
@@ -268,13 +278,13 @@ for obj in data_to.objects:
     if obj is not None:
         bpy.context.scene.collection.objects.link(obj)
 """
-                            result = self.blender.run_script(
-                                script,
-                                background=True,
-                                blend_file=output_blend
-                            )
-
-                            # Cleanup temp blend file
+                                result = self.blender.run_script(
+                                    script,
+                                    background=True,
+                                    blend_file=output_blend
+                                )
+                        finally:
+                            # Always remove the temp blend file.
                             temp_blend.unlink(missing_ok=True)
                     else:
                         result = self.import_file(file_path)

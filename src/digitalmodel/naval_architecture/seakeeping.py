@@ -13,6 +13,16 @@ References:
 """
 
 import math
+import warnings
+from pathlib import Path
+from typing import Optional
+
+from digitalmodel.citations.registry import get_en400_reference
+from digitalmodel.citations.schema import CitationResolutionError
+
+# One-shot guard so standalone mode warns once, not per call (mirrors the
+# DNV-OS-E301 mooring pilot's degradation behavior).
+_EN400_STANDALONE_WARNED = False
 
 # Standard gravity and seawater density
 G = 9.81  # m/s²
@@ -53,6 +63,48 @@ def natural_heave_period(
     mass_kg = displacement_tonnes * 1000.0
     stiffness = RHO_SW * G * waterplane_area_m2
     return 2 * math.pi * math.sqrt(mass_kg / stiffness)
+
+
+def natural_heave_period_cited(
+    displacement_tonnes: float,
+    waterplane_area_m2: float,
+    *,
+    repo_root: Optional[Path] = None,
+) -> dict:
+    """`natural_heave_period` with an EN400 provenance sidecar.
+
+    Mirrors the DNV-OS-E301 mooring pilot's opt-in-by-name design: the legacy
+    `natural_heave_period` stays unchanged; callers opt into citation emission
+    by name. Returns ``{"value", "units", "citations"}``.
+
+    Fail-closed: a configured-but-missing/stale wiki page raises
+    CitationResolutionError. Standalone mode (resolver unconfigured) degrades
+    gracefully with a one-shot RuntimeWarning and an empty ``citations`` list.
+    """
+    global _EN400_STANDALONE_WARNED
+    period_s = natural_heave_period(displacement_tonnes, waterplane_area_m2)
+    citations: list = []
+    try:
+        cited = get_en400_reference(
+            "Chapter 8 — Seakeeping (natural heave period)",
+            note="natural heave period from waterplane stiffness",
+            repo_root=repo_root,
+        )
+        citations = [cited.citation]
+    except CitationResolutionError as exc:
+        if exc.reason.startswith("resolver_unconfigured"):
+            if not _EN400_STANDALONE_WARNED:
+                warnings.warn(
+                    "digitalmodel standalone mode: EN400 citation unavailable; "
+                    "proceeding without a provenance sidecar.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                _EN400_STANDALONE_WARNED = True
+            citations = []
+        else:
+            raise
+    return {"value": period_s, "units": "s", "citations": citations}
 
 
 def natural_pitch_period(

@@ -199,8 +199,12 @@ class BatchProcessor:
         def convert_operation(file_path: Path) -> Dict[str, Any]:
             """Convert single file."""
             # Import to temporary .blend
+            # SECURITY: NamedTemporaryFile(delete=False) instead of the
+            # deprecated, race-prone tempfile.mktemp() (TOCTOU symlink class).
             import tempfile
-            temp_blend = Path(tempfile.mktemp(suffix=".blend"))
+            _tf = tempfile.NamedTemporaryFile(suffix=".blend", delete=False)
+            _tf.close()
+            temp_blend = Path(_tf.name)
 
             try:
                 # Import
@@ -221,14 +225,11 @@ class BatchProcessor:
                     output_format
                 )
 
-                # Cleanup
-                temp_blend.unlink(missing_ok=True)
-
                 return export_result
 
-            except Exception as e:
+            finally:
+                # Always remove the temp blend file (success or exception).
                 temp_blend.unlink(missing_ok=True)
-                raise
 
         return self.process_files(
             files,

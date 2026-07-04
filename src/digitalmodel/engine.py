@@ -1,3 +1,4 @@
+import inspect
 import os
 import sys
 
@@ -41,7 +42,7 @@ from digitalmodel.signal_processing.time_series.time_series_analysis import (
 )
 from digitalmodel.infrastructure.transformation.transformation import Transformation
 
-# from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
+from digitalmodel.subsea.vertical_riser.vertical_riser import vertical_riser
 from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 from digitalmodel.infrastructure.base_solvers.structural.plate_buckling import (
     PlateBuckling,
@@ -57,6 +58,25 @@ wwyaml = WorkingWithYAML()
 app_manager = ConfigureApplicationInputs()
 
 
+def _configure_accepts_root_folder() -> bool:
+    """Whether assetutilities' ``ConfigureApplicationInputs.configure`` accepts
+    ``root_folder``.
+
+    The embed-port (#1136 / workspace-hub#3307) passes ``root_folder`` to
+    ``configure``; assetutilities releases that predate that change raise
+    ``TypeError: ... unexpected keyword argument 'root_folder'``. Feature-detect
+    once so digitalmodel runs against both the old and new dependency API.
+    """
+    try:
+        params = inspect.signature(ConfigureApplicationInputs.configure).parameters
+    except (TypeError, ValueError):
+        return False
+    return "root_folder" in params
+
+
+_CONFIGURE_HAS_ROOT_FOLDER = _configure_accepts_root_folder()
+
+
 def _running_under_pytest() -> bool:
     return (
         "PYTEST_CURRENT_TEST" in os.environ
@@ -66,7 +86,29 @@ def _running_under_pytest() -> bool:
     )
 
 
-def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
+def engine(
+    inputfile: str = None,
+    cfg: dict = None,
+    config_flag: bool = True,
+    root_folder: str = None,
+    log_to_file: bool = True,
+    embed: bool = False,
+) -> dict:
+    """Run a digitalmodel workflow.
+
+    Additive params (workspace-hub#3307, mirroring assetutilities #3297);
+    defaults are byte-identical to today's digitalmodel CLI behavior:
+
+    - ``root_folder`` (default None): on the file/default path, explicitly
+      override the resolved ``analysis_root_folder`` so outputs land under this
+      dir. None => today's input-file-dir / os.getcwd() resolution.
+    - ``log_to_file`` (default True): consumed only by the ``embed`` path (passed
+      through to ``configure_embed``). The file/default path keeps configure()'s
+      forced-file logging regardless (``log_to_file`` is NOT threaded there).
+    - ``embed`` (default False): when True, dispatch the caller's in-memory
+      ``cfg`` directly under ``root_folder`` (re-entrant, sandboxed) -- the
+      embeddable run path #3285's digitalmodel-bound ``run_workflow`` consumes.
+    """
     cfg_argv_dict = {}
     if cfg is None:
         try:
@@ -88,8 +130,6 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
             cfg["_config_file_path"] = os.path.abspath(inputfile)
             cfg["_config_dir_path"] = os.path.dirname(os.path.abspath(inputfile))
         logger.info(f"Engine set config dir: {cfg.get('_config_dir_path')}")
-        if cfg is None:
-            raise ValueError("cfg is None")
 
     if "basename" in cfg:
         basename = cfg["basename"]
@@ -98,20 +138,72 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     else:
         raise ValueError("basename not found in cfg")
 
-    if config_flag:
+    if embed:
+        # ---- EMBEDDABLE RUN PATH (workspace-hub#3307; mirrors #3297) ----
+        # The entrypoint #3285's digitalmodel-bound run_workflow calls. Dispatches
+        # the caller's in-memory cfg directly under the injected root_folder.
+        if cfg is None or root_folder is None:
+            raise ValueError(
+                "engine(embed=True) requires both cfg and root_folder"
+            )
         fm = FileManagement()
+        # Per-call instance => no module-singleton (app_manager) re-entrancy bleed
+        # across repeated in-process embed runs. configure_embed (assetutilities
+        # #3297) sets analysis_root_folder=root, log folders under root, AND
+        # rebases cfg["_config_dir_path"]=root so config-relative routers (the
+        # wall-thickness quickcheck + ~20 peers that read _config_dir_path) write
+        # under root, not the input-file dir or cwd. Positional call -- NO
+        # library_name (that arg exists only on the regular configure()).
+        embed_app_manager = ConfigureApplicationInputs()
+        if not hasattr(embed_app_manager, "configure_embed"):
+            raise NotImplementedError(
+                "engine(embed=True) requires assetutilities with "
+                "ConfigureApplicationInputs.configure_embed (assetutilities#3297); "
+                "the installed assetutilities does not provide it — upgrade it."
+            )
+        cfg_base = embed_app_manager.configure_embed(
+            cfg, basename, root_folder, log_to_file=log_to_file
+        )
+        # DELIBERATELY skip the _config_dir_path/_config_file_path re-copy that the
+        # default path does below -- re-copying the original cfg's input-file dir
+        # would clobber the rebased root and send config-relative routers back
+        # outside the injected root, defeating isolation. configure_embed already
+        # created the results folders, so no second configure_result_folder.
+        cfg_base = fm.router(cfg_base)
+    elif config_flag:
+        fm = FileManagement()
+        # Pass root_folder only when the installed assetutilities supports it;
+        # older releases don't accept the kwarg (see _configure_accepts_root_folder).
+        configure_kwargs = {"inputfile": inputfile}
+        if _CONFIGURE_HAS_ROOT_FOLDER:
+            configure_kwargs["root_folder"] = root_folder
+        elif root_folder is not None:
+            logger.warning(
+                "root_folder=%r ignored: installed assetutilities "
+                "ConfigureApplicationInputs.configure() does not accept it; "
+                "upgrade assetutilities for embed/root-folder routing.",
+                root_folder,
+            )
         if inputfile is not None and _running_under_pytest():
             original_argv = sys.argv[:]
             sys.argv = [original_argv[0], inputfile]
             try:
                 cfg_base = app_manager.configure(
-                    cfg, library_name, basename, cfg_argv_dict, inputfile=inputfile
+                    cfg,
+                    library_name,
+                    basename,
+                    cfg_argv_dict,
+                    **configure_kwargs,
                 )
             finally:
                 sys.argv = original_argv
         else:
             cfg_base = app_manager.configure(
-                cfg, library_name, basename, cfg_argv_dict, inputfile=inputfile
+                cfg,
+                library_name,
+                basename,
+                cfg_argv_dict,
+                **configure_kwargs,
             )
         # Preserve config file path from original cfg
         if "_config_file_path" in cfg:
@@ -149,6 +241,11 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     elif basename in ["aqwa"]:
         aqwa = Aqwa()
         cfg_base = aqwa.router(cfg_base)
+    elif basename in ["ansys"]:
+        # Licensed ANSYS/MAPDL solve via a prepared APDL script (#940).
+        from digitalmodel.ansys.workflow import AnsysWorkflow
+
+        cfg_base = AnsysWorkflow().router(cfg_base)
     elif basename == "modal_analysis":
         oma = OrcModalAnalysis()
         cfg_base = oma.run_modal_analysis(cfg_base)
@@ -191,6 +288,12 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = jumper_installation(cfg_base)
+    elif basename == "installation_pamphlet":
+        from digitalmodel.installation.installation_pamphlet.workflow import (
+            router as installation_pamphlet,
+        )
+
+        cfg_base = installation_pamphlet(cfg_base)
     elif basename == "ship_design":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)
@@ -204,6 +307,10 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
 
         cfg_base = mooring_fatigue(cfg_base)
+    elif basename == "riser_fatigue":
+        from digitalmodel.riser_fatigue.workflow import router as riser_fatigue
+
+        cfg_base = riser_fatigue(cfg_base)
     elif basename == "synthetic_rope_mooring_fatigue":
         from digitalmodel.synthetic_rope_mooring_fatigue.workflow import (
             router as synthetic_rope_mooring_fatigue,
@@ -216,6 +323,48 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         )
 
         cfg_base = spectral_fatigue(cfg_base)
+    elif basename == "rao_spectral_fatigue":
+        from digitalmodel.rao_spectral_fatigue.workflow import (
+            router as rao_spectral_fatigue,
+        )
+
+        cfg_base = rao_spectral_fatigue(cfg_base)
+    elif basename == "vessel_seakeeping":
+        from digitalmodel.vessel_seakeeping.workflow import (
+            router as vessel_seakeeping,
+        )
+
+        cfg_base = vessel_seakeeping(cfg_base)
+    elif basename == "lifting_lug":
+        from digitalmodel.lifting_lug.workflow import router as lifting_lug
+
+        cfg_base = lifting_lug(cfg_base)
+    elif basename == "inspection_planning":
+        from digitalmodel.asset_integrity.inspection_planning import (
+            router as inspection_planning,
+        )
+
+        cfg_base = inspection_planning(cfg_base)
+    elif basename == "weather_window":
+        from digitalmodel.weather_window.workflow import router as weather_window
+
+        cfg_base = weather_window(cfg_base)
+    elif basename == "esp_pump_hydraulics":
+        from digitalmodel.production_engineering.esp_pump_hydraulics import (
+            router as esp_pump_hydraulics,
+        )
+
+        cfg_base = esp_pump_hydraulics(cfg_base)
+    elif basename == "span_rectification":
+        from digitalmodel.subsea.pipeline.span_rectification import (
+            router as span_rectification,
+        )
+
+        cfg_base = span_rectification(cfg_base)
+    elif basename == "pipelay":
+        from digitalmodel.pipelay.workflow import router as pipelay
+
+        cfg_base = pipelay(cfg_base)
     elif basename == "cathodic_protection":
         cp = CathodicProtection()
         cfg_base = cp.router(cfg_base)
@@ -387,6 +536,25 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         fmw = FPSOMooringWorkflow()
         cfg_base = fmw.router(cfg_base)
+    elif basename == "fowt_mooring":
+        from digitalmodel.orcaflex.fowt_mooring_workflow import (
+            FOWTMooringWorkflow,
+        )
+
+        fowt_mooring = FOWTMooringWorkflow()
+        cfg_base = fowt_mooring.router(cfg_base)
+    elif basename == "floating_wind_sizing":
+        from digitalmodel.floating_wind.workflow import (
+            FloatingWindSizingWorkflow,
+        )
+
+        cfg_base = FloatingWindSizingWorkflow().router(cfg_base)
+    elif basename == "floating_wind_economics":
+        from digitalmodel.floating_wind.economics_workflow import (
+            FloatingWindEconomicsWorkflow,
+        )
+
+        cfg_base = FloatingWindEconomicsWorkflow().router(cfg_base)
     elif basename == "fpso_mooring_full":
         from digitalmodel.marine_ops.marine_engineering.mooring_analysis.fpso_full_workflow import (
             FPSOMooringFullWorkflow,
@@ -438,19 +606,40 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         scour = ScourWorkflow()
         cfg_base = scour.router(cfg_base)
+    elif basename == "mudmat_bearing_capacity":
+        from digitalmodel.geotechnical.cfg_workflows import (
+            MudmatBearingCapacityWorkflow,
+        )
+
+        mudmat = MudmatBearingCapacityWorkflow()
+        cfg_base = mudmat.router(cfg_base)
+    elif basename == "liquefaction":
+        from digitalmodel.geotechnical.cfg_workflows import LiquefactionWorkflow
+
+        liquefaction = LiquefactionWorkflow()
+        cfg_base = liquefaction.router(cfg_base)
     elif basename == "rig_capability_assessment":
         from digitalmodel.field_development.rig_capability import (
             router as rig_capability,
         )
 
         cfg_base = rig_capability(cfg_base)
-    elif basename in ["capex_estimate", "opex_estimate", "concept_selection"]:
+    elif basename in [
+        "capex_estimate",
+        "opex_estimate",
+        "concept_selection",
+        "concept_screening",
+    ]:
         from digitalmodel.field_development.registry_workflows import (
             FieldDevelopmentRegistryWorkflow,
         )
 
         field_development = FieldDevelopmentRegistryWorkflow()
         cfg_base = field_development.router(cfg_base)
+    elif basename == "well_access":
+        from digitalmodel.well_access.router import router as well_access_router
+
+        cfg_base = well_access_router(cfg_base)
     elif basename == "production":
         from digitalmodel.production_engineering.workflow import (
             ProductionEngineeringWorkflow,
@@ -466,6 +655,32 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         from digitalmodel.well.workflow import run_well_hydraulics
 
         cfg_base = run_well_hydraulics(cfg_base)
+    elif basename == "swab_surge":
+        from digitalmodel.well.workflow import run_swab_surge
+
+        cfg_base = run_swab_surge(cfg_base)
+    elif basename == "casing_design":
+        from digitalmodel.well.workflow import run_casing_design
+
+        cfg_base = run_casing_design(cfg_base)
+    elif basename == "pore_pressure":
+        from digitalmodel.well.drilling.pore_pressure import (
+            router as run_pore_pressure,
+        )
+
+        cfg_base = run_pore_pressure(cfg_base)
+    elif basename == "dual_gradient":
+        from digitalmodel.well.drilling.dual_gradient import (
+            router as run_dual_gradient,
+        )
+
+        cfg_base = run_dual_gradient(cfg_base)
+    elif basename == "loading_computer":
+        from digitalmodel.naval_architecture.loading_computer import (
+            router as run_loading_computer,
+        )
+
+        cfg_base = run_loading_computer(cfg_base)
     elif basename == "wellpath":
         from digitalmodel.well.wellpath.workflow import router as wellpath
 
@@ -485,6 +700,41 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "ffs":
+        # workspace-hub#3285: Phase-1 FFS coordinator (assess_component) engine route.
+        # NEW basename -- legacy "API579" arm (a different engine) is untouched.
+        from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+
+        cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "riser_joint_ffs":
+        # #1292: drilling-riser joint FFS — Level-1 envelopes, placement, rollup.
+        from digitalmodel.asset_integrity.riser_joint_ffs import (
+            RiserJointFFSWorkflow,
+        )
+
+        cfg_base = RiserJointFFSWorkflow().router(cfg_base)
+    elif basename == "buckling_parametric":
+        # workspace-hub#3285-OWNED: DNV-RP-C201 parametric plate-buckling sweep.
+        # NEW basename -- legacy "plate_buckling" arm (PlateBuckling class) untouched.
+        from digitalmodel.structural.buckling_workflow import (
+            BucklingParametricWorkflow,
+        )
+
+        cfg_base = BucklingParametricWorkflow().router(cfg_base)
+    elif basename == "mooring_mbl":
+        # workspace-hub#3285: DNV-OS-E301 mooring MBL pilot (#2685). NEW basename --
+        # the reserved "mooring" arm (subsea/mooring_analysis/ redirect) is untouched.
+        from digitalmodel.orcaflex.mooring_workflow import MooringMBLWorkflow
+
+        cfg_base = MooringMBLWorkflow().router(cfg_base)
+    elif basename in ["openfoam", "cfd"]:
+        # digitalmodel #1161: route an OpenFOAM CFD case through the engine.
+        # Thin handler -- builds the case (OpenFOAMCaseBuilder) and optionally
+        # runs it (OpenFOAMRunner, fail-closed). NEW basename; the existing
+        # solver arms (ansys/aqwa/orcawave) are untouched.
+        from digitalmodel.solvers.openfoam.workflow import OpenFOAMWorkflow
+
+        cfg_base = OpenFOAMWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
