@@ -1,0 +1,66 @@
+# Riser configuration screening - API STD 2RD (burst, collapse, combined M-T).
+#
+# Representative deepwater top-tensioned production riser:
+#   21 in OD x 0.875 in WT, API 5L X80, ~3000 m water depth class.
+# Geometry/material follow the existing config/pipe/*_21OD_0875in_*_riser.yml
+# pipe definitions (generic engineering, no project/client identifiers).
+#
+# Load cases span the four standard categories. Pressures, moments and tensions
+# are realistic screening-level values for a deepwater production riser; they
+# are inputs, not solved responses.
+#
+# Run:  uv run python -m digitalmodel examples/workflows/riser-screening/input.yml
+
+basename: riser_screening
+
+riser_screening:
+  label: deepwater_production_riser_21in
+  code: API-STD-2RD
+  output_dir: results/riser_screening
+
+  geometry:
+    outer_diameter: 0.5334        # m  (21 in)
+    wall_thickness: 0.022225      # m  (0.875 in)
+    corrosion_allowance: 0.003    # m  (3 mm)
+
+  material:
+    grade: API 5L X80
+    smys: 552000000.0             # Pa (80 ksi)
+    smts: 621000000.0             # Pa (90 ksi)
+    youngs_modulus: 207000000000.0
+    poissons_ratio: 0.3
+
+  load_cases:
+    - name: operating
+      category: operating
+      internal_pressure: 34500000.0    # Pa (~5000 psi shut-in)
+      external_pressure: 12000000.0    # Pa (~1200 m hydrostatic)
+      bending_moment: 350000.0         # N*m
+      effective_tension: 2500000.0     # N
+
+    - name: extreme_100yr
+      category: extreme
+      internal_pressure: 34500000.0
+      external_pressure: 12000000.0
+      bending_moment: 900000.0
+      effective_tension: 3800000.0
+
+    - name: survival_1000yr
+      category: survival
+      internal_pressure: 38000000.0
+      external_pressure: 12000000.0
+      bending_moment: 1250000.0
+      effective_tension: 4600000.0
+
+    - name: accidental_drift_off
+      category: accidental
+      internal_pressure: 31000000.0
+      external_pressure: 12300000.0    # deeper draw-down on drift
+      bending_moment: 1450000.0
+      effective_tension: 2100000.0
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
