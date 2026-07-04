@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIV lock-in screening explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--warn:#b7791f;--bad:#c0392b}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:800px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ select{font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:80px}
+ .reads{display:flex;gap:26px;flex-wrap:wrap;margin:6px 0}
+ .read{font-size:13px;color:var(--muted)}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:22px;font-weight:700}
+ .pill{display:inline-block;padding:3px 12px;border-radius:20px;font-weight:700;font-size:15px}
+ .safe{background:#e6f5ec;color:var(--ok)} .marginal{background:#fbf0dd;color:var(--warn)}
+ .lockin{background:#fbe6e3;color:var(--bad)}
+ .scale{position:relative;height:46px;margin:16px 0 6px;border-radius:9px;overflow:hidden;
+        background:linear-gradient(90deg,#e6f5ec 0%,#e6f5ec 33%,#fbf0dd 33%,#fbf0dd 40%,#fbe6e3 40%,#fbe6e3 80%,#fbf0dd 80%,#fbf0dd 100%);border:1px solid var(--line)}
+ .band{position:absolute;top:0;bottom:0;border-left:2px dashed var(--bad);border-right:2px dashed var(--bad)}
+ .marker{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--navy);transition:left .1s}
+ .marker::after{content:attr(data-v);position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+   font-size:10px;font-weight:700;color:var(--navy);white-space:nowrap}
+ .scalelab{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
+ .cap{font-size:12px;color:var(--muted);margin-top:8px}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+</style></head><body>
+<h1>Vortex-induced vibration &mdash; lock-in screening explorer</h1>
+<p class="sub">First-pass VIV screening on the reduced-velocity method: a member locks in to
+cross-flow vortex shedding when V<sub>r</sub> = V/(f<sub>n</sub>&middot;D) enters the 4&ndash;8 band
+(DNV-RP-C205). Pick a member and drag the current to see it cross into lock-in. Every point is a
+live <code>VIVScreening</code> evaluation.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label>Member</label><select id="mem"></select>
+    <label for="v">Current velocity</label>
+    <input type="range" id="v" min="0" max="0" step="1">
+    <span class="wval" id="vval"></span>
+  </div>
+  <div class="reads">
+    <div class="read">Reduced velocity V<sub>r</sub><b id="rVr" style="color:var(--navy)">&mdash;</b></div>
+    <div class="read">Status<b><span class="pill" id="rSt">&mdash;</span></b></div>
+    <div class="read">Safety factor<b id="rSf" style="color:var(--navy)">&mdash;</b></div>
+  </div>
+  <div class="scale"><div class="marker" id="mark" data-v=""></div></div>
+  <div class="scalelab"><span>V_r 0</span><span>4 (lock-in)</span><span>8</span><span>10</span></div>
+  <div class="cap">Green = below onset, amber = marginal, red = in the 4&ndash;8 cross-flow lock-in band. Marker = current V<sub>r</sub>.</div>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_viv_explorer.py</code> from
+<code>src/digitalmodel/subsea/viv_analysis/screening.py</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/screening.py">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"members":{"Drilling riser joint":{"fn":0.3,"d":0.53},"Free-spanning pipeline":{"fn":0.8,"d":0.32},"Well conductor":{"fn":1.1,"d":0.76}},"v":[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5],"vr_min":4.0,"vr_max":8.0,"standard":"DNV-RP-C205 reduced-velocity lock-in"},"series":{"Drilling riser joint":[{"v":0.1,"vr":0.629,"status":"safe","sf":6.36},{"v":0.2,"vr":1.258,"status":"safe","sf":3.18},{"v":0.3,"vr":1.887,"status":"safe","sf":2.12},{"v":0.4,"vr":2.516,"status":"safe","sf":1.59},{"v":0.5,"vr":3.145,"status":"marginal","sf":1.272},{"v":0.6,"vr":3.774,"status":"marginal","sf":1.06},{"v":0.7,"vr":4.403,"status":"lock-in","sf":0.909},{"v":0.8,"vr":5.031,"status":"lock-in","sf":0.795},{"v":0.9,"vr":5.66,"status":"lock-in","sf":0.708},{"v":1.0,"vr":6.289,"status":"lock-in","sf":0.786},{"v":1.1,"vr":6.918,"status":"lock-in","sf":0.865},{"v":1.2,"vr":7.547,"status":"lock-in","sf":0.943},{"v":1.3,"vr":8.176,"status":"marginal","sf":1.022},{"v":1.4,"vr":8.805,"status":"marginal","sf":1.101},{"v":1.5,"vr":9.434,"status":"safe","sf":1.179},{"v":1.6,"vr":10.063,"status":"safe","sf":1.258},{"v":1.7,"vr":10.692,"status":"safe","sf":1.336},{"v":1.8,"vr":11.321,"status":"safe","sf":1.415},{"v":1.9,"vr":11.95,"status":"safe","sf":1.494},{"v":2.0,"vr":12.579,"status":"safe","sf":1.572},{"v":2.1,"vr":13.208,"status":"safe","sf":1.651},{"v":2.2,"vr":13.836,"status":"safe","sf":1.73},{"v":2.3,"vr":14.465,"status":"safe","sf":1.808},{"v":2.4,"vr":15.094,"status":"safe","sf":1.887},{"v":2.5,"vr":15.723,"status":"safe","sf":1.965}],"Free-spanning pipeline":[{"v":0.1,"vr":0.391,"status":"safe","sf":10.24},{"v":0.2,"vr":0.781,"status":"safe","sf":5.12},{"v":0.3,"vr":1.172,"status":"safe","sf":3.413},{"v":0.4,"vr":1.562,"status":"safe","sf":2.56},{"v":0.5,"vr":1.953,"status":"safe","sf":2.048},{"v":0.6,"vr":2.344,"status":"safe","sf":1.707},{"v":0.7,"vr":2.734,"status":"safe","sf":1.463},{"v":0.8,"vr":3.125,"status":"marginal","sf":1.28},{"v":0.9,"vr":3.516,"status":"marginal","sf":1.138},{"v":1.0,"vr":3.906,"status":"marginal","sf":1.024},{"v":1.1,"vr":4.297,"status":"lock-in","sf":0.931},{"v":1.2,"vr":4.688,"status":"lock-in","sf":0.853},{"v":1.3,"vr":5.078,"status":"lock-in","sf":0.788},{"v":1.4,"vr":5.469,"status":"lock-in","sf":0.731},{"v":1.5,"vr":5.859,"status":"lock-in","sf":0.732},{"v":1.6,"vr":6.25,"status":"lock-in","sf":0.781},{"v":1.7,"vr":6.641,"status":"lock-in","sf":0.83},{"v":1.8,"vr":7.031,"status":"lock-in","sf":0.879},{"v":1.9,"vr":7.422,"status":"lock-in","sf":0.928},{"v":2.0,"vr":7.812,"status":"lock-in","sf":0.977},{"v":2.1,"vr":8.203,"status":"marginal","sf":1.025},{"v":2.2,"vr":8.594,"status":"marginal","sf":1.074},{"v":2.3,"vr":8.984,"status":"marginal","sf":1.123},{"v":2.4,"vr":9.375,"status":"safe","sf":1.172},{"v":2.5,"vr":9.766,"status":"safe","sf":1.221}],"Well conductor":[{"v":0.1,"vr":0.12,"status":"safe","sf":33.44},{"v":0.2,"vr":0.239,"status":"safe","sf":16.72},{"v":0.3,"vr":0.359,"status":"safe","sf":11.147},{"v":0.4,"vr":0.478,"status":"safe","sf":8.36},{"v":0.5,"vr":0.598,"status":"safe","sf":6.688},{"v":0.6,"vr":0.718,"status":"safe","sf":5.573},{"v":0.7,"vr":0.837,"status":"safe","sf":4.777},{"v":0.8,"vr":0.957,"status":"safe","sf":4.18},{"v":0.9,"vr":1.077,"status":"safe","sf":3.716},{"v":1.0,"vr":1.196,"status":"safe","sf":3.344},{"v":1.1,"vr":1.316,"status":"safe","sf":3.04},{"v":1.2,"vr":1.435,"status":"safe","sf":2.787},{"v":1.3,"vr":1.555,"status":"safe","sf":2.572},{"v":1.4,"vr":1.675,"status":"safe","sf":2.389},{"v":1.5,"vr":1.794,"status":"safe","sf":2.229},{"v":1.6,"vr":1.914,"status":"safe","sf":2.09},{"v":1.7,"vr":2.033,"status":"safe","sf":1.967},{"v":1.8,"vr":2.153,"status":"safe","sf":1.858},{"v":1.9,"vr":2.273,"status":"safe","sf":1.76},{"v":2.0,"vr":2.392,"status":"safe","sf":1.672},{"v":2.1,"vr":2.512,"status":"safe","sf":1.592},{"v":2.2,"vr":2.632,"status":"safe","sf":1.52},{"v":2.3,"vr":2.751,"status":"safe","sf":1.454},{"v":2.4,"vr":2.871,"status":"safe","sf":1.393},{"v":2.5,"vr":2.99,"status":"safe","sf":1.338}]}};
+const M = DATA.meta, V = M.v, MEM = M.members, SCALEMAX = 10.0;
+const spec = document.getElementById('spec');
+spec.innerHTML = [['Standard', M.standard], ['Lock-in band', M.vr_min+'–'+M.vr_max+' V_r'],
+  ['Members', Object.keys(MEM).length]]
+  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+const selM = document.getElementById('mem');
+Object.keys(MEM).forEach(m=>selM.add(new Option(m+' (f_n '+MEM[m].fn+' Hz, D '+MEM[m].d+' m)', m)));
+const slider = document.getElementById('v');
+slider.max = V.length-1;
+const CLS = {safe:'safe', marginal:'marginal', 'lock-in':'lockin'};
+
+function render(){
+  const m = selM.value, idx = +slider.value, p = DATA.series[m][idx];
+  document.getElementById('vval').textContent = V[idx].toFixed(1)+' m/s';
+  document.getElementById('rVr').textContent = p.vr.toFixed(2);
+  const st = document.getElementById('rSt');
+  st.textContent = p.status; st.className = 'pill '+(CLS[p.status]||'safe');
+  document.getElementById('rSf').textContent = p.sf.toFixed(2);
+  const mk = document.getElementById('mark');
+  mk.style.left = Math.min(p.vr/SCALEMAX*100, 100).toFixed(1)+'%';
+  mk.setAttribute('data-v', p.vr.toFixed(1));
+}
+selM.value = Object.keys(MEM)[0];
+let start = V.indexOf(1.0); if(start<0) start = Math.floor(V.length/2);
+slider.value = start; render();
+[selM, slider].forEach(el=>el.addEventListener('input', render));
+</script>
+</body></html>
