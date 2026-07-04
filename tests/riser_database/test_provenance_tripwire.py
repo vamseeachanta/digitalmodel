@@ -71,6 +71,16 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "telemetry_inputs.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_telemetry_inputs.py",
     REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "telemetry_snapshot_sample.json",
+    # twin B #1374 residual-correction seam: the domain-neutral residual spine, the
+    # riser adapter, its tests + synthetic fixture. Pure math / synthetic pairs,
+    # carrying no provenance tokens by construction; gated so any future edit is
+    # caught (same vessel/identity caveat as twin A — enforced by the fixture
+    # identity-key assertion in test_response_correction.py + human review).
+    REPO_ROOT / "src" / "digitalmodel" / "residual" / "model.py",
+    REPO_ROOT / "src" / "digitalmodel" / "residual" / "skill.py",
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "response_correction.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_response_correction.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "response_residual_pairs.json",
 )
 
 
@@ -146,7 +156,8 @@ def test_new_analytical_code_is_gated():
     scanned artifact set (it reproduces wellhead/conductor engagements)."""
     scanned = {p.name for p in _PUBLIC_ARTIFACTS}
     for required in ("envelope.py", "conductor_response.py", "riser_response.py",
-                     "telemetry_inputs.py"):
+                     "telemetry_inputs.py", "response_correction.py", "model.py",
+                     "skill.py"):
         assert required in scanned, f"{required} is not gated by the provenance tripwire"
 
 
