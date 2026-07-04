@@ -9,10 +9,16 @@ publish a *limiting significant wave height* ``Hs_limit`` for launch and recover
 (IMCA R 004 / IMCA R 015 LARS operability practice; consistent with the workability
 concept used throughout DNV-RP / API 17H intervention planning).
 
-This module provides the deterministic, public-standard core of that check. It does
-not model spectral vessel motion (deferred to ``hydrodynamics/seakeeping`` and an
-RAO-based response solver); it works on the bounding parameter the standards and
-operability tables are written in: significant wave height.
+This module provides the deterministic, public-standard core of that check on the
+bounding parameter the standards and operability tables are written in:
+significant wave height (the ``seastate_operability`` / ``scatter_operability``
+screens below).
+
+An optional **RAO-based response path** (``rao_based_operability``) refines the
+screen to the *actual* motion at the ROV deployment point: it reuses the
+``motion_forecast`` engine (#1358) to transfer a phased wave forecast through the
+vessel RAO and evaluate the vertical velocity at the splash-zone / A-frame point.
+It is additive and independent — the Hs screens do not require it.
 
 Single sea-state operability (deterministic screening)
 ------------------------------------------------------
@@ -213,4 +219,93 @@ def scatter_operability(
         hs_oplim=hs_oplim,
         n_operable=n_operable,
         n_total=n_total,
+    )
+
+
+@dataclass(frozen=True)
+class RaoOperabilityResult:
+    """RAO-based LARS operability at the ROV deployment point.
+
+    Attributes
+    ----------
+    v_significant:
+        Significant (2*std) vertical velocity at the deployment point [m/s].
+    v_oplim:
+        Operational velocity limit ``alpha * velocity_limit`` [m/s].
+    utilisation:
+        ``v_significant / v_oplim`` (<= 1.0 means operable).
+    margin:
+        ``v_oplim - v_significant`` [m/s] (positive = margin remaining).
+    operable:
+        ``True`` when ``v_significant <= v_oplim``.
+    """
+
+    v_significant: float
+    v_oplim: float
+    utilisation: float
+    margin: float
+    operable: bool
+
+
+def rao_based_operability(
+    forecast,
+    rao,
+    *,
+    deployment_offset: tuple = (0.0, 0.0, 0.0),
+    velocity_limit: float,
+    alpha: float = 1.0,
+    dt: float = 0.2,
+) -> RaoOperabilityResult:
+    """RAO-based LARS operability at the ROV deployment point (response-solver path).
+
+    The refinement the Hs screens above defer to: reuses the ``motion_forecast``
+    engine (#1358) to reconstruct vessel motion from a phased ``WaveForecast`` and
+    the vessel ``rao``, evaluates the **vertical velocity at the ROV splash-zone /
+    A-frame deployment point** (rigid-body lever arm), and compares its significant
+    amplitude to the rated velocity limit (snatch-load avoidance at the splash
+    zone; IMCA R 004 / R 015). Additive to and independent of the Hs screens.
+
+    Parameters
+    ----------
+    forecast:
+        A phased ``motion_forecast.WaveForecast`` (or duck-typed equivalent).
+    rao:
+        A ``motion_forecast`` RAO provider (``AnalyticRAO`` / ``GridRAO``).
+    deployment_offset:
+        ``(rx, ry, rz)`` [m] of the deployment point on the vessel.
+    velocity_limit:
+        Rated limiting significant vertical velocity [m/s], must be > 0.
+    alpha:
+        Weather-forecast allowance (0 < alpha <= 1, default 1.0).
+    dt:
+        Reconstruction time step [s].
+
+    Raises
+    ------
+    ValueError
+        On non-positive ``velocity_limit`` or ``alpha`` outside (0, 1].
+    """
+    if velocity_limit <= 0.0:
+        raise ValueError(f"velocity_limit must be > 0, got {velocity_limit!r}")
+    if not (0.0 < alpha <= 1.0):
+        raise ValueError(f"alpha must be in (0, 1], got {alpha!r}")
+
+    import numpy as np
+    from digitalmodel.motion_forecast import (
+        reconstruct_motion,
+        time_derivative,
+        vertical_motion_at,
+    )
+
+    motion = reconstruct_motion(forecast, rao, dt=dt)
+    z = vertical_motion_at(motion, deployment_offset)
+    v = time_derivative(motion.t, z)                 # signed vertical velocity
+    v_significant = 2.0 * float(np.std(v))
+    v_oplim = alpha * velocity_limit
+    return RaoOperabilityResult(
+        v_significant=v_significant,
+        v_oplim=v_oplim,
+        utilisation=v_significant / v_oplim,
+        margin=v_oplim - v_significant,
+        operable=v_significant <= v_oplim,
     )

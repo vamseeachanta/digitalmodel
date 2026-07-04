@@ -122,3 +122,52 @@ def test_scatter_operability_alpha_excludes_more_cells():
 def test_scatter_invalid_inputs_raise(scatter, kwargs):
     with pytest.raises(ValueError):
         scatter_operability(scatter, **kwargs)
+
+
+# --------------------------------------------------------------------------- #
+# RAO-based response path (#1358 Task 6) — reuses the motion_forecast engine
+# --------------------------------------------------------------------------- #
+from digitalmodel.subsea.rov.seastate_limits import rao_based_operability  # noqa: E402
+
+
+def _forecast_and_rao():
+    from digitalmodel.motion_forecast import AnalyticRAO, synthesize_forecast
+
+    fc = synthesize_forecast(2.5, 9.0, n_components=48, horizon=90.0, seed=3)
+    rao = AnalyticRAO({"heave": lambda w, b: 0.9 + 0j})  # near wave-following heave
+    return fc, rao
+
+
+def test_rao_operability_operable_and_not():
+    fc, rao = _forecast_and_rao()
+    # measure the significant velocity, then bracket it with two limits
+    res = rao_based_operability(fc, rao, velocity_limit=100.0)  # huge -> operable
+    v = res.v_significant
+    assert v > 0.0 and res.operable
+    tight = rao_based_operability(fc, rao, velocity_limit=v * 0.5)
+    assert not tight.operable and tight.utilisation > 1.0
+
+
+def test_rao_operability_lever_arm_increases_velocity():
+    from digitalmodel.motion_forecast import AnalyticRAO, synthesize_forecast
+
+    fc = synthesize_forecast(2.5, 9.0, n_components=48, horizon=90.0, seed=3)
+    rao = AnalyticRAO({
+        "heave": lambda w, b: 0.5 + 0j,
+        "pitch": lambda w, b: (w * w / 9.80665) * 40.0 + 0j,  # deg/m
+    })
+    at_cog = rao_based_operability(fc, rao, deployment_offset=(0.0, 0.0, 0.0),
+                                   velocity_limit=100.0).v_significant
+    far = rao_based_operability(fc, rao, deployment_offset=(60.0, 0.0, 0.0),
+                                velocity_limit=100.0).v_significant
+    assert far > at_cog  # lever arm adds pitch-induced vertical velocity
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"velocity_limit": 0.0},
+    {"velocity_limit": 0.4, "alpha": 1.5},
+])
+def test_rao_operability_invalid_inputs_raise(kwargs):
+    fc, rao = _forecast_and_rao()
+    with pytest.raises(ValueError):
+        rao_based_operability(fc, rao, **kwargs)
