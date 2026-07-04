@@ -207,6 +207,17 @@ SPECS: list[dict] = [
          figures=[], bullets=["Offset x current operability envelope per operating mode",
                               "Governing utilisation vs cited code limits (API RP 16Q / API STD 2RD)",
                               "Near-boundary points escalate to the exact analytical run"]),
+    dict(id="drilling-riser-operability-monitor", kind="work",
+         title="Operability & integrity monitor",
+         std="API-RP-16Q · API-STD-2RD",
+         path="drilling/operability-monitor.html",
+         blurb="Live-style playback of a generic drilling-riser scenario: telemetry and metocean drive "
+               "the operability margin, the flex-joint response (physics plus a measured-tracking "
+               "correction), a wellhead bending-moment indicator, and the drift-off time-to-limit — every "
+               "value pre-computed by the analytical seams and played back (the page does no physics).",
+         figures=[], bullets=["Watch-circle, operability margin, flex-joint, wellhead moment and drift-off at a glance",
+                              "Twin-B correction only tightens the verdict; limits stay cited code values",
+                              "Screening tier — operability and drift-off escalate states shown separately"]),
     dict(id="riser-validation", kind="work", title="Riser validation report",
          std="OrcaFlex · tier-2 fast library", path="orcaflex/riser-validation-report.html",
          blurb="Riser global-analysis results verified against reference cases from the tier-2 fast "
@@ -470,6 +481,7 @@ WORKFLOW_MAP: dict[str, str] = {
     "dynacard-troubleshooting": "dynacard-diagnostics",
     "dynacard-field-health": "artificial-lift-field-health",
     "drilling-riser-operability": "drilling-riser-operability-query",
+    "drilling-riser-operability-monitor": "drilling-riser-operability-query",
 }
 _API_INVOKE = "uv run python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
@@ -493,6 +505,7 @@ PROMPTS: dict[str, str] = {
     "ocimf": "Give me OCIMF MEG3/MEG4 wind and current coefficients for my heading and loading condition.",
     "passing-ship": "Run the Wang (1975) passing-ship interaction benchmark - sway force and yaw moment.",
     "drilling-riser-operability": "Screen my drilling-riser operability: governing utilisation across vessel offset and surface current per operating mode, against the API RP 16Q / API STD 2RD limits, and flag near-boundary points that need the exact analytical run.",
+    "drilling-riser-operability-monitor": "Monitor my drilling-riser operability and integrity from a telemetry track: show the operability margin, the flex-joint response with the measured-tracking correction, a wellhead bending-moment indicator, and the drift-off time-to-limit if thrusters were lost now.",
     "riser-validation": "Run the riser global-analysis validation against the tier-2 reference cases (DNV-OS-F201 code check).",
     "riser-mesh": "Run a riser mesh-density convergence study and quantify the discretisation effect on response.",
     "subsea-xsection": "Generate a layer-by-layer offshore cable / umbilical / pipeline cross-section with envelope geometry.",

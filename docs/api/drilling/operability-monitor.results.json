@@ -1,0 +1,359 @@
+{
+  "response": "governing_utilisation",
+  "atlas_id": "b5a542c49bf7",
+  "content_fingerprint": "b5a542c49bf71ab3dbba3864a6155630a4f2deb6ca86278e6102405caaa3afda",
+  "tier": "quasi_static_screening",
+  "offset_pct": [
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0
+  ],
+  "current_speed_mps": [
+    0.0,
+    0.5,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "configs": {
+    "rsu_a__drilling": {
+      "uc": [
+        [
+          0.2466,
+          0.579907,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          0.286479,
+          0.866386,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          0.572958,
+          1.152865,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          0.859437,
+          1.439344,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          1.145916,
+          1.725823,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          1.432394,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          1.718873,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ]
+      ],
+      "light": [
+        [
+          "OPERABLE",
+          "OPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "OPERABLE",
+          "OPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "OPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "OPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ],
+        [
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE",
+          "INOPERABLE"
+        ]
+      ]
+    }
+  },
+  "max_rel_error": 0.088011,
+  "standards": [
+    {
+      "id": "API-RP-16Q",
+      "edition": "1993"
+    },
+    {
+      "id": "API-STD-2RD",
+      "edition": "3e-2025"
+    }
+  ],
+  "scenario": {
+    "config": "rsu_a__drilling",
+    "water_depth_m": 1500.0,
+    "current_speed_mps": 0.5
+  },
+  "track": [
+    {
+      "t": 0.0,
+      "offset_m": 3.0,
+      "offset_pct": 0.2,
+      "operability_uc": 0.637203,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.766291,
+      "measured_angle_deg": 0.22,
+      "predicted_angle_deg": 1.274,
+      "corrected_angle_deg": 1.533,
+      "decision_angle_deg": 1.533,
+      "wh_moment_knm": 1012.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.16,
+      "time_to_limit_s": 81.49,
+      "lead_time_margin_s": 21.49,
+      "point_of_disconnect_m": 4.095,
+      "drift_status": "drift_off"
+    },
+    {
+      "t": 300.0,
+      "offset_m": 6.0,
+      "offset_pct": 0.4,
+      "operability_uc": 0.694499,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.834922,
+      "measured_angle_deg": 0.5,
+      "predicted_angle_deg": 1.389,
+      "corrected_angle_deg": 1.67,
+      "decision_angle_deg": 1.67,
+      "wh_moment_knm": 1102.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.32,
+      "time_to_limit_s": 73.319,
+      "lead_time_margin_s": 13.319,
+      "point_of_disconnect_m": 6.421,
+      "drift_status": "drift_off"
+    },
+    {
+      "t": 600.0,
+      "offset_m": 9.0,
+      "offset_pct": 0.6,
+      "operability_uc": 0.751794,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.903552,
+      "measured_angle_deg": 0.85,
+      "predicted_angle_deg": 1.504,
+      "corrected_angle_deg": 1.807,
+      "decision_angle_deg": 1.807,
+      "wh_moment_knm": 1192.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.48,
+      "time_to_limit_s": 64.116,
+      "lead_time_margin_s": 4.116,
+      "point_of_disconnect_m": 9.04,
+      "drift_status": "drift_off"
+    },
+    {
+      "t": 900.0,
+      "offset_m": 12.0,
+      "offset_pct": 0.8,
+      "operability_uc": 0.80909,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.972182,
+      "measured_angle_deg": 1.3,
+      "predicted_angle_deg": 1.618,
+      "corrected_angle_deg": 1.944,
+      "decision_angle_deg": 1.944,
+      "wh_moment_knm": 1282.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.64,
+      "time_to_limit_s": 53.348,
+      "lead_time_margin_s": -6.652,
+      "point_of_disconnect_m": 12.0,
+      "drift_status": "escalate"
+    },
+    {
+      "t": 1200.0,
+      "offset_m": 15.0,
+      "offset_pct": 1.0,
+      "operability_uc": 0.866386,
+      "light": "OPERABLE",
+      "flexjoint_uc": 1.040812,
+      "measured_angle_deg": 1.8,
+      "predicted_angle_deg": 1.733,
+      "corrected_angle_deg": 2.082,
+      "decision_angle_deg": 2.082,
+      "wh_moment_knm": 1372.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.8,
+      "time_to_limit_s": 39.763,
+      "lead_time_margin_s": -20.237,
+      "point_of_disconnect_m": 15.0,
+      "drift_status": "escalate"
+    },
+    {
+      "t": 1500.0,
+      "offset_m": 24.0,
+      "offset_pct": 1.6,
+      "operability_uc": 1.038273,
+      "light": "INOPERABLE",
+      "flexjoint_uc": 1.246703,
+      "measured_angle_deg": 3.0,
+      "predicted_angle_deg": 2.077,
+      "corrected_angle_deg": 2.493,
+      "decision_angle_deg": 2.493,
+      "wh_moment_knm": 1642.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 1.28,
+      "time_to_limit_s": 0.0,
+      "lead_time_margin_s": -60.0,
+      "point_of_disconnect_m": 24.0,
+      "drift_status": "escalate"
+    },
+    {
+      "t": 1800.0,
+      "offset_m": 12.0,
+      "offset_pct": 0.8,
+      "operability_uc": 0.80909,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.972182,
+      "measured_angle_deg": 1.3,
+      "predicted_angle_deg": 1.618,
+      "corrected_angle_deg": 1.944,
+      "decision_angle_deg": 1.944,
+      "wh_moment_knm": 1282.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.64,
+      "time_to_limit_s": 53.348,
+      "lead_time_margin_s": -6.652,
+      "point_of_disconnect_m": 12.0,
+      "drift_status": "escalate"
+    },
+    {
+      "t": 2100.0,
+      "offset_m": 6.0,
+      "offset_pct": 0.4,
+      "operability_uc": 0.694499,
+      "light": "OPERABLE",
+      "flexjoint_uc": 0.834922,
+      "measured_angle_deg": 0.5,
+      "predicted_angle_deg": 1.389,
+      "corrected_angle_deg": 1.67,
+      "decision_angle_deg": 1.67,
+      "wh_moment_knm": 1102.615,
+      "r_watch_m": 18.75,
+      "watch_frac": 0.32,
+      "time_to_limit_s": 73.319,
+      "lead_time_margin_s": 13.319,
+      "point_of_disconnect_m": 6.421,
+      "drift_status": "drift_off"
+    }
+  ],
+  "fingerprint": "86ddf18d48f98f86"
+}

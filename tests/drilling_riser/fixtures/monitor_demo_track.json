@@ -1,0 +1,18 @@
+{
+  "provenance": {
+    "source": "synthetic (generic DP-vessel telemetry track); representative offline demo for the operability/integrity monitor",
+    "licence": "synthetic — no client, field, well, vessel or vendor data",
+    "note": "Fully synthetic illustrative drift-then-recover scenario for twin D (#1376). Round numbers only; matches no real vessel's rated capacity and no real drift-off event's timing signature. No vessel identity, no credentials.",
+    "captured_offline": true
+  },
+  "records": [
+    {"timestamp": "2026-01-01T00:00:00", "vessel_offset_m": 3.0, "vessel_heading_deg": 175.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 1800.0, "flexjoint_angle_upper_deg": 0.15, "flexjoint_angle_lower_deg": 0.22},
+    {"timestamp": "2026-01-01T00:05:00", "vessel_offset_m": 6.0, "vessel_heading_deg": 174.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 2400.0, "flexjoint_angle_upper_deg": 0.35, "flexjoint_angle_lower_deg": 0.50},
+    {"timestamp": "2026-01-01T00:10:00", "vessel_offset_m": 9.0, "vessel_heading_deg": 173.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 3200.0, "flexjoint_angle_upper_deg": 0.60, "flexjoint_angle_lower_deg": 0.85},
+    {"timestamp": "2026-01-01T00:15:00", "vessel_offset_m": 12.0, "vessel_heading_deg": 172.0, "top_tension_kn": 3000.0, "thrusters_online": 5, "total_available_thrust_kn": 7500.0, "total_commanded_thrust_kn": 4200.0, "flexjoint_angle_upper_deg": 0.90, "flexjoint_angle_lower_deg": 1.30},
+    {"timestamp": "2026-01-01T00:20:00", "vessel_offset_m": 15.0, "vessel_heading_deg": 170.0, "top_tension_kn": 3000.0, "thrusters_online": 5, "total_available_thrust_kn": 7500.0, "total_commanded_thrust_kn": 5200.0, "flexjoint_angle_upper_deg": 1.25, "flexjoint_angle_lower_deg": 1.80},
+    {"timestamp": "2026-01-01T00:25:00", "vessel_offset_m": 24.0, "vessel_heading_deg": 168.0, "top_tension_kn": 3000.0, "thrusters_online": 5, "total_available_thrust_kn": 7500.0, "total_commanded_thrust_kn": 6000.0, "flexjoint_angle_upper_deg": 2.10, "flexjoint_angle_lower_deg": 3.00},
+    {"timestamp": "2026-01-01T00:30:00", "vessel_offset_m": 12.0, "vessel_heading_deg": 171.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 3600.0, "flexjoint_angle_upper_deg": 0.90, "flexjoint_angle_lower_deg": 1.30},
+    {"timestamp": "2026-01-01T00:35:00", "vessel_offset_m": 6.0, "vessel_heading_deg": 174.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 2200.0, "flexjoint_angle_upper_deg": 0.35, "flexjoint_angle_lower_deg": 0.50}
+  ]
+}
