@@ -70,6 +70,7 @@ of duplicating its detailed issue history.
 | `riser_fatigue` | `src/digitalmodel/riser_fatigue/` | `tests/riser_fatigue/` | `docs/domains/README.md` | Riser fatigue analysis and automation | fatigue standards, NumPy |
 | `spectral_fatigue` | `src/digitalmodel/spectral_fatigue/` | `tests/` | `docs/domains/README.md` | Spectral (frequency-domain) fatigue calculation | fatigue standards, SciPy |
 | `synthetic_rope_mooring_fatigue` | `src/digitalmodel/synthetic_rope_mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Synthetic-rope mooring fatigue analysis | fatigue standards, NumPy |
+| `tug` | `src/digitalmodel/tug/` | `tests/tug/` | `docs/domains/README.md` | Tug/towage analysis: bollard pull, fendering, girting stability, towline mechanics, emissions | NumPy, engineering standards |
 | `usecase_registry` | `src/digitalmodel/usecase_registry/` | `tests/test_usecase_registry.py` | `docs/domains/README.md` | Registry of runnable use cases and routing metadata | PyYAML |
 | `vessel_seakeeping` | `src/digitalmodel/vessel_seakeeping/` | `tests/` | `docs/domains/README.md` | Vessel seakeeping response and operability analysis | hydrodynamics standards |
 | `weather_window` | `src/digitalmodel/weather_window/` | `tests/` | `docs/domains/README.md` | Weather-window/operability assessment for marine operations | metocean data, statistics |
