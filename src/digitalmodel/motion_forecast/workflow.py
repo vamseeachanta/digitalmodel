@@ -102,15 +102,21 @@ def router(cfg: Dict) -> Dict:
         "n_components": len(forecast.components),
     }
 
-    # Optional rolling go/no-go decision for a named operation (#1359).
+    # Criteria loaded once when a named operation is set; reused by the forecast
+    # decision (#1359) and the measured status (#1367).
     op = mf.get("operation")
+    crits = None
     if op:
         from .criteria import load_criteria
-        from .decision import rolling_decision
 
         crits = load_criteria(mf.get("criteria_path"))
         if op not in crits:
             raise ValueError(f"unknown operation {op!r}; have {sorted(crits)}")
+
+    # Optional rolling go/no-go decision for a named operation (#1359).
+    if op:
+        from .decision import rolling_decision
+
         dec = rolling_decision(motion, crits[op])
         mf["decision"] = {
             "operation": dec.operation,
@@ -124,4 +130,32 @@ def router(cfg: Dict) -> Dict:
             "lead_time_to_caution": dec.lead_time_to_caution,
             "lead_time_to_no_go": dec.lead_time_to_no_go,
         }
+
+    # Optional measured-motion mode: ingest an MMS/MRU feed (#1367).
+    meas_cfg = mf.get("measured")
+    if meas_cfg:
+        from .measured import MeasuredMotion
+        from .measured_source import from_csv
+        from .reconcile import measured_status, seam_offset
+
+        if isinstance(meas_cfg, MeasuredMotion):
+            measured = meas_cfg
+        elif isinstance(meas_cfg, dict) and meas_cfg.get("csv"):
+            measured = from_csv(meas_cfg["csv"])
+        else:
+            raise ValueError(
+                "motion_forecast.measured must be a MeasuredMotion or {'csv': <path>}"
+            )
+        if op:
+            md = measured_status(measured, crits[op])
+            mf["measured_status"] = {
+                "operation": md.operation, "governing": md.governing,
+                "unit": md.unit, "state": md.state.value, "display": md.display,
+                "current_value": md.current_value,
+                "caution": md.caution, "limit": md.limit,
+            }
+        # Reconcile only against the just-built forecast when "now" is inside it
+        # (never against an unrelated default sea).
+        if float(motion.t[0]) <= measured.now <= float(motion.t[-1]):
+            mf["reconciliation"] = {"seam_offset": seam_offset(measured, motion)}
     return cfg
