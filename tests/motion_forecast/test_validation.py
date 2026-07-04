@@ -1,10 +1,17 @@
-"""Validation against the existing tested spectral engine (digitalmodel #1358).
+"""Spectral bookkeeping + realised-variance validation (digitalmodel #1358).
 
-The irregular cross-check compares the reconstruction's **analytic variance**
-``sum(0.5*a_i^2*|H_i|^2)`` against the ``hydrodynamics.seakeeping`` oracle m0 on
-a shared grid. Both are discretisations of ``integral(|H|^2 S dω)`` so they
-agree deterministically — a naive "FFT the record and compare m0" would inject
-one-realisation chi-square scatter and false-fail.
+Two complementary checks:
+
+- ``test_analytic_variance_matches_oracle_m0`` — a *bookkeeping/convergence*
+  check that the variance the reconstruction will realise,
+  ``sum(0.5*a_i^2*|H_i|^2)``, equals the ``hydrodynamics.seakeeping`` spectral
+  m0 ``integral(|H|^2 S dω)`` on a fine grid. Both sides use the same S and |H|,
+  so this validates the amplitude/energy bookkeeping (a_i = sqrt(2 S dω)), not
+  the time-domain engine itself.
+- ``test_realized_record_variance_close_to_analytic`` — drives
+  ``reconstruct_motion`` and checks the realised record variance matches, which
+  *does* exercise the engine (phase-preservation itself is guarded by the
+  regular-wave tests in test_reconstruct).
 """
 
 import numpy as np

@@ -26,19 +26,43 @@ def wavenumber(omega: float, water_depth: Optional[float] = None) -> float:
     """Wavenumber k from the linear dispersion relation.
 
     Deep water (``water_depth is None``): ``k = omega^2 / g``. Finite depth:
-    solve ``omega^2 = g k tanh(k h)`` by fixed-point iteration.
+    solve ``omega^2 = g k tanh(k h)`` for k.
+
+    The residual ``f(k) = g k tanh(k h) - omega^2`` is strictly increasing in k,
+    so this uses **bisection** (guaranteed convergent, unlike the fixed-point map
+    ``k <- omega^2/(g tanh(kh))`` which oscillates in shallow water) with a
+    relative tolerance, and raises if it fails to converge.
     """
+    if omega <= 0:
+        return 0.0
     k_deep = omega * omega / GRAVITY
     if water_depth is None or water_depth <= 0 or not np.isfinite(water_depth):
         return k_deep
-    k = k_deep
-    for _ in range(100):
-        k_new = omega * omega / (GRAVITY * np.tanh(k * water_depth))
-        if abs(k_new - k) < 1e-12:
-            k = k_new
+
+    def f(k: float) -> float:
+        return GRAVITY * k * np.tanh(k * water_depth) - omega * omega
+
+    # bracket: f(0+) < 0; grow hi until f(hi) > 0 (true k >= k_deep for finite h)
+    lo, hi = 0.0, max(k_deep, 1.0 / water_depth)
+    for _ in range(200):
+        if f(hi) > 0:
             break
-        k = k_new
-    return float(k)
+        hi *= 2.0
+    else:  # pragma: no cover - unreachable for physical inputs
+        raise RuntimeError(f"could not bracket wavenumber (omega={omega}, h={water_depth})")
+
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        fm = f(mid)
+        if abs(fm) <= 1e-10 * omega * omega or (hi - lo) <= 1e-12 * mid:
+            return float(mid)
+        if fm > 0:
+            hi = mid
+        else:
+            lo = mid
+    raise RuntimeError(
+        f"wavenumber bisection did not converge (omega={omega}, h={water_depth})"
+    )
 
 
 def reconstruct_motion(
@@ -68,7 +92,15 @@ def reconstruct_motion(
         Explicit times (s). **Fail-closed**: any time outside
         ``[origin_time, origin_time + horizon]`` raises — no extrapolation
         beyond the predictable zone.
+
+    Notes
+    -----
+    Component headings and the RAO's heading axis must share the *going-to*
+    convention (deg from +x). Convert a source RAO's headings at ingest with
+    :func:`.conventions.heading_going_to_deg` if it reports "coming-from".
     """
+    if not forecast.components:
+        raise ValueError("forecast has no wave components")
     t0 = forecast.origin_time
     t1 = forecast.origin_time + forecast.horizon
     if t_grid is None:

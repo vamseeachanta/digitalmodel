@@ -59,15 +59,28 @@ class GridRAO:
     """Complex transfer built from a parsed ``DisplacementRAO`` grid."""
 
     def __init__(self, displacement_rao, source: RAOSource):
+        """Wrap a ``DisplacementRAO``.
+
+        Headings are assumed to be in the *going-to* convention consistent with
+        the forecast components (convert with
+        :func:`.conventions.heading_going_to_deg` at ingest if the source reports
+        "coming-from"). Axes are sorted ascending so the interpolation's
+        ``np.interp``/``searchsorted`` assumptions always hold.
+        """
         rao = displacement_rao
-        self.freqs = np.asarray(rao.frequencies, dtype=float)     # rad/s
-        self.headings = np.asarray(rao.headings, dtype=float)     # deg
+        freqs = np.asarray(rao.frequencies, dtype=float)     # rad/s
+        headings = np.asarray(rao.headings, dtype=float)     # deg
+        fo = np.argsort(freqs)                               # ascending order
+        ho = np.argsort(headings)
+        self.freqs = freqs[fo]
+        self.headings = headings[ho]
         self.source = source
         self._H: Dict[str, np.ndarray] = {}
         for dof in DOF_NAMES:
             d = rao.get_dof_data(dof)
             phase_rad = np.deg2rad(normalize_phase_deg(d.phase, source))
-            self._H[dof] = np.asarray(d.amplitude, dtype=float) * np.exp(1j * phase_rad)
+            grid = np.asarray(d.amplitude, dtype=float) * np.exp(1j * phase_rad)
+            self._H[dof] = grid[np.ix_(fo, ho)]
 
     @classmethod
     def from_unified(cls, unified, source: RAOSource) -> "GridRAO":

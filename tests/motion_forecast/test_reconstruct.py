@@ -68,9 +68,18 @@ def test_finite_depth_wavenumber_reduces_to_deep():
     assert wavenumber(w, None) == pytest.approx(w * w / GRAVITY)
     # deep-water limit: large depth -> tanh -> 1
     assert wavenumber(w, 100000.0) == pytest.approx(w * w / GRAVITY, rel=1e-6)
-    # dispersion holds: omega^2 = g k tanh(k h)
-    k = wavenumber(w, 40.0)
-    assert w * w == pytest.approx(GRAVITY * k * np.tanh(k * 40.0), rel=1e-9)
+
+
+@pytest.mark.parametrize("w", [0.3, 0.6, 0.9, 1.4])
+@pytest.mark.parametrize("h", [2.0, 5.0, 10.0, 40.0])
+def test_finite_depth_dispersion_holds_in_shallow_water(w, h):
+    """The solver must satisfy omega^2 = g k tanh(k h) even in shallow water
+    (the old fixed-point iteration diverged and returned a wrong k silently)."""
+    k = wavenumber(w, h)
+    assert k > 0
+    assert w * w == pytest.approx(GRAVITY * k * np.tanh(k * h), rel=1e-6)
+    # finite depth shortens waves: k >= deep-water k
+    assert k >= w * w / GRAVITY - 1e-12
 
 
 def test_vertical_motion_lever_arm():
