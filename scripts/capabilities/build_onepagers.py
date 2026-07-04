@@ -431,6 +431,28 @@ SPECS: list[dict] = [
          bullets=["SI = log10(IAP / Ksp_cond) per family, supersaturation flagged at SI > 0",
                   "T/P sweep and bottomhole→wellhead SI trending along the production string",
                   "Waterflood mixing sweep (barium-rich formation water × sulfate-rich seawater)"]),
+    dict(id="wall-thickness-explorer", kind="work", title="Wall-thickness multi-code explorer",
+         std="DNV-ST-F101 · API RP 1111 · ASME B31.4/8 · PD 8010-2 · ISO 13623",
+         path="structural/wall-thickness-explorer.html",
+         blurb="One 12.75-inch X65 deepwater line sized under all nine registered design codes at "
+               "once — a wall-thickness slider drives each code's governing utilization against the "
+               "1.0 limit, with the minimum wall to pass per code. Every point is a live "
+               "WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+         figures=[("9", "design codes"), ("369", "engine evaluations"), ("~19.5 mm", "min wall, pipeline codes")],
+         bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
+                  "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
+                  "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
+    dict(id="cathodic-protection-explorer", kind="work", title="Cathodic-protection anode explorer",
+         std="DNV-RP-B401",
+         path="structural/cathodic-protection-explorer.html",
+         blurb="DNV-RP-B401 sacrificial-anode design for a jacket or monopile — structure and "
+               "seawater-climate selectors and a design-life slider drive total anode mass by "
+               "external-coating quality. Every value is a live marine_structure_current_demand "
+               "run (current demand → anode mass → anode count).",
+         figures=[("31.7 → 18.6 t", "bare vs premium coating"), ("159 → 93", "anode count")],
+         bullets=["Current demand with coating breakdown → anode mass → anode count, per DNV-RP-B401",
+                  "Coating quality (bare / aged / good / premium) swept against a 10–40 yr design life and seawater climate",
+                  "Premium external coating cuts a 4-leg jacket's 25-yr anode mass from ~31.7 t (159 anodes) to ~18.6 t (93)"]),
 ]
 
 
