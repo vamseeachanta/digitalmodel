@@ -165,7 +165,9 @@ def test_rao_operability_lever_arm_increases_velocity():
 
 @pytest.mark.parametrize("kwargs", [
     {"velocity_limit": 0.0},
+    {"velocity_limit": -0.4},
     {"velocity_limit": 0.4, "alpha": 1.5},
+    {"velocity_limit": 0.4, "alpha": 0.0},
 ])
 def test_rao_operability_invalid_inputs_raise(kwargs):
     fc, rao = _forecast_and_rao()

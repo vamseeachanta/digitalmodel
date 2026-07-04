@@ -229,7 +229,8 @@ class RaoOperabilityResult:
     Attributes
     ----------
     v_significant:
-        Significant (2*std) vertical velocity at the deployment point [m/s].
+        Significant *single* amplitude (2*sigma) of the vertical velocity at the
+        deployment point [m/s]. ``velocity_limit`` must be in the same convention.
     v_oplim:
         Operational velocity limit ``alpha * velocity_limit`` [m/s].
     utilisation:
@@ -251,7 +252,7 @@ def rao_based_operability(
     forecast,
     rao,
     *,
-    deployment_offset: tuple = (0.0, 0.0, 0.0),
+    deployment_offset: tuple[float, float, float] = (0.0, 0.0, 0.0),
     velocity_limit: float,
     alpha: float = 1.0,
     dt: float = 0.2,
@@ -274,11 +275,17 @@ def rao_based_operability(
     deployment_offset:
         ``(rx, ry, rz)`` [m] of the deployment point on the vessel.
     velocity_limit:
-        Rated limiting significant vertical velocity [m/s], must be > 0.
+        Rated limiting vertical velocity [m/s], must be > 0, expressed as a
+        **significant single amplitude (2*sigma)** to match ``v_significant``.
     alpha:
-        Weather-forecast allowance (0 < alpha <= 1, default 1.0).
+        Weather-forecast allowance (0 < alpha <= 1, default 1.0), applied as
+        ``v_oplim = alpha * velocity_limit`` (same semantics as the Hs path).
     dt:
         Reconstruction time step [s].
+
+    Returns
+    -------
+    RaoOperabilityResult
 
     Raises
     ------
