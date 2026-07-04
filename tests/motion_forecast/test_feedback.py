@@ -12,7 +12,6 @@ def test_operable_fraction_and_longest_run_go_only():
     states = [GO, GO, NOGO, GO, MARG, GO]
     s = operability_summary(states)
     assert s.operable_fraction == pytest.approx(4 / 6)   # GO only
-    assert s.downtime_fraction == pytest.approx(2 / 6)
     assert s.waiting_on_weather_fraction == pytest.approx(2 / 6)
     assert s.longest_operable_run == 2                   # GO,GO
     assert s.n == 6

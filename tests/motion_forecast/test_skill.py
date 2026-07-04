@@ -56,3 +56,18 @@ def test_aggregate_skill_pools_residuals_not_mean_of_rmse():
     assert agg.rmse == pytest.approx(pooled, rel=1e-9)
     assert agg.rmse != pytest.approx(2.0)             # != mean-of-rmse (1+3)/2
     assert agg.n_samples == 100
+
+
+def test_nan_residual_is_masked_not_poisoning():
+    t = np.linspace(0.0, 40.0, 81)
+    mh = np.ones_like(t)   # residual 1 vs a zero forecast
+    mh[10] = np.nan        # one MRU dropout
+    agg = aggregate_skill([SkillRecord(_fc(t, heave=np.zeros_like(t)),
+                                       _meas(t, heave=mh))])["heave"]
+    assert agg.rmse == pytest.approx(1.0)  # NaN masked, not poisoning the batch
+    assert agg.n_samples == 80             # the dropout dropped
+
+
+def test_aggregate_skill_empty_raises():
+    with pytest.raises(ValueError, match="at least one"):
+        aggregate_skill([])

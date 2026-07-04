@@ -38,13 +38,25 @@ def test_fit_recovers_injected_gain_bias():
     assert corr.bias["heave"] == pytest.approx(0.5, abs=1e-9)
 
 
-def test_holdout_reduces_rmse_on_affine_structure():
+def test_holdout_removes_exact_affine():
     ts = [np.linspace(0.0, 50.0, 251) + 100 * i for i in range(4)]
     recs = [_affine_record(t, gain=2.0, bias=0.5) for t in ts]
     rep = holdout_report(recs)["heave"]
-    assert rep.rmse_after < rep.rmse_before          # affine error is removable
-    assert rep.rmse_after == pytest.approx(0.0, abs=1e-9)
-    # correlation is invariant under a positive-gain affine correction
+    assert rep.rmse_after == pytest.approx(0.0, abs=1e-9)  # exact affine removable
+
+
+def test_holdout_generalises_to_noise_floor():
+    """Fit on train, apply to HELD-OUT test with independent noise realisations:
+    rmse_after lands at the noise floor (NOT ~0), so a fit-on-test bug (memorising
+    the test split) could not satisfy it. Correlation is invariant (affine)."""
+    noise = 0.1
+    ts = [np.linspace(0.0, 50.0, 251) + 100 * i for i in range(6)]
+    recs = [_affine_record(t, gain=2.0, bias=0.5, seed=i, noise=noise)
+            for i, t in enumerate(ts)]
+    rep = holdout_report(recs)["heave"]
+    assert rep.rmse_before > 0.5                          # uncorrected: gain 2 + bias
+    assert rep.rmse_after == pytest.approx(noise, rel=0.3)  # ~ injected noise floor
+    assert rep.rmse_after < 0.3 * rep.rmse_before
     assert rep.correlation_after == pytest.approx(rep.correlation_before, abs=1e-9)
 
 

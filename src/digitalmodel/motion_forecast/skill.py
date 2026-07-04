@@ -4,8 +4,11 @@ Pools forecast-vs-measured residuals across a batch of ``SkillRecord`` pairs to
 show how skill degrades with lead time and to summarise aggregate error.
 
 Statistical care (per review):
-- RMSE and bias **pool** residuals across records (equal weight per sample —
-  correct for unequal-length overlaps; not a mean of per-record RMSEs).
+- RMSE and bias **pool** residuals across records (sample-weighted — not a mean
+  of per-record RMSEs; note denser-sampled records carry more weight, and
+  autocorrelated residuals reduce the effective sample count).
+- Non-finite residuals (e.g. MRU dropouts) are masked out before pooling, so one
+  bad sample cannot poison the batch.
 - Correlation does **not** pool (concatenating records with different DC offsets
   is a Simpson artifact) — it is reported as the per-record distribution
   (median + IQR).
@@ -37,6 +40,10 @@ class SkillRecord:
         hi = min(self.measured.t[-1], self.forecast.t[-1])
         if hi <= lo:
             raise ValueError("SkillRecord: forecast and measured do not overlap in time")
+        if self.forecast.origin_time > self.forecast.t[0] + 1e-9:
+            raise ValueError(
+                "SkillRecord: forecast.origin_time must be <= forecast.t[0] (lead >= 0)"
+            )
 
 
 def _pooled(records: Sequence[SkillRecord], dof: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -49,7 +56,10 @@ def _pooled(records: Sequence[SkillRecord], dof: str) -> Tuple[np.ndarray, np.nd
         resid.append(res[dof][2])
     if not leads:
         return np.array([]), np.array([])
-    return np.concatenate(leads), np.concatenate(resid)
+    lead_arr = np.concatenate(leads)
+    resid_arr = np.concatenate(resid)
+    finite = np.isfinite(resid_arr) & np.isfinite(lead_arr)  # drop MRU dropouts
+    return lead_arr[finite], resid_arr[finite]
 
 
 def error_vs_lead_time(
@@ -83,6 +93,8 @@ class AggregateSkill:
 
 def aggregate_skill(records: Sequence[SkillRecord]) -> Dict[str, AggregateSkill]:
     """Pooled RMSE/bias + per-record correlation distribution, per DOF."""
+    if not records:
+        raise ValueError("aggregate_skill needs at least one record")
     out: Dict[str, AggregateSkill] = {}
     for d in DOF_NAMES:
         _leads, resid = _pooled(records, d)

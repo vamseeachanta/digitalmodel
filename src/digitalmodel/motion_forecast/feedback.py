@@ -16,7 +16,8 @@ from digitalmodel.marine_ops.installation.go_no_go import DecisionState
 @dataclass
 class OperabilitySummary:
     operable_fraction: float
-    downtime_fraction: float
+    # weather/motion-driven downtime only (from go/no-go state); this is a subset
+    # of total downtime, which also covers equipment/logistics not modelled here.
     waiting_on_weather_fraction: float
     longest_operable_run: int  # samples
     n: int
@@ -49,7 +50,6 @@ def operability_summary(
 
     return OperabilitySummary(
         operable_fraction=operable_fraction,
-        downtime_fraction=1.0 - operable_fraction,
         waiting_on_weather_fraction=1.0 - operable_fraction,
         longest_operable_run=longest,
         n=n,

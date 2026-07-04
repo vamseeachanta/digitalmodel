@@ -50,7 +50,9 @@ def _pooled_m_fc(records: Sequence[SkillRecord], dof: str) -> Tuple[np.ndarray, 
         m, fc, _ = res[dof]
         ms.append(m)
         fcs.append(fc)
-    return np.concatenate(ms), np.concatenate(fcs)
+    m_arr, fc_arr = np.concatenate(ms), np.concatenate(fcs)
+    finite = np.isfinite(m_arr) & np.isfinite(fc_arr)  # drop MRU dropouts
+    return m_arr[finite], fc_arr[finite]
 
 
 def fit_correction(records: Sequence[SkillRecord], *, var_eps: float = 1e-12) -> Correction:
