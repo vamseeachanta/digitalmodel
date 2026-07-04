@@ -33,6 +33,7 @@ of duplicating its detailed issue history.
 | `floating_wind` | `src/digitalmodel/floating_wind/` | `tests/floating_wind/` | `docs/domains/README.md` | Floating-wind global sizing & concept screening (semi/spar/TLP/barge); `floating_wind_sizing` workflow | hydrostatics, parametric sweeps, OrcaWave/OrcaFlex (solver tier) |
 | `hydrostatics` | `src/digitalmodel/hydrostatics/` | `tests/hydrostatics/` | `docs/domains/README.md` | Fluid-column hydrostatics; seabed/hydrostatic pressure and offshore pressure-unit conversions | NumPy |
 | `mooring_resilience` | `src/digitalmodel/mooring_resilience/` | `tests/` | `docs/domains/README.md` | Mooring-system resilience screening (intact/damaged tension, foundation, fatigue) over pre-computed atlases | mooring atlases, API RP 2SK / DNV-OS-E301 |
+| `motion_forecast` | `src/digitalmodel/motion_forecast/` | `tests/motion_forecast/` | `docs/domains/README.md` | Short-horizon vessel/structure motion forecast, operability go/no-go (#1358) | NumPy, RAO/hydrodynamics |
 | `naval_architecture` | `src/digitalmodel/naval_architecture/` | `tests/naval_architecture/` | `docs/domains/README.md` | Stability, hull form, compliance, gyradius calculations; loading computer (#1035) | naval architecture standards |
 | `reporting` | `src/digitalmodel/reporting/` | `tests/reporting/` | `docs/domains/README.md` | Shared report block library / backbone (report-as-backbone, #1018) | pydantic, HTML rendering |
 | `nde` | `src/digitalmodel/nde/` | `tests/nde/` | `docs/domains/README.md` | Non-destructive examination workflows and checks | inspection standards |
@@ -42,6 +43,7 @@ of duplicating its detailed issue history.
 | `production_chemistry` | `src/digitalmodel/production_chemistry/` | `tests/production_chemistry/` | `docs/domains/README.md` | Mineral-scale saturation indices (Oddo-Tomson), brine mixing/waterflood compatibility | NumPy, pandas |
 | `production_engineering` | `src/digitalmodel/production_engineering/` | `tests/production_engineering/` | `docs/domains/README.md` | Well testing, nodal analysis, production quality scoring | petroleum engineering models |
 | `reservoir` | `src/digitalmodel/reservoir/` | `tests/reservoir/` | `docs/domains/reservoir/` | Reservoir engineering and production-support calculations | reservoir engineering models |
+| `residual` | `src/digitalmodel/residual/` | `tests/residual/` | `docs/domains/README.md` | Transparent, bounded residual-correction spine for the hybrid digital twin (#1374) | NumPy |
 | `signal_processing` | `src/digitalmodel/signal_processing/` | `tests/signal_processing/` | `docs/domains/signal_processing/` | Signal analysis, filters, time-series utilities | NumPy, SciPy |
 | `solvers` | `src/digitalmodel/solvers/` | `tests/solvers/` | `docs/domains/solvers/` | Solver adapters, OrcaFlex/OrcaWave/AQWA workflows, batch execution | solver-specific APIs |
 | `specialized` | `src/digitalmodel/specialized/` | `tests/specialized/` | `docs/domains/specialized/` | Specialized/non-core modules pending routing cleanup | mixed utilities |

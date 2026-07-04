@@ -116,6 +116,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_resilience
+  - module: motion_forecast
+    entry_point: src/digitalmodel/motion_forecast/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/motion_forecast/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#motion_forecast
   - module: naval_architecture
     entry_point: src/digitalmodel/naval_architecture/
     maturity: beta
@@ -170,6 +176,12 @@ modules:
     owner_wiki: docs/domains/reservoir/
     key_tests: [tests/reservoir/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
+  - module: residual
+    entry_point: src/digitalmodel/residual/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/residual/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#residual
   - module: signal_processing
     entry_point: src/digitalmodel/signal_processing/
     maturity: beta
