@@ -1,0 +1,406 @@
+{
+  "meta": {
+    "rect_l": 40.0,
+    "cyl_d": 40.0,
+    "tank_h": 26.0,
+    "roll_t": 12.0,
+    "tol": 0.15,
+    "band_lo": 10.2,
+    "band_hi": 13.8,
+    "standard": "Faltinsen linear potential theory + API 650 Annex E"
+  },
+  "series": [
+    {
+      "h": 2.0,
+      "fillpct": 8,
+      "rect": 18.14,
+      "cyl": 15.5,
+      "tc": 15.43,
+      "resonant": false
+    },
+    {
+      "h": 2.5,
+      "fillpct": 10,
+      "rect": 16.26,
+      "cyl": 13.9,
+      "tc": 13.84,
+      "resonant": false
+    },
+    {
+      "h": 3.0,
+      "fillpct": 12,
+      "rect": 14.88,
+      "cyl": 12.74,
+      "tc": 12.68,
+      "resonant": true
+    },
+    {
+      "h": 3.5,
+      "fillpct": 13,
+      "rect": 13.83,
+      "cyl": 11.85,
+      "tc": 11.79,
+      "resonant": true
+    },
+    {
+      "h": 4.0,
+      "fillpct": 15,
+      "rect": 12.98,
+      "cyl": 11.14,
+      "tc": 11.09,
+      "resonant": true
+    },
+    {
+      "h": 4.5,
+      "fillpct": 17,
+      "rect": 12.29,
+      "cyl": 10.56,
+      "tc": 10.51,
+      "resonant": true
+    },
+    {
+      "h": 5.0,
+      "fillpct": 19,
+      "rect": 11.71,
+      "cyl": 10.08,
+      "tc": 10.03,
+      "resonant": true
+    },
+    {
+      "h": 5.5,
+      "fillpct": 21,
+      "rect": 11.22,
+      "cyl": 9.68,
+      "tc": 9.63,
+      "resonant": true
+    },
+    {
+      "h": 6.0,
+      "fillpct": 23,
+      "rect": 10.8,
+      "cyl": 9.33,
+      "tc": 9.29,
+      "resonant": true
+    },
+    {
+      "h": 6.5,
+      "fillpct": 25,
+      "rect": 10.44,
+      "cyl": 9.03,
+      "tc": 8.99,
+      "resonant": true
+    },
+    {
+      "h": 7.0,
+      "fillpct": 27,
+      "rect": 10.12,
+      "cyl": 8.78,
+      "tc": 8.73,
+      "resonant": false
+    },
+    {
+      "h": 7.5,
+      "fillpct": 29,
+      "rect": 9.84,
+      "cyl": 8.55,
+      "tc": 8.51,
+      "resonant": false
+    },
+    {
+      "h": 8.0,
+      "fillpct": 31,
+      "rect": 9.59,
+      "cyl": 8.35,
+      "tc": 8.31,
+      "resonant": false
+    },
+    {
+      "h": 8.5,
+      "fillpct": 33,
+      "rect": 9.37,
+      "cyl": 8.18,
+      "tc": 8.14,
+      "resonant": false
+    },
+    {
+      "h": 9.0,
+      "fillpct": 35,
+      "rect": 9.18,
+      "cyl": 8.02,
+      "tc": 7.98,
+      "resonant": false
+    },
+    {
+      "h": 9.5,
+      "fillpct": 37,
+      "rect": 9.0,
+      "cyl": 7.88,
+      "tc": 7.85,
+      "resonant": false
+    },
+    {
+      "h": 10.0,
+      "fillpct": 38,
+      "rect": 8.84,
+      "cyl": 7.76,
+      "tc": 7.72,
+      "resonant": false
+    },
+    {
+      "h": 10.5,
+      "fillpct": 40,
+      "rect": 8.7,
+      "cyl": 7.65,
+      "tc": 7.61,
+      "resonant": false
+    },
+    {
+      "h": 11.0,
+      "fillpct": 42,
+      "rect": 8.57,
+      "cyl": 7.55,
+      "tc": 7.52,
+      "resonant": false
+    },
+    {
+      "h": 11.5,
+      "fillpct": 44,
+      "rect": 8.45,
+      "cyl": 7.46,
+      "tc": 7.43,
+      "resonant": false
+    },
+    {
+      "h": 12.0,
+      "fillpct": 46,
+      "rect": 8.34,
+      "cyl": 7.38,
+      "tc": 7.35,
+      "resonant": false
+    },
+    {
+      "h": 12.5,
+      "fillpct": 48,
+      "rect": 8.25,
+      "cyl": 7.31,
+      "tc": 7.28,
+      "resonant": false
+    },
+    {
+      "h": 13.0,
+      "fillpct": 50,
+      "rect": 8.16,
+      "cyl": 7.25,
+      "tc": 7.21,
+      "resonant": false
+    },
+    {
+      "h": 13.5,
+      "fillpct": 52,
+      "rect": 8.08,
+      "cyl": 7.19,
+      "tc": 7.15,
+      "resonant": false
+    },
+    {
+      "h": 14.0,
+      "fillpct": 54,
+      "rect": 8.0,
+      "cyl": 7.14,
+      "tc": 7.1,
+      "resonant": false
+    },
+    {
+      "h": 14.5,
+      "fillpct": 56,
+      "rect": 7.94,
+      "cyl": 7.09,
+      "tc": 7.05,
+      "resonant": false
+    },
+    {
+      "h": 15.0,
+      "fillpct": 58,
+      "rect": 7.87,
+      "cyl": 7.04,
+      "tc": 7.01,
+      "resonant": false
+    },
+    {
+      "h": 15.5,
+      "fillpct": 60,
+      "rect": 7.82,
+      "cyl": 7.01,
+      "tc": 6.97,
+      "resonant": false
+    },
+    {
+      "h": 16.0,
+      "fillpct": 62,
+      "rect": 7.76,
+      "cyl": 6.97,
+      "tc": 6.94,
+      "resonant": false
+    },
+    {
+      "h": 16.5,
+      "fillpct": 63,
+      "rect": 7.72,
+      "cyl": 6.94,
+      "tc": 6.9,
+      "resonant": false
+    },
+    {
+      "h": 17.0,
+      "fillpct": 65,
+      "rect": 7.67,
+      "cyl": 6.91,
+      "tc": 6.87,
+      "resonant": false
+    },
+    {
+      "h": 17.5,
+      "fillpct": 67,
+      "rect": 7.63,
+      "cyl": 6.88,
+      "tc": 6.85,
+      "resonant": false
+    },
+    {
+      "h": 18.0,
+      "fillpct": 69,
+      "rect": 7.6,
+      "cyl": 6.86,
+      "tc": 6.82,
+      "resonant": false
+    },
+    {
+      "h": 18.5,
+      "fillpct": 71,
+      "rect": 7.56,
+      "cyl": 6.84,
+      "tc": 6.8,
+      "resonant": false
+    },
+    {
+      "h": 19.0,
+      "fillpct": 73,
+      "rect": 7.53,
+      "cyl": 6.82,
+      "tc": 6.78,
+      "resonant": false
+    },
+    {
+      "h": 19.5,
+      "fillpct": 75,
+      "rect": 7.5,
+      "cyl": 6.8,
+      "tc": 6.76,
+      "resonant": false
+    },
+    {
+      "h": 20.0,
+      "fillpct": 77,
+      "rect": 7.48,
+      "cyl": 6.78,
+      "tc": 6.75,
+      "resonant": false
+    },
+    {
+      "h": 20.5,
+      "fillpct": 79,
+      "rect": 7.45,
+      "cyl": 6.77,
+      "tc": 6.73,
+      "resonant": false
+    },
+    {
+      "h": 21.0,
+      "fillpct": 81,
+      "rect": 7.43,
+      "cyl": 6.75,
+      "tc": 6.72,
+      "resonant": false
+    },
+    {
+      "h": 21.5,
+      "fillpct": 83,
+      "rect": 7.41,
+      "cyl": 6.74,
+      "tc": 6.71,
+      "resonant": false
+    },
+    {
+      "h": 22.0,
+      "fillpct": 85,
+      "rect": 7.39,
+      "cyl": 6.73,
+      "tc": 6.7,
+      "resonant": false
+    },
+    {
+      "h": 22.5,
+      "fillpct": 87,
+      "rect": 7.37,
+      "cyl": 6.72,
+      "tc": 6.69,
+      "resonant": false
+    },
+    {
+      "h": 23.0,
+      "fillpct": 88,
+      "rect": 7.36,
+      "cyl": 6.71,
+      "tc": 6.68,
+      "resonant": false
+    },
+    {
+      "h": 23.5,
+      "fillpct": 90,
+      "rect": 7.34,
+      "cyl": 6.7,
+      "tc": 6.67,
+      "resonant": false
+    },
+    {
+      "h": 24.0,
+      "fillpct": 92,
+      "rect": 7.33,
+      "cyl": 6.69,
+      "tc": 6.66,
+      "resonant": false
+    },
+    {
+      "h": 24.5,
+      "fillpct": 94,
+      "rect": 7.31,
+      "cyl": 6.69,
+      "tc": 6.65,
+      "resonant": false
+    },
+    {
+      "h": 25.0,
+      "fillpct": 96,
+      "rect": 7.3,
+      "cyl": 6.68,
+      "tc": 6.65,
+      "resonant": false
+    },
+    {
+      "h": 25.5,
+      "fillpct": 98,
+      "rect": 7.29,
+      "cyl": 6.67,
+      "tc": 6.64,
+      "resonant": false
+    },
+    {
+      "h": 26.0,
+      "fillpct": 100,
+      "rect": 7.28,
+      "cyl": 6.67,
+      "tc": 6.64,
+      "resonant": false
+    }
+  ]
+}
