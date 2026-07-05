@@ -161,10 +161,11 @@ def _roll_verdict(point: Mapping, *, wave_hs_m: float, hs_ceiling_m: float):
       * operability — the atlas ``light`` directly (OPERABLE->GO, INOPERABLE->NO_GO,
         ESCALATE->NO_GO when the value is missing/out-of-range else MARGINAL). None is
         normalised to fail-closed BEFORE any classify (never ``_classify(None, ...)``).
-      * seastate-domain guard — a rolling Hs above the static-screen ceiling -> NO_GO.
+      * seastate-domain guard — a rolling Hs above the static-screen ceiling (or a
+        missing / NaN Hs) -> NO_GO.
       * flex-joint — the twin-B decision UC via the shared ``_classify`` (caution 0.9).
-      * drift-off — magnitude-gated: escalate or a non-positive EDS window -> NO_GO;
-        an open window -> MARGINAL; station held -> GO.
+      * drift-off — magnitude-gated: escalate, a non-positive OR a missing EDS window
+        -> NO_GO; an open (finite, positive) window -> MARGINAL; station held -> GO.
     ``lead_time_s`` is the drift-off physics projection only (``lead_time_margin_s``);
     no retrospective first-crossing over the replay is claimed.
     """
@@ -180,8 +181,10 @@ def _roll_verdict(point: Mapping, *, wave_hs_m: float, hs_ceiling_m: float):
         states.append(DecisionState.NO_GO if uc is None else DecisionState.MARGINAL)
 
     # seastate-domain guard: the wave-blind static operability screen is out of its
-    # validated domain above the ceiling -> the verdict cannot be a trusted GO.
-    if wave_hs_m > hs_ceiling_m + 1e-9:
+    # validated domain above the ceiling -> the verdict cannot be a trusted GO. A
+    # missing / NaN rolling Hs (a dropped metocean sample) is treated as out-of-domain
+    # too (fail-closed), never silently skipped.
+    if not math.isfinite(wave_hs_m) or wave_hs_m > hs_ceiling_m + 1e-9:
         states.append(DecisionState.NO_GO)
 
     # flex-joint (twin-B decision UC = max(corrected, raw); trips before the raw atlas)
@@ -194,8 +197,9 @@ def _roll_verdict(point: Mapping, *, wave_hs_m: float, hs_ceiling_m: float):
         states.append(DecisionState.NO_GO)
     elif st == "station_held":
         states.append(DecisionState.GO)
-    else:  # drift_off
-        states.append(DecisionState.NO_GO if (lm is not None and lm <= 0.0) else DecisionState.MARGINAL)
+    else:  # drift_off — fail-closed: only an OPEN (finite, positive) EDS window is
+        # MARGINAL; a missing or non-positive window cannot be a trusted CAUTION.
+        states.append(DecisionState.MARGINAL if (lm is not None and lm > 0.0) else DecisionState.NO_GO)
 
     worst = max(states, key=lambda s: _SEVERITY[s])
     return worst, point["lead_time_margin_s"]

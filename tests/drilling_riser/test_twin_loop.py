@@ -59,6 +59,13 @@ def test_seastate_domain_guard_forces_no_go_above_ceiling():
     assert st is DecisionState.NO_GO
 
 
+def test_nan_seastate_fails_closed():
+    # a dropped / NaN metocean sample must NOT bypass the domain guard (NaN > ceiling is
+    # False) — it fails closed to NO-GO rather than being silently trusted as in-domain
+    st, _ = _roll_verdict(_point(), wave_hs_m=float("nan"), hs_ceiling_m=1.0)
+    assert st is DecisionState.NO_GO
+
+
 def test_drift_off_is_magnitude_gated():
     # an OPEN EDS window is CAUTION ...
     st, _ = _roll_verdict(_point(drift_status="drift_off", lead_time_margin_s=120.0), wave_hs_m=0.8, hs_ceiling_m=1.0)
@@ -67,6 +74,9 @@ def test_drift_off_is_magnitude_gated():
     st, _ = _roll_verdict(_point(drift_status="drift_off", lead_time_margin_s=-5.0), wave_hs_m=0.8, hs_ceiling_m=1.0)
     assert st is DecisionState.NO_GO
     st, _ = _roll_verdict(_point(drift_status="escalate"), wave_hs_m=0.8, hs_ceiling_m=1.0)
+    assert st is DecisionState.NO_GO
+    # ... and a drift-off with NO reported EDS margin fails closed (never a trusted CAUTION)
+    st, _ = _roll_verdict(_point(drift_status="drift_off", lead_time_margin_s=None), wave_hs_m=0.8, hs_ceiling_m=1.0)
     assert st is DecisionState.NO_GO
 
 

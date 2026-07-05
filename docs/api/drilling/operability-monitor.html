@@ -74,7 +74,10 @@
       <button class="pb" id="play" aria-label="Play or pause">&#9654; Play</button>
       <input id="scrub" type="range" min="0" value="0" step="1" aria-label="Scrub the telemetry track">
       <span class="tstamp" id="tlab">t = 0 s</span>
+      <span class="chip" id="verdict" style="font-size:13px;padding:4px 12px" aria-live="polite">
+        <span class="ic" id="vic"></span><span id="vlt"></span></span>
     </div>
+    <canvas id="vs" width="360" height="26" role="img" aria-label="Rolling GO / CAUTION / NO-GO verdict over the track" style="margin-top:4px"></canvas>
     <div class="row">
       <div>
         <div class="lab" style="font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px">Watch circle</div>
@@ -340,7 +343,9 @@ const DATA = {
       "time_to_limit_s": 81.49,
       "lead_time_margin_s": 21.49,
       "point_of_disconnect_m": 4.095,
-      "drift_status": "drift_off"
+      "drift_status": "drift_off",
+      "go_no_go": "CAUTION",
+      "lead_time_s": 21.49
     },
     {
       "t": 300.0,
@@ -359,7 +364,9 @@ const DATA = {
       "time_to_limit_s": 73.319,
       "lead_time_margin_s": 13.319,
       "point_of_disconnect_m": 6.421,
-      "drift_status": "drift_off"
+      "drift_status": "drift_off",
+      "go_no_go": "CAUTION",
+      "lead_time_s": 13.319
     },
     {
       "t": 600.0,
@@ -378,7 +385,9 @@ const DATA = {
       "time_to_limit_s": 64.116,
       "lead_time_margin_s": 4.116,
       "point_of_disconnect_m": 9.04,
-      "drift_status": "drift_off"
+      "drift_status": "drift_off",
+      "go_no_go": "CAUTION",
+      "lead_time_s": 4.116
     },
     {
       "t": 900.0,
@@ -397,7 +406,9 @@ const DATA = {
       "time_to_limit_s": 53.348,
       "lead_time_margin_s": -6.652,
       "point_of_disconnect_m": 12.0,
-      "drift_status": "escalate"
+      "drift_status": "escalate",
+      "go_no_go": "NO-GO",
+      "lead_time_s": -6.652
     },
     {
       "t": 1200.0,
@@ -416,7 +427,9 @@ const DATA = {
       "time_to_limit_s": 39.763,
       "lead_time_margin_s": -20.237,
       "point_of_disconnect_m": 15.0,
-      "drift_status": "escalate"
+      "drift_status": "escalate",
+      "go_no_go": "NO-GO",
+      "lead_time_s": -20.237
     },
     {
       "t": 1500.0,
@@ -435,7 +448,9 @@ const DATA = {
       "time_to_limit_s": 0.0,
       "lead_time_margin_s": -60.0,
       "point_of_disconnect_m": 24.0,
-      "drift_status": "escalate"
+      "drift_status": "escalate",
+      "go_no_go": "NO-GO",
+      "lead_time_s": -60.0
     },
     {
       "t": 1800.0,
@@ -454,7 +469,9 @@ const DATA = {
       "time_to_limit_s": 53.348,
       "lead_time_margin_s": -6.652,
       "point_of_disconnect_m": 12.0,
-      "drift_status": "escalate"
+      "drift_status": "escalate",
+      "go_no_go": "NO-GO",
+      "lead_time_s": -6.652
     },
     {
       "t": 2100.0,
@@ -473,10 +490,12 @@ const DATA = {
       "time_to_limit_s": 73.319,
       "lead_time_margin_s": 13.319,
       "point_of_disconnect_m": 6.421,
-      "drift_status": "drift_off"
+      "drift_status": "drift_off",
+      "go_no_go": "CAUTION",
+      "lead_time_s": 13.319
     }
   ],
-  "fingerprint": "86ddf18d48f98f86"
+  "fingerprint": "8b998b9900aeda2a"
 };
 const TRACK = DATA.track, OFF = DATA.offset_pct, CUR = DATA.current_speed_mps;
 const CFG = DATA.scenario.config, GRID = DATA.configs[CFG];
@@ -492,6 +511,21 @@ function driftColor(st){
   if(st==='station_held') return css('--good');
   if(st==='escalate') return css('--escalate');
   return css('--warn'); // drift_off
+}
+function verdictColor(v){
+  if(v==='GO') return css('--good');
+  if(v==='CAUTION') return css('--warn');
+  return css('--serious'); // NO-GO
+}
+// rolling verdict strip — one cell per track point, coloured by the SERVED go_no_go
+// label (no recompute). This is the "traffic light" over the whole scenario.
+const vs=document.getElementById('vs'), vsx=vs.getContext('2d');
+function drawVS(){
+  const dpr=window.devicePixelRatio||1, W=vs.clientWidth||360, H=26;
+  vs.width=W*dpr; vs.height=H*dpr; vsx.setTransform(dpr,0,0,dpr,0,0); vsx.clearRect(0,0,W,H);
+  const n=TRACK.length, w=W/n;
+  TRACK.forEach((p,i)=>{ vsx.fillStyle=verdictColor(p.go_no_go); vsx.fillRect(i*w+1,0,w-2,H-8); });
+  vsx.fillStyle=css('--dot'); vsx.fillRect(idx*w+w/2-1,H-6,2,6);
 }
 function fmtT(s){ if(s===null) return '&infin;'; const m=Math.floor(s/60), r=Math.round(s%60); return m+':'+String(r).padStart(2,'0'); }
 
@@ -535,7 +569,11 @@ function render(){
   const p=TRACK[idx];
   document.getElementById('scrub').value=idx;
   document.getElementById('tlab').innerHTML='t = '+p.t+' s';
-  drawWC(p); drawTL();
+  drawWC(p); drawTL(); drawVS();
+  const vcol=verdictColor(p.go_no_go);
+  document.getElementById('vic').style.background=vcol;
+  document.getElementById('vlt').textContent='verdict '+p.go_no_go+
+    (p.lead_time_s!==null?' · '+Math.round(p.lead_time_s)+' s lead':'');
   document.getElementById('wcnote').innerHTML='Vessel offset <b>'+p.offset_m.toFixed(0)+' m</b> ('+
     p.offset_pct.toFixed(1)+'% WD) of allowable <b>'+p.r_watch_m.toFixed(0)+' m</b>'+
     (p.watch_frac!==null?' &middot; '+(p.watch_frac*100).toFixed(0)+'% of watch circle':'');
