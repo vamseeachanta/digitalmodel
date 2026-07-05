@@ -554,6 +554,67 @@
       ]
     }
   ],
+  "cfd": {
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "free_decay": {
+      "shape": "rectangular",
+      "points": [
+        {
+          "x": 0.15,
+          "om_meas": 1.17792,
+          "om_an": 1.17464,
+          "err": 0.00279
+        },
+        {
+          "x": 0.3,
+          "om_meas": 1.51644,
+          "om_an": 1.52097,
+          "err": 0.00298
+        },
+        {
+          "x": 0.5,
+          "om_meas": 1.69745,
+          "om_an": 1.69744,
+          "err": 0.0
+        },
+        {
+          "x": 0.7,
+          "om_meas": 1.75075,
+          "om_an": 1.75079,
+          "err": 2e-05
+        }
+      ]
+    },
+    "forced_roll": {
+      "h_over_L": 0.35,
+      "first_mode_period_s": 1.20041,
+      "resonant_period_s": 1.20041,
+      "roll_amplitude_deg": 4.0,
+      "points": [
+        {
+          "ratio": 0.85,
+          "T": 1.02035,
+          "amp": 0.2097,
+          "resp": 0.01843,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "T": 1.20041,
+          "amp": 1.88003,
+          "resp": 0.05432,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.15,
+          "T": 1.38047,
+          "amp": 2.58226,
+          "resp": 0.05023,
+          "status": "completed"
+        }
+      ]
+    }
+  },
   "resonance": [
     {
       "h": 2.0,
@@ -862,6 +923,8 @@
     "Bosch & Vugts (1966) \u2014 roll damping by free-surface anti-roll tanks",
     "Ervin, Barnes & Wolfe, UMTRI-85-35 / FHWA (1985) \u2014 cargo-tank-truck stability & rollover",
     "Rajagounder et al. (2016), Engineering Journal 20(1) \u2014 automotive fuel-tank sloshing (VOF + baffles)",
-    "Micheli et al. (2022), J. Applied Fluid Mechanics 15(2) \u2014 spray-tanker sloshing under braking"
+    "Micheli et al. (2022), J. Applied Fluid Mechanics 15(2) \u2014 spray-tanker sloshing under braking",
+    "Carette (2023), Ship Technology Research 70(2) \u2014 a consistent method to design & evaluate anti-roll tanks; excitation = roll angle + local lateral acceleration (DOI 10.1080/09377255.2022.2117496)",
+    "Delorme et al. (2009), Ocean Engineering 36(2) \u2014 SPHERIC canonical forced-roll rectangular-tank benchmark"
   ]
 }
