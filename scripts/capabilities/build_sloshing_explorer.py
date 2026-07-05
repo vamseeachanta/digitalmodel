@@ -34,6 +34,10 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[2]
 _OUT_DIR = _REPO / "docs" / "api" / "structural"
 _ENGINE = _REPO / "src" / "digitalmodel" / "hydrodynamics" / "sloshing.py"
+# Optional CFD benchmark manifest (measured 2D VOF points; epic #1429). When
+# present, its rectangular free-decay points are overlaid on the master curve
+# and a small verification table is rendered; when absent the page is unchanged.
+_CFD_BENCHMARK = _OUT_DIR / "sloshing-cfd-benchmark.json"
 
 _spec = importlib.util.spec_from_file_location("dm_sloshing_engine", _ENGINE)
 slosh = importlib.util.module_from_spec(_spec)
@@ -170,7 +174,47 @@ REFERENCES = [
     "Ervin, Barnes & Wolfe, UMTRI-85-35 / FHWA (1985) — cargo-tank-truck stability & rollover",
     "Rajagounder et al. (2016), Engineering Journal 20(1) — automotive fuel-tank sloshing (VOF + baffles)",
     "Micheli et al. (2022), J. Applied Fluid Mechanics 15(2) — spray-tanker sloshing under braking",
+    "Carette (2023), Ship Technology Research 70(2) — a consistent method to design & evaluate anti-roll tanks; excitation = roll angle + local lateral acceleration (DOI 10.1080/09377255.2022.2117496)",
+    "Delorme et al. (2009), Ocean Engineering 36(2) — SPHERIC canonical forced-roll rectangular-tank benchmark",
 ]
+
+
+def _load_cfd_benchmark():
+    """Rectangular CFD benchmark points for the master-curve overlay (epic #1429).
+
+    Reads the committed manifest written by
+    ``scripts/cfd/run_sloshing_benchmark.py`` (measured 2D interFoam VOF runs).
+    Returns a compact dict for the page, or ``None`` when the manifest is absent
+    (the page then renders exactly as before). Only ``completed`` cases with a
+    measured Omega1 are carried through.
+    """
+    if not _CFD_BENCHMARK.exists():
+        return None
+    data = json.loads(_CFD_BENCHMARK.read_text())
+    out = {"solver": data.get("meta", {}).get("solver", "OpenFOAM interFoam (VOF)")}
+    fd = data.get("free_decay") or {}
+    pts = [
+        {"x": p["h_over_L"], "om_meas": p["omega1_meas"],
+         "om_an": p["omega1_analytical"], "err": p["rel_error"]}
+        for p in fd.get("points", [])
+        if p.get("solver_status") == "completed" and "omega1_meas" in p
+    ]
+    out["free_decay"] = {"shape": fd.get("shape", "rectangular"), "points": pts}
+    fr = data.get("forced_roll") or {}
+    if fr.get("points"):
+        out["forced_roll"] = {
+            "h_over_L": fr.get("h_over_L"),
+            "first_mode_period_s": fr.get("first_mode_period_s"),
+            "resonant_period_s": fr.get("resonant_period_s"),
+            "roll_amplitude_deg": fr.get("roll_amplitude_deg"),
+            "points": [
+                {"ratio": p.get("period_ratio"), "T": p.get("drive_period_s"),
+                 "amp": p.get("moment_amplitude_nm"), "resp": p.get("response_amp_m"),
+                 "status": p.get("solver_status")}
+                for p in fr.get("points", [])
+            ],
+        }
+    return out
 
 
 def build_study():
@@ -184,6 +228,7 @@ def build_study():
                  "band_hi": round(_ROLL_T * (1 + _TOL), 2),
                  "cyl_d": _RCYL_D, "tank_h": _TANK_H},
         "shapes": shapes,
+        "cfd": _load_cfd_benchmark(),
         "resonance": _resonance_series(),
         "references": REFERENCES,
     }
@@ -261,6 +306,7 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
   <div class="legend" id="legend"></div>
   <p class="fnote">Horizontal-cylinder and elliptical curves use the equivalent-rectangle method (good to ~10&ndash;15% at mid
   fill; near-full and violent cases are where a VOF free-surface CFD run takes over).</p>
+  <div id="cfdverify"></div>
 </div>
 
 <div class="panel">
@@ -303,6 +349,9 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
     Violent / high-fill / impact cases &mdash; and the coupled roll response of partially filled ballast tanks used as
     tuned/anti-roll tanks &mdash; are resolved with VOF free-surface CFD (OpenFOAM), feeding a reduced response back into
     the vessel roll time-domain model. This is the tiering behind the ACMA / Noble ballast-tank sloshing study.
+    The <b style="color:#c0392b">red rings</b> on the master curve above are the first rung of that ladder: measured 2D
+    interFoam points that pin the rectangular curve to real free-surface CFD (see the
+    <a href="../cfd/tank-sloshing-verification.html">CFD verification page</a>).
   </div>
 </div>
 
@@ -319,6 +368,8 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
 <script>
 const DATA = __DATA__;
 const G = DATA.meta.g, COL = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+const CFD = DATA.cfd;               // measured 2D VOF benchmark (epic #1429) or null
+const CFDCOL = '#c0392b'; let cfdOn = true;
 
 /* ---------- master chart ---------- */
 const XW=720,YH=380,ML=54,MR=16,MT=14,MB=42, XMAX=1.5, YMAX=2.0;
@@ -339,13 +390,28 @@ function drawChart(sel){
     const w = (i===sel)?3.2:1.8, o=(sel<0||i===sel)?1:0.5;
     g+=`<path d="${d}" fill="none" stroke="${COL[i]}" stroke-width="${w}" opacity="${o}"/>`;
   });
+  // Measured CFD points overlaid on the rectangular curve (epic #1429).
+  if(CFD && CFD.free_decay && cfdOn){
+    CFD.free_decay.points.forEach(p=>{
+      const cx=px(p.x), cy=py(p.om_meas);
+      g+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="#fff" stroke="${CFDCOL}" stroke-width="2.2"/>`+
+         `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="1.7" fill="${CFDCOL}"/>`+
+         `<title>CFD h/L=${p.x}: Ω₁=${p.om_meas} (analytical ${p.om_an}, err ${(p.err*100).toFixed(2)}%)</title>`;
+    });
+  }
   document.getElementById('chart').innerHTML=g;
 }
 function drawLegend(sel){
-  document.getElementById('legend').innerHTML = DATA.shapes.map((sh,i)=>
+  let items = DATA.shapes.map((sh,i)=>
     `<span data-i="${i}" class="${on[i]?'':'off'}"><i style="background:${COL[i]}"></i>${sh.label}</span>`).join('');
+  if(CFD && CFD.free_decay && CFD.free_decay.points.length){
+    items += `<span data-cfd="1" class="${cfdOn?'':'off'}" title="Measured 2D interFoam VOF free-decay points">`+
+      `<i style="background:transparent;border:2px solid ${CFDCOL};height:11px;width:11px;border-radius:50%"></i>CFD (OpenFOAM VOF)</span>`;
+  }
+  document.getElementById('legend').innerHTML = items;
   document.querySelectorAll('#legend span').forEach(el=>el.onclick=()=>{
-    const i=+el.dataset.i; on[i]=!on[i]; drawLegend(sel); drawChart(sel);});
+    if(el.dataset.cfd){ cfdOn=!cfdOn; } else { const i=+el.dataset.i; on[i]=!on[i]; }
+    drawLegend(sel); drawChart(sel);});
 }
 
 /* ---------- shape lookup ---------- */
@@ -387,7 +453,36 @@ function renderRes(){
 let st=S.findIndex(p=>p.fillpct>=95); hs.value=st<0?S.length-1:st; renderRes();
 hs.addEventListener('input',renderRes);
 
+/* ---------- CFD verification table (epic #1429) ---------- */
+function renderCFD(){
+  const el=document.getElementById('cfdverify'); if(!el) return;
+  if(!CFD || !CFD.free_decay || !CFD.free_decay.points.length){ el.innerHTML=''; return; }
+  const rows = CFD.free_decay.points.map(p=>
+    `<tr><td>${(p.x*100).toFixed(0)}%</td><td class="mono">${p.om_meas.toFixed(3)}</td>`+
+    `<td class="mono">${p.om_an.toFixed(3)}</td><td class="mono">${(p.err*100).toFixed(2)}%</td></tr>`).join('');
+  let fr='';
+  if(CFD.forced_roll && CFD.forced_roll.resonant_period_s){
+    const F=CFD.forced_roll;
+    fr=`<p class="fnote" style="margin-top:10px"><b style="color:${CFDCOL}">Forced-roll resonance.</b> Driving the same
+      rectangular tank (h/L&nbsp;≈&nbsp;${F.h_over_L}) at three roll periods bracketing the analytical first mode
+      T&#8321;&nbsp;=&nbsp;${F.first_mode_period_s}&nbsp;s, the tank response peaks at
+      <b>${F.resonant_period_s}&nbsp;s</b> — the forced response confirms the free-decay natural period is the
+      resonant period.</p>`;
+  }
+  el.innerHTML =
+    `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+      <span class="tag" style="color:${CFDCOL}">CFD verification of the rectangular curve</span>
+      <p class="fnote" style="margin:2px 0 8px">Measured 2D free-surface CFD (${CFD.solver}) — the
+      red rings on the chart. Each free-decay case rings down a small first-mode perturbation; the FFT natural
+      frequency, non-dimensionalised, is compared to the analytical curve value.</p>
+      <table><thead><tr><th>Fill h/L</th><th>Ω&#8321; measured (CFD)</th><th>Ω&#8321; analytical</th><th>Error</th></tr></thead>
+        <tbody>${rows}</tbody></table>${fr}
+      <p class="fnote">Full method &amp; force-history: <a href="../cfd/tank-sloshing-verification.html">2D tank-sloshing CFD verification &rarr;</a></p>
+    </div>`;
+}
+
 document.getElementById('refs').innerHTML=DATA.references.map(r=>`<li>${r}</li>`).join('');
+renderCFD();
 renderShape();
 </script>
 </body></html>
