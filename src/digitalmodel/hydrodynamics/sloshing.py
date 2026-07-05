@@ -151,6 +151,72 @@ def api650_convective_period(diameter: float, fill_height: float) -> float:
     return 1.8 * ks * math.sqrt(diameter)
 
 
+def _ellipse_equivalent_rectangle(width: float, height: float, fill_fraction: float):
+    """
+    Equivalent-rectangle reduction of an elliptical / obround / horizontal-cylinder
+    cross-section at a partial fill.
+
+    Returns ``(a, b_s, h_eq)`` — semi-major (half-width) ``a``, the free-surface
+    width ``b_s`` and the equivalent still-liquid depth ``h_eq`` — such that the
+    transverse sloshing frequency follows Lamb's rectangular relation with
+    L -> b_s and h -> h_eq.  ``fill_fraction`` = liquid depth / tank height (0..1).
+    """
+    a = width / 2.0
+    b = height / 2.0
+    f = min(max(fill_fraction, 0.02), 0.98)  # clamp: b_s -> 0 at the extremes
+    s = 2.0 * f - 1.0
+    disc = math.sqrt(max(1.0 - s * s, 1e-9))
+    b_s = 2.0 * a * disc  # free-surface width
+    area_frac = 0.5 + (math.asin(s) + s * disc) / math.pi  # A_L / (pi a b)
+    h_eq = b * area_frac * (math.pi / 2.0) / disc
+    return a, b_s, h_eq
+
+
+def oval_tank_periods(
+    width: float, height: float, fill_fraction: float, n_modes: int = 3, g: float = G_STD
+) -> List[float]:
+    """
+    Transverse sloshing natural periods (s) of an elliptical / obround / horizontal
+    cylindrical tank via the equivalent-rectangle method (Lamb, with the free-surface
+    width and equivalent depth from the cross-section geometry at ``fill_fraction``).
+
+    ``width`` and ``height`` are the full cross-section dimensions; a horizontal
+    circular cylinder is the special case ``width == height == diameter``.
+
+    Validity: the equivalent-rectangle approximation is good over the mid-fill
+    range (fill_fraction ~0.15-0.75, within ~10-15% of the exact potential-flow
+    value for a circle at half fill).  Near a full tank the free-surface width
+    ``b_s`` collapses and the approximation over-predicts the frequency — those
+    high-fill / violent cases are the ones a VOF free-surface CFD run resolves.
+    """
+    if width <= 0 or height <= 0:
+        raise ValueError("width and height must be positive")
+    if not 0.0 < fill_fraction < 1.0:
+        raise ValueError("fill_fraction must be in (0, 1)")
+    _, b_s, h_eq = _ellipse_equivalent_rectangle(width, height, fill_fraction)
+    periods: List[float] = []
+    n = 1
+    while len(periods) < n_modes:
+        k = n * math.pi / b_s
+        omega_sq = g * k * math.tanh(k * h_eq)
+        periods.append(2.0 * math.pi / math.sqrt(omega_sq))
+        n += 2  # antisymmetric transverse modes
+    return periods
+
+
+def horizontal_cylinder_periods(
+    diameter: float, fill_fraction: float, n_modes: int = 3, g: float = G_STD
+) -> List[float]:
+    """
+    Transverse sloshing natural periods (s) of a HORIZONTAL circular cylinder — the
+    road-tanker / rail-tank-car / IMO Type-C shape — at ``fill_fraction`` (0..1).
+
+    Equivalent-rectangle special case of :func:`oval_tank_periods` with
+    width = height = diameter.
+    """
+    return oval_tank_periods(diameter, diameter, fill_fraction, n_modes, g)
+
+
 def resonance_check(
     natural_periods: List[float], excitation_periods: List[float], tolerance: float = 0.15
 ) -> List[float]:

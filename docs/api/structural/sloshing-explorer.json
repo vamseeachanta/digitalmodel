@@ -1,406 +1,867 @@
 {
   "meta": {
-    "rect_l": 40.0,
-    "cyl_d": 40.0,
-    "tank_h": 26.0,
+    "g": 9.80665,
     "roll_t": 12.0,
     "tol": 0.15,
     "band_lo": 10.2,
     "band_hi": 13.8,
-    "standard": "Faltinsen linear potential theory + API 650 Annex E"
+    "cyl_d": 40.0,
+    "tank_h": 26.0
   },
-  "series": [
+  "shapes": [
+    {
+      "key": "rectangular",
+      "label": "Rectangular / prismatic",
+      "lc": "L (length in the excitation direction)",
+      "formula": "omega_1^2 = (pi g / L) tanh(pi h / L)",
+      "ratio": "h / L (depth / length)",
+      "deep": 1.7725,
+      "note": "LNG membrane, seismic storage, ship cargo tanks. Exact linear potential theory.",
+      "default": {
+        "span": 40.0,
+        "fill_ratio": 0.5,
+        "span_label": "Length L (m)"
+      },
+      "curve": [
+        [
+          0.05,
+          0.6996
+        ],
+        [
+          0.1,
+          0.9776
+        ],
+        [
+          0.15,
+          1.1746
+        ],
+        [
+          0.2,
+          1.3227
+        ],
+        [
+          0.25,
+          1.4354
+        ],
+        [
+          0.3,
+          1.521
+        ],
+        [
+          0.35,
+          1.5857
+        ],
+        [
+          0.4,
+          1.6343
+        ],
+        [
+          0.45,
+          1.6705
+        ],
+        [
+          0.5,
+          1.6974
+        ],
+        [
+          0.55,
+          1.7174
+        ],
+        [
+          0.6,
+          1.7321
+        ],
+        [
+          0.65,
+          1.7429
+        ],
+        [
+          0.7,
+          1.7508
+        ],
+        [
+          0.75,
+          1.7566
+        ],
+        [
+          0.8,
+          1.7609
+        ],
+        [
+          0.85,
+          1.764
+        ],
+        [
+          0.9,
+          1.7663
+        ],
+        [
+          0.95,
+          1.7679
+        ],
+        [
+          1.0,
+          1.7691
+        ],
+        [
+          1.05,
+          1.77
+        ],
+        [
+          1.1,
+          1.7707
+        ],
+        [
+          1.15,
+          1.7712
+        ],
+        [
+          1.2,
+          1.7715
+        ],
+        [
+          1.25,
+          1.7718
+        ],
+        [
+          1.3,
+          1.772
+        ],
+        [
+          1.35,
+          1.7721
+        ],
+        [
+          1.4,
+          1.7722
+        ],
+        [
+          1.45,
+          1.7723
+        ],
+        [
+          1.5,
+          1.7723
+        ]
+      ],
+      "lookup": [
+        {
+          "f": 0.2,
+          "T": 9.59
+        },
+        {
+          "f": 0.3,
+          "T": 8.34
+        },
+        {
+          "f": 0.4,
+          "T": 7.76
+        },
+        {
+          "f": 0.5,
+          "T": 7.48
+        },
+        {
+          "f": 0.6,
+          "T": 7.33
+        },
+        {
+          "f": 0.7,
+          "T": 7.25
+        },
+        {
+          "f": 0.8,
+          "T": 7.21
+        }
+      ]
+    },
+    {
+      "key": "upright-cylinder",
+      "label": "Upright cylinder (vertical axis)",
+      "lc": "D (diameter)",
+      "formula": "omega_1^2 = (1.841 g / R) tanh(1.841 h / R)",
+      "ratio": "h / D (depth / diameter)",
+      "deep": 1.9187,
+      "note": "Storage tanks, spar/CALM, spherical-limit. First J1' root 1.841. API 650 Annex E convective.",
+      "default": {
+        "span": 40.0,
+        "fill_ratio": 0.5,
+        "span_label": "Diameter D (m)"
+      },
+      "curve": [
+        [
+          0.05,
+          0.8188
+        ],
+        [
+          0.1,
+          1.1392
+        ],
+        [
+          0.15,
+          1.36
+        ],
+        [
+          0.2,
+          1.5195
+        ],
+        [
+          0.25,
+          1.6353
+        ],
+        [
+          0.3,
+          1.7187
+        ],
+        [
+          0.35,
+          1.7783
+        ],
+        [
+          0.4,
+          1.8206
+        ],
+        [
+          0.45,
+          1.8504
+        ],
+        [
+          0.5,
+          1.8713
+        ],
+        [
+          0.55,
+          1.8858
+        ],
+        [
+          0.6,
+          1.896
+        ],
+        [
+          0.65,
+          1.903
+        ],
+        [
+          0.7,
+          1.9079
+        ],
+        [
+          0.75,
+          1.9113
+        ],
+        [
+          0.8,
+          1.9137
+        ],
+        [
+          0.85,
+          1.9153
+        ],
+        [
+          0.9,
+          1.9164
+        ],
+        [
+          0.95,
+          1.9172
+        ],
+        [
+          1.0,
+          1.9177
+        ],
+        [
+          1.05,
+          1.9181
+        ],
+        [
+          1.1,
+          1.9184
+        ],
+        [
+          1.15,
+          1.9185
+        ],
+        [
+          1.2,
+          1.9187
+        ],
+        [
+          1.25,
+          1.9188
+        ],
+        [
+          1.3,
+          1.9188
+        ],
+        [
+          1.35,
+          1.9189
+        ],
+        [
+          1.4,
+          1.9189
+        ],
+        [
+          1.45,
+          1.9189
+        ],
+        [
+          1.5,
+          1.9189
+        ]
+      ],
+      "lookup": [
+        {
+          "f": 0.2,
+          "T": 8.35
+        },
+        {
+          "f": 0.3,
+          "T": 7.38
+        },
+        {
+          "f": 0.4,
+          "T": 6.97
+        },
+        {
+          "f": 0.5,
+          "T": 6.78
+        },
+        {
+          "f": 0.6,
+          "T": 6.69
+        },
+        {
+          "f": 0.7,
+          "T": 6.65
+        },
+        {
+          "f": 0.8,
+          "T": 6.63
+        }
+      ]
+    },
+    {
+      "key": "horizontal-cylinder",
+      "label": "Horizontal cylinder (road tanker)",
+      "lc": "D (diameter)",
+      "formula": "equivalent rectangle: omega_1^2 = g (pi / b_s) tanh(pi h_eq / b_s)",
+      "ratio": "fill fraction F = h / D",
+      "deep": null,
+      "note": "Road tankers, rail tank cars, IMO Type-C. Equivalent-rectangle; best at mid fill.",
+      "default": {
+        "span": 2.4,
+        "fill_ratio": 0.5,
+        "span_label": "Diameter D (m)"
+      },
+      "curve": [
+        [
+          0.05,
+          1.31
+        ],
+        [
+          0.1,
+          1.3388
+        ],
+        [
+          0.15,
+          1.369
+        ],
+        [
+          0.2,
+          1.4008
+        ],
+        [
+          0.25,
+          1.4342
+        ],
+        [
+          0.3,
+          1.4693
+        ],
+        [
+          0.35,
+          1.5062
+        ],
+        [
+          0.4,
+          1.5448
+        ],
+        [
+          0.45,
+          1.5854
+        ],
+        [
+          0.5,
+          1.628
+        ],
+        [
+          0.55,
+          1.6729
+        ],
+        [
+          0.6,
+          1.7205
+        ],
+        [
+          0.65,
+          1.7718
+        ],
+        [
+          0.7,
+          1.8287
+        ],
+        [
+          0.75,
+          1.8951
+        ]
+      ],
+      "lookup": [
+        {
+          "f": 0.2,
+          "T": 2.22
+        },
+        {
+          "f": 0.3,
+          "T": 2.12
+        },
+        {
+          "f": 0.4,
+          "T": 2.01
+        },
+        {
+          "f": 0.5,
+          "T": 1.91
+        },
+        {
+          "f": 0.6,
+          "T": 1.81
+        },
+        {
+          "f": 0.7,
+          "T": 1.7
+        },
+        {
+          "f": 0.8,
+          "T": 1.57
+        }
+      ]
+    },
+    {
+      "key": "elliptical",
+      "label": "Elliptical / obround (fuel tanker)",
+      "lc": "W (cross-section width)",
+      "formula": "equivalent rectangle on the oval cross-section (a, b_s, h_eq)",
+      "ratio": "fill fraction F (at width/height = 1.5)",
+      "deep": null,
+      "note": "Highway cargo tanks & automotive fuel tanks (wider than tall). Equivalent-rectangle.",
+      "default": {
+        "span": 2.0,
+        "fill_ratio": 0.5,
+        "span_label": "Width W (m), height = W/1.5"
+      },
+      "curve": [
+        [
+          0.0333,
+          1.0753
+        ],
+        [
+          0.0667,
+          1.1055
+        ],
+        [
+          0.1,
+          1.138
+        ],
+        [
+          0.1333,
+          1.1731
+        ],
+        [
+          0.1667,
+          1.2111
+        ],
+        [
+          0.2,
+          1.2522
+        ],
+        [
+          0.2333,
+          1.297
+        ],
+        [
+          0.2667,
+          1.3459
+        ],
+        [
+          0.3,
+          1.3993
+        ],
+        [
+          0.3333,
+          1.4577
+        ],
+        [
+          0.3667,
+          1.5219
+        ],
+        [
+          0.4,
+          1.5923
+        ],
+        [
+          0.4333,
+          1.6697
+        ],
+        [
+          0.4667,
+          1.7549
+        ],
+        [
+          0.5,
+          1.8495
+        ]
+      ],
+      "lookup": [
+        {
+          "f": 0.2,
+          "T": 2.42
+        },
+        {
+          "f": 0.3,
+          "T": 2.27
+        },
+        {
+          "f": 0.4,
+          "T": 2.11
+        },
+        {
+          "f": 0.5,
+          "T": 1.95
+        },
+        {
+          "f": 0.6,
+          "T": 1.78
+        },
+        {
+          "f": 0.7,
+          "T": 1.62
+        },
+        {
+          "f": 0.8,
+          "T": 1.45
+        }
+      ]
+    }
+  ],
+  "resonance": [
     {
       "h": 2.0,
       "fillpct": 8,
-      "rect": 18.14,
       "cyl": 15.5,
-      "tc": 15.43,
       "resonant": false
     },
     {
       "h": 2.5,
       "fillpct": 10,
-      "rect": 16.26,
       "cyl": 13.9,
-      "tc": 13.84,
       "resonant": false
     },
     {
       "h": 3.0,
       "fillpct": 12,
-      "rect": 14.88,
       "cyl": 12.74,
-      "tc": 12.68,
       "resonant": true
     },
     {
       "h": 3.5,
       "fillpct": 13,
-      "rect": 13.83,
       "cyl": 11.85,
-      "tc": 11.79,
       "resonant": true
     },
     {
       "h": 4.0,
       "fillpct": 15,
-      "rect": 12.98,
       "cyl": 11.14,
-      "tc": 11.09,
       "resonant": true
     },
     {
       "h": 4.5,
       "fillpct": 17,
-      "rect": 12.29,
       "cyl": 10.56,
-      "tc": 10.51,
       "resonant": true
     },
     {
       "h": 5.0,
       "fillpct": 19,
-      "rect": 11.71,
       "cyl": 10.08,
-      "tc": 10.03,
-      "resonant": true
+      "resonant": false
     },
     {
       "h": 5.5,
       "fillpct": 21,
-      "rect": 11.22,
       "cyl": 9.68,
-      "tc": 9.63,
-      "resonant": true
+      "resonant": false
     },
     {
       "h": 6.0,
       "fillpct": 23,
-      "rect": 10.8,
       "cyl": 9.33,
-      "tc": 9.29,
-      "resonant": true
+      "resonant": false
     },
     {
       "h": 6.5,
       "fillpct": 25,
-      "rect": 10.44,
       "cyl": 9.03,
-      "tc": 8.99,
-      "resonant": true
+      "resonant": false
     },
     {
       "h": 7.0,
       "fillpct": 27,
-      "rect": 10.12,
       "cyl": 8.78,
-      "tc": 8.73,
       "resonant": false
     },
     {
       "h": 7.5,
       "fillpct": 29,
-      "rect": 9.84,
       "cyl": 8.55,
-      "tc": 8.51,
       "resonant": false
     },
     {
       "h": 8.0,
       "fillpct": 31,
-      "rect": 9.59,
       "cyl": 8.35,
-      "tc": 8.31,
       "resonant": false
     },
     {
       "h": 8.5,
       "fillpct": 33,
-      "rect": 9.37,
       "cyl": 8.18,
-      "tc": 8.14,
       "resonant": false
     },
     {
       "h": 9.0,
       "fillpct": 35,
-      "rect": 9.18,
       "cyl": 8.02,
-      "tc": 7.98,
       "resonant": false
     },
     {
       "h": 9.5,
       "fillpct": 37,
-      "rect": 9.0,
       "cyl": 7.88,
-      "tc": 7.85,
       "resonant": false
     },
     {
       "h": 10.0,
       "fillpct": 38,
-      "rect": 8.84,
       "cyl": 7.76,
-      "tc": 7.72,
       "resonant": false
     },
     {
       "h": 10.5,
       "fillpct": 40,
-      "rect": 8.7,
       "cyl": 7.65,
-      "tc": 7.61,
       "resonant": false
     },
     {
       "h": 11.0,
       "fillpct": 42,
-      "rect": 8.57,
       "cyl": 7.55,
-      "tc": 7.52,
       "resonant": false
     },
     {
       "h": 11.5,
       "fillpct": 44,
-      "rect": 8.45,
       "cyl": 7.46,
-      "tc": 7.43,
       "resonant": false
     },
     {
       "h": 12.0,
       "fillpct": 46,
-      "rect": 8.34,
       "cyl": 7.38,
-      "tc": 7.35,
       "resonant": false
     },
     {
       "h": 12.5,
       "fillpct": 48,
-      "rect": 8.25,
       "cyl": 7.31,
-      "tc": 7.28,
       "resonant": false
     },
     {
       "h": 13.0,
       "fillpct": 50,
-      "rect": 8.16,
       "cyl": 7.25,
-      "tc": 7.21,
       "resonant": false
     },
     {
       "h": 13.5,
       "fillpct": 52,
-      "rect": 8.08,
       "cyl": 7.19,
-      "tc": 7.15,
       "resonant": false
     },
     {
       "h": 14.0,
       "fillpct": 54,
-      "rect": 8.0,
       "cyl": 7.14,
-      "tc": 7.1,
       "resonant": false
     },
     {
       "h": 14.5,
       "fillpct": 56,
-      "rect": 7.94,
       "cyl": 7.09,
-      "tc": 7.05,
       "resonant": false
     },
     {
       "h": 15.0,
       "fillpct": 58,
-      "rect": 7.87,
       "cyl": 7.04,
-      "tc": 7.01,
       "resonant": false
     },
     {
       "h": 15.5,
       "fillpct": 60,
-      "rect": 7.82,
       "cyl": 7.01,
-      "tc": 6.97,
       "resonant": false
     },
     {
       "h": 16.0,
       "fillpct": 62,
-      "rect": 7.76,
       "cyl": 6.97,
-      "tc": 6.94,
       "resonant": false
     },
     {
       "h": 16.5,
       "fillpct": 63,
-      "rect": 7.72,
       "cyl": 6.94,
-      "tc": 6.9,
       "resonant": false
     },
     {
       "h": 17.0,
       "fillpct": 65,
-      "rect": 7.67,
       "cyl": 6.91,
-      "tc": 6.87,
       "resonant": false
     },
     {
       "h": 17.5,
       "fillpct": 67,
-      "rect": 7.63,
       "cyl": 6.88,
-      "tc": 6.85,
       "resonant": false
     },
     {
       "h": 18.0,
       "fillpct": 69,
-      "rect": 7.6,
       "cyl": 6.86,
-      "tc": 6.82,
       "resonant": false
     },
     {
       "h": 18.5,
       "fillpct": 71,
-      "rect": 7.56,
       "cyl": 6.84,
-      "tc": 6.8,
       "resonant": false
     },
     {
       "h": 19.0,
       "fillpct": 73,
-      "rect": 7.53,
       "cyl": 6.82,
-      "tc": 6.78,
       "resonant": false
     },
     {
       "h": 19.5,
       "fillpct": 75,
-      "rect": 7.5,
       "cyl": 6.8,
-      "tc": 6.76,
       "resonant": false
     },
     {
       "h": 20.0,
       "fillpct": 77,
-      "rect": 7.48,
       "cyl": 6.78,
-      "tc": 6.75,
       "resonant": false
     },
     {
       "h": 20.5,
       "fillpct": 79,
-      "rect": 7.45,
       "cyl": 6.77,
-      "tc": 6.73,
       "resonant": false
     },
     {
       "h": 21.0,
       "fillpct": 81,
-      "rect": 7.43,
       "cyl": 6.75,
-      "tc": 6.72,
       "resonant": false
     },
     {
       "h": 21.5,
       "fillpct": 83,
-      "rect": 7.41,
       "cyl": 6.74,
-      "tc": 6.71,
       "resonant": false
     },
     {
       "h": 22.0,
       "fillpct": 85,
-      "rect": 7.39,
       "cyl": 6.73,
-      "tc": 6.7,
       "resonant": false
     },
     {
       "h": 22.5,
       "fillpct": 87,
-      "rect": 7.37,
       "cyl": 6.72,
-      "tc": 6.69,
       "resonant": false
     },
     {
       "h": 23.0,
       "fillpct": 88,
-      "rect": 7.36,
       "cyl": 6.71,
-      "tc": 6.68,
       "resonant": false
     },
     {
       "h": 23.5,
       "fillpct": 90,
-      "rect": 7.34,
       "cyl": 6.7,
-      "tc": 6.67,
       "resonant": false
     },
     {
       "h": 24.0,
       "fillpct": 92,
-      "rect": 7.33,
       "cyl": 6.69,
-      "tc": 6.66,
       "resonant": false
     },
     {
       "h": 24.5,
       "fillpct": 94,
-      "rect": 7.31,
       "cyl": 6.69,
-      "tc": 6.65,
       "resonant": false
     },
     {
       "h": 25.0,
       "fillpct": 96,
-      "rect": 7.3,
       "cyl": 6.68,
-      "tc": 6.65,
       "resonant": false
     },
     {
       "h": 25.5,
       "fillpct": 98,
-      "rect": 7.29,
       "cyl": 6.67,
-      "tc": 6.64,
       "resonant": false
     },
     {
       "h": 26.0,
       "fillpct": 100,
-      "rect": 7.28,
       "cyl": 6.67,
-      "tc": 6.64,
       "resonant": false
     }
+  ],
+  "references": [
+    "Abramson, NASA SP-106 (1966) \u2014 The Dynamic Behavior of Liquids in Moving Containers",
+    "Ibrahim, Liquid Sloshing Dynamics (Cambridge, 2005)",
+    "Faltinsen & Timokha, Sloshing (Cambridge, 2009)",
+    "Dodge, New Dynamic Behavior of Liquids in Moving Containers (SwRI, 2000)",
+    "McIver (1989), J. Fluid Mech. 201 \u2014 cylindrical & spherical containers, arbitrary depth",
+    "Budiansky (1960) \u2014 sloshing in circular canals and spherical tanks",
+    "Evans & McIver (1987), J. Fluid Mech. \u2014 resonant frequencies with a vertical baffle",
+    "Housner (1963); API 650 Annex E; Malhotra-Wenk-Wieland (2000); Eurocode 8 Part 4 \u2014 seismic tanks",
+    "Bosch & Vugts (1966) \u2014 roll damping by free-surface anti-roll tanks",
+    "Ervin, Barnes & Wolfe, UMTRI-85-35 / FHWA (1985) \u2014 cargo-tank-truck stability & rollover",
+    "Rajagounder et al. (2016), Engineering Journal 20(1) \u2014 automotive fuel-tank sloshing (VOF + baffles)",
+    "Micheli et al. (2022), J. Applied Fluid Mechanics 15(2) \u2014 spray-tanker sloshing under braking"
   ]
 }
