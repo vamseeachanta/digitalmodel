@@ -453,6 +453,20 @@ SPECS: list[dict] = [
          bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
                   "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
+    dict(id="sloshing-explorer", kind="work", title="Tank sloshing natural-period & resonance explorer",
+         std="Faltinsen linear potential theory · McIver · API 650 Annex E",
+         path="structural/sloshing-explorer.html",
+         blurb="Fundamental sloshing natural period across tank shapes — rectangular, upright "
+               "cylinder, horizontal cylinder (road tanker) and elliptical/obround fuel tanks — as a "
+               "normalized master curve that collapses every size onto one dimensionless family, a "
+               "shape-selector lookup for real periods, and a resonance screen showing partial-fill "
+               "coupling with vessel roll. Backed by a worldwide relationship survey.",
+         figures=[("4", "tank shapes"), ("Ω₁=ω₁√(Lc/g)", "normalized master curve"),
+                  ("<0.5%", "API 650 ↔ potential-flow")],
+         bullets=["Normalized dimensionless master curve (Ω₁ vs fill/slenderness ratio) — any size reads off one family",
+                  "Shape dropdown → real natural periods for rectangular, upright/horizontal cylinder and oval cross-sections (equivalent-rectangle for the tanker shapes)",
+                  "Resonance screen: partial fill sweeps the sloshing period into the vessel roll band — the coupling external diffraction (AQWA/OrcaWave) misses, and the analytical→CFD tiering behind the ballast-tank study",
+                  "Relationship basis surveyed worldwide: Abramson, Ibrahim, Faltinsen & Timokha, McIver, Housner/API 650, plus road/automotive-tanker (UMTRI, Rajagounder, Micheli)"]),
     dict(id="cathodic-protection-explorer", kind="work", title="Cathodic-protection anode explorer",
          std="DNV-RP-B401",
          path="structural/cathodic-protection-explorer.html",

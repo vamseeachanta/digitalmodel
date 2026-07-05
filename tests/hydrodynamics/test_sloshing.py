@@ -36,6 +36,36 @@ def test_api650_convective_period_golden():
     assert tc == pytest.approx(6.7482, abs=1e-3)
 
 
+def test_horizontal_cylinder_halffull_golden():
+    # Equivalent-rectangle: half-full circle -> Omega^2 = omega^2 R/g = 1.325
+    # (McIver benchmark; D = 40 m -> fundamental period 7.795 s).
+    T = s.horizontal_cylinder_periods(diameter=40.0, fill_fraction=0.5, n_modes=1)[0]
+    assert T == pytest.approx(7.795, abs=2e-3)
+    omega_sq = (2 * math.pi / T) ** 2
+    assert omega_sq * 20.0 / s.G_STD == pytest.approx(1.325, abs=2e-3)
+
+
+def test_oval_reduces_to_horizontal_cylinder():
+    # width == height == diameter must equal the horizontal-cylinder case.
+    a = s.oval_tank_periods(width=40.0, height=40.0, fill_fraction=0.5, n_modes=1)[0]
+    b = s.horizontal_cylinder_periods(diameter=40.0, fill_fraction=0.5, n_modes=1)[0]
+    assert a == pytest.approx(b, rel=1e-9)
+
+
+def test_oval_midfill_accuracy():
+    # Elliptical AR=1.49 (width 0.52, height 0.35): equivalent-rectangle is
+    # within a few % of the reference frequency at mid fill (F=0.7 -> ~1.209 Hz).
+    T = s.oval_tank_periods(width=0.52, height=0.35, fill_fraction=0.7, n_modes=1)[0]
+    assert (1.0 / T) == pytest.approx(1.209, rel=0.05)
+
+
+def test_oval_fill_fraction_bounds():
+    with pytest.raises(ValueError):
+        s.oval_tank_periods(width=2.0, height=1.0, fill_fraction=0.0)
+    with pytest.raises(ValueError):
+        s.oval_tank_periods(width=2.0, height=1.0, fill_fraction=1.0)
+
+
 def test_api650_agrees_with_potential_flow():
     # Cross-validation: API 650 convective period ~ potential-flow fundamental (<1%).
     tc = s.api650_convective_period(40.0, 20.0)

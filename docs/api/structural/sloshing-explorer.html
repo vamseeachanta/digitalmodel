@@ -1,108 +1,202 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tank sloshing resonance explorer — digitalmodel</title>
+<title>Tank sloshing — natural-period & resonance explorer — digitalmodel</title>
 <style>
  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
-       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--roll:#7c3aed}
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--roll:#7c3aed;
+       --c0:#0B3D91;--c1:#0f8a7e;--c2:#b8860b;--c3:#c0392b}
  *{box-sizing:border-box;margin:0;padding:0}
  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
       color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
- h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
- .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:820px}
- .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
- .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
-            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
- .spec b{color:var(--navy)}
+ h1{font-size:24px;color:var(--navy);letter-spacing:-.3px}
+ h2{font-size:15px;color:var(--navy);margin:2px 0 10px;letter-spacing:-.2px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:840px}
  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
         padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
- .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
- .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
- input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
- .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:120px}
- .reads{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0}
- .read{font-size:13px;color:var(--muted)}
- .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;color:var(--navy)}
- .scale{position:relative;height:44px;margin:22px 0 4px;border-radius:9px;overflow:hidden;
-        background:#f4f8fc;border:1px solid var(--line)}
+ .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+      color:var(--teal);margin-bottom:6px}
+ svg{width:100%;height:auto;display:block}
+ .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px}
+ .legend span{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer;user-select:none}
+ .legend i{width:22px;height:3px;border-radius:2px;display:inline-block}
+ .legend .off{opacity:.32}
+ .ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 12px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13px}
+ select,input[type=number]{font:inherit;font-size:14px;padding:6px 9px;border:1px solid var(--line);
+      border-radius:8px;background:#fff;color:var(--ink)}
+ input[type=range]{flex:1;min-width:180px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:15px;min-width:96px}
+ .reads{display:flex;gap:26px;flex-wrap:wrap;margin:8px 0}
+ .read{font-size:12.5px;color:var(--muted)}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:22px;font-weight:700;color:var(--navy)}
+ table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+ th,td{text-align:right;padding:5px 9px;border-bottom:1px solid var(--line)}
+ th:first-child,td:first-child{text-align:left}
+ th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+ td.mono{font-family:ui-monospace,Menlo,monospace;color:var(--navy);font-weight:700}
+ .fnote{font-size:12px;color:var(--muted);margin-top:8px}
+ .formula{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--soft);
+      border:1px solid var(--line);border-radius:8px;padding:8px 11px;color:var(--navy);margin:8px 0}
+ .scale{position:relative;height:44px;margin:20px 0 4px;border-radius:9px;overflow:hidden;
+        background:var(--soft);border:1px solid var(--line)}
  .band{position:absolute;top:0;bottom:0;background:rgba(124,58,237,.15);border-left:2px solid var(--roll);border-right:2px solid var(--roll)}
- .tick{position:absolute;top:-4px;bottom:-4px;width:2px}
- .tick.rect{background:var(--navy)} .tick.cyl{background:var(--teal)} .tick.tc{background:#b8860b}
- .tick span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;white-space:nowrap}
+ .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--teal)}
+ .tick span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--teal);white-space:nowrap}
  .scalelab{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
  .flag{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:4px 12px;margin-top:12px}
  .flag.ok{background:#e6f5ec;color:var(--ok)} .flag.bad{background:#fdecea;color:var(--bad)}
- .cap{font-size:12px;color:var(--muted);margin-top:12px}
- .cap i{font-style:normal;font-weight:700}
+ ul.refs{list-style:none;font-size:12.5px;color:var(--muted);columns:2;column-gap:26px}
+ ul.refs li{padding:3px 0;break-inside:avoid}
+ .cfd{background:linear-gradient(135deg,#f4f8fc,#eaf3ff);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+ .cfd b{color:var(--navy)}
  .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+ @media(max-width:640px){ul.refs{columns:1}}
 </style></head><body>
-<h1>Tank sloshing &mdash; resonance explorer</h1>
-<p class="sub">Analytical sloshing screen for an LNG-scale cargo/storage tank. Drag the fill level to read
-the fundamental sloshing period (prismatic and cylindrical, linear potential theory) and the API&nbsp;650
-Annex&nbsp;E convective period, and watch them move against the vessel roll-period band. As fill drops the
-sloshing period lengthens and sweeps <i>into</i> the vessel-motion band &mdash; the coupling external
-diffraction (AQWA/OrcaWave) does not capture. Every point is a live engine evaluation.</p>
-<div class="spec" id="spec"></div>
+<h1>Tank sloshing &mdash; natural-period &amp; resonance explorer</h1>
+<p class="sub">The fundamental sloshing natural period of a partially filled tank, from validated analytical
+theory across tank shapes. The <b>normalized master curve</b> collapses every size onto one dimensionless
+family; pick a shape to read real periods; and see how partial fill sweeps a tank into resonance with vessel
+roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture. Every value is a live
+<code>hydrodynamics.sloshing</code> evaluation.</p>
 
 <div class="panel">
+  <span class="tag">Normalized master curve</span>
+  <h2>Dimensionless sloshing frequency &Omega;&#8321; = &omega;&#8321;&radic;(L<sub>c</sub>/g) vs fill / slenderness ratio h/L<sub>c</sub></h2>
+  <p class="sub" style="margin:0 0 8px">Any tank of a given shape &mdash; any size &mdash; lies on its curve. Read &Omega;&#8321; off the
+  curve at your fill ratio, then the real period is <b>T = 2&pi;&radic;(L<sub>c</sub>/g) / &Omega;&#8321;</b>. Deep-liquid asymptotes:
+  rectangular &radic;&pi;&nbsp;=&nbsp;1.77, upright cylinder &radic;1.841&nbsp;=&nbsp;1.36 (&times;&radic;2 on a diameter basis).</p>
+  <svg id="chart" viewBox="0 0 720 380" role="img" aria-label="Normalized sloshing frequency curves"></svg>
+  <div class="legend" id="legend"></div>
+  <p class="fnote">Horizontal-cylinder and elliptical curves use the equivalent-rectangle method (good to ~10&ndash;15% at mid
+  fill; near-full and violent cases are where a VOF free-surface CFD run takes over).</p>
+</div>
+
+<div class="panel">
+  <span class="tag">Shape lookup</span>
+  <h2>Real natural period for a specific tank</h2>
+  <div class="ctrl">
+    <label for="shape">Tank shape</label>
+    <select id="shape"></select>
+    <label for="span" id="spanlab">Size (m)</label>
+    <input type="number" id="span" step="0.1" min="0.1" style="width:92px">
+  </div>
+  <div class="formula" id="formula"></div>
+  <div class="reads">
+    <div class="read">Fundamental period (½ full)<b id="rT">&mdash;</b></div>
+    <div class="read">Characteristic length L<sub>c</sub><b id="rLc" style="font-size:14px">&mdash;</b></div>
+    <div class="read">Aspect / fill ratio<b id="rRatio" style="font-size:14px">&mdash;</b></div>
+  </div>
+  <table><thead><tr><th>Fill fraction</th><th>Fundamental period T&#8321; (s)</th></tr></thead>
+    <tbody id="lookrows"></tbody></table>
+  <p class="fnote" id="shapenote"></p>
+</div>
+
+<div class="panel">
+  <span class="tag">Resonance screen &mdash; marine coupling</span>
+  <h2>Partial-fill sloshing vs vessel roll (the ballast-tank / anti-roll case)</h2>
   <div class="ctrl">
     <label for="h">Fill level</label>
     <input type="range" id="h" min="0" max="0" step="1">
     <span class="wval" id="hval"></span>
   </div>
   <div class="reads">
-    <div class="read">Prismatic T&#8321<b id="rR">&mdash;</b></div>
-    <div class="read">Cylindrical T&#8321<b id="rC">&mdash;</b></div>
-    <div class="read">API 650 Tc<b id="rT" style="color:#b8860b">&mdash;</b></div>
-    <div class="read">Vessel roll<b id="rV" style="color:var(--roll)">&mdash;</b></div>
+    <div class="read">Cylindrical T&#8321;<b id="cT">&mdash;</b></div>
+    <div class="read">Vessel roll<b id="cV" style="color:var(--roll)">&mdash;</b></div>
   </div>
-  <div class="scale"><div class="band" id="band"></div>
-    <div class="tick rect" id="trect"><span style="color:var(--navy)">prism</span></div>
-    <div class="tick cyl" id="tcyl"><span style="color:var(--teal)">cyl</span></div>
-    <div class="tick tc" id="ttc"><span style="color:#b8860b">Tc</span></div></div>
+  <div class="scale"><div class="band" id="band"></div><div class="tick" id="ctick"><span>tank</span></div></div>
   <div class="scalelab"><span>4 s</span><span>8</span><span>12</span><span>16</span><span>20 s</span></div>
-  <div id="flag"></div>
-  <div class="cap">Shaded = vessel roll resonance band (&plusmn;<i id="tolpct"></i> of the roll period). When a
-  tank period enters the band, partial-fill sloshing can couple with vessel motion &mdash; the case that warrants
-  a VOF free-surface CFD check.</div>
+  <div id="cflag"></div>
+  <div class="cfd" style="margin-top:14px">
+    <b>Where CFD takes over.</b> Analytical periods and the class-simplified screen above close most of a scope.
+    Violent / high-fill / impact cases &mdash; and the coupled roll response of partially filled ballast tanks used as
+    tuned/anti-roll tanks &mdash; are resolved with VOF free-surface CFD (OpenFOAM), feeding a reduced response back into
+    the vessel roll time-domain model. This is the tiering behind the ACMA / Noble ballast-tank sloshing study.
+  </div>
+</div>
+
+<div class="panel">
+  <span class="tag">Worldwide relationship basis</span>
+  <h2>References</h2>
+  <ul class="refs" id="refs"></ul>
 </div>
 
 <p class="foot">Built by <code>scripts/capabilities/build_sloshing_explorer.py</code> from
-<code>src/digitalmodel/hydrodynamics/sloshing.py</code>. Regenerate to refresh.
+<code>src/digitalmodel/hydrodynamics/sloshing.py</code>.
 &mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/hydrodynamics/sloshing.py">engine source &rarr;</a></p>
 
 <script>
-const DATA = {"meta":{"rect_l":40.0,"cyl_d":40.0,"tank_h":26.0,"roll_t":12.0,"tol":0.15,"band_lo":10.2,"band_hi":13.8,"standard":"Faltinsen linear potential theory + API 650 Annex E"},"series":[{"h":2.0,"fillpct":8,"rect":18.14,"cyl":15.5,"tc":15.43,"resonant":false},{"h":2.5,"fillpct":10,"rect":16.26,"cyl":13.9,"tc":13.84,"resonant":false},{"h":3.0,"fillpct":12,"rect":14.88,"cyl":12.74,"tc":12.68,"resonant":true},{"h":3.5,"fillpct":13,"rect":13.83,"cyl":11.85,"tc":11.79,"resonant":true},{"h":4.0,"fillpct":15,"rect":12.98,"cyl":11.14,"tc":11.09,"resonant":true},{"h":4.5,"fillpct":17,"rect":12.29,"cyl":10.56,"tc":10.51,"resonant":true},{"h":5.0,"fillpct":19,"rect":11.71,"cyl":10.08,"tc":10.03,"resonant":true},{"h":5.5,"fillpct":21,"rect":11.22,"cyl":9.68,"tc":9.63,"resonant":true},{"h":6.0,"fillpct":23,"rect":10.8,"cyl":9.33,"tc":9.29,"resonant":true},{"h":6.5,"fillpct":25,"rect":10.44,"cyl":9.03,"tc":8.99,"resonant":true},{"h":7.0,"fillpct":27,"rect":10.12,"cyl":8.78,"tc":8.73,"resonant":false},{"h":7.5,"fillpct":29,"rect":9.84,"cyl":8.55,"tc":8.51,"resonant":false},{"h":8.0,"fillpct":31,"rect":9.59,"cyl":8.35,"tc":8.31,"resonant":false},{"h":8.5,"fillpct":33,"rect":9.37,"cyl":8.18,"tc":8.14,"resonant":false},{"h":9.0,"fillpct":35,"rect":9.18,"cyl":8.02,"tc":7.98,"resonant":false},{"h":9.5,"fillpct":37,"rect":9.0,"cyl":7.88,"tc":7.85,"resonant":false},{"h":10.0,"fillpct":38,"rect":8.84,"cyl":7.76,"tc":7.72,"resonant":false},{"h":10.5,"fillpct":40,"rect":8.7,"cyl":7.65,"tc":7.61,"resonant":false},{"h":11.0,"fillpct":42,"rect":8.57,"cyl":7.55,"tc":7.52,"resonant":false},{"h":11.5,"fillpct":44,"rect":8.45,"cyl":7.46,"tc":7.43,"resonant":false},{"h":12.0,"fillpct":46,"rect":8.34,"cyl":7.38,"tc":7.35,"resonant":false},{"h":12.5,"fillpct":48,"rect":8.25,"cyl":7.31,"tc":7.28,"resonant":false},{"h":13.0,"fillpct":50,"rect":8.16,"cyl":7.25,"tc":7.21,"resonant":false},{"h":13.5,"fillpct":52,"rect":8.08,"cyl":7.19,"tc":7.15,"resonant":false},{"h":14.0,"fillpct":54,"rect":8.0,"cyl":7.14,"tc":7.1,"resonant":false},{"h":14.5,"fillpct":56,"rect":7.94,"cyl":7.09,"tc":7.05,"resonant":false},{"h":15.0,"fillpct":58,"rect":7.87,"cyl":7.04,"tc":7.01,"resonant":false},{"h":15.5,"fillpct":60,"rect":7.82,"cyl":7.01,"tc":6.97,"resonant":false},{"h":16.0,"fillpct":62,"rect":7.76,"cyl":6.97,"tc":6.94,"resonant":false},{"h":16.5,"fillpct":63,"rect":7.72,"cyl":6.94,"tc":6.9,"resonant":false},{"h":17.0,"fillpct":65,"rect":7.67,"cyl":6.91,"tc":6.87,"resonant":false},{"h":17.5,"fillpct":67,"rect":7.63,"cyl":6.88,"tc":6.85,"resonant":false},{"h":18.0,"fillpct":69,"rect":7.6,"cyl":6.86,"tc":6.82,"resonant":false},{"h":18.5,"fillpct":71,"rect":7.56,"cyl":6.84,"tc":6.8,"resonant":false},{"h":19.0,"fillpct":73,"rect":7.53,"cyl":6.82,"tc":6.78,"resonant":false},{"h":19.5,"fillpct":75,"rect":7.5,"cyl":6.8,"tc":6.76,"resonant":false},{"h":20.0,"fillpct":77,"rect":7.48,"cyl":6.78,"tc":6.75,"resonant":false},{"h":20.5,"fillpct":79,"rect":7.45,"cyl":6.77,"tc":6.73,"resonant":false},{"h":21.0,"fillpct":81,"rect":7.43,"cyl":6.75,"tc":6.72,"resonant":false},{"h":21.5,"fillpct":83,"rect":7.41,"cyl":6.74,"tc":6.71,"resonant":false},{"h":22.0,"fillpct":85,"rect":7.39,"cyl":6.73,"tc":6.7,"resonant":false},{"h":22.5,"fillpct":87,"rect":7.37,"cyl":6.72,"tc":6.69,"resonant":false},{"h":23.0,"fillpct":88,"rect":7.36,"cyl":6.71,"tc":6.68,"resonant":false},{"h":23.5,"fillpct":90,"rect":7.34,"cyl":6.7,"tc":6.67,"resonant":false},{"h":24.0,"fillpct":92,"rect":7.33,"cyl":6.69,"tc":6.66,"resonant":false},{"h":24.5,"fillpct":94,"rect":7.31,"cyl":6.69,"tc":6.65,"resonant":false},{"h":25.0,"fillpct":96,"rect":7.3,"cyl":6.68,"tc":6.65,"resonant":false},{"h":25.5,"fillpct":98,"rect":7.29,"cyl":6.67,"tc":6.64,"resonant":false},{"h":26.0,"fillpct":100,"rect":7.28,"cyl":6.67,"tc":6.64,"resonant":false}]};
-const M = DATA.meta, S = DATA.series, LO = 4.0, HI = 20.0;
-const pos = v => Math.max(0, Math.min((v-LO)/(HI-LO)*100, 100));
-const spec = document.getElementById('spec');
-spec.innerHTML = [['Method', M.standard], ['Prismatic L', M.rect_l+' m'],
-  ['Cylindrical D', M.cyl_d+' m'], ['Tank height', M.tank_h+' m'],
-  ['Vessel roll', M.roll_t+' s']]
-  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
-document.getElementById('tolpct').textContent = Math.round(M.tol*100)+'%';
-document.getElementById('rV').textContent = M.roll_t.toFixed(1)+' s';
-const band = document.getElementById('band');
-band.style.left = pos(M.band_lo)+'%';
-band.style.width = (pos(M.band_hi)-pos(M.band_lo))+'%';
-const slider = document.getElementById('h');
-slider.max = S.length-1;
+const DATA = {"meta":{"g":9.80665,"roll_t":12.0,"tol":0.15,"band_lo":10.2,"band_hi":13.8,"cyl_d":40.0,"tank_h":26.0},"shapes":[{"key":"rectangular","label":"Rectangular / prismatic","lc":"L (length in the excitation direction)","formula":"omega_1^2 = (pi g / L) tanh(pi h / L)","ratio":"h / L (depth / length)","deep":1.7725,"note":"LNG membrane, seismic storage, ship cargo tanks. Exact linear potential theory.","default":{"span":40.0,"fill_ratio":0.5,"span_label":"Length L (m)"},"curve":[[0.05,0.6996],[0.1,0.9776],[0.15,1.1746],[0.2,1.3227],[0.25,1.4354],[0.3,1.521],[0.35,1.5857],[0.4,1.6343],[0.45,1.6705],[0.5,1.6974],[0.55,1.7174],[0.6,1.7321],[0.65,1.7429],[0.7,1.7508],[0.75,1.7566],[0.8,1.7609],[0.85,1.764],[0.9,1.7663],[0.95,1.7679],[1.0,1.7691],[1.05,1.77],[1.1,1.7707],[1.15,1.7712],[1.2,1.7715],[1.25,1.7718],[1.3,1.772],[1.35,1.7721],[1.4,1.7722],[1.45,1.7723],[1.5,1.7723]],"lookup":[{"f":0.2,"T":9.59},{"f":0.3,"T":8.34},{"f":0.4,"T":7.76},{"f":0.5,"T":7.48},{"f":0.6,"T":7.33},{"f":0.7,"T":7.25},{"f":0.8,"T":7.21}]},{"key":"upright-cylinder","label":"Upright cylinder (vertical axis)","lc":"D (diameter)","formula":"omega_1^2 = (1.841 g / R) tanh(1.841 h / R)","ratio":"h / D (depth / diameter)","deep":1.9187,"note":"Storage tanks, spar/CALM, spherical-limit. First J1' root 1.841. API 650 Annex E convective.","default":{"span":40.0,"fill_ratio":0.5,"span_label":"Diameter D (m)"},"curve":[[0.05,0.8188],[0.1,1.1392],[0.15,1.36],[0.2,1.5195],[0.25,1.6353],[0.3,1.7187],[0.35,1.7783],[0.4,1.8206],[0.45,1.8504],[0.5,1.8713],[0.55,1.8858],[0.6,1.896],[0.65,1.903],[0.7,1.9079],[0.75,1.9113],[0.8,1.9137],[0.85,1.9153],[0.9,1.9164],[0.95,1.9172],[1.0,1.9177],[1.05,1.9181],[1.1,1.9184],[1.15,1.9185],[1.2,1.9187],[1.25,1.9188],[1.3,1.9188],[1.35,1.9189],[1.4,1.9189],[1.45,1.9189],[1.5,1.9189]],"lookup":[{"f":0.2,"T":8.35},{"f":0.3,"T":7.38},{"f":0.4,"T":6.97},{"f":0.5,"T":6.78},{"f":0.6,"T":6.69},{"f":0.7,"T":6.65},{"f":0.8,"T":6.63}]},{"key":"horizontal-cylinder","label":"Horizontal cylinder (road tanker)","lc":"D (diameter)","formula":"equivalent rectangle: omega_1^2 = g (pi / b_s) tanh(pi h_eq / b_s)","ratio":"fill fraction F = h / D","deep":null,"note":"Road tankers, rail tank cars, IMO Type-C. Equivalent-rectangle; best at mid fill.","default":{"span":2.4,"fill_ratio":0.5,"span_label":"Diameter D (m)"},"curve":[[0.05,1.31],[0.1,1.3388],[0.15,1.369],[0.2,1.4008],[0.25,1.4342],[0.3,1.4693],[0.35,1.5062],[0.4,1.5448],[0.45,1.5854],[0.5,1.628],[0.55,1.6729],[0.6,1.7205],[0.65,1.7718],[0.7,1.8287],[0.75,1.8951]],"lookup":[{"f":0.2,"T":2.22},{"f":0.3,"T":2.12},{"f":0.4,"T":2.01},{"f":0.5,"T":1.91},{"f":0.6,"T":1.81},{"f":0.7,"T":1.7},{"f":0.8,"T":1.57}]},{"key":"elliptical","label":"Elliptical / obround (fuel tanker)","lc":"W (cross-section width)","formula":"equivalent rectangle on the oval cross-section (a, b_s, h_eq)","ratio":"fill fraction F (at width/height = 1.5)","deep":null,"note":"Highway cargo tanks & automotive fuel tanks (wider than tall). Equivalent-rectangle.","default":{"span":2.0,"fill_ratio":0.5,"span_label":"Width W (m), height = W/1.5"},"curve":[[0.0333,1.0753],[0.0667,1.1055],[0.1,1.138],[0.1333,1.1731],[0.1667,1.2111],[0.2,1.2522],[0.2333,1.297],[0.2667,1.3459],[0.3,1.3993],[0.3333,1.4577],[0.3667,1.5219],[0.4,1.5923],[0.4333,1.6697],[0.4667,1.7549],[0.5,1.8495]],"lookup":[{"f":0.2,"T":2.42},{"f":0.3,"T":2.27},{"f":0.4,"T":2.11},{"f":0.5,"T":1.95},{"f":0.6,"T":1.78},{"f":0.7,"T":1.62},{"f":0.8,"T":1.45}]}],"resonance":[{"h":2.0,"fillpct":8,"cyl":15.5,"resonant":false},{"h":2.5,"fillpct":10,"cyl":13.9,"resonant":false},{"h":3.0,"fillpct":12,"cyl":12.74,"resonant":true},{"h":3.5,"fillpct":13,"cyl":11.85,"resonant":true},{"h":4.0,"fillpct":15,"cyl":11.14,"resonant":true},{"h":4.5,"fillpct":17,"cyl":10.56,"resonant":true},{"h":5.0,"fillpct":19,"cyl":10.08,"resonant":false},{"h":5.5,"fillpct":21,"cyl":9.68,"resonant":false},{"h":6.0,"fillpct":23,"cyl":9.33,"resonant":false},{"h":6.5,"fillpct":25,"cyl":9.03,"resonant":false},{"h":7.0,"fillpct":27,"cyl":8.78,"resonant":false},{"h":7.5,"fillpct":29,"cyl":8.55,"resonant":false},{"h":8.0,"fillpct":31,"cyl":8.35,"resonant":false},{"h":8.5,"fillpct":33,"cyl":8.18,"resonant":false},{"h":9.0,"fillpct":35,"cyl":8.02,"resonant":false},{"h":9.5,"fillpct":37,"cyl":7.88,"resonant":false},{"h":10.0,"fillpct":38,"cyl":7.76,"resonant":false},{"h":10.5,"fillpct":40,"cyl":7.65,"resonant":false},{"h":11.0,"fillpct":42,"cyl":7.55,"resonant":false},{"h":11.5,"fillpct":44,"cyl":7.46,"resonant":false},{"h":12.0,"fillpct":46,"cyl":7.38,"resonant":false},{"h":12.5,"fillpct":48,"cyl":7.31,"resonant":false},{"h":13.0,"fillpct":50,"cyl":7.25,"resonant":false},{"h":13.5,"fillpct":52,"cyl":7.19,"resonant":false},{"h":14.0,"fillpct":54,"cyl":7.14,"resonant":false},{"h":14.5,"fillpct":56,"cyl":7.09,"resonant":false},{"h":15.0,"fillpct":58,"cyl":7.04,"resonant":false},{"h":15.5,"fillpct":60,"cyl":7.01,"resonant":false},{"h":16.0,"fillpct":62,"cyl":6.97,"resonant":false},{"h":16.5,"fillpct":63,"cyl":6.94,"resonant":false},{"h":17.0,"fillpct":65,"cyl":6.91,"resonant":false},{"h":17.5,"fillpct":67,"cyl":6.88,"resonant":false},{"h":18.0,"fillpct":69,"cyl":6.86,"resonant":false},{"h":18.5,"fillpct":71,"cyl":6.84,"resonant":false},{"h":19.0,"fillpct":73,"cyl":6.82,"resonant":false},{"h":19.5,"fillpct":75,"cyl":6.8,"resonant":false},{"h":20.0,"fillpct":77,"cyl":6.78,"resonant":false},{"h":20.5,"fillpct":79,"cyl":6.77,"resonant":false},{"h":21.0,"fillpct":81,"cyl":6.75,"resonant":false},{"h":21.5,"fillpct":83,"cyl":6.74,"resonant":false},{"h":22.0,"fillpct":85,"cyl":6.73,"resonant":false},{"h":22.5,"fillpct":87,"cyl":6.72,"resonant":false},{"h":23.0,"fillpct":88,"cyl":6.71,"resonant":false},{"h":23.5,"fillpct":90,"cyl":6.7,"resonant":false},{"h":24.0,"fillpct":92,"cyl":6.69,"resonant":false},{"h":24.5,"fillpct":94,"cyl":6.69,"resonant":false},{"h":25.0,"fillpct":96,"cyl":6.68,"resonant":false},{"h":25.5,"fillpct":98,"cyl":6.67,"resonant":false},{"h":26.0,"fillpct":100,"cyl":6.67,"resonant":false}],"references":["Abramson, NASA SP-106 (1966) \u2014 The Dynamic Behavior of Liquids in Moving Containers","Ibrahim, Liquid Sloshing Dynamics (Cambridge, 2005)","Faltinsen & Timokha, Sloshing (Cambridge, 2009)","Dodge, New Dynamic Behavior of Liquids in Moving Containers (SwRI, 2000)","McIver (1989), J. Fluid Mech. 201 \u2014 cylindrical & spherical containers, arbitrary depth","Budiansky (1960) \u2014 sloshing in circular canals and spherical tanks","Evans & McIver (1987), J. Fluid Mech. \u2014 resonant frequencies with a vertical baffle","Housner (1963); API 650 Annex E; Malhotra-Wenk-Wieland (2000); Eurocode 8 Part 4 \u2014 seismic tanks","Bosch & Vugts (1966) \u2014 roll damping by free-surface anti-roll tanks","Ervin, Barnes & Wolfe, UMTRI-85-35 / FHWA (1985) \u2014 cargo-tank-truck stability & rollover","Rajagounder et al. (2016), Engineering Journal 20(1) \u2014 automotive fuel-tank sloshing (VOF + baffles)","Micheli et al. (2022), J. Applied Fluid Mechanics 15(2) \u2014 spray-tanker sloshing under braking"]};
+const G = DATA.meta.g, COL = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
 
-function render(){
-  const p = S[+slider.value];
-  document.getElementById('hval').textContent = p.h.toFixed(1)+' m ('+p.fillpct+'%)';
-  document.getElementById('rR').textContent = p.rect.toFixed(2)+' s';
-  document.getElementById('rC').textContent = p.cyl.toFixed(2)+' s';
-  document.getElementById('rT').textContent = p.tc.toFixed(2)+' s';
-  document.getElementById('trect').style.left = pos(p.rect)+'%';
-  document.getElementById('tcyl').style.left = pos(p.cyl)+'%';
-  document.getElementById('ttc').style.left = pos(p.tc)+'%';
-  const f = document.getElementById('flag');
-  if(p.resonant){ f.className='flag bad'; f.textContent='⚠ Resonance risk — a tank period is within the roll band → CFD check warranted'; }
-  else { f.className='flag ok'; f.textContent='✓ No resonance — tank periods clear of the roll band'; }
+/* ---------- master chart ---------- */
+const XW=720,YH=380,ML=54,MR=16,MT=14,MB=42, XMAX=1.5, YMAX=2.0;
+const px=x=>ML+(x/XMAX)*(XW-ML-MR), py=y=>YH-MB-(y/YMAX)*(YH-MT-MB);
+const on = DATA.shapes.map(()=>true);
+function drawChart(sel){
+  let g='';
+  // grid + axes
+  for(let gx=0;gx<=1.5;gx+=0.25){g+=`<line x1="${px(gx)}" y1="${py(0)}" x2="${px(gx)}" y2="${py(YMAX)}" stroke="var(--line)"/>`+
+    `<text x="${px(gx)}" y="${py(0)+16}" fill="var(--muted)" font-size="10" text-anchor="middle">${gx}</text>`;}
+  for(let gy=0;gy<=2;gy+=0.5){g+=`<line x1="${px(0)}" y1="${py(gy)}" x2="${px(XMAX)}" y2="${py(gy)}" stroke="var(--line)"/>`+
+    `<text x="${px(0)-8}" y="${py(gy)+3}" fill="var(--muted)" font-size="10" text-anchor="end">${gy.toFixed(1)}</text>`;}
+  g+=`<text x="${(ML+XW-MR)/2}" y="${YH-6}" fill="var(--muted)" font-size="11" text-anchor="middle">fill / slenderness ratio  h / Lc</text>`;
+  g+=`<text transform="translate(14,${(YH-MB+MT)/2}) rotate(-90)" fill="var(--muted)" font-size="11" text-anchor="middle">Ω₁ = ω₁√(Lc/g)</text>`;
+  DATA.shapes.forEach((sh,i)=>{
+    if(!on[i]) return;
+    const d = sh.curve.map((p,j)=>`${j?'L':'M'}${px(p[0]).toFixed(1)} ${py(p[1]).toFixed(1)}`).join(' ');
+    const w = (i===sel)?3.2:1.8, o=(sel<0||i===sel)?1:0.5;
+    g+=`<path d="${d}" fill="none" stroke="${COL[i]}" stroke-width="${w}" opacity="${o}"/>`;
+  });
+  document.getElementById('chart').innerHTML=g;
 }
-let start = S.findIndex(p=>p.fillpct>=95); if(start<0) start = S.length-1;
-slider.value = start; render();
-slider.addEventListener('input', render);
+function drawLegend(sel){
+  document.getElementById('legend').innerHTML = DATA.shapes.map((sh,i)=>
+    `<span data-i="${i}" class="${on[i]?'':'off'}"><i style="background:${COL[i]}"></i>${sh.label}</span>`).join('');
+  document.querySelectorAll('#legend span').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.i; on[i]=!on[i]; drawLegend(sel); drawChart(sel);});
+}
+
+/* ---------- shape lookup ---------- */
+const sel = document.getElementById('shape');
+DATA.shapes.forEach((sh,i)=>{const o=document.createElement('option');o.value=i;o.textContent=sh.label;sel.appendChild(o);});
+const spanEl=document.getElementById('span');
+function renderShape(){
+  const i=+sel.value, sh=DATA.shapes[i];
+  document.getElementById('spanlab').textContent=sh.default.span_label;
+  if(document.activeElement!==spanEl) spanEl.value=sh.default.span;
+  const scale=Math.sqrt((+spanEl.value||sh.default.span)/sh.default.span);
+  document.getElementById('formula').textContent=sh.formula;
+  document.getElementById('rLc').textContent=sh.lc;
+  document.getElementById('rRatio').textContent=sh.ratio;
+  const half=sh.lookup.find(r=>r.f===0.5);
+  document.getElementById('rT').textContent=(half.T*scale).toFixed(2)+' s';
+  document.getElementById('lookrows').innerHTML=sh.lookup.map(r=>
+    `<tr><td>${Math.round(r.f*100)}%</td><td class="mono">${(r.T*scale).toFixed(2)}</td></tr>`).join('');
+  document.getElementById('shapenote').textContent=sh.note;
+  drawChart(i); drawLegend(i);
+}
+sel.onchange=renderShape; spanEl.oninput=renderShape;
+
+/* ---------- resonance screen ---------- */
+const M=DATA.meta, S=DATA.resonance, LO=4,HI=20, pos=v=>Math.max(0,Math.min((v-LO)/(HI-LO)*100,100));
+const band=document.getElementById('band');
+band.style.left=pos(M.band_lo)+'%'; band.style.width=(pos(M.band_hi)-pos(M.band_lo))+'%';
+document.getElementById('cV').textContent=M.roll_t.toFixed(1)+' s';
+const hs=document.getElementById('h'); hs.max=S.length-1;
+function renderRes(){
+  const p=S[+hs.value];
+  document.getElementById('hval').textContent=p.h.toFixed(1)+' m ('+p.fillpct+'%)';
+  document.getElementById('cT').textContent=p.cyl.toFixed(2)+' s';
+  document.getElementById('ctick').style.left=pos(p.cyl)+'%';
+  const f=document.getElementById('cflag');
+  if(p.resonant){f.className='flag bad';f.textContent='⚠ Resonance risk — tank period within the roll band → CFD check warranted';}
+  else{f.className='flag ok';f.textContent='✓ No resonance — tank period clear of the roll band';}
+}
+let st=S.findIndex(p=>p.fillpct>=95); hs.value=st<0?S.length-1:st; renderRes();
+hs.addEventListener('input',renderRes);
+
+document.getElementById('refs').innerHTML=DATA.references.map(r=>`<li>${r}</li>`).join('');
+renderShape();
 </script>
 </body></html>

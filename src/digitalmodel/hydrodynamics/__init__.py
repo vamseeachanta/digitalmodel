@@ -27,6 +27,8 @@ from .seakeeping import (
 from .sloshing import (
     rectangular_tank_periods,
     cylindrical_tank_periods,
+    horizontal_cylinder_periods,
+    oval_tank_periods,
     api650_convective_period,
     resonance_check,
     screen_tank,
@@ -57,6 +59,8 @@ __all__ = [
     "operability_analysis",
     "rectangular_tank_periods",
     "cylindrical_tank_periods",
+    "horizontal_cylinder_periods",
+    "oval_tank_periods",
     "api650_convective_period",
     "resonance_check",
     "screen_tank",
