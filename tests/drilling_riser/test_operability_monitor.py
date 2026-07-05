@@ -179,6 +179,9 @@ _ALLOWED_POINT_KEYS = {
     "measured_angle_deg", "predicted_angle_deg", "corrected_angle_deg", "decision_angle_deg",
     "wh_moment_knm", "r_watch_m", "watch_frac", "time_to_limit_s", "lead_time_margin_s",
     "point_of_disconnect_m", "drift_status",
+    # twin E #1377: the rolled verdict (label) + physics lead time (seconds) — a label
+    # and a time, no absolute force / mass / capacity.
+    "go_no_go", "lead_time_s",
 }
 _FORBIDDEN = ("provenance", "validation", "source_sha256", "SOURCE_FILES", "samples",
               "m_eff", "thrust_efficiency", "environmental_force", "f_env_n", "f_net_n",

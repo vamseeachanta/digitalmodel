@@ -20,17 +20,21 @@ from digitalmodel.marine_ops.installation.go_no_go import (
     _check_criterion,
 )
 
+# The classifier + lead-time mechanics moved to the shared spine (#1377) so the
+# drilling-riser twin loop and this motion loop share ONE copy. Re-exported here so
+# ``decision._classify`` / ``decision._first_crossing`` / ``decision.DISPLAY_LABEL``
+# keep resolving for existing consumers (e.g. ``motion_forecast.reconcile``).
+from digitalmodel.decision_spine import (  # noqa: F401
+    DISPLAY_LABEL,
+    _classify,
+    _first_crossing,
+)
+
 from .criteria import Criterion
 from .derived import compute_governing
 from .models import MotionForecast
 
 Offset = Tuple[float, float, float]
-
-DISPLAY_LABEL = {
-    DecisionState.GO: "GO",
-    DecisionState.MARGINAL: "CAUTION",
-    DecisionState.NO_GO: "NO-GO",
-}
 
 
 @dataclass
@@ -54,33 +58,6 @@ class RollingDecision:
     @property
     def display(self) -> str:
         return DISPLAY_LABEL[self.state]
-
-
-def _first_crossing(t: np.ndarray, v: np.ndarray, level: float, now: float) -> Optional[float]:
-    """Lead time (s) to the first sample with ``v > level`` (strict), else None.
-
-    Strict ``>`` keeps this consistent with :func:`_classify` and the reused
-    ``go_no_go._check_criterion`` band (``value == limit`` is still MARGINAL, so
-    it must not register as a NO-GO crossing).
-    """
-    mask = v > level
-    if not mask.any():
-        return None
-    return float(t[int(np.argmax(mask))] - now)
-
-
-def _classify(value: float, caution: float, limit: float) -> DecisionState:
-    """Classify a governing value, matching ``_check_criterion`` boundaries.
-
-    ``value > limit`` -> NO_GO (FAIL); ``value > caution`` -> MARGINAL (WARNING);
-    else GO (PASS). NaN is unsafe -> NO_GO (fail-closed)."""
-    if not np.isfinite(value):
-        return DecisionState.NO_GO
-    if value > limit:
-        return DecisionState.NO_GO
-    if value > caution:
-        return DecisionState.MARGINAL
-    return DecisionState.GO
 
 
 def rolling_decision(
