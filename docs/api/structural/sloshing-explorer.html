@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tank sloshing resonance explorer — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
+       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--roll:#7c3aed}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
+      color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
+ h1{font-size:23px;color:var(--navy);letter-spacing:-.3px}
+ .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;max-width:820px}
+ .spec{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+ .spec span{font-size:12px;font-weight:600;color:var(--muted);background:#fff;
+            border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+ .spec b{color:var(--navy)}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+ .ctrl label{font-weight:700;color:var(--navy);font-size:13.5px}
+ input[type=range]{flex:1;min-width:220px;accent-color:var(--teal)}
+ .wval{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--teal);font-size:16px;min-width:120px}
+ .reads{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0}
+ .read{font-size:13px;color:var(--muted)}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;color:var(--navy)}
+ .scale{position:relative;height:44px;margin:22px 0 4px;border-radius:9px;overflow:hidden;
+        background:#f4f8fc;border:1px solid var(--line)}
+ .band{position:absolute;top:0;bottom:0;background:rgba(124,58,237,.15);border-left:2px solid var(--roll);border-right:2px solid var(--roll)}
+ .tick{position:absolute;top:-4px;bottom:-4px;width:2px}
+ .tick.rect{background:var(--navy)} .tick.cyl{background:var(--teal)} .tick.tc{background:#b8860b}
+ .tick span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;white-space:nowrap}
+ .scalelab{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
+ .flag{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:4px 12px;margin-top:12px}
+ .flag.ok{background:#e6f5ec;color:var(--ok)} .flag.bad{background:#fdecea;color:var(--bad)}
+ .cap{font-size:12px;color:var(--muted);margin-top:12px}
+ .cap i{font-style:normal;font-weight:700}
+ .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+</style></head><body>
+<h1>Tank sloshing &mdash; resonance explorer</h1>
+<p class="sub">Analytical sloshing screen for an LNG-scale cargo/storage tank. Drag the fill level to read
+the fundamental sloshing period (prismatic and cylindrical, linear potential theory) and the API&nbsp;650
+Annex&nbsp;E convective period, and watch them move against the vessel roll-period band. As fill drops the
+sloshing period lengthens and sweeps <i>into</i> the vessel-motion band &mdash; the coupling external
+diffraction (AQWA/OrcaWave) does not capture. Every point is a live engine evaluation.</p>
+<div class="spec" id="spec"></div>
+
+<div class="panel">
+  <div class="ctrl">
+    <label for="h">Fill level</label>
+    <input type="range" id="h" min="0" max="0" step="1">
+    <span class="wval" id="hval"></span>
+  </div>
+  <div class="reads">
+    <div class="read">Prismatic T&#8321<b id="rR">&mdash;</b></div>
+    <div class="read">Cylindrical T&#8321<b id="rC">&mdash;</b></div>
+    <div class="read">API 650 Tc<b id="rT" style="color:#b8860b">&mdash;</b></div>
+    <div class="read">Vessel roll<b id="rV" style="color:var(--roll)">&mdash;</b></div>
+  </div>
+  <div class="scale"><div class="band" id="band"></div>
+    <div class="tick rect" id="trect"><span style="color:var(--navy)">prism</span></div>
+    <div class="tick cyl" id="tcyl"><span style="color:var(--teal)">cyl</span></div>
+    <div class="tick tc" id="ttc"><span style="color:#b8860b">Tc</span></div></div>
+  <div class="scalelab"><span>4 s</span><span>8</span><span>12</span><span>16</span><span>20 s</span></div>
+  <div id="flag"></div>
+  <div class="cap">Shaded = vessel roll resonance band (&plusmn;<i id="tolpct"></i> of the roll period). When a
+  tank period enters the band, partial-fill sloshing can couple with vessel motion &mdash; the case that warrants
+  a VOF free-surface CFD check.</div>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_sloshing_explorer.py</code> from
+<code>src/digitalmodel/hydrodynamics/sloshing.py</code>. Regenerate to refresh.
+&mdash; <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/hydrodynamics/sloshing.py">engine source &rarr;</a></p>
+
+<script>
+const DATA = {"meta":{"rect_l":40.0,"cyl_d":40.0,"tank_h":26.0,"roll_t":12.0,"tol":0.15,"band_lo":10.2,"band_hi":13.8,"standard":"Faltinsen linear potential theory + API 650 Annex E"},"series":[{"h":2.0,"fillpct":8,"rect":18.14,"cyl":15.5,"tc":15.43,"resonant":false},{"h":2.5,"fillpct":10,"rect":16.26,"cyl":13.9,"tc":13.84,"resonant":false},{"h":3.0,"fillpct":12,"rect":14.88,"cyl":12.74,"tc":12.68,"resonant":true},{"h":3.5,"fillpct":13,"rect":13.83,"cyl":11.85,"tc":11.79,"resonant":true},{"h":4.0,"fillpct":15,"rect":12.98,"cyl":11.14,"tc":11.09,"resonant":true},{"h":4.5,"fillpct":17,"rect":12.29,"cyl":10.56,"tc":10.51,"resonant":true},{"h":5.0,"fillpct":19,"rect":11.71,"cyl":10.08,"tc":10.03,"resonant":true},{"h":5.5,"fillpct":21,"rect":11.22,"cyl":9.68,"tc":9.63,"resonant":true},{"h":6.0,"fillpct":23,"rect":10.8,"cyl":9.33,"tc":9.29,"resonant":true},{"h":6.5,"fillpct":25,"rect":10.44,"cyl":9.03,"tc":8.99,"resonant":true},{"h":7.0,"fillpct":27,"rect":10.12,"cyl":8.78,"tc":8.73,"resonant":false},{"h":7.5,"fillpct":29,"rect":9.84,"cyl":8.55,"tc":8.51,"resonant":false},{"h":8.0,"fillpct":31,"rect":9.59,"cyl":8.35,"tc":8.31,"resonant":false},{"h":8.5,"fillpct":33,"rect":9.37,"cyl":8.18,"tc":8.14,"resonant":false},{"h":9.0,"fillpct":35,"rect":9.18,"cyl":8.02,"tc":7.98,"resonant":false},{"h":9.5,"fillpct":37,"rect":9.0,"cyl":7.88,"tc":7.85,"resonant":false},{"h":10.0,"fillpct":38,"rect":8.84,"cyl":7.76,"tc":7.72,"resonant":false},{"h":10.5,"fillpct":40,"rect":8.7,"cyl":7.65,"tc":7.61,"resonant":false},{"h":11.0,"fillpct":42,"rect":8.57,"cyl":7.55,"tc":7.52,"resonant":false},{"h":11.5,"fillpct":44,"rect":8.45,"cyl":7.46,"tc":7.43,"resonant":false},{"h":12.0,"fillpct":46,"rect":8.34,"cyl":7.38,"tc":7.35,"resonant":false},{"h":12.5,"fillpct":48,"rect":8.25,"cyl":7.31,"tc":7.28,"resonant":false},{"h":13.0,"fillpct":50,"rect":8.16,"cyl":7.25,"tc":7.21,"resonant":false},{"h":13.5,"fillpct":52,"rect":8.08,"cyl":7.19,"tc":7.15,"resonant":false},{"h":14.0,"fillpct":54,"rect":8.0,"cyl":7.14,"tc":7.1,"resonant":false},{"h":14.5,"fillpct":56,"rect":7.94,"cyl":7.09,"tc":7.05,"resonant":false},{"h":15.0,"fillpct":58,"rect":7.87,"cyl":7.04,"tc":7.01,"resonant":false},{"h":15.5,"fillpct":60,"rect":7.82,"cyl":7.01,"tc":6.97,"resonant":false},{"h":16.0,"fillpct":62,"rect":7.76,"cyl":6.97,"tc":6.94,"resonant":false},{"h":16.5,"fillpct":63,"rect":7.72,"cyl":6.94,"tc":6.9,"resonant":false},{"h":17.0,"fillpct":65,"rect":7.67,"cyl":6.91,"tc":6.87,"resonant":false},{"h":17.5,"fillpct":67,"rect":7.63,"cyl":6.88,"tc":6.85,"resonant":false},{"h":18.0,"fillpct":69,"rect":7.6,"cyl":6.86,"tc":6.82,"resonant":false},{"h":18.5,"fillpct":71,"rect":7.56,"cyl":6.84,"tc":6.8,"resonant":false},{"h":19.0,"fillpct":73,"rect":7.53,"cyl":6.82,"tc":6.78,"resonant":false},{"h":19.5,"fillpct":75,"rect":7.5,"cyl":6.8,"tc":6.76,"resonant":false},{"h":20.0,"fillpct":77,"rect":7.48,"cyl":6.78,"tc":6.75,"resonant":false},{"h":20.5,"fillpct":79,"rect":7.45,"cyl":6.77,"tc":6.73,"resonant":false},{"h":21.0,"fillpct":81,"rect":7.43,"cyl":6.75,"tc":6.72,"resonant":false},{"h":21.5,"fillpct":83,"rect":7.41,"cyl":6.74,"tc":6.71,"resonant":false},{"h":22.0,"fillpct":85,"rect":7.39,"cyl":6.73,"tc":6.7,"resonant":false},{"h":22.5,"fillpct":87,"rect":7.37,"cyl":6.72,"tc":6.69,"resonant":false},{"h":23.0,"fillpct":88,"rect":7.36,"cyl":6.71,"tc":6.68,"resonant":false},{"h":23.5,"fillpct":90,"rect":7.34,"cyl":6.7,"tc":6.67,"resonant":false},{"h":24.0,"fillpct":92,"rect":7.33,"cyl":6.69,"tc":6.66,"resonant":false},{"h":24.5,"fillpct":94,"rect":7.31,"cyl":6.69,"tc":6.65,"resonant":false},{"h":25.0,"fillpct":96,"rect":7.3,"cyl":6.68,"tc":6.65,"resonant":false},{"h":25.5,"fillpct":98,"rect":7.29,"cyl":6.67,"tc":6.64,"resonant":false},{"h":26.0,"fillpct":100,"rect":7.28,"cyl":6.67,"tc":6.64,"resonant":false}]};
+const M = DATA.meta, S = DATA.series, LO = 4.0, HI = 20.0;
+const pos = v => Math.max(0, Math.min((v-LO)/(HI-LO)*100, 100));
+const spec = document.getElementById('spec');
+spec.innerHTML = [['Method', M.standard], ['Prismatic L', M.rect_l+' m'],
+  ['Cylindrical D', M.cyl_d+' m'], ['Tank height', M.tank_h+' m'],
+  ['Vessel roll', M.roll_t+' s']]
+  .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
+document.getElementById('tolpct').textContent = Math.round(M.tol*100)+'%';
+document.getElementById('rV').textContent = M.roll_t.toFixed(1)+' s';
+const band = document.getElementById('band');
+band.style.left = pos(M.band_lo)+'%';
+band.style.width = (pos(M.band_hi)-pos(M.band_lo))+'%';
+const slider = document.getElementById('h');
+slider.max = S.length-1;
+
+function render(){
+  const p = S[+slider.value];
+  document.getElementById('hval').textContent = p.h.toFixed(1)+' m ('+p.fillpct+'%)';
+  document.getElementById('rR').textContent = p.rect.toFixed(2)+' s';
+  document.getElementById('rC').textContent = p.cyl.toFixed(2)+' s';
+  document.getElementById('rT').textContent = p.tc.toFixed(2)+' s';
+  document.getElementById('trect').style.left = pos(p.rect)+'%';
+  document.getElementById('tcyl').style.left = pos(p.cyl)+'%';
+  document.getElementById('ttc').style.left = pos(p.tc)+'%';
+  const f = document.getElementById('flag');
+  if(p.resonant){ f.className='flag bad'; f.textContent='⚠ Resonance risk — a tank period is within the roll band → CFD check warranted'; }
+  else { f.className='flag ok'; f.textContent='✓ No resonance — tank periods clear of the roll band'; }
+}
+let start = S.findIndex(p=>p.fillpct>=95); if(start<0) start = S.length-1;
+slider.value = start; render();
+slider.addEventListener('input', render);
+</script>
+</body></html>
