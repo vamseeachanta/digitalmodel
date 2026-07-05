@@ -38,6 +38,12 @@ _ENGINE = _REPO / "src" / "digitalmodel" / "hydrodynamics" / "sloshing.py"
 # present, its rectangular free-decay points are overlaid on the master curve
 # and a small verification table is rendered; when absent the page is unchanged.
 _CFD_BENCHMARK = _OUT_DIR / "sloshing-cfd-benchmark.json"
+# Optional forced-roll frequency-response manifest (issue #1433): with/without
+# forced-roll resonance sweep. Drives the "forced-roll resonance" panel.
+_FORCED_RESPONSE = _OUT_DIR / "sloshing-forced-response.json"
+# Optional literature-survey synthesis (issue #1433): drives the way-forward +
+# literature-confidence section. Written from the deep-research workflow.
+_RESEARCH = _OUT_DIR / "sloshing-cfd-research.json"
 
 _spec = importlib.util.spec_from_file_location("dm_sloshing_engine", _ENGINE)
 slosh = importlib.util.module_from_spec(_spec)
@@ -217,6 +223,97 @@ def _load_cfd_benchmark():
     return out
 
 
+def _fit_sdof_zeta(pairs):
+    """Best-fit damping ratio zeta for the linear damped-oscillator amplification
+    A(r) = 1/sqrt((1-r^2)^2 + (2*zeta*r)^2), each fill normalised to its own peak.
+
+    ``pairs`` is a list of (r = T_drive/T1, normalised_response) points pooled over
+    fills. Returns the zeta in [0.03, 0.5] minimising the squared error to the
+    self-normalised model (model divided by its value at r=1). This is the standard
+    linear representation of a lightly damped fundamental sloshing mode
+    (Faltinsen & Timokha 2009; Abramson 1966) — a MODEL overlay, not a fit claim.
+    """
+    def amp(r, z):
+        return 1.0 / math.sqrt((1.0 - r * r) ** 2 + (2.0 * z * r) ** 2)
+
+    best_z, best_err = 0.1, float("inf")
+    z = 0.03
+    while z <= 0.5001:
+        a1 = amp(1.0, z)
+        err = sum((y - amp(r, z) / a1) ** 2 for r, y in pairs)
+        if err < best_err:
+            best_err, best_z = err, z
+        z += 0.005
+    return round(best_z, 3)
+
+
+def _load_forced_response():
+    """Forced-roll frequency-response for the "with vs without" panel (#1433).
+
+    Reads the manifest written by ``scripts/cfd/run_sloshing_response_sweep.py``.
+    Returns per-fill normalised response points (run-up / its own peak vs
+    r = T_drive/T1), a pooled damped-oscillator zeta, and a confidence table of
+    forced-roll resonant period vs free-decay/analytical natural period. ``None``
+    when the manifest is absent (panel then omitted).
+    """
+    if not _FORCED_RESPONSE.exists():
+        return None
+    data = json.loads(_FORCED_RESPONSE.read_text())
+    fills, pooled = [], []
+    for f in data.get("fills", []):
+        t1 = f.get("T1_analytical_s")
+        pts = []
+        for p in f.get("forced", []):
+            amp = p.get("runup_amp_m")
+            if amp is None or p.get("status") != "completed" or not t1:
+                continue
+            pts.append({"r": round(p["drive_period_s"] / t1, 4), "amp": amp})
+        if not pts:
+            continue
+        peak = max(pp["amp"] for pp in pts)
+        for pp in pts:
+            pp["norm"] = round(pp["amp"] / peak, 4) if peak else 0.0
+            pooled.append((pp["r"], pp["norm"]))
+        nat_an = f.get("natural_period_analytical_s") or t1
+        res = f.get("resonant_period_cfd_s")
+        fills.append({
+            "h_over_L": f["h_over_L"],
+            "t1_analytical": t1,
+            "nat_cfd": f.get("natural_period_cfd_s"),
+            "nat_analytical": nat_an,
+            "resonant_cfd": res,
+            "res_ratio": round(res / nat_an, 3) if (res and nat_an) else None,
+            "freedecay_err": f.get("freedecay_rel_error"),
+            "points": pts,
+        })
+    if not fills:
+        return None
+    return {
+        "solver": data.get("meta", {}).get("solver", "OpenFOAM interFoam (VOF)"),
+        "roll_amplitude_deg": data.get("meta", {}).get("roll_amplitude_deg"),
+        "tank": data.get("tank", {}),
+        "zeta": _fit_sdof_zeta(pooled) if pooled else 0.1,
+        "fills": fills,
+    }
+
+
+def _load_research():
+    """Literature synthesis for the way-forward + confidence section (#1433)."""
+    if not _RESEARCH.exists():
+        return None
+    data = json.loads(_RESEARCH.read_text())
+    syn = data.get("synthesis", data)
+    order = {"high": 0, "medium": 1, "low": 2}
+    fw = sorted(syn.get("further_cfd", []),
+                key=lambda x: order.get(x.get("priority", "medium"), 1))
+    return {
+        "confidence": syn.get("methodology_confidence", ""),
+        "supports": syn.get("supports", [])[:6],
+        "contrasts": syn.get("contrasts", [])[:6],
+        "further_cfd": fw,
+    }
+
+
 def build_study():
     shapes = []
     for sh in SHAPES:
@@ -229,6 +326,8 @@ def build_study():
                  "cyl_d": _RCYL_D, "tank_h": _TANK_H},
         "shapes": shapes,
         "cfd": _load_cfd_benchmark(),
+        "forced_response": _load_forced_response(),
+        "research": _load_research(),
         "resonance": _resonance_series(),
         "references": REFERENCES,
     }
@@ -287,6 +386,12 @@ _HTML = r"""<!DOCTYPE html>
  .cfd{background:linear-gradient(135deg,#f4f8fc,#eaf3ff);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
  .cfd b{color:var(--navy)}
  .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+ .litl{list-style:none;font-size:12.5px;color:var(--muted)} .litl li{padding:5px 0;border-bottom:1px solid var(--line)}
+ .litl b{color:var(--ink)} .litl .cite{color:var(--teal);font-size:11px;display:block;margin-top:2px}
+ .fwl{font-size:12.5px;color:var(--ink);padding-left:20px} .fwl li{margin:6px 0}
+ .fwl .rat{color:var(--muted)}
+ .pri{display:inline-block;font-size:9.5px;font-weight:700;border-radius:4px;padding:1px 6px;color:#fff;margin-right:5px;letter-spacing:.3px}
+ .pri-high{background:var(--bad)} .pri-medium{background:var(--c2)} .pri-low{background:var(--muted)}
  @media(max-width:640px){ul.refs{columns:1}}
 </style></head><body>
 <h1>Tank sloshing &mdash; natural-period &amp; resonance explorer</h1>
@@ -307,6 +412,19 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
   <p class="fnote">Horizontal-cylinder and elliptical curves use the equivalent-rectangle method (good to ~10&ndash;15% at mid
   fill; near-full and violent cases are where a VOF free-surface CFD run takes over).</p>
   <div id="cfdverify"></div>
+</div>
+
+<div class="panel" id="forcedpanel" style="display:none">
+  <span class="tag" style="color:#c0392b">Forced-roll resonance &mdash; with vs without</span>
+  <h2>How forced roll reveals the sloshing resonance</h2>
+  <p class="sub" style="margin:0 0 6px"><b>Without</b> forced roll, a free-decay CFD run gives the tank's intrinsic
+  first-mode natural period (the point on the master curve). <b>With</b> forced roll, driving the tank at a range of
+  roll periods and measuring the wall run-up traces a resonance curve that <b>peaks at that same natural period</b>
+  &mdash; roll excites the mode the free-decay rings down. Response is normalised to each fill's own peak and plotted
+  against the drive period over the natural period, T<sub>drive</sub>/T&#8321;.</p>
+  <svg id="respchart" viewBox="0 0 720 360" role="img" aria-label="Forced-roll frequency response"></svg>
+  <div class="legend" id="resplegend"></div>
+  <div id="respverify"></div>
 </div>
 
 <div class="panel">
@@ -353,6 +471,21 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
     interFoam points that pin the rectangular curve to real free-surface CFD (see the
     <a href="../cfd/tank-sloshing-verification.html">CFD verification page</a>).
   </div>
+</div>
+
+<div class="panel" id="wayforwardpanel" style="display:none">
+  <span class="tag" style="color:#c0392b">Literature confidence &amp; way forward</span>
+  <h2>What the literature says &mdash; and the CFD that should follow</h2>
+  <p class="sub" id="confidence" style="margin:0 0 12px"></p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 22px">
+    <div><h2 style="font-size:12.5px;color:var(--ok)">Supports our approach</h2><ul class="litl" id="litsup"></ul></div>
+    <div><h2 style="font-size:12.5px;color:var(--bad)">Caveats &amp; contrasts</h2><ul class="litl" id="litcon"></ul></div>
+  </div>
+  <h2 style="font-size:13px;margin-top:16px">Further CFD analysis (prioritised)</h2>
+  <ol class="fwl" id="furthercfd"></ol>
+  <p class="fnote">Synthesised from an adversarially-verified deep literature survey (8 agents; fabricated draft
+  figures were removed by a critique pass). Full method &amp; references on the
+  <a href="../cfd/sloshing-cfd-study.html">CFD study page &rarr;</a></p>
 </div>
 
 <div class="panel">
@@ -481,8 +614,85 @@ function renderCFD(){
     </div>`;
 }
 
+/* ---------- forced-roll resonance panel (issue #1433) ---------- */
+const FR = DATA.forced_response;
+const FRCOL = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+function drawRespChart(){
+  const RW=720,RH=360,rML=56,rMR=16,rMT=14,rMB=44,RX0=0.6,RX1=1.5,RYX=1.18;
+  const rpx=r=>rML+((r-RX0)/(RX1-RX0))*(RW-rML-rMR);
+  const rpy=y=>RH-rMB-(y/RYX)*(RH-rMT-rMB);
+  let g='';
+  for(let gx=0.6;gx<=1.5001;gx+=0.1){g+=`<line x1="${rpx(gx).toFixed(1)}" y1="${rpy(0)}" x2="${rpx(gx).toFixed(1)}" y2="${rpy(RYX)}" stroke="var(--line)"/>`+
+    `<text x="${rpx(gx).toFixed(1)}" y="${rpy(0)+16}" fill="var(--muted)" font-size="10" text-anchor="middle">${gx.toFixed(1)}</text>`;}
+  for(let gy=0;gy<=1.0001;gy+=0.25){g+=`<line x1="${rpx(RX0)}" y1="${rpy(gy)}" x2="${rpx(RX1)}" y2="${rpy(gy)}" stroke="var(--line)"/>`+
+    `<text x="${rpx(RX0)-8}" y="${rpy(gy)+3}" fill="var(--muted)" font-size="10" text-anchor="end">${gy.toFixed(2)}</text>`;}
+  g+=`<text x="${(rML+RW-rMR)/2}" y="${RH-6}" fill="var(--muted)" font-size="11" text-anchor="middle">drive period / natural period  T_drive / T₁</text>`;
+  g+=`<text transform="translate(14,${(RH-rMB+rMT)/2}) rotate(-90)" fill="var(--muted)" font-size="11" text-anchor="middle">wall run-up (normalised to peak)</text>`;
+  // "without forced roll" = the natural period, at r = 1
+  g+=`<line x1="${rpx(1).toFixed(1)}" y1="${rpy(0)}" x2="${rpx(1).toFixed(1)}" y2="${rpy(RYX)}" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5 4"/>`+
+     `<text x="${rpx(1).toFixed(1)}" y="${rpy(RYX)+2}" fill="#c0392b" font-size="10.5" text-anchor="middle">natural period (free-decay)</text>`;
+  // damped-oscillator model overlay (literature)
+  const z=FR.zeta, a1=1/(2*z); let d='';
+  for(let r=RX0;r<=RX1+1e-9;r+=0.01){const A=(1/Math.sqrt((1-r*r)**2+(2*z*r)**2))/a1; d+=`${d?'L':'M'}${rpx(r).toFixed(1)} ${rpy(Math.min(A,RYX)).toFixed(1)}`;}
+  g+=`<path d="${d}" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="2 3"/>`;
+  // CFD response per fill
+  FR.fills.forEach((f,i)=>{
+    const pts=f.points.slice().sort((a,b)=>a.r-b.r);
+    const line=pts.map((p,j)=>`${j?'L':'M'}${rpx(p.r).toFixed(1)} ${rpy(p.norm).toFixed(1)}`).join(' ');
+    g+=`<path d="${line}" fill="none" stroke="${FRCOL[i]}" stroke-width="2.4"/>`;
+    pts.forEach(p=>{g+=`<circle cx="${rpx(p.r).toFixed(1)}" cy="${rpy(p.norm).toFixed(1)}" r="4" fill="#fff" stroke="${FRCOL[i]}" stroke-width="2"/>`;});
+  });
+  document.getElementById('respchart').innerHTML=g;
+}
+function renderForced(){
+  const panel=document.getElementById('forcedpanel');
+  if(!FR||!FR.fills||!FR.fills.length){ if(panel) panel.style.display='none'; return; }
+  panel.style.display='';
+  drawRespChart();
+  document.getElementById('resplegend').innerHTML =
+    FR.fills.map((f,i)=>`<span><i style="background:${FRCOL[i]}"></i>Forced roll, fill h/L = ${f.h_over_L}</span>`).join('')+
+    `<span><i style="background:var(--muted)"></i>Damped-oscillator model, ζ = ${FR.zeta} (linear theory)</span>`;
+  const rows = FR.fills.map(f=>
+    `<tr><td>${(f.h_over_L*100).toFixed(0)}%</td>`+
+    `<td class="mono">${f.nat_analytical? f.nat_analytical.toFixed(3):'—'}</td>`+
+    `<td class="mono">${f.nat_cfd? f.nat_cfd.toFixed(3):'—'}</td>`+
+    `<td class="mono">${f.resonant_cfd? f.resonant_cfd.toFixed(3):'—'}</td>`+
+    `<td class="mono">${f.res_ratio!=null? f.res_ratio.toFixed(2):'—'}</td></tr>`).join('');
+  const amp = FR.roll_amplitude_deg? FR.roll_amplitude_deg+'° roll':'forced roll';
+  document.getElementById('respverify').innerHTML =
+    `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+      <p class="fnote" style="margin:0 0 8px">Measured 2D VOF (${FR.solver}); ${amp} on an
+      L=${FR.tank.breadth_m} m tank. Confidence check: the forced-roll resonant period lands on the
+      natural period (ratio ≈ 1.00) at every fill.</p>
+      <table><thead><tr><th>Fill h/L</th><th>Natural T₁ analytical (s)</th><th>Natural T₁ free-decay CFD (s)</th>
+        <th>Resonant T forced CFD (s)</th><th>resonant / natural</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      <p class="fnote" style="margin-top:8px">The dashed grey curve is the linear damped-oscillator amplification
+      A(r)=1/√((1−r²)²+(2ζr)²) — the standard representation of a lightly damped fundamental sloshing mode
+      (Faltinsen &amp; Timokha 2009; Abramson 1966) — with ζ fitted to the CFD points.</p>
+    </div>`;
+}
+
+/* ---------- literature confidence + way forward (issue #1433) ---------- */
+const RES = DATA.research;
+function renderResearch(){
+  const panel=document.getElementById('wayforwardpanel');
+  if(!RES||!RES.further_cfd||!RES.further_cfd.length){ if(panel) panel.style.display='none'; return; }
+  panel.style.display='';
+  document.getElementById('confidence').textContent=RES.confidence||'';
+  const li=items=>items.map(x=>`<li>${x.point||''}<span class="cite">${x.citation||''}</span></li>`).join('');
+  document.getElementById('litsup').innerHTML=li(RES.supports||[]);
+  document.getElementById('litcon').innerHTML=li(RES.contrasts||[]);
+  document.getElementById('furthercfd').innerHTML=(RES.further_cfd||[]).map(x=>{
+    const p=(x.priority||'medium');
+    return `<li><span class="pri pri-${p}">${p.toUpperCase()}</span><b>${x.title||''}</b> `+
+      `<span class="rat">— ${x.rationale||''}</span></li>`;}).join('');
+}
+
 document.getElementById('refs').innerHTML=DATA.references.map(r=>`<li>${r}</li>`).join('');
 renderCFD();
+renderForced();
+renderResearch();
 renderShape();
 </script>
 </body></html>

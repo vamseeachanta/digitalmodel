@@ -1,0 +1,188 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_response_sweep.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "epic": "#1429",
+    "issue": "#1433",
+    "g": 9.80665,
+    "roll_amplitude_deg": 4.0
+  },
+  "tank": {
+    "shape": "rectangular",
+    "breadth_m": 0.9,
+    "tank_height_m": 0.9,
+    "freedecay_cells_per_breadth": 80,
+    "forced_cells_per_breadth": 60,
+    "n_cycles": 6.0
+  },
+  "fills": [
+    {
+      "h_over_L": 0.3,
+      "T1_analytical_s": 1.25147,
+      "natural_period_cfd_s": 1.2472,
+      "natural_period_analytical_s": 1.25147,
+      "freedecay_rel_error": 0.00342,
+      "resonant_period_cfd_s": 1.25147,
+      "resonance_metric": "wall run-up amplitude (runup_amp_m)",
+      "forced": [
+        {
+          "period_ratio": 0.7,
+          "drive_period_s": 0.87603,
+          "drive_freq_hz": 1.14151,
+          "runup_amp_m": 0.095785,
+          "quad_coeff": 0.07707,
+          "moment_amplitude_nm": 0.41262,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 0.85,
+          "drive_period_s": 1.06375,
+          "drive_freq_hz": 0.94007,
+          "runup_amp_m": 0.130293,
+          "quad_coeff": 0.08528,
+          "moment_amplitude_nm": 0.28815,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.0,
+          "drive_period_s": 1.25147,
+          "drive_freq_hz": 0.79906,
+          "runup_amp_m": 0.357493,
+          "quad_coeff": 1.99706,
+          "moment_amplitude_nm": 2.05446,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.15,
+          "drive_period_s": 1.43919,
+          "drive_freq_hz": 0.69484,
+          "runup_amp_m": 0.264772,
+          "quad_coeff": 0.39737,
+          "moment_amplitude_nm": 2.57567,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.3,
+          "drive_period_s": 1.62691,
+          "drive_freq_hz": 0.61466,
+          "runup_amp_m": 0.162687,
+          "quad_coeff": 0.17255,
+          "moment_amplitude_nm": 1.55201,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "h_over_L": 0.5,
+      "T1_analytical_s": 1.12136,
+      "natural_period_cfd_s": 1.11713,
+      "natural_period_analytical_s": 1.12136,
+      "freedecay_rel_error": 0.00379,
+      "resonant_period_cfd_s": 1.12136,
+      "resonance_metric": "wall run-up amplitude (runup_amp_m)",
+      "forced": [
+        {
+          "period_ratio": 0.7,
+          "drive_period_s": 0.78495,
+          "drive_freq_hz": 1.27397,
+          "runup_amp_m": 0.200998,
+          "quad_coeff": 0.17245,
+          "moment_amplitude_nm": 1.57299,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 0.85,
+          "drive_period_s": 0.95316,
+          "drive_freq_hz": 1.04914,
+          "runup_amp_m": 0.233958,
+          "quad_coeff": 0.19435,
+          "moment_amplitude_nm": 0.65613,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.0,
+          "drive_period_s": 1.12136,
+          "drive_freq_hz": 0.89177,
+          "runup_amp_m": 0.36535,
+          "quad_coeff": 1.69998,
+          "moment_amplitude_nm": 1.73143,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.15,
+          "drive_period_s": 1.28956,
+          "drive_freq_hz": 0.77546,
+          "runup_amp_m": 0.357231,
+          "quad_coeff": 2.27851,
+          "moment_amplitude_nm": 4.7994,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.3,
+          "drive_period_s": 1.45777,
+          "drive_freq_hz": 0.68598,
+          "runup_amp_m": 0.222216,
+          "quad_coeff": 0.20566,
+          "moment_amplitude_nm": 2.56188,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "h_over_L": 0.7,
+      "T1_analytical_s": 1.0872,
+      "natural_period_cfd_s": 1.08897,
+      "natural_period_analytical_s": 1.0872,
+      "freedecay_rel_error": 0.00163,
+      "resonant_period_cfd_s": 1.0872,
+      "resonance_metric": "wall run-up amplitude (runup_amp_m)",
+      "forced": [
+        {
+          "period_ratio": 0.7,
+          "drive_period_s": 0.76104,
+          "drive_freq_hz": 1.31399,
+          "runup_amp_m": 0.33719,
+          "quad_coeff": 0.89645,
+          "moment_amplitude_nm": 3.66042,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 0.85,
+          "drive_period_s": 0.92412,
+          "drive_freq_hz": 1.08211,
+          "runup_amp_m": 0.31219,
+          "quad_coeff": 0.54451,
+          "moment_amplitude_nm": 1.71938,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.0,
+          "drive_period_s": 1.0872,
+          "drive_freq_hz": 0.91979,
+          "runup_amp_m": 0.389733,
+          "quad_coeff": 2.66874,
+          "moment_amplitude_nm": 2.74299,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.15,
+          "drive_period_s": 1.25027,
+          "drive_freq_hz": 0.79983,
+          "runup_amp_m": 0.371497,
+          "quad_coeff": 3.13858,
+          "moment_amplitude_nm": 6.0051,
+          "status": "completed"
+        },
+        {
+          "period_ratio": 1.3,
+          "drive_period_s": 1.41335,
+          "drive_freq_hz": 0.70754,
+          "runup_amp_m": 0.324348,
+          "quad_coeff": 0.41938,
+          "moment_amplitude_nm": 4.29097,
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}
