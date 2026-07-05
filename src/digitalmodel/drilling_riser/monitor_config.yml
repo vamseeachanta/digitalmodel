@@ -1,0 +1,33 @@
+# Generic drilling-riser operability/integrity MONITOR config (twin D #1376, epic #1372).
+#
+# GENERIC ILLUSTRATIVE nominals — NOT a real vessel/wellhead. Governance (T2): a real
+# conductor capacity is licensed/client data and a specific conductor geometry would
+# fingerprint a real wellhead, so the monitor shows a conductor bending-MOMENT indicator
+# (kN·m) ONLY — never a utilisation against a capacity — and every conductor constant is a
+# coarse round nominal on the band grid enforced by
+# test_operability_monitor.test_conductor_geometry_is_banded_generic.
+provenance:
+  source: synthetic / generic — nominal banded scenario for a public operability/integrity monitor
+  licence: synthetic — no client, field, well, vessel or wellhead data
+  note: >
+    The scenario riser reuses the generic banded rsu_a stack-up from the merged
+    operability atlas (operability_configs.yml); the conductor geometry is a generic
+    nominal (30-in conductor, coarse soil/stand-off bands). No rated capacity is shown
+    or stored (moment indicator only).
+
+# The scenario riser (reuses the atlas rsu_a generic banded stack-up — one shared riser
+# drives every gauge). config token below must be one of operability_atlas.ALLOWED_TOKENS.
+scenario:
+  config: rsu_a__drilling
+  outer_diameter_m: 0.5334     # nominal 21 in (atlas rsu_a)
+  wall_thickness_m: 0.0254     # nominal 1 in
+  water_depth_m: 1500.0        # 500 m band (atlas rsu_a)
+  length_m: 1500.0
+  tension_n: 3000000.0         # 0.5 MN band
+
+# Generic banded conductor GEOMETRY (moment indicator only — NO capacity, NO UC).
+conductor:
+  outer_diameter_m: 0.762      # nominal 30 in conductor
+  wall_thickness_m: 0.0254     # nominal 1 in
+  soil_modulus_n_per_m2: 5000000.0   # 5 MN/m^2 band (coarse nominal soil)
+  stand_off_m: 15.0            # 5 m band (BOP/LMRP stand-off arm, nominal)

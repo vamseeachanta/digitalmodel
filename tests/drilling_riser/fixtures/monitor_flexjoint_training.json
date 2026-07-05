@@ -1,0 +1,13 @@
+{
+  "provenance": {
+    "source": "synthetic (measured = scale*predicted + noise from KNOWN constants); representative offline twin-B training pairs for the monitor",
+    "licence": "synthetic — no client, field, well or vessel data",
+    "note": "Fully synthetic flex-joint (measured, predicted) angle-magnitude pairs [deg] for twin D (#1376). predicted values are representative static beam-column flex-joint angle magnitudes; each measured = true_scale*predicted (+ small deterministic noise). NOT derived from any real measured trace. No identity, no credentials.",
+    "captured_offline": true
+  },
+  "true_model": {"upper_scale": 1.15, "lower_scale": 1.20, "noise_deg": 0.01},
+  "predicted_upper_deg": [0.40, 0.60, 0.90, 1.20, 1.60, 2.00, 2.40, 2.80, 3.20],
+  "measured_upper_deg":  [0.47, 0.68, 1.04, 1.37, 1.85, 2.29, 2.77, 3.23, 3.67],
+  "predicted_lower_deg": [0.60, 0.90, 1.30, 1.70, 2.20, 2.70, 3.20, 3.70, 4.20],
+  "measured_lower_deg":  [0.73, 1.07, 1.57, 2.05, 2.63, 3.25, 3.83, 4.45, 5.03]
+}
