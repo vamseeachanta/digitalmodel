@@ -24,6 +24,14 @@ from .seakeeping import (
     motion_exceedance,
     operability_analysis,
 )
+from .sloshing import (
+    rectangular_tank_periods,
+    cylindrical_tank_periods,
+    api650_convective_period,
+    resonance_check,
+    screen_tank,
+    SloshingResult,
+)
 
 # Capytaine BEM solver (optional — requires capytaine-env)
 try:
@@ -47,6 +55,12 @@ __all__ = [
     "significant_amplitude",
     "motion_exceedance",
     "operability_analysis",
+    "rectangular_tank_periods",
+    "cylindrical_tank_periods",
+    "api650_convective_period",
+    "resonance_check",
+    "screen_tank",
+    "SloshingResult",
 ]
 
 if _HAS_CAPYTAINE:
