@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "generated_by": "deep literature-research workflow (8 agents, adversarially critiqued)",
+    "epic": "#1429",
+    "issue": "#1433",
+    "note": "Client-facing curation of an adversarially-verified survey; fabricated draft figures were removed by a critique agent."
+  },
+  "synthesis": {
+    "methodology_confidence": "The literature supports our 2D VOF free-decay + forced-roll approach for the FREQUENCY, TUNING and DAMPING questions it is scoped to answer, but with more caveats than the original draft implied. Independent VOF-CFD (Yang & West 2016) and shaker/sway experiments (Bäuerlein & Avila 2021; Chen & Xue 2018; Faltinsen/Rognebakke) confirm that linear tanh dispersion predicts first-mode natural frequencies well at intermediate-to-deep fills and that free-decay-then-FFT is an accepted extraction method, so a sub-percent free-decay match is credible - but a specific '<0.3%' figure must be EARNED by a Courant/mesh-convergence study, not asserted a priori. Bäuerlein & Avila validate the 90-degree phase-lag/quadrature criterion as a rigorous resonance locator, and the anti-roll-tank literature (Carette 2023; Moaleji & Greig 2007) supports reducing a partially filled tank to a lightly-damped tuned SDOF. Confidence is genuinely PARTIAL for design loads and combined-motion excitation: above the ~0.34 critical depth the resonance detunes off linear T1 onto a soft-spring branch (confirmed by Bäuerlein & Avila 2024), 2D omits swirl and the effective-gravity-angle (sway+roll) forcing, and impact-pressure magnitude is mesh/air-compressibility sensitive.",
+    "supports": [
+      {
+        "point": "NASA's first-principles VOF CFD is demonstrated to accurately predict slosh natural frequency and to capture the very low (well below 1% critical) smooth-wall damping (damping RMS error <4.8%, max <8.5% vs experiment), and the paper explicitly states there is NO analytical solution for slosh damping - which is exactly why a CFD quadrature/decay extraction is necessary.",
+        "citation": "Yang, H.Q. & West, J. (2016), 'Validation of High-Resolution CFD Method for Slosh Damping Extraction of Baffled Tanks', NASA MSFC/AIAA, NTRS 20160009699"
+      },
+      {
+        "point": "In a horizontally forced (sway) rectangular tank the response lags the forcing by 90 degrees AT the nonlinear response maximum regardless of wave regime, validating use of the quadrature/phase-lag peak as a rigorous resonance locator rather than an amplitude proxy.",
+        "citation": "Bäuerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)"
+      },
+      {
+        "point": "Linear potential theory predicts rectangular first-mode frequencies that agree well with commercial-CFD sloshing-elevation time histories, with the important qualifier that linear theory under-predicts AMPLITUDE (not frequency) near resonance - exactly the gap our VOF CFD fills for resonant run-up.",
+        "citation": "Nuclear Engineering & Technology (2019), 'Simple analytical method for predicting the sloshing motion in a rectangular pool', ScienceDirect S1738573319301767"
+      },
+      {
+        "point": "An experiment-validated OpenFOAM interFoam VOF sloshing study across multiple fill levels establishes our toolchain (interFoam, multi-fill sweep) as an accepted, validated sloshing solver reproducing frequency, amplitude and resonance trends.",
+        "citation": "Chen, Y. & Xue, M.-A. (2018), 'Numerical Simulation of Liquid Sloshing with Different Filling Levels Using OpenFOAM and Experimental Validation', Water 10(12):1752, DOI 10.3390/w10121752"
+      },
+      {
+        "point": "The Delorme et al. 2009 canonical forced-roll benchmark (2D tank 900x508x62 mm, SHALLOW fill 93 mm i.e. h/L~0.10, roll amplitude 4 deg, SPH+experiment with many repeats for pressure statistics; SPHERIC Test 10) is the reference geometry and protocol for forced-roll-brackets-T1 validation, and it notably finds peak impact pressures at a frequency BELOW the first natural frequency - a built-in detuning warning.",
+        "citation": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodríguez, R. & Botía-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: Pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10"
+      },
+      {
+        "point": "The Faltinsen/Rognebakke sway-excited rectangular-tank campaign uses the IDENTICAL tanh dispersion f_n=(1/2pi)sqrt[(n pi g/L)tanh(n pi h/L)] we validate against, over fills overlapping our range, giving measured free-surface elevation vs analytic natural periods - direct support for Step 1.",
+        "citation": "Rognebakke, O.F. & Faltinsen, O.M. (2000/2003), sway-excited rectangular-tank sloshing experiments and multimodal theory, J. Fluid Mech."
+      },
+      {
+        "point": "The anti-roll-tank literature explicitly frames a partially filled tank as a Tuned Vibration Absorber whose natural frequency is set close to the ship roll natural frequency and whose damping ratio is then optimized - directly supporting our resonance-at-T1 framing and endorsing reduction of the forced-roll CFD to a reportable SDOF (natural frequency + damping ratio), the deliverable ART designers actually use.",
+        "citation": "Carette, N. (2023), 'A consistent method to design and evaluate the performance of Anti-Roll Tanks for ships', Ship Technology Research 70; Youssef, K.S., Mook, D.T., Nayfeh, A.H. & Ragab, S.A. (2003), J. Vibration and Control 9(7):839-862"
+      },
+      {
+        "point": "Parametric coupling of a passive anti-roll tank to the roll equation confirms the CFD-extractable design levers (frequency tuning, damping, effective mass, CG-relative location) with frequency tuning to the roll period the dominant lever; a well-tuned passive tank delivers roughly 20-25% roll reduction - an order-of-magnitude benchmark for a future coupled ship+tank case.",
+        "citation": "Abdel Gawad, A.F., Ragab, S.A., Nayfeh, A.H. & Mook, D.T. (2001), 'Roll stabilization by anti-roll passive tanks', Ocean Engineering 28"
+      }
+    ],
+    "contrasts": [
+      {
+        "point": "A well-defined critical filling depth h/L~=0.34 marks a hard-to-soft-spring transition: ABOVE it (which includes our best-fill h/L=0.70) the forced response follows a soft-spring Duffing branch and the resonance peak shifts AWAY from the linear T1 as roll amplitude grows - so our run-up/quadrature peak will detune off T1 at finite amplitude and the roll amplitude used MUST be reported.",
+        "citation": "Bäuerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech. (published April 2024)"
+      },
+      {
+        "point": "In horizontally forced experiments the response-amplitude MAXIMUM does not sit on the linear natural frequency: for the deep tank the peak shifts toward LOWER frequency (softening) with growing hysteresis as forcing rises, and inviscid multimodal (Faltinsen-Timokha) theory OVERESTIMATES amplitude/hysteresis - contradicting any naive 'peak exactly at T1' claim and favoring viscous interFoam over inviscid models.",
+        "citation": "Bäuerlein, B. & Avila, K. (2021), J. Fluid Mech. 925, A22"
+      },
+      {
+        "point": "VOF against the Delorme canonical forced-roll tank reproduces the TIMING/phasing of pressure peaks well but OVERESTIMATES peak-pressure magnitude - so frequency/phase/run-up are the trustworthy CFD quantities while impact-pressure magnitude in violent roll is mesh/compressibility sensitive and must be caveated.",
+        "citation": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Botía-Vera canonical narrow tank"
+      },
+      {
+        "point": "A pitch-excitation study documents a resonant-frequency shift at ~70% fill (our chosen best fill) with a soft-spring characteristic (peak frequency decreasing as amplitude rises) - a direct warning that our 70%-fill forced-roll peak detunes downward from linear T1 unless roll amplitude is kept small or the softening shift is explicitly reported.",
+        "citation": "MDPI Water 16(11):1551 (2024), 'Experimental Study on the Sloshing of a Rectangular Tank under Pitch Excitations'"
+      },
+      {
+        "point": "The real shipboard driving parameter is the Effective Gravity Angle (combined local lateral/sway/yaw-induced acceleration + roll angle), not roll alone; our forced-ROLL-only CFD captures only the roll-angle term and is therefore a partial/conservative excitation, motivating a combined sway+roll case.",
+        "citation": "Carette, N. (2023), Ship Technology Research 70"
+      },
+      {
+        "point": "'Best fill' is NOT a universal constant: passive free-surface tanks are tuned by setting liquid depth so the depth-dependent gravity-wave period matches the target roll period, so our 70% result is 'best' only for our specific L and target T1 and should be reported as a tuning curve f1(fill) intersecting the roll frequency, not a standalone optimum. Also, at low tank damping the tank can AMPLIFY roll near frequency ratios ~0.84 and ~1.05 (two-peak detuning split) rather than damp it.",
+        "citation": "Moaleji, R. & Greig, A.R. (2007), 'On the development of ship anti-roll tanks', Ocean Engineering 34(1):103-121"
+      },
+      {
+        "point": "There is NO closed-form analytical solution for slosh damping (vorticity dissipation), and the Faltinsen-Timokha multimodal nonlinear theory is only valid for finite/intermediate depths (roughly h/L>~0.24-0.27), degrading in shallow water - so our shallow h/L=0.15 case sits near the analytical floor and damping must come from CFD/experiment, which is precisely why the CFD quadrature-coefficient peak is the physically necessary complement.",
+        "citation": "Faltinsen, O.M. & Timokha, A.N. (2009), 'Sloshing', Cambridge Univ. Press; corroborated by Yang & West (2016), which states no analytical damping solution exists"
+      },
+      {
+        "point": "Near resonance 2D is physically insufficient for near-square plan-forms or multi-axis motion: 2D planar standing waves are UNSTABLE to 3D perturbation and bifurcate through planar->square-like->swirling(rotary)->chaotic regimes that are intrinsically 3D, bounding our 2D claim to the planar first mode of an elongated tank.",
+        "citation": "Faltinsen, O.M., Rognebakke, O.F. & Timokha, A.N. (2003), 'Resonant three-dimensional nonlinear sloshing in a square-base basin', J. Fluid Mech., DOI 10.1017/S0022112003004816"
+      }
+    ],
+    "further_cfd": [
+      {
+        "title": "Roll-amplitude sweep to map the soft-spring backbone and quantify peak detuning off linear T1 at h/L=0.70",
+        "rationale": "Multiple sources (Bäuerlein & Avila 2024 near critical depth; MDPI Water 16(11):1551 2024 at 70% fill) predict our best-fill case sits above the ~0.34 critical depth and will detune downward as amplitude grows. Sweeping roll amplitude on a fine frequency grid (~0.95-1.15 T1) maps the amplitude-dependent backbone and turns 'peak at T1' into a defensible, amplitude-annotated statement.",
+        "priority": "high"
+      },
+      {
+        "title": "Reduce the forced-roll quadrature response to a reportable SDOF (equivalent linear damping ratio, added moment, m-c-k) and build an f1(fill) tuning curve instead of asserting a single best fill",
+        "rationale": "The ART design literature (Carette 2023; Youssef et al. 2003; Abdel Gawad et al. 2001; Moaleji & Greig 2007) shows 'best fill' is derived from f1(fill)=f_roll via the already-validated tanh dispersion, and the deliverable designers use is an SDOF (natural frequency + damping ratio). This converts our CFD into the exact engineering artifact and correctly frames the 70% result as a tuning-curve intersection.",
+        "priority": "high"
+      },
+      {
+        "title": "Courant/mesh convergence study (free-decay at Co=0.10 and 0.05, ~25-50 cells across the interface band, interface-compression coefficient =1) to CERTIFY any sub-percent frequency match and separate numerical from physical damping",
+        "rationale": "Larsen, Fuhrman & Roenby (2019) show wave-height constancy and phase are Courant- and scheme-dependent; the draft's '<0.3%' claim is only credible AFTER demonstrating Co-convergence of both frequency and decay rate, and any residual probe drift must be shown numerical before attributing it to physical damping. This convergence study is a precondition, not an optional extra.",
+        "priority": "high"
+      },
+      {
+        "title": "Direct validation run against the Delorme / SPHERIC Test 10 canonical forced-roll tank at its ACTUAL shallow fill (900x508x62 mm, 93 mm fill, h/L~0.10, roll 4 deg)",
+        "rationale": "This is the reference 2D forced-roll benchmark with published wall-pressure + prescribed-motion histories and many repeats. CORRECTION to the original plan: it is a SHALLOW-fill case (h/L~0.10), not a 70% fill, so it validates resonance detection and wall run-up at low fill (and reproduces the observed max-pressure-below-T1 behaviour) but does NOT directly validate our h/L=0.70 point - a separate higher-fill benchmark is needed for that.",
+        "priority": "high"
+      },
+      {
+        "title": "Shallow-fill (h/L~0.15) forced-roll at increasing amplitude to capture bore/hydraulic-jump onset and amplitude-dependent detuning near the analytical floor",
+        "rationale": "Faltinsen & Timokha and shallow-water studies place h/L~0.15 near/below the ~0.24-0.27 validity floor of low-order theory, where linear tanh overestimates the natural frequency and breaking/jumps dominate - the regime where anti-roll tuning must be set by CFD, exposing where our analytical anchor breaks.",
+        "priority": "medium"
+      },
+      {
+        "title": "Combined sway + roll (Effective Gravity Angle) excitation case to test whether resonance and wall run-up shift versus roll-only forcing",
+        "rationale": "Carette (2023) shows the true driving parameter combines lateral acceleration and roll angle; our roll-only CFD is a partial/conservative drive, so an EGA case checks whether the tuned-damper resonance and run-up change under realistic combined motion.",
+        "priority": "medium"
+      },
+      {
+        "title": "Tank-width / 3D sensitivity study (Delorme Part 2 span sweep; near-square plan-form 3D check for swirl)",
+        "rationale": "Souto-Iglesias et al. Part 2 isolates 2D-vs-3D effects on pressure statistics, and Faltinsen-Rognebakke-Timokha (2003) show planar 2D waves are unstable to 3D swirl near resonance for near-square tanks - this quantifies/justifies the 2D idealization for an elongated ballast tank and bounds where 3D is mandatory.",
+        "priority": "medium"
+      },
+      {
+        "title": "Damping/baffle-screen sweep to reproduce the classic low-damping two-peak detuning split (frequency ratios ~0.84 and ~1.05) and show it merging as damping rises",
+        "rationale": "Moaleji & Greig (2007) report adverse resonance peaks straddling the 1:1 tuning point at low damping; reproducing this split and its suppression is a strong validation target for our forced sweep and demonstrates the damping-limited, bounded amplification of the tuned device.",
+        "priority": "low"
+      },
+      {
+        "title": "Impact/roof-pressure time histories vs amplitude near T1 at partial/low fill, with compressible-air (and later hydroelastic/3D) treatment",
+        "rationale": "The roof-impact study (peak just above f1) shows peak wall/roof pressures are nonlinear and cluster near f1, while 2D/3D comparison and LNG studies (Bunnik & Huijsmans 2007) show single-phase 2D mispredicts impact loads without air compressibility/3D - this is the outer-tier design-load deliverable, explicitly beyond validated 2D tuning.",
+        "priority": "low"
+      }
+    ],
+    "references": [
+      {
+        "cite": "Yang, H.Q. & West, J. (2016), 'Validation of High-Resolution CFD Method for Slosh Damping Extraction of Baffled Tanks', NASA MSFC/AIAA, NTRS 20160009699",
+        "url": "https://ntrs.nasa.gov/api/citations/20160009699/downloads/20160009699.pdf"
+      },
+      {
+        "cite": "Bäuerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)",
+        "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/phase-lag-predicts-nonlinear-response-maxima-in-liquidsloshing-experiments/2CD68A3A9A3AFC648B311D6C01835988"
+      },
+      {
+        "cite": "Bäuerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech.",
+        "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/different-scenarios-in-sloshing-flows-near-the-critical-filling-depth/54FD143B8361FD0C8139611C088905B2"
+      },
+      {
+        "cite": "Chen, Y. & Xue, M.-A. (2018), 'Numerical Simulation of Liquid Sloshing with Different Filling Levels Using OpenFOAM and Experimental Validation', Water 10(12):1752, DOI 10.3390/w10121752",
+        "url": "https://www.mdpi.com/2073-4441/10/12/1752"
+      },
+      {
+        "cite": "Nuclear Engineering & Technology (2019), 'Simple analytical method for predicting the sloshing motion in a rectangular pool', S1738573319301767",
+        "url": "https://www.sciencedirect.com/science/article/pii/S1738573319301767"
+      },
+      {
+        "cite": "Faltinsen, O.M. & Timokha, A.N. (2009), 'Sloshing', Cambridge University Press; Faltinsen & Timokha (2002) intermediate-depth multimodal theory",
+        "url": "https://www.cambridge.org/core/books/sloshing/"
+      },
+      {
+        "cite": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodríguez, R. & Botía-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10 (SHALLOW 93 mm fill)",
+        "url": "https://www.spheric-sph.org/tests/test-10"
+      },
+      {
+        "cite": "Souto-Iglesias, A., Botía-Vera, E., Martín, A. & Pérez-Arribas, F. (2011), 'A set of canonical problems in sloshing, Part 2: influence of tank width on impact pressure statistics in regular forced angular motion'",
+        "url": "https://www.researchgate.net/publication/278898071"
+      },
+      {
+        "cite": "Rognebakke, O.F. & Faltinsen, O.M. (2000/2003), sway-excited rectangular-tank sloshing experiments and multimodal theory, J. Fluid Mech. ('replicated JMSA 2023' claim from draft is UNVERIFIED)",
+        "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics"
+      },
+      {
+        "cite": "Faltinsen, O.M., Rognebakke, O.F. & Timokha, A.N. (2003), 'Resonant three-dimensional nonlinear sloshing in a square-base basin', J. Fluid Mech., DOI 10.1017/S0022112003004816",
+        "url": "https://www.imath.kiev.ua/~tim/PAPERS/JFM2003.pdf"
+      },
+      {
+        "cite": "Larsen, B.E., Fuhrman, D.R. & Roenby, J. (2019), 'Performance of interFoam on the simulation of progressive waves', Coastal Engineering (arXiv:1804.01158)",
+        "url": "https://arxiv.org/abs/1804.01158"
+      },
+      {
+        "cite": "'On the Efficacy of Turbulence Modelling for Sloshing' (2022), Applied Sciences 12(17):8851",
+        "url": "https://www.mdpi.com/2076-3417/12/17/8851"
+      },
+      {
+        "cite": "Carette, N. (2023), 'A consistent method to design and evaluate the performance of Anti-Roll Tanks for ships', Ship Technology Research 70",
+        "url": "https://www.tandfonline.com/doi/full/10.1080/09377255.2022.2117496"
+      },
+      {
+        "cite": "Moaleji, R. & Greig, A.R. (2007), 'On the development of ship anti-roll tanks', Ocean Engineering 34(1):103-121",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0029801806000722"
+      },
+      {
+        "cite": "Youssef, K.S., Mook, D.T., Nayfeh, A.H. & Ragab, S.A. (2003), 'Roll Stabilization by Passive Anti-Roll Tanks Using an Improved Model of the Tank-Liquid Motion', J. Vibration and Control 9(7):839-862",
+        "url": "https://journals.sagepub.com/doi/10.1177/1077546303009007006"
+      },
+      {
+        "cite": "Abdel Gawad, A.F., Ragab, S.A., Nayfeh, A.H. & Mook, D.T. (2001), 'Roll stabilization by anti-roll passive tanks', Ocean Engineering 28",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0029801800000159"
+      },
+      {
+        "cite": "MDPI Water 16(11):1551 (2024), 'Experimental Study on the Sloshing of a Rectangular Tank under Pitch Excitations'",
+        "url": "https://www.mdpi.com/2073-4441/16/11/1551"
+      },
+      {
+        "cite": "'Experimental study on sloshing impact load in elastic tank with low/partial filling under rolling coupled pitching', Int. J. Naval Arch. & Ocean Eng., S2092-6782(19)30044-5",
+        "url": "https://www.sciencedirect.com/science/article/pii/S2092678219300445"
+      },
+      {
+        "cite": "Verhagen, J.H.G. & van Wijngaarden, L. (1965), 'Non-linear oscillations of fluid in a container', J. Fluid Mech. 22; as summarized in J. Fluids & Structures 2021, S0889-9746(21)00105-5 and JMSE 2022, 10(11):1792",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0889974621001055"
+      },
+      {
+        "cite": "'Comparison of Sloshing Pressures in 2D and 3D Tanks' (2013), Int. J. Ocean Syst. Eng.",
+        "url": "https://koreascience.or.kr/article/JAKO201302757910269.page"
+      },
+      {
+        "cite": "Bunnik, T. & Huijsmans, R. (2007), 'Large-scale LNG sloshing model tests', ISOPE; ComFLOW-2 project",
+        "url": "https://www.semanticscholar.org/paper/f1d44f5067ad8298c44222e207446a85cec8d1c4"
+      },
+      {
+        "cite": "Kim, S.-Y., Kim, K.-H., Kim, Y. et al. (2012), 'Comparative study on model-scale sloshing tests', J. Marine Science and Technology 17",
+        "url": "https://link.springer.com/article/10.1007/s00773-011-0144-z"
+      },
+      {
+        "cite": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Botía-Vera canonical narrow sloshing tank",
+        "url": "https://www.flow3d.com/validation-of-sloshing-simulations-in-narrow-tanks/"
+      },
+      {
+        "cite": "Godderidge, B., Turnock, S.R., Tan, M. & Earl, C. (2009/2012), 'A rapid method for the simulation of sloshing using a mathematical model based on the pendulum equation', Computers & Fluids",
+        "url": "https://eprints.soton.ac.uk/337050/"
+      }
+    ]
+  }
+}
