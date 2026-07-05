@@ -453,6 +453,18 @@ SPECS: list[dict] = [
          bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
                   "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
+    dict(id="sloshing-explorer", kind="work", title="Tank sloshing resonance explorer",
+         std="Faltinsen linear potential theory · API 650 Annex E",
+         path="structural/sloshing-explorer.html",
+         blurb="A representative LNG-scale tank swept across fill level: the fundamental sloshing "
+               "periods (prismatic and cylindrical, linear potential theory) and the API 650 "
+               "Annex E convective period, read live against a vessel roll-period band. Every "
+               "point is a live hydrodynamics.sloshing evaluation.",
+         figures=[("49", "engine evaluations"), ("<0.5%", "API 650 ↔ potential-flow agreement"),
+                  ("6.7–15.5 s", "fundamental period vs fill")],
+         bullets=["Rectangular & upright-cylindrical fundamental sloshing periods from linear potential-flow theory (Faltinsen & Timokha), plus the API 650 Annex E convective period",
+                  "Live resonance flag against a representative vessel roll band — partial fill lengthens the sloshing period into the vessel-motion range, the coupling external diffraction (AQWA/OrcaWave) does not capture",
+                  "The analytical / class-simplified screening tier; CFD (VOF free-surface) is reserved for the violent/impact and resonant cases it flags"]),
     dict(id="cathodic-protection-explorer", kind="work", title="Cathodic-protection anode explorer",
          std="DNV-RP-B401",
          path="structural/cathodic-protection-explorer.html",
