@@ -414,6 +414,22 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
   <div id="cfdverify"></div>
 </div>
 
+<div class="panel" id="cfdlitpanel" style="display:none">
+  <span class="tag" style="color:#c0392b">CFD vs literature &mdash; which shape is validated</span>
+  <h2>Which tank shape was run in CFD? The RECTANGULAR tank &mdash; measured CFD vs literature theory</h2>
+  <p class="sub" style="margin:0 0 8px">The master curve above is <b>literature theory</b> (linear potential flow) for every
+  shape. So far only the <b>rectangular</b> tank has been validated with free-surface CFD (OpenFOAM VOF). This chart
+  isolates it &mdash; CFD-measured points against the literature curve, with the error at each fill &mdash; and the strip
+  below shows which shapes are CFD-validated versus literature / analytical only.</p>
+  <svg id="cfdlitchart" viewBox="0 0 720 380" role="img" aria-label="CFD measured vs literature theory, rectangular tank"></svg>
+  <div class="legend" id="cfdlitlegend"></div>
+  <div id="shapecov" style="margin-top:12px"></div>
+  <p class="fnote">Literature basis: linear potential theory (Faltinsen &amp; Timokha 2009; Abramson 1966), corroborated by
+  forced-roll and multi-fill CFD / experiments (Delorme&nbsp;/&nbsp;SPHERIC; Rognebakke &amp; Faltinsen; Chen &amp; Xue).
+  Full method, force histories and the adversarially-verified survey:
+  <a href="../cfd/sloshing-cfd-study.html">the 2D CFD validation study &rarr;</a></p>
+</div>
+
 <div class="panel" id="forcedpanel" style="display:none">
   <span class="tag" style="color:#c0392b">Forced-roll resonance &mdash; with vs without</span>
   <h2>How forced roll reveals the sloshing resonance</h2>
@@ -689,8 +705,44 @@ function renderResearch(){
       `<span class="rat">— ${x.rationale||''}</span></li>`;}).join('');
 }
 
+/* ---------- CFD vs literature — which shape is validated (issue #1429) ---------- */
+function renderCfdVsLit(){
+  const panel=document.getElementById('cfdlitpanel');
+  if(!CFD||!CFD.free_decay||!CFD.free_decay.points.length){ if(panel) panel.style.display='none'; return; }
+  panel.style.display='';
+  const rect=DATA.shapes.find(s=>s.key==='rectangular')||DATA.shapes[0];
+  let g='';
+  for(let gx=0;gx<=1.5;gx+=0.25){g+=`<line x1="${px(gx)}" y1="${py(0)}" x2="${px(gx)}" y2="${py(YMAX)}" stroke="var(--line)"/>`+
+    `<text x="${px(gx)}" y="${py(0)+16}" fill="var(--muted)" font-size="10" text-anchor="middle">${gx}</text>`;}
+  for(let gy=0;gy<=2;gy+=0.5){g+=`<line x1="${px(0)}" y1="${py(gy)}" x2="${px(XMAX)}" y2="${py(gy)}" stroke="var(--line)"/>`+
+    `<text x="${px(0)-8}" y="${py(gy)+3}" fill="var(--muted)" font-size="10" text-anchor="end">${gy.toFixed(1)}</text>`;}
+  g+=`<text x="${(ML+XW-MR)/2}" y="${YH-6}" fill="var(--muted)" font-size="11" text-anchor="middle">fill / slenderness ratio  h / L</text>`;
+  g+=`<text transform="translate(14,${(YH-MB+MT)/2}) rotate(-90)" fill="var(--muted)" font-size="11" text-anchor="middle">Ω₁ = ω₁√(L/g)</text>`;
+  const d=rect.curve.map((p,j)=>`${j?'L':'M'}${px(p[0]).toFixed(1)} ${py(p[1]).toFixed(1)}`).join(' ');
+  g+=`<path d="${d}" fill="none" stroke="var(--c0)" stroke-width="2.6"/>`;
+  CFD.free_decay.points.forEach(p=>{
+    const cx=px(p.x), cy=py(p.om_meas);
+    g+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5.5" fill="#fff" stroke="${CFDCOL}" stroke-width="2.4"/>`+
+       `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2" fill="${CFDCOL}"/>`+
+       `<text x="${(cx+9).toFixed(1)}" y="${(cy-6).toFixed(1)}" fill="${CFDCOL}" font-size="10" font-weight="700">${(p.err*100).toFixed(2)}%</text>`;
+  });
+  document.getElementById('cfdlitchart').innerHTML=g;
+  document.getElementById('cfdlitlegend').innerHTML=
+    `<span><i style="background:var(--c0)"></i>Literature — linear potential theory (rectangular)</span>`+
+    `<span><i style="background:transparent;border:2px solid ${CFDCOL};height:11px;width:11px;border-radius:50%"></i>CFD measured — OpenFOAM VOF (rectangular)</span>`;
+  const cov=DATA.shapes.map((s,i)=>{
+    const r=(s.key==='rectangular');
+    return `<span style="display:inline-block;border:1px solid var(--line);border-radius:20px;padding:5px 12px;margin:3px 8px 3px 0;font-size:12px;`+
+      (r?`background:#fdecea;color:${CFDCOL};font-weight:700`:`background:var(--soft);color:var(--muted)`)+`">`+
+      `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${COL[i]};margin-right:6px;vertical-align:0"></i>`+
+      `${s.label} &mdash; ${r?'CFD-validated ✓':'literature / analytical'}</span>`;
+  }).join('');
+  document.getElementById('shapecov').innerHTML=`<b style="font-size:12.5px;color:var(--ink)">CFD validation coverage by shape:</b><br>`+cov;
+}
+
 document.getElementById('refs').innerHTML=DATA.references.map(r=>`<li>${r}</li>`).join('');
 renderCFD();
+renderCfdVsLit();
 renderForced();
 renderResearch();
 renderShape();

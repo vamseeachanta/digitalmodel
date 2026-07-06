@@ -214,7 +214,8 @@ analytical linear-potential value &radic;(&pi;&middot;tanh(&pi;h/L)). Four fills
 <tbody>{rows}</tbody></table>
 <p class="callout key"><b>Result.</b> The 2D VOF pipeline reproduces the analytical first-mode frequency to
 within {worst:.2f}% across the fill range — the measured points sit on the rectangular master curve. See the
-<a href="../structural/sloshing-explorer.html">interactive master-curve explorer</a>.</p>
+<a href="../structural/sloshing-explorer.html#cfdlitpanel">CFD-vs-literature chart</a> (which shape was validated) in
+the interactive explorer.</p>
 """
 
 
