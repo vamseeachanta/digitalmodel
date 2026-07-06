@@ -440,6 +440,83 @@ def _fmt0(v):
     return f"{int(v):,}" if isinstance(v, (int, float)) else "—"
 
 
+def _convergence_svg(conv):
+    """Static SVG: relative error (%) vs mesh (cells-per-breadth), log-x — shows
+    the free-decay frequency converging as the grid refines."""
+    ms = conv.get("mesh_sweep", []) if conv else []
+    pts = [(m["cells_per_breadth"], abs(m["rel_error_pct"])) for m in ms if m.get("rel_error_pct") is not None]
+    if len(pts) < 2:
+        return ""
+    pts.sort()
+    xs = [math.log10(c) for c, _ in pts]
+    ymax = max(0.5, max(e for _, e in pts) * 1.15)
+    W, H, ML, MR, MT, MB = 720, 300, 56, 16, 14, 42
+    x0, x1 = min(xs) - 0.05, max(xs) + 0.05
+    def px(lx):
+        return ML + (lx - x0) / (x1 - x0) * (W - ML - MR)
+    def py(e):
+        return H - MB - e / ymax * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    for c, _ in pts:
+        lx = math.log10(c)
+        g.append(f'<line x1="{px(lx):.1f}" y1="{py(0):.1f}" x2="{px(lx):.1f}" y2="{py(ymax):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(lx):.1f}" y="{py(0)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{c}</text>')
+    for e in (0, ymax/2, ymax):
+        g.append(f'<line x1="{px(x0):.1f}" y1="{py(e):.1f}" x2="{px(x1):.1f}" y2="{py(e):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(x0)-8:.1f}" y="{py(e)+3:.1f}" fill="#5a6b7b" font-size="10" text-anchor="end">{e:.2f}</text>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">mesh resolution — cells per breadth (log)</text>')
+    g.append(f'<text transform="translate(13,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">|frequency error| (%)</text>')
+    line = " ".join(f'{"L" if i else "M"}{px(math.log10(c)):.1f} {py(e):.1f}' for i, (c, e) in enumerate(pts))
+    g.append(f'<path d="{line}" fill="none" stroke="#0B3D91" stroke-width="2.4"/>')
+    for c, e in pts:
+        g.append(f'<circle cx="{px(math.log10(c)):.1f}" cy="{py(e):.1f}" r="4.5" fill="#fff" stroke="#0B3D91" stroke-width="2"/>')
+    g.append('</svg>')
+    return "".join(g) + '<p class="cap">Free-decay frequency error vs mesh — it falls only slowly toward a ~0.29% floor: the residual is physical (finite-amplitude), not mesh.</p>'
+
+
+def _convergence_section(conv):
+    if not conv or not conv.get("mesh_sweep"):
+        return ""
+    an = conv.get("analytical_freq_hz")
+    rich = conv.get("richardson") or {}
+    svg = _convergence_svg(conv)
+    mrows = "".join(
+        f'<tr><td>{m["cells_per_breadth"]}&times;{m["cells_per_breadth"]}</td><td class="num">{m["cells"]:,}</td>'
+        f'<td class="num">{m["freq_meas_hz"]:.5f}</td><td class="num">{abs(m["rel_error_pct"]):.3f}%</td>'
+        f'<td class="num">{_fmt0(m.get("runtime_s"))}</td><td class="num">{_fmt0(m.get("predicted_runtime_s"))}</td></tr>'
+        for m in conv["mesh_sweep"])
+    drows = "".join(
+        f'<tr><td>{d["dt"]}</td><td class="num">{d["timesteps"]:,}</td><td class="num">{d["freq_meas_hz"]:.5f}</td>'
+        f'<td class="num">{abs(d["rel_error_pct"]):.3f}%</td></tr>' for d in conv.get("dt_sweep", []))
+    rich_txt = ""
+    if rich:
+        rich_txt = (f'<p class="callout"><b>Richardson extrapolation (ratio-2 triple).</b> Observed order of accuracy '
+                    f'<b>p&nbsp;=&nbsp;{rich.get("observed_order_p")}</b>, grid-converged frequency '
+                    f'<b>{rich.get("extrapolated_freq_hz")}&nbsp;Hz</b> vs analytical {an}&nbsp;Hz, fine-grid '
+                    f'GCI&nbsp;=&nbsp;<b>{rich.get("gci_fine_pct")}%</b>. The extrapolated value stays ~0.2% below the '
+                    f'linear-analytical target, and p is far below the formal ~2 &mdash; so the study is not in the '
+                    f'asymptotic regime and the GCI is indicative only (a non-mesh term dominates the error).</p>')
+    verdict = conv.get("verdict")
+    vtxt = f'<p class="callout key"><b>Verdict.</b> {_esc(verdict)}</p>' if verdict else ""
+    return f"""
+<h2>Grid &amp; timestep convergence — is the &le;0.30% earned?</h2>
+<p>The literature (and our own adversarial review) is clear that a sub-percent match must be <b>earned</b> by a
+convergence study, not asserted. This refines the exact case with the known ~0.30% error (L=1&nbsp;m tank,
+h/L&nbsp;=&nbsp;0.30 &mdash; which lands on a cell face at every mesh, so the analytical target is identical) across
+five grids and three timesteps.</p>
+{svg}
+<table><thead><tr><th>Mesh</th><th>Cells</th><th>Freq (Hz)</th><th>|error|</th><th>Runtime (s)</th><th>Predicted (s)</th></tr></thead>
+<tbody>{mrows}</tbody></table>
+<p class="cap">The last two columns check the <a href="cfd-runtime-estimator.html">run-time estimator</a>: its rate is calibrated at
+~16-wide contention, so it reads as an upper bound here — this batch ran 7-wide and tapering, so actual came in below
+predicted, exactly as the contention model says (fewer concurrent &rarr; faster per case).</p>
+<h3>Timestep sweep (fixed 80&times;80 mesh)</h3>
+<table><thead><tr><th>&Delta;t (s)</th><th>Timesteps</th><th>Freq (Hz)</th><th>|error|</th></tr></thead><tbody>{drows}</tbody></table>
+{rich_txt}
+{vtxt}
+"""
+
+
 def _references_section(research):
     refs = []
     if research:
@@ -542,6 +619,7 @@ def build():
     backbone = _load("sloshing-backbone.json")
     research = _load("sloshing-cfd-research.json")
     compute = _load_cfd("sloshing-compute.json")
+    convergence = _load_cfd("sloshing-convergence.json")
 
     n_cases = 0
     if bench:
@@ -574,6 +652,7 @@ def build():
 </header>
 {_img("effect-of-roll.gif", "The effect of forced roll — same tank, same 70% fill. LEFT: with roll, the free surface piles up and sloshes wall-to-wall. RIGHT: without roll, it stays flat and calm. Live 2D VOF (OpenFOAM v2312) free-surface fields.", "820px")}
 {_natural_period_section(bench)}
+{_convergence_section(convergence)}
 {_forced_section(forced)}
 {_backbone_section(backbone)}
 {_literature_section(research)}

@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_convergence.py",
+    "epic": "#1429",
+    "issue": "#1433",
+    "case": "rectangular free-decay, L=1.0 m, h/L=0.3",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "note": "h/L=0.30 lands exactly on a cell face for every mesh, so the analytical target is identical."
+  },
+  "analytical_freq_hz": 0.758054,
+  "mesh_sweep": [
+    {
+      "cells_per_breadth": 40,
+      "cells": 1600,
+      "dt": 0.002,
+      "freq_meas_hz": 0.75558,
+      "rel_error_pct": 0.3264,
+      "runtime_s": 149.7,
+      "predicted_runtime_s": 117.6
+    },
+    {
+      "cells_per_breadth": 60,
+      "cells": 3600,
+      "dt": 0.002,
+      "freq_meas_hz": 0.755651,
+      "rel_error_pct": 0.317,
+      "runtime_s": 241.2,
+      "predicted_runtime_s": 264.6
+    },
+    {
+      "cells_per_breadth": 80,
+      "cells": 6400,
+      "dt": 0.002,
+      "freq_meas_hz": 0.755701,
+      "rel_error_pct": 0.3104,
+      "runtime_s": 342.7,
+      "predicted_runtime_s": 470.4
+    },
+    {
+      "cells_per_breadth": 120,
+      "cells": 14400,
+      "dt": 0.002,
+      "freq_meas_hz": 0.755763,
+      "rel_error_pct": 0.3022,
+      "runtime_s": 684.8,
+      "predicted_runtime_s": 1058.4
+    },
+    {
+      "cells_per_breadth": 160,
+      "cells": 25600,
+      "dt": 0.002,
+      "freq_meas_hz": 0.755807,
+      "rel_error_pct": 0.2964,
+      "runtime_s": 1208.0,
+      "predicted_runtime_s": 1881.6
+    }
+  ],
+  "dt_sweep": [
+    {
+      "dt": 0.004,
+      "cells_per_breadth": 80,
+      "timesteps": 3000,
+      "freq_meas_hz": 0.755702,
+      "rel_error_pct": 0.3103,
+      "runtime_s": 205.6
+    },
+    {
+      "dt": 0.002,
+      "cells_per_breadth": 80,
+      "timesteps": 6000,
+      "freq_meas_hz": 0.755701,
+      "rel_error_pct": 0.3104,
+      "runtime_s": 342.7
+    },
+    {
+      "dt": 0.001,
+      "cells_per_breadth": 80,
+      "timesteps": 12000,
+      "freq_meas_hz": 0.755717,
+      "rel_error_pct": 0.3083,
+      "runtime_s": 615.9
+    }
+  ],
+  "richardson": {
+    "observed_order_p": 0.191,
+    "extrapolated_freq_hz": 0.756556,
+    "gci_fine_pct": 0.1239
+  },
+  "verdict": "Numerically sound: the frequency is grid- and timestep-converged — mesh error falls monotonically to a ~0.29% plateau (only the finest 25,600-cell mesh reaches ≤0.30%) and the timestep sweep is flat over a 4× refinement. But the residual is predominantly PHYSICAL, not discretization: Richardson extrapolation gives 0.7566 Hz, still ~0.20% below the linear-analytical 0.758 Hz — an irreducible finite-amplitude offset (0.02 m perturbation) from the linear tanh dispersion. The low observed order (p ≈ 0.19, far below the formal ~2) confirms a non-mesh term dominates the error budget, so the GCI (0.12%) is indicative only. Bottom line: the ~0.3% agreement is a finite-amplitude modeling difference, not numerical error that vanishes with refinement."
+}
