@@ -134,8 +134,11 @@ def _parabolic_peak(xs: List[float], ys: List[float]) -> Optional[float]:
     denom = (y0 - 2 * y1 + y2)
     if denom == 0:
         return x1
-    # vertex of the parabola through the three equally-or-unequally spaced points
-    return x1 + 0.5 * ((x1 - x0) ** 2 * (y1 - y2) - (x1 - x2) ** 2 * (y1 - y0)) / (
+    # Vertex of the parabola through the three points (Numerical Recipes 10.2).
+    # NOTE the leading minus — the version shipped in PR #1438 had "+", which
+    # REFLECTS the vertex about the grid maximum x1; peak locations were correct
+    # only to the grid spacing. Corrected with the #1433 shallow-fill sweep.
+    return x1 - 0.5 * ((x1 - x0) ** 2 * (y1 - y2) - (x1 - x2) ** 2 * (y1 - y0)) / (
         (x1 - x0) * (y1 - y2) - (x1 - x2) * (y1 - y0))
 
 

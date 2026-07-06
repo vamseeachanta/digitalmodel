@@ -488,7 +488,8 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
   <p class="fnote">&zeta; and B&#8324;&#8324; from the forced-roll CFD (in-phase / quadrature reduction; SloshingCouplingModel).
   Higher fill &rarr; more damping. This is a <b>screening-grade linearization</b>, valid as a design anchor, not a full model:
   &zeta; is a config-specific <b>equivalent</b> (not an invariant law), fixed at <b>4&deg; roll</b> (larger amplitude bends the
-  backbone &mdash; softening &mdash; and raises breaking-driven damping); it is <b>2D</b>, so it cannot capture 3D rotary/swirl
+  backbone &mdash; softening at these fills, h/L &ge; 0.30; shallow fills harden instead &mdash; and raises breaking-driven
+  damping); it is <b>2D</b>, so it cannot capture 3D rotary/swirl
   modes near resonance; there are <b>no baffles/screens</b> (damping here is wave-breaking only &mdash; real anti-roll tanks tune
   damping with internals); and roll&ndash;sway coupling / roll-axis position are not modelled. Only three fills, so &zeta;/B&#8324;&#8324;
   are coarsely interpolated. See the <a href="../cfd/sloshing-cfd-study.html">CFD study</a> for the backbone and full caveats.</p>
@@ -750,9 +751,13 @@ function renderResearch(){
   const li=items=>items.map(x=>`<li>${x.point||''}<span class="cite">${x.citation||''}</span></li>`).join('');
   document.getElementById('litsup').innerHTML=li(RES.supports||[]);
   document.getElementById('litcon').innerHTML=li(RES.contrasts||[]);
-  document.getElementById('furthercfd').innerHTML=(RES.further_cfd||[]).map(x=>{
+  const fw=(RES.further_cfd||[]).slice().sort((a,b)=>(a.status==='done')-(b.status==='done'));
+  document.getElementById('furthercfd').innerHTML=fw.map(x=>{
     const p=(x.priority||'medium');
-    return `<li><span class="pri pri-${p}">${p.toUpperCase()}</span><b>${x.title||''}</b> `+
+    const chip=x.status==='done'
+      ? `<span class="pri" style="background:#e6f4ea;color:#1f7a43">&#10003; DONE</span>`
+      : `<span class="pri pri-${p}">${p.toUpperCase()}</span>`;
+    return `<li>${chip}<b>${x.title||''}</b> `+
       `<span class="rat">— ${x.rationale||''}</span></li>`;}).join('');
 }
 

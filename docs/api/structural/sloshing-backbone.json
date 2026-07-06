@@ -24,9 +24,9 @@
       "amplitudes": [
         {
           "roll_deg": 2.0,
-          "resonant_ratio": 0.9907,
-          "freq_ratio": 1.0093,
-          "detuning_pct": 0.93,
+          "resonant_ratio": 1.0093,
+          "freq_ratio": 0.9908,
+          "detuning_pct": -0.92,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.25469,
           "points": [
@@ -76,9 +76,9 @@
         },
         {
           "roll_deg": 4.0,
-          "resonant_ratio": 1.0463,
-          "freq_ratio": 0.9558,
-          "detuning_pct": -4.42,
+          "resonant_ratio": 1.0537,
+          "freq_ratio": 0.949,
+          "detuning_pct": -5.1,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.42196,
           "points": [
@@ -128,9 +128,9 @@
         },
         {
           "roll_deg": 6.0,
-          "resonant_ratio": 1.1059,
-          "freq_ratio": 0.9043,
-          "detuning_pct": -9.57,
+          "resonant_ratio": 1.0941,
+          "freq_ratio": 0.914,
+          "detuning_pct": -8.6,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.41948,
           "points": [
@@ -180,9 +180,9 @@
         },
         {
           "roll_deg": 8.0,
-          "resonant_ratio": 1.0788,
-          "freq_ratio": 0.927,
-          "detuning_pct": -7.3,
+          "resonant_ratio": 1.1212,
+          "freq_ratio": 0.8919,
+          "detuning_pct": -10.81,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.43244,
           "points": [
@@ -239,9 +239,9 @@
       "amplitudes": [
         {
           "roll_deg": 2.0,
-          "resonant_ratio": 1.0542,
-          "freq_ratio": 0.9486,
-          "detuning_pct": -5.14,
+          "resonant_ratio": 1.0458,
+          "freq_ratio": 0.9562,
+          "detuning_pct": -4.38,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.3387,
           "points": [
@@ -291,9 +291,9 @@
         },
         {
           "roll_deg": 4.0,
-          "resonant_ratio": 1.1124,
-          "freq_ratio": 0.899,
-          "detuning_pct": -10.1,
+          "resonant_ratio": 1.0876,
+          "freq_ratio": 0.9194,
+          "detuning_pct": -8.06,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.38973,
           "points": [
@@ -343,9 +343,9 @@
         },
         {
           "roll_deg": 6.0,
-          "resonant_ratio": 1.0778,
-          "freq_ratio": 0.9278,
-          "detuning_pct": -7.22,
+          "resonant_ratio": 1.1222,
+          "freq_ratio": 0.8911,
+          "detuning_pct": -10.89,
           "peak_quad_at_grid_edge": false,
           "peak_runup_m": 0.40405,
           "points": [
