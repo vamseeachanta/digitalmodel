@@ -738,6 +738,34 @@
       }
     ]
   },
+  "sdof": {
+    "g": 9.80665,
+    "roll_deg": 4.0,
+    "breadth_m": 0.9,
+    "fills": [
+      {
+        "h_over_L": 0.3,
+        "T1": 1.25147,
+        "zeta": 0.095,
+        "B44": 1.9971,
+        "A44": -0.0191
+      },
+      {
+        "h_over_L": 0.5,
+        "T1": 1.12136,
+        "zeta": 0.18,
+        "B44": 1.7,
+        "A44": -0.0105
+      },
+      {
+        "h_over_L": 0.7,
+        "T1": 1.0872,
+        "zeta": 0.305,
+        "B44": 2.6687,
+        "A44": 0.019
+      }
+    ]
+  },
   "research": {
     "confidence": "The literature supports our 2D VOF free-decay + forced-roll approach for the FREQUENCY, TUNING and DAMPING questions it is scoped to answer, but with more caveats than the original draft implied. Independent VOF-CFD (Yang & West 2016) and shaker/sway experiments (B\u00e4uerlein & Avila 2021; Chen & Xue 2018; Faltinsen/Rognebakke) confirm that linear tanh dispersion predicts first-mode natural frequencies well at intermediate-to-deep fills and that free-decay-then-FFT is an accepted extraction method, so a sub-percent free-decay match is credible - but a specific '<0.3%' figure must be EARNED by a Courant/mesh-convergence study, not asserted a priori. B\u00e4uerlein & Avila validate the 90-degree phase-lag/quadrature criterion as a rigorous resonance locator, and the anti-roll-tank literature (Carette 2023; Moaleji & Greig 2007) supports reducing a partially filled tank to a lightly-damped tuned SDOF. Confidence is genuinely PARTIAL for design loads and combined-motion excitation: above the ~0.34 critical depth the resonance detunes off linear T1 onto a soft-spring branch (confirmed by B\u00e4uerlein & Avila 2024), 2D omits swirl and the effective-gravity-angle (sway+roll) forcing, and impact-pressure magnitude is mesh/air-compressibility sensitive.",
     "supports": [
