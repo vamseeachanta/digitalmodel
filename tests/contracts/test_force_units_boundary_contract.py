@@ -296,8 +296,11 @@ _TYPICAL: dict[str, float] = {
 
 
 def _in_window(key: str, value: float) -> bool:
+    # Half-open [lo, hi): with inclusive bounds a 3-decade window lets an
+    # edge value's x1000 (or div-1000) corruption land exactly ON the opposite
+    # bound and pass undetected (r2 finding 2).
     lo, hi = PLAUSIBLE[key]
-    return lo <= value <= hi
+    return lo <= value < hi
 
 
 def test_windows_reject_factor_1000_mutations():
@@ -504,7 +507,11 @@ def test_mooring_check_mbl_plausibility_seam():
     max_tension_kn = 3000.0
     util = design.check_mbl(max_tension_kn)
 
-    mbl = MOORING_MATERIAL_LIBRARY["R4_84mm_chain"].mbl  # 6978.0 kN
+    mbl = MOORING_MATERIAL_LIBRARY["R4_84mm_chain"].mbl
+    # Pin the library constant so the hand-calc is genuinely independent — a
+    # silent library-value change within the window would otherwise pass
+    # (r2 finding 1).
+    assert mbl == 6978.0
     assert _in_window("mooring_mbl_kn", mbl)
     expected = round(max_tension_kn / mbl, 4)  # 0.4299
     assert util["R4_84mm_chain"] == expected
