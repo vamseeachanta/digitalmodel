@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFD run-time estimator — digitalmodel</title>
+<style>
+ :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;--mut:#5b6b86;
+       --line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--warn:#b8860b;--bad:#c0392b}
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);
+      line-height:1.55;padding:26px 20px 60px;max-width:1000px;margin:0 auto}
+ h1{font-size:24px;color:var(--navy);letter-spacing:-.3px}
+ h2{font-size:15px;color:var(--navy);margin:2px 0 10px}
+ .sub{color:var(--mut);font-size:14px;margin:6px 0 18px;max-width:860px}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px;
+        box-shadow:0 1px 2px rgba(16,40,80,.04)}
+ .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+ .machine{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+ .machine div{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--mut)}
+ .machine b{display:block;color:var(--navy);font-size:14px}
+ .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:6px 0 4px}
+ label{font-weight:700;color:var(--navy);font-size:12.5px;display:block;margin-bottom:3px}
+ select,input{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%}
+ .hint{font-size:11px;color:var(--mut);margin-top:2px}
+ .reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:16px 0 4px}
+ .read{background:linear-gradient(135deg,#f4f8fc,#eaf3ff);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+ .read span{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+ .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:26px;font-weight:700;color:var(--navy);margin-top:3px}
+ .read.hero b{color:var(--bad)}
+ .read small{color:var(--mut);font-size:12px;font-weight:400}
+ table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}
+ th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--line)} th:first-child,td:first-child{text-align:left}
+ th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+ td.mono{font-family:ui-monospace,Menlo,monospace;color:var(--navy);font-weight:700}
+ .fnote{font-size:12px;color:var(--mut);margin-top:10px} .fnote b{color:var(--ink)}
+ .foot{color:var(--mut);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
+ code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:.9em}
+</style></head><body>
+<h1>CFD run-time estimator</h1>
+<p class="sub">How long will a 2D interFoam (VOF) sloshing study take on this machine? Enter a proposed run and read the
+<b>anticipated wall-clock to wait</b>. The per-case rate is the machine's own <b>measured</b> µs per cell&middot;timestep
+(from <a href="sloshing-cfd-study.html">the CFD study</a>), so the estimate reproduces the real runs &mdash; see the
+validation panel. Use it to scope and review new CFD work before committing the compute.</p>
+
+<div class="panel">
+  <span class="tag">Machine</span>
+  <div class="machine" id="machine"></div>
+</div>
+
+<div class="panel">
+  <span class="tag">Estimate a run</span>
+  <h2>Proposed study</h2>
+  <div class="grid">
+    <div><label>Case profile</label><select id="profile"></select><div class="hint" id="rateHint"></div></div>
+    <div><label>Mesh N<sub>x</sub></label><input type="number" id="nx" value="60" min="1"></div>
+    <div><label>Mesh N<sub>y</sub></label><input type="number" id="ny" value="60" min="1"></div>
+    <div><label>Mesh N<sub>z</sub> (1 = 2D)</label><input type="number" id="nz" value="1" min="1"><div class="hint" id="cellHint"></div></div>
+    <div><label>Sim time (s)</label><input type="number" id="simt" value="7" step="0.1" min="0.1"></div>
+    <div><label>Time step &Delta;t (s)</label><input type="number" id="dt" value="0.001" step="0.0005" min="1e-5"><div class="hint" id="stepHint"></div></div>
+    <div><label>Number of cases</label><input type="number" id="ncase" value="48" min="1"></div>
+    <div><label>Fan-out (concurrent)</label><input type="number" id="conc" value="14" min="1"><div class="hint">memory-limited ~16 on this box</div></div>
+  </div>
+  <div class="reads">
+    <div class="read"><span>Per-case wall</span><b id="oCase">&mdash;</b></div>
+    <div class="read"><span>Waves</span><b id="oWaves">&mdash;</b><small id="oWavesN"></small></div>
+    <div class="read hero"><span>Anticipated wait (batch)</span><b id="oBatch">&mdash;</b><small id="oBatchRange"></small></div>
+    <div class="read"><span>Cores reserved</span><b id="oCoreH">&mdash;</b><small>core-hours</small></div>
+  </div>
+  <p class="fnote"><b>Model:</b> per-case wall = rate &times; cells &times; timesteps (rate = measured, at ~14&ndash;16-wide fan-out);
+  batch = &lceil;cases / fan-out&rceil; waves. Estimates carry <b>~&plusmn;30%</b> (adaptive-timestep &amp; free-surface variance).
+  3D (N<sub>z</sub>&gt;1) applies an <b>unmeasured ~1.2&times;</b> cost/cell penalty &mdash; benchmark before relying on it. Running fewer
+  concurrent finishes each case faster (a quieter box is ~35% quicker per case) but fewer in parallel.</p>
+</div>
+
+<div class="panel">
+  <span class="tag">Validation &mdash; measured vs predicted</span>
+  <h2>The estimator reproduces the real runs</h2>
+  <table><thead><tr><th>Measured case class</th><th>Cells</th><th>Timesteps</th><th>Fan-out</th>
+    <th>Measured / case</th><th>Predicted / case</th></tr></thead><tbody id="valrows"></tbody></table>
+  <p class="fnote">The per-case rate is calibrated from these classes, so predicted matches measured by construction; the value is
+  extrapolating to <b>new</b> mesh sizes, sim lengths, case counts and concurrency for planning.</p>
+</div>
+
+<p class="foot">Built by <code>scripts/capabilities/build_cfd_runtime_estimator.py</code> from
+<code>docs/api/cfd/sloshing-compute.json</code>. &mdash; <a href="sloshing-cfd-study.html">CFD study &amp; provenance &rarr;</a></p>
+
+<script>
+const DATA = {"machine":{"host":"dev-secondary (ace-linux-2)","cores":32,"ram_gb":31,"solver":"interFoam (VOF), OpenFOAM ESI v2312 \u2014 single-threaded per case"},"profiles":[{"label":"backbone (forced roll, 60x60)","rate_us":27.847,"cells":3600,"timesteps":7175,"runtime_s":719,"concurrency":14},{"label":"forced roll (60x60)","rate_us":22.316,"cells":3600,"timesteps":6810,"runtime_s":547,"concurrency":16},{"label":"free-decay (80x80)","rate_us":12.25,"cells":6400,"timesteps":6000,"runtime_s":470,"concurrency":16}]};
+const M = DATA.machine, PROF = DATA.profiles;
+document.getElementById('machine').innerHTML =
+  `<div><span>Host</span><b>${M.host||'—'}</b></div>`+
+  `<div><span>Cores</span><b>${M.cores||'—'}</b></div>`+
+  `<div><span>RAM</span><b>${M.ram_gb||'—'} GB</b></div>`+
+  `<div><span>Solver</span><b>${(M.solver||'').split('—')[0]}</b></div>`;
+
+const sel=document.getElementById('profile');
+PROF.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${p.label} — ${p.rate_us} µs/cell·step`;sel.appendChild(o);});
+
+function fmt(s){ if(!isFinite(s)||s<=0) return '—';
+  if(s<90) return s.toFixed(0)+' s';
+  if(s<5400){const m=Math.floor(s/60),ss=Math.round(s%60);return m+'m '+(ss<10?'0':'')+ss+'s';}
+  const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h+'h '+(m<10?'0':'')+m+'m';}
+
+function calc(){
+  const p=PROF[+sel.value];
+  const nx=+nxEl.value||1, ny=+nyEl.value||1, nz=+nzEl.value||1;
+  const cells=nx*ny*nz;
+  const simt=+simtEl.value||0, dt=+dtEl.value||1e-9;
+  const steps=Math.max(1,Math.round(simt/dt));
+  const N=Math.max(1,+ncaseEl.value||1), C=Math.max(1,+concEl.value||1);
+  let rate=p.rate_us*1e-6;                 // s per cell·timestep (measured, ~15-wide)
+  if(nz>1) rate*=1.2;                      // unmeasured 3D penalty
+  const perCase=rate*cells*steps;          // per-case wall (s)
+  const waves=Math.ceil(N/C);
+  const batchCentral=(N/C)*perCase;        // continuous scheduling
+  const batchUpper=waves*perCase;          // discrete waves (upper)
+  const coreH=batchCentral*C/3600;         // cores reserved x wall hours
+  document.getElementById('cellHint').textContent=cells.toLocaleString()+' cells';
+  document.getElementById('stepHint').textContent='≈ '+steps.toLocaleString()+' timesteps';
+  document.getElementById('rateHint').textContent=p.rate_us+' µs/cell·step'+(nz>1?' ×1.2 (3D, est.)':'');
+  document.getElementById('oCase').textContent=fmt(perCase);
+  document.getElementById('oWaves').textContent=waves;
+  document.getElementById('oWavesN').textContent=' × '+fmt(perCase);
+  document.getElementById('oBatch').textContent=fmt(batchCentral);
+  document.getElementById('oBatchRange').textContent='range '+fmt(batchCentral*0.7)+' – '+fmt(batchUpper);
+  document.getElementById('oCoreH').textContent=coreH.toFixed(1);
+}
+const nxEl=document.getElementById('nx'),nyEl=document.getElementById('ny'),nzEl=document.getElementById('nz'),
+      simtEl=document.getElementById('simt'),dtEl=document.getElementById('dt'),
+      ncaseEl=document.getElementById('ncase'),concEl=document.getElementById('conc');
+[sel,nxEl,nyEl,nzEl,simtEl,dtEl,ncaseEl,concEl].forEach(e=>e.addEventListener('input',calc));
+
+// validation rows: predicted per-case from the same model = rate*cells*steps
+document.getElementById('valrows').innerHTML = PROF.map(p=>{
+  const pred=p.rate_us*1e-6*p.cells*p.timesteps;
+  return `<tr><td>${p.label}</td><td class="mono">${p.cells.toLocaleString()}</td>`+
+    `<td class="mono">${p.timesteps.toLocaleString()}</td><td class="mono">${p.concurrency}×</td>`+
+    `<td class="mono">${fmt(p.runtime_s)}</td><td class="mono">${fmt(pred)}</td></tr>`;
+}).join('');
+
+function fmt2(s){return fmt(s);}
+calc();
+</script>
+</body></html>

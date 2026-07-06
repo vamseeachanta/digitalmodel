@@ -97,7 +97,9 @@ interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case), so future com
 cell&middot;timestep) is the machine invariant. Its <b>intrinsic</b> value is ~12&ndash;17&micro;s across classes;
 the higher per-class figures in the table below are the <b>same work inflated ~1.5&ndash;2.3&times; by
 memory-bandwidth contention</b> when 14&ndash;16 cases share the box &mdash; a batch artifact, not a physics cost
-curve. That contention is the dominant compute-planning lever.</p>
+curve. That contention is the dominant compute-planning lever.
+<b>Scoping a new run? Use the <a href="cfd-runtime-estimator.html">interactive run-time estimator &rarr;</a></b>
+to read the anticipated wait for a proposed mesh / case count / fan-out.</p>
 <p>This box runs 2D interFoam sloshing at an intrinsic ~12-17 us per cell·timestep (static free-decay ~12; a single uncontended moving-mesh forced case ~16-17). The 22-28 us per-class figures are NOT a physics cost curve — they are the same work inflated ~1.5-2.3x by memory-bandwidth contention when 14-16 cases share the 32-core / 31 GB box. Contention, not mesh motion, is the dominant compute-planning lever; a 14-wide fan-out still cut the 48-case backbone from ~5-6 h serial to 34.7 min (~7-10x wall-clock).</p>
 <table><thead><tr><th>Case class</th><th>Mesh (cells)</th><th>Timesteps</th><th>Sim time (s)</th>
 <th>Runtime median (s)</th><th>s / sim-s</th><th>&micro;s / cell&middot;step (contended)</th><th>Fan-out</th></tr></thead>
