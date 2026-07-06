@@ -421,7 +421,9 @@ def _compute_section(compute):
 cell&middot;timestep) is the machine invariant. Its <b>intrinsic</b> value is ~12&ndash;17&micro;s across classes;
 the higher per-class figures in the table below are the <b>same work inflated ~1.5&ndash;2.3&times; by
 memory-bandwidth contention</b> when 14&ndash;16 cases share the box &mdash; a batch artifact, not a physics cost
-curve. That contention is the dominant compute-planning lever.</p>
+curve. That contention is the dominant compute-planning lever.
+<b>Scoping a new run? Use the <a href="cfd-runtime-estimator.html">interactive run-time estimator &rarr;</a></b>
+to read the anticipated wait for a proposed mesh / case count / fan-out.</p>
 {head}
 <table><thead><tr><th>Case class</th><th>Mesh (cells)</th><th>Timesteps</th><th>Sim time (s)</th>
 <th>Runtime median (s)</th><th>s / sim-s</th><th>&micro;s / cell&middot;step (contended)</th><th>Fan-out</th></tr></thead>
