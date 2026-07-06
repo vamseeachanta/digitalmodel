@@ -106,12 +106,20 @@ def test_loop_covers_the_track(loop):
         assert "lead_time_s" in p
 
 
-def test_rolling_transition_go_to_nogo(loop):
+def test_rolling_transition_caution_to_nogo_and_back(loop):
+    # NOTE: under the twin-C zero-thrust-credit screen (drift_off_config.yml
+    # ``thrust_efficiency: 0.0`` — a scalar DPState cannot be shown to OPPOSE the
+    # drift, so surviving thrust is reported as a margin, never credited), the
+    # drift gauge can never say station_held with the default config. The composed
+    # verdict is therefore CAUTION at best — GO is deliberately unreachable in the
+    # served demo. This matches the committed monitor artifact and the reviewed
+    # twin-C conservatism; do NOT "fix" it by crediting thrust in the served loop.
     labels = [p["go_no_go"] for p in loop]
-    assert labels[0] == "GO", labels                 # calm, on station
+    assert labels[0] == "CAUTION", labels            # calm: best achievable verdict
+    assert "GO" not in labels, labels                # GO unreachable under zero credit
     assert "NO-GO" in labels, labels                 # the drift-off / high-sea excursion
     # the vessel recovers by the end of the drift-then-recover scenario
-    assert labels[-1] in ("GO", "CAUTION"), labels
+    assert labels[-1] == "CAUTION", labels
     # the peak-sea step (Hs 2.0 > ceiling, index 5) must be NO-GO (seastate-domain guard)
     assert labels[5] == "NO-GO", labels
 
