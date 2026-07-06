@@ -36,6 +36,11 @@ def _load(name):
     return json.loads(p.read_text()) if p.exists() else None
 
 
+def _load_cfd(name):
+    p = _OUT.parent / name
+    return json.loads(p.read_text()) if p.exists() else None
+
+
 def _img(fname, caption, maxw="560px"):
     """<figure> for a committed CFD render, or '' if the asset is absent."""
     if not (_VIZ / fname).exists():
@@ -369,6 +374,69 @@ def _wayforward_section(research):
     return f'<h2>5 &middot; Way forward — further CFD analysis</h2><ul class="fw">{items}</ul>'
 
 
+def _compute_section(compute):
+    if not compute or not compute.get("classes"):
+        return ""
+    m = compute.get("machine", {})
+    rows = ""
+    for c in compute["classes"]:
+        rt = c.get("runtime_s", {})
+        med = rt.get("median") if isinstance(rt, dict) else c.get("runtime_s_median")
+        rows += (
+            f'<tr><td>{_esc(c["class"])}</td>'
+            f'<td class="num">{c.get("cells"):,}</td>'
+            f'<td class="num">{_fmt0(c.get("median_timesteps"))}</td>'
+            f'<td class="num">{c.get("sim_time_s")}</td>'
+            f'<td class="num">{_fmt0(med)}</td>'
+            f'<td class="num">{c.get("throughput_s_per_sim_s")}</td>'
+            f'<td class="num">{c.get("cost_us_per_cell_timestep")}</td>'
+            f'<td class="num">{c.get("concurrency")}&times;</td></tr>')
+    pe = compute.get("parallel_efficiency") or {}
+    pe_txt = ""
+    if pe:
+        pe_txt = (f'<p class="callout key"><b>Parallel effectiveness.</b> The {pe.get("n_cases")}-case backbone batch ran '
+                  f'<b>{pe.get("concurrency")}&times; concurrent in {pe.get("actual_wall_min")} min</b> — versus '
+                  f'~5&ndash;6 h one-at-a-time (a <b>~7&ndash;10&times; wall-clock speedup</b>, the range reflecting how the '
+                  f'serial baseline is estimated), even though each case ran ~{pe.get("per_case_contention_x")}&times; slower '
+                  f'under memory-bandwidth contention. Fan-out wins decisively on total throughput.</p>')
+    model = compute.get("runtime_model", {})
+    an = compute.get("analysis") or {}
+    proj = ""
+    if an.get("projections"):
+        prows = "".join(
+            f'<tr><td>{_esc(p.get("tier",""))}</td><td>{_esc(p.get("assumptions",""))}</td>'
+            f'<td class="num">{_esc(p.get("est_wall",""))}</td><td class="num">{_esc(p.get("est_core_hours","—"))}</td></tr>'
+            for p in an["projections"])
+        proj = (f'<h3>Projected compute for the way-forward tiers</h3>'
+                f'<table><thead><tr><th>Tier</th><th>Assumptions</th><th>Est. wall-clock</th><th>Est. core-hours</th></tr></thead>'
+                f'<tbody>{prows}</tbody></table>')
+    caveats = ""
+    if an.get("caveats"):
+        caveats = '<p class="cap">Caveats: ' + " · ".join(_esc(c) for c in an["caveats"]) + '</p>'
+    head = f'<p>{_esc(an["headline"])}</p>' if an.get("headline") else ""
+    return f"""
+<h2>6 &middot; Compute &amp; runtime — machine effectiveness</h2>
+<p>What a 2D interFoam sloshing case costs on this box (<b>{_esc(m.get("host"))}</b>, {m.get("cores")} cores,
+{_esc(m.get("solver"))}), so future compute can be predicted. The mesh-normalised cost (&micro;s of wall per
+cell&middot;timestep) is the machine invariant. Its <b>intrinsic</b> value is ~12&ndash;17&micro;s across classes;
+the higher per-class figures in the table below are the <b>same work inflated ~1.5&ndash;2.3&times; by
+memory-bandwidth contention</b> when 14&ndash;16 cases share the box &mdash; a batch artifact, not a physics cost
+curve. That contention is the dominant compute-planning lever.</p>
+{head}
+<table><thead><tr><th>Case class</th><th>Mesh (cells)</th><th>Timesteps</th><th>Sim time (s)</th>
+<th>Runtime median (s)</th><th>s / sim-s</th><th>&micro;s / cell&middot;step (contended)</th><th>Fan-out</th></tr></thead>
+<tbody>{rows}</tbody></table>
+{pe_txt}
+<p class="cap">Runtime model: <code>{_esc(model.get("form",""))}</code> — {_esc(model.get("explanation",""))}</p>
+{proj}
+{caveats}
+"""
+
+
+def _fmt0(v):
+    return f"{int(v):,}" if isinstance(v, (int, float)) else "—"
+
+
 def _references_section(research):
     refs = []
     if research:
@@ -470,6 +538,7 @@ def build():
     forced = _load("sloshing-forced-response.json")
     backbone = _load("sloshing-backbone.json")
     research = _load("sloshing-cfd-research.json")
+    compute = _load_cfd("sloshing-compute.json")
 
     n_cases = 0
     if bench:
@@ -506,6 +575,7 @@ def build():
 {_backbone_section(backbone)}
 {_literature_section(research)}
 {_wayforward_section(research)}
+{_compute_section(compute)}
 <h2>Method &amp; provenance</h2>
 <p>2D <code>interFoam</code> (VOF) on OpenFOAM ESI v2312. Free-decay: static slip-wall tank, first-mode cosine
 perturbation, FFT of the wall free-surface. Forced roll: rigid whole-mesh roll via the ESI solidBody motion

@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/collect_compute_stats.py",
+    "epic": "#1429",
+    "issue": "#1439",
+    "note": "Derived compute characterization; case trees are not committed."
+  },
+  "machine": {
+    "host": "dev-secondary (ace-linux-2)",
+    "cores": 32,
+    "ram_gb": 31,
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case"
+  },
+  "classes": [
+    {
+      "class": "backbone (forced roll, 60x60)",
+      "n_cases": 48,
+      "cells": 3600,
+      "sim_time_s": 7.15,
+      "dt_mode": "adaptive (maxCo)",
+      "median_timesteps": 7175,
+      "runtime_s": {
+        "min": 419,
+        "median": 719,
+        "max": 1068,
+        "mean": 708
+      },
+      "throughput_s_per_sim_s": 100.5,
+      "cost_us_per_cell_timestep": 27.847,
+      "concurrency": 14,
+      "batch_wall_min": 34.7,
+      "sum_runtime_min": 566.4
+    },
+    {
+      "class": "forced roll (60x60)",
+      "n_cases": 15,
+      "cells": 3600,
+      "sim_time_s": 6.73,
+      "dt_mode": "adaptive (maxCo)",
+      "median_timesteps": 6810,
+      "runtime_s": {
+        "min": 309,
+        "median": 547,
+        "max": 823,
+        "mean": 564
+      },
+      "throughput_s_per_sim_s": 81.3,
+      "cost_us_per_cell_timestep": 22.316,
+      "concurrency": 16,
+      "batch_wall_min": 30.4,
+      "sum_runtime_min": 141.0
+    },
+    {
+      "class": "free-decay (80x80)",
+      "n_cases": 3,
+      "cells": 6400,
+      "sim_time_s": 12.0,
+      "dt_mode": "fixed dt=0.002",
+      "median_timesteps": 6000,
+      "runtime_s": {
+        "min": 443,
+        "median": 470,
+        "max": 496,
+        "mean": 470
+      },
+      "throughput_s_per_sim_s": 39.2,
+      "cost_us_per_cell_timestep": 12.25,
+      "concurrency": 16,
+      "batch_wall_min": 0.9,
+      "sum_runtime_min": 23.5
+    }
+  ],
+  "parallel_efficiency": {
+    "batch": "backbone (forced roll, 60x60)",
+    "n_cases": 48,
+    "concurrency": 14,
+    "actual_wall_min": 34.7,
+    "serial_uncontended_est_min": 336.0,
+    "wallclock_speedup_x": "~7-10 (range: serial baseline 247-336 min depending on sim-time scaling)",
+    "per_case_contention_x": 2.33,
+    "note": "14-wide fan-out finished the batch ~7-10x faster in wall-clock than one-at-a-time (serial baseline 247-336 min), despite each case running ~2.3x slower under memory-bandwidth contention — net throughput win."
+  },
+  "runtime_model": {
+    "form": "t_wall ≈ C · N_cells · N_timesteps · f(concurrency)",
+    "explanation": "Wall time scales with the product of mesh cells and solver timesteps; the mesh-normalised cost (µs per cell·timestep) is the machine invariant, and f(concurrency) is the contention factor for parallel fan-out."
+  },
+  "intrinsic_cost_us_per_cell_timestep": "~12-17 (static free-decay ~12; single uncontended moving-mesh forced ~16-17). Per-class figures below are contention-inflated (~1.5-2.3x).",
+  "analysis": {
+    "headline": "This box runs 2D interFoam sloshing at an intrinsic ~12-17 us per cell·timestep (static free-decay ~12; a single uncontended moving-mesh forced case ~16-17). The 22-28 us per-class figures are NOT a physics cost curve — they are the same work inflated ~1.5-2.3x by memory-bandwidth contention when 14-16 cases share the 32-core / 31 GB box. Contention, not mesh motion, is the dominant compute-planning lever; a 14-wide fan-out still cut the 48-case backbone from ~5-6 h serial to 34.7 min (~7-10x wall-clock).",
+    "projections": [
+      {
+        "tier": "Courant / mesh convergence — free-decay 160×160, Co halved",
+        "assumptions": "static-mesh @ ~12 us/cell·ts intrinsic; 25,600 cells × ~12,000 timesteps; ~4 cases fit one fan-out wave",
+        "est_wall": "~1-2 h (one 14-wide wave)",
+        "est_core_hours": "~4-8 core-h"
+      },
+      {
+        "tier": "Shallow-fill amplitude sweep — 24 forced-roll @ 60×60",
+        "assumptions": "3,600 cells × ~7,000 ts; 2 fan-out waves of 14; +10-20% if impacts cut dt",
+        "est_wall": "~20-25 min",
+        "est_core_hours": "~2-5 core-h"
+      },
+      {
+        "tier": "3D L-shaped ballast tank — extrude ~60-100 cells in 3rd dim",
+        "assumptions": "216k-360k cells × ~7,000 ts, moving mesh; 3D cost/cell an unmeasured ~1.2× extrapolation; single-thread per case",
+        "est_wall": "~12-24 h single-thread per case; ~1-2.5 h with ~16-core MPI (UNMEASURED — benchmark first)",
+        "est_core_hours": "~12-24 core-h/case; ~35-70 for a 3-fill set"
+      }
+    ],
+    "caveats": [
+      "Contention is memory-bandwidth-bound (not compute-bound): 14-16 concurrent interFoam on 32 cores / 31 GB slow each ~2.3x; the 22-28 us/cell·ts figures are batch-specific artifacts, not physics.",
+      "No large intrinsic moving-mesh premium: the raw 12→22→28 ordering conflates mesh motion with contention; use ~12-17 us intrinsic for 2D planning.",
+      "Adaptive-timestep variance: forced/backbone timesteps vary ±10-20% case-to-case with the free-surface dynamics; runtimes are medians, not guarantees.",
+      "2D→3D is an unmeasured extrapolation (assumed 1.2× 3D cost/cell); the ~1-2.5 h MPI figure must be benchmarked on this host before it is promised.",
+      "Fan-out speedup is a ~7-10x range: the serial baseline is 247 min (measured 309 s/case) to 336 min (sim-time-scaled); sub-14 case counts finish in a single wave."
+    ]
+  }
+}
