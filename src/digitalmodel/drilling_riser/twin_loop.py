@@ -211,7 +211,7 @@ class _Context(NamedTuple):
     conductor: ConductorInput
     wd: float
     length: float
-    tension: float
+    tension_n: float
     criteria: EnvelopeCriteria
     models: FlexjointModels
     drift_cfg: dict
@@ -250,7 +250,7 @@ def _load_context(atlas_root: Path | None = None) -> _Context:
     )
     return _Context(
         token=sc["config"], section=section, conductor=conductor,
-        wd=float(sc["water_depth_m"]), length=float(sc["length_m"]), tension=float(sc["tension_n"]),
+        wd=float(sc["water_depth_m"]), length=float(sc["length_m"]), tension_n=float(sc["tension_n"]),
         criteria=criteria, models=models, drift_cfg=load_drift_config(),
         root=(atlas_root or (repo / "atlases")),
     )
@@ -287,7 +287,7 @@ def run_twin_loop(
         point = evaluate_point(
             snap, token=ctx.token, section=ctx.section, conductor=ctx.conductor,
             condition=condition, cur=cur, water_depth_m=ctx.wd, length_m=ctx.length,
-            tension_n=ctx.tension, criteria=ctx.criteria, models=ctx.models,
+            tension_n=ctx.tension_n, criteria=ctx.criteria, models=ctx.models,
             drift_cfg=ctx.drift_cfg, atlas_root=ctx.root, t0=t0,
         )
         state, lead = _roll_verdict(point, wave_hs_m=hs, hs_ceiling_m=hs_ceiling_m)
