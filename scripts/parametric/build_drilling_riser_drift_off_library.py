@@ -9,7 +9,7 @@ vessel-riser dynamics) that scales the quasi-static time-to-limit toward the tru
 dynamic value.
 
 Operator step: replace the STUB values in ``_stub_drift_amp`` with a real
-licensed OrcaFlex run per canonical case, then bump the ``solver_version`` in
+licensed OrcaFlex run per canonical case, then raise the ``solver_version`` in
 ``parametric.refresh.LIBRARY_EXPECTATIONS`` off "STUB" — the committed stub
 immediately reads stale and the query escalates until a real library is built.
 Mirrors build_drilling_riser_envelope_library.py.
