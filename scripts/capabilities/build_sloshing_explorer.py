@@ -44,6 +44,9 @@ _FORCED_RESPONSE = _OUT_DIR / "sloshing-forced-response.json"
 # Optional literature-survey synthesis (issue #1433): drives the way-forward +
 # literature-confidence section. Written from the deep-research workflow.
 _RESEARCH = _OUT_DIR / "sloshing-cfd-research.json"
+# Optional SDOF / tuned-damper reduction (issue #1433): drives the interactive
+# anti-roll tuning panel. Written from reduce_sloshing_sdof.py.
+_SDOF = _OUT_DIR.parent / "cfd" / "sloshing-sdof.json"
 
 _spec = importlib.util.spec_from_file_location("dm_sloshing_engine", _ENGINE)
 slosh = importlib.util.module_from_spec(_spec)
@@ -314,6 +317,22 @@ def _load_research():
     }
 
 
+def _load_sdof():
+    """SDOF / tuned-damper reduction for the anti-roll tuning panel (#1433)."""
+    if not _SDOF.exists():
+        return None
+    d = json.loads(_SDOF.read_text())
+    return {"g": d.get("tuning_basis", {}).get("g", G),
+            "roll_deg": d.get("meta", {}).get("roll_amplitude_deg"),
+            "breadth_m": d.get("tank", {}).get("breadth_m"),
+            "fills": [{
+                "h_over_L": f["h_over_L"], "T1": f.get("natural_period_s"),
+                "zeta": f.get("equivalent_damping_ratio_zeta"),
+                "B44": (f.get("resonance_coefficients") or {}).get("added_roll_damping_B44"),
+                "A44": (f.get("resonance_coefficients") or {}).get("added_roll_inertia_A44"),
+            } for f in d.get("sdof_by_fill", [])]}
+
+
 def build_study():
     shapes = []
     for sh in SHAPES:
@@ -327,6 +346,7 @@ def build_study():
         "shapes": shapes,
         "cfd": _load_cfd_benchmark(),
         "forced_response": _load_forced_response(),
+        "sdof": _load_sdof(),
         "research": _load_research(),
         "resonance": _resonance_series(),
         "references": REFERENCES,
@@ -441,6 +461,37 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
   <svg id="respchart" viewBox="0 0 720 360" role="img" aria-label="Forced-roll frequency response"></svg>
   <div class="legend" id="resplegend"></div>
   <div id="respverify"></div>
+</div>
+
+<div class="panel" id="tuningpanel" style="display:none">
+  <span class="tag" style="color:#c0392b">Anti-roll tuning &mdash; CFD-reduced tuned damper</span>
+  <h2>Tune the tank to your vessel: fill for a target roll period, and the damping it delivers</h2>
+  <p class="sub" style="margin:0 0 8px">The forced-roll CFD reduces the tank to a single-DOF tuned damper &mdash; an
+  equivalent damping ratio &zeta; (rising with fill) plus added roll damping/inertia. Tuning is a <b>curve, not a single
+  &ldquo;best fill&rdquo;</b>: set the tank length L and fill so the sloshing period f&#8321;(fill) matches the vessel roll
+  period; the fill then sets the damping.</p>
+  <div class="ctrl">
+    <label for="tuneL">Tank length L (m)</label>
+    <input type="number" id="tuneL" value="40" step="1" min="0.5" style="width:92px">
+    <label for="tuneT">Target vessel roll period (s)</label>
+    <input type="number" id="tuneT" value="12" step="0.5" min="1" style="width:92px">
+  </div>
+  <div class="reads">
+    <div class="read">Tuning fill h/L<b id="tuneHL">&mdash;</b></div>
+    <div class="read">Fill depth h<b id="tuneH" style="font-size:15px">&mdash;</b></div>
+    <div class="read">Damping there (CFD &zeta;)<b id="tuneZeta" style="font-size:15px">&mdash;</b></div>
+  </div>
+  <p class="fnote" id="tuneNote"></p>
+  <h2 style="font-size:13px;margin-top:14px">CFD-reduced tuned-damper parameters (rectangular, 4&deg; roll)</h2>
+  <table><thead><tr><th>Fill h/L</th><th>Natural period T&#8321; (s)</th><th>Equivalent damping &zeta;</th><th>Added roll damping B&#8324;&#8324; (N&middot;m&middot;s/rad)</th></tr></thead>
+    <tbody id="sdofrows"></tbody></table>
+  <p class="fnote">&zeta; and B&#8324;&#8324; from the forced-roll CFD (in-phase / quadrature reduction; SloshingCouplingModel).
+  Higher fill &rarr; more damping. This is a <b>screening-grade linearization</b>, valid as a design anchor, not a full model:
+  &zeta; is a config-specific <b>equivalent</b> (not an invariant law), fixed at <b>4&deg; roll</b> (larger amplitude bends the
+  backbone &mdash; softening &mdash; and raises breaking-driven damping); it is <b>2D</b>, so it cannot capture 3D rotary/swirl
+  modes near resonance; there are <b>no baffles/screens</b> (damping here is wave-breaking only &mdash; real anti-roll tanks tune
+  damping with internals); and roll&ndash;sway coupling / roll-axis position are not modelled. Only three fills, so &zeta;/B&#8324;&#8324;
+  are coarsely interpolated. See the <a href="../cfd/sloshing-cfd-study.html">CFD study</a> for the backbone and full caveats.</p>
 </div>
 
 <div class="panel">
@@ -740,10 +791,53 @@ function renderCfdVsLit(){
   document.getElementById('shapecov').innerHTML=`<b style="font-size:12.5px;color:var(--ink)">CFD validation coverage by shape:</b><br>`+cov;
 }
 
+/* ---------- anti-roll tuning — CFD-reduced tuned damper (issue #1433) ---------- */
+const SDOF = DATA.sdof;
+function renderTuning(){
+  const panel=document.getElementById('tuningpanel');
+  if(!SDOF||!SDOF.fills||!SDOF.fills.length){ if(panel) panel.style.display='none'; return; }
+  panel.style.display='';
+  const g=SDOF.g||9.80665;
+  const Lel=document.getElementById('tuneL'), Tel=document.getElementById('tuneT');
+  const fs=SDOF.fills.slice().sort((a,b)=>a.h_over_L-b.h_over_L);
+  function zetaAt(hl){
+    if(hl<=fs[0].h_over_L) return fs[0].zeta;
+    if(hl>=fs[fs.length-1].h_over_L) return fs[fs.length-1].zeta;
+    for(let i=0;i<fs.length-1;i++){ if(hl>=fs[i].h_over_L&&hl<=fs[i+1].h_over_L){
+      const t=(hl-fs[i].h_over_L)/(fs[i+1].h_over_L-fs[i].h_over_L); return fs[i].zeta+t*(fs[i+1].zeta-fs[i].zeta);} }
+    return null;
+  }
+  function calc(){
+    const L=+Lel.value||1, T=+Tel.value||1, note=document.getElementById('tuneNote');
+    const X=4*Math.PI*L/(g*T*T);   // tanh(pi*h/L) = 4*pi*L/(g*T^2)
+    if(X>=1){
+      document.getElementById('tuneHL').textContent='—';
+      document.getElementById('tuneH').textContent='—';
+      document.getElementById('tuneZeta').textContent='—';
+      note.innerHTML=`<b style="color:var(--bad)">Tank too short</b> to tune to a ${T}s roll — a rectangular tank of L=${L} m tops out at a shorter period even when full. Increase L for longer roll periods.`;
+      return;
+    }
+    const hl=Math.atanh(X)/Math.PI, h=hl*L, z=zetaAt(hl);
+    const extrap=(hl<fs[0].h_over_L||hl>fs[fs.length-1].h_over_L);
+    document.getElementById('tuneHL').textContent=hl.toFixed(3);
+    document.getElementById('tuneH').textContent=h.toFixed(2)+' m';
+    document.getElementById('tuneZeta').textContent=(z!=null?('ζ ≈ '+z.toFixed(2)):'—');
+    note.innerHTML=`Fill this L=${L} m tank to <b>h/L = ${hl.toFixed(3)}</b> (depth ${h.toFixed(2)} m) so its first sloshing mode matches your ${T}s roll — the <b>frequency tuning is scale-exact</b> (CFD-validated to ≤0.30%). `+
+      (extrap?`<span style="color:var(--warn)">ζ extrapolated beyond the CFD fills (h/L 0.30–0.70).</span> `
+             :`Equivalent damping ζ ≈ ${z.toFixed(2)} there. `)+
+      `<span style="color:var(--warn)">ζ is from a 0.9 m-tank 4° CFD and does <b>not</b> Froude-scale (breaking/viscosity-driven) — indicative only at other sizes; confirm damping with a scale-specific run.</span>`;
+  }
+  Lel.oninput=calc; Tel.oninput=calc; calc();
+  document.getElementById('sdofrows').innerHTML=fs.map(f=>
+    `<tr><td>${(f.h_over_L*100).toFixed(0)}%</td><td class="mono">${f.T1?f.T1.toFixed(3):'—'}</td>`+
+    `<td class="mono">${f.zeta!=null?f.zeta.toFixed(3):'—'}</td><td class="mono">${f.B44!=null?f.B44.toFixed(2):'—'}</td></tr>`).join('');
+}
+
 document.getElementById('refs').innerHTML=DATA.references.map(r=>`<li>${r}</li>`).join('');
 renderCFD();
 renderCfdVsLit();
 renderForced();
+renderTuning();
 renderResearch();
 renderShape();
 </script>
