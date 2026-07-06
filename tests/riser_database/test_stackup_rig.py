@@ -32,6 +32,13 @@ TOPOLOGY_VOCAB = {
     "intervention-bop-on-tree",
     "mpd-surface-stack",
     "production-scr-hangoff",
+    # #1279 wave-2 classes (dm#1259 follow-on, RSU-0010..0070):
+    "sbop",
+    "riserless",
+    "ttr",
+    "slwr",
+    "landing-string",
+    "workover-surface-stack",
     "none",
 }
 STACKUP_TYPE_VOCAB = {
@@ -40,14 +47,26 @@ STACKUP_TYPE_VOCAB = {
     "weight-table",
     "joint-library",
     "component-library",
+    "stack-up-drawing",
 }
-OPERATION_VOCAB = {"drilling", "completion", "intervention", "mpd", "pa", ""}
+OPERATION_VOCAB = {
+    "drilling",
+    "completion",
+    "intervention",
+    "mpd",
+    "pa",
+    "production",
+    "workover",
+    "",
+}
 WATER_DEPTH_BAND_VOCAB = {
     "0-500m",
     "500-1000m",
     "1000-1500m",
     "1500-2000m",
     "2000-3000m",
+    "3000-4000m",
+    "4000-5000m",
     "",
 }
 
@@ -65,8 +84,8 @@ DEID_PATTERNS = (
 
 def test_row_counts_pinned():
     db = RiserDatabase.load()
-    assert len(db.stackups) == 9
-    assert len(db.rigs) == 3
+    assert len(db.stackups) == 70
+    assert len(db.rigs) == 7
     assert all(isinstance(r, RiserStackupRow) for r in db.stackups)
     assert all(isinstance(r, RigRiserInterfaceRow) for r in db.rigs)
 
@@ -103,7 +122,8 @@ def test_stackup_vocabularies():
 
 
 def test_topology_grain():
-    """The depth-collapsed grain: 5 topology classes + none-sentinel rows."""
+    """The depth-collapsed grain: every vocabulary class is exercised by at
+    least one row (11 topology classes + none-sentinel rows)."""
     classes = {r.topology_class for r in RiserDatabase.load().stackups}
     assert classes == TOPOLOGY_VOCAB - {"none"} | {"none"}
 
@@ -185,8 +205,8 @@ def test_no_exact_unit_bearing_values_in_raw_files():
     violations = []
     for path in targets:
         for line in path.read_text().splitlines():
-            if "water_depth_band" in line or re.search(r"\b\d{3,4}-\d{3,4}m\b", line):
-                continue  # band vocabulary lines are asserted separately
+            if "water_depth_band" in line or re.search(r"\b\d{1,4}-\d{3,4}m\b", line):
+                continue  # band vocabulary lines (incl. 0-500m) asserted separately
             for pattern in DEID_PATTERNS:
                 if pattern.search(line):
                     violations.append((path.name, line.strip()[:80]))

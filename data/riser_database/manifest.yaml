@@ -13,12 +13,12 @@ tables:
     sha256: 121a4d08df0a271b12e59ba8344893dd6aa71fc310a09d4c8b2bed3509a98c2f
   rig_riser_interface:
     file: rig_riser_interface.csv
-    rows: 3
-    sha256: 56ea3f0707b51ee5d74f9add84e83a4e274ad88e1954630e7a9b7cd0b4e432a7
+    rows: 7
+    sha256: 9a33b3b394ccffa6d57582b8ab0615c160f99c36a2581a215d035feb0beb1c15
   riser_stackup:
     file: riser_stackup.csv
-    rows: 9
-    sha256: f7d949cd0ffeceecc174c9e0c7b03845374fb34d395138c94cda4b85017de64a
+    rows: 70
+    sha256: 8845fe65226fe6569e62df7eed8c85dac21da43394eee1851715caf19673a78d
   standards_crosswalk:
     file: standards_crosswalk.csv
     rows: 4

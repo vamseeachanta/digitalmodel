@@ -28,6 +28,12 @@ _KNOWN_WIKI_CLONES = (
 
 #: Generic engineering/document words that appear in slugs but are not
 #: provenance names. Anything NOT here and >=4 chars is treated as a name.
+#: Extended for the #1279 wave-2 registry (dm#1259 follow-on): the new source
+#: pages' slugs/paths carry many generic engineering + filesystem words whose
+#: normalized substrings occur in long-merged public artifacts (e.g. "tension"
+#: in "tensioner", "water"/"depth" in "water_depth_band", "drill" in
+#: "drillship", "king" in "-king" gerunds, "visio" in "revision"). Real
+#: provenance names (fields, rigs, clients, programs) stay OUT of this list.
 _STOPWORDS = {
     "analysis", "assessment", "basis", "compliant", "concept", "conductors",
     "data", "design", "deep", "development", "drilling", "engineering",
@@ -36,7 +42,24 @@ _STOPWORDS = {
     "riser", "risers", "sidetrack", "source", "sources", "stackup", "study",
     "summary", "ttr", "well", "wellhead", "wellheads", "wells", "wiki", "wikis",
     "workbook", "client", "share", "operational", "market",
+    # -- #1279 wave-2 generic additions ------------------------------------
+    "adapter", "additional", "archive", "assembly", "auto", "buoyancy",
+    "code", "comments", "completion", "conductor", "content", "database",
+    "depth", "docs", "draft", "drawing", "drawings", "drill", "drive",
+    "family", "files", "flex", "from", "generic", "hard", "king", "landing",
+    "limits", "list", "lmrp", "load", "long", "main", "model", "monitoring",
+    "names", "normal", "orcaflex", "package", "prod", "production", "project",
+    "python", "query", "reference", "report", "reports", "riserless",
+    "riserstackup", "safety", "sbop", "stack", "stackups", "stres", "string",
+    "subsea", "system", "technical", "tension", "test", "tree", "visio",
+    "water", "weight", "weights", "workover",
 }
+
+#: Round band-edge numerals used by the public ``water_depth_band`` scheme.
+#: They appear in folder/file names on the private side (e.g. a phase folder
+#: or a depth-suffixed workbook), but as PUBLIC tokens they are the sanctioned
+#: coarse-band boundaries — never identifying. Project numbers stay enforced.
+_BAND_EDGE_NUMBERS = {"500", "1000", "1500", "2000", "3000", "4000", "5000"}
 
 _PUBLIC_ARTIFACTS = (
     DEFAULT_DB_ROOT / "config_catalog.csv",
@@ -132,7 +155,8 @@ def _provenance_tokens() -> tuple[set[str], set[str]]:
             if word.casefold() not in _STOPWORDS:
                 names.add(word.casefold())
         for num in re.findall(r"\b[1-9]\d{3,4}\b", text):
-            numbers.add(num)
+            if num not in _BAND_EDGE_NUMBERS:
+                numbers.add(num)
 
     for slug in linked:
         harvest(slug.replace("-", " "))

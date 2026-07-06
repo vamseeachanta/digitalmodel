@@ -107,7 +107,7 @@ attach the output to the PR as evidence.
   *done*: solver-backed dynamic tier stub. **#1281b / #1345** — *done*:
   wellhead/conductor moment + flex-joint hardware rating (AMJIG per-category
   criteria still deferred). See the operating-envelope sections below.
-* **#1199d** (T3, frontier-gated) — de-identified ACE result precedent,
+* **#1199d** (T3, tier-gated) — de-identified ACE result precedent,
   `private_sidecar` route; extends the leak gate to those rows.
 * Future numeric response-surface atlases (metocean, VIV) live under
   `atlases/riser_database*` per `parametric.atlas` conventions — deliberately
@@ -140,6 +140,19 @@ on water depth only, one band per source dataset family.
 registry makes the in-context reconciliation test fail here until the table
 gains the row — a conscious update, never silent drift. Public issues, PRs
 and commit messages about this table family carry bands and handles only.
+
+**Wave 2 (#1279, dm#1259 follow-on):** RSU-0010..RSU-0070 (61 handle rows)
+land from the second registry ingest. The controlled vocabularies grew with
+the corpus — `topology_class` adds `sbop`, `riserless`, `ttr`, `slwr`,
+`landing-string` and `workover-surface-stack`; `stackup_type` adds
+`stack-up-drawing` (GA/schematic-grade sources with no tabulated masses);
+`operation` adds `production` and `workover`; the band scheme adds
+`3000-4000m` and `4000-5000m`. Four rig classes join
+`rig_riser_interface` — two tensioner-capability classes
+(`semisub-6x833k-dat`, `semisub-10x250k-wireline`) and two drillship classes
+keyed by subsea-stack GA mass (`drillship-15k-stack-784kip`,
+`drillship-15k-stack-893kip`); `rig_ref` is wired only where a wave-2 source
+documented the rig class, and stays empty elsewhere.
 
 ## Assembly engine (#1280)
 
@@ -227,7 +240,7 @@ client is a follow-up (#1365). No client-derived archive tables are read.
 mode** (categorical) × offset/current/Hs/Tp (continuous), storing a **von Mises
 dynamic amplification factor** (DAF). It ships as a STUB (`solver.licensed=False`,
 `version="STUB"`) with synthetic values until a licensed OrcaFlex time-domain
-run per mode replaces them; bumping the `LIBRARY_EXPECTATIONS` version off "STUB"
+run per mode replaces them; moving the `LIBRARY_EXPECTATIONS` version off "STUB"
 makes the committed stub read stale → the query escalates → a real run is
 prompted. `compute_operating_envelope(dynamic=True)` loads the atlas once,
 multiplies the **von Mises** utilisation by the DAF (the one response the static

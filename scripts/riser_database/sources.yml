@@ -179,6 +179,436 @@ stackup_rows:
     riser_od_in: "21"
     water_depth_band: 2000-3000m
     rig_ref: ""
+  # RSU-0010..RSU-0070 (#1279 dm#1259 follow-on): handle rows for the second
+  # registry wave. Same governance — handles + coarse bands only; the private
+  # registry page is the value authority for every row below.
+  - rsu_id: RSU-0010
+    topology_class: completion-bop-on-ths
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 500-1000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0011
+    topology_class: completion-bop-on-ths
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 500-1000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0012
+    topology_class: intervention-bop-on-tree
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 500-1000m
+    rig_ref: drillship-6g-16x3600k-dat
+  - rsu_id: RSU-0013
+    topology_class: landing-string
+    stackup_type: stack-up-drawing
+    operation: completion
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0014
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0015
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0016
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0017
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: component-library
+    operation: drilling
+    riser_od_in: "18.75"
+    water_depth_band: 3000-4000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0018
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: component-library
+    operation: drilling
+    riser_od_in: "18.75"
+    water_depth_band: ""
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0019
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0020
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0021
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0022
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0023
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0024
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0025
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: drillship-15k-stack-784kip
+  - rsu_id: RSU-0026
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: 3000-4000m
+    rig_ref: drillship-15k-stack-893kip
+  - rsu_id: RSU-0027
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: ""
+  - rsu_id: RSU-0028
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0029
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: component-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0030
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21.25"
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0031
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21.25"
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0032
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21.25"
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0033
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21.5"
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0034
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0035
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0036
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0037
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: 3000-4000m
+    rig_ref: ""
+  - rsu_id: RSU-0038
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: semisub-10x250k-wireline
+  - rsu_id: RSU-0039
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: semisub-10x250k-wireline
+  - rsu_id: RSU-0040
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: semisub-10x250k-wireline
+  - rsu_id: RSU-0041
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 2000-3000m
+    rig_ref: semisub-10x250k-wireline
+  - rsu_id: RSU-0042
+    topology_class: sbop
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "16"
+    water_depth_band: 1000-1500m
+    rig_ref: ""
+  - rsu_id: RSU-0043
+    topology_class: sbop
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: "16"
+    water_depth_band: 1000-1500m
+    rig_ref: ""
+  - rsu_id: RSU-0044
+    topology_class: slwr
+    stackup_type: as-planned-stackup
+    operation: production
+    riser_od_in: "16"
+    water_depth_band: 4000-5000m
+    rig_ref: ""
+  - rsu_id: RSU-0045
+    topology_class: slwr
+    stackup_type: component-library
+    operation: production
+    riser_od_in: ""
+    water_depth_band: 4000-5000m
+    rig_ref: ""
+  - rsu_id: RSU-0046
+    topology_class: slwr
+    stackup_type: as-planned-stackup
+    operation: production
+    riser_od_in: "12.75"
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0047
+    topology_class: slwr
+    stackup_type: as-planned-stackup
+    operation: production
+    riser_od_in: "6.625"
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0048
+    topology_class: slwr
+    stackup_type: as-planned-stackup
+    operation: production
+    riser_od_in: "12.75"
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0049
+    topology_class: none
+    stackup_type: component-library
+    operation: production
+    riser_od_in: ""
+    water_depth_band: 500-1000m
+    rig_ref: ""
+  - rsu_id: RSU-0050
+    topology_class: ttr
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0051
+    topology_class: ttr
+    stackup_type: component-library
+    operation: production
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0052
+    topology_class: ttr
+    stackup_type: weight-table
+    operation: production
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0053
+    topology_class: ttr
+    stackup_type: weight-table
+    operation: workover
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0054
+    topology_class: ttr
+    stackup_type: as-planned-stackup
+    operation: production
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0055
+    topology_class: workover-surface-stack
+    stackup_type: stack-up-drawing
+    operation: workover
+    riser_od_in: "13.625"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0056
+    topology_class: workover-surface-stack
+    stackup_type: stack-up-drawing
+    operation: workover
+    riser_od_in: "13.625"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0057
+    topology_class: ttr
+    stackup_type: component-library
+    operation: workover
+    riser_od_in: "10.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0058
+    topology_class: ttr
+    stackup_type: stack-up-drawing
+    operation: drilling
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0059
+    topology_class: riserless
+    stackup_type: joint-library
+    operation: completion
+    riser_od_in: "7"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0060
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "7.625"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0061
+    topology_class: riserless
+    stackup_type: component-library
+    operation: completion
+    riser_od_in: "3.5"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0062
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "4"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0063
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "5.875"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0064
+    topology_class: riserless
+    stackup_type: stack-up-drawing
+    operation: completion
+    riser_od_in: "7"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0065
+    topology_class: riserless
+    stackup_type: stack-up-drawing
+    operation: completion
+    riser_od_in: "3.5"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0066
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "7"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0067
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "7.625"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0068
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "2.875"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0069
+    topology_class: riserless
+    stackup_type: as-planned-stackup
+    operation: completion
+    riser_od_in: "3.5"
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0070
+    topology_class: none
+    stackup_type: component-library
+    operation: intervention
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: ""
 
 # rig_riser_interface (#1259): generic rig-class slugs; wed_rig_name joins the
 # worldenergydata 2,268-rig identity space and is populated ONLY for rows
@@ -218,3 +648,45 @@ rig_rows:
     n_tension_wires: ""
     wed_rig_name: ""
     note: market-typical capability figures for screening
+  # #1279 dm#1259 follow-on rig classes. Slugs stay technical-signature only;
+  # capability numerics are class-grade values from the registry wave-2 docs.
+  - rig_ref: semisub-6x833k-dat
+    rig_type: semisub
+    n_tensioners: "6"
+    tensioner_type: direct-acting
+    tensioner_capacity_kips: "833.3"
+    tensioner_stroke_ft: "50"
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: DP semisub class with six direct-acting tensioners
+  - rig_ref: semisub-10x250k-wireline
+    rig_type: semisub
+    n_tensioners: "10"
+    tensioner_type: wireline
+    tensioner_capacity_kips: "250"
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: wireline-tensioner DP semisub class
+  - rig_ref: drillship-15k-stack-784kip
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: ""
+    tensioner_capacity_kips: ""
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: drillship class keyed by subsea stack GA mass; lighter variant
+  - rig_ref: drillship-15k-stack-893kip
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: ""
+    tensioner_capacity_kips: ""
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: drillship class keyed by subsea stack GA mass; deeper-water-rated variant
