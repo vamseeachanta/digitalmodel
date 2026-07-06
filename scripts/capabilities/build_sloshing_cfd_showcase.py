@@ -28,9 +28,22 @@ _OUT = _REPO / "docs" / "api" / "cfd" / "sloshing-cfd-study.html"
 G = 9.80665
 
 
+_VIZ = _REPO / "docs" / "api" / "cfd" / "viz"
+
+
 def _load(name):
     p = _STRUCT / name
     return json.loads(p.read_text()) if p.exists() else None
+
+
+def _img(fname, caption, maxw="560px"):
+    """<figure> for a committed CFD render, or '' if the asset is absent."""
+    if not (_VIZ / fname).exists():
+        return ""
+    return (f'<figure style="margin:16px 0;text-align:center">'
+            f'<img src="viz/{fname}" alt="{_esc(caption)}" loading="lazy" '
+            f'style="max-width:{maxw};width:100%;border:1px solid var(--line);border-radius:8px">'
+            f'<figcaption class="cap">{caption}</figcaption></figure>')
 
 
 def _esc(s):
@@ -131,6 +144,48 @@ def _response_svg(forced):
 # --------------------------------------------------------------------------- #
 
 
+def _mastercurve_svg(bench):
+    """Static SVG: analytical rectangular master curve + measured CFD points
+    (the 'without forced roll' natural-period result)."""
+    pts = [p for p in (bench.get("free_decay") or {}).get("points", [])
+           if p.get("solver_status") == "completed" and "omega1_meas" in p]
+    if not pts:
+        return ""
+    W, H, ML, MR, MT, MB = 720, 330, 54, 16, 14, 42
+    X1, Y1 = 1.5, 2.0
+    def px(x):
+        return ML + x / X1 * (W - ML - MR)
+    def py(y):
+        return H - MB - y / Y1 * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    gx = 0.0
+    while gx <= 1.5001:
+        g.append(f'<line x1="{px(gx):.1f}" y1="{py(0):.1f}" x2="{px(gx):.1f}" y2="{py(Y1):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(gx):.1f}" y="{py(0)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{gx:.2f}</text>')
+        gx += 0.25
+    for gy in (0, 0.5, 1.0, 1.5, 2.0):
+        g.append(f'<line x1="{px(0):.1f}" y1="{py(gy):.1f}" x2="{px(X1):.1f}" y2="{py(gy):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(0)-8:.1f}" y="{py(gy)+3:.1f}" fill="#5a6b7b" font-size="10" text-anchor="end">{gy:.1f}</text>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">fill / slenderness ratio  h / L</text>')
+    g.append(f'<text transform="translate(13,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">Ω1 = ω1√(L/g)</text>')
+    # analytical rectangular curve Om = sqrt(pi*tanh(pi*x))
+    d = []
+    x = 0.05
+    while x <= 1.5001:
+        om = math.sqrt(math.pi * math.tanh(math.pi * x))
+        d.append(f'{"L" if d else "M"}{px(x):.1f} {py(om):.1f}')
+        x += 0.02
+    g.append(f'<path d="{" ".join(d)}" fill="none" stroke="#0B3D91" stroke-width="2.6"/>')
+    # measured CFD points
+    for p in pts:
+        cx, cy = px(p["h_over_L"]), py(p["omega1_meas"])
+        g.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5" fill="#fff" stroke="#c0392b" stroke-width="2.2"/>'
+                 f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="1.7" fill="#c0392b"/>')
+    g.append('</svg>')
+    return "".join(g) + ('<p class="cap"><span style="color:#0B3D91">&#8212;</span> analytical  '
+                         '&nbsp; <span style="color:#c0392b">&#9711;</span> measured CFD (free-decay, no forced roll)</p>')
+
+
 def _natural_period_section(bench):
     if not bench or not (bench.get("free_decay") or {}).get("points"):
         return ""
@@ -144,10 +199,12 @@ def _natural_period_section(bench):
     )
     worst = max(p["rel_error"] for p in pts) * 100
     return f"""
-<h2>1 &middot; Natural period — CFD vs analytical (the master curve)</h2>
+<h2>1 &middot; Natural period — CFD vs analytical (without forced roll)</h2>
 <p>A free-decay run rings down a small first-mode perturbation in a static rectangular tank; the FFT
 natural frequency, non-dimensionalised as &Omega;&#8321; = &omega;&#8321;&radic;(L/g), is compared to the
 analytical linear-potential value &radic;(&pi;&middot;tanh(&pi;h/L)). Four fills bracket the curve.</p>
+{_mastercurve_svg(bench)}
+{_img("free-decay-mode.png", "Free-surface (VOF) field of the free-decay first mode — the standing wave rings down in the static tank (water navy, air pale, interface at &alpha;=0.5). Real OpenFOAM output.", "760px")}
 <table><thead><tr><th>Fill h/L</th><th>&Omega;&#8321; measured (CFD)</th><th>&Omega;&#8321; analytical</th><th>Error</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p class="callout key"><b>Result.</b> The 2D VOF pipeline reproduces the analytical first-mode frequency to
@@ -180,6 +237,7 @@ def _forced_section(forced):
 driving the tank ({ampt}) at a range of roll periods and measuring the steady wall run-up traces a resonance
 curve that <b>peaks at that same natural period</b> — roll excites the mode the free-decay rings down. The dashed
 grey curve is the linear damped-oscillator amplification (Faltinsen &amp; Timokha 2009; Abramson 1966).</p>
+{_img("roll-cycle-montage.png", "One roll cycle at resonance (0, T/4, T/2, 3T/4, T), h/L=0.70 — the tank tilts and the free surface sweeps wall-to-wall. Real OpenFOAM (VOF) output.", "820px")}
 {svg}
 <table><thead><tr><th>Fill h/L</th><th>Natural T&#8321; analytical (s)</th><th>Natural T&#8321; free-decay CFD (s)</th>
 <th>Resonant T forced CFD (s)</th><th>resonant / natural</th></tr></thead><tbody>{rows}</tbody></table>
@@ -192,6 +250,88 @@ def _fmt(v):
     return f"{v:.3f}" if isinstance(v, (int, float)) else "—"
 
 
+def _backbone_svg(bb):
+    """Static SVG: frequency detuning (%) of the resonant peak vs roll amplitude,
+    one line per fill (above- vs below-critical depth)."""
+    fills = bb.get("fills", []) if bb else []
+    series = []
+    for f in fills:
+        pts = [(a["roll_deg"], a["detuning_pct"]) for a in f.get("amplitudes", [])
+               if a.get("detuning_pct") is not None]
+        if pts:
+            series.append((f["h_over_L"], f.get("regime", ""), sorted(pts)))
+    if not series:
+        return ""
+    alld = [d for _, _, pts in series for _, d in pts]
+    ymax = max(4.0, max(abs(min(alld)), abs(max(alld))) * 1.25)
+    W, H, ML, MR, MT, MB = 720, 320, 58, 16, 16, 42
+    X0, X1 = 0, 9
+    def px(a):
+        return ML + (a - X0) / (X1 - X0) * (W - ML - MR)
+    def py(d):
+        return MT + (ymax - d) / (2 * ymax) * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    for a in range(0, 10, 2):
+        g.append(f'<line x1="{px(a):.1f}" y1="{py(ymax):.1f}" x2="{px(a):.1f}" y2="{py(-ymax):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(a):.1f}" y="{py(-ymax)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{a}</text>')
+    for d in (-ymax, -ymax/2, 0, ymax/2, ymax):
+        g.append(f'<line x1="{px(X0):.1f}" y1="{py(d):.1f}" x2="{px(X1):.1f}" y2="{py(d):.1f}" stroke="{"#c0392b" if abs(d)<1e-9 else "#dde3ea"}" stroke-dasharray="{"4 3" if abs(d)<1e-9 else ""}"/>')
+        g.append(f'<text x="{px(X0)-8:.1f}" y="{py(d)+3:.1f}" fill="#5a6b7b" font-size="10" text-anchor="end">{d:+.1f}</text>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">roll amplitude (deg)</text>')
+    g.append(f'<text transform="translate(14,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">resonant-frequency detuning f_res/f1 − 1 (%)</text>')
+    g.append(f'<text x="{px(8.6):.1f}" y="{py(ymax*0.82):.1f}" fill="#5a6b7b" font-size="9.5" text-anchor="end">hardening ↑</text>')
+    g.append(f'<text x="{px(8.6):.1f}" y="{py(-ymax*0.82):.1f}" fill="#5a6b7b" font-size="9.5" text-anchor="end">softening ↓</text>')
+    for i, (hl, regime, pts) in enumerate(series):
+        col = _FRCOL[i % len(_FRCOL)]
+        line = " ".join(f'{"L" if j else "M"}{px(a):.1f} {py(d):.1f}' for j, (a, d) in enumerate(pts))
+        g.append(f'<path d="{line}" fill="none" stroke="{col}" stroke-width="2.4"/>')
+        for a, d in pts:
+            g.append(f'<circle cx="{px(a):.1f}" cy="{py(d):.1f}" r="4" fill="#fff" stroke="{col}" stroke-width="2"/>')
+    g.append('</svg>')
+    legend = " &nbsp; ".join(
+        f'<span style="color:{_FRCOL[i%3]}">&#9679;</span> h/L = {hl} ({regime.split("(")[0].strip()})'
+        for i, (hl, regime, _) in enumerate(series))
+    return "".join(g) + f'<p class="cap">{legend}</p>'
+
+
+def _backbone_section(bb):
+    if not bb or not bb.get("fills"):
+        return ""
+    svg = _backbone_svg(bb)
+    crit = bb.get("meta", {}).get("critical_depth_h_over_L", 0.34)
+    rows = ""
+    for f in bb["fills"]:
+        for a in f.get("amplitudes", []):
+            det = a.get("detuning_pct")
+            rows += (
+                f'<tr><td>{f["h_over_L"]*100:.0f}%</td><td class="num">{a["roll_deg"]:.0f}&deg;</td>'
+                f'<td class="num">{_fmt(a.get("resonant_ratio"))}</td>'
+                f'<td class="num">{det:+.2f}%</td>'
+                f'<td class="num">{_fmt(a.get("peak_runup_m"))}</td></tr>'
+                if det is not None else
+                f'<tr><td>{f["h_over_L"]*100:.0f}%</td><td class="num">{a["roll_deg"]:.0f}&deg;</td>'
+                f'<td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>')
+    return f"""
+<h2>3 &middot; Roll-amplitude backbone — amplitude-dependent detuning</h2>
+<p>At 4&deg; roll the resonant peak sits on the linear T&#8321; (section 2). Nonlinear theory predicts this only
+holds at small amplitude: the fundamental sloshing mode is a soft spring whose resonant frequency drifts with
+amplitude. This sweep drives each fill at 2&ndash;8&deg; over a frequency grid and locates resonance by the
+<b>quadrature (damping) coefficient peak</b> &mdash; the phase-based locator (B&auml;uerlein &amp; Avila 2021);
+the wall run-up saturates near resonance and is not a reliable locator, so it is reported separately.</p>
+{svg}
+<table><thead><tr><th>Fill h/L</th><th>Roll amp</th><th>Resonant T/T&#8321;</th><th>Freq detuning</th><th>Peak run-up (m)</th></tr></thead>
+<tbody>{rows}</tbody></table>
+<p class="callout key"><b>Result.</b> Both fills show <b>soft-spring detuning</b>: the resonant period lengthens
+(frequency drops) as roll amplitude grows, reaching roughly <b>7&ndash;13% below T&#8321; at 8&deg;</b>. The
+h/L = 0.70 case (above the h/L &asymp; {crit} critical depth) is the clear soft spring; h/L = 0.30 sits right at
+the critical depth and also detunes downward under strong shallow-water nonlinearity rather than showing the clean
+hardening small-amplitude theory would predict. So &ldquo;resonance at T&#8321;&rdquo; is the small-amplitude
+limit only &mdash; at operational roll angles the tank detunes, and anti-roll tuning must use the
+amplitude-annotated value. (The grid is coarse (&Delta;r = 0.05) and the 8&deg;/70% peak reaches the r = 1.15
+edge, so a finer, wider grid is the natural refinement.)</p>
+"""
+
+
 def _literature_section(research):
     if not research:
         return ""
@@ -202,7 +342,7 @@ def _literature_section(research):
     def li(items):
         return "".join(f'<li>{_esc(x.get("point",""))} <span class="cite">— {_esc(x.get("citation",""))}</span></li>'
                        for x in items)
-    out = ['<h2>3 &middot; Literature survey — support &amp; contrast</h2>']
+    out = ['<h2>4 &middot; Literature survey — support &amp; contrast</h2>']
     if conf:
         out.append(f'<p class="callout">{_esc(conf)}</p>')
     if sup:
@@ -226,7 +366,7 @@ def _wayforward_section(research):
         f'<b>{_esc(x.get("title",""))}</b> — {_esc(x.get("rationale",""))}</li>'
         for x in fw
     )
-    return f'<h2>4 &middot; Way forward — further CFD analysis</h2><ul class="fw">{items}</ul>'
+    return f'<h2>5 &middot; Way forward — further CFD analysis</h2><ul class="fw">{items}</ul>'
 
 
 def _references_section(research):
@@ -272,13 +412,63 @@ ul.lit,ul.fw{padding-left:20px;font-size:.92rem}ul.lit li,ul.fw li{margin:.4em 0
 .pri{display:inline-block;font-size:.66rem;font-weight:700;border-radius:4px;padding:2px 6px;color:#fff;margin-right:4px}
 .pri-high{background:var(--red)}.pri-medium{background:#b06f00}.pri-low{background:var(--mut)}
 .refs li{font-size:.85rem;margin:.3em 0;color:var(--mut)}a{color:var(--accent)}
+.filebox{margin:14px 0}.filebox .fname{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;padding:6px 12px;display:inline-block}
+.filebox pre{margin:0;background:#0f1b2d;color:#dbe7f5;border-radius:0 6px 6px 6px;padding:12px 14px;overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:.8rem;line-height:1.5}
+.filebox pre .cm{color:#7f9bc4}.filebox pre .kw{color:#8fd3fe}
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+"""
+
+
+def _filebox(fname, code):
+    return (f'<div class="filebox"><span class="fname">{_esc(fname)}</span>'
+            f'<pre>{code}</pre></div>')
+
+
+# Verified excerpts from a generated forced-roll case (the case tree itself is not
+# committed; these literal snippets keep the page self-contained & reproducible).
+def _input_files_section():
+    roll = (
+        '<span class="cm">// Prescribed roll: whole-mesh rigid rotation (ESI solidBody)</span>\n'
+        '<span class="kw">dynamicFvMesh</span>    dynamicMotionSolverFvMesh;\n'
+        '<span class="kw">motionSolver</span>     solidBody;\n'
+        'solidBodyMotionFunction <span class="kw">oscillatingRotatingMotion</span>;\n'
+        'oscillatingRotatingMotionCoeffs\n{\n'
+        '    origin      (0.45 0 0);   <span class="cm">// roll axis = tank floor centre</span>\n'
+        '    omega       5.779;        <span class="cm">// rad/s  (T1 = 1.087 s at h/L = 0.70)</span>\n'
+        '    amplitude   (0 0 4);      <span class="cm">// degrees — 4 deg roll about z</span>\n}')
+    vof = (
+        '<span class="cm">// Two-phase VOF: water & air</span>\n'
+        '<span class="kw">phases</span>          (water air);\n'
+        'water\n{ transportModel Newtonian; nu 1e-06;    rho 1000; }\n'
+        'air\n{ transportModel Newtonian; nu 1.48e-05; rho 1;    }\n'
+        'sigma            0.07;   <span class="cm">// N/m surface tension</span>')
+    ana = (
+        'application     <span class="kw">interFoam</span>;   <span class="cm">// 2-phase VOF free-surface solver</span>\n'
+        'functions\n{\n'
+        '    <span class="cm">// wall run-up — the resonance metric</span>\n'
+        '    interfaceHeight1 { type <span class="kw">interfaceHeight</span>; alpha alpha.water;\n'
+        '                       locations ( (0.0075 0 0.005) ); }  <span class="cm">// near-wall antinode</span>\n'
+        '    <span class="cm">// roll-reaction moment -> added inertia + damping</span>\n'
+        '    tankRollMoment   { type <span class="kw">forces</span>; patches (leftWall rightWall lowerWall);\n'
+        '                       rho rho; CofR (0.45 0 0); }  <span class="cm">// M_z about the roll axis</span>\n}')
+    return f"""
+<h2>Appendix &middot; CFD input files — how the roll &amp; analysis are set up</h2>
+<p>The cases are generated by the drivers (no hand-editing); these are the load-bearing OpenFOAM dictionary
+excerpts. The <b>roll</b> is a prescribed whole-mesh rigid rotation about the tank floor centre; the
+<b>analysis</b> is a near-wall free-surface probe (run-up) plus a wall-force integration reduced to the roll
+moment. Verified excerpts from a forced-roll case (<code>h/L = 0.70</code>):</p>
+{_filebox("constant/dynamicMeshDict", roll)}
+{_filebox("constant/transportProperties", vof)}
+{_filebox("system/controlDict  (solver + analysis function objects)", ana)}
+<p class="cap">Generated by <code>SloshingForcedRollConfig</code> / <code>build_forced_roll_case</code> in
+<code>digitalmodel/solvers/openfoam/validation/sloshing_2d.py</code>.</p>
 """
 
 
 def build():
     bench = _load("sloshing-cfd-benchmark.json")
     forced = _load("sloshing-forced-response.json")
+    backbone = _load("sloshing-backbone.json")
     research = _load("sloshing-cfd-research.json")
 
     n_cases = 0
@@ -288,6 +478,9 @@ def build():
     if forced:
         for f in forced.get("fills", []):
             n_cases += 1 + len(f.get("forced", []))
+    if backbone:
+        for f in backbone.get("fills", []):
+            n_cases += sum(len(a.get("points", [])) for a in f.get("amplitudes", []))
 
     solver = (forced or bench or {}).get("meta", {}).get("solver", "interFoam (VOF), OpenFOAM ESI v2312")
 
@@ -307,8 +500,10 @@ def build():
     <div><b>Resonance</b><span>at natural period</span></div>
   </div>
 </header>
+{_img("effect-of-roll.gif", "The effect of forced roll — same tank, same 70% fill. LEFT: with roll, the free surface piles up and sloshes wall-to-wall. RIGHT: without roll, it stays flat and calm. Live 2D VOF (OpenFOAM v2312) free-surface fields.", "820px")}
 {_natural_period_section(bench)}
 {_forced_section(forced)}
+{_backbone_section(backbone)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 <h2>Method &amp; provenance</h2>
@@ -317,10 +512,12 @@ perturbation, FFT of the wall free-surface. Forced roll: rigid whole-mesh roll v
 solver, partial fill snapped to a cell face, wall run-up + tank reaction-moment reduced to in-phase / quadrature
 coefficients. Engines and validated cases ship in <code>digitalmodel</code>
 (<code>solvers/openfoam/validation/sloshing_2d.py</code>, <code>sloshing_sweep.py</code>); the drivers are
-<code>scripts/cfd/run_sloshing_benchmark.py</code> and <code>run_sloshing_response_sweep.py</code>. Related:
+<code>scripts/cfd/run_sloshing_benchmark.py</code>, <code>run_sloshing_response_sweep.py</code> and
+<code>run_sloshing_backbone.py</code>. Related:
 <a href="tank-sloshing-verification.html">2D tank-sloshing verification</a> &middot;
 <a href="../structural/sloshing-explorer.html">master-curve explorer</a>.</p>
 {_references_section(research)}
+{_input_files_section()}
 <footer>Built by <code>scripts/capabilities/build_sloshing_cfd_showcase.py</code> from the committed CFD
 manifests. Part of the digitalmodel OpenFOAM verification suite — computed on real OpenFOAM ESI v2312, not mocked.</footer>
 """
