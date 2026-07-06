@@ -440,6 +440,40 @@ def _fmt0(v):
     return f"{int(v):,}" if isinstance(v, (int, float)) else "—"
 
 
+def _spheric_section(sp):
+    if not sp or not sp.get("comparison"):
+        return ""
+    c = sp["comparison"]; case = sp.get("case", {}); pub = sp.get("published_pressure_pa", {})
+    cfd = c.get("cfd_first_peak_pa")
+    band = c.get("exp_2sigma_band_pa", [None, None])
+    within = c.get("within_experimental_scatter")
+    ratio = c.get("ratio_cfd_over_mean")
+    vclass = "callout key" if within else "callout"
+    verdict = ("<b>Within the experimental scatter.</b>" if within else "<b>Outside the 2σ band.</b>")
+    return f"""
+<h2>External validation — Delorme / SPHERIC Test 10 (shallow fill, impact pressure)</h2>
+<p>The one recognised external benchmark with published <b>experimental</b> data (not our own analytical): the SPHERIC
+Test 10 lateral-impact case (Delorme et&nbsp;al. 2009; benchmark values Botia-Vera et&nbsp;al. 2010). A shallow-filled
+tank (L={case.get('tank_L_m')} m, h={case.get('fill_h_m')} m &asymp; {round((case.get('fill_fraction') or 0)*100)}% fill)
+in {case.get('roll_amplitude_deg')}&deg; forced roll at T={case.get('drive_period_s')} s (0.85·T&#8320;) throws an
+overturning wave that slams the side wall at the still-water line; the first-impact pressure at <b>Sensor&nbsp;1</b>
+(y={case.get('sensor1_height_m')} m) is the validated quantity. A moving-wall <code>patchProbes</code> tap tracks the
+rotating wall.</p>
+<table><thead><tr><th>Quantity</th><th class="num">Value</th><th>Note</th></tr></thead><tbody>
+<tr><td>CFD first-impact peak (Sensor&nbsp;1)</td><td class="num">{_fmt0(cfd)} Pa</td><td>single 2D interFoam realisation</td></tr>
+<tr><td>Experiment, first-peak (water, 1X)</td><td class="num">{_fmt0(pub.get('mean'))} &plusmn; {_fmt0(pub.get('sd'))} Pa</td><td>mean &plusmn; SD, 100 runs (CoV ~{pub.get('cov_pct')}%)</td></tr>
+<tr><td>Experimental 2σ band</td><td class="num">{_fmt0(band[0])}–{_fmt0(band[1])} Pa</td><td>CFD / mean = {ratio}</td></tr>
+</tbody></table>
+<p class="{vclass}">{verdict} The CFD peak sits at <b>{ratio}&times; the experimental mean</b> (upper part of the 2σ band) &mdash;
+consistent with the documented tendency of violent-impact CFD/SPH to <b>over-predict</b> pressure maxima. A single
+deterministic 2D CFD run is one draw from a <b>strongly stochastic</b> impact distribution (experimental CoV ~20%), so
+agreement is judged as landing within the experimental scatter, not as an exact number; 2D also omits the experiment's
+out-of-plane-thickness dependence and air entrapment. This validates the forced-roll VOF impact path against measured
+data at shallow fill.</p>
+<p class="cap">Sources: {_esc(pub.get('source',''))}.</p>
+"""
+
+
 def _convergence_svg(conv):
     """Static SVG: relative error (%) vs mesh (cells-per-breadth), log-x — shows
     the free-decay frequency converging as the grid refines."""
@@ -620,6 +654,7 @@ def build():
     research = _load("sloshing-cfd-research.json")
     compute = _load_cfd("sloshing-compute.json")
     convergence = _load_cfd("sloshing-convergence.json")
+    spheric = _load_cfd("sloshing-spheric.json")
 
     n_cases = 0
     if bench:
@@ -655,6 +690,7 @@ def build():
 {_convergence_section(convergence)}
 {_forced_section(forced)}
 {_backbone_section(backbone)}
+{_spheric_section(spheric)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 {_compute_section(compute)}

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_spheric_test10.py",
+    "epic": "#1429",
+    "issue": "#1433",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "benchmark": "SPHERIC Test 10 / Delorme et al. 2009 (lateral impact, water)",
+    "note": "Single 2D realisation vs the experimental first-peak distribution (strongly stochastic, CoV ~20%); 2D omits out-of-plane-thickness dependence and air entrapment."
+  },
+  "case": {
+    "tank_L_m": 0.9,
+    "tank_H_m": 0.508,
+    "fill_h_m": 0.093,
+    "fill_fraction": 0.183,
+    "roll_amplitude_deg": 4.0,
+    "drive_period_s": 1.6298,
+    "T0_first_mode_s": 1.9174,
+    "sensor1_height_m": 0.093,
+    "cells": [
+      90,
+      51,
+      1
+    ],
+    "n_cycles": 6.0,
+    "solver_status": "completed",
+    "runtime_s": 964.2
+  },
+  "cfd_pressure_pa": {
+    "left_wall": {
+      "peak": 2922.5,
+      "design_p99": 1726.2,
+      "mean": 283.7
+    },
+    "right_wall": {
+      "peak": 4688.0,
+      "design_p99": 1822.5,
+      "mean": 315.3
+    },
+    "first_peak_pa": 4688.0
+  },
+  "published_pressure_pa": {
+    "quantity": "Sensor 1, first-peak, water, 1X thickness; mean +/- SD (100 runs)",
+    "mean": 3710.0,
+    "sd": 732.0,
+    "cov_pct": 19.7,
+    "source": "Botia-Vera, Souto-Iglesias, Bulian & Lobovsky (2010), Table II (100 runs); Delorme et al. (2009), Ocean Eng. 36(2)"
+  },
+  "comparison": {
+    "cfd_first_peak_pa": 4688.0,
+    "exp_mean_pa": 3710.0,
+    "exp_2sigma_band_pa": [
+      2246.0,
+      5174.0
+    ],
+    "within_experimental_scatter": true,
+    "ratio_cfd_over_mean": 1.264
+  }
+}
