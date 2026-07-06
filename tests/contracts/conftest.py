@@ -21,7 +21,9 @@ def au_version():
 def pytest_configure(config):
     config.addinivalue_line(
         "markers",
-        "contracts: Contract tests asserting assetutilities public API stability",
+        "contracts: Repo-level contract tests asserting cross-cutting invariants "
+        "(assetutilities public API stability; force/moment/pressure units per "
+        "docs/UNITS.md, #1447)",
     )
 
 
