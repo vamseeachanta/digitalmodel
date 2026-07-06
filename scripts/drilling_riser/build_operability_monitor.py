@@ -26,29 +26,27 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 from pathlib import Path
 
 import yaml
 
 from digitalmodel.drilling_riser import operability_atlas as oa
-from digitalmodel.drilling_riser.conductor_response import solve_conductor_moment
-from digitalmodel.drilling_riser.drift_off import drift_off_screen
 from digitalmodel.drilling_riser.drift_off import load_config as load_drift_config
 from digitalmodel.drilling_riser.envelope import (
     ConductorInput,
-    CurrentProfile,
     EnvelopeCriteria,
     RiserSection,
 )
 from digitalmodel.drilling_riser.operability_screening import screen_operability
-from digitalmodel.drilling_riser.response_correction import (
-    correct_flexjoint_response,
-    fit_flexjoint_models,
-    flexjoint_utilisation,
+from digitalmodel.drilling_riser.response_correction import fit_flexjoint_models
+from digitalmodel.decision_spine import DISPLAY_LABEL
+from digitalmodel.drilling_riser.telemetry_inputs import parse_snapshots
+from digitalmodel.drilling_riser.twin_loop import (
+    STATIC_SCREEN_HS_CEILING_M,
+    _num,
+    _roll_verdict,
+    evaluate_point,
 )
-from digitalmodel.drilling_riser.riser_response import solve_static_response
-from digitalmodel.drilling_riser.telemetry_inputs import parse_snapshots, snapshot_to_offset_pct
 from digitalmodel.parametric.atlas import Atlas
 from digitalmodel.subsea.mooring_analysis.models import EnvironmentalConditions
 
@@ -81,13 +79,6 @@ _COND_BAND = {"soil_modulus_n_per_m2": 1_000_000.0, "stand_off_m": 5.0}
 
 def _sha(obj) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True).encode()).hexdigest()
-
-
-def _num(x):
-    """JSON-safe number: inf/nan -> None (station-held time-to-limit is 'no drift')."""
-    if x is None or (isinstance(x, float) and (math.isinf(x) or math.isnan(x))):
-        return None
-    return round(float(x), 3)
 
 
 def _criteria_from_atlas_config() -> tuple[EnvelopeCriteria, list[dict]]:
@@ -136,49 +127,19 @@ def build_results(atlas_root: Path | None = None) -> dict:
     t0 = snaps[0].timestamp
     track = []
     for snap in snaps:
-        off_pct = snapshot_to_offset_pct(snap, water_depth_m=wd)
-        # -- operability (twin A offset -> #1283 atlas) --
-        scr = screen_operability(token, off_pct, cur, atlas_root=root)
-        # -- physics prediction at the live point (for twin B + wellhead) --
-        drag = CurrentProfile(surface_speed_mps=cur).drag_load_n_per_m(section.outer_diameter_m)
-        pred = solve_static_response(length_m=length, top_offset_m=snap.vessel_offset_m,
-                                     tension_n=tension, ei_nm2=section.ei_nm2, current_load_n_per_m=drag)
-        pred_angle = max(abs(pred.angle_upper_deg), abs(pred.angle_lower_deg))
-        # -- flex-joint (twin B: correct the prediction; decision = max(corrected, raw)) --
-        corr = correct_flexjoint_response(pred, models)
-        fj_uc = flexjoint_utilisation(corr.decision_static_angle_deg, criteria)
-        meas = snap.measured
-        meas_angle = None
-        if meas is not None:
-            vals = [abs(v) for v in (meas.flexjoint_angle_upper_deg, meas.flexjoint_angle_lower_deg) if v is not None]
-            meas_angle = max(vals) if vals else None
-        # -- wellhead bending-moment INDICATOR (kN·m only; no capacity, no UC) --
-        wh = solve_conductor_moment(shear_n=pred.shear_lower_n, stand_off_m=conductor.stand_off_m,
-                                    soil_modulus_n_per_m2=conductor.soil_modulus_n_per_m2, ei_nm2=conductor.ei_nm2)
-        wh_moment_knm = wh.max_moment_nm / 1000.0
-        # -- drift-off (twin C: watch-circle + time-to-limit) --
-        dr = drift_off_screen(snap.dp, condition, section=section, water_depth_m=wd, length_m=length,
-                              tension_n=tension, criteria=criteria, config=drift_cfg, x0_m=snap.vessel_offset_m)
-        watch_frac = snap.vessel_offset_m / dr.r_watch_m if dr.r_watch_m > 0 else None
-        track.append({
-            "t": round((snap.timestamp - t0).total_seconds(), 1),
-            "offset_m": round(snap.vessel_offset_m, 3),
-            "offset_pct": round(off_pct, 4),
-            "operability_uc": round(float(scr.governing_utilisation), 6) if scr.governing_utilisation is not None else None,
-            "light": scr.light,
-            "flexjoint_uc": round(float(fj_uc), 6),
-            "measured_angle_deg": None if meas_angle is None else round(meas_angle, 3),
-            "predicted_angle_deg": round(pred_angle, 3),
-            "corrected_angle_deg": round(corr.corrected_static_angle_deg, 3),
-            "decision_angle_deg": round(corr.decision_static_angle_deg, 3),
-            "wh_moment_knm": round(wh_moment_knm, 3),
-            "r_watch_m": round(dr.r_watch_m, 3),
-            "watch_frac": None if watch_frac is None else round(watch_frac, 4),
-            "time_to_limit_s": _num(dr.time_to_limit_s),
-            "lead_time_margin_s": _num(dr.lead_time_margin_s),
-            "point_of_disconnect_m": _num(dr.point_of_disconnect_m),
-            "drift_status": dr.status,
-        })
+        p = evaluate_point(
+            snap, token=token, section=section, conductor=conductor, condition=condition,
+            cur=cur, water_depth_m=wd, length_m=length, tension_n=tension, criteria=criteria,
+            models=models, drift_cfg=drift_cfg, atlas_root=root, t0=t0,
+        )
+        # twin E #1377: the rolled conservative verdict for THIS demo point (fixed sea =
+        # the atlas static-screen ceiling, so the seastate-domain guard is in-domain here;
+        # the rolling-metocean guard is exercised by twin_loop.run_twin_loop + its test).
+        state, lead = _roll_verdict(p, wave_hs_m=float(condition.wave_hs),
+                                    hs_ceiling_m=STATIC_SCREEN_HS_CEILING_M)
+        p["go_no_go"] = DISPLAY_LABEL[state]
+        p["lead_time_s"] = _num(lead)
+        track.append(p)
 
     # scenario config's atlas grid (the heatmap backdrop for the watch-circle-in-envelope view)
     offset_axis = [ax for ax in atlas.axes if ax.name == "offset_pct"][0].grid
@@ -312,7 +273,10 @@ _TEMPLATE = r"""<!DOCTYPE html>
       <button class="pb" id="play" aria-label="Play or pause">&#9654; Play</button>
       <input id="scrub" type="range" min="0" value="0" step="1" aria-label="Scrub the telemetry track">
       <span class="tstamp" id="tlab">t = 0 s</span>
+      <span class="chip" id="verdict" style="font-size:13px;padding:4px 12px" aria-live="polite">
+        <span class="ic" id="vic"></span><span id="vlt"></span></span>
     </div>
+    <canvas id="vs" width="360" height="26" role="img" aria-label="Rolling GO / CAUTION / NO-GO verdict over the track" style="margin-top:4px"></canvas>
     <div class="row">
       <div>
         <div class="lab" style="font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px">Watch circle</div>
@@ -373,6 +337,21 @@ function driftColor(st){
   if(st==='escalate') return css('--escalate');
   return css('--warn'); // drift_off
 }
+function verdictColor(v){
+  if(v==='GO') return css('--good');
+  if(v==='CAUTION') return css('--warn');
+  return css('--serious'); // NO-GO
+}
+// rolling verdict strip — one cell per track point, coloured by the SERVED go_no_go
+// label (no recompute). This is the "traffic light" over the whole scenario.
+const vs=document.getElementById('vs'), vsx=vs.getContext('2d');
+function drawVS(){
+  const dpr=window.devicePixelRatio||1, W=vs.clientWidth||360, H=26;
+  vs.width=W*dpr; vs.height=H*dpr; vsx.setTransform(dpr,0,0,dpr,0,0); vsx.clearRect(0,0,W,H);
+  const n=TRACK.length, w=W/n;
+  TRACK.forEach((p,i)=>{ vsx.fillStyle=verdictColor(p.go_no_go); vsx.fillRect(i*w+1,0,w-2,H-8); });
+  vsx.fillStyle=css('--dot'); vsx.fillRect(idx*w+w/2-1,H-6,2,6);
+}
 function fmtT(s){ if(s===null) return '&infin;'; const m=Math.floor(s/60), r=Math.round(s%60); return m+':'+String(r).padStart(2,'0'); }
 
 // --- watch-circle plan: allowable radius ring + vessel-offset dot (linear scale, no physics) ---
@@ -415,7 +394,11 @@ function render(){
   const p=TRACK[idx];
   document.getElementById('scrub').value=idx;
   document.getElementById('tlab').innerHTML='t = '+p.t+' s';
-  drawWC(p); drawTL();
+  drawWC(p); drawTL(); drawVS();
+  const vcol=verdictColor(p.go_no_go);
+  document.getElementById('vic').style.background=vcol;
+  document.getElementById('vlt').textContent='verdict '+p.go_no_go+
+    (p.lead_time_s!==null?' · '+Math.round(p.lead_time_s)+' s lead':'');
   document.getElementById('wcnote').innerHTML='Vessel offset <b>'+p.offset_m.toFixed(0)+' m</b> ('+
     p.offset_pct.toFixed(1)+'% WD) of allowable <b>'+p.r_watch_m.toFixed(0)+' m</b>'+
     (p.watch_frac!==null?' &middot; '+(p.watch_frac*100).toFixed(0)+'% of watch circle':'');

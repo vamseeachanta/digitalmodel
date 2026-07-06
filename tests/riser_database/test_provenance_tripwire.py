@@ -91,6 +91,12 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "scripts" / "parametric" / "build_drilling_riser_drift_off_library.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_drift_off.py",
     REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "drift_off_sample.json",
+    # #1377 twin E: the shared per-point composition engine + the rolling GO/CAUTION/
+    # NO-GO integration, the shared decision spine, and the synthetic metocean fixture.
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "twin_loop.py",
+    REPO_ROOT / "src" / "digitalmodel" / "decision_spine.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "test_twin_loop.py",
+    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "monitor_metocean_track.json",
 )
 
 
@@ -167,7 +173,7 @@ def test_new_analytical_code_is_gated():
     scanned = {p.name for p in _PUBLIC_ARTIFACTS}
     for required in ("envelope.py", "conductor_response.py", "riser_response.py",
                      "telemetry_inputs.py", "response_correction.py", "model.py",
-                     "skill.py", "drift_off.py"):
+                     "skill.py", "drift_off.py", "twin_loop.py", "decision_spine.py"):
         assert required in scanned, f"{required} is not gated by the provenance tripwire"
 
 
