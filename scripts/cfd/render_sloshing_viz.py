@@ -207,8 +207,23 @@ def make_effect_sidebyside(left: Path, right: Path, out_gif: Path, out_png: Path
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Render sloshing CFD field visualizations (#1437)")
     ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--only", choices=["all", "shallow"], default="all",
+                    help="render only the named asset group")
     args = ap.parse_args(argv)
     wd = args.work_dir
+
+    # Shallow-fill bore (h/L=0.15, 8 deg, r=0.95 — near the hardening-detuned
+    # resonance): montage of the travelling bore over one drive period (#1433).
+    bore = wd / "sh_hl15_a080_r095"
+    if bore.exists():
+        Tb = 0.95 * 1.62045
+        b0 = round(6 * Tb, 2)  # steady tail (8 cycles total)
+        make_montage(bore, _OUT / "shallow-bore-montage.png", 60, 60, moved=True,
+                     times=[round(b0 + k * Tb / 4, 2) for k in range(5)],
+                     labels=["0", "T/4", "T/2", "3T/4", "T"],
+                     title="one drive period, shallow bore")
+    if args.only == "shallow":
+        return 0
 
     # Resonant forced-roll case (h/L=0.70, r=1.0, 4 deg): the hero animation + cycle montage.
     hero = wd / "resp_fr_hl70_r100"

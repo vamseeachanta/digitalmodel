@@ -327,14 +327,155 @@ the wall run-up saturates near resonance and is not a reliable locator, so it is
 {svg}
 <table><thead><tr><th>Fill h/L</th><th>Roll amp</th><th>Resonant T/T&#8321;</th><th>Freq detuning</th><th>Peak run-up (m)</th></tr></thead>
 <tbody>{rows}</tbody></table>
-<p class="callout key"><b>Result.</b> Both fills show <b>soft-spring detuning</b>: the resonant period lengthens
-(frequency drops) as roll amplitude grows, reaching roughly <b>7&ndash;13% below T&#8321; at 8&deg;</b>. The
+<p class="callout key"><b>Result.</b> Both fills show <b>soft-spring detuning</b>: the resonant frequency drops
+<b>monotonically</b> as roll amplitude grows, reaching <b>~11&ndash;13% below f&#8321; at 8&deg;</b>
+(h/L = 0.30: &minus;0.9% &rarr; &minus;10.8%; h/L = 0.70: &minus;4.4% &rarr; &minus;13.0%). The
 h/L = 0.70 case (above the h/L &asymp; {crit} critical depth) is the clear soft spring; h/L = 0.30 sits right at
 the critical depth and also detunes downward under strong shallow-water nonlinearity rather than showing the clean
 hardening small-amplitude theory would predict. So &ldquo;resonance at T&#8321;&rdquo; is the small-amplitude
 limit only &mdash; at operational roll angles the tank detunes, and anti-roll tuning must use the
 amplitude-annotated value. (The grid is coarse (&Delta;r = 0.05) and the 8&deg;/70% peak reaches the r = 1.15
-edge, so a finer, wider grid is the natural refinement.)</p>
+edge, so a finer, wider grid is the natural refinement. Values re-reduced with the corrected sub-grid vertex
+interpolation introduced with the shallow-fill sweep &mdash; the originally published detunings placed each peak
+correctly only to the &Delta;r = 0.05 grid.)</p>
+"""
+
+
+# Sequential ramp for the ordered roll-amplitude series (2..8 deg), lightest->darkest.
+_SHCOL = {2.0: "#6390cf", 4.0: "#4272b5", 6.0: "#265699", 8.0: "#0B3D91"}
+
+
+def _shallow_svg(sh):
+    """Static SVG: normalised quadrature-coefficient response vs T_drive/T1,
+    one line per roll amplitude — the peak location IS the resonance."""
+    amps = sh.get("amplitudes", []) if sh else []
+    series = []
+    for a in amps:
+        pts = [(p["ratio"], p["quad_coeff"]) for p in a.get("points", [])
+               if p.get("status") == "completed" and p.get("quad_coeff") is not None]
+        if len(pts) >= 3:
+            peak = max(q for _, q in pts)
+            if peak > 0:
+                series.append((a["roll_deg"], sorted((r, q / peak) for r, q in pts)))
+    if not series:
+        return ""
+    W, H, ML, MR, MT, MB = 720, 340, 56, 64, 16, 44
+    X0, X1, YX = 0.76, 1.19, 1.12
+    def px(r):
+        return ML + (r - X0) / (X1 - X0) * (W - ML - MR)
+    def py(y):
+        return H - MB - y / YX * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    gx = 0.80
+    while gx <= 1.1501:
+        g.append(f'<line x1="{px(gx):.1f}" y1="{py(0):.1f}" x2="{px(gx):.1f}" y2="{py(YX):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(gx):.1f}" y="{py(0)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{gx:.2f}</text>')
+        gx += 0.05
+    for gy in (0, 0.25, 0.5, 0.75, 1.0):
+        g.append(f'<line x1="{px(X0):.1f}" y1="{py(gy):.1f}" x2="{px(X1):.1f}" y2="{py(gy):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(X0)-8:.1f}" y="{py(gy)+3:.1f}" fill="#5a6b7b" font-size="10" text-anchor="end">{gy:.2f}</text>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">drive period / natural period  T_drive / T1</text>')
+    g.append(f'<text transform="translate(14,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">quadrature (damping) coefficient (normalised)</text>')
+    g.append(f'<line x1="{px(1):.1f}" y1="{py(0):.1f}" x2="{px(1):.1f}" y2="{py(YX):.1f}" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5 4"/>')
+    g.append(f'<text x="{px(1):.1f}" y="{py(YX)+1:.1f}" fill="#c0392b" font-size="10.5" text-anchor="middle">linear T&#8321;</text>')
+    for deg, pts in series:
+        col = _SHCOL.get(deg, "#0B3D91")
+        line = " ".join(f'{"L" if j else "M"}{px(r):.1f} {py(y):.1f}' for j, (r, y) in enumerate(pts))
+        g.append(f'<path d="{line}" fill="none" stroke="{col}" stroke-width="2.2"/>')
+        for r, y in pts:
+            g.append(f'<circle cx="{px(r):.1f}" cy="{py(y):.1f}" r="3.6" fill="#fff" stroke="{col}" stroke-width="2"/>')
+    # Direct labels at the right end, pushed apart vertically so they never collide.
+    lab = sorted(((py(pts[-1][1]), pts[-1][0], deg) for deg, pts in series))
+    for i in range(1, len(lab)):
+        if lab[i][0] - lab[i - 1][0] < 13:
+            lab[i] = (lab[i - 1][0] + 13, lab[i][1], lab[i][2])
+    for ly, rl, deg in lab:
+        g.append(f'<text x="{px(rl)+8:.1f}" y="{ly+4:.1f}" fill="{_SHCOL.get(deg, "#0B3D91")}" font-size="10.5">{deg:.0f}&#176;</text>')
+    g.append('</svg>')
+    legend = " &nbsp; ".join(f'<span style="color:{_SHCOL[d]}">&#9679;</span> roll {d:.0f}&#176;' for d, _ in series)
+    return "".join(g) + f'<p class="cap">{legend} &nbsp;&mdash; each curve normalised to its own peak; the peak location is the resonance.</p>'
+
+
+def _shallow_callout(sh):
+    amps = [a for a in sh.get("amplitudes", []) if a.get("detuning_pct") is not None]
+    if not amps:
+        return ""
+    lo, hi = amps[0], amps[-1]
+    rohs = [a["peak_runup_over_h"] for a in amps if a.get("peak_runup_over_h")]
+    asyms = [a["peak_asymmetry"] for a in amps if a.get("peak_asymmetry")]
+    return f"""<p class="callout key"><b>Result.</b> The shallow fill detunes the <b>opposite way</b> to the deeper
+fills: a <b>hardening</b> response whose resonant frequency sits <b>above</b> linear f&#8321; at every amplitude
+&mdash; robust at the grid level (the quadrature peak lands at r = 0.95 &lt; 1 for all four amplitudes), and the
+sign flip nonlinear theory predicts below the h/L &asymp; 0.34 critical depth (Faltinsen &amp; Timokha 2009).
+The flip demonstrated here is between h/L = 0.15 and the 0.30/0.70 fills &mdash; our h/L = 0.30 case, nominally
+just below critical, already softens, so the practical boundary sits below 0.30 rather than exactly at 0.34.
+Sub-grid interpolation puts the offset <b>largest at small amplitude</b> (~{lo["detuning_pct"]:+.0f}% at
+{lo["roll_deg"]:.0f}&deg;) shrinking to ~{hi["detuning_pct"]:+.0f}% at {hi["roll_deg"]:.0f}&deg; &mdash;
+consistent with the increasingly dissipative bore broadening the response peak and pulling it back toward
+T&#8321;, though this amplitude trend rides on the sub-grid fit (all grid maxima sit at the same ratio) and on
+8-cycle records, so treat it as indicative (~&plusmn;1 pct-pt) rather than resolved; it must also reverse below
+2&deg; to meet the free-decay anchor. What is <b>not</b> in doubt is the violence of the response:
+<b>near resonance there is no small-amplitude window where the linear anchor holds under forcing</b> &mdash;
+even at 2&deg; roll the free surface is a bore-like wave with run-up {min(rohs):.1f}&times; the still depth
+(rising to ~3&times; at 6&ndash;8&deg;) and crest/trough asymmetry ~4&ndash;5 (a linear standing wave is
+symmetric); away from resonance the surface relaxes toward a moderate nonlinear wave. The free-decay anchor
+(0.28% at this fill) is real but describes the unforced small-amplitude limit only.
+<b>Practical consequence:</b> if ballast operation passes through shallow fills, anti-roll tuning there cannot
+come from the tanh master curve &mdash; it needs the forced-response CFD, and the resonant frequency to use is
+amplitude-dependent. Caveats: single 2D grid (&Delta;r = 0.05, cpb = 60 &mdash; no convergence study repeated at
+this fill); 8-cycle records are short of full steady state near resonance (a finer ratio grid + longer records
+is the natural refinement); at 6&ndash;8&deg; the bore crest reaches ~0.64 m against the 0.77 m freeboard, so
+amplitudes at or slightly beyond 8&deg; would engage roof-impact physics beyond this sweep's scope.</p>"""
+
+
+def _shallow_section(sh, bb):
+    if not sh or not sh.get("amplitudes"):
+        return ""
+    tank = sh.get("tank", {})
+    hl = tank.get("fill_h_over_L", 0.15)
+    crit = sh.get("meta", {}).get("critical_depth_h_over_L", 0.34)
+    rows = ""
+    for a in sh["amplitudes"]:
+        det = a.get("detuning_pct")
+        edge = ' <span class="cap">(grid edge)</span>' if a.get("peak_quad_at_grid_edge") else ""
+        if det is not None:
+            rows += (f'<tr><td class="num">{a["roll_deg"]:.0f}&deg;</td>'
+                     f'<td class="num">{_fmt(a.get("resonant_ratio"))}{edge}</td>'
+                     f'<td class="num">{det:+.2f}%</td>'
+                     f'<td class="num">{_fmt(a.get("peak_runup_over_h"))}</td>'
+                     f'<td class="num">{_fmt(a.get("peak_asymmetry"))}</td></tr>')
+        else:
+            rows += (f'<tr><td class="num">{a["roll_deg"]:.0f}&deg;</td>'
+                     f'<td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>')
+    # Detuning-vs-amplitude comparison across all swept fills (shallow + backbone).
+    comp_svg = ""
+    if bb and bb.get("fills"):
+        merged = {"fills": bb["fills"] + [{
+            "h_over_L": hl, "regime": "shallow-water / bore regime",
+            "amplitudes": sh["amplitudes"]}]}
+        comp_svg = _backbone_svg(merged)
+    return f"""
+<h2>Shallow-fill bore regime — amplitude sweep at h/L = {hl}</h2>
+<p>The fills above sit at or above the h/L &asymp; {crit} critical depth. Real ballast operation also passes
+through <b>shallow fills</b>, where the response is set by <b>travelling bores / hydraulic jumps</b> and low-order
+(tanh-dispersion) theory degrades &mdash; the regime where anti-roll tuning must come from CFD. This sweep drives
+h/L&nbsp;=&nbsp;{hl} (h&nbsp;=&nbsp;{tank.get("fill_depth_m")} m) at 2&ndash;8&deg; roll over an
+r&nbsp;=&nbsp;0.80&ndash;1.15 frequency grid ({sum(len(a.get("points", [])) for a in sh["amplitudes"])} cases).
+The free-decay benchmark (section&nbsp;1) anchors the small-amplitude natural frequency at this fill to within
+0.28% of linear theory; the sweep measures how fast that anchor degrades as amplitude grows. Resonance is again
+located by the <b>quadrature (damping) coefficient peak</b>. Bore onset is tracked by two wall-probe indicators:
+<b>run-up / depth</b> (the shallow-water nonlinearity parameter) and <b>crest/trough asymmetry</b> (bores throw a
+sharp high crest over a drawn-down trough; a linear standing wave is symmetric).</p>
+{_shallow_svg(sh)}
+{_img("shallow-bore-montage.png", "The shallow-fill bore over one drive period (h/L = 0.15, 8&deg; roll, r = 0.95 — near the detuned resonance). The water mass travels wall-to-wall as a bore and throws run-up several times the still depth up the tank walls. Live 2D VOF fields on the actual rolled mesh.", "820px")}
+<table><thead><tr><th>Roll amp</th><th>Resonant T/T&#8321;</th><th>Freq detuning</th>
+<th>Peak run-up / h</th><th>Crest/trough asymmetry</th></tr></thead>
+<tbody>{rows}</tbody></table>
+<p class="cap">Run-up / h and asymmetry are each amplitude's maximum across the ratio grid; they occur near
+(not exactly at) the resonant ratio. Off resonance both indicators fall sharply &mdash; at r = 0.80 the
+run-up is below the still depth and the asymmetry near 1.</p>
+{comp_svg}
+{_shallow_callout(sh)}
 """
 
 
@@ -367,9 +508,13 @@ def _wayforward_section(research):
         return ""
     order = {"high": 0, "medium": 1, "low": 2}
     fw = sorted(fw, key=lambda x: order.get(x.get("priority", "medium"), 1))
+    def chip(x):
+        if x.get("status") == "done":
+            return '<span class="pri" style="background:#e6f4ea;color:#1f7a43">&#10003; DONE</span> '
+        return f'<span class="pri pri-{_esc(x.get("priority","medium"))}">{_esc(x.get("priority","").upper())}</span> '
+    fw = sorted(fw, key=lambda x: x.get("status") == "done")  # open items first
     items = "".join(
-        f'<li><span class="pri pri-{_esc(x.get("priority","medium"))}">{_esc(x.get("priority","").upper())}</span> '
-        f'<b>{_esc(x.get("title",""))}</b> — {_esc(x.get("rationale",""))}</li>'
+        f'<li>{chip(x)}<b>{_esc(x.get("title",""))}</b> — {_esc(x.get("rationale",""))}</li>'
         for x in fw
     )
     return f'<h2>5 &middot; Way forward — further CFD analysis</h2><ul class="fw">{items}</ul>'
@@ -655,6 +800,7 @@ def build():
     compute = _load_cfd("sloshing-compute.json")
     convergence = _load_cfd("sloshing-convergence.json")
     spheric = _load_cfd("sloshing-spheric.json")
+    shallow = _load_cfd("sloshing-shallow.json")
 
     n_cases = 0
     if bench:
@@ -666,6 +812,8 @@ def build():
     if backbone:
         for f in backbone.get("fills", []):
             n_cases += sum(len(a.get("points", [])) for a in f.get("amplitudes", []))
+    if shallow:
+        n_cases += sum(len(a.get("points", [])) for a in shallow.get("amplitudes", []))
 
     solver = (forced or bench or {}).get("meta", {}).get("solver", "interFoam (VOF), OpenFOAM ESI v2312")
 
@@ -691,6 +839,7 @@ def build():
 {_forced_section(forced)}
 {_backbone_section(backbone)}
 {_spheric_section(spheric)}
+{_shallow_section(shallow, backbone)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 {_compute_section(compute)}
@@ -700,8 +849,8 @@ perturbation, FFT of the wall free-surface. Forced roll: rigid whole-mesh roll v
 solver, partial fill snapped to a cell face, wall run-up + tank reaction-moment reduced to in-phase / quadrature
 coefficients. Engines and validated cases ship in <code>digitalmodel</code>
 (<code>solvers/openfoam/validation/sloshing_2d.py</code>, <code>sloshing_sweep.py</code>); the drivers are
-<code>scripts/cfd/run_sloshing_benchmark.py</code>, <code>run_sloshing_response_sweep.py</code> and
-<code>run_sloshing_backbone.py</code>. Related:
+<code>scripts/cfd/run_sloshing_benchmark.py</code>, <code>run_sloshing_response_sweep.py</code>,
+<code>run_sloshing_backbone.py</code> and <code>run_sloshing_shallow_sweep.py</code>. Related:
 <a href="tank-sloshing-verification.html">2D tank-sloshing verification</a> &middot;
 <a href="../structural/sloshing-explorer.html">master-curve explorer</a>.</p>
 {_references_section(research)}

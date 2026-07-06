@@ -824,27 +824,32 @@
       {
         "title": "Roll-amplitude sweep to map the soft-spring backbone and quantify peak detuning off linear T1 at h/L=0.70",
         "rationale": "Multiple sources (B\u00e4uerlein & Avila 2024 near critical depth; MDPI Water 16(11):1551 2024 at 70% fill) predict our best-fill case sits above the ~0.34 critical depth and will detune downward as amplitude grows. Sweeping roll amplitude on a fine frequency grid (~0.95-1.15 T1) maps the amplitude-dependent backbone and turns 'peak at T1' into a defensible, amplitude-annotated statement.",
-        "priority": "high"
+        "priority": "high",
+        "status": "done"
       },
       {
         "title": "Reduce the forced-roll quadrature response to a reportable SDOF (equivalent linear damping ratio, added moment, m-c-k) and build an f1(fill) tuning curve instead of asserting a single best fill",
         "rationale": "The ART design literature (Carette 2023; Youssef et al. 2003; Abdel Gawad et al. 2001; Moaleji & Greig 2007) shows 'best fill' is derived from f1(fill)=f_roll via the already-validated tanh dispersion, and the deliverable designers use is an SDOF (natural frequency + damping ratio). This converts our CFD into the exact engineering artifact and correctly frames the 70% result as a tuning-curve intersection.",
-        "priority": "high"
+        "priority": "high",
+        "status": "done"
       },
       {
         "title": "Courant/mesh convergence study (free-decay at Co=0.10 and 0.05, ~25-50 cells across the interface band, interface-compression coefficient =1) to CERTIFY any sub-percent frequency match and separate numerical from physical damping",
         "rationale": "Larsen, Fuhrman & Roenby (2019) show wave-height constancy and phase are Courant- and scheme-dependent; the draft's '<0.3%' claim is only credible AFTER demonstrating Co-convergence of both frequency and decay rate, and any residual probe drift must be shown numerical before attributing it to physical damping. This convergence study is a precondition, not an optional extra.",
-        "priority": "high"
+        "priority": "high",
+        "status": "done"
       },
       {
         "title": "Direct validation run against the Delorme / SPHERIC Test 10 canonical forced-roll tank at its ACTUAL shallow fill (900x508x62 mm, 93 mm fill, h/L~0.10, roll 4 deg)",
         "rationale": "This is the reference 2D forced-roll benchmark with published wall-pressure + prescribed-motion histories and many repeats. CORRECTION to the original plan: it is a SHALLOW-fill case (h/L~0.10), not a 70% fill, so it validates resonance detection and wall run-up at low fill (and reproduces the observed max-pressure-below-T1 behaviour) but does NOT directly validate our h/L=0.70 point - a separate higher-fill benchmark is needed for that.",
-        "priority": "high"
+        "priority": "high",
+        "status": "done"
       },
       {
         "title": "Shallow-fill (h/L~0.15) forced-roll at increasing amplitude to capture bore/hydraulic-jump onset and amplitude-dependent detuning near the analytical floor",
         "rationale": "Faltinsen & Timokha and shallow-water studies place h/L~0.15 near/below the ~0.24-0.27 validity floor of low-order theory, where linear tanh overestimates the natural frequency and breaking/jumps dominate - the regime where anti-roll tuning must be set by CFD, exposing where our analytical anchor breaks.",
-        "priority": "medium"
+        "priority": "medium",
+        "status": "done"
       },
       {
         "title": "Combined sway + roll (Effective Gravity Angle) excitation case to test whether resonance and wall run-up shift versus roll-only forcing",
