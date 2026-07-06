@@ -57,6 +57,17 @@ of breadth <code>L</code> and fill depth <code>h</code> is the analytical target
 <p>which saturates in deep fill (set by <code>L</code>) and collapses toward the shallow-water speed
 <code>√(gh)</code> in shallow fill — so fill depth is the dominant tuning knob.</p>
 
+<h2>Free-surface visualization — the effect of roll</h2>
+<p>Real 2D VOF free-surface fields from OpenFOAM v2312. <b>Left:</b> with forced roll, the tank sloshes
+wall-to-wall; <b>right:</b> without roll, the surface stays flat and calm — the mechanism this study
+quantifies. Shown at h/L&nbsp;=&nbsp;0.70 (water navy, air pale, interface at &alpha;&nbsp;=&nbsp;0.5).</p>
+<figure style="margin:16px 0;text-align:center">
+  <img src="viz/effect-of-roll.gif" alt="With vs without forced roll — 2D VOF free-surface fields"
+       loading="lazy" style="max-width:820px;width:100%;border:1px solid var(--line);border-radius:8px">
+  <figcaption class="sub" style="margin-top:6px">With roll (sloshing) vs without roll (calm), same tank — a live OpenFOAM VOF animation.
+  One roll cycle in phases and the full study: <a href="sloshing-cfd-study.html">the 2D CFD study &rarr;</a></figcaption>
+</figure>
+
 <h2>Verification 1 — natural frequency, across the fill range</h2>
 <p>Free-decay: the tank is given a small free-surface perturbation and rings down; the fundamental
 frequency is extracted by FFT and compared to the analytical <code>tanh</code> dispersion. Bracketed at
