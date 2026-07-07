@@ -4,61 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Short-Horizon Motion Forecast &mdash; Bridge Console</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 <style>
-  /* Light-primary palette matched to digitalmodel capabilities page */
+  /* Brand tokens + primitives (palette, typography, --wrap) come from the
+     canonical ../_assets/brand.css (digitalmodel#1472). Only PAGE-SPECIFIC
+     tokens live here: the per-DOF trace hues and predictable-zone shading. */
   :root{
-    --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
-    --ink:#13233f; --muted:#5b6b86; --faint:#8593ab;
-    --grid:rgba(19,35,63,.09);
-    --brand:#0b3d91; --accent:#0f8a7e;
     --heave:#0b3d91; --pitch:#0f8a7e; --roll:#6d4fe0;
-    --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
     --zone:rgba(15,138,126,.06); --zone-edge:rgba(15,138,126,.42);
-    --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
-    --r:12px;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
-      --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a;
-      --grid:rgba(140,170,200,.12);
-      --brand:#84a9e8; --accent:#3fb6c9;
       --heave:#84a9e8; --pitch:#3fb6c9; --roll:#a893ff;
-      --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
       --zone:rgba(63,182,201,.08); --zone-edge:rgba(63,182,201,.45);
-      --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
     }
   }
   :root[data-theme="light"]{
-    --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
-    --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
-    --brand:#0b3d91; --accent:#0f8a7e;
     --heave:#0b3d91; --pitch:#0f8a7e; --roll:#6d4fe0;
-    --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
     --zone:rgba(15,138,126,.06); --zone-edge:rgba(15,138,126,.42);
-    --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
   }
   :root[data-theme="dark"]{
-    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
-    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
-    --brand:#84a9e8; --accent:#3fb6c9;
     --heave:#84a9e8; --pitch:#3fb6c9; --roll:#a893ff;
-    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
     --zone:rgba(63,182,201,.08); --zone-edge:rgba(63,182,201,.45);
-    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
   }
 
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--ground);
-    color:var(--ink);
-    font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-    line-height:1.55; -webkit-font-smoothing:antialiased;
-  }
-  .mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
-  .lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
-
-  .wrap{max-width:1240px; margin:0 auto; padding:14px clamp(14px,3vw,32px) 40px}
+  .wrap{max-width:var(--wrap); margin:0 auto; padding:14px clamp(14px,3vw,32px) 40px}
 
   header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:12px}
   .brand{display:flex; flex-direction:column; gap:6px}
@@ -150,7 +120,7 @@
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div class="kicker"><span class="dot"></span><span class="lbl">Marine operations &middot; decision support</span></div>
+      <a class="brandmark kicker" href="../capabilities/" title="All capabilities" aria-label="Back to capabilities index"><span class="dot"></span><span class="lbl">Marine operations &middot; decision support</span></a>
       <h1>Short-Horizon Motion Forecast</h1>
       <div class="tag">Know the next few <em>motions</em>, not just the next few waves. Anchored to live <strong>vessel &amp; structure</strong> motions from an <strong>MMS / motion-measurement system</strong>, a phase-resolved wave forecast transferred through the asset RAO predicts what is coming &mdash; a rolling go / no-go with lead time.</div>
       <div style="margin-top:12px"><span class="pill">Live MMS / MRU feed &middot; phase-resolved forecast &middot; vessel &amp; structure motions &middot; on AQWA / OrcaFlex RAOs</span></div>
