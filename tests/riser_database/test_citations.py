@@ -10,8 +10,10 @@ plus the explicit `pip install digitalmodel` no-wiki path: with every
 resolution route disabled, direct getter calls FAIL CLOSED and only the
 consumer helper degrades.
 """
+
 from __future__ import annotations
 
+import os
 import time
 import warnings
 from pathlib import Path
@@ -26,6 +28,31 @@ def _fixture_repo_root() -> Path:
     """Vendored wiki fixture root (frontmatter-only pages, see
     tests/citations/fixtures/**/FIXTURE_PROVENANCE.md)."""
     return Path(__file__).resolve().parent.parent / "citations" / "fixtures"
+
+
+def _amjig_repo_root() -> Path:
+    candidates = []
+    env = os.environ.get("LLM_WIKI_PATH")
+    if env:
+        candidates.append(Path(env))
+    candidates.extend(
+        (
+            Path("/mnt/local-analysis/wt-llmwiki-rsu"),  # abs-path-allowed
+            Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
+        )
+    )
+    for root in candidates:
+        page = (
+            root
+            / "wikis"
+            / "engineering-standards"
+            / "wiki"
+            / "standards"
+            / "amjig-1997.md"
+        )
+        if page.is_file():
+            return root
+    pytest.skip("amjig-1997 wiki criteria page not available")
 
 
 @pytest.fixture(autouse=True)
@@ -160,7 +187,9 @@ def test_user_override_wins_for_f_wt():
 
 
 def test_user_override_wins_for_f_bt():
-    cv = getters.get_buoyancy_tension_factor(override=0.9, repo_root=_fixture_repo_root())
+    cv = getters.get_buoyancy_tension_factor(
+        override=0.9, repo_root=_fixture_repo_root()
+    )
     assert cv.value == 0.9
     assert "user override" in cv.citation.note
     assert "0.96" in cv.citation.note
@@ -191,6 +220,26 @@ def test_get_flexjoint_angle_limit_mean_and_max():
 def test_get_flexjoint_angle_limit_rejects_unknown_kind():
     with pytest.raises(ValueError):
         getters.get_flexjoint_angle_limit("median", repo_root=_fixture_repo_root())
+
+
+def test_get_amjig_envelope_criteria_emits_private_wiki_citation():
+    """AMJIG values resolve only in-context; no licensed values live here."""
+    amjig = getters.get_amjig_envelope_criteria(
+        "connected", repo_root=_amjig_repo_root()
+    )
+    plain_vm = getters.get_von_mises_design_factor(repo_root=_fixture_repo_root())
+
+    assert amjig.criteria_set == "16q-amjig"
+    assert amjig.category
+    assert amjig.von_mises_design_factor.value != plain_vm.value
+    assert amjig.von_mises_design_factor.citation.code_id == "amjig-1997"
+    assert amjig.flexjoint_angle_max_deg.citation.code_id == "amjig-1997"
+
+
+def test_get_amjig_envelope_criteria_fails_closed_without_wiki(_no_wiki_anywhere):
+    with pytest.raises(CitationResolutionError) as exc:
+        getters.get_amjig_envelope_criteria("connected")
+    assert exc.value.code_id in {"<resolver>", "amjig-1997"}
 
 
 def test_von_mises_getter_matches_code_check_engine_default():

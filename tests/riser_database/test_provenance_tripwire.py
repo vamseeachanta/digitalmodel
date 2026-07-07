@@ -9,6 +9,7 @@ famous public-domain field/rig names cannot live in the GLOBAL deny list
 (they legitimately appear in worldenergydata's regulatory datasets), so THIS
 test is where they are enforced for digitalmodel. Loud skip standalone.
 """
+
 from __future__ import annotations
 
 import os
@@ -35,31 +36,127 @@ _KNOWN_WIKI_CLONES = (
 #: "drillship", "king" in "-king" gerunds, "visio" in "revision"). Real
 #: provenance names (fields, rigs, clients, programs) stay OUT of this list.
 _STOPWORDS = {
-    "analysis", "assessment", "basis", "compliant", "concept", "conductors",
-    "data", "design", "deep", "development", "drilling", "engineering",
-    "fatigue", "foundation", "joint", "library", "mode", "multi", "normalization",
-    "overview", "presentation", "proj", "projects", "registry", "results",
-    "riser", "risers", "sidetrack", "source", "sources", "stackup", "study",
-    "summary", "ttr", "well", "wellhead", "wellheads", "wells", "wiki", "wikis",
-    "workbook", "client", "share", "operational", "market",
+    "analysis",
+    "assessment",
+    "basis",
+    "compliant",
+    "concept",
+    "conductors",
+    "data",
+    "design",
+    "deep",
+    "development",
+    "drilling",
+    "engineering",
+    "fatigue",
+    "foundation",
+    "joint",
+    "library",
+    "mode",
+    "multi",
+    "normalization",
+    "overview",
+    "presentation",
+    "proj",
+    "projects",
+    "registry",
+    "results",
+    "riser",
+    "risers",
+    "sidetrack",
+    "source",
+    "sources",
+    "stackup",
+    "study",
+    "summary",
+    "ttr",
+    "well",
+    "wellhead",
+    "wellheads",
+    "wells",
+    "wiki",
+    "wikis",
+    "workbook",
+    "client",
+    "share",
+    "operational",
+    "market",
     # -- #1279 wave-2 generic additions ------------------------------------
-    "adapter", "additional", "archive", "assembly", "auto", "buoyancy",
-    "code", "comments", "completion", "conductor", "content", "database",
-    "depth", "docs", "draft", "drawing", "drawings", "drill", "drive",
-    "family", "files", "flex", "from", "generic", "hard", "king", "landing",
-    "limits", "list", "lmrp", "load", "long", "main", "model", "monitoring",
-    "names", "normal", "orcaflex", "package", "prod", "production", "project",
-    "python", "query", "reference", "report", "reports", "riserless",
-    "riserstackup", "safety", "sbop", "stack", "stackups", "stres", "string",
-    "subsea", "system", "technical", "tension", "test", "tree", "visio",
-    "water", "weight", "weights", "workover",
+    "adapter",
+    "additional",
+    "archive",
+    "assembly",
+    "auto",
+    "buoyancy",
+    "code",
+    "comments",
+    "completion",
+    "conductor",
+    "content",
+    "database",
+    "depth",
+    "docs",
+    "draft",
+    "drawing",
+    "drawings",
+    "drill",
+    "drive",
+    "family",
+    "files",
+    "flex",
+    "from",
+    "generic",
+    "hard",
+    "king",
+    "landing",
+    "limits",
+    "list",
+    "lmrp",
+    "load",
+    "long",
+    "main",
+    "model",
+    "monitoring",
+    "names",
+    "normal",
+    "orcaflex",
+    "package",
+    "prod",
+    "production",
+    "project",
+    "python",
+    "query",
+    "reference",
+    "report",
+    "reports",
+    "riserless",
+    "riserstackup",
+    "safety",
+    "sbop",
+    "stack",
+    "stackups",
+    "stres",
+    "string",
+    "subsea",
+    "system",
+    "technical",
+    "tension",
+    "test",
+    "tree",
+    "visio",
+    "water",
+    "weight",
+    "weights",
+    "workover",
     # -- #1453 wave-2 calc-contract generic additions: new post-llm-wiki#826
     # source-page slugs carry these generic document/engineering words whose
     # normalized substrings occur in long-merged public artifacts (e.g.
     # "installation" in twin_loop.py/decision_spine.py prose, "sheets" in
     # "sheet-side", "workbooks" in golden-test docstrings). Real provenance
     # names (fields, rigs, clients, programs) stay OUT of this list.
-    "installation", "sheets", "workbooks",
+    "installation",
+    "sheets",
+    "workbooks",
 }
 
 #: Round band-edge numerals used by the public ``water_depth_band`` scheme.
@@ -88,6 +185,7 @@ _PUBLIC_ARTIFACTS = (
     # #1281 / #1345 operating-envelope + conductor analytical code: reproduces
     # wellhead/conductor engagements, so it must carry no provenance tokens.
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "envelope.py",
+    REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "envelope_modes.yml",
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "riser_response.py",
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "conductor_response.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_envelope.py",
@@ -100,7 +198,11 @@ _PUBLIC_ARTIFACTS = (
     # assertion in test_telemetry_inputs.py plus human review, not by this gate.
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "telemetry_inputs.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_telemetry_inputs.py",
-    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "telemetry_snapshot_sample.json",
+    REPO_ROOT
+    / "tests"
+    / "drilling_riser"
+    / "fixtures"
+    / "telemetry_snapshot_sample.json",
     # twin B #1374 residual-correction seam: the domain-neutral residual spine, the
     # riser adapter, its tests + synthetic fixture. Pure math / synthetic pairs,
     # carrying no provenance tokens by construction; gated so any future edit is
@@ -110,7 +212,11 @@ _PUBLIC_ARTIFACTS = (
     REPO_ROOT / "src" / "digitalmodel" / "residual" / "skill.py",
     REPO_ROOT / "src" / "digitalmodel" / "drilling_riser" / "response_correction.py",
     REPO_ROOT / "tests" / "drilling_riser" / "test_response_correction.py",
-    REPO_ROOT / "tests" / "drilling_riser" / "fixtures" / "response_residual_pairs.json",
+    REPO_ROOT
+    / "tests"
+    / "drilling_riser"
+    / "fixtures"
+    / "response_residual_pairs.json",
     # twin C #1375 drift-off screen: the analytical module, its banded generic
     # config (vessel particulars — a fingerprinting surface), the stub build
     # script, tests + synthetic fixture. Gated so any future edit is caught (same
@@ -188,7 +294,9 @@ def test_no_provenance_tokens_in_public_artifacts():
         normalized = _normalize(raw)
         for token in names:
             if _normalize(token) in normalized:
-                violations.append((path.name, f"name-token #{sorted(names).index(token)}"))
+                violations.append(
+                    (path.name, f"name-token #{sorted(names).index(token)}")
+                )
         for num in numbers:
             if re.search(rf"\b{num}\b", raw):
                 violations.append((path.name, f"project-number {num}"))
@@ -202,10 +310,22 @@ def test_new_analytical_code_is_gated():
     """#1345 [G-1]: the envelope + conductor analytical code must be inside the
     scanned artifact set (it reproduces wellhead/conductor engagements)."""
     scanned = {p.name for p in _PUBLIC_ARTIFACTS}
-    for required in ("envelope.py", "conductor_response.py", "riser_response.py",
-                     "telemetry_inputs.py", "response_correction.py", "model.py",
-                     "skill.py", "drift_off.py", "twin_loop.py", "decision_spine.py"):
-        assert required in scanned, f"{required} is not gated by the provenance tripwire"
+    for required in (
+        "envelope.py",
+        "conductor_response.py",
+        "riser_response.py",
+        "envelope_modes.yml",
+        "telemetry_inputs.py",
+        "response_correction.py",
+        "model.py",
+        "skill.py",
+        "drift_off.py",
+        "twin_loop.py",
+        "decision_spine.py",
+    ):
+        assert (
+            required in scanned
+        ), f"{required} is not gated by the provenance tripwire"
 
 
 def test_scan_would_catch_a_planted_token(tmp_path):
@@ -216,7 +336,7 @@ def test_scan_would_catch_a_planted_token(tmp_path):
         pytest.skip("no name tokens in the private registry to plant")
     planted = sorted(names)[0]
     f = tmp_path / "conductor_like.py"
-    f.write_text(f'# soil calibration note from the {planted} job\nK = 5.0e6\n')
+    f.write_text(f"# soil calibration note from the {planted} job\nK = 5.0e6\n")
     normalized = _normalize(f.read_text())
     assert _normalize(planted) in normalized  # caught
 
@@ -229,8 +349,7 @@ def _operability_atlas_text_files():
     the basename dir instead so the scan can never orphan (#1283)."""
     base = REPO_ROOT / "atlases" / "drilling_riser_operability"
     default = base / "default.txt"
-    if not default.is_file():
-        return []
+    assert default.is_file(), "operability atlas default.txt is missing"
     atlas_dir = base / default.read_text().strip()
     return [atlas_dir / "manifest.yaml", atlas_dir / "surrogate.json"]
 
@@ -240,19 +359,24 @@ def test_no_provenance_tokens_in_operability_atlas():
     manifest.yaml + surrogate.json) must carry no private-registry name/number
     token. In-context gate (skips standalone, like the rest of this file)."""
     names, numbers = _provenance_tokens()
+    paths = _operability_atlas_text_files()
+    missing = [str(path.relative_to(REPO_ROOT)) for path in paths if not path.is_file()]
+    assert not missing, f"operability atlas default points at missing files: {missing}"
     violations = []
-    for path in _operability_atlas_text_files():
-        if not path.is_file():
-            continue
+    for path in paths:
         raw = path.read_text()
         normalized = _normalize(raw)
         for token in names:
             if _normalize(token) in normalized:
-                violations.append((path.name, f"name-token #{sorted(names).index(token)}"))
+                violations.append(
+                    (path.name, f"name-token #{sorted(names).index(token)}")
+                )
         for num in numbers:
             if re.search(rf"\b{num}\b", raw):
                 violations.append((path.name, f"project-number {num}"))
-    assert not violations, f"provenance tokens leaked into the operability atlas: {violations}"
+    assert (
+        not violations
+    ), f"provenance tokens leaked into the operability atlas: {violations}"
 
 
 def _drift_off_atlas_text_files():
@@ -279,8 +403,12 @@ def test_no_provenance_tokens_in_drift_off_atlas():
         normalized = _normalize(raw)
         for token in names:
             if _normalize(token) in normalized:
-                violations.append((path.name, f"name-token #{sorted(names).index(token)}"))
+                violations.append(
+                    (path.name, f"name-token #{sorted(names).index(token)}")
+                )
         for num in numbers:
             if re.search(rf"\b{num}\b", raw):
                 violations.append((path.name, f"project-number {num}"))
-    assert not violations, f"provenance tokens leaked into the drift-off atlas: {violations}"
+    assert (
+        not violations
+    ), f"provenance tokens leaked into the drift-off atlas: {violations}"

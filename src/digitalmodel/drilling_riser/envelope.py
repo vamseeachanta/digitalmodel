@@ -23,6 +23,7 @@ RAO seastate contribution. Dynamic amplification, drift-off, recoil and VIV are
 the solver tier (#1281c). Wellhead/conductor-moment limits need a net-new data
 column and land in #1281b. SI internally.
 """
+
 from __future__ import annotations
 
 import math
@@ -45,9 +46,21 @@ _MODE_CONFIG_PATH = Path(__file__).with_name("envelope_modes.yml")
 
 
 @lru_cache(maxsize=1)
-def _mode_active_limits() -> dict:
+def _mode_config() -> dict:
     cfg = yaml.safe_load(_MODE_CONFIG_PATH.read_text(encoding="utf-8"))
+    return cfg
+
+
+@lru_cache(maxsize=1)
+def _mode_active_limits() -> dict:
+    cfg = _mode_config()
     return {m: set(v["active_limits"]) for m, v in cfg["modes"].items()}
+
+
+@lru_cache(maxsize=1)
+def _criteria_set_ids() -> set:
+    return set(_mode_config().get("criteria_sets", {"16q": {}, "16q-amjig": {}}))
+
 
 #: Solver-tier dynamic-amplification library atlas basename (#1346, stub).
 DYNAMIC_ATLAS_BASENAME: str = "drilling_riser_envelope"
@@ -162,6 +175,8 @@ class EnvelopeCriteria:
     flexjoint_angle_mean_deg: float
     flexjoint_angle_max_deg: float
     von_mises_design_factor: float
+    criteria_set: str = "16q"
+    category: str = "drilling"
 
 
 @dataclass(frozen=True)
@@ -185,6 +200,11 @@ class EnvelopeResult:
     #: solver provenance + disclaimer so a dynamically-amplified verdict can never
     #: leave without its STUB/licensed marker. ``None`` for the pure C1 static path.
     dynamic_provenance: Optional[dict] = None
+    #: Criteria-set provenance for the allowable mask (for example ``16q`` or
+    #: ``16q-amjig``). The physical response arrays are standard-independent;
+    #: only the allowable mask changes with this tag.
+    criteria_set: str = "16q"
+    criteria_category: str = ""
 
     @property
     def operable_fraction(self) -> float:
@@ -192,24 +212,47 @@ class EnvelopeResult:
 
 
 def resolve_envelope_criteria(
-    mode: OperatingMode = OperatingMode.DRILLING, *, repo_root=None
+    mode: OperatingMode = OperatingMode.DRILLING,
+    *,
+    criteria_set: str = "16q",
+    repo_root=None,
 ) -> EnvelopeCriteria:
     """Resolve the cited criteria (fail-closed) for a mode.
 
-    Flex-joint angle limits cite API RP 16Q; the von Mises design factor cites
-    API STD 2RD. Raises ``CitationResolutionError`` if the wiki does not resolve.
-    (The mode currently selects the same 16Q/2RD criteria set; per-category /
-    AMJIG divergence is #1281b.)
+    ``criteria_set="16q"`` keeps the plain API RP 16Q / API STD 2RD limits.
+    ``criteria_set="16q-amjig"`` keeps the physical response unchanged but
+    resolves AMJIG per-category allowable ceilings from the private wiki.
     """
+    mode = OperatingMode(mode)
+    if criteria_set not in _criteria_set_ids():
+        allowed = ", ".join(sorted(_criteria_set_ids()))
+        raise ValueError(f"criteria_set must be one of {allowed}, got {criteria_set!r}")
     from digitalmodel.riser_database.getters import (
+        get_amjig_envelope_criteria,
         get_flexjoint_angle_limit,
         get_von_mises_design_factor,
     )
 
+    if criteria_set == "16q-amjig":
+        amjig = get_amjig_envelope_criteria(mode.value, repo_root=repo_root)
+        return EnvelopeCriteria(
+            flexjoint_angle_mean_deg=amjig.flexjoint_angle_mean_deg.value,
+            flexjoint_angle_max_deg=amjig.flexjoint_angle_max_deg.value,
+            von_mises_design_factor=amjig.von_mises_design_factor.value,
+            criteria_set=amjig.criteria_set,
+            category=amjig.category,
+        )
+
     return EnvelopeCriteria(
-        flexjoint_angle_mean_deg=get_flexjoint_angle_limit("mean", repo_root=repo_root).value,
-        flexjoint_angle_max_deg=get_flexjoint_angle_limit("max", repo_root=repo_root).value,
+        flexjoint_angle_mean_deg=get_flexjoint_angle_limit(
+            "mean", repo_root=repo_root
+        ).value,
+        flexjoint_angle_max_deg=get_flexjoint_angle_limit(
+            "max", repo_root=repo_root
+        ).value,
         von_mises_design_factor=get_von_mises_design_factor(repo_root=repo_root).value,
+        criteria_set=criteria_set,
+        category=mode.value,
     )
 
 
@@ -226,7 +269,7 @@ def _von_mises_utilisation(
         design_factor=design_factor,
     )
     n = response.z_m.size
-    tensions_kn = np.full(n, tension_n / 1000.0)   # constant screening tension
+    tensions_kn = np.full(n, tension_n / 1000.0)  # constant screening tension
     moments_knm = response.bending_moment_nm / 1000.0
     results = check_api_rp_2rd(pipe, response.z_m, tensions_kn, moments_knm)
     return max(r.utilisation for r in results)
@@ -292,7 +335,9 @@ def compute_operating_envelope(
                 current_load_n_per_m=w,
             )
             static_angle_deg = max(abs(resp.angle_lower_deg), abs(resp.angle_upper_deg))
-            vm = _von_mises_utilisation(section, resp, tension_n, criteria.von_mises_design_factor)
+            vm = _von_mises_utilisation(
+                section, resp, tension_n, criteria.von_mises_design_factor
+            )
             # Wellhead/conductor moment (#1345): the riser lower-flex-joint shear
             # over the BOP/LMRP stand-off arm loads the conductor below mudline.
             wh_moment_knm = None
@@ -319,31 +364,43 @@ def compute_operating_envelope(
                     static_angle_deg / criteria.flexjoint_angle_mean_deg,
                     total_angle / fj_max_limit,
                 )
-                if wh_moment_knm is not None and rig_limits.conductor_moment_capacity_kn_m:
+                if (
+                    wh_moment_knm is not None
+                    and rig_limits.conductor_moment_capacity_kn_m
+                ):
                     util["wh_moment"][i, j, k] = (
                         wh_moment_knm / rig_limits.conductor_moment_capacity_kn_m
                     )
                 util["von_mises"][i, j, k] = vm
                 if dyn_atlas is not None:
-                    pred = dyn_atlas.predict({
-                        "mode": mode.value,
-                        "offset_pct": float(off_pct),
-                        "current_speed_mps": float(u),
-                        "hs_m": sea.hs_m,
-                        "tp_s": sea.tp_s,
-                    })
+                    pred = dyn_atlas.predict(
+                        {
+                            "mode": mode.value,
+                            "offset_pct": float(off_pct),
+                            "current_speed_mps": float(u),
+                            "hs_m": sea.hs_m,
+                            "tp_s": sea.tp_s,
+                        }
+                    )
                     if pred.in_range:
                         util["von_mises"][i, j, k] = vm * pred.value
                     else:
-                        util["von_mises"][i, j, k] = np.nan  # escalate, never extrapolate
+                        util["von_mises"][
+                            i, j, k
+                        ] = np.nan  # escalate, never extrapolate
                         dyn_escalated += 1
                 heave = rao_heave_m_per_m * sea.hs_m
                 stroke_avail = rig_limits.tj_stroke_m or rig_limits.tensioner_stroke_m
                 if stroke_avail:
                     util["stroke"][i, j, k] = (setdown + heave) / stroke_avail
                 if rig_limits.moonpool_half_min_m:
-                    allow = rig_limits.moonpool_half_min_m - DEFAULT_MOONPOOL_CLEARANCE_MARGIN_M
-                    util["moonpool"][i, j, k] = x_offset / allow if allow > 0 else np.inf
+                    allow = (
+                        rig_limits.moonpool_half_min_m
+                        - DEFAULT_MOONPOOL_CLEARANCE_MARGIN_M
+                    )
+                    util["moonpool"][i, j, k] = (
+                        x_offset / allow if allow > 0 else np.inf
+                    )
 
     # Apply the mode's active-limit set: limits not gating this mode -> NaN
     # (excluded from governing/allowable), per envelope_modes.yml.
@@ -357,7 +414,9 @@ def compute_operating_envelope(
     with np.errstate(invalid="ignore"):
         gov_idx = np.nanargmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1)
         governing = np.array(stacked_names, dtype=object)[gov_idx]
-        allowable = np.nanmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1) <= 1.0
+        allowable = (
+            np.nanmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1) <= 1.0
+        )
 
     dynamic_provenance = None
     if dyn_atlas is not None:
@@ -382,4 +441,6 @@ def compute_operating_envelope(
         governing_limit=governing,
         allowable_mask=allowable,
         dynamic_provenance=dynamic_provenance,
+        criteria_set=criteria.criteria_set,
+        criteria_category=criteria.category,
     )
