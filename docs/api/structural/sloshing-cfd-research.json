@@ -6,7 +6,7 @@
     "note": "Client-facing curation of an adversarially-verified survey; fabricated draft figures were removed by a critique agent."
   },
   "synthesis": {
-    "methodology_confidence": "The literature supports our 2D VOF free-decay + forced-roll approach for the FREQUENCY, TUNING and DAMPING questions it is scoped to answer, but with more caveats than the original draft implied. Independent VOF-CFD (Yang & West 2016) and shaker/sway experiments (B\u00e4uerlein & Avila 2021; Chen & Xue 2018; Faltinsen/Rognebakke) confirm that linear tanh dispersion predicts first-mode natural frequencies well at intermediate-to-deep fills and that free-decay-then-FFT is an accepted extraction method, so a sub-percent free-decay match is credible - but a specific '<0.3%' figure must be EARNED by a Courant/mesh-convergence study, not asserted a priori. B\u00e4uerlein & Avila validate the 90-degree phase-lag/quadrature criterion as a rigorous resonance locator, and the anti-roll-tank literature (Carette 2023; Moaleji & Greig 2007) supports reducing a partially filled tank to a lightly-damped tuned SDOF. Confidence is genuinely PARTIAL for design loads and combined-motion excitation: above the ~0.34 critical depth the resonance detunes off linear T1 onto a soft-spring branch (confirmed by B\u00e4uerlein & Avila 2024), 2D omits swirl and the effective-gravity-angle (sway+roll) forcing, and impact-pressure magnitude is mesh/air-compressibility sensitive.",
+    "methodology_confidence": "The literature supports our 2D VOF free-decay + forced-roll approach for the FREQUENCY, TUNING and DAMPING questions it is scoped to answer, but with more caveats than the original draft implied. Independent VOF-CFD (Yang & West 2016) and shaker/sway experiments (Bäuerlein & Avila 2021; Chen & Xue 2018; Faltinsen/Rognebakke) confirm that linear tanh dispersion predicts first-mode natural frequencies well at intermediate-to-deep fills and that free-decay-then-FFT is an accepted extraction method, so a sub-percent free-decay match is credible - but a specific '<0.3%' figure must be EARNED by a Courant/mesh-convergence study, not asserted a priori. Bäuerlein & Avila validate the 90-degree phase-lag/quadrature criterion as a rigorous resonance locator, and the anti-roll-tank literature (Carette 2023; Moaleji & Greig 2007) supports reducing a partially filled tank to a lightly-damped tuned SDOF. Confidence is genuinely PARTIAL for design loads and combined-motion excitation: above the ~0.34 critical depth the resonance detunes off linear T1 onto a soft-spring branch (confirmed by Bäuerlein & Avila 2024), 2D omits swirl and the effective-gravity-angle (sway+roll) forcing, and impact-pressure magnitude is mesh/air-compressibility sensitive.",
     "supports": [
       {
         "point": "NASA's first-principles VOF CFD is demonstrated to accurately predict slosh natural frequency and to capture the very low (well below 1% critical) smooth-wall damping (damping RMS error <4.8%, max <8.5% vs experiment), and the paper explicitly states there is NO analytical solution for slosh damping - which is exactly why a CFD quadrature/decay extraction is necessary.",
@@ -14,7 +14,7 @@
       },
       {
         "point": "In a horizontally forced (sway) rectangular tank the response lags the forcing by 90 degrees AT the nonlinear response maximum regardless of wave regime, validating use of the quadrature/phase-lag peak as a rigorous resonance locator rather than an amplitude proxy.",
-        "citation": "B\u00e4uerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)"
+        "citation": "Bäuerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)"
       },
       {
         "point": "Linear potential theory predicts rectangular first-mode frequencies that agree well with commercial-CFD sloshing-elevation time histories, with the important qualifier that linear theory under-predicts AMPLITUDE (not frequency) near resonance - exactly the gap our VOF CFD fills for resonant run-up.",
@@ -26,7 +26,7 @@
       },
       {
         "point": "The Delorme et al. 2009 canonical forced-roll benchmark (2D tank 900x508x62 mm, SHALLOW fill 93 mm i.e. h/L~0.10, roll amplitude 4 deg, SPH+experiment with many repeats for pressure statistics; SPHERIC Test 10) is the reference geometry and protocol for forced-roll-brackets-T1 validation, and it notably finds peak impact pressures at a frequency BELOW the first natural frequency - a built-in detuning warning.",
-        "citation": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodr\u00edguez, R. & Bot\u00eda-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: Pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10"
+        "citation": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodríguez, R. & Botía-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: Pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10"
       },
       {
         "point": "The Faltinsen/Rognebakke sway-excited rectangular-tank campaign uses the IDENTICAL tanh dispersion f_n=(1/2pi)sqrt[(n pi g/L)tanh(n pi h/L)] we validate against, over fills overlapping our range, giving measured free-surface elevation vs analytic natural periods - direct support for Step 1.",
@@ -44,15 +44,15 @@
     "contrasts": [
       {
         "point": "A well-defined critical filling depth h/L~=0.34 marks a hard-to-soft-spring transition: ABOVE it (which includes our best-fill h/L=0.70) the forced response follows a soft-spring Duffing branch and the resonance peak shifts AWAY from the linear T1 as roll amplitude grows - so our run-up/quadrature peak will detune off T1 at finite amplitude and the roll amplitude used MUST be reported.",
-        "citation": "B\u00e4uerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech. (published April 2024)"
+        "citation": "Bäuerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech. (published April 2024)"
       },
       {
         "point": "In horizontally forced experiments the response-amplitude MAXIMUM does not sit on the linear natural frequency: for the deep tank the peak shifts toward LOWER frequency (softening) with growing hysteresis as forcing rises, and inviscid multimodal (Faltinsen-Timokha) theory OVERESTIMATES amplitude/hysteresis - contradicting any naive 'peak exactly at T1' claim and favoring viscous interFoam over inviscid models.",
-        "citation": "B\u00e4uerlein, B. & Avila, K. (2021), J. Fluid Mech. 925, A22"
+        "citation": "Bäuerlein, B. & Avila, K. (2021), J. Fluid Mech. 925, A22"
       },
       {
         "point": "VOF against the Delorme canonical forced-roll tank reproduces the TIMING/phasing of pressure peaks well but OVERESTIMATES peak-pressure magnitude - so frequency/phase/run-up are the trustworthy CFD quantities while impact-pressure magnitude in violent roll is mesh/compressibility sensitive and must be caveated.",
-        "citation": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Bot\u00eda-Vera canonical narrow tank"
+        "citation": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Botía-Vera canonical narrow tank"
       },
       {
         "point": "A pitch-excitation study documents a resonant-frequency shift at ~70% fill (our chosen best fill) with a soft-spring characteristic (peak frequency decreasing as amplitude rises) - a direct warning that our 70%-fill forced-roll peak detunes downward from linear T1 unless roll amplitude is kept small or the softening shift is explicitly reported.",
@@ -78,7 +78,7 @@
     "further_cfd": [
       {
         "title": "Roll-amplitude sweep to map the soft-spring backbone and quantify peak detuning off linear T1 at h/L=0.70",
-        "rationale": "Multiple sources (B\u00e4uerlein & Avila 2024 near critical depth; MDPI Water 16(11):1551 2024 at 70% fill) predict our best-fill case sits above the ~0.34 critical depth and will detune downward as amplitude grows. Sweeping roll amplitude on a fine frequency grid (~0.95-1.15 T1) maps the amplitude-dependent backbone and turns 'peak at T1' into a defensible, amplitude-annotated statement.",
+        "rationale": "Multiple sources (Bäuerlein & Avila 2024 near critical depth; MDPI Water 16(11):1551 2024 at 70% fill) predict our best-fill case sits above the ~0.34 critical depth and will detune downward as amplitude grows. Sweeping roll amplitude on a fine frequency grid (~0.95-1.15 T1) maps the amplitude-dependent backbone and turns 'peak at T1' into a defensible, amplitude-annotated statement.",
         "priority": "high",
         "status": "done"
       },
@@ -109,7 +109,8 @@
       {
         "title": "Combined sway + roll (Effective Gravity Angle) excitation case to test whether resonance and wall run-up shift versus roll-only forcing",
         "rationale": "Carette (2023) shows the true driving parameter combines lateral acceleration and roll angle; our roll-only CFD is a partial/conservative drive, so an EGA case checks whether the tuned-damper resonance and run-up change under realistic combined motion.",
-        "priority": "medium"
+        "priority": "medium",
+        "status": "done"
       },
       {
         "title": "Tank-width / 3D sensitivity study (Delorme Part 2 span sweep; near-square plan-form 3D check for swirl)",
@@ -119,7 +120,8 @@
       {
         "title": "Damping/baffle-screen sweep to reproduce the classic low-damping two-peak detuning split (frequency ratios ~0.84 and ~1.05) and show it merging as damping rises",
         "rationale": "Moaleji & Greig (2007) report adverse resonance peaks straddling the 1:1 tuning point at low damping; reproducing this split and its suppression is a strong validation target for our forced sweep and demonstrates the damping-limited, bounded amplification of the tuned device.",
-        "priority": "low"
+        "priority": "low",
+        "status": "done"
       },
       {
         "title": "Impact/roof-pressure time histories vs amplitude near T1 at partial/low fill, with compressible-air (and later hydroelastic/3D) treatment",
@@ -133,11 +135,11 @@
         "url": "https://ntrs.nasa.gov/api/citations/20160009699/downloads/20160009699.pdf"
       },
       {
-        "cite": "B\u00e4uerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)",
+        "cite": "Bäuerlein, B. & Avila, K. (2021), 'Phase lag predicts nonlinear response maxima in liquid-sloshing experiments', J. Fluid Mech. 925, A22 (arXiv:2011.02726)",
         "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/phase-lag-predicts-nonlinear-response-maxima-in-liquidsloshing-experiments/2CD68A3A9A3AFC648B311D6C01835988"
       },
       {
-        "cite": "B\u00e4uerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech.",
+        "cite": "Bäuerlein, B. & Avila, K. (2024), 'Different scenarios in sloshing flows near the critical filling depth', J. Fluid Mech.",
         "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/different-scenarios-in-sloshing-flows-near-the-critical-filling-depth/54FD143B8361FD0C8139611C088905B2"
       },
       {
@@ -153,11 +155,11 @@
         "url": "https://www.cambridge.org/core/books/sloshing/"
       },
       {
-        "cite": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodr\u00edguez, R. & Bot\u00eda-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10 (SHALLOW 93 mm fill)",
+        "cite": "Delorme, L., Colagrossi, A., Souto-Iglesias, A., Zamora-Rodríguez, R. & Botía-Vera, E. (2009), 'A set of canonical problems in sloshing, Part I: pressure field in forced roll', Ocean Engineering 36(2):168-178; SPHERIC Test 10 (SHALLOW 93 mm fill)",
         "url": "https://www.spheric-sph.org/tests/test-10"
       },
       {
-        "cite": "Souto-Iglesias, A., Bot\u00eda-Vera, E., Mart\u00edn, A. & P\u00e9rez-Arribas, F. (2011), 'A set of canonical problems in sloshing, Part 2: influence of tank width on impact pressure statistics in regular forced angular motion'",
+        "cite": "Souto-Iglesias, A., Botía-Vera, E., Martín, A. & Pérez-Arribas, F. (2011), 'A set of canonical problems in sloshing, Part 2: influence of tank width on impact pressure statistics in regular forced angular motion'",
         "url": "https://www.researchgate.net/publication/278898071"
       },
       {
@@ -217,7 +219,7 @@
         "url": "https://link.springer.com/article/10.1007/s00773-011-0144-z"
       },
       {
-        "cite": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Bot\u00eda-Vera canonical narrow sloshing tank",
+        "cite": "FLOW-3D / Minerva Dynamics validation of the Souto-Iglesias & Botía-Vera canonical narrow sloshing tank",
         "url": "https://www.flow3d.com/validation-of-sloshing-simulations-in-narrow-tanks/"
       },
       {
