@@ -644,6 +644,89 @@ here detunes &minus;10.5% versus the shipped 6-cycle backbone's &minus;8.1% at t
 """
 
 
+def _tld_svg(tld):
+    """Vessel roll response |X1/Xst| vs frequency ratio, one curve per tank
+    damping — the tuned-absorber two-peak split merging as damping rises."""
+    gs = tld.get("frequency_ratio_grid", [])
+    curves = [c for c in tld.get("curves", []) if c.get("source") != "reference"]
+    if not gs or not curves:
+        return ""
+    ymax = max(max(c["response"]) for c in curves) * 1.06
+    W, H, ML, MR, MT, MB = 720, 340, 52, 118, 18, 44
+    X0, X1 = gs[0], gs[-1]
+    def px(g):
+        return ML + (g - X0) / (X1 - X0) * (W - ML - MR)
+    def py(y):
+        return H - MB - y / ymax * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    gx = 0.8
+    while gx <= X1 + 1e-9:
+        g.append(f'<line x1="{px(gx):.1f}" y1="{py(0):.1f}" x2="{px(gx):.1f}" y2="{py(ymax):.1f}" stroke="#eef1f5"/>')
+        g.append(f'<text x="{px(gx):.1f}" y="{py(0)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{gx:.1f}</text>')
+        gx += 0.1
+    for gy in range(0, int(ymax) + 1, 5):
+        g.append(f'<line x1="{px(X0):.1f}" y1="{py(gy):.1f}" x2="{px(X1):.1f}" y2="{py(gy):.1f}" stroke="#eef1f5"/>')
+        g.append(f'<text x="{px(X0)-8:.1f}" y="{py(gy)+3:.1f}" fill="#5a6b7b" font-size="10" text-anchor="end">{gy}</text>')
+    g.append(f'<line x1="{px(1):.1f}" y1="{py(0):.1f}" x2="{px(1):.1f}" y2="{py(ymax):.1f}" stroke="#c0392b" stroke-width="1.3" stroke-dasharray="5 4"/>')
+    g.append(f'<text x="{px(1):.1f}" y="{py(ymax)+1:.1f}" fill="#c0392b" font-size="10" text-anchor="middle">tuning</text>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">frequency ratio  &omega; / &omega;_roll</text>')
+    g.append(f'<text transform="translate(13,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">vessel roll response |X&#8321;/X_st|</text>')
+    # sequential ramp: light damping -> dark, ordered by zeta
+    ramp = ["#9ec4e8", "#5b9bd5", "#2b6cb0", "#0B3D91", "#062560"]
+    labels = []
+    for i, c in enumerate(sorted(curves, key=lambda c: c["zeta"])):
+        col = ramp[i % len(ramp)]
+        pts = list(zip(gs, c["response"]))
+        line = " ".join(f'{"L" if j else "M"}{px(x):.1f} {py(min(y, ymax)):.1f}' for j, (x, y) in enumerate(pts))
+        g.append(f'<path d="{line}" fill="none" stroke="{col}" stroke-width="2.2"/>')
+        labels.append((c, col))
+    g.append('</svg>')
+    leg = " &nbsp; ".join(
+        f'<span style="color:{col}">&#9679;</span> {c["label"]} (&zeta;={c["zeta"]:.2f}, '
+        f'{"2 peaks" if c["n_peaks"] >= 2 else "merged"}, peak {c["peak_response"]:.1f})'
+        for c, col in labels)
+    return "".join(g) + f'<p class="cap">{leg}</p>'
+
+
+def _tld_section(tld):
+    if not tld or not tld.get("curves"):
+        return ""
+    meta = tld.get("meta", {})
+    summ = tld.get("summary", {})
+    mu = meta.get("mass_ratio_mu", 0.05)
+    zopt = meta.get("z_opt")
+    under = summ.get("under_damped_labels", [])
+    over = summ.get("over_damped_labels", [])
+    best = summ.get("best_fill_label", "")
+    bz = summ.get("best_fill_zeta")
+    return f"""
+<h2>Coupled anti-roll response — the two-peak split &amp; the optimum</h2>
+<p>All the sweeps above characterise the tank alone. Its <b>purpose</b> is to damp a <b>vessel's</b> roll: a
+partially filled tank tuned near the roll frequency is a <b>tuned-liquid damper</b>. Coupling it to the vessel
+roll (the Den Hartog tuned-absorber equations; Moaleji&nbsp;&amp;&nbsp;Greig&nbsp;2007) shows the design
+trade-off — and it turns on the <b>tank damping</b>, which is exactly what the forced-roll CFD measured. This is
+<b>not</b> new CFD: it feeds the CFD-measured equivalent damping ratio &zeta; (which rises with fill,
+&asymp;&nbsp;0.10&nbsp;/&nbsp;0.18&nbsp;/&nbsp;0.31 at h/L&nbsp;=&nbsp;0.30&nbsp;/&nbsp;0.50&nbsp;/&nbsp;0.70,
+from the SDOF reduction) into the coupled response at a representative mass ratio &mu;&nbsp;=&nbsp;{mu}.</p>
+{_tld_svg(tld)}
+<p class="callout key"><b>Result.</b> A lightly damped tuned tank <b>splits</b> the vessel roll response into
+<b>two adverse peaks</b> straddling the tuning frequency; as tank damping rises the peaks <b>merge</b> into a
+single controlled peak, and past the optimum the tank <b>over-damps</b> and the peak grows back. The CFD fill
+&zeta; ladder <b>brackets the Den&nbsp;Hartog optimum</b> (&zeta;<sub>opt</sub>&nbsp;=&nbsp;{zopt:.2f} at this
+mass ratio): the low fill{'s' if len(under) > 1 else ''} ({', '.join(under)}) {'are' if len(under) > 1 else 'is'}
+<b>under-damped</b> and show{'' if len(under) > 1 else 's'} the two-peak split; the lowest peak — the best anti-roll performance among the fills
+— is at <b>{best}</b> (&zeta;&nbsp;=&nbsp;{bz:.2f}, closest to the optimum); and the high fill
+({', '.join(over) if over else 'h/L = 0.70'}) is <b>over-damped</b> — its single peak is <b>taller</b> than the
+mid-fill one because a too-stiff tank stops moving relative to the vessel and stops absorbing. So &ldquo;more damping is better&rdquo; is
+wrong: there is an optimum, and our fill sweep straddles it. In practice the tank damping is set by an internal
+<b>baffle or damping screen</b> (Moaleji&nbsp;&amp;&nbsp;Greig's device) rather than by fill; the physics is the
+same, and the CFD &zeta; ladder shows the target band. Caveats: representative mass ratio &mu;&nbsp;=&nbsp;{mu}
+(the split/merge is generic in &mu; — only the peak <b>separation</b> scales as &radic;&mu;); perfect tuning
+(f&nbsp;=&nbsp;1) and an undamped-hull idealisation (adds hull roll damping in a full design); constant-&zeta;
+screening from the 4&deg; 2D CFD (&zeta; does not Froude-scale, and swirl/baffle detail is 3D).</p>
+"""
+
+
 def _literature_section(research):
     if not research:
         return ""
@@ -968,6 +1051,7 @@ def build():
     shallow = _load_cfd("sloshing-shallow.json")
     shallow_refine = _load_cfd("sloshing-shallow-refine.json")
     ega = _load("sloshing-ega.json")
+    tld = _load("sloshing-tld-twopeak.json")
 
     n_cases = 0
     if bench:
@@ -1012,6 +1096,7 @@ def build():
 {_spheric_section(spheric)}
 {_shallow_section(shallow_refine or shallow, shallow, backbone)}
 {_ega_section(ega)}
+{_tld_section(tld)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 {_compute_section(compute)}
