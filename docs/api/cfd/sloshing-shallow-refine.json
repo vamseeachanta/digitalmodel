@@ -91,14 +91,14 @@
     },
     {
       "roll_deg": 2.0,
-      "resonant_ratio": 0.9346,
-      "freq_ratio": 1.07,
-      "detuning_pct": 7.0,
-      "argmax_ratio": 0.925,
+      "resonant_ratio": 0.9348,
+      "freq_ratio": 1.0698,
+      "detuning_pct": 6.98,
+      "argmax_ratio": 0.9375,
       "peak_quad_at_grid_edge": false,
-      "peak_runup_m": 0.23443,
-      "peak_runup_over_h": 1.7366,
-      "peak_asymmetry": 4.1091,
+      "peak_runup_m": 0.25513,
+      "peak_runup_over_h": 1.8898,
+      "peak_asymmetry": 4.2089,
       "points": [
         {
           "ratio": 0.875,
@@ -107,6 +107,15 @@
           "quad_coeff": 0.4623,
           "asymmetry": 3.775,
           "runup_over_h": 1.1549,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.8875,
+          "drive_period_s": 1.43815,
+          "runup_amp_m": 0.194068,
+          "quad_coeff": 0.78158,
+          "asymmetry": 3.7109,
+          "runup_over_h": 1.4375,
           "status": "completed"
         },
         {
@@ -119,6 +128,15 @@
           "status": "completed"
         },
         {
+          "ratio": 0.9125,
+          "drive_period_s": 1.47866,
+          "runup_amp_m": 0.255128,
+          "quad_coeff": 1.26206,
+          "asymmetry": 4.2089,
+          "runup_over_h": 1.8898,
+          "status": "completed"
+        },
+        {
           "ratio": 0.925,
           "drive_period_s": 1.49891,
           "runup_amp_m": 0.234434,
@@ -128,12 +146,30 @@
           "status": "completed"
         },
         {
+          "ratio": 0.9375,
+          "drive_period_s": 1.51917,
+          "runup_amp_m": 0.228678,
+          "quad_coeff": 1.42256,
+          "asymmetry": 3.9327,
+          "runup_over_h": 1.6939,
+          "status": "completed"
+        },
+        {
           "ratio": 0.95,
           "drive_period_s": 1.53942,
           "runup_amp_m": 0.232571,
           "quad_coeff": 1.35241,
           "asymmetry": 3.4644,
           "runup_over_h": 1.7227,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.9625,
+          "drive_period_s": 1.55968,
+          "runup_amp_m": 0.217194,
+          "quad_coeff": 1.2744,
+          "asymmetry": 3.3381,
+          "runup_over_h": 1.6088,
           "status": "completed"
         },
         {
