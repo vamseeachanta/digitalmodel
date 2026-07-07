@@ -58,15 +58,15 @@
   .mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
   .lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
 
-  .wrap{max-width:1240px; margin:0 auto; padding:22px clamp(14px,3vw,32px) 60px}
+  .wrap{max-width:1240px; margin:0 auto; padding:14px clamp(14px,3vw,32px) 40px}
 
-  header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:20px}
+  header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:12px}
   .brand{display:flex; flex-direction:column; gap:6px}
   .kicker{display:flex; align-items:center; gap:9px}
   .dot{width:9px;height:9px;border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent); animation:pulse 2.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
-  h1{font-size:clamp(22px,3vw,31px); margin:0; font-weight:800; letter-spacing:-.015em; color:var(--brand); text-wrap:balance}
-  .tag{color:var(--muted); font-size:14px; max-width:56ch}
+  h1{font-size:clamp(20px,2.4vw,26px); margin:0; font-weight:800; letter-spacing:-.015em; color:var(--brand); text-wrap:balance}
+  .tag{color:var(--muted); font-size:13px; max-width:64ch}
   .theme-btn{background:var(--panel); color:var(--muted); border:1px solid var(--edge); border-radius:99px; padding:7px 13px; font-size:12px; cursor:pointer; display:flex; gap:7px; align-items:center}
   .theme-btn:hover{color:var(--ink)}
   .theme-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
@@ -93,22 +93,22 @@
   input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%; background:var(--accent); border:2px solid var(--panel); cursor:pointer}
   input[type=range]:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 
-  .stage{display:flex; flex-direction:column; gap:14px}
+  .stage{display:flex; flex-direction:column; gap:10px; min-width:0}
 
   /* status banner */
-  .status{position:relative; overflow:hidden; padding:16px 18px; display:grid; grid-template-columns:auto 1fr auto; gap:18px; align-items:center}
+  .status{position:relative; overflow:hidden; padding:10px 16px; display:grid; grid-template-columns:auto 1fr auto; gap:18px; align-items:center}
   .status::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--verdict,var(--muted))}
   .verdict-badge{display:flex; flex-direction:column; gap:2px; padding-left:6px}
-  .verdict-word{font-size:clamp(28px,5vw,44px); font-weight:760; letter-spacing:-.02em; line-height:1; color:var(--verdict,var(--ink))}
+  .verdict-word{font-size:clamp(24px,3.4vw,34px); font-weight:760; letter-spacing:-.02em; line-height:1; color:var(--verdict,var(--ink))}
   .verdict-sub{color:var(--muted); font-size:12.5px}
   .countdown{text-align:right}
-  .countdown .big{font-size:clamp(24px,4.5vw,38px); font-weight:700; line-height:1; color:var(--ink)}
+  .countdown .big{font-size:clamp(22px,3vw,30px); font-weight:700; line-height:1; color:var(--ink)}
   .countdown .cap{color:var(--muted)}
   .lead-explain{font-size:13px; color:var(--muted); align-self:center; max-width:34ch}
   .lead-explain b{color:var(--ink); font-weight:640}
 
-  .panel{padding:12px 14px 8px}
-  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px}
+  .panel{padding:8px 14px 6px}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:3px}
   .panel-title{display:flex; align-items:center; gap:9px}
   .panel-title h3{margin:0; font-size:13.5px; font-weight:700; letter-spacing:.01em; color:var(--brand)}
   .legend{display:flex; gap:12px; flex-wrap:wrap}
@@ -119,13 +119,14 @@
   canvas{display:block; width:100%; height:auto}
 
   /* transport */
-  .transport{display:flex; align-items:center; gap:14px; padding:12px 14px}
-  .play{all:unset; cursor:pointer; width:38px;height:38px;border-radius:50%; display:grid;place-items:center; background:var(--accent); color:#fff; font-size:12px}
+  .transport{display:flex; align-items:center; gap:14px; padding:8px 14px}
+  .play{all:unset; cursor:pointer; width:34px;height:34px;border-radius:50%; display:grid;place-items:center; background:var(--accent); color:#fff; font-size:12px}
   .play:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
   .transport .scrub{flex:1}
   .speed{display:flex; gap:6px}
   .speed button{all:unset;cursor:pointer;padding:5px 9px;border-radius:6px;font-size:11.5px;color:var(--muted);background:var(--panel-2)}
   .speed button[aria-pressed="true"]{color:var(--ink);background:color-mix(in srgb,var(--accent) 14%,var(--panel-2))}
+  .speed button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
 
   footer{margin-top:26px; color:var(--faint); font-size:12px; line-height:1.65; border-top:1px solid var(--edge); padding-top:16px}
   footer b{color:var(--muted)}
@@ -135,6 +136,13 @@
   .chip b{color:var(--brand); font-weight:700}
   a{color:var(--accent)}
   @media (prefers-reduced-motion: reduce){.dot{animation:none}}
+  /* short viewports: reclaim vertical space so the whole console fits without scrolling */
+  @media (max-height:820px){
+    .wrap{padding-top:10px}
+    header.top{margin-bottom:8px}
+    .tag{display:none}
+    header.top>.brand>div[style]{margin-top:6px!important}
+  }
 </style>
 </head>
 <body>
@@ -166,11 +174,11 @@
       <div class="card">
         <div class="field">
           <div class="slideval"><span class="lbl">Sig. wave height H<sub>s</sub></span><span class="num mono" id="hsVal">2.5 m</span></div>
-          <input type="range" id="hs" min="0.5" max="5" step="0.1" value="2.5">
+          <input type="range" id="hs" min="0.5" max="5" step="0.1" value="2.5" aria-label="Significant wave height, metres">
         </div>
         <div class="field">
           <div class="slideval"><span class="lbl">Peak period T<sub>p</sub></span><span class="num mono" id="tpVal">9.0 s</span></div>
-          <input type="range" id="tp" min="5" max="16" step="0.2" value="9">
+          <input type="range" id="tp" min="5" max="16" step="0.2" value="9" aria-label="Peak period, seconds">
         </div>
         <div class="field">
           <span class="lbl">Sea type &mdash; sets the predictable zone</span>
@@ -205,18 +213,18 @@
             <div class="panel-title"><span class="lbl">1 &middot; Sea surface</span><h3>Incident wave elevation &eta;(t)</h3></div>
             <div class="readout">measured&nbsp;&middot;&nbsp;<b id="etaNow">&mdash;</b></div>
           </div>
-          <canvas id="cvWave" height="150"></canvas>
+          <canvas id="cvWave" height="112" role="img" aria-label="Incident wave elevation time trace, measured then forecast across the predictable zone"></canvas>
         </div>
         <div class="panel" style="border-top:1px solid var(--edge)">
           <div class="panel-head">
-            <div class="panel-title"><span class="lbl">2 &middot; Asset response</span><h3>Forecast 6-DOF motion</h3></div>
+            <div class="panel-title"><span class="lbl">2 &middot; Asset response</span><h3>Forecast motion &mdash; heave / pitch / roll</h3></div>
             <div class="legend">
-              <span class="lg"><i style="background:var(--heave)"></i>Heave (m)</span>
-              <span class="lg"><i style="background:var(--pitch)"></i>Pitch (&deg;)</span>
-              <span class="lg"><i style="background:var(--roll)"></i>Roll (&deg;)</span>
+              <span class="lg"><i style="background:var(--heave)"></i>Heave&nbsp;<b id="pkHeave" class="mono">&mdash;</b></span>
+              <span class="lg"><i style="background:var(--pitch)"></i>Pitch&nbsp;<b id="pkPitch" class="mono">&mdash;</b></span>
+              <span class="lg"><i style="background:var(--roll)"></i>Roll&nbsp;<b id="pkRoll" class="mono">&mdash;</b></span>
             </div>
           </div>
-          <canvas id="cvMotion" height="164"></canvas>
+          <canvas id="cvMotion" height="124" role="img" aria-label="Forecast vessel motion: heave, pitch and roll time traces, each scaled to a shared axis with peak values labelled"></canvas>
         </div>
         <div class="panel" style="border-top:1px solid var(--edge)">
           <div class="panel-head">
@@ -226,7 +234,7 @@
               <span class="lg"><i style="background:var(--nogo)"></i>limit</span>
             </div>
           </div>
-          <canvas id="cvGov" height="150"></canvas>
+          <canvas id="cvGov" height="112" role="img" aria-label="Governing quantity time trace with caution and limit thresholds"></canvas>
         </div>
         <div class="panel" style="border-top:1px solid var(--edge); padding-bottom:12px">
           <div class="panel-head">
@@ -237,7 +245,7 @@
               <span class="lg"><i style="background:var(--nogo)"></i>no-go</span>
             </div>
           </div>
-          <canvas id="cvTimeline" height="42"></canvas>
+          <canvas id="cvTimeline" height="40" role="img" aria-label="Rolling go, caution and no-go decision across the forecast horizon"></canvas>
         </div>
         <div class="transport" style="border-top:1px solid var(--edge)">
           <button class="play" id="playBtn" aria-label="Play or pause">&#x275A;&#x275A;</button>
@@ -368,12 +376,19 @@ function drawTrace(cv, series, opts){
   // threshold bands
   if(opts.limit){
     for(const sgn of [1,-1]){
-      ctx.strokeStyle=css("--nogo"); ctx.globalAlpha=.8; ctx.setLineDash([5,4]);
+      // limit + caution get DISTINCT dash patterns so they are separable without colour
+      ctx.strokeStyle=css("--nogo"); ctx.globalAlpha=.85; ctx.setLineDash([6,3]);
       ctx.beginPath();ctx.moveTo(x0,Y(sgn*opts.limit));ctx.lineTo(x1,Y(sgn*opts.limit));ctx.stroke();
-      ctx.strokeStyle=css("--caution");
+      ctx.strokeStyle=css("--caution"); ctx.setLineDash([2,3]);
       ctx.beginPath();ctx.moveTo(x0,Y(sgn*opts.caution));ctx.lineTo(x1,Y(sgn*opts.caution));ctx.stroke();
     }
     ctx.globalAlpha=1; ctx.setLineDash([]);
+    // redundant text labels (colour-independent channel); placed on the lower
+    // thresholds so they clear the FORECAST label in the top-right corner
+    ctx.font="600 8.5px ui-monospace,monospace"; ctx.textAlign="right";
+    ctx.fillStyle=css("--nogo");    ctx.fillText("limit",   x1-1, Y(-opts.limit)+9);
+    ctx.fillStyle=css("--caution"); ctx.fillText("caution", x1-1, Y(-opts.caution)+9);
+    ctx.textAlign="left";
   }
   // series: array of {color, fn, width, fill}
   const step=span/260;
@@ -393,26 +408,46 @@ function drawTrace(cv, series, opts){
   ctx.textAlign="right"; ctx.fillText("FORECAST +"+Math.round(horizon)+"s", x1-1, y0+9); ctx.textAlign="left";
 }
 
-/* rolling go/no-go timeline strip */
+/* rolling go/no-go timeline strip — shares the trace panels' time axis so the
+   NOW plumb-line and every event line up vertically across all four panels */
 function drawTimeline(cv){
   const {ctx,w,h}=fitCanvas(cv);
-  const x0=6,x1=w-6,y0=8,y1=h-8;
+  const padL=6,padR=6, x0=padL,x1=w-padR, y0=5, y1=h-13;   // reserve bottom row for labels
   const op=OPS[state.op];
+  const t0=state.now-PAST, t1=state.now+horizon, span=t1-t0;   // identical to drawTrace
+  const X=t=>x0+(t-t0)/span*(x1-x0);
+  const xNow=X(state.now), xEnd=X(state.now+horizon);
   ctx.clearRect(0,0,w,h);
-  const n=Math.max(40,Math.floor(x1-x0));
+  // measured region (left of now): decision not applicable -> neutral fill
+  ctx.fillStyle=css("--panel-2"); ctx.fillRect(x0,y0,xNow-x0,y1-y0);
+  // forecast region: rolling go / caution / no-go
+  const n=Math.max(30,Math.floor(xEnd-xNow));
   for(let i=0;i<n;i++){
     const t=state.now+(i/n)*horizon;
     const v=Math.abs(govAt(t));
-    let col = v>=op.limit?css("--nogo") : v>=op.caution?css("--caution") : css("--go");
-    ctx.fillStyle=col;
-    const xa=x0+(i/n)*(x1-x0), wseg=(x1-x0)/n+0.6;
+    ctx.fillStyle = v>=op.limit?css("--nogo") : v>=op.caution?css("--caution") : css("--go");
+    const xa=xNow+(i/n)*(xEnd-xNow), wseg=(xEnd-xNow)/n+0.8;
     ctx.fillRect(xa,y0,wseg,y1-y0);
   }
-  // frame + ticks
+  // frame
   ctx.strokeStyle=css("--edge"); ctx.lineWidth=1; ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+  // now divider — same dashed treatment as the trace panels above
+  ctx.strokeStyle=css("--zone-edge"); ctx.setLineDash([3,4]); ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(xNow,y0);ctx.lineTo(xNow,y1);ctx.stroke(); ctx.setLineDash([]);
+  // first-breach marker: colour-independent channel for the go->no-go boundary
+  const V=computeVerdict();
+  if(V.firstBreach!==null){
+    const xb=X(state.now+V.firstBreach);
+    ctx.strokeStyle=css("--ink"); ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(xb,y0);ctx.lineTo(xb,y1);ctx.stroke();
+    ctx.fillStyle=css("--ink"); ctx.fillRect(xb-3,y0,6,3);
+  }
+  // labels aligned to the shared axis
+  ctx.fillStyle=css("--faint"); ctx.font="600 8.5px ui-monospace,monospace";
+  ctx.fillText("MEASURED", x0+2, y1+10);
   ctx.fillStyle=css("--muted"); ctx.font="600 9.5px ui-monospace,monospace";
-  ctx.fillText("now", x0, y1+9);
-  ctx.textAlign="right"; ctx.fillText("+"+Math.round(horizon)+"s horizon", x1, y1+9); ctx.textAlign="left";
+  ctx.fillText("NOW", xNow+4, y1+10);
+  ctx.textAlign="right"; ctx.fillText("+"+Math.round(horizon)+"s", x1, y1+10); ctx.textAlign="left";
 }
 
 /* ---------- verdict logic ---------- */
@@ -440,18 +475,43 @@ function computeVerdict(){
 
 /* ---------- render ---------- */
 const el=id=>document.getElementById(id);
+
+/* size the three trace canvases to the available viewport so the whole console
+   (status + 3 traces + decision strip + transport) fits on one screen.
+   Chrome height is MEASURED at runtime (not guessed) so it self-corrects on any
+   viewport; must run after at least one render() so the canvases have real heights. */
+function sizePanels(){
+  const traces=[el("cvWave"),el("cvMotion"),el("cvGov")];
+  const curTrace=traces.reduce((s,c)=>s+c.getBoundingClientRect().height,0);
+  const tp=document.querySelector(".transport");
+  if(!curTrace||!tp) return;
+  // everything above + between + below the three traces (hero, status, heads, strip, transport)
+  const nonTrace=tp.getBoundingClientRect().bottom - curTrace;
+  let avail=window.innerHeight - nonTrace - 10;           // 10px breathing room
+  avail=Math.max(150, Math.min(avail, 560));              // total height shared by the 3 trace canvases
+  const wave=Math.round(avail*0.30), motion=Math.round(avail*0.40), gov=avail-wave-motion;
+  el("cvWave").setAttribute("height", wave);
+  el("cvMotion").setAttribute("height", motion);
+  el("cvGov").setAttribute("height", gov);
+}
+
 function render(){
   const op=OPS[state.op];
   // wave
   drawTrace(el("cvWave"), [{color:css("--accent"), fn:t=>evalAt(t).eta, width:1.8}], {amax:Math.max(state.hs*0.9,1.2)});
   // motions (heave m, pitch &deg;, roll &deg;) — scale to common axis by normalising to their own amax
-  const mProbe=[]; for(let t=state.now-PAST;t<=state.now+horizon;t+=0.5){const s=evalAt(t); mProbe.push(Math.max(Math.abs(s.heave),Math.abs(s.pitch),Math.abs(s.roll)));}
-  const mAmax=Math.max(1.0, ...mProbe)*1.05;
+  let pkH=0,pkP=0,pkR=0;
+  for(let t=state.now-PAST;t<=state.now+horizon;t+=0.5){const s=evalAt(t); pkH=Math.max(pkH,Math.abs(s.heave)); pkP=Math.max(pkP,Math.abs(s.pitch)); pkR=Math.max(pkR,Math.abs(s.roll));}
+  const mAmax=Math.max(1.0, pkH, pkP, pkR)*1.05;
   drawTrace(el("cvMotion"), [
     {color:css("--heave"), fn:t=>evalAt(t).heave, width:1.8},
     {color:css("--pitch"), fn:t=>evalAt(t).pitch, width:1.5},
     {color:css("--roll"),  fn:t=>evalAt(t).roll,  width:1.5},
   ], {amax:mAmax});
+  // peak magnitudes per DOF (shared axis is relative; the numbers carry the real units)
+  el("pkHeave").textContent=pkH.toFixed(2)+" m";
+  el("pkPitch").textContent=pkP.toFixed(1)+"°";
+  el("pkRoll").textContent=pkR.toFixed(1)+"°";
   // governing
   el("govTitle").textContent=op.gov+" ("+op.unit+")";
   let gAmax=op.limit*1.4; for(let t=state.now-PAST;t<=state.now+horizon;t+=0.6){gAmax=Math.max(gAmax,Math.abs(govAt(t))*1.08);}
@@ -519,7 +579,10 @@ function frame(ts){
   requestAnimationFrame(frame);
 }
 build();
-window.addEventListener("resize", render);
+render();          // establish real canvas display heights, then measure & fit
+sizePanels();
+render();
+window.addEventListener("resize", ()=>{sizePanels(); render();});
 requestAnimationFrame(frame);
 </script>
 </body>
