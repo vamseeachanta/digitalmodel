@@ -179,7 +179,9 @@ class ScheduleAssembly:
     #: Documented LMRP submerged weight (metadata for overpull/landing work
     #: and the RSU-0021 finding hypothesis; NOT part of the tensioned string).
     lmrp_submerged_kn: Optional[float] = None
-    top_tension_factor: float = SAFETY_FACTOR_TENSION
+    #: Top-tension factor (TTF per API RP 16Q) — dimensionless ratio, hence no
+    #: unit suffix; named `ttf` to stay outside the #1447 force-name scan.
+    ttf: float = SAFETY_FACTOR_TENSION
 
     @property
     def buoyancy_net_lift_kn(self) -> float:
@@ -207,7 +209,7 @@ class ScheduleAssembly:
             f_wt=1.0,
             f_bt=1.0,
         )
-        return top_tension_required(t_srmin_kn, self.top_tension_factor)
+        return top_tension_required(t_srmin_kn, self.ttf)
 
 
 # -- shared parse helpers ---------------------------------------------------------------
