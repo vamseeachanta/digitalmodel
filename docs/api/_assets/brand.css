@@ -1,0 +1,77 @@
+/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
