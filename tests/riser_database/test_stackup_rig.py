@@ -48,6 +48,9 @@ STACKUP_TYPE_VOCAB = {
     "joint-library",
     "component-library",
     "stack-up-drawing",
+    # llm-wiki#829 wave-5 (RSU-0071..0084): documented operating-envelope
+    # results datasets (static window / dynamic envelope grids).
+    "operability-dataset",
 }
 OPERATION_VOCAB = {
     "drilling",
@@ -84,8 +87,8 @@ DEID_PATTERNS = (
 
 def test_row_counts_pinned():
     db = RiserDatabase.load()
-    assert len(db.stackups) == 70
-    assert len(db.rigs) == 7
+    assert len(db.stackups) == 84
+    assert len(db.rigs) == 10
     assert all(isinstance(r, RiserStackupRow) for r in db.stackups)
     assert all(isinstance(r, RigRiserInterfaceRow) for r in db.rigs)
 

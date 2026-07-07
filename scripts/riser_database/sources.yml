@@ -609,6 +609,107 @@ stackup_rows:
     riser_od_in: ""
     water_depth_band: ""
     rig_ref: ""
+  # RSU-0071..RSU-0084 (llm-wiki#829 pairing): handle rows for the wave-5
+  # registry ingest. Same governance — handles + coarse bands only; the
+  # private registry page is the value authority for every row below.
+  - rsu_id: RSU-0071
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: drillship-10k-stack-356kip
+  - rsu_id: RSU-0072
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: drillship-10k-stack-511kip
+  - rsu_id: RSU-0073
+    topology_class: none
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0074
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: semisub-12x125k-wireline
+  - rsu_id: RSU-0075
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1000-1500m
+    rig_ref: semisub-12x125k-wireline
+  - rsu_id: RSU-0076
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: joint-library
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: ""
+    rig_ref: semisub-12x125k-wireline
+  - rsu_id: RSU-0077
+    topology_class: sbop
+    stackup_type: as-planned-stackup
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: 0-500m
+    rig_ref: ""
+  - rsu_id: RSU-0078
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: operability-dataset
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0079
+    topology_class: conventional-bop-on-wellhead
+    stackup_type: operability-dataset
+    operation: drilling
+    riser_od_in: "21"
+    water_depth_band: 1500-2000m
+    rig_ref: semisub-6x833k-dat
+  - rsu_id: RSU-0080
+    topology_class: none
+    stackup_type: component-library
+    operation: drilling
+    riser_od_in: ""
+    water_depth_band: ""
+    rig_ref: ""
+  - rsu_id: RSU-0081
+    topology_class: ttr
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0082
+    topology_class: ttr
+    stackup_type: weight-table
+    operation: workover
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0083
+    topology_class: ttr
+    stackup_type: weight-table
+    operation: drilling
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
+  - rsu_id: RSU-0084
+    topology_class: ttr
+    stackup_type: component-library
+    operation: production
+    riser_od_in: "11.75"
+    water_depth_band: 1500-2000m
+    rig_ref: ""
 
 # rig_riser_interface (#1259): generic rig-class slugs; wed_rig_name joins the
 # worldenergydata 2,268-rig identity space and is populated ONLY for rows
@@ -690,3 +791,36 @@ rig_rows:
     n_tension_wires: ""
     wed_rig_name: ""
     note: drillship class keyed by subsea stack GA mass; deeper-water-rated variant
+  # llm-wiki#829 wave-5 rig classes. Two drillship classes keyed by subsea-stack
+  # weight-estimate mass (the wave-2 GA-mass precedent) plus one wireline-
+  # tensioner semisub capability class from a documented tension chain.
+  - rig_ref: drillship-10k-stack-356kip
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: ""
+    tensioner_capacity_kips: ""
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: drillship class keyed by subsea stack weight-estimate mass; lighter variant
+  - rig_ref: drillship-10k-stack-511kip
+    rig_type: drillship
+    n_tensioners: ""
+    tensioner_type: ""
+    tensioner_capacity_kips: ""
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: drillship class keyed by subsea stack weight-estimate mass; revision-growth variant
+  - rig_ref: semisub-12x125k-wireline
+    rig_type: semisub
+    n_tensioners: "12"
+    tensioner_type: wireline
+    tensioner_capacity_kips: "125"
+    tensioner_stroke_ft: ""
+    tj_stroke_ft: ""
+    n_tension_wires: ""
+    wed_rig_name: ""
+    note: wireline-tensioner semisub class; two lines may fail per the tension criterion
