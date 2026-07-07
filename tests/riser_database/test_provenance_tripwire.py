@@ -53,6 +53,13 @@ _STOPWORDS = {
     "riserstackup", "safety", "sbop", "stack", "stackups", "stres", "string",
     "subsea", "system", "technical", "tension", "test", "tree", "visio",
     "water", "weight", "weights", "workover",
+    # -- #1453 wave-2 calc-contract generic additions: new post-llm-wiki#826
+    # source-page slugs carry these generic document/engineering words whose
+    # normalized substrings occur in long-merged public artifacts (e.g.
+    # "installation" in twin_loop.py/decision_spine.py prose, "sheets" in
+    # "sheet-side", "workbooks" in golden-test docstrings). Real provenance
+    # names (fields, rigs, clients, programs) stay OUT of this list.
+    "installation", "sheets", "workbooks",
 }
 
 #: Round band-edge numerals used by the public ``water_depth_band`` scheme.
