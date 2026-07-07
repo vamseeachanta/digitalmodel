@@ -154,6 +154,21 @@ keyed by subsea-stack GA mass (`drillship-15k-stack-784kip`,
 `drillship-15k-stack-893kip`); `rig_ref` is wired only where a wave-2 source
 documented the rig class, and stays empty elsewhere.
 
+**Wave 5 (llm-wiki#829 pairing):** RSU-0071..RSU-0084 (14 handle rows) land
+from the wave-5 registry ingest: rig-keyed BOP-stack and riser-equipment
+weight tables, a wireline-tensioner semisub 16Q stack-up + joint/foam
+library, a shallow-water tension workbook from a surface-stack operation
+(the first `0-500m` drilling-operation row), two documented
+operating-window datasets, and a TTR
+weight/tension family. `stackup_type` adds `operability-dataset` (documented
+operating-envelope results); the topology, operation and band vocabularies
+are unchanged. Three rig classes join `rig_riser_interface` — one
+wireline-tensioner capability class (`semisub-12x125k-wireline`) and two
+drillship classes keyed by subsea-stack weight-estimate mass
+(`drillship-10k-stack-356kip`, `drillship-10k-stack-511kip`), following the
+wave-2 GA-mass precedent; weight tables with no documented water depth ship
+an empty band, never a guessed one.
+
 ## Assembly engine (#1280)
 
 `drilling_riser/assembly.py` turns component records + counts into a
