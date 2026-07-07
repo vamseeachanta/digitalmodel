@@ -141,7 +141,7 @@ def test_rsu0021_lmrp_inclusion_hypothesis():
     assembly = load_schedule_assembly("RSU-0021", root)
     lmrp_kn = assembly.lmrp_submerged_kn
     assert lmrp_kn is not None and lmrp_kn > 0.0
-    factor = assembly.top_tension_factor
+    factor = assembly.ttf
     for mud_kg_m3, documented_kn in documented_endpoints("RSU-0021", root):
         adjusted = assembly.minimum_top_tension_16q_kn(mud_kg_m3) + factor * lmrp_kn
         assert abs(adjusted - documented_kn) / documented_kn < 0.06
