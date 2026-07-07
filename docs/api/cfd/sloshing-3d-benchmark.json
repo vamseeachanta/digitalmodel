@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
+    "box": "a-l-2 / dev-secondary (32 cores)",
+    "epic": "#1429",
+    "issue": "#1433",
+    "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
+    "geometry": "methodology near-square plan-form (NOT the real B1546 tank; real B_db/D_db from #640)",
+    "note": "Timed stage = solver only (blockMesh/setFields/decomposePar are untimed setup). s_per_step normalises out any adaptive-dt step-count drift across ranks.",
+    "decomposition": "scotch",
+    "timing": "solver wall-clock / timesteps"
+  },
+  "case": {
+    "breadth_m": 0.9,
+    "height_m": 0.9,
+    "length_m": 0.9,
+    "fill_h_over_L": 0.5,
+    "roll_amplitude_deg": 4.0,
+    "cells_per_breadth": 60,
+    "cells": 216000,
+    "end_time_s": 0.3
+  },
+  "scaling": [
+    {
+      "ranks": 1,
+      "cells": 216000,
+      "cells_per_rank": 216000,
+      "status": "completed",
+      "wall_s": 186.59,
+      "steps": 37,
+      "s_per_step": 5.043,
+      "speedup_vs_1rank": 1.0,
+      "parallel_efficiency": 1.0,
+      "reliability": "clean"
+    },
+    {
+      "ranks": 2,
+      "cells": 216000,
+      "cells_per_rank": 108000,
+      "status": "completed",
+      "wall_s": 104.85,
+      "steps": 37,
+      "s_per_step": 2.8339,
+      "speedup_vs_1rank": 1.78,
+      "parallel_efficiency": 0.89,
+      "reliability": "clean"
+    },
+    {
+      "ranks": 4,
+      "cells": 216000,
+      "cells_per_rank": 54000,
+      "status": "completed",
+      "wall_s": 50.16,
+      "steps": 37,
+      "s_per_step": 1.3556,
+      "speedup_vs_1rank": 3.72,
+      "parallel_efficiency": 0.93,
+      "reliability": "clean"
+    },
+    {
+      "ranks": 8,
+      "cells": 216000,
+      "cells_per_rank": 27000,
+      "status": "completed",
+      "wall_s": 39.15,
+      "steps": 37,
+      "s_per_step": 1.0582,
+      "speedup_vs_1rank": 4.766,
+      "parallel_efficiency": 0.596,
+      "reliability": "mild-contention"
+    },
+    {
+      "ranks": 16,
+      "cells": 216000,
+      "cells_per_rank": 13500,
+      "status": "completed",
+      "wall_s": 35.84,
+      "steps": 37,
+      "s_per_step": 0.9686,
+      "speedup_vs_1rank": 5.206,
+      "parallel_efficiency": 0.325,
+      "reliability": "mild-contention"
+    },
+    {
+      "ranks": 24,
+      "cells": 216000,
+      "cells_per_rank": 9000,
+      "status": "completed",
+      "wall_s": 37.34,
+      "steps": 37,
+      "s_per_step": 1.0091,
+      "speedup_vs_1rank": 4.998,
+      "parallel_efficiency": 0.208,
+      "reliability": "contention-affected"
+    },
+    {
+      "ranks": 32,
+      "cells": 216000,
+      "cells_per_rank": 6750,
+      "status": "completed",
+      "wall_s": 54.78,
+      "steps": 37,
+      "s_per_step": 1.4805,
+      "speedup_vs_1rank": 3.406,
+      "parallel_efficiency": 0.106,
+      "reliability": "contention-affected"
+    }
+  ],
+  "best_efficiency_rank": {
+    "ranks": 4,
+    "cells": 216000,
+    "cells_per_rank": 54000,
+    "status": "completed",
+    "wall_s": 50.16,
+    "steps": 37,
+    "s_per_step": 1.3556,
+    "speedup_vs_1rank": 3.72,
+    "parallel_efficiency": 0.93
+  },
+  "contention": {
+    "box_load_during_run": "~7 (shared box) for this 216k sweep",
+    "followup_512k_run": "a cpb=80/512k sweep launched next was INVALIDATED \u2014 box load spiked to ~24 (an npm install + other work saturated the cores); np=16 came out slower than np=8, a pure contention artifact, so clean high-core scaling could not be measured on this shared box right now",
+    "implication": "the binding constraint on a-l-2 is not the interFoam scaling (0.93 efficiency at 4 cores is excellent) but that the box is heavily SHARED; sustained high-core CFD contends with other work and wall-clock is unpredictable during busy periods"
+  },
+  "production_projection": {
+    "basis": "216k-cell case, s_per_step measured here; a real 3D case is ~6-12 drive cycles ~ 1000-2500 steps (adaptive dt)",
+    "single_case_min_at_np4": [
+      22.6,
+      56.5
+    ],
+    "single_case_min_at_np8": [
+      17.6,
+      44.1
+    ],
+    "note": "finer production meshes (500k-1M cells) cost ~2-5x more per step but scale to more cores; on a-l-2 the shared-load ceiling matters more than the core count"
+  },
+  "machine_verdict": {
+    "solver_scaling": "interFoam scales well intrinsically \u2014 0.93 parallel efficiency at 4 cores, ~0.6 at 8 (216k cells); the knee is a cells/rank limit (efficiency craters below ~27k cells/rank)",
+    "adequate_for": "single 3D cases + small methodology sweeps at ~4-8 cores, ideally in a quiet window (~15-40 min per 216k-cell case)",
+    "wait_for_heavier_node": "only for a LARGE production sweep needing predictable high-throughput wall-clock \u2014 a-l-2's shared load (not core count) is then the binding constraint; a dedicated/less-contended node or scheduled quiet-window runs would fix it. GPU boxes do NOT help (interFoam is CPU/MPI-bound)",
+    "real_gate": "still the geometry (#640 real B_db/D_db), not compute \u2014 a 3D run without it is methodology-only regardless of machine"
+  }
+}
