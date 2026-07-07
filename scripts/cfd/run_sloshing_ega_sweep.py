@@ -58,6 +58,13 @@ FILL = 0.70
 ROLL_DEG = 4.0
 LEVERS = (0.0, 0.45, 0.90)         # roll-axis depth below floor: 0, 0.5L, 1.0L
 RATIOS = (0.95, 1.00, 1.05, 1.10, 1.15, 1.20)   # x T1
+# The EGA levers carry a much larger effective forcing amplitude (2-4x), so the
+# 0.70 fill soft-springs further and its resonance shifts to LONGER period (r>1);
+# the base grid clamps both EGA peaks at the r=1.20 high edge. Extend the grid
+# there so the shifted quadrature peak is bracketed interior. collect() is
+# data-driven, so these fold in automatically; roll-only (d=0) peaks at r~1.10
+# and needs no extension.
+EXTRA = [(d, r) for d in (0.45, 0.90) for r in (1.25, 1.30, 1.35)]
 CPB = 60
 N_CYCLES = 12.0                    # settled deep-fill records (> backbone's 6)
 
@@ -163,6 +170,14 @@ def collect(work_dir: Path, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         qy = [p["quad_coeff"] for p in comp if p.get("quad_coeff") is not None]
         r_res = _parabolic_peak(qx, qy) if qy else None
         at_edge = bool(qy) and qx[qy.index(max(qy))] in (qx[0], qx[-1])
+        # Forcing-normalised resonance: the quad coefficient is normalised to the
+        # ROLL angle, but the EGA effective-forcing magnification (1 + d*omega^2/g)
+        # is frequency-dependent, so the raw peak is a BIASED (lower-bound) estimate
+        # of the soft-spring shift. Dividing by the magnification isolates the
+        # transfer function; if the shift survives it is genuine, not an artifact.
+        qyn = [p["quad_coeff"] / (p.get("ega_amplification") or 1.0)
+               for p in comp if p.get("quad_coeff") is not None]
+        r_res_fn = _parabolic_peak(qx, qyn) if qyn else None
         runups = [p["runup_amp_m"] for p in comp if p.get("runup_amp_m")]
         levers_out.append({
             "lever_m": lever,
@@ -171,6 +186,8 @@ def collect(work_dir: Path, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             "resonant_ratio": round(r_res, 4) if r_res else None,
             "freq_ratio": round(1.0 / r_res, 4) if r_res else None,
             "detuning_pct": round((1.0 / r_res - 1.0) * 100, 2) if r_res else None,
+            "forcing_norm_resonant_ratio": round(r_res_fn, 4) if r_res_fn else None,
+            "forcing_norm_detuning_pct": round((1.0 / r_res_fn - 1.0) * 100, 2) if r_res_fn else None,
             "peak_quad_at_grid_edge": at_edge,
             "peak_runup_m": round(max(runups), 5) if runups else None,
             "points": [{"ratio": p["ratio"], "drive_period_s": p["drive_period_s"],
@@ -209,6 +226,7 @@ def main(argv: List[str] | None = None) -> int:
     args.work_dir.mkdir(parents=True, exist_ok=True)
 
     matrix = [(d, r) for d in LEVERS for r in RATIOS]
+    matrix += [t for t in EXTRA if t not in matrix]
     print(f"running {len(matrix)} cases with {args.workers} workers")
     rows: List[Dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
