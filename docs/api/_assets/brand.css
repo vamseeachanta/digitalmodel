@@ -60,6 +60,19 @@
   --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
 }
 
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
 /* ---- shared primitives -------------------------------------------------- */
 *{box-sizing:border-box}
 body{
