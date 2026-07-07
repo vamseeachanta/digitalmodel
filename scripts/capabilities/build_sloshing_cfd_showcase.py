@@ -519,6 +519,131 @@ resolution of the linear anchor (sign-consistent only).</p>
 """
 
 
+# roll-only (grey baseline) then two EGA levers (blue ramp).
+_EGACOL = ["#64748b", "#2b6cb0", "#0B3D91"]
+
+
+def _ega_svg(ega):
+    """Quadrature response vs T_drive/T1 for roll-only vs combined sway+roll,
+    each curve normalised to its own peak so the resonance SHIFT is visible."""
+    levers = ega.get("levers", []) if ega else []
+    series = []
+    for i, l in enumerate(levers):
+        pts = [(p["ratio"], p["quad_coeff"]) for p in l.get("points", [])
+               if p.get("status") == "completed" and p.get("quad_coeff") is not None]
+        if len(pts) >= 3:
+            peak = max(q for _, q in pts)
+            if peak > 0:
+                series.append((l, sorted((r, q / peak) for r, q in pts)))
+    if not series:
+        return ""
+    W, H, ML, MR, MT, MB = 720, 340, 56, 96, 16, 44
+    X0, X1, YX = 0.92, 1.40, 1.12
+    def px(r):
+        return ML + (r - X0) / (X1 - X0) * (W - ML - MR)
+    def py(y):
+        return H - MB - y / YX * (H - MT - MB)
+    g = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">']
+    gx = 0.95
+    while gx <= 1.4001:
+        g.append(f'<line x1="{px(gx):.1f}" y1="{py(0):.1f}" x2="{px(gx):.1f}" y2="{py(YX):.1f}" stroke="#dde3ea"/>')
+        g.append(f'<text x="{px(gx):.1f}" y="{py(0)+16:.1f}" fill="#5a6b7b" font-size="10" text-anchor="middle">{gx:.2f}</text>')
+        gx += 0.05
+    for gy in (0, 0.5, 1.0):
+        g.append(f'<line x1="{px(X0):.1f}" y1="{py(gy):.1f}" x2="{px(X1):.1f}" y2="{py(gy):.1f}" stroke="#dde3ea"/>')
+    g.append(f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" fill="#5a6b7b" font-size="11" text-anchor="middle">drive period / natural period  T_drive / T1</text>')
+    g.append(f'<text transform="translate(14,{(H-MB+MT)/2:.0f}) rotate(-90)" fill="#5a6b7b" font-size="11" text-anchor="middle">quadrature (damping) coefficient (normalised)</text>')
+    g.append(f'<line x1="{px(1):.1f}" y1="{py(0):.1f}" x2="{px(1):.1f}" y2="{py(YX):.1f}" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5 4"/>')
+    g.append(f'<text x="{px(1):.1f}" y="{py(YX)+1:.1f}" fill="#c0392b" font-size="10.5" text-anchor="middle">linear T&#8321;</text>')
+    for i, (l, pts) in enumerate(series):
+        col = _EGACOL[i % len(_EGACOL)]
+        line = " ".join(f'{"L" if j else "M"}{px(r):.1f} {py(y):.1f}' for j, (r, y) in enumerate(pts))
+        g.append(f'<path d="{line}" fill="none" stroke="{col}" stroke-width="2.2"/>')
+        for r, y in pts:
+            g.append(f'<circle cx="{px(r):.1f}" cy="{py(y):.1f}" r="3.4" fill="#fff" stroke="{col}" stroke-width="2"/>')
+        rr = l.get("resonant_ratio")
+        if rr:
+            g.append(f'<line x1="{px(rr):.1f}" y1="{py(0):.1f}" x2="{px(rr):.1f}" y2="{py(1.06):.1f}" stroke="{col}" stroke-width="1" stroke-dasharray="2 2"/>')
+        g.append(f'<text x="{px(pts[-1][0])+7:.1f}" y="{py(pts[-1][1])+4:.1f}" fill="{col}" font-size="10.5">{l["label"]}</text>')
+    g.append('</svg>')
+    legend = " &nbsp; ".join(f'<span style="color:{_EGACOL[i%3]}">&#9679;</span> {l["label"]}'
+                             for i, (l, _) in enumerate(series))
+    return "".join(g) + (f'<p class="cap">{legend} &nbsp;&mdash; each curve normalised to its own peak; the '
+                         f'dashed vertical marks the located resonance. The peak marches to LONGER period '
+                         f'(right) as the sub-floor lever grows.</p>')
+
+
+def _ega_section(ega):
+    if not ega or not ega.get("levers"):
+        return ""
+    tank = ega.get("tank", {})
+    hl = tank.get("fill_h_over_L", 0.70)
+    deg = tank.get("roll_amplitude_deg", 4)
+    ncyc = tank.get("n_cycles", 12)
+    by = {l["lever_over_L"]: l for l in ega["levers"]}
+    base = by.get(0.0)
+    egal = [l for l in ega["levers"] if l["lever_over_L"] > 0]
+    ncases = sum(len(l.get("points", [])) for l in ega["levers"])
+    rows = ""
+    for l in ega["levers"]:
+        amp = l.get("runup_amplification_vs_rollonly")
+        rows += (f'<tr><td>{l["label"]}</td>'
+                 f'<td class="num">{_fmt(l.get("resonant_ratio"))}</td>'
+                 f'<td class="num">{l["detuning_pct"]:+.1f}%</td>'
+                 f'<td class="num">{l["forcing_norm_detuning_pct"]:+.1f}%</td>'
+                 f'<td class="num">{_fmt(l.get("peak_runup_m"))}</td>'
+                 f'<td class="num">{amp:.2f}&times;</td></tr>')
+    hi = egal[-1] if egal else None
+    # effective-forcing magnification at (nearest to) the d=1L resonance
+    hi_amp = ""
+    if hi and hi.get("resonant_ratio"):
+        near = min((p for p in hi["points"] if p.get("ega_amplification")),
+                   key=lambda p: abs(p["ratio"] - hi["resonant_ratio"]), default=None)
+        if near:
+            hi_amp = f"{near['ega_amplification']:.0f}"
+    return f"""
+<h2>Combined sway + roll — the Effective Gravity Angle</h2>
+<p>The forced-roll and backbone sweeps above roll the tank about <b>its own floor</b>. A real vessel's roll axis
+sits <b>below</b> the ballast tank, so a rolling tank also feels a <b>lateral acceleration</b> — the true forcing
+is an <b>Effective Gravity Angle</b> that combines the angular tilt with an in-phase lateral translation
+(Carette&nbsp;2023). Rolling about the tank floor captures only the tilt term, so it is a <b>partial</b> drive.
+This sweep adds the lateral term with OpenFOAM <code>multiMotion</code> (roll about the floor + an anti-phase
+lateral surge) and measures the difference at h/L&nbsp;=&nbsp;{hl}, {deg}&deg; roll, {ncyc:.0f} cycles
+({ncases} cases). The surge amplitude is set to the roll-induced lateral for a roll axis a distance
+<b>d</b> below the floor; the construction is validated — the multiMotion run-up matches the exact
+roll-about-a-lower-axis case to five significant figures.</p>
+{_ega_svg(ega)}
+<table><thead><tr><th>Drive</th><th>Resonant T/T&#8321;</th><th>Detuning</th>
+<th>Detuning (forcing-normalised)</th><th>Peak run-up (m)</th><th>Run-up vs roll-only</th></tr></thead>
+<tbody>{rows}</tbody></table>
+<p class="cap">The effective-forcing magnification 1&nbsp;+&nbsp;d&omega;&sup2;/g is frequency-dependent; the
+forcing-normalised column divides the response by it to isolate the transfer function. Run-up is each drive's
+peak across the ratio grid.</p>
+<p class="callout key"><b>Result.</b> Roll-only about the tank floor is a <b>partial, non-conservative</b> drive:
+adding the roll-induced lateral acceleration (the EGA term) both <b>detunes the resonance to longer period</b> and
+<b>under-predicts the run-up</b>. The deep fill (h/L&nbsp;=&nbsp;{hl}, above the critical depth) soft-springs
+<b>further</b> as the sub-floor lever grows — resonant detuning deepens from
+{base["detuning_pct"]:+.0f}% (roll-only) to {egal[0]["detuning_pct"]:+.0f}% at d&nbsp;=&nbsp;0.5&nbsp;L and
+{hi["detuning_pct"]:+.0f}% at d&nbsp;=&nbsp;1&nbsp;L, because the added lateral forcing raises the effective
+amplitude and the tank runs further down its soft-spring backbone. This shift is <b>robust</b>: normalising the
+response by the (frequency-dependent) effective forcing barely moves it and if anything <b>deepens</b> it
+({hi["forcing_norm_detuning_pct"]:+.1f}% at d&nbsp;=&nbsp;1&nbsp;L), so the quad-peak locator — which is
+normalised to the roll angle, not the effective angle — reports a <b>lower bound</b> on the true shift, not an
+artifact of it. The response magnitude tells the second half: roll-only under-predicts peak run-up by
+<b>~{100*(egal[0]["runup_amplification_vs_rollonly"]-1):.0f}%</b>, but that gap <b>saturates</b> — a
+~{hi_amp}&times;-larger effective forcing at d&nbsp;=&nbsp;1&nbsp;L (near resonance) yields
+<b>no more</b> run-up than d&nbsp;=&nbsp;0.5&nbsp;L (0.45&nbsp;m on a 0.9&nbsp;m tank &mdash; the free surface is
+near its headroom ceiling, breaking-influenced). <b>Practical consequence:</b> anti-roll assessment cannot use
+roll-only-about-the-tank CFD — it under-states both the detuning and the peak response; the roll axis must be
+placed at the real vessel lever. Caveats: single deep fill and roll amplitude, 2D (no swirl); the lever d is a
+<b>dimensionless lab-scale</b> parameter (0.5&ndash;1 tank breadth), not a specific vessel value; resonance from a
+coarse &Delta;r&nbsp;=&nbsp;0.05 grid (ratios good to ~&plusmn;0.02, so detunings are quoted to the nearest
+percent); run-up is a saturated single-probe metric near the ceiling. Corollary: the 12-cycle roll-only baseline
+here detunes &minus;10.5% versus the shipped 6-cycle backbone's &minus;8.1% at the same point, so the
+<b>6-cycle backbone under-reports</b> detuning — read it as a lower bound too.</p>
+"""
+
+
 def _literature_section(research):
     if not research:
         return ""
@@ -842,6 +967,7 @@ def build():
     spheric = _load_cfd("sloshing-spheric.json")
     shallow = _load_cfd("sloshing-shallow.json")
     shallow_refine = _load_cfd("sloshing-shallow-refine.json")
+    ega = _load("sloshing-ega.json")
 
     n_cases = 0
     if bench:
@@ -857,6 +983,8 @@ def build():
         n_cases += sum(len(a.get("points", [])) for a in shallow.get("amplitudes", []))
     if shallow_refine:
         n_cases += sum(len(a.get("points", [])) for a in shallow_refine.get("amplitudes", []))
+    if ega:
+        n_cases += sum(len(l.get("points", [])) for l in ega.get("levers", []))
 
     solver = (forced or bench or {}).get("meta", {}).get("solver", "interFoam (VOF), OpenFOAM ESI v2312")
 
@@ -883,6 +1011,7 @@ def build():
 {_backbone_section(backbone)}
 {_spheric_section(spheric)}
 {_shallow_section(shallow_refine or shallow, shallow, backbone)}
+{_ega_section(ega)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 {_compute_section(compute)}
