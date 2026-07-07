@@ -22,6 +22,13 @@ gates:
     failure_action: "block"
     warning_action: "report"
 
+  tests-capabilities:
+    enabled: true
+    order: 1
+    description: "Domain tests for capabilities IA inventory (#1444)"
+    domain: "capabilities"
+    test_roots: ["tests/capabilities/"]
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/capabilities/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
   tests-cathodic-protection:
     enabled: true
     order: 1
