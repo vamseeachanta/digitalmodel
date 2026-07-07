@@ -3,6 +3,7 @@
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -158,4 +159,134 @@ def test_committed_inventory_is_fresh():
     assert ci.check(REPO, committed) == 0, (
         "committed inventory drifted — regenerate: "
         ".venv/bin/python scripts/capabilities/build_capabilities_inventory.py"
+    )
+
+
+# ---------------------------------------------------------------------------
+# One-pager coverage ratchet + standards grounding (issue #1456).
+#
+# After #1456 closes, total coverage IS the contract: every live section
+# carries a kind="section" SPECS entry AND its committed PDF. A future section
+# without its one-pager fails CI here — that is the point (plan:
+# workspace-hub docs/plans/2026-07-06-issue-dm-1456-section-onepager-gaps.md).
+# Escape hatch: list a section id under `onepager_exempt:` in
+# capabilities-clusters.yml (empty today; adding to it is a reviewable diff,
+# never a silent bypass).
+# ---------------------------------------------------------------------------
+
+_GH_HREF_RE = re.compile(
+    r"https://github\.com/vamseeachanta/digitalmodel/(?:blob|tree)/main/(.+)"
+)
+# standards-designator tokens inside a SPECS `std` line (publisher prefix
+# followed by a numbered designation, e.g. "DNV-RP-C203", "API RP 2A-WSD")
+_STD_TOKEN_RE = re.compile(
+    r"\b(?:API|DNV|DNVGL|ASME|BS|PD|ISO|EN|NORSOK|NACE|IACS|IMO|MIL|SPE|IIW)"
+    r"[A-Za-z0-9 .()/-]*\d[A-Za-z0-9.()/-]*"
+)
+_BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"}
+
+
+def _onepager_exempt() -> set:
+    return set(yaml.safe_load(CLUSTERS.read_text()).get("onepager_exempt", []))
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", s.upper())
+
+
+def _section_linked_files(section: dict) -> list:
+    """Repo files a live section links: GitHub blob/tree URLs into this repo
+    (dirs recursed) plus page-relative hrefs under docs/api/capabilities/."""
+    out = []
+    for href in section["hrefs"]:
+        m = _GH_HREF_RE.match(href)
+        if m:
+            p = REPO / m.group(1)
+        elif href.startswith("http"):
+            continue  # external non-repo deliverable
+        else:
+            p = (REPO / "docs" / "api" / "capabilities" / href).resolve()
+        if p.is_dir():
+            out += [f for f in sorted(p.rglob("*")) if f.is_file()]
+        elif p.is_file():
+            out.append(p)
+    return out
+
+
+# 10 — ratchet (a): section-kind SPECS ids <-> live section anchors, 1:1
+
+
+def test_specs_section_ids_biject_live_sections():
+    exempt = _onepager_exempt()
+    live = {s["id"] for s in ci.parse_sections(INDEX.read_text())}
+    covered = set(ci.load_pdf_specs(REPO))  # anchors with a sec-* SPECS entry
+    assert exempt <= live, f"stale onepager_exempt entries: {sorted(exempt - live)}"
+    orphans = covered - live
+    assert not orphans, (
+        f"sec-* SPECS entries with no live section: {sorted(orphans)}"
+    )
+    missing = live - covered - exempt
+    assert not missing, (
+        f"live sections without a kind='section' SPECS entry: {sorted(missing)} "
+        "— author the entry in scripts/capabilities/build_onepagers.py or add "
+        "the id to onepager_exempt in capabilities-clusters.yml (reviewed diff)"
+    )
+
+
+# 11 — ratchet (b): every section one-pager PDF is committed (pdf_gaps == []
+# in the inventory is a SPECS-presence signal only; THIS closes the disk hole)
+
+
+def test_every_section_pdf_committed():
+    pdf_by_section = ci.load_pdf_specs(REPO)
+    assert pdf_by_section, "no section-kind SPECS entries found"
+    for sec, rel in sorted(pdf_by_section.items()):
+        p = REPO / rel
+        assert p.exists(), f"one-pager PDF for #{sec} not committed: {rel}"
+        size = p.stat().st_size
+        assert 0 < size < 2_000_000, f"{rel} size {size} outside (0, 2MB)"
+
+
+# 12 — standards grounding (#1391 lesson): every standards token in a
+# section-kind `std` line must grep-match a file that section links
+
+
+def test_specs_standards_grounded():
+    sections = {s["id"]: s for s in ci.parse_sections(INDEX.read_text())}
+    script = REPO / "scripts" / "capabilities" / "build_onepagers.py"
+    spec_ = importlib.util.spec_from_file_location("build_onepagers_g", script)
+    bo = importlib.util.module_from_spec(spec_)
+    spec_.loader.exec_module(bo)
+
+    norm_cache: dict = {}
+
+    def evidence(token: str, files: list) -> bool:
+        want = _norm(token)
+        for f in files:
+            if f.suffix.lower() in _BINARY_SUFFIXES or f.stat().st_size > 2_000_000:
+                continue
+            if f not in norm_cache:
+                try:
+                    norm_cache[f] = _norm(f.read_text(errors="ignore"))
+                except OSError:
+                    norm_cache[f] = ""
+            if want in norm_cache[f]:
+                return True
+        return False
+
+    ungrounded = []
+    for entry in bo.SPECS:
+        if entry.get("kind") != "section":
+            continue
+        anchor = entry["id"][len("sec-"):]
+        section = sections.get(anchor)
+        if section is None:
+            continue  # covered by the bijection test
+        files = _section_linked_files(section)
+        for token in _STD_TOKEN_RE.findall(entry["std"]):
+            if not evidence(token, files):
+                ungrounded.append((entry["id"], token))
+    assert not ungrounded, (
+        f"standards named in `std` lines with zero grep evidence in the "
+        f"section's linked files (overclaim per dm#1391): {ungrounded}"
     )

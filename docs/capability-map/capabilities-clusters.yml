@@ -61,6 +61,11 @@ clusters:
       lifting/lowering dynamics and weather-windowed marine operations.
     sections: [installation]
 
+# Sections allowed to lack a capability one-pager (tests/capabilities ratchet,
+# issue #1456). EMPTY by design — total coverage is the established practice;
+# adding an id here is a reviewable diff, never a silent bypass.
+onepager_exempt: []
+
 # explorer relpath -> section id, for explorers not hyperlinked from any
 # section block (residual joins are declared here, reviewed, never guessed).
 explorer_aliases:

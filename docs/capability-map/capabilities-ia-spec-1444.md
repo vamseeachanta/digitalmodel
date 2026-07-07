@@ -4,7 +4,7 @@
 > `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`
 > Presentation is owned by the capabilities revamp lane (PR #1389 coordination note) — this spec is its input; `index.html` is not edited here.
 
-Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **10** · unlinked explorers: **0**
+Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
 
 ## Cluster taxonomy
 
@@ -64,28 +64,28 @@ Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **10*
 |---|---|---|---|---|
 | [`#ffs`](../api/capabilities/index.html#ffs) | structures-ffs | `docs/api/ffs/riser-joint-acceptance-explorer.html` | `docs/api/capabilities/pdf/sec-ffs.pdf` | unknown |
 | [`#structural`](../api/capabilities/index.html#structural) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-structural.pdf` | unknown |
-| [`#fatigue`](../api/capabilities/index.html#fatigue) | structures-ffs | *gap* | *gap* | 2026-07-04 (#1396) |
+| [`#fatigue`](../api/capabilities/index.html#fatigue) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-fatigue.pdf` | 2026-07-04 (#1396) |
 | [`#hydro`](../api/capabilities/index.html#hydro) | hydro-naval | `docs/api/hydro/ocimf-coefficient-explorer.html` | `docs/api/capabilities/pdf/sec-hydro.pdf` | unknown |
-| [`#cfd`](../api/capabilities/index.html#cfd) | hydro-naval | `docs/api/structural/sloshing-explorer.html` | *gap* | 2026-07-06 (#1442) |
+| [`#cfd`](../api/capabilities/index.html#cfd) | hydro-naval | `docs/api/structural/sloshing-explorer.html` | `docs/api/capabilities/pdf/sec-cfd.pdf` | 2026-07-06 (#1442) |
 | [`#risers`](../api/capabilities/index.html#risers) | pipelines-risers | `docs/api/drilling/drilling-riser-operability-explorer.html` | `docs/api/capabilities/pdf/sec-risers.pdf` | unknown |
-| [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) | pipelines-risers | `docs/api/structural/wall-thickness-explorer.html` | *gap* | 2026-07-04 (#1389) |
+| [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) | pipelines-risers | `docs/api/structural/wall-thickness-explorer.html` | `docs/api/capabilities/pdf/sec-wall-thickness.pdf` | 2026-07-04 (#1389) |
 | [`#subsea`](../api/capabilities/index.html#subsea) | moorings-stationkeeping | *gap* | `docs/api/capabilities/pdf/sec-subsea.pdf` | unknown |
-| [`#viv`](../api/capabilities/index.html#viv) | pipelines-risers | `docs/api/structural/viv-explorer.html` | *gap* | 2026-07-04 (#1396) |
+| [`#viv`](../api/capabilities/index.html#viv) | pipelines-risers | `docs/api/structural/viv-explorer.html` | `docs/api/capabilities/pdf/sec-viv.pdf` | 2026-07-04 (#1396) |
 | [`#installation`](../api/capabilities/index.html#installation) | installation-ops | *gap* | `docs/api/capabilities/pdf/sec-installation.pdf` | unknown |
 | [`#wind`](../api/capabilities/index.html#wind) | field-dev-economics | *gap* | `docs/api/capabilities/pdf/sec-wind.pdf` | unknown |
-| [`#field-development`](../api/capabilities/index.html#field-development) | field-dev-economics | `docs/api/structural/field-economics-explorer.html` | *gap* | 2026-07-04 (#1396) |
+| [`#field-development`](../api/capabilities/index.html#field-development) | field-dev-economics | `docs/api/structural/field-economics-explorer.html` | `docs/api/capabilities/pdf/sec-field-development.pdf` | 2026-07-04 (#1396) |
 | [`#manoeuvring`](../api/capabilities/index.html#manoeuvring) | hydro-naval | `docs/api/hydro/rudder-maneuvering-explorer.html` | `docs/api/capabilities/pdf/sec-manoeuvring.pdf` | unknown |
-| [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) | hydro-naval | `docs/api/structural/ship-resistance-explorer.html` | *gap* | 2026-07-04 (#1394) |
-| [`#geotechnical`](../api/capabilities/index.html#geotechnical) | moorings-stationkeeping | `docs/api/structural/anchor-holding-explorer.html` | *gap* | 2026-07-04 (#1394) |
+| [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) | hydro-naval | `docs/api/structural/ship-resistance-explorer.html` | `docs/api/capabilities/pdf/sec-naval-architecture.pdf` | 2026-07-04 (#1394) |
+| [`#geotechnical`](../api/capabilities/index.html#geotechnical) | moorings-stationkeeping | `docs/api/structural/anchor-holding-explorer.html` | `docs/api/capabilities/pdf/sec-geotechnical.pdf` | 2026-07-04 (#1394) |
 | [`#artificial-lift`](../api/capabilities/index.html#artificial-lift) | wells-drilling-production | *gap* | `docs/api/capabilities/pdf/sec-artificial-lift.pdf` | unknown |
-| [`#production-engineering`](../api/capabilities/index.html#production-engineering) | wells-drilling-production | `docs/api/structural/ipr-explorer.html` | *gap* | 2026-07-04 (#1396) |
+| [`#production-engineering`](../api/capabilities/index.html#production-engineering) | wells-drilling-production | `docs/api/structural/ipr-explorer.html` | `docs/api/capabilities/pdf/sec-production-engineering.pdf` | 2026-07-04 (#1396) |
 | [`#well`](../api/capabilities/index.html#well) | wells-drilling-production | `docs/api/well/casing-design-explorer.html` | `docs/api/capabilities/pdf/sec-well.pdf` | unknown |
-| [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) | wells-drilling-production | `docs/api/structural/pore-pressure-explorer.html` | *gap* | 2026-07-04 (#1396) |
-| [`#cathodic`](../api/capabilities/index.html#cathodic) | structures-ffs | `docs/api/structural/cathodic-protection-explorer.html` | *gap* | 2026-07-04 (#1389) |
+| [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) | wells-drilling-production | `docs/api/structural/pore-pressure-explorer.html` | `docs/api/capabilities/pdf/sec-drilling-engineering.pdf` | 2026-07-04 (#1396) |
+| [`#cathodic`](../api/capabilities/index.html#cathodic) | structures-ffs | `docs/api/structural/cathodic-protection-explorer.html` | `docs/api/capabilities/pdf/sec-cathodic.pdf` | 2026-07-04 (#1389) |
 | [`#corrosion-production`](../api/capabilities/index.html#corrosion-production) | wells-drilling-production | `docs/api/corrosion/galvanic-compatibility-explorer.html`<br>`docs/api/production/scale-si-explorer.html` | `docs/api/capabilities/pdf/sec-corrosion-production.pdf` | unknown |
 | [`#validation`](../api/capabilities/index.html#validation) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-validation.pdf` | unknown |
 
-**PDF gap set (10):** `fatigue`, `cfd`, `wall-thickness`, `viv`, `field-development`, `naval-architecture`, `geotechnical`, `production-engineering`, `drilling-engineering`, `cathodic`
+**PDF gap set (0):** 
 
 **Unlinked explorers:** none
 

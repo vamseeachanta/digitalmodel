@@ -65,7 +65,7 @@ SPECS: list[dict] = [
                   "RSTRENG effective-area and B31G screens validated to published worked examples",
                   "API 579-1 Part 6 pitting (auto-routed from UT grids), Part 12 dent / dent-gouge, and BS 7910 Option-1 FAD weld-flaw envelopes"]),
     dict(id="sec-structural", kind="section", title="Ship structural strength",
-         std="DNV-RP-C201 · IACS UR S11 · class rules", path="capabilities/#structural",
+         std="DNV-RP-C201 · class rules", path="capabilities/#structural",
          blurb="Plate and stiffened-panel buckling for ship structure — plate-field, column and "
                "tripping interaction explored against the governing class code.",
          figures=[("215.61 MPa", "panel tripping f_T"), ("DNV-RP-C201", "governing code")],
@@ -350,7 +350,7 @@ SPECS: list[dict] = [
                               "6-DOF vessel & structure-interface motion via AQWA / OrcaFlex RAOs",
                               "Rolling GO / CAUTION / NO-GO with lead-time to first breach"]),
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
-         std="Gibbs wave equation · Bezerra projections · API 11E", path="capabilities/#artificial-lift",
+         std="Gibbs wave equation · Bezerra projections", path="capabilities/#artificial-lift",
          blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
                "wave-equation solvers, an 18-mode failure-signature library plus a 336-card "
                "example library, ML card classification with a CI drift-guard on every "
@@ -478,6 +478,183 @@ SPECS: list[dict] = [
          bullets=["Current demand with coating breakdown → anode mass → anode count, per DNV-RP-B401",
                   "Coating quality (bare / aged / good / premium) swept against a 10–40 yr design life and seawater climate",
                   "Premium external coating cuts a 4-leg jacket's 25-yr anode mass from ~31.7 t (159 anodes) to ~18.6 t (93)"]),
+
+    # ---- sections added by #1456 (closes the #1444 pdf_gaps set; every
+    # ---- standard in a std line is grep-grounded in a file the section
+    # ---- links — enforced by tests/capabilities test_specs_standards_grounded) ----
+    dict(id="sec-fatigue", kind="section",
+         title="Fatigue & fracture — S-N life and crack growth",
+         std="DNV-RP-C203 · API RP 2A-WSD · BS 7608 · EN 1993-1-9 · NORSOK N-004 · BS 7910",
+         path="capabilities/#fatigue",
+         blurb="A code-referenced fatigue toolkit: a 221-curve S-N library spanning DNV-RP-C203, "
+               "API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004; Efthymiou stress-concentration "
+               "factors for tubular joints; rainflow counting into Miner's-rule damage; "
+               "hotspot-stress extrapolation; and Paris'-law crack growth. Every curve, SCF "
+               "equation and read-out formula carries its clause reference in-code, with numeric "
+               "checks pinned to published tables and hand calculations.",
+         figures=[("221", "S-N curves, 6 standards"), ("17", "standard curve sets"),
+                  ("3", "environments (air / seawater+CP / free corrosion)")],
+         bullets=["Single S-N lookup across 17 standard sets keyed by curve id (e.g. DNV-RP-C203:D:air) with slope, knee and thickness-correction metadata",
+                  "Efthymiou (OTC 4829) SCFs for T/Y and K tubular joints under axial, in-plane and out-of-plane bending, plus DNV plate / weld SCFs",
+                  "Weld-fatigue quick-check: stress-range histogram + weld class → thickness correction → Palmgren-Miner damage, pass/fail and life factor",
+                  "Two- and three-point hotspot-stress extrapolation to the weld toe (DNV-RP-C203 §4.3 · IIW)",
+                  "Paris'-law crack-growth integration (BS 7910) from initial to critical crack size — the fracture-mechanics complement to the S-N route"]),
+    dict(id="sec-cfd", kind="section",
+         title="Computational fluid dynamics (CFD)",
+         std="OpenFOAM v2312 · known-answer verification · VOF / RANS / overset",
+         path="capabilities/#cfd",
+         blurb="Open-source CFD (OpenFOAM) verified against classical analytical and benchmark "
+               "solutions — known-answer verification across steady-laminar, transient-laminar, "
+               "turbulent (RANS), free-surface (VOF), wave-generation, 6-DOF floating-body and "
+               "wave-body interaction (overset) regimes, computed on real OpenFOAM v2312, not "
+               "mocked. Reports are interactive: live charts, scrubbable animations and a member "
+               "VIV lock-in screening calculator.",
+         figures=[("9", "verification cases + RAO spot-check"), ("73", "real 2D sloshing cases"),
+                  ("1.7%", "heave RAO vs long-wave limit")],
+         bullets=["Free-surface (VOF) canon: dam break (Martin & Moyce), numerical wave tank, green-water impact (Kleefsman / MARIN) and forced-roll tank sloshing within 0.29% of the analytical tanh dispersion",
+                  "Overset wave-body interaction: floating-box heave RAO within 1.7% of the long-wave limit, frequency-swept against a frozen potential-flow (BEM) reference",
+                  "Cylinder wave loading vs the exact MacCamy-Fuchs diffraction closed form (3.4% at ka = 0.96) — a case a Morison estimate fails",
+                  "Laminar / turbulent benchmarks: Blasius flat plate, Re=100 Karman street (Strouhal within 0.9%), k-omega SST law-of-the-wall, NACA0012 polar",
+                  "Ballast-tank sloshing study: master curve pinned by measured VOF fields, passive roll-damper reduction, and a run-time estimator calibrated to the machine's own measured runs"]),
+    dict(id="sec-wall-thickness", kind="section",
+         title="Wall thickness — sizing & code checks",
+         std="DNV-ST-F101 · API RP 1111 · ASME B31.4 · ASME B31.8 · PD 8010-2 · ISO 13623 · DNV-ST-F201 · API STD 2RD",
+         path="capabilities/#wall-thickness",
+         blurb="Pipeline and riser wall-thickness sizing and pressure-integrity code checks — one "
+               "geometry / material / loads spec dispatched across ten registered design codes "
+               "(edition-aware: DNV-OS-F101 2007 vs DNV-ST-F101 2021, API RP 1111 3rd vs 4th "
+               "edition), with burst, collapse (solved from the cubic, not tabulated), "
+               "propagation-buckling and combined-loading utilizations, minimum-thickness solvers "
+               "and cross-code comparison reports. Every result carries a code_reference kept in "
+               "sync with the codes register.",
+         figures=[("10", "registered design codes"), ("369", "live engine evaluations"),
+                  ("~19.5 mm", "min wall, pipeline codes")],
+         bullets=["Strategy-registry engine: submarine pipeline, riser LRFD and onshore / transmission codes behind one PipeGeometry / PipeMaterial / DesignLoads spec",
+                  "Edition-aware safety factors with a machine-readable clause / equation manifest per code",
+                  "Cross-code comparison live: the same 12.75″ X65 deepwater line under all registered codes, min wall to pass per code",
+                  "API RP 1111 installation screens — propagating-buckle pressure, transition water depth, buckle-arrestor verdicts",
+                  "Screening-level quick check from a minimal input deck, plus 30 CFR Part 250 regulatory burst / minimum-thickness cards"]),
+    dict(id="sec-viv", kind="section",
+         title="Vortex-induced vibration — screening, frequency & fatigue",
+         std="DNV-RP-C205 · Strouhal · DNV-RP-C203",
+         path="capabilities/#viv",
+         blurb="A first-pass VIV toolkit for tubular members and risers: natural-frequency "
+               "calculation (Euler-Bernoulli beam + tension-controlled string, five boundary "
+               "conditions, fluid added mass), vortex-shedding frequency from the Strouhal "
+               "relation, reduced-velocity lock-in screening with a safety factor, and VIV-induced "
+               "fatigue on DNV-RP-C203 S-N curves — the full-member generalization of the lock-in "
+               "check the CFD Re=100 cylinder card exposes. Backed by unit, CLI and integration "
+               "tests and a standalone CI workflow.",
+         figures=[("4–8", "cross-flow lock-in V_r band"), ("13", "DNV-RP-C203 S-N curves"),
+                  ("5", "beam boundary conditions")],
+         bullets=["Reduced-velocity lock-in screening live: V_r = V/(f_n·D) against the 4–8 cross-flow band with safe / marginal / lock-in status and safety factor",
+                  "Natural frequency from Euler-Bernoulli beam + tensioned-string models, five boundary conditions, fluid added mass",
+                  "Strouhal shedding frequency with Reynolds- and surface-condition-based selection (smooth / rough / straked / helical), plus current-profile sweeps",
+                  "VIV amplitude (A/D) to bending stress range to Palmgren-Miner damage and fatigue life across 13 tabulated S-N curves",
+                  "Config-driven tubular-member workflow emitting CSV result tables, runnable end-to-end from the example input.yml"]),
+    dict(id="sec-field-development", kind="section",
+         title="Field development — concept screening, cost & economics",
+         std="GoM 10-field CAPEX benchmark · DCF NPV / IRR · Arps decline",
+         path="capabilities/#field-development",
+         blurb="The oil-and-gas concept-select twin of the floating-wind LCOE work: screen an "
+               "offshore prospect across four decision axes (schedule, rig-days, driver-level "
+               "CAPEX and lifecycle intervention), rank host concepts (TLP / spar / semi / FPSO / "
+               "subsea tieback), and run pre-tax discounted-cash-flow economics on the survivors. "
+               "All parameters are generic Gulf-of-Mexico defaults from a reviewable YAML; every "
+               "field is an INPUT — no reservoir, flow-assurance or structural simulation is "
+               "solved. Rig demand is reported in days, never $/day.",
+         figures=[("4", "decision axes"), ("10", "GoM benchmark fields"),
+                  ("~$55/bbl", "reference break-even")],
+         bullets=["Four-axis concept screen (schedule weeks, development rig-days, driver-level CAPEX, intervention index) over TLP / spar / semi / FPSO / subsea-tieback hosts",
+                  "CAPEX ranges anchored to 10 GoM reference fields, scaled by a 0.6-power capacity law and a depth factor, with distance-banded subsea-tieback logic",
+                  "Pre-tax DCF economics live: CAPEX selector and oil-price slider drive NPV across break-even, with hyperbolic / harmonic Arps decline and five fiscal regimes in the same engine",
+                  "Field-development layout schematic generator plus a structured catalog of worked reference developments",
+                  "Honesty contract: rule / parameter screening only — rate and well count are inputs, rig demand in days, never $/day"]),
+    dict(id="sec-naval-architecture", kind="section",
+         title="Naval architecture — stability, resistance & hull strength",
+         std="Holtrop-Mennen · IMO IS Code 2008 · IACS UR S11 · DNV-OS-C101",
+         path="capabilities/#naval-architecture",
+         blurb="A ship-design suite beyond the rudder / manoeuvring tools: Holtrop-Mennen "
+               "resistance and powering, IMO intact and damage stability with GZ-curve area "
+               "criteria, IACS hull-girder longitudinal strength and class-rule scantlings, and "
+               "floating-platform stability for FPSO, semi-sub, spar, TLP and barge hulls. Every "
+               "method carries its standard in the code and is pinned to published worked examples "
+               "in dedicated tests.",
+         figures=[("3", "hull forms, live explorer"), ("6", "IMO intact-stability criteria"),
+                  ("5", "floating-platform types")],
+         bullets=["Calm-water resistance and effective power (Holtrop-Mennen) with frictional, wave-making, form and transom components, live over a 6–18 kn sweep",
+                  "GZ righting-arm curves from cross-curves (GZ = KN − KG·sinφ), lost-buoyancy damage method, all six IMO intact-stability criteria — pinned to EN400 worked conditions",
+                  "IACS UR S11 vertical wave bending moment, permissible bending stress 175/k, and the S11A partial-factor ultimate check",
+                  "Prescriptive plate-thickness and lateral-pressure scantling checks to class rules",
+                  "Seakeeping natural periods, simplified RAOs and spectral RMS response; intact / damaged platform stability with wind-heel and area criteria"]),
+    dict(id="sec-geotechnical", kind="section",
+         title="Geotechnical — pile, anchor & foundation capacity",
+         std="API RP 2GEO · DNV-RP-E302 / E303 · DNV-RP-C212 · DNV-RP-F107",
+         path="capabilities/#geotechnical",
+         blurb="Standards-referenced calculators for the seabed side of an offshore mooring or "
+               "foundation problem — the engines that size and check the anchors the "
+               "mooring-resilience atlases place. Pile axial capacity, drag- and suction-anchor "
+               "holding, mudmat bearing and sliding, plus liquefaction triggering and scour "
+               "screening. Each function is a dataclass-returning engine with input validation "
+               "and its governing standard stamped on the result.",
+         figures=[("α / β", "clay / sand skin friction"), ("3", "seabed soil classes, live"),
+                  ("4", "engine families")],
+         bullets=["Driven-pile axial capacity per API RP 2GEO: α method in clay, β method in sand, end bearing, summed layer-by-layer",
+                  "Drag-anchor holding from empirical efficiency factors (DNV-RP-E302, API RP 2SK) live across soft clay / stiff clay / sand; suction-caisson capacity (DNV-RP-E303) in the same engine",
+                  "Mudmat bearing capacity (DNV-RP-C212 / Brinch Hansen) with shape, depth and effective-area corrections, plus base sliding",
+                  "Seed-Idriss / NCEER per-layer liquefaction factor of safety with magnitude scaling",
+                  "DNV-RP-F107 equilibrium scour for pipelines and monopiles and rock-armour thickness"]),
+    dict(id="sec-production-engineering", kind="section",
+         title="Production engineering — nodal analysis & well deliverability",
+         std="Vogel · Fetkovich · Hagedorn-Brown · Brent-method operating point",
+         path="capabilities/#production-engineering",
+         blurb="A node-based well-performance engine: intersect an inflow (IPR) curve with a "
+               "vertical-lift (VLP) pressure traverse to find the operating point, then bound it "
+               "with a confidence band derived from the underlying test-quality score. The "
+               "correlations are textbook and each is unit-tested against its published equation; "
+               "the distinctive layer is physics-based data reconciliation — GIGO divergence and "
+               "nonlinearity flags that catch a bad test record before it corrupts the nodal "
+               "model. Distinct from the rod-pump dynacard diagnostics under Artificial lift.",
+         figures=[("±5 / ±15 / ±30%", "confidence bands (G/A/R)"),
+                  ("≥20%", "GIGO divergence flag")],
+         bullets=["Operating point by solving IPR(q) = VLP(q) with Brent's method, bracketed from zero to absolute open flow",
+                  "Vogel / Fetkovich / Klins-Clark inflow and Hagedorn-Brown / Beggs-Brill outflow correlations, each unit-tested against its published equation",
+                  "Green / Amber / Red confidence band keyed to the test-quality score",
+                  "ESP sizing from total dynamic head (net lift + Hazen-Williams tubing friction + discharge head) with stage-count, motor and operating-range pass/fail",
+                  "Test-to-model reconciliation: QC score, nonlinearity detection (transient / slug / gas-lift instability / high watercut), GIGO divergence diagnosis and recommendations"]),
+    dict(id="sec-drilling-engineering", kind="section",
+         title="Drilling engineering — pore pressure, hydraulics & well control",
+         std="Eaton · Bowers · Burkhardt · API RP 13D",
+         path="capabilities/#drilling-engineering",
+         blurb="Closed-form, license-free drilling-geomechanics and hydraulics engines: "
+               "multi-method pore-pressure prediction with explicit P10/P50/P90 uncertainty and a "
+               "communicated safe mud-weight window, swab/surge tripping limits, annular "
+               "hydraulics and ECD, ROP models, and a real-time dysfunction / kick detector. "
+               "Every method is a published closed form with unit tests pinned to hand calcs and "
+               "standard limiting cases — distinct from the casing-design explorer under Well "
+               "construction, which covers tubular strength.",
+         figures=[("P10/P50/P90", "pore-pressure uncertainty"), ("8", "Bourgoyne-Young ROP parameters")],
+         bullets=["Multi-method pore pressure live: Eaton and Bowers gradients diverging down an overpressured well, governing minimum mud weight and the kick/loss mud-weight window",
+                  "Swab / surge from Burkhardt's clinging constant through Bingham annular friction, solved for the max trip speed that keeps BHP inside the window",
+                  "Generalised annular hydraulics per API RP 13D (velocity, frictional loss, ECD, cuttings transport) for arbitrary pipe-in-hole geometry",
+                  "Bourgoyne-Young 8-parameter and Warren power-law ROP models",
+                  "Real-time dysfunction & kick detector over surface-parameter windows: stick-slip, washout, bit-balling, instability and kick with severity and mitigation"]),
+    dict(id="sec-cathodic", kind="section",
+         title="Cathodic protection",
+         std="DNV-RP-B401 · DNV-RP-F103 · ISO 15589-1 / -2 · API RP 1632 · NACE SP0169",
+         path="capabilities/#cathodic",
+         blurb="Sacrificial-anode and impressed-current CP design across structure types — "
+               "current demand with coating breakdown, anode mass / resistance / output and "
+               "spacing, protected length, depletion & retrofit remaining life, survey "
+               "interpretation (CIS / DCVG) and stray-current screens. Edition-aware DNV-RP-B401 "
+               "(2017 / 2021) backed by doc-verified test vectors — 500+ tests across the module.",
+         figures=[("18", "CP engine modules"), ("500+", "doc-verified tests"),
+                  ("31.7 → 18.6 t", "bare vs premium coating, 25-yr jacket")],
+         bullets=["Current demand with coating breakdown → anode mass → anode count on the McCoy / Dwight resistance formulas, edition-aware DNV-RP-B401",
+                  "Structure-type demo set: jacket, pipeline, manifold, monopile and FPSO hull as durable registry workflows with pinned inputs and CI tests",
+                  "Pipeline CP: DNV-RP-F103 protected length, ISO 15589-1 / -2 and bracelet anodes; onshore galvanic + ICCP rectifier and ground-bed sizing per API RP 1632",
+                  "Depletion & retrofit remaining life, CIS / DCVG survey interpretation, AC / DC stray-current interference screens",
+                  "Factory-applied coating selection (DNV-RP-F106) with per-system breakdown factors feeding the current demand"]),
 ]
 
 

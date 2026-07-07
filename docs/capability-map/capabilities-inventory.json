@@ -72,18 +72,7 @@
       "value_statement": "Getting hardware to the seabed safely — installability screening, lifting/lowering dynamics and weather-windowed marine operations."
     }
   ],
-  "pdf_gaps": [
-    "fatigue",
-    "cfd",
-    "wall-thickness",
-    "viv",
-    "field-development",
-    "naval-architecture",
-    "geotechnical",
-    "production-engineering",
-    "drilling-engineering",
-    "cathodic"
-  ],
+  "pdf_gaps": [],
   "recent": [
     {
       "date": "2026-07-06",
@@ -154,7 +143,7 @@
       "cluster": "structures-ffs",
       "explorers": [],
       "id": "fatigue",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-fatigue.pdf",
       "title": "Fatigue &amp; fracture &mdash; S-N life and crack growth"
     },
     {
@@ -177,7 +166,7 @@
         "docs/api/structural/sloshing-explorer.html"
       ],
       "id": "cfd",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-cfd.pdf",
       "title": "Computational fluid dynamics (CFD)"
     },
     {
@@ -200,7 +189,7 @@
         "docs/api/structural/wall-thickness-explorer.html"
       ],
       "id": "wall-thickness",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-wall-thickness.pdf",
       "title": "Wall thickness &mdash; sizing &amp; code checks"
     },
     {
@@ -221,7 +210,7 @@
         "docs/api/structural/viv-explorer.html"
       ],
       "id": "viv",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-viv.pdf",
       "title": "Vortex-induced vibration &mdash; screening, frequency &amp; fatigue"
     },
     {
@@ -250,7 +239,7 @@
         "docs/api/structural/field-economics-explorer.html"
       ],
       "id": "field-development",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-field-development.pdf",
       "title": "Field development &mdash; concept screening, cost &amp; economics"
     },
     {
@@ -273,7 +262,7 @@
         "docs/api/structural/ship-resistance-explorer.html"
       ],
       "id": "naval-architecture",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-naval-architecture.pdf",
       "title": "Naval architecture &mdash; stability, resistance &amp; hull strength"
     },
     {
@@ -286,7 +275,7 @@
         "docs/api/structural/anchor-holding-explorer.html"
       ],
       "id": "geotechnical",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-geotechnical.pdf",
       "title": "Geotechnical &mdash; pile, anchor &amp; foundation capacity"
     },
     {
@@ -307,7 +296,7 @@
         "docs/api/structural/ipr-explorer.html"
       ],
       "id": "production-engineering",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-production-engineering.pdf",
       "title": "Production engineering &mdash; nodal analysis &amp; well deliverability"
     },
     {
@@ -330,7 +319,7 @@
         "docs/api/structural/pore-pressure-explorer.html"
       ],
       "id": "drilling-engineering",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-drilling-engineering.pdf",
       "title": "Drilling engineering &mdash; pore pressure, hydraulics &amp; well control"
     },
     {
@@ -343,7 +332,7 @@
         "docs/api/structural/cathodic-protection-explorer.html"
       ],
       "id": "cathodic",
-      "pdf": null,
+      "pdf": "docs/api/capabilities/pdf/sec-cathodic.pdf",
       "title": "Cathodic protection"
     },
     {
