@@ -7,6 +7,7 @@ backtick-wrapped so `scripts/ci/detect_touched_domains.py` can parse them.
 | Domain | Test roots | Purpose/deps/notes |
 | --- | --- | --- |
 | asset-integrity | `tests/asset_integrity/`, `tests/engineering_validation/`, `tests/test_wall_thickness.py`, `tests/test_wall_thickness_api_rp_2rd.py`, `tests/test_wall_thickness_api_std_2rd.py`, `tests/test_wall_thickness_codes/`, `tests/test_wall_thickness_comparison.py`, `tests/test_wall_thickness_dnv_editions.py`, `tests/test_wall_thickness_editions.py`, `tests/test_wall_thickness_interactive_report.py`, `tests/test_wall_thickness_lookup.py`, `tests/test_wall_thickness_mt_report.py`, `tests/test_wall_thickness_parametric.py`, `tests/test_wall_thickness_phases.py`, `tests/materials/` | Fitness-for-service, pipe sizing, wall thickness, material grade matrix, and integrity calculations. |
+| capabilities | `tests/capabilities/` | Capabilities-page IA inventory: section census bijection, cluster totality, reference-index joins, freshness gate (#1444). |
 | cathodic-protection | `tests/cathodic_protection/` | Cathodic protection design, monitoring, surveys, standards, and reports. |
 | citations | `tests/citations/` | Citation registry and schema validation. |
 | contracts | `tests/contracts/`, `tests/compat/`, `tests/cross_repo/`, `tests/docs/`, `tests/test_apistd2rd_migration.py`, `tests/test_module_reorganization.py`, `tests/test_restructure_compat.py`, `tests/test_units.py`, `tests/test_validation_utils.py` | External package contracts, routing/docs contracts, compatibility, and migration guards. |

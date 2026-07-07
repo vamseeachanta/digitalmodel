@@ -1,0 +1,36 @@
+# ABOUTME: Explicit recency metadata for capabilities sections (issue #1444).
+# ABOUTME: Git-derived dating is IMPOSSIBLE here — sections live inside one
+# ABOUTME: index.html AND repo history was truncated by the 2026-07 git slim —
+# ABOUTME: so recency is frozen PR evidence, maintained by hand on each merge.
+#
+# Format: sections.<id>: {date: YYYY-MM-DD, pr: NNNN} | "unknown"
+# Entries without evidence stay "unknown" (rendered honestly, never dated).
+
+schema_version: "1.0"
+recent_n: 8
+
+sections:
+  # 2026-07-04 restoration + expansion waves (PR evidence from gh, 2026-07-06)
+  wall-thickness: {date: "2026-07-04", pr: 1389}
+  cathodic: {date: "2026-07-04", pr: 1389}
+  naval-architecture: {date: "2026-07-04", pr: 1394}
+  geotechnical: {date: "2026-07-04", pr: 1394}
+  viv: {date: "2026-07-04", pr: 1396}
+  fatigue: {date: "2026-07-04", pr: 1396}
+  production-engineering: {date: "2026-07-04", pr: 1396}
+  drilling-engineering: {date: "2026-07-04", pr: 1396}
+  field-development: {date: "2026-07-04", pr: 1396}
+  cfd: {date: "2026-07-06", pr: 1442}
+  # pre-slim sections — no recoverable evidence (history truncated)
+  ffs: unknown
+  structural: unknown
+  hydro: unknown
+  risers: unknown
+  subsea: unknown
+  installation: unknown
+  wind: unknown
+  manoeuvring: unknown
+  artificial-lift: unknown
+  well: unknown
+  corrosion-production: unknown
+  validation: unknown

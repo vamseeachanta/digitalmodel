@@ -1,0 +1,69 @@
+# ABOUTME: Machine source-of-truth for the capabilities-page cluster taxonomy
+# ABOUTME: (issue #1444). The IA spec + inventory render FROM this file.
+#
+# Contract: every <section id> on docs/api/capabilities/index.html appears in
+# EXACTLY one cluster (totality + disjointness are test-enforced against the
+# live page census — a new section that skips this file fails CI).
+# Labels/membership are the owner's review surface: edit here, regenerate.
+
+schema_version: "1.0"
+
+clusters:
+  - key: structures-ffs
+    label: Structures & Fitness-for-Service
+    value_statement: >-
+      Strength, fatigue and remaining-life decisions for plates, panels and
+      aging assets — field measurement to code verdict, with the validation
+      table anchoring every engine to a published golden case.
+    sections: [structural, fatigue, ffs, cathodic, validation]
+
+  - key: pipelines-risers
+    label: Pipelines & Risers
+    value_statement: >-
+      Wall sizing, code checks and vortex-induced-vibration screening for
+      flowlines, pipelines and riser systems across 10+ design codes.
+    sections: [risers, wall-thickness, viv]
+
+  - key: moorings-stationkeeping
+    label: Moorings, Anchors & Subsea
+    value_statement: >-
+      Stationkeeping design and subsea hardware — mooring strength and
+      fatigue, anchor holding capacity, and foundation geotechnics.
+    sections: [subsea, geotechnical]
+
+  - key: hydro-naval
+    label: Hydrodynamics & Naval Architecture
+    value_statement: >-
+      Vessel and floating-body behaviour — diffraction, seakeeping, CFD,
+      manoeuvring and ship-form performance from hull lines to RAOs.
+    sections: [hydro, cfd, manoeuvring, naval-architecture]
+
+  - key: wells-drilling-production
+    label: Wells, Drilling & Production
+    value_statement: >-
+      The well axis end-to-end — casing and drilling engineering, pore
+      pressure, artificial lift, production chemistry and flow assurance.
+    sections:
+      [well, drilling-engineering, artificial-lift, production-engineering,
+       corrosion-production]
+
+  - key: field-dev-economics
+    label: Field Development & Economics
+    value_statement: >-
+      Concept-to-cashflow screening — field development options, floating
+      wind TOTEX/LCOE and NPV levers over real project structures.
+    sections: [field-development, wind]
+
+  - key: installation-ops
+    label: Installation & Marine Operations
+    value_statement: >-
+      Getting hardware to the seabed safely — installability screening,
+      lifting/lowering dynamics and weather-windowed marine operations.
+    sections: [installation]
+
+# explorer relpath -> section id, for explorers not hyperlinked from any
+# section block (residual joins are declared here, reviewed, never guessed).
+explorer_aliases:
+  # tank-sloshing lives in the CFD-study family (PRs #1424/#1428/#1443) but
+  # the index's cfd section does not hyperlink it — owner may re-home it.
+  docs/api/structural/sloshing-explorer.html: cfd
