@@ -2,7 +2,7 @@
 
 Canonical standard for the designed pages under `docs/api/**` (GitHub Pages).
 Ref: digitalmodel#1471 (epic) · #1473 (this doc). Reference implementation:
-[`hydro/short-horizon-motion-forecast.html`](hydro/short-horizon-motion-forecast.html).
+[`hydro/short-horizon-motion-forecast.html`](https://vamseeachanta.github.io/digitalmodel/hydro/short-horizon-motion-forecast.html).
 
 > **Publish-path note.** Pages publishes `docs/api/` as the **site root**:
 > `docs/api/hydro/x.html` → `/digitalmodel/hydro/x.html`, and
