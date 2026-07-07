@@ -203,6 +203,27 @@ def test_forced_roll_uses_yaw_about_z_at_floor_centre(tmp_path) -> None:
     assert cfg.motion().motion_type is MotionType.YAW
 
 
+def test_forced_roll_axis_depth_drops_origin(tmp_path) -> None:
+    # EGA-via-roll-axis-depth: the rotation origin drops below the floor.
+    cfg = SloshingForcedRollConfig(roll_axis_depth_m=0.9)
+    dmd = (build_forced_roll_case(cfg, tmp_path) / "constant" / "dynamicMeshDict").read_text()
+    assert f"origin      ({0.5 * cfg.breadth:.10g} -0.9 0)" in dmd
+    assert not cfg.is_combined_motion  # single rotating DOF, not multiMotion
+
+
+def test_forced_roll_ega_sway_uses_multimotion(tmp_path) -> None:
+    # Combined sway+roll (EGA) => multiMotion superposition of roll + surge.
+    cfg = SloshingForcedRollConfig(sway_amplitude_m=0.063, sway_phase_shift_s=0.5)
+    assert cfg.is_combined_motion
+    dmd = (build_forced_roll_case(cfg, tmp_path) / "constant" / "dynamicMeshDict").read_text()
+    assert "multiMotion" in dmd
+    assert "oscillatingRotatingMotion" in dmd and "oscillatingLinearMotion" in dmd
+    assert "amplitude   (0.063 0 0);" in dmd
+    assert "phaseShift  0.5;" in dmd
+    # roll still about the floor centre (moment reference stays put)
+    assert f"origin      ({0.5 * cfg.breadth:.10g} 0 0)" in dmd
+
+
 def test_forced_roll_moving_walls(tmp_path) -> None:
     case_dir = build_forced_roll_case(SloshingForcedRollConfig(), tmp_path)
     u = (case_dir / "0" / "U").read_text()

@@ -15,6 +15,7 @@ from digitalmodel.solvers.openfoam.motion import (
     PrescribedMotion,
     render_dynamic_mesh_dict,
     render_dynamic_mesh_dict_body,
+    render_multi_motion_body,
     write_dynamic_mesh_dict,
 )
 from digitalmodel.solvers.openfoam.case_builder import OpenFOAMCaseBuilder
@@ -201,3 +202,41 @@ class TestCaseBuilderIntegration:
         motion = PrescribedMotion(MotionType.ROLL, amplitude=8.0, period=18.0)
         setup = SloshingSetup(motion=motion)
         assert setup.case.motion is motion
+
+
+class TestMultiMotion:
+    """Combined-DOF superposition via OpenFOAM ``multiMotion`` (EGA drive)."""
+
+    def _ega(self):
+        roll = PrescribedMotion(MotionType.YAW, amplitude=4.0, period=1.0,
+                                origin=(0.45, 0.0, 0.0))
+        sway = PrescribedMotion(MotionType.SURGE, amplitude=0.063, period=1.0,
+                                phase_shift_s=0.5)
+        return render_multi_motion_body([("roll", roll), ("sway", sway)])
+
+    def test_multi_motion_wraps_both_sub_motions(self):
+        body = self._ega()
+        assert "solidBodyMotionFunction multiMotion;" in body
+        assert "multiMotionCoeffs" in body
+        # both sub-motions present under named sub-dicts
+        assert "roll\n    {" in body and "sway\n    {" in body
+        assert "oscillatingRotatingMotion" in body
+        assert "oscillatingLinearMotion" in body
+        # rotation about the floor centre, sway on x with its phase shift
+        assert "amplitude   (0 0 4);" in body
+        assert "amplitude   (0.063 0 0);" in body
+        assert "phaseShift  0.5;" in body
+
+    def test_multi_motion_keeps_solid_body_solver(self):
+        body = self._ega()
+        assert "dynamicMotionSolverFvMesh" in body
+        assert "motionSolver     solidBody;" in body
+
+    def test_multi_motion_requires_two_sub_motions(self):
+        roll = PrescribedMotion(MotionType.YAW, amplitude=4.0, period=1.0)
+        with pytest.raises(ValueError):
+            render_multi_motion_body([("roll", roll)])
+
+    def test_phase_shift_omitted_when_zero(self):
+        m = PrescribedMotion(MotionType.SURGE, amplitude=0.05, period=1.0)
+        assert "phaseShift" not in render_dynamic_mesh_dict_body(m)

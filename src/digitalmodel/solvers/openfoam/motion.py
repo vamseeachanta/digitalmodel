@@ -91,6 +91,7 @@ class PrescribedMotion:
     amplitude: float
     period: float
     origin: Vec3 = (0.0, 0.0, 0.0)
+    phase_shift_s: float = 0.0  # translational DOFs only: x = A*sin(omega*(t+phi))
 
     def __post_init__(self) -> None:
         if self.period <= 0.0:
@@ -160,14 +161,14 @@ def _vec(v: Vec3) -> str:
     return f"({_fmt(v[0])} {_fmt(v[1])} {_fmt(v[2])})"
 
 
-def render_dynamic_mesh_dict_body(motion: PrescribedMotion) -> str:
-    """Return the ``dynamicMeshDict`` entries (no FoamFile header).
+def _motion_coeffs(motion: PrescribedMotion) -> str:
+    """The ``solidBodyMotionFunction <type>; <type>Coeffs {...}`` block for one DOF.
 
-    Suitable for embedding under a caller-supplied header (e.g. the
-    ``OpenFOAMCaseBuilder`` header) or for the standalone writer below.
+    Reused by the single-DOF renderer and by the ``multiMotion`` superposition
+    (each sub-motion is one of these blocks under a named sub-dict).
     """
     if motion.motion_type.is_rotational:
-        coeffs = (
+        return (
             "solidBodyMotionFunction oscillatingRotatingMotion;\n"
             "oscillatingRotatingMotionCoeffs\n"
             "{\n"
@@ -176,26 +177,80 @@ def render_dynamic_mesh_dict_body(motion: PrescribedMotion) -> str:
             f"    amplitude   {_vec(motion.amplitude_vector)};  // degrees, Euler angles\n"
             "}\n"
         )
-    else:
-        coeffs = (
-            "solidBodyMotionFunction oscillatingLinearMotion;\n"
-            "oscillatingLinearMotionCoeffs\n"
-            "{\n"
-            f"    amplitude   {_vec(motion.amplitude_vector)};  // metres\n"
-            f"    omega       {_fmt(motion.omega)};  // rad/s\n"
-            "}\n"
-        )
-
+    # oscillatingLinearMotion: x = amplitude*sin(omega*(t + phaseShift)).
+    phase = (f"    phaseShift  {_fmt(motion.phase_shift_s)};  // s\n"
+             if motion.phase_shift_s else "")
     return (
-        f"// Prescribed single-DOF forcing: {motion.motion_type.value}, "
-        f"A={_fmt(motion.amplitude)} "
-        f"{'deg' if motion.motion_type.is_rotational else 'm'}, "
-        f"T={_fmt(motion.period)} s (omega={_fmt(motion.omega)} rad/s)\n"
+        "solidBodyMotionFunction oscillatingLinearMotion;\n"
+        "oscillatingLinearMotionCoeffs\n"
+        "{\n"
+        f"    amplitude   {_vec(motion.amplitude_vector)};  // metres\n"
+        f"    omega       {_fmt(motion.omega)};  // rad/s\n"
+        f"{phase}"
+        "}\n"
+    )
+
+
+def _solid_body_header(comment: str) -> str:
+    return (
+        f"// {comment}\n"
         "// ESI whole-mesh rigid motion (entire mesh moves; no sub-zone).\n"
         "dynamicFvMesh    dynamicMotionSolverFvMesh;\n"
         "motionSolverLibs (fvMotionSolvers);\n"
         "motionSolver     solidBody;\n\n"
-        f"{coeffs}"
+    )
+
+
+def render_dynamic_mesh_dict_body(motion: PrescribedMotion) -> str:
+    """Return the ``dynamicMeshDict`` entries (no FoamFile header).
+
+    Suitable for embedding under a caller-supplied header (e.g. the
+    ``OpenFOAMCaseBuilder`` header) or for the standalone writer below.
+    """
+    comment = (
+        f"Prescribed single-DOF forcing: {motion.motion_type.value}, "
+        f"A={_fmt(motion.amplitude)} "
+        f"{'deg' if motion.motion_type.is_rotational else 'm'}, "
+        f"T={_fmt(motion.period)} s (omega={_fmt(motion.omega)} rad/s)"
+    )
+    return _solid_body_header(comment) + _motion_coeffs(motion)
+
+
+def render_multi_motion_body(motions: List[Tuple[str, PrescribedMotion]]) -> str:
+    """Return ``dynamicMeshDict`` entries for a SUPERPOSITION of DOFs via
+    OpenFOAM ``multiMotion`` (the sub-motions' rigid transforms are composed).
+
+    Args:
+        motions: ordered ``(label, PrescribedMotion)`` pairs; each becomes a
+            named sub-dict under ``multiMotionCoeffs``. Order sets the septernion
+            composition order (``multiMotion`` folds them left-to-right). For a
+            combined roll + lateral-sway (Effective-Gravity-Angle) drive, list
+            the rotation first then the translation.
+
+    The physical use is the EGA excitation (Carette 2023): a rolling tank whose
+    roll axis sits below the tank also feels a lateral acceleration, so the true
+    forcing combines an angular tilt (oscillatingRotatingMotion) with an in-phase
+    lateral translation (oscillatingLinearMotion) — roll-only is a partial drive.
+    """
+    if len(motions) < 2:
+        raise ValueError("multiMotion needs at least two sub-motions")
+    subs = []
+    for label, m in motions:
+        body = _motion_coeffs(m).rstrip("\n")
+        indented = "\n".join("        " + ln if ln else "" for ln in body.split("\n"))
+        subs.append(f"    {label}\n    {{\n{indented}\n    }}\n")
+    desc = " + ".join(
+        f"{lbl}:{m.motion_type.value} A={_fmt(m.amplitude)}"
+        f"{'deg' if m.motion_type.is_rotational else 'm'}"
+        f"{f' phi={_fmt(m.phase_shift_s)}s' if m.phase_shift_s else ''}"
+        for lbl, m in motions)
+    T = motions[0][1].period
+    return (
+        _solid_body_header(f"Prescribed MULTI-DOF forcing ({desc}), T={_fmt(T)} s")
+        + "solidBodyMotionFunction multiMotion;\n"
+        + "multiMotionCoeffs\n{\n"
+        + "".join(subs)
+        + "}\n"
     )
 
 

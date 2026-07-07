@@ -55,7 +55,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-from ..motion import MotionType, PrescribedMotion, render_dynamic_mesh_dict_body
+from ..motion import (
+    MotionType,
+    PrescribedMotion,
+    render_dynamic_mesh_dict_body,
+    render_multi_motion_body,
+)
 from ..partial_fill import (
     partial_fill_box,
     render_set_fields_dict_body,
@@ -187,6 +192,19 @@ class SloshingForcedRollConfig:
     n_cycles: float = 6.0
     field_write_interval: float = 0.05
     name: str = "validation_sloshing_spheric_test10"
+    # --- Effective-Gravity-Angle (combined sway+roll) excitation (Carette 2023).
+    # A real vessel's roll axis sits BELOW the ballast tank, so a rolling tank
+    # also feels a lateral acceleration; roll-only about the tank is a partial
+    # (conservative) drive. Two equivalent representations:
+    #   roll_axis_depth_m > 0 : roll about an axis this far below the tank floor
+    #       (exact rigid roll about the lower axis — the origin drops to -depth).
+    #   sway_amplitude_m > 0  : superpose an independent lateral SURGE on the roll
+    #       about the floor via OpenFOAM multiMotion (general seaway: arbitrary
+    #       amplitude + phase). sway_phase_shift_s offsets it from the roll.
+    # Set at most one (they overlap physically); the driver picks the renderer.
+    roll_axis_depth_m: float = 0.0
+    sway_amplitude_m: float = 0.0
+    sway_phase_shift_s: float = 0.0
 
     @property
     def cell_size(self) -> float:
@@ -231,8 +249,9 @@ class SloshingForcedRollConfig:
 
     @property
     def roll_origin(self) -> Tuple[float, float, float]:
-        """Rotation axis at the centre of the tank floor (m)."""
-        return (0.5 * self.breadth, 0.0, 0.0)
+        """Rotation axis at the centre of the tank floor (m), dropped by
+        ``roll_axis_depth_m`` to place it below the tank for an EGA drive."""
+        return (0.5 * self.breadth, -self.roll_axis_depth_m or 0.0, 0.0)
 
     def motion(self) -> PrescribedMotion:
         """Prescribed forced roll = in-plane rotation about z (engine YAW)."""
@@ -242,6 +261,24 @@ class SloshingForcedRollConfig:
             period=self.drive_period,
             origin=self.roll_origin,
         )
+
+    @property
+    def is_combined_motion(self) -> bool:
+        """True when an independent lateral sway is superposed on the roll
+        (Effective-Gravity-Angle drive via multiMotion)."""
+        return self.sway_amplitude_m > 0.0
+
+    def motions(self) -> List[Tuple[str, PrescribedMotion]]:
+        """Ordered ``(label, motion)`` pairs for the multiMotion superposition:
+        roll (about the floor) + an independent lateral SURGE. Only meaningful
+        when ``is_combined_motion``."""
+        roll = PrescribedMotion(
+            MotionType.YAW, amplitude=self.roll_amplitude_deg,
+            period=self.drive_period, origin=(0.5 * self.breadth, 0.0, 0.0))
+        sway = PrescribedMotion(
+            MotionType.SURGE, amplitude=self.sway_amplitude_m,
+            period=self.drive_period, phase_shift_s=self.sway_phase_shift_s)
+        return [("roll", roll), ("sway", sway)]
 
 
 # ---------------------------------------------------------------------------
@@ -450,11 +487,16 @@ boundaryField
 """
 
 
-def _dynamic_mesh_dict_text(motion: PrescribedMotion) -> str:
-    """A complete constant/dynamicMeshDict for the forced-roll case (reuses #658)."""
-    return _hdr("dictionary", "dynamicMeshDict") + "\n" + render_dynamic_mesh_dict_body(
-        motion
-    ) + "\n"
+def _dynamic_mesh_dict_text(config: SloshingForcedRollConfig) -> str:
+    """A complete constant/dynamicMeshDict for the forced-roll case (reuses #658).
+
+    Single-DOF roll unless an EGA sway is configured, in which case the roll and
+    lateral SURGE are superposed via multiMotion."""
+    if config.is_combined_motion:
+        body = render_multi_motion_body(config.motions())
+    else:
+        body = render_dynamic_mesh_dict_body(config.motion())
+    return _hdr("dictionary", "dynamicMeshDict") + "\n" + body + "\n"
 
 
 # Default name of the tank roll-reaction moment forces functionObject (#641).
@@ -721,7 +763,7 @@ def build_forced_roll_case(
         control=control,
         setfields=setfields,
         u_field=_FIELD_U_MOVING,
-        dynamic_mesh=_dynamic_mesh_dict_text(config.motion()),
+        dynamic_mesh=_dynamic_mesh_dict_text(config),
         provenance=_forced_roll_provenance(config),
     )
 
