@@ -1,0 +1,397 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_shallow_refine.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "epic": "#1429",
+    "issue": "#1433",
+    "g": 9.80665,
+    "purpose": "refinement of the shipped h/L=0.15 shallow sweep (sloshing-shallow.json): finer ratio grid + 16-cycle records to test whether the amplitude-dependent hardening trend survives sub-grid interpolation",
+    "critical_depth_h_over_L": 0.34,
+    "resonance_locator": "quadrature (damping) coefficient peak \u2014 phase-based, per B\u00e4uerlein & Avila (2021)",
+    "free_decay_anchor": "h/L=0.15 free-decay: measured f1 within 0.28% of linear tanh at small amplitude (sloshing-cfd-benchmark.json)",
+    "note": "argmax_ratio is the on-grid quadrature-coefficient maximum; resonant_ratio adds the 3-point sub-grid parabola. Bore indicators from the wall-probe tail (last 60%): asymmetry = crest/trough; runup_over_h = runup / still depth."
+  },
+  "tank": {
+    "shape": "rectangular",
+    "breadth_m": 0.9,
+    "tank_height_m": 0.9,
+    "fill_h_over_L": 0.15,
+    "fill_depth_m": 0.135,
+    "T1_analytical_s": 1.62045,
+    "cells_per_breadth": 60,
+    "n_cycles": 16.0
+  },
+  "amplitudes": [
+    {
+      "roll_deg": 1.0,
+      "resonant_ratio": 0.9303,
+      "freq_ratio": 1.0749,
+      "detuning_pct": 7.49,
+      "argmax_ratio": 0.925,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.22043,
+      "peak_runup_over_h": 1.6328,
+      "peak_asymmetry": 4.3851,
+      "points": [
+        {
+          "ratio": 0.875,
+          "drive_period_s": 1.41789,
+          "runup_amp_m": 0.058167,
+          "quad_coeff": 0.08115,
+          "asymmetry": 2.9972,
+          "runup_over_h": 0.4309,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.9,
+          "drive_period_s": 1.4584,
+          "runup_amp_m": 0.184211,
+          "quad_coeff": 0.61387,
+          "asymmetry": 4.1739,
+          "runup_over_h": 1.3645,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.925,
+          "drive_period_s": 1.49891,
+          "runup_amp_m": 0.220432,
+          "quad_coeff": 1.17785,
+          "asymmetry": 4.3851,
+          "runup_over_h": 1.6328,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.53942,
+          "runup_amp_m": 0.186593,
+          "quad_coeff": 0.95091,
+          "asymmetry": 4.2079,
+          "runup_over_h": 1.3822,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.975,
+          "drive_period_s": 1.57994,
+          "runup_amp_m": 0.143102,
+          "quad_coeff": 0.43358,
+          "asymmetry": 3.7743,
+          "runup_over_h": 1.06,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.62045,
+          "runup_amp_m": 0.119259,
+          "quad_coeff": 0.21822,
+          "asymmetry": 4.1521,
+          "runup_over_h": 0.8834,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "roll_deg": 2.0,
+      "resonant_ratio": 0.9346,
+      "freq_ratio": 1.07,
+      "detuning_pct": 7.0,
+      "argmax_ratio": 0.925,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.23443,
+      "peak_runup_over_h": 1.7366,
+      "peak_asymmetry": 4.1091,
+      "points": [
+        {
+          "ratio": 0.875,
+          "drive_period_s": 1.41789,
+          "runup_amp_m": 0.155917,
+          "quad_coeff": 0.4623,
+          "asymmetry": 3.775,
+          "runup_over_h": 1.1549,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.9,
+          "drive_period_s": 1.4584,
+          "runup_amp_m": 0.218033,
+          "quad_coeff": 1.06882,
+          "asymmetry": 4.0029,
+          "runup_over_h": 1.6151,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.925,
+          "drive_period_s": 1.49891,
+          "runup_amp_m": 0.234434,
+          "quad_coeff": 1.39505,
+          "asymmetry": 4.1091,
+          "runup_over_h": 1.7366,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.53942,
+          "runup_amp_m": 0.232571,
+          "quad_coeff": 1.35241,
+          "asymmetry": 3.4644,
+          "runup_over_h": 1.7227,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.975,
+          "drive_period_s": 1.57994,
+          "runup_amp_m": 0.192478,
+          "quad_coeff": 0.96664,
+          "asymmetry": 3.4439,
+          "runup_over_h": 1.4258,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.62045,
+          "runup_amp_m": 0.141008,
+          "quad_coeff": 0.53099,
+          "asymmetry": 3.206,
+          "runup_over_h": 1.0445,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "roll_deg": 4.0,
+      "resonant_ratio": 0.9438,
+      "freq_ratio": 1.0596,
+      "detuning_pct": 5.96,
+      "argmax_ratio": 0.95,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.31812,
+      "peak_runup_over_h": 2.3564,
+      "peak_asymmetry": 3.6852,
+      "points": [
+        {
+          "ratio": 0.925,
+          "drive_period_s": 1.49891,
+          "runup_amp_m": 0.318117,
+          "quad_coeff": 1.77716,
+          "asymmetry": 3.5453,
+          "runup_over_h": 2.3564,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.53942,
+          "runup_amp_m": 0.286415,
+          "quad_coeff": 1.91623,
+          "asymmetry": 3.6852,
+          "runup_over_h": 2.1216,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.975,
+          "drive_period_s": 1.57994,
+          "runup_amp_m": 0.210267,
+          "quad_coeff": 1.50224,
+          "asymmetry": 2.7844,
+          "runup_over_h": 1.5575,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.62045,
+          "runup_amp_m": 0.191056,
+          "quad_coeff": 1.35584,
+          "asymmetry": 2.2145,
+          "runup_over_h": 1.4152,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.025,
+          "drive_period_s": 1.66096,
+          "runup_amp_m": 0.175451,
+          "quad_coeff": 1.13571,
+          "asymmetry": 2.7235,
+          "runup_over_h": 1.2996,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.70147,
+          "runup_amp_m": 0.12733,
+          "quad_coeff": 0.83921,
+          "asymmetry": 1.7608,
+          "runup_over_h": 0.9432,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "roll_deg": 6.0,
+      "resonant_ratio": 0.973,
+      "freq_ratio": 1.0277,
+      "detuning_pct": 2.77,
+      "argmax_ratio": 0.975,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.34483,
+      "peak_runup_over_h": 2.5543,
+      "peak_asymmetry": 4.1185,
+      "points": [
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.53942,
+          "runup_amp_m": 0.320654,
+          "quad_coeff": 1.9464,
+          "asymmetry": 3.9772,
+          "runup_over_h": 2.3752,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.975,
+          "drive_period_s": 1.57994,
+          "runup_amp_m": 0.34483,
+          "quad_coeff": 2.06497,
+          "asymmetry": 2.9361,
+          "runup_over_h": 2.5543,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.62045,
+          "runup_amp_m": 0.339123,
+          "quad_coeff": 1.90159,
+          "asymmetry": 4.1185,
+          "runup_over_h": 2.512,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.025,
+          "drive_period_s": 1.66096,
+          "runup_amp_m": 0.206034,
+          "quad_coeff": 1.4341,
+          "asymmetry": 2.2209,
+          "runup_over_h": 1.5262,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.70147,
+          "runup_amp_m": 0.14905,
+          "quad_coeff": 1.25245,
+          "asymmetry": 1.1644,
+          "runup_over_h": 1.1041,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.075,
+          "drive_period_s": 1.74198,
+          "runup_amp_m": 0.184445,
+          "quad_coeff": 1.11944,
+          "asymmetry": 1.8978,
+          "runup_over_h": 1.3663,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "roll_deg": 8.0,
+      "resonant_ratio": 0.9878,
+      "freq_ratio": 1.0123,
+      "detuning_pct": 1.23,
+      "argmax_ratio": 1.0,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.4172,
+      "peak_runup_over_h": 3.0904,
+      "peak_asymmetry": 4.955,
+      "points": [
+        {
+          "ratio": 0.875,
+          "drive_period_s": 1.41789,
+          "runup_amp_m": 0.18914,
+          "quad_coeff": 1.05026,
+          "asymmetry": 2.1693,
+          "runup_over_h": 1.401,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.9,
+          "drive_period_s": 1.4584,
+          "runup_amp_m": 0.247422,
+          "quad_coeff": 1.2513,
+          "asymmetry": 2.8059,
+          "runup_over_h": 1.8328,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.925,
+          "drive_period_s": 1.49891,
+          "runup_amp_m": 0.269719,
+          "quad_coeff": 1.49796,
+          "asymmetry": 3.2503,
+          "runup_over_h": 1.9979,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.53942,
+          "runup_amp_m": 0.382817,
+          "quad_coeff": 1.80883,
+          "asymmetry": 4.955,
+          "runup_over_h": 2.8357,
+          "status": "completed"
+        },
+        {
+          "ratio": 0.975,
+          "drive_period_s": 1.57994,
+          "runup_amp_m": 0.367868,
+          "quad_coeff": 2.07775,
+          "asymmetry": 4.7135,
+          "runup_over_h": 2.7249,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.62045,
+          "runup_amp_m": 0.417205,
+          "quad_coeff": 2.08154,
+          "asymmetry": 3.3995,
+          "runup_over_h": 3.0904,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.025,
+          "drive_period_s": 1.66096,
+          "runup_amp_m": 0.297528,
+          "quad_coeff": 1.79919,
+          "asymmetry": 2.1522,
+          "runup_over_h": 2.2039,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.70147,
+          "runup_amp_m": 0.21879,
+          "quad_coeff": 1.50128,
+          "asymmetry": 2.38,
+          "runup_over_h": 1.6207,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.075,
+          "drive_period_s": 1.74198,
+          "runup_amp_m": 0.167724,
+          "quad_coeff": 1.29412,
+          "asymmetry": 1.573,
+          "runup_over_h": 1.2424,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.1,
+          "drive_period_s": 1.78249,
+          "runup_amp_m": 0.158623,
+          "quad_coeff": 1.15136,
+          "asymmetry": 1.1403,
+          "runup_over_h": 1.175,
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

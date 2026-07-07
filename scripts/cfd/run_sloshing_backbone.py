@@ -53,6 +53,12 @@ CRITICAL_DEPTH = 0.34
 FILLS = (0.30, 0.70)               # below / above the critical depth
 ROLL_DEGS = (2.0, 4.0, 6.0, 8.0)
 RATIOS = (0.90, 0.95, 1.00, 1.05, 1.10, 1.15)   # x T1(fill)
+# The base grid clamps the h/L=0.70 peak at its high edge (r=1.15) for the
+# strongly-detuning high-amplitude cases (8 deg edge-clamped; 6 deg near-tie).
+# Extend the grid there so the quadrature peak is bracketed interior and the
+# parabolic sub-grid fit is valid rather than reporting the edge as a floor.
+# collect() is data-driven, so these extra points fold in automatically.
+EXTRA = [(0.70, deg, r) for deg in (6.0, 8.0) for r in (1.20, 1.25)]
 CPB = 60
 N_CYCLES = 6.0
 
@@ -201,6 +207,7 @@ def main(argv: List[str] | None = None) -> int:
     args.work_dir.mkdir(parents=True, exist_ok=True)
 
     matrix = [(hl, deg, r) for hl in FILLS for deg in ROLL_DEGS for r in RATIOS]
+    matrix += [t for t in EXTRA if t not in matrix]
     print(f"running {len(matrix)} cases with {args.workers} workers")
     rows: List[Dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=args.workers) as ex:

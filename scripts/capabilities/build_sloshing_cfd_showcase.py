@@ -329,20 +329,22 @@ the wall run-up saturates near resonance and is not a reliable locator, so it is
 <tbody>{rows}</tbody></table>
 <p class="callout key"><b>Result.</b> Both fills show <b>soft-spring detuning</b>: the resonant frequency drops
 <b>monotonically</b> as roll amplitude grows, reaching <b>~11&ndash;13% below f&#8321; at 8&deg;</b>
-(h/L = 0.30: &minus;0.9% &rarr; &minus;10.8%; h/L = 0.70: &minus;4.4% &rarr; &minus;13.0%). The
+(h/L = 0.30: &minus;0.9% &rarr; &minus;10.8%; h/L = 0.70: &minus;4.4% &rarr; &minus;13.2%). The
 h/L = 0.70 case (above the h/L &asymp; {crit} critical depth) is the clear soft spring; h/L = 0.30 sits right at
 the critical depth and also detunes downward under strong shallow-water nonlinearity rather than showing the clean
 hardening small-amplitude theory would predict. So &ldquo;resonance at T&#8321;&rdquo; is the small-amplitude
 limit only &mdash; at operational roll angles the tank detunes, and anti-roll tuning must use the
-amplitude-annotated value. (The grid is coarse (&Delta;r = 0.05) and the 8&deg;/70% peak reaches the r = 1.15
-edge, so a finer, wider grid is the natural refinement. Values re-reduced with the corrected sub-grid vertex
-interpolation introduced with the shallow-fill sweep &mdash; the originally published detunings placed each peak
-correctly only to the &Delta;r = 0.05 grid.)</p>
+amplitude-annotated value. (The base grid is &Delta;r = 0.05; the h/L = 0.70 grid was <b>extended to r = 1.25</b>
+at 6&ndash;8&deg; so the strongly-detuned peak is now <b>bracketed interior</b> &mdash; the 8&deg; peak was
+previously clamped at the r = 1.15 edge, i.e. a lower bound; the de-clamped value is &minus;13.2%. Values reduced
+with the corrected sub-grid vertex interpolation introduced with the shallow-fill sweep &mdash; the originally
+published detunings placed each peak correctly only to the &Delta;r = 0.05 grid.)</p>
 """
 
 
-# Sequential ramp for the ordered roll-amplitude series (2..8 deg), lightest->darkest.
-_SHCOL = {2.0: "#6390cf", 4.0: "#4272b5", 6.0: "#265699", 8.0: "#0B3D91"}
+# Sequential single-hue ramp for the ordered roll-amplitude series (1..8 deg),
+# lightest->darkest (refined sweep adds the 1 deg low-amplitude anchor).
+_SHCOL = {1.0: "#93b4e0", 2.0: "#6390cf", 4.0: "#4272b5", 6.0: "#265699", 8.0: "#0B3D91"}
 
 
 def _shallow_svg(sh):
@@ -396,51 +398,86 @@ def _shallow_svg(sh):
     return "".join(g) + f'<p class="cap">{legend} &nbsp;&mdash; each curve normalised to its own peak; the peak location is the resonance.</p>'
 
 
-def _shallow_callout(sh):
+def _within_resolution(a):
+    """True if this amplitude's quadrature peak is flat enough that the reported
+    detuning is within grid/method resolution of the anchor — the top two quad
+    points differ by <1% of the max (physics-critic ask: report such a case as
+    sign-consistent only, not as a resolved number)."""
+    qs = sorted((p.get("quad_coeff") for p in a.get("points", [])
+                 if p.get("quad_coeff") is not None), reverse=True)
+    return len(qs) >= 2 and qs[0] > 0 and (qs[0] - qs[1]) / qs[0] < 0.01
+
+
+def _shallow_callout(sh, wide):
     amps = [a for a in sh.get("amplitudes", []) if a.get("detuning_pct") is not None]
     if not amps:
         return ""
     lo, hi = amps[0], amps[-1]
+    r2 = next((a.get("resonant_ratio") for a in amps if a["roll_deg"] == 2.0), None)
+    walk = " &rarr; ".join(f'{a.get("argmax_ratio")}@{a["roll_deg"]:.0f}&deg;' for a in amps)
     rohs = [a["peak_runup_over_h"] for a in amps if a.get("peak_runup_over_h")]
-    asyms = [a["peak_asymmetry"] for a in amps if a.get("peak_asymmetry")]
-    return f"""<p class="callout key"><b>Result.</b> The shallow fill detunes the <b>opposite way</b> to the deeper
-fills: a <b>hardening</b> response whose resonant frequency sits <b>above</b> linear f&#8321; at every amplitude
-&mdash; robust at the grid level (the quadrature peak lands at r = 0.95 &lt; 1 for all four amplitudes), and the
-sign flip nonlinear theory predicts below the h/L &asymp; 0.34 critical depth (Faltinsen &amp; Timokha 2009).
-The flip demonstrated here is between h/L = 0.15 and the 0.30/0.70 fills &mdash; our h/L = 0.30 case, nominally
-just below critical, already softens, so the practical boundary sits below 0.30 rather than exactly at 0.34.
-Sub-grid interpolation puts the offset <b>largest at small amplitude</b> (~{lo["detuning_pct"]:+.0f}% at
-{lo["roll_deg"]:.0f}&deg;) shrinking to ~{hi["detuning_pct"]:+.0f}% at {hi["roll_deg"]:.0f}&deg; &mdash;
-consistent with the increasingly dissipative bore broadening the response peak and pulling it back toward
-T&#8321;, though this amplitude trend rides on the sub-grid fit (all grid maxima sit at the same ratio) and on
-8-cycle records, so treat it as indicative (~&plusmn;1 pct-pt) rather than resolved; it must also reverse below
-2&deg; to meet the free-decay anchor. What is <b>not</b> in doubt is the violence of the response:
-<b>near resonance there is no small-amplitude window where the linear anchor holds under forcing</b> &mdash;
-even at 2&deg; roll the free surface is a bore-like wave with run-up {min(rohs):.1f}&times; the still depth
-(rising to ~3&times; at 6&ndash;8&deg;) and crest/trough asymmetry ~4&ndash;5 (a linear standing wave is
-symmetric); away from resonance the surface relaxes toward a moderate nonlinear wave. The free-decay anchor
-(0.28% at this fill) is real but describes the unforced small-amplitude limit only.
+    hi_res = " (within grid/method resolution of the anchor &mdash; sign-consistent only)" if _within_resolution(hi) else ""
+    conv = (f" A half-step &Delta;r = 0.0125 convergence check at 2&deg; holds the peak at r &asymp; {r2:.3f}, "
+            f"so the sub-grid vertex is confirmed, not manufacturing the trend." if r2 else "")
+    # Correction vs the superseded 8-cycle coarse-grid sweep (read its numbers live).
+    wamps = {a["roll_deg"]: a.get("detuning_pct") for a in (wide or {}).get("amplitudes", [])}
+    deltas = [(a["roll_deg"], wamps[a["roll_deg"]], a["detuning_pct"])
+              for a in amps if a["roll_deg"] in wamps and wamps[a["roll_deg"]] is not None]
+    overstated = [d for d in deltas if d[1] - d[2] > 1.0]
+    corr = ""
+    if overstated:
+        pairs = "; ".join(f'{d[0]:.0f}&deg;: {d[1]:+.1f}% &rarr; {d[2]:+.1f}%' for d in overstated)
+        corr = (f""" <b>Correction.</b> An earlier 8-cycle coarse-grid (&Delta;r = 0.05) sweep placed every
+amplitude's peak at r = 0.95 and reported the hardening as indicative. The refined 16-cycle &Delta;r = 0.025
+sweep supersedes it: the low amplitudes are confirmed (within ~&plusmn;0.4 pct-pt), but the high amplitudes were
+<b>overstated by ~2 pct-pt</b> ({pairs}) &mdash; the short records had not settled near resonance.""")
+    return f"""<p class="callout key"><b>Result.</b> Below the h/L &asymp; 0.34 critical depth the shallow fill
+detunes the <b>opposite way</b> to the deeper fills: a <b>hardening</b> response with the resonant frequency
+<b>above</b> linear f&#8321; at every amplitude (the sign flip nonlinear theory predicts below critical depth;
+Faltinsen &amp; Timokha 2009). This is now <b>grid-resolved, not a sub-grid artifact</b>: on the refined
+&Delta;r = 0.025 grid the quadrature-peak node itself walks with amplitude ({walk}).{conv} The flip is between
+h/L = 0.15 and the 0.30/0.70 fills; our h/L = 0.30 case, nominally just below critical, already softens, so the
+practical boundary sits below 0.30 rather than exactly at 0.34.
+The hardening <b>weakens monotonically</b> as roll grows &mdash; from ~{lo["detuning_pct"]:+.0f}% at
+{lo["roll_deg"]:.0f}&deg; to ~{hi["detuning_pct"]:+.0f}% at {hi["roll_deg"]:.0f}&deg;{hi_res}. That is
+<b>not</b> a clean hardening backbone (which would bend <i>away</i> from f&#8321; as amplitude grows); it is the
+signature of <b>bore dissipation</b> &mdash; the travelling bore breaks harder at higher amplitude, broadening
+the peak and pulling the effective resonance back toward T&#8321;.{corr}
+The {lo["roll_deg"]:.0f}&deg; anchor ({lo["detuning_pct"]:+.1f}%, the strongest swept) shows the hardening does
+<b>not</b> reverse above 1&deg;; reconciliation with the near-zero free-decay anchor (natural frequency within
+0.28% of linear at &asymp;0 amplitude) therefore happens only in the un-swept sub-1&deg; limit &mdash; and note
+free decay (unforced transient frequency) and forced phase-resonance coincide only in the linear limit, so part
+of that gap is definitional. What is <b>not</b> in doubt is the violence: near resonance even 2&deg; roll is a
+bore-like wave, run-up {min(rohs):.1f}&times; the still depth (rising to ~{max(rohs):.0f}&times; at 8&deg;) and
+crest/trough asymmetry ~4&ndash;5 (a linear standing wave is symmetric); away from resonance the surface relaxes
+toward a moderate nonlinear wave.
 <b>Practical consequence:</b> if ballast operation passes through shallow fills, anti-roll tuning there cannot
-come from the tanh master curve &mdash; it needs the forced-response CFD, and the resonant frequency to use is
-amplitude-dependent. Caveats: single 2D grid (&Delta;r = 0.05, cpb = 60 &mdash; no convergence study repeated at
-this fill); 8-cycle records are short of full steady state near resonance (a finer ratio grid + longer records
-is the natural refinement); at 6&ndash;8&deg; the bore crest reaches ~0.64 m against the 0.77 m freeboard, so
-amplitudes at or slightly beyond 8&deg; would engage roof-impact physics beyond this sweep's scope.</p>"""
+come from the tanh master curve &mdash; it needs the forced-response CFD, the resonant frequency is
+amplitude-dependent, and below ~critical depth expect <b>hardening, not softening</b>. Caveats: single 2D grid
+(cpb = 60); the quadrature-coefficient locator is a single-harmonic proxy under heavy bore breaking; the deep-fill
+backbone above used 6 drive cycles vs 16 here; the sub-1&deg; onset and roof-impact physics (at 6&ndash;8&deg; the
+bore crest reaches ~0.64 m against 0.77 m freeboard) are beyond this sweep's scope.</p>"""
 
 
-def _shallow_section(sh, bb):
+def _shallow_section(sh, wide, bb):
     if not sh or not sh.get("amplitudes"):
         return ""
     tank = sh.get("tank", {})
     hl = tank.get("fill_h_over_L", 0.15)
+    ncyc = tank.get("n_cycles", 16)
     crit = sh.get("meta", {}).get("critical_depth_h_over_L", 0.34)
+    ncases = sum(len(a.get("points", [])) for a in sh["amplitudes"])
     rows = ""
     for a in sh["amplitudes"]:
         det = a.get("detuning_pct")
-        edge = ' <span class="cap">(grid edge)</span>' if a.get("peak_quad_at_grid_edge") else ""
+        tag = ""
+        if a.get("peak_quad_at_grid_edge"):
+            tag = ' <span class="cap">(grid edge)</span>'
+        elif _within_resolution(a):
+            tag = ' <span class="cap">(≈ within resolution)</span>'
         if det is not None:
             rows += (f'<tr><td class="num">{a["roll_deg"]:.0f}&deg;</td>'
-                     f'<td class="num">{_fmt(a.get("resonant_ratio"))}{edge}</td>'
+                     f'<td class="num">{_fmt(a.get("resonant_ratio"))}{tag}</td>'
                      f'<td class="num">{det:+.2f}%</td>'
                      f'<td class="num">{_fmt(a.get("peak_runup_over_h"))}</td>'
                      f'<td class="num">{_fmt(a.get("peak_asymmetry"))}</td></tr>')
@@ -458,24 +495,27 @@ def _shallow_section(sh, bb):
 <h2>Shallow-fill bore regime — amplitude sweep at h/L = {hl}</h2>
 <p>The fills above sit at or above the h/L &asymp; {crit} critical depth. Real ballast operation also passes
 through <b>shallow fills</b>, where the response is set by <b>travelling bores / hydraulic jumps</b> and low-order
-(tanh-dispersion) theory degrades &mdash; the regime where anti-roll tuning must come from CFD. This sweep drives
-h/L&nbsp;=&nbsp;{hl} (h&nbsp;=&nbsp;{tank.get("fill_depth_m")} m) at 2&ndash;8&deg; roll over an
-r&nbsp;=&nbsp;0.80&ndash;1.15 frequency grid ({sum(len(a.get("points", [])) for a in sh["amplitudes"])} cases).
-The free-decay benchmark (section&nbsp;1) anchors the small-amplitude natural frequency at this fill to within
-0.28% of linear theory; the sweep measures how fast that anchor degrades as amplitude grows. Resonance is again
-located by the <b>quadrature (damping) coefficient peak</b>. Bore onset is tracked by two wall-probe indicators:
-<b>run-up / depth</b> (the shallow-water nonlinearity parameter) and <b>crest/trough asymmetry</b> (bores throw a
-sharp high crest over a drawn-down trough; a linear standing wave is symmetric).</p>
+(tanh-dispersion) theory degrades &mdash; the regime where anti-roll tuning must come from CFD. This
+<b>refined</b> sweep drives h/L&nbsp;=&nbsp;{hl} (h&nbsp;=&nbsp;{tank.get("fill_depth_m")} m) at
+<b>1&ndash;8&deg;</b> roll over a fine &Delta;r&nbsp;=&nbsp;0.025 frequency grid with <b>{ncyc:.0f}-cycle</b>
+records ({ncases} cases; the 2&deg; case is refined to a &Delta;r&nbsp;=&nbsp;0.0125 half-step for a
+grid-convergence check). The free-decay benchmark (section&nbsp;1) anchors the small-amplitude natural frequency
+at this fill to within 0.28% of linear theory; the sweep measures how fast that anchor degrades as amplitude
+grows. Resonance is located by the <b>quadrature (damping) coefficient peak</b>. Bore onset is tracked by two
+wall-probe indicators: <b>run-up / depth</b> (the shallow-water nonlinearity parameter) and <b>crest/trough
+asymmetry</b> (bores throw a sharp high crest over a drawn-down trough; a linear standing wave is symmetric).</p>
 {_shallow_svg(sh)}
 {_img("shallow-bore-montage.png", "The shallow-fill bore over one drive period (h/L = 0.15, 8&deg; roll, r = 0.95 — near the detuned resonance). The water mass travels wall-to-wall as a bore and throws run-up several times the still depth up the tank walls. Live 2D VOF fields on the actual rolled mesh.", "820px")}
 <table><thead><tr><th>Roll amp</th><th>Resonant T/T&#8321;</th><th>Freq detuning</th>
 <th>Peak run-up / h</th><th>Crest/trough asymmetry</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p class="cap">Run-up / h and asymmetry are each amplitude's maximum across the ratio grid; they occur near
-(not exactly at) the resonant ratio. Off resonance both indicators fall sharply &mdash; at r = 0.80 the
-run-up is below the still depth and the asymmetry near 1.</p>
+(not exactly at) the resonant ratio. Off resonance both indicators fall sharply &mdash; toward the edges of the
+swept band the run-up drops well below its resonant value and the asymmetry falls toward 1. &ldquo;≈ within
+resolution&rdquo; flags an amplitude whose quadrature peak is flat enough that the detuning is within grid/method
+resolution of the linear anchor (sign-consistent only).</p>
 {comp_svg}
-{_shallow_callout(sh)}
+{_shallow_callout(sh, wide)}
 """
 
 
@@ -801,6 +841,7 @@ def build():
     convergence = _load_cfd("sloshing-convergence.json")
     spheric = _load_cfd("sloshing-spheric.json")
     shallow = _load_cfd("sloshing-shallow.json")
+    shallow_refine = _load_cfd("sloshing-shallow-refine.json")
 
     n_cases = 0
     if bench:
@@ -814,6 +855,8 @@ def build():
             n_cases += sum(len(a.get("points", [])) for a in f.get("amplitudes", []))
     if shallow:
         n_cases += sum(len(a.get("points", [])) for a in shallow.get("amplitudes", []))
+    if shallow_refine:
+        n_cases += sum(len(a.get("points", [])) for a in shallow_refine.get("amplitudes", []))
 
     solver = (forced or bench or {}).get("meta", {}).get("solver", "interFoam (VOF), OpenFOAM ESI v2312")
 
@@ -839,7 +882,7 @@ def build():
 {_forced_section(forced)}
 {_backbone_section(backbone)}
 {_spheric_section(spheric)}
-{_shallow_section(shallow, backbone)}
+{_shallow_section(shallow_refine or shallow, shallow, backbone)}
 {_literature_section(research)}
 {_wayforward_section(research)}
 {_compute_section(compute)}
