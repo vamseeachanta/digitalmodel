@@ -49,7 +49,8 @@ export DEBIAN_FRONTEND=noninteractive
 $SUDO apt-get update -qq
 $SUDO apt-get install -y -qq \
   build-essential git curl ca-certificates gnupg \
-  openmpi-bin libopenmpi-dev
+  openmpi-bin libopenmpi-dev \
+  rclone   # cloud data sync (inputs/outputs/reports) for the headless box
 
 # ---- OpenFOAM ESI v${OF_VERSION} ------------------------------------------- #
 if [[ -r "$OF_BASHRC" ]]; then
@@ -115,4 +116,9 @@ Next:
   cd $REPO_DIR
   scripts/setup/verify-cfd-box.sh                       # smoke + parallel MPI check
   scripts/setup/verify-cfd-box.sh --benchmark $WORK_DIR # + the 3D scaling benchmark (labelled for this box)
+
+HITL (secrets — not automated here):
+  gh auth login --with-token < token.txt   # headless: use a PAT, NOT the browser flow
+  rclone config                            # create the cloud remote for data sync
+  RCLONE_REMOTE=<remote:path> scripts/setup/sync-cfd-data.sh --install-timer 30m  # always-sync
 EOF
