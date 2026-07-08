@@ -26,11 +26,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
 
+from digitalmodel.asset_integrity.composite_repair import (
+    CompositeRepairParameters,
+    recommend_from_ffs_result,
+)
 from digitalmodel.codes import API_579
 from .ffs_decision import FFSDecision
 from .ffs_router import FFSRouter
@@ -52,14 +56,14 @@ class FFSComponent:
     """The component under assessment (geometry, code, material, condition)."""
 
     component_id: str
-    design_code: str               # e.g. "B31.8", "B31.4", "ASME_VIII_DIV1"
+    design_code: str  # e.g. "B31.8", "B31.4", "ASME_VIII_DIV1"
     nominal_od_in: float
     nominal_wt_in: float
     design_pressure_psi: float
     smys_psi: Optional[float] = None
     corrosion_rate_in_per_yr: float = 0.0
-    fca_in: float = 0.0            # future corrosion allowance
-    rsf_a: float = 0.90            # allowable remaining strength factor
+    fca_in: float = 0.0  # future corrosion allowance
+    rsf_a: float = 0.90  # allowable remaining strength factor
     component_type: str = "pipe"
 
 
@@ -68,8 +72,8 @@ class FFSAssessmentResult:
     """Unified FFS result — the canonical record for downstream consumers."""
 
     component_id: str
-    assessment_type: str           # "GML" | "LML" | "PITTING"
-    level_reached: int             # 1 (screening sufficed) or 2 (RSF needed)
+    assessment_type: str  # "GML" | "LML" | "PITTING"
+    level_reached: int  # 1 (screening sufficed) or 2 (RSF needed)
     t_nominal_in: float
     t_min_in: float
     t_measured_min_in: float
@@ -79,10 +83,11 @@ class FFSAssessmentResult:
     rsf_a: float
     folias_factor: float
     remaining_life_yr: float
-    verdict: str                   # ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE
-    rerated_pressure_psi: float    # screening re-rate = P_design * min(1, rsf/rsf_a)
-    sufficiency_status: str        # SUFFICIENT/TAKE_MORE/ESCALATE
-    sufficiency: Any = None        # SufficiencyResult
+    verdict: str  # ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE
+    rerated_pressure_psi: float  # screening re-rate = P_design * min(1, rsf/rsf_a)
+    sufficiency_status: str  # SUFFICIENT/TAKE_MORE/ESCALATE
+    repair_recommendation: Optional[dict[str, Any]] = None
+    sufficiency: Any = None  # SufficiencyResult
     level1: dict = field(default_factory=dict)
     level2: dict = field(default_factory=dict)
     decision: dict = field(default_factory=dict)
@@ -96,7 +101,7 @@ class FFSAssessmentResult:
 
     def to_dict(self) -> dict:
         """JSON-serialisable summary (for lookup tables / the Deckhand API)."""
-        return {
+        payload = {
             "component_id": self.component_id,
             "assessment_type": self.assessment_type,
             "level_reached": self.level_reached,
@@ -115,6 +120,9 @@ class FFSAssessmentResult:
             "passes": self.passes,
             "code_reference": self.code_reference,
         }
+        if self.repair_recommendation is not None:
+            payload["repair_recommendation"] = self.repair_recommendation
+        return payload
 
 
 def assess_component(
@@ -123,6 +131,7 @@ def assess_component(
     *,
     input_units: str = "in",
     force_type: Optional[str] = None,
+    repair_context: Optional[Mapping[str, Any]] = None,
 ) -> FFSAssessmentResult:
     """Run the full Phase-1 FFS chain and return one unified result.
 
@@ -133,6 +142,8 @@ def assess_component(
         input_units: ``"in"`` (default) or ``"mm"`` — passed to GridParser.
         force_type: override the auto-classification
             ("GML"/"LML"/"PITTING").
+        repair_context: optional composite-repair screening context. Used only
+            for REPAIR verdicts.
     """
     df = _to_grid_df(grid, input_units)
 
@@ -209,7 +220,7 @@ def assess_component(
     rerated = float(_rr) if _rr is not None else float("nan")
     level_reached = 1 if l1["verdict"] == "ACCEPT" else 2
 
-    return FFSAssessmentResult(
+    result = FFSAssessmentResult(
         component_id=component.component_id,
         assessment_type=atype,
         level_reached=level_reached,
@@ -242,6 +253,12 @@ def assess_component(
             ),
         },
     )
+    params = CompositeRepairParameters()
+    context = _repair_context_from_component(component, atype, repair_context, params)
+    recommendation = recommend_from_ffs_result(result, context, params=params)
+    if recommendation is not None:
+        result.repair_recommendation = recommendation.to_dict()
+    return result
 
 
 def _to_grid_df(grid: GridLike, input_units: str) -> pd.DataFrame:
@@ -255,3 +272,35 @@ def _to_grid_df(grid: GridLike, input_units: str) -> pd.DataFrame:
     raise TypeError(
         f"grid must be a DataFrame, numpy array, or CSV path; got {type(grid)!r}."
     )
+
+
+def _repair_context_from_component(
+    component: FFSComponent,
+    assessment_type: str,
+    repair_context: Optional[Mapping[str, Any]],
+    params: CompositeRepairParameters,
+) -> dict[str, Any]:
+    """Build default repair context from FFS fields, then overlay caller data."""
+    context: dict[str, Any] = {
+        "active_leak": False,
+        "through_wall_now": False,
+        "through_wall_within_repair_life": False,
+        "defect_type": _repair_defect_type(assessment_type),
+        "service": "oil",
+        "pressure_psi": component.design_pressure_psi,
+        "temperature_f": params.default_temperature_f,
+        "repair_life_yr": params.default_repair_life_yr,
+        "axial_load": False,
+    }
+    if repair_context:
+        context.update(repair_context)
+    return context
+
+
+def _repair_defect_type(assessment_type: str) -> str:
+    mapping = {
+        "GML": "external_metal_loss",
+        "LML": "external_metal_loss",
+        "PITTING": "pitting",
+    }
+    return mapping.get(assessment_type.upper(), assessment_type.lower())

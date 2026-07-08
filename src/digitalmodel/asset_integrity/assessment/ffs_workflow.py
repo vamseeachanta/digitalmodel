@@ -45,6 +45,7 @@ class FFSWorkflow:
             grid,
             input_units=ffs_cfg.get("input_units", "in"),
             force_type=ffs_cfg.get("force_type"),
+            repair_context=ffs_cfg.get("repair_context"),
         )
 
         # in-memory locator target: cfg[basename] == cfg["ffs"] (the 16-key
