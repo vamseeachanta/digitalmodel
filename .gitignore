@@ -375,3 +375,8 @@ CLAUDE.local.md
 .claude/skills/.ecosystem-propagated
 .claude/skills/guidelines
 output_610/
+
+# Dynacard capability staging intermediates — derived from PRIVATE client card
+# archives (reference client production-data paths); must stay uncommitted.
+scripts/capabilities/_*_stage.json
+scripts/capabilities/_*_manifest.json
