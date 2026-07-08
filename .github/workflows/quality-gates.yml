@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history so the abs-path guard can diff vs base
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,8 +46,15 @@ jobs:
       - name: Create reports directory
         run: mkdir -p reports
 
-      - name: Check no developer-machine absolute paths
-        run: bash scripts/enforcement/check-no-abs-paths.sh
+      - name: Check no NEW developer/client absolute paths (diff-scoped)
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          [ -z "$BASE" ] && BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)"
+          fi
+          echo "Scanning for NEW absolute paths added since $BASE"
+          bash scripts/enforcement/check-no-abs-paths.sh --added "$BASE"
 
       - name: Run Quality Gates
         run: |

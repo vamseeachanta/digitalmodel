@@ -1,74 +1,117 @@
 #!/usr/bin/env bash
 # check-no-abs-paths.sh — workspace-hub #2574
-# Enforce the "no hardcoded developer-machine absolute paths" rule across
-# digitalmodel source, tests, and YAML fixtures. Vendored from
-# workspace-hub/scripts/enforcement/check-no-abs-paths.sh and extended to
-# scan .yml/.yaml files (where prior leakage was found).
+# Enforce the "no hardcoded developer-machine / client absolute paths" rule.
+# Vendored from workspace-hub and extended (dm #1433, 2026-07-08) to (a) catch
+# DOS user-home + client project-share paths that a client-data audit found
+# slipping through, and (b) run DIFF-SCOPED so it blocks NEW absolute paths
+# going forward without failing on the (grandfathered) existing ones.
 #
-# Usage:
-#   scripts/enforcement/check-no-abs-paths.sh
-#   scripts/enforcement/check-no-abs-paths.sh path/to/file ...
+# Modes:
+#   check-no-abs-paths.sh <file> ...        scan the given files (whole file)
+#   check-no-abs-paths.sh --added <base>    scan only ADDED lines vs <base>
+#                                           (the CI / going-forward gate)
+#   check-no-abs-paths.sh --all             scan the whole tree (debt audit)
+#   check-no-abs-paths.sh                    == --all
 #
-# Exit 0 if no violations; exit 1 with a list of offending lines otherwise.
+# Allowlist: any line ending "# abs-path-allowed" is ignored. One-shot bypass:
+# ALLOW_ABS_PATHS=1. Fixtures under */tests/fixtures/* are always skipped.
 #
-# Allowlist (line-level): any line ending with "# abs-path-allowed" is
-# ignored. One-shot bypass: ALLOW_ABS_PATHS=1.
-#
-# Detection: regex scan for /home/, /mnt/, /Users/, /opt/, and DOS-style
-# drive letters across .sh, .py, .yml, .yaml files tracked by git.
+# Detection (excludes legitimate cross-platform tool paths such as
+# C:\Program Files\Orcina, /opt/orcina, /usr/lib/openfoam):
+#   - Unix dev/client shares:   /mnt/local-analysis|dde|ace/, and
+#                               /home|/Users/<user>/(workspace-hub|github|
+#                               projects|Desktop|Documents)
+#   - DOS developer home:       X:\Users\<name>\
+#   - DOS client project share: X:\<digit>...  (e.g. K:\0198\)
 
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git -C "$SELF_DIR" rev-parse --show-toplevel 2>/dev/null || echo "$SELF_DIR")"
+cd "$REPO_ROOT"
 
-declare -a TARGETS=()
-if (( $# == 0 )); then
-  while IFS= read -r f; do
-    case "$f" in
-      */tests/fixtures/*) continue ;;
-    esac
-    TARGETS+=("$REPO_ROOT/$f")
-  done < <(cd "$REPO_ROOT" && git ls-files \
-      'src/*.sh' 'src/*.py' 'src/*.yml' 'src/*.yaml' \
-      'tests/*.sh' 'tests/*.py' 'tests/*.yml' 'tests/*.yaml')
-else
-  TARGETS=("$@")
-fi
+# Developer-machine / client leakage patterns (extended regex). Backslashes are
+# doubled for DOS paths so the ERE sees a literal backslash.
+PATTERN='(/mnt/(local-analysis|dde|ace)/|/(home|Users)/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects|Desktop|Documents)|[A-Za-z]:\\Users\\[a-zA-Z]|[A-Za-z]:\\[0-9])'
 
-# Narrow scope: developer-machine leakage patterns that break CI.
-# Excludes intentional cross-platform fallback paths (e.g. /opt/orcina,
-# C:\Program Files\Orcina) which are legitimate engineering-tool discovery.
-# Broader absolute-path policy lives in workspace-hub's enforcement script.
-PATTERN='(/mnt/local-analysis/|/home/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects)|/Users/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects))'
+# Which tracked files the whole-tree / file modes consider.
+GLOBS=('src/**/*.sh' 'src/**/*.py' 'src/**/*.yml' 'src/**/*.yaml'
+       'tests/**/*.sh' 'tests/**/*.py' 'tests/**/*.yml' 'tests/**/*.yaml'
+       'config/**/*.yml' 'config/**/*.yaml' 'docs/**/*.md')
 
-declare -a VIOLATIONS=()
-# Single grep pass per file batch: orders of magnitude faster than per-line bash.
-# `grep -nE` emits "<file>:<line>:<content>"; we strip the allowlist marker and
-# convert to repo-relative paths.
-if (( ${#TARGETS[@]} > 0 )); then
+_is_fixture() { [[ "$1" == */tests/fixtures/* ]]; }
+
+_report_and_exit() {
+  local n="$1"
+  if (( n == 0 )); then exit 0; fi
+  if [[ "${ALLOW_ABS_PATHS:-0}" == "1" ]]; then
+    echo "check-no-abs-paths: $n violation(s); ALLOW_ABS_PATHS=1 bypass in effect" >&2
+    exit 0
+  fi
+  {
+    echo ""
+    echo "check-no-abs-paths: $n developer/client absolute-path violation(s)."
+    echo "  Use Path(__file__).resolve().parents[N], \$(git rev-parse --show-toplevel),"
+    echo "  or a config/env var instead of a machine/client path."
+    echo "  Trailing '# abs-path-allowed' exempts a line; ALLOW_ABS_PATHS=1 bypasses (logged)."
+  } >&2
+  exit 1
+}
+
+# ---- mode: --added <base> (scan only newly-added lines vs base) ------------- #
+scan_added() {
+  local base="${1:-}"
+  [[ -z "$base" ]] && { echo "check-no-abs-paths: --added requires a <base> ref" >&2; exit 2; }
+  if ! git rev-parse --verify "$base^{commit}" >/dev/null 2>&1; then
+    base="$(git rev-parse --verify origin/main 2>/dev/null || true)"
+    [[ -z "$base" ]] && { echo "check-no-abs-paths: base ref unresolved; skipping diff scan" >&2; exit 0; }
+  fi
+  # Walk the diff, tracking the new-file path and new-line number; emit
+  # 'path<TAB>line<TAB>content' for ADDED lines only, then filter by
+  # pattern/allowlist.
+  local n=0
+  while IFS= read -r rec; do
+    local path="${rec%%$'\t'*}"; local rest="${rec#*$'\t'}"
+    local line="${rest%%$'\t'*}"; local content="${rest#*$'\t'}"
+    _is_fixture "$path" && continue
+    [[ "$content" == *'# abs-path-allowed' ]] && continue
+    if grep -qE "$PATTERN" <<<"$content"; then
+      printf '%s:%s:%s\n' "$path" "$line" "$content" >&2
+      n=$((n + 1))
+    fi
+  done < <(
+    git diff --unified=0 --no-color --diff-filter=d "$base"...HEAD -- "${GLOBS[@]}" 2>/dev/null \
+      | awk '
+          /^\+\+\+ /   { p=$2; sub(/^b\//,"",p); next }
+          /^@@ /       { m=$0; sub(/^.*\+/,"",m); sub(/[, ].*$/,"",m); ln=m+0; next }
+          /^\+/        { print p "\t" ln "\t" substr($0,2); ln++; next }
+        '
+  )
+  _report_and_exit "$n"
+}
+
+# ---- mode: files / --all (scan whole files) -------------------------------- #
+scan_files() {
+  local -a targets=()
+  if (( $# > 0 )); then
+    for f in "$@"; do _is_fixture "$f" || targets+=("$f"); done
+  else
+    while IFS= read -r f; do _is_fixture "$f" || targets+=("$f"); done \
+      < <(git ls-files "${GLOBS[@]}")
+  fi
+  (( ${#targets[@]} == 0 )) && exit 0
+  local n=0
   while IFS= read -r match; do
     [[ -z "$match" ]] && continue
     [[ "$match" == *'# abs-path-allowed' ]] && continue
-    rel="${match#$REPO_ROOT/}"
-    line_no="${rel#*:}"
-    line_no="${line_no%%:*}"
-    rel_path="${rel%%:*}"
-    printf '%s\n' "$match" | sed "s|^$REPO_ROOT/||"
-    VIOLATIONS+=("$rel_path:$line_no")
-  done < <(grep -nHE "$PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
-fi
+    printf '%s\n' "$match" >&2
+    n=$((n + 1))
+  done < <(grep -nHE "$PATTERN" "${targets[@]}" 2>/dev/null || true)
+  _report_and_exit "$n"
+}
 
-if (( ${#VIOLATIONS[@]} > 0 )); then
-  if [[ "${ALLOW_ABS_PATHS:-0}" == "1" ]]; then
-    echo "check-no-abs-paths: ${#VIOLATIONS[@]} violation(s) found; ALLOW_ABS_PATHS=1 bypass in effect" >&2
-    exit 0
-  fi
-  echo "" >&2
-  echo "check-no-abs-paths: ${#VIOLATIONS[@]} violation(s) found." >&2
-  echo "  Use Path(__file__).resolve().parents[N] or \$(git rev-parse --show-toplevel) instead." >&2
-  echo "  Trailing '# abs-path-allowed' on a single line exempts that line." >&2
-  echo "  One-shot bypass (logged): ALLOW_ABS_PATHS=1 ..." >&2
-  exit 1
-fi
-exit 0
+case "${1:-}" in
+  --added) shift; scan_added "${1:-}" ;;
+  --all)   shift; scan_files ;;
+  *)       scan_files "$@" ;;
+esac
