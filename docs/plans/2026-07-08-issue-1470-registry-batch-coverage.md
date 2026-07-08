@@ -1,6 +1,6 @@
 # Plan for #1470: Registry Batch Coverage Wave 6
 
-> **Status:** plan-review
+> **Status:** plan-approved
 > **Complexity:** T3
 > **Date:** 2026-07-08
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1470
