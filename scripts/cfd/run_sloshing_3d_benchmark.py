@@ -286,7 +286,8 @@ def run_at_ranks(work_dir: Path, cpb: int, end_time: float, dt: float,
     return row
 
 
-def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
+            label: str | None = None) -> Dict[str, Any]:
     done = [r for r in rows if r["status"] == "completed" and r.get("s_per_step")]
     base = next((r for r in done if r["ranks"] == 1), None) or (
         min(done, key=lambda r: r["ranks"]) if done else None)
@@ -300,10 +301,13 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]]) -> Dict[str, 
     # extrapolate a production estimate at the best-efficiency rank
     best = max((r for r in done if r["ranks"] > 1),
                key=lambda r: r.get("parallel_efficiency", 0), default=None)
+    import os
+    host = os.uname().nodename
     manifest = {
         "meta": {"generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
                  "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
-                 "box": "a-l-2 / dev-secondary (32 cores)",
+                 "box": label or host,
+                 "hostname": host, "cores": os.cpu_count(),
                  "epic": "#1429", "issue": "#1433",
                  "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
                  "geometry": "methodology near-square plan-form (NOT the real B1546 tank; real B_db/D_db from #640)",
@@ -315,8 +319,13 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]]) -> Dict[str, 
         "scaling": sorted(rows, key=lambda r: r["ranks"]),
         "best_efficiency_rank": best,
     }
-    _MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    _MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n")
+    # A label writes a per-box manifest (…-<label>.json) so multiple boxes'
+    # results coexist for head-to-head comparison; no label keeps the base name.
+    out = (_MANIFEST.with_name(f"{_MANIFEST.stem}-{label}{_MANIFEST.suffix}")
+           if label else _MANIFEST)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest["_out_path"] = str(out.relative_to(_REPO))
     return manifest
 
 
@@ -327,6 +336,8 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("--end-time", type=float, default=0.30)
     ap.add_argument("--dt", type=float, default=0.001)
     ap.add_argument("--ranks", type=int, nargs="+", default=[1, 2, 4, 8, 16, 24, 32])
+    ap.add_argument("--label", default=None,
+                    help="per-box tag; writes sloshing-3d-benchmark-<label>.json so boxes coexist")
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)
     print(f"3D benchmark: cpb={args.cpb}, end={args.end_time}s, ranks={args.ranks}")
@@ -337,7 +348,7 @@ def main(argv: List[str] | None = None) -> int:
         print(f"[np={n:>2}] {row['status']:<16} cells={row.get('cells','-')} "
               f"wall={row.get('wall_s','-')}s steps={row.get('steps','-')} "
               f"s/step={row.get('s_per_step','-')}")
-    m = collect(args.cpb, args.end_time, rows)
+    m = collect(args.cpb, args.end_time, rows, label=args.label)
     print("\n=== strong scaling ===")
     for r in m["scaling"]:
         if r["status"] == "completed":
@@ -345,7 +356,7 @@ def main(argv: List[str] | None = None) -> int:
                   f"speedup={r.get('speedup_vs_1rank','-')}x  "
                   f"eff={r.get('parallel_efficiency','-')}  "
                   f"cells/rank={r.get('cells_per_rank')}")
-    print(f"-> {_MANIFEST.relative_to(_REPO)}")
+    print(f"-> {m.get('_out_path', _MANIFEST.relative_to(_REPO))}")
     return 0
 
 
