@@ -2,10 +2,10 @@
 MAJOR
 
 ## Retrieval
-Verified locally: plan file, issue body, registry seed rows, batch logic, schedule/calc tests, wiki source pages for X-Drill and RSU-0077, review artifacts, legal-scan script. Ran focused tests: `tests/drilling_riser/test_schedule_assembly.py tests/drilling_riser/test_assembly_golden.py` -> `22 passed`.
+Verified locally: plan file, issue body, registry seed rows, batch logic, schedule/calc tests, private wiki evidence for source-incomplete rows and `RSU-0077`, review artifacts, legal-scan script. Ran focused tests: `tests/drilling_riser/test_schedule_assembly.py tests/drilling_riser/test_assembly_golden.py` -> `22 passed`.
 
 ## Findings
-1. `RSU-0077` is under-specified despite being the obvious source-backed lift candidate. The plan leaves prioritization open at `docs/plans/2026-07-08-issue-1470-registry-batch-coverage.md:210`, but the wiki source already documents RSU-0077 as a shallow-water tension workbook with four cases and operating tensions (`ri-sbop-weight-data-family.md:223-246`). The TDD list has no RSU-0077-specific contract/schema/golden test.
+1. `RSU-0077` is under-specified despite being the obvious source-backed lift candidate. The plan leaves prioritization open, but private wiki evidence already documents `RSU-0077` as a shallow-water tension source. The TDD list has no `RSU-0077`-specific contract/schema/batch test.
 
 2. The runnable-count acceptance is too weak for an issue titled/specified to lift `8/21`. Plan lines `112` and `168` allow "above 8/21, or explicit reviewed no-lift source-gap result," which can pass without closing any runnable gap. Given RSU-0077 source evidence exists, this is not approval-ready.
 

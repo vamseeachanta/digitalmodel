@@ -19,7 +19,7 @@ Incomplete checks:
 
 - MAJOR: Governance index requirement is waived without replacement. Plan lines 53 and 68 say `docs/plans/README.md` is missing and will not be created, but the issue-planning workflow requires a plan index row or an explicit equivalent state surface.
 
-- MAJOR: Public/private leakage controls are under-scoped. Plan lines 75-77 include raw local paths, and failed review artifacts include local runtime paths. Plan line 178 only bans raw source-share paths and wiki-side numeric values in commits/PRs/comments; it omits plan files and review artifacts.
+- MAJOR: Public/private leakage controls are under-scoped. Plan lines 75-77 include raw local paths, and failed review artifacts include local runtime paths. Plan line 178 only bans private source identifiers and wiki-side numeric values in commits/PRs/comments; it omits plan files and review artifacts.
 
 - MAJOR: Legal scan command is non-executable as written from this topology. `workspace-hub/scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only` returned `ERROR: Repository not found`.
 

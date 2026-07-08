@@ -28,6 +28,7 @@ from digitalmodel.drilling_riser.calc_contracts import find_contract, resolve_wi
 from digitalmodel.drilling_riser.stackup import minimum_slip_ring_tension
 
 _CALC = "16q-min-top-tension"
+_SHALLOW_WATER_CALC = "shallow-water-tension-to-rotate"
 
 _RSU_0007_KEYS = {
     "rsu_id",
@@ -87,24 +88,39 @@ _RSU_0023_KEYS = {
     "overall_min_top_tension_kips",
     "mud_weight_sweep",
 }
+_RSU_0077_SHALLOW_KEYS = {
+    "rsu_id",
+    "calc",
+    "units",
+    "mud_weight_ppg",
+    "n_tensioners",
+    "governing_case",
+    "governing_tension_to_apply_kips",
+    "cases",
+    "reproduction",
+}
 
 
-def _calc_contract(rsu_id: str, required_keys: set[str]) -> dict:
+def _calc_contract_for(rsu_id: str, calc: str, required_keys: set[str]) -> dict:
     root = resolve_wiki_root()
     if root is None:
         pytest.skip(
             "llm-wiki registry not available (standalone mode) — the 16Q "
             "goldens are part of the in-context merge gate"
         )
-    contract = find_contract(rsu_id, _CALC, root)
+    contract = find_contract(rsu_id, calc, root)
     if contract is None:
         pytest.fail(
-            f"llm-wiki found but no {_CALC} contract for {rsu_id} — the "
+            f"llm-wiki found but no {calc} contract for {rsu_id} — the "
             "paired llm-wiki calc-contract change is not on this clone"
         )
     missing = required_keys - set(contract)
     assert not missing, f"{rsu_id} contract schema drift — missing: {missing}"
     return contract
+
+
+def _calc_contract(rsu_id: str, required_keys: set[str]) -> dict:
+    return _calc_contract_for(rsu_id, _CALC, required_keys)
 
 
 def _assert_golden(result: float, documented: float) -> None:
@@ -303,3 +319,26 @@ def test_16q_rsu0014_setting_side_consistency():
     assert len(ladder) >= 2
     for (op_a, top_a), (op_b, top_b) in zip(ladder, ladder[1:]):
         assert top_b - top_a == pytest.approx(op_b - op_a, abs=0.11)
+
+
+# -- wave 6 (#1470): shallow-water tension-to-rotate workbook -------------------------
+
+
+def test_rsu0077_shallow_water_tension_to_rotate_contract_schema():
+    """RSU-0077 is not a fabricated 16Q chain: the private source workbook
+    carries a shallow-water tension-to-rotate case table. The contract pins
+    only machine-readable schema and internal consistency here; the workbook
+    values stay wiki-side."""
+    c = _calc_contract_for("RSU-0077", _SHALLOW_WATER_CALC, _RSU_0077_SHALLOW_KEYS)
+    assert c["units"] == "kips"
+    assert c["n_tensioners"] > 0
+    cases = c["cases"]
+    assert cases
+    case_ids = {case["case"] for case in cases}
+    assert len(case_ids) == len(cases)
+    assert c["governing_case"] in case_ids
+    governing = next(case for case in cases if case["case"] == c["governing_case"])
+    assert c["governing_tension_to_apply_kips"] == pytest.approx(
+        governing["op_tension_to_apply_kips"]
+    )
+    assert all(case["op_tension_to_apply_kips"] > 0 for case in cases)
