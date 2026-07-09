@@ -818,13 +818,28 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results["diagnostic_message"].startswith("Classification: PUMP_TAGGING.")
         assert results["pump_fillage"] == pytest.approx(75.909653)
         assert results["inferred_production"] == pytest.approx(338.041470)
+        assert cfg["screening_status"] == "fail"
+        assert cfg["artificial_lift"]["screening_status"] == "fail"
+        assert cfg["artificial_lift"]["classification"] == "PUMP_TAGGING"
+        assert cfg["artificial_lift"]["severity"] == "critical"
+        assert cfg["artificial_lift"]["setpoints"]["structure_rating_capped"] is False
 
         html_report = Path(cfg["outputs"]["html_report"])
         if not html_report.is_absolute():
             html_report = REPO_ROOT / html_report
         html = html_report.read_text()
+        assert "screening_status" in html
+        assert "POC setpoints" in html
+        assert "Troubleshooting" in html
+        assert "structure-rating cap not applied" in html
+        assert "Synthetic seed</dt><dd>711" in html
+        assert "PPRL" in html
+        assert "MPRL" in html
+        assert "Load span" in html
+        assert "Fluid load" in html
         assert "Pump Tagging" in html
         assert "SIM-PUMP-TAGGING-711" in html
+        assert "711" in html
     elif workflow["id"] == "artificial-lift-field-health":
         summary = cfg["artificial_lift_field_health"]
         statuses = {row["api14"]: row["health_status"] for row in summary["wells"]}
