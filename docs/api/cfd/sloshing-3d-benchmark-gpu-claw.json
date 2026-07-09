@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
+    "box": "gpu-claw",
+    "hostname": "gpu-claw",
+    "cores": 8,
+    "epic": "#1429",
+    "issue": "#1433",
+    "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
+    "geometry": "methodology near-square plan-form (not a production tank geometry; production proportions come from #640)",
+    "note": "Timed stage = solver only (blockMesh/setFields/decomposePar are untimed setup). s_per_step normalises out any adaptive-dt step-count drift across ranks.",
+    "decomposition": "scotch",
+    "timing": "solver wall-clock / timesteps"
+  },
+  "case": {
+    "breadth_m": 0.9,
+    "height_m": 0.9,
+    "length_m": 0.9,
+    "fill_h_over_L": 0.5,
+    "roll_amplitude_deg": 4.0,
+    "cells_per_breadth": 60,
+    "cells": 216000,
+    "end_time_s": 0.3
+  },
+  "scaling": [
+    {
+      "ranks": 1,
+      "cells": 216000,
+      "cells_per_rank": 216000,
+      "status": "completed",
+      "wall_s": 79.2,
+      "steps": 37,
+      "s_per_step": 2.1407,
+      "speedup_vs_1rank": 1.0,
+      "parallel_efficiency": 1.0
+    },
+    {
+      "ranks": 2,
+      "cells": 216000,
+      "cells_per_rank": 108000,
+      "status": "completed",
+      "wall_s": 44.72,
+      "steps": 37,
+      "s_per_step": 1.2085,
+      "speedup_vs_1rank": 1.771,
+      "parallel_efficiency": 0.886
+    },
+    {
+      "ranks": 4,
+      "cells": 216000,
+      "cells_per_rank": 54000,
+      "status": "completed",
+      "wall_s": 32.64,
+      "steps": 37,
+      "s_per_step": 0.8821,
+      "speedup_vs_1rank": 2.427,
+      "parallel_efficiency": 0.607
+    },
+    {
+      "ranks": 8,
+      "cells": 216000,
+      "cells_per_rank": 27000,
+      "status": "completed",
+      "wall_s": 21.83,
+      "steps": 37,
+      "s_per_step": 0.5899,
+      "speedup_vs_1rank": 3.629,
+      "parallel_efficiency": 0.454
+    },
+    {
+      "ranks": 16,
+      "cells": 216000,
+      "cells_per_rank": 13500,
+      "status": "completed",
+      "wall_s": 25.7,
+      "steps": 37,
+      "s_per_step": 0.6945,
+      "speedup_vs_1rank": 3.082,
+      "parallel_efficiency": 0.193
+    }
+  ],
+  "best_efficiency_rank": {
+    "ranks": 2,
+    "cells": 216000,
+    "cells_per_rank": 108000,
+    "status": "completed",
+    "wall_s": 44.72,
+    "steps": 37,
+    "s_per_step": 1.2085,
+    "speedup_vs_1rank": 1.771,
+    "parallel_efficiency": 0.886
+  }
+}
