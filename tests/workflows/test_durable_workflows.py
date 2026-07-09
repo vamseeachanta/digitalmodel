@@ -557,6 +557,28 @@ def test_workflow_registry(workflow, monkeypatch):
         assert summary["peak_frequency"] == pytest.approx(omega_p, abs=0.02)
         assert len(spectrum) == 181
         assert (spectrum["S"] >= 0.0).all()
+    elif workflow["id"] == "response-spectrum":
+        summary = cfg["response_spectrum"]["summary"]
+        results_path = Path(cfg["response_spectrum"]["timeseries_csv"])
+        report_path = Path(cfg["response_spectrum"]["report_html"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not report_path.is_absolute():
+            report_path = REPO_ROOT / report_path
+        timeseries = pd.read_csv(results_path)
+
+        assert cfg["screening_status"] == "pass"
+        assert cfg["response_spectrum"]["method"] == "kinematic_cumtrapz"
+        assert summary["npts"] == 1560
+        assert summary["dt_s"] == pytest.approx(0.02)
+        assert summary["pga_g"] == pytest.approx(0.31882, rel=1.0e-4)
+        assert len(timeseries) == 1560
+        assert {"velocity_m_s", "displacement_m"}.issubset(timeseries.columns)
+        html = report_path.read_text(encoding="utf-8")
+        assert "Data provenance" in html
+        assert "Kinematic acceleration integration" in html
+        assert html.find("<script") >= 0
+        assert html.find("cdn.plot") == -1
     elif workflow["id"] == "rao-tabulation":
         summary = cfg["rao_tabulation"]
         results_path = Path(summary["rao_csv"])

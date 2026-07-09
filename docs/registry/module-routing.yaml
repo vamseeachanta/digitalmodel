@@ -182,6 +182,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/residual/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#residual
+  - module: seismic
+    entry_point: src/digitalmodel/seismic/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/seismic/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#seismic
   - module: signal_processing
     entry_point: src/digitalmodel/signal_processing/
     maturity: beta
