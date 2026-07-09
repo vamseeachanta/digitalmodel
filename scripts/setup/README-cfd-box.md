@@ -43,6 +43,35 @@ Matched case (cpb=60 / 216k cells, 0.30 s window, core ladder). Judge on **peak
 throughput AND wall-clock predictability** — a-l-2's real limit was contention on
 a shared box, not the solver.
 
+## 4. Dispatch between CFD Linux hosts
+Use the dispatcher from `ace-linux-1` when both `gpu-claw` and `ace-linux-2` are
+available over SSH. It probes each host for reachability, core count, and current
+load, then selects the fastest eligible host from the benchmark manifests.
+
+```bash
+uv run python scripts/setup/dispatch-cfd-run.py --ranks 8 --dry-run -- \
+    echo run-on-{host}-np-{ranks}
+```
+
+Remove `--dry-run` to execute the command on the selected host. The remote
+command runs with OpenFOAM v2312 sourced, from `~/digitalmodel`, and receives:
+`CFD_DISPATCH_HOST`, `CFD_DISPATCH_RANKS`, and `CFD_DISPATCH_S_PER_STEP`.
+
+Host defaults:
+- `gpu-claw`: `CFD_GPU_CLAW_SSH` or `gpu-claw`; manifest
+  `docs/api/cfd/sloshing-3d-benchmark-gpu-claw.json`. For VPN-only addresses,
+  export `CFD_GPU_CLAW_SSH=user@<vpn-ip>` before dispatch.
+- `ace-linux-2`: `CFD_ACE_LINUX_2_SSH` or `ace-linux-2`;
+  manifest `docs/api/cfd/sloshing-3d-benchmark.json`.
+
+For offline planning or tests, bypass SSH probes:
+```bash
+uv run python scripts/setup/dispatch-cfd-run.py \
+    --assume-probe gpu-claw=8,0.5 \
+    --assume-probe ace-linux-2=32,8.0 \
+    --ranks 8 --dry-run -- echo run-on-{host}-np-{ranks}
+```
+
 ## 5. Data sync to the cloud (always-on)
 Key data survives the box via `rclone`. One-time (HITL — provides a cloud secret):
 ```bash
@@ -58,7 +87,7 @@ RCLONE_REMOTE=cfdcloud:cfd-box scripts/setup/sync-cfd-data.sh --install-timer 30
 Syncs the **small durable set** — input configs, result manifests, reports/HTML —
 **not** the multi-GB raw case trees (regenerable; opt in with `SYNC_RAW=1`).
 
-## 4. Migrate (if the new box wins)
+## 6. Migrate (if the new box wins)
 - Commit the new box's benchmark manifest via PR (reference #1495).
 - Update the CFD-execution routing: `workspace-hub` `routing-rules.yaml` (`domain:cfd`
   → new host) and the `cfd-execution-box` memory note.
