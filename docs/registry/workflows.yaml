@@ -374,6 +374,16 @@ workflows:
       - examples/workflows/wave-spectrum/results/input_spectrum.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wave-spectrum]
     runtime: offline
+  - id: response-spectrum
+    basename: response_spectrum
+    title: Accelerogram preprocessing for response-spectrum workflows
+    input: examples/workflows/response-spectrum/input.yml
+    outputs:
+      - examples/workflows/response-spectrum/results/input.yml
+      - examples/workflows/response-spectrum/results/input_timeseries.csv
+      - examples/workflows/response-spectrum/results/input_report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[response-spectrum]
+    runtime: offline
   - id: rao-tabulation
     basename: rao_tabulation
     title: Offline 6-DOF vessel RAO amplitude and phase tabulation

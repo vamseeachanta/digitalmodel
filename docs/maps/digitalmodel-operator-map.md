@@ -44,6 +44,7 @@ of duplicating its detailed issue history.
 | `production_engineering` | `src/digitalmodel/production_engineering/` | `tests/production_engineering/` | `docs/domains/README.md` | Well testing, nodal analysis, production quality scoring | petroleum engineering models |
 | `reservoir` | `src/digitalmodel/reservoir/` | `tests/reservoir/` | `docs/domains/reservoir/` | Reservoir engineering and production-support calculations | reservoir engineering models |
 | `residual` | `src/digitalmodel/residual/` | `tests/residual/` | `docs/domains/README.md` | Transparent, bounded residual-correction spine for the hybrid digital twin (#1374) | NumPy |
+| `seismic` | `src/digitalmodel/seismic/` | `tests/seismic/` | `docs/domains/README.md` | Strong-motion accelerogram preprocessing and response-spectrum workflow scaffolding | NumPy, SciPy, pandas, Plotly |
 | `signal_processing` | `src/digitalmodel/signal_processing/` | `tests/signal_processing/` | `docs/domains/signal_processing/` | Signal analysis, filters, time-series utilities | NumPy, SciPy |
 | `solvers` | `src/digitalmodel/solvers/` | `tests/solvers/` | `docs/domains/solvers/` | Solver adapters, OrcaFlex/OrcaWave/AQWA workflows, batch execution | solver-specific APIs |
 | `specialized` | `src/digitalmodel/specialized/` | `tests/specialized/` | `docs/domains/specialized/` | Specialized/non-core modules pending routing cleanup | mixed utilities |

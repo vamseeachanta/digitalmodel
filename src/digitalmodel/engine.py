@@ -636,6 +636,12 @@ def engine(
 
         liquefaction = LiquefactionWorkflow()
         cfg_base = liquefaction.router(cfg_base)
+    elif basename == "response_spectrum":
+        from digitalmodel.seismic.response_spectrum.workflow import (
+            router as response_spectrum,
+        )
+
+        cfg_base = response_spectrum(cfg_base)
     elif basename == "rig_capability_assessment":
         from digitalmodel.field_development.rig_capability import (
             router as rig_capability,
