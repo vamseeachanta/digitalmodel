@@ -11,32 +11,82 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
+OPENFOAM_PACKAGE_VERSION="2312.260127-2"
+OPENMPI_PACKAGE_VERSION="4.1.6-7ubuntu2"
+ASSETUTILITIES_URL="https://github.com/vamseeachanta/assetutilities.git"
+ASSETUTILITIES_COMMIT="993f1b5ddc90b56ecf531bedb1b84f5efe096700"
+ASSETUTILITIES_TREE="5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
+ASSETUTILITIES_DIR="${ASSETUTILITIES_DIR:-$(dirname "$REPO_ROOT")/assetutilities}"
 WORK_DIR="${2:-${WORK_DIR:-$HOME/cfd_work}}"
 PY="$REPO_ROOT/.venv/bin/python"; [[ -x "$PY" ]] || PY="python"
 
 ok()  { printf '  \033[1;32m✓\033[0m %s\n' "$*"; }
 bad() { printf '  \033[1;31m✗\033[0m %s\n' "$*" >&2; FAIL=1; }
+package_version() { dpkg-query -W -f='${Version}' "$1" 2>/dev/null || true; }
+package_is_held() { apt-mark showhold 2>/dev/null | grep -Fx -- "$1" >/dev/null; }
 FAIL=0
 
 echo "== toolchain =="
-for t in blockMesh interFoam decomposePar reconstructPar mpirun; do
+for t in blockMesh interFoam decomposePar reconstructParMesh reconstructPar mpirun; do
   if command -v "$t" >/dev/null 2>&1; then ok "$t ($(command -v "$t"))"; else bad "$t NOT on PATH — did you 'source .../etc/bashrc'?"; fi
 done
-[[ -x "$PY" || "$PY" == python ]] && ok "python: $($PY --version 2>&1)"
+[[ "$(package_version openfoam2312-default)" == "$OPENFOAM_PACKAGE_VERSION" ]] \
+  && ok "openfoam2312-default $OPENFOAM_PACKAGE_VERSION" \
+  || bad "openfoam2312-default must equal $OPENFOAM_PACKAGE_VERSION"
+[[ "$(package_version openmpi-bin)" == "$OPENMPI_PACKAGE_VERSION" ]] \
+  && ok "openmpi-bin $OPENMPI_PACKAGE_VERSION" \
+  || bad "openmpi-bin must equal $OPENMPI_PACKAGE_VERSION"
+[[ "$(package_version libopenmpi-dev)" == "$OPENMPI_PACKAGE_VERSION" ]] \
+  && ok "libopenmpi-dev $OPENMPI_PACKAGE_VERSION" \
+  || bad "libopenmpi-dev must equal $OPENMPI_PACKAGE_VERSION"
+package_is_held "openfoam2312-default" \
+  && ok "openfoam2312-default is held" || bad "openfoam2312-default is not held"
+package_is_held "openmpi-bin" \
+  && ok "openmpi-bin is held" || bad "openmpi-bin is not held"
+package_is_held "libopenmpi-dev" \
+  && ok "libopenmpi-dev is held" || bad "libopenmpi-dev is not held"
+git -C "$ASSETUTILITIES_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+  && ok "assetutilities sibling is a Git worktree" \
+  || bad "assetutilities sibling checkout is missing: $ASSETUTILITIES_DIR"
+[[ "$(git -C "$ASSETUTILITIES_DIR" remote get-url origin 2>/dev/null || true)" == "$ASSETUTILITIES_URL" ]] \
+  || bad "assetutilities origin must equal $ASSETUTILITIES_URL"
+[[ "$(git -C "$ASSETUTILITIES_DIR" rev-parse HEAD 2>/dev/null || true)" == "$ASSETUTILITIES_COMMIT" ]] \
+  && ok "assetutilities commit $ASSETUTILITIES_COMMIT" \
+  || bad "assetutilities commit must equal $ASSETUTILITIES_COMMIT"
+[[ "$(git -C "$ASSETUTILITIES_DIR" rev-parse 'HEAD^{tree}' 2>/dev/null || true)" == "$ASSETUTILITIES_TREE" ]] \
+  && ok "assetutilities tree $ASSETUTILITIES_TREE" \
+  || bad "assetutilities tree must equal $ASSETUTILITIES_TREE"
+git diff --quiet || bad "working tree has tracked modifications"
+git diff --cached --quiet || bad "working tree has staged modifications"
+[[ -z "$(git ls-files --others --exclude-standard)" ]] \
+  || bad "working tree has untracked files"
+git -C "$ASSETUTILITIES_DIR" diff --quiet \
+  || bad "assetutilities has tracked modifications"
+git -C "$ASSETUTILITIES_DIR" diff --cached --quiet \
+  || bad "assetutilities has staged modifications"
+[[ -z "$(git -C "$ASSETUTILITIES_DIR" ls-files --others --exclude-standard)" ]] \
+  || bad "assetutilities has untracked files"
+if uv run --frozen --extra cfd python -c \
+  'import gmsh; assert gmsh.__version__ == "4.15.1"' >/dev/null; then
+  ok "locked Python gmsh 4.15.1"
+else
+  bad "locked CFD environment cannot import gmsh 4.15.1"
+fi
 (( FAIL )) && { echo "toolchain incomplete — fix before benchmarking."; exit 1; }
 
-echo "== smoke: tiny 3D interFoam, serial + 2-rank MPI =="
-# reuse the benchmark harness at a trivial size + window (fast machinery check)
-if $PY scripts/cfd/run_sloshing_3d_benchmark.py --work-dir "$WORK_DIR" \
-     --cpb 24 --end-time 0.02 --dt 0.001 --ranks 1 2 --label "$(hostname -s)-smoke" >/tmp/cfdsmoke.log 2>&1; then
-  if grep -q "np= 2.*completed" /tmp/cfdsmoke.log && grep -q "np= 1.*completed" /tmp/cfdsmoke.log; then
-    ok "serial + 2-rank (decomposePar + mpirun -parallel) both completed"
-    grep -E "np=[[:space:]]*[12]" /tmp/cfdsmoke.log | sed 's/^/    /'
-  else
-    bad "smoke run did not complete both ranks — see /tmp/cfdsmoke.log"; tail -15 /tmp/cfdsmoke.log
-  fi
+echo "== smoke: synthetic Gmsh bridge + 2-rank MPI machinery =="
+mkdir -p "$WORK_DIR"
+smoke_log="$WORK_DIR/verify-synthetic-smoke.log"
+if CFD_DISPATCH_RANKS=2 CFD_EXECUTION_CLASS=test \
+  uv run --frozen --extra cfd python scripts/cfd/run_synthetic_tank_3d_smoke.py \
+    --ranks 2 \
+    --work-dir "$WORK_DIR/verify-synthetic-smoke" \
+    --evidence "$WORK_DIR/verify-synthetic-smoke.json" \
+    --cpb 6 --end-time 0.02 --delta-t 0.001 >"$smoke_log" 2>&1; then
+  ok "Gmsh bridge + non-oversubscribed 2-rank smoke completed"
 else
-  bad "smoke run failed — see /tmp/cfdsmoke.log"; tail -20 /tmp/cfdsmoke.log
+  bad "synthetic smoke failed — see $smoke_log"
+  tail -20 "$smoke_log"
 fi
 (( FAIL )) && exit 1
 

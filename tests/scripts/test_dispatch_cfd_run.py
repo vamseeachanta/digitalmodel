@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/setup/dispatch-cfd-run.py"
 
@@ -165,6 +167,10 @@ def test_dispatch_dry_run_builds_openfoam_ssh_command(tmp_path: Path) -> None:
     assert "gpu-claw" in argv
     remote_shell = argv[-1]
     assert "source /usr/lib/openfoam/openfoam2312/etc/bashrc" in remote_shell
+    source_offset = remote_shell.index("source /usr/lib/openfoam/openfoam2312/etc/bashrc")
+    errexit_offset = remote_shell.index("set -e")
+    assert source_offset < errexit_offset
+    assert "bashrc || exit $?; set -e;" in remote_shell
     assert 'cd -- "$HOME"/digitalmodel' in remote_shell
     assert "CFD_DISPATCH_RANKS=8" in remote_shell
     assert "scripts/setup/verify-cfd-box.sh --benchmark '~/cfd_work'" in remote_shell
@@ -242,3 +248,69 @@ def test_cli_dry_run_does_not_invoke_ssh(tmp_path: Path) -> None:
     assert "selected: gpu-claw" in result.stdout
     assert "ssh " in result.stdout
     assert "echo run" in result.stdout
+
+
+def test_dispatch_default_threshold_is_fixed_at_one_point_five(
+    tmp_path: Path,
+) -> None:
+    dispatcher = load_dispatcher()
+    manifest = tmp_path / "gpu.json"
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
+    candidate = dispatcher.evaluate_host(
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
+        dispatcher.load_benchmark(manifest),
+        requested_ranks=8,
+        max_load_per_core=dispatcher.build_parser().parse_args([]).max_load_per_core,
+    )
+
+    assert candidate.eligible
+    assert dispatcher.build_parser().parse_args([]).max_load_per_core == 1.5
+
+
+def test_dispatch_exports_selected_rank_for_smoke_driver(tmp_path: Path) -> None:
+    dispatcher = load_dispatcher()
+    manifest = tmp_path / "gpu.json"
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
+    candidate = dispatcher.evaluate_host(
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
+        dispatcher.load_benchmark(manifest),
+        requested_ranks=8,
+        max_load_per_core=1.5,
+    )
+
+    remote = dispatcher.build_ssh_command(
+        candidate,
+        remote_command=["python", "scripts/cfd/run_synthetic_tank_3d_smoke.py", "--ranks", "{ranks}"],
+        repo_dir="~/digitalmodel",
+    )[-1]
+
+    assert "CFD_DISPATCH_RANKS=8" in remote
+    assert "CFD_EXECUTION_CLASS=dedicated" in remote
+    assert "CFD_DISPATCH_PROJECTED_LOAD_PER_CORE=1.0625" in remote
+    assert "run_synthetic_tank_3d_smoke.py --ranks 8" in remote
+
+
+@pytest.mark.parametrize("threshold", [0.0, 1.49, 1.51, float("nan")])
+def test_dispatch_api_rejects_any_nonfixed_load_threshold(threshold: float) -> None:
+    dispatcher = load_dispatcher()
+    profile = dispatcher.BenchmarkProfile(
+        "test", Path("benchmark.json"), 100, (dispatcher.BenchmarkRow(2, 0.1),)
+    )
+
+    with pytest.raises(ValueError, match="fixed at 1.5"):
+        dispatcher.evaluate_host(
+            dispatcher.HostConfig("test", "test", profile.manifest),
+            dispatcher.HostProbe("test", True, "test", 4, 0.1, "ok"),
+            profile,
+            requested_ranks=2,
+            max_load_per_core=threshold,
+        )
+
+
+def test_dispatch_cli_rejects_nonfixed_load_threshold() -> None:
+    dispatcher = load_dispatcher()
+
+    with pytest.raises(SystemExit):
+        dispatcher.build_parser().parse_args(["--max-load-per-core", "0"])
