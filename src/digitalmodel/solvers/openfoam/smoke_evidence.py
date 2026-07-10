@@ -51,7 +51,6 @@ def _integer(value: Any, label: str, *, minimum: int = 0) -> int:
         raise EvidenceValidationError(f"{label} must be an integer >= {minimum}")
     return value
 
-
 def _digest(value: Any, label: str) -> str:
     if not isinstance(value, str) or _HASH.fullmatch(value) is None:
         raise EvidenceValidationError(f"{label} must be a lowercase SHA-256")
@@ -213,14 +212,15 @@ def _validate_bridge(record: Any, artifacts: Mapping) -> None:
     if bridge["schema_version"] != 1 or bridge["status"] != "completed":
         raise EvidenceValidationError("bridge must be completed schema version 1")
     _utc(bridge["created_utc"], "bridge.created_utc")
-    source = _exact(bridge["source_msh"], {"path", "sha256", "format"}, "bridge source")
+    source = _exact(bridge["source_msh"], {"path", "sha256", "size", "format"}, "bridge source")
     mesh = _exact(
         bridge["poly_mesh"], {"path", "tree_sha256", "file_count", "total_bytes"}, "bridge mesh"
     )
     if source["path"] != "source.msh" or source["format"] != "2.2":
         raise EvidenceValidationError("bridge source metadata is invalid")
-    if _digest(source["sha256"], "bridge source digest") != artifacts["source_msh"]["sha256"]:
-        raise EvidenceValidationError("bridge source digest does not match artifacts")
+    source_matches = _digest(source["sha256"], "bridge source digest") == artifacts["source_msh"]["sha256"] and _integer(source["size"], "bridge source size", minimum=1) == artifacts["source_msh"]["size"]
+    if not source_matches:
+        raise EvidenceValidationError("bridge source digest or size does not match artifacts")
     inputs = _exact(bridge["case_inputs"], {"tree_sha256", "file_count", "total_bytes"}, "bridge inputs")
     _digest(inputs["tree_sha256"], "bridge inputs digest")
     for name in ("file_count", "total_bytes"):
