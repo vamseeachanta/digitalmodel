@@ -1,28 +1,5 @@
 #!/usr/bin/env python3
-"""
-ABOUTME: Fail-closed OpenFOAM solver runner. The openfoam module otherwise only
-*generates* case directories (case_builder); this executes them.
-
-Unlike a single-executable solver (MAPDL), an OpenFOAM run is a *sequence* of
-utilities invoked inside the case directory:
-
-    blockMesh            -> system/blockMeshDict        -> log.blockMesh
-    [snappyHexMesh]      -> system/snappyHexMeshDict    -> log.snappyHexMesh
-    <solver>             -> e.g. interFoam / simpleFoam -> log.<solver>
-    [foamToVTK]          -> VTK/ for PyVista/ParaView   -> log.foamToVTK
-
-This mirrors the ANSYS/OrcaWave/AQWA runner contract so the same fixed
-``uv run python -m digitalmodel <input>`` lane command can drive a CFD solve:
-
-  - **fail-closed**: if no OpenFOAM is on PATH and a real solve was requested,
-    the run falls back to DRY_RUN (the workflow then raises, so the lane can
-    never record a false finish);
-  - per-utility log capture (``log.<utility>``) for convergence tracking;
-  - metadata-only result (status, paths, return codes) — heavy field/VTK data
-    stays in the case directory on the host.
-
-Invocation is subprocess-based (no PyFoam hard dependency).
-"""
+"""Fail-closed subprocess runner for prepared OpenFOAM cases."""
 
 from __future__ import annotations
 
@@ -173,16 +150,24 @@ class OpenFOAMRunner:
         preflight = self._preflight(case, result, using_prebuilt)
         if preflight is None:
             return result
-        _, stages = preflight
+        solver, stages = preflight
 
         execution: PrebuiltExecution | None = None
         start = time.monotonic()
         try:
             execution_case = case
             if prebuilt_manifest is not None:
-                execution = prepare_prebuilt_execution(case, prebuilt_manifest)
+                execution = prepare_prebuilt_execution(
+                    case,
+                    prebuilt_manifest,
+                    timeout_seconds=self._config.timeout_seconds,
+                )
                 execution_case = execution.case_dir
                 result.case_dir = execution_case
+                if self._read_solver(execution_case) != solver:
+                    raise PrebuiltMeshError(
+                        "attested snapshot solver does not match preflight selection"
+                    )
             self._execute_stages(result, execution_case, stages, start)
             if execution is not None:
                 execution.verify_unchanged()
@@ -212,6 +197,9 @@ class OpenFOAMRunner:
                 "Could not determine solver: pass config.solver or add "
                 "'application' to system/controlDict",
             )
+            return None
+        if using_prebuilt and solver != "interFoam":
+            self._fail(result, "prebuilt mesh execution requires interFoam")
             return None
         if self._config.dry_run:
             result.status = OpenFOAMRunStatus.DRY_RUN
