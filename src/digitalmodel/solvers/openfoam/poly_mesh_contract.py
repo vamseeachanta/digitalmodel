@@ -272,6 +272,8 @@ def _failed_check_count(lines: list[str]) -> int:
         tokens = line.rstrip(".").split()
         if len(tokens) == 4 and tokens[0] == "Failed" and tokens[2:] == ["mesh", "checks"]:
             matches.append(_integer(tokens[1], "failed mesh check count"))
+    if not matches:
+        return 0
     if len(matches) != 1:
         raise PolyMeshContractError("checkMesh must report one failed-check count")
     return matches[0]

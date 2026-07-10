@@ -151,6 +151,14 @@ def test_return_code_zero_with_failed_mesh_check_is_rejected() -> None:
         parse_check_mesh_output(output, return_code=0)
 
 
+def test_openfoam_2312_success_may_omit_zero_failed_check_count() -> None:
+    output = VALID_CHECK_MESH.replace("Failed 0 mesh checks.\n", "")
+
+    result = parse_check_mesh_output(output, return_code=0)
+
+    assert result.cell_count == 4
+
+
 @pytest.mark.parametrize(
     ("output", "return_code", "message"),
     [
