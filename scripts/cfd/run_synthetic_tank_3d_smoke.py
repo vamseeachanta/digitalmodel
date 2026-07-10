@@ -45,6 +45,8 @@ from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_INPUT = REPO_ROOT / "examples/cfd/synthetic_l_tank/input.yml"
 DEFAULT_EVIDENCE = REPO_ROOT / "docs/api/cfd/synthetic-l-tank-smoke.json"
+OPENFOAM_PACKAGE_VERSION = "2312.260127-2"
+OPENMPI_PACKAGE_VERSION = "4.1.6-7ubuntu2"
 
 
 def visible_cpu_count() -> int:
@@ -147,9 +149,27 @@ def _toolchain() -> BridgeToolchain:
         raise SmokeError(f"gmsh must equal 4.15.1, received {gmsh.__version__}")
     return BridgeToolchain(
         gmsh.__version__,
-        "2312.260127-2",
-        "4.1.6-7ubuntu2",
+        _package_version("openfoam2312-default", OPENFOAM_PACKAGE_VERSION),
+        _package_version("openmpi-bin", OPENMPI_PACKAGE_VERSION),
     )
+
+
+def _package_version(package: str, expected: str) -> str:
+    try:
+        process = subprocess.run(
+            ["dpkg-query", "-W", "-f=${Version}", package],
+            capture_output=True,
+            text=True,
+            check=False,
+            shell=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise SmokeError(f"cannot attest {package}: {exc}") from exc
+    actual = process.stdout.strip()
+    if process.returncode != 0 or actual != expected:
+        raise SmokeError(f"{package} must equal {expected}, received {actual or 'missing'}")
+    return actual
 
 
 def _evidence_context(

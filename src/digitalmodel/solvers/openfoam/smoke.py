@@ -46,12 +46,7 @@ class SmokePlan:
             ("decomposePar", "-force"),
             ("mpirun", "-np", str(self.ranks), "interFoam", "-parallel"),
             ("reconstructParMesh", "-latestTime"),
-            (
-                "reconstructPar",
-                "-latestTime",
-                "-no-fields",
-                "-no-lagrangian",
-            ),
+            ("reconstructPar", "-latestTime", "-no-fields", "-no-lagrangian"),
         )
 
     @property
@@ -282,6 +277,8 @@ def _evidence_payload(
     return {
         "schema_version": 1,
         "status": result.status,
+        "purpose": "methodology_bridge_validation_only",
+        "engineering_claim": "none",
         "created_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "execution_class": execution_class,
         "execution_metrics": execution_metrics,

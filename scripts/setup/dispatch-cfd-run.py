@@ -184,9 +184,7 @@ def probe_host(
         capture_output=True,
     )
     if result.returncode != 0:
-        reason = (
-            result.stderr or result.stdout or f"ssh rc={result.returncode}"
-        ).strip()
+        reason = (result.stderr or result.stdout or f"ssh rc={result.returncode}").strip()
         return HostProbe(host.name, False, "", 0, 0.0, reason)
     values: dict[str, str] = {}
     for line in result.stdout.splitlines():
