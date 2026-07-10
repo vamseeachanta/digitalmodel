@@ -242,3 +242,43 @@ def test_cli_dry_run_does_not_invoke_ssh(tmp_path: Path) -> None:
     assert "selected: gpu-claw" in result.stdout
     assert "ssh " in result.stdout
     assert "echo run" in result.stdout
+
+
+def test_dispatch_default_threshold_is_fixed_at_one_point_five(
+    tmp_path: Path,
+) -> None:
+    dispatcher = load_dispatcher()
+    manifest = tmp_path / "gpu.json"
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
+    candidate = dispatcher.evaluate_host(
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
+        dispatcher.load_benchmark(manifest),
+        requested_ranks=8,
+        max_load_per_core=dispatcher.build_parser().parse_args([]).max_load_per_core,
+    )
+
+    assert candidate.eligible
+    assert dispatcher.build_parser().parse_args([]).max_load_per_core == 1.5
+
+
+def test_dispatch_exports_selected_rank_for_smoke_driver(tmp_path: Path) -> None:
+    dispatcher = load_dispatcher()
+    manifest = tmp_path / "gpu.json"
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
+    candidate = dispatcher.evaluate_host(
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
+        dispatcher.load_benchmark(manifest),
+        requested_ranks=8,
+        max_load_per_core=1.5,
+    )
+
+    remote = dispatcher.build_ssh_command(
+        candidate,
+        remote_command=["python", "scripts/cfd/run_synthetic_tank_3d_smoke.py", "--ranks", "{ranks}"],
+        repo_dir="~/digitalmodel",
+    )[-1]
+
+    assert "CFD_DISPATCH_RANKS=8" in remote
+    assert "run_synthetic_tank_3d_smoke.py --ranks 8" in remote
