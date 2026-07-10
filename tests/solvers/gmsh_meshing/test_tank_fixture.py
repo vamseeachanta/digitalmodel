@@ -49,18 +49,94 @@ def valid_spec_data() -> dict:
     }
 
 
+def _expected_member_geometry(spec: TankFixtureSpec) -> tuple[dict, dict]:
+    member = spec.members
+    tank = spec.tank
+    long_x = 0.5 * (tank.longitudinal_leg_width - member.thickness)
+    long_z = tank.transverse_leg_length + member.edge_clearance
+    long_mid_z = long_z + 0.5 * spec.longitudinal_member_span
+    long_open = spec.longitudinal_opening
+    trans_x = tank.longitudinal_leg_width + member.edge_clearance
+    trans_z = 0.5 * (tank.transverse_leg_length - member.thickness)
+    trans_mid_x = trans_x + 0.5 * spec.transverse_member_span
+    trans_open = spec.transverse_opening
+    longitudinal = {
+        "orientation": "longitudinal-z",
+        "bounds": (
+            long_x,
+            0.0,
+            long_z,
+            long_x + member.thickness,
+            member.height,
+            long_z + spec.longitudinal_member_span,
+        ),
+        "opening_bounds": (
+            long_x,
+            0.5 * member.height - long_open.vertical_radius,
+            long_mid_z - long_open.span_radius,
+            long_x + member.thickness,
+            0.5 * member.height + long_open.vertical_radius,
+            long_mid_z + long_open.span_radius,
+        ),
+        "gross": member.thickness * member.height * spec.longitudinal_member_span,
+        "opening": member.thickness
+        * math.pi
+        * long_open.vertical_radius
+        * long_open.span_radius,
+    }
+    transverse = {
+        "orientation": "transverse-x",
+        "bounds": (
+            trans_x,
+            0.0,
+            trans_z,
+            trans_x + spec.transverse_member_span,
+            member.height,
+            trans_z + member.thickness,
+        ),
+        "opening_bounds": (
+            trans_mid_x - trans_open.transverse_radius,
+            0.5 * member.height - trans_open.vertical_radius,
+            trans_z,
+            trans_mid_x + trans_open.transverse_radius,
+            0.5 * member.height + trans_open.vertical_radius,
+            trans_z + member.thickness,
+        ),
+        "gross": spec.transverse_member_span * member.height * member.thickness,
+        "opening": member.thickness
+        * math.pi
+        * trans_open.transverse_radius
+        * trans_open.vertical_radius,
+    }
+    return longitudinal, transverse
+
+
+def _assert_perforated_member_geometry(spec: TankFixtureSpec, summary) -> None:
+    expected_members = _expected_member_geometry(spec)
+
+    assert summary.member_count == len(summary.member_geometry) == 2
+    assert summary.opening_count == 2
+    for observed, expected in zip(summary.member_geometry, expected_members):
+        assert observed.orientation == expected["orientation"]
+        assert observed.bounds == pytest.approx(expected["bounds"], abs=1e-6)
+        assert observed.opening_bounds == pytest.approx(
+            expected["opening_bounds"], abs=1e-6
+        )
+        assert observed.volume == pytest.approx(
+            expected["gross"] - expected["opening"], rel=1e-8
+        )
+        assert observed.opening_volume == pytest.approx(expected["opening"], rel=1e-8)
+        assert len(observed.opening_surface_tags) == 1
+
+
 def test_spec_uses_frozen_si_y_up_roll_frame_and_analytic_volume() -> None:
     spec = TankFixtureSpec.from_mapping(valid_spec_data())
 
     gross = 0.8 * (0.6 * 1.6 + 1.2 * 0.6 - 0.6 * 0.6)
     longitudinal_span = 1.6 - 0.6 - 2.0 * 0.08
     transverse_span = 1.2 - 0.6 - 2.0 * 0.08
-    longitudinal_solid = 0.06 * (
-        0.5 * longitudinal_span - math.pi * 0.18 * 0.32
-    )
-    transverse_solid = 0.06 * (
-        0.5 * transverse_span - math.pi * 0.18 * 0.18
-    )
+    longitudinal_solid = 0.06 * (0.5 * longitudinal_span - math.pi * 0.18 * 0.32)
+    transverse_solid = 0.06 * (0.5 * transverse_span - math.pi * 0.18 * 0.18)
 
     assert spec.length_unit == "m"
     assert spec.frame == EXPECTED_FRAME
@@ -87,9 +163,7 @@ def test_spec_uses_frozen_si_y_up_roll_frame_and_analytic_volume() -> None:
             "longitudinal_leg_width",
         ),
         (
-            lambda data: data["openings"]["longitudinal"].update(
-                vertical_radius=0.26
-            ),
+            lambda data: data["openings"]["longitudinal"].update(vertical_radius=0.26),
             "longitudinal opening",
         ),
     ],
@@ -123,16 +197,13 @@ def test_occ_fixture_has_expected_volume_members_openings_and_surface_coverage(
     assert summary.volume_count == 1
     assert summary.member_count == 2
     assert summary.opening_count == 2
-    assert summary.fluid_volume == pytest.approx(
-        spec.expected_fluid_volume, rel=1e-8
-    )
+    _assert_perforated_member_geometry(spec, summary)
+    assert summary.fluid_volume == pytest.approx(spec.expected_fluid_volume, rel=1e-8)
     assert summary.wall_surface_tags
     assert summary.atmosphere_surface_tags
     assert summary.unassigned_surface_tags == ()
     assert summary.overlapping_surface_tags == ()
-    assert set(summary.wall_surface_tags).isdisjoint(
-        summary.atmosphere_surface_tags
-    )
+    assert set(summary.wall_surface_tags).isdisjoint(summary.atmosphere_surface_tags)
 
 
 def test_serialized_mesh_is_tagged_first_order_ascii_msh2_with_positive_tets(
@@ -165,21 +236,25 @@ def test_mesh_options_and_repeat_build_are_deterministic(serialized_meshes) -> N
     assert first.read_bytes() == second.read_bytes()
     assert first_summary.shape_min_jacobian > 0.17
     assert second_summary.shape_min_jacobian > 0.17
-    assert first_summary.mesh_options == second_summary.mesh_options == {
-        "Mesh.MshFileVersion": 2.2,
-        "Mesh.Binary": 0.0,
-        "Mesh.SaveAll": 0.0,
-        "Mesh.ElementOrder": 1.0,
-        "Mesh.Algorithm3D": 4.0,
-        "Mesh.OptimizeNetgen": 1.0,
-        "Mesh.OptimizeThreshold": 1.0,
-        "Mesh.Reproducible": 1.0,
-        "Mesh.RandomSeed": 0.0,
-        "General.NumThreads": 1.0,
-        "Mesh.MaxNumThreads1D": 1.0,
-        "Mesh.MaxNumThreads2D": 1.0,
-        "Mesh.MaxNumThreads3D": 1.0,
-    }
+    assert (
+        first_summary.mesh_options
+        == second_summary.mesh_options
+        == {
+            "Mesh.MshFileVersion": 2.2,
+            "Mesh.Binary": 0.0,
+            "Mesh.SaveAll": 0.0,
+            "Mesh.ElementOrder": 1.0,
+            "Mesh.Algorithm3D": 4.0,
+            "Mesh.OptimizeNetgen": 1.0,
+            "Mesh.OptimizeThreshold": 1.0,
+            "Mesh.Reproducible": 1.0,
+            "Mesh.RandomSeed": 0.0,
+            "General.NumThreads": 1.0,
+            "Mesh.MaxNumThreads1D": 1.0,
+            "Mesh.MaxNumThreads2D": 1.0,
+            "Mesh.MaxNumThreads3D": 1.0,
+        }
+    )
 
 
 def test_scaled_fixture_keeps_groups_and_cubic_volume(tmp_path: Path) -> None:
@@ -199,6 +274,7 @@ def test_scaled_fixture_keeps_groups_and_cubic_volume(tmp_path: Path) -> None:
         "atmosphere": (2, 3),
     }
     assert summary.unassigned_surface_tags == ()
+    _assert_perforated_member_geometry(scaled, summary)
 
 
 def test_source_mesh_promotion_uses_temporary_sibling(
