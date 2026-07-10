@@ -1,0 +1,195 @@
+{
+  "artifacts": {
+    "initial_fields": {
+      "file_count": 3,
+      "path": "0",
+      "total_bytes": 8986,
+      "tree_sha256": "4e81f07c403b8acab6276bb80f6db4ed3ed28710784248d39e24e915c9604c12"
+    },
+    "input": {
+      "path": "input.yml",
+      "sha256": "2c2c33e7aa51ffffeca650d4a0747dd6d6253e5c2b025c4e26cef93738cb59c4",
+      "size": 562
+    },
+    "poly_mesh": {
+      "file_count": 9,
+      "path": "constant/polyMesh",
+      "total_bytes": 253939,
+      "tree_sha256": "36aa3b98d34010f68644cd864c2df742d43eddbad2f4eff2a06d94824dac2cd2"
+    },
+    "source_msh": {
+      "path": "source.msh",
+      "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679",
+      "size": 175391
+    },
+    "system": {
+      "file_count": 5,
+      "path": "system",
+      "total_bytes": 2066,
+      "tree_sha256": "95a91ea7044b14c3bb5763220d492792be2ae4f82ce2a76421eca8825d0937a2"
+    },
+    "uv_lock": {
+      "path": "uv.lock",
+      "sha256": "d0406434f99e5549f31eebd0bcef44d8a16d6321a613c6f4874ba8560cd37c4c",
+      "size": 1001261
+    }
+  },
+  "bridge": {
+    "commands": [
+      {
+        "argv": [
+          "gmshToFoam",
+          "source.msh"
+        ],
+        "return_code": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "3207091a31d1dd960307adc61da1f3148c3565a787be6d7be65a476b1ce084c9"
+      },
+      {
+        "argv": [
+          "changeDictionary",
+          "-constant",
+          "-subDict",
+          "dictionaryReplacement"
+        ],
+        "return_code": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "abba9ea619be91550aea2cb847ef7509a9912136f62a02b0a5a4693782c979c8"
+      },
+      {
+        "argv": [
+          "checkMesh",
+          "-allGeometry",
+          "-allTopology"
+        ],
+        "return_code": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "71fecd598f11efdd7ee07273d7ee9536b8b3e40cc8299df6c4b385ff14c15fa9"
+      }
+    ],
+    "contract": {
+      "atmosphere_patch": "atmosphere",
+      "cells": 3618,
+      "faces": 7824,
+      "fluid_zone": "fluid",
+      "internal_faces": 6648,
+      "patches": [
+        "walls",
+        "atmosphere"
+      ],
+      "wall_patches": [
+        "walls"
+      ]
+    },
+    "created_utc": "2026-07-10T15:11:41.737779Z",
+    "poly_mesh": {
+      "file_count": 9,
+      "path": "constant/polyMesh",
+      "total_bytes": 253939,
+      "tree_sha256": "36aa3b98d34010f68644cd864c2df742d43eddbad2f4eff2a06d94824dac2cd2"
+    },
+    "schema_version": 1,
+    "source_msh": {
+      "format": "2.2",
+      "path": "source.msh",
+      "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679"
+    },
+    "status": "completed",
+    "toolchain": {
+      "gmsh": "4.15.1",
+      "openfoam_package": "2312.260127-2",
+      "openmpi_package": "4.1.6-7ubuntu2"
+    }
+  },
+  "created_utc": "2026-07-10T15:11:47.374082Z",
+  "execution_class": "shared-fallback",
+  "execution_metrics": {
+    "load1": 2.3837890625,
+    "load_per_core": 0.074493408203125
+  },
+  "final_time": 0.3,
+  "load_threshold": 1.5,
+  "motion": {
+    "max_displacement": 0.06933777845758834,
+    "max_rotation_error": 5.01762568014169e-08
+  },
+  "ranks": 8,
+  "schema_version": 1,
+  "seconds_per_step": 0.028186731764839754,
+  "selected_dispatcher_ranks": 8,
+  "source_provenance": {
+    "clean": true,
+    "commit": "d2e5eb5638dae4454337adf82844f0226f03f765",
+    "tracked_sources_sha256": "6519e6ef6b4b0f07d7c0829bae235617547771b4b354926cd106a306842f2b1b"
+  },
+  "stages": [
+    {
+      "argv": [
+        "setFields"
+      ],
+      "log_path": "log.smoke-01-setFields",
+      "log_sha256": "44548130e730c0af59ae18d82b79cbffa5f2d130bed6cae46033e1541e769ee7",
+      "name": "setFields",
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "44548130e730c0af59ae18d82b79cbffa5f2d130bed6cae46033e1541e769ee7"
+    },
+    {
+      "argv": [
+        "decomposePar",
+        "-force"
+      ],
+      "log_path": "log.smoke-02-decomposePar",
+      "log_sha256": "be583bfc27fb803a3b74f441e1569f2302a04c84ff5f8222ce13914339eabd1c",
+      "name": "decomposePar",
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "be583bfc27fb803a3b74f441e1569f2302a04c84ff5f8222ce13914339eabd1c"
+    },
+    {
+      "argv": [
+        "mpirun",
+        "-np",
+        "8",
+        "interFoam",
+        "-parallel"
+      ],
+      "log_path": "log.smoke-03-mpirun",
+      "log_sha256": "9036a24552aadb7692962f9fee071373863db99c6835f52928f9f420b749aa35",
+      "name": "mpirun",
+      "return_code": 0,
+      "stderr_sha256": "9d4876ddd8fae04428e16e356ce55b5561ffd2c03ae91aaee82a86d3ca46d794",
+      "stdout_sha256": "2e9ac7e68251b34f52183cc9fdc426dfe04e72da27d5611f12de75a93233c26a"
+    },
+    {
+      "argv": [
+        "reconstructParMesh",
+        "-latestTime"
+      ],
+      "log_path": "log.smoke-04-reconstructParMesh",
+      "log_sha256": "d196443869763c4dffabbb716fe850e7fe53b02febc7804ac7015032617a31ce",
+      "name": "reconstructParMesh",
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "d196443869763c4dffabbb716fe850e7fe53b02febc7804ac7015032617a31ce"
+    },
+    {
+      "argv": [
+        "reconstructPar",
+        "-latestTime",
+        "-no-fields",
+        "-no-lagrangian"
+      ],
+      "log_path": "log.smoke-05-reconstructPar",
+      "log_sha256": "088f64da20ad9a52dd99d106233eb44281b51c71760e50f1b8b5208b86733670",
+      "name": "reconstructPar",
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "088f64da20ad9a52dd99d106233eb44281b51c71760e50f1b8b5208b86733670"
+    }
+  ],
+  "status": "completed",
+  "step_count": 81,
+  "visible_cpus": 32,
+  "wall_seconds": 2.28312527295202
+}
