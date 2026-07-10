@@ -29,17 +29,14 @@ _INFRASTRUCTURE = re.compile(r"\b(?:ace-linux-[0-9]+|gpu-claw|localhost)\b", re.
 _FORBIDDEN_KEYS = {"host", "hostname", "ssh", "ssh_target", "address", "ip", "ip_address", "machine", "node"}
 _PROVENANCE_FIELDS = {"clean", "commit", "tracked_sources_sha256"}
 
-
 class EvidenceValidationError(ValueError):
     """Raised when evidence is incomplete, unsafe, or internally inconsistent."""
-
 
 def _exact(record: Any, fields: set[str] | frozenset[str], label: str) -> Mapping:
     if not isinstance(record, Mapping) or set(record) != set(fields):
         actual = sorted(record) if isinstance(record, Mapping) else type(record).__name__
         raise EvidenceValidationError(f"{label} fields are not exact: {actual}")
     return record
-
 
 def _number(value: Any, label: str, *, minimum: float = 0.0) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -48,7 +45,6 @@ def _number(value: Any, label: str, *, minimum: float = 0.0) -> float:
     if not math.isfinite(number) or number < minimum:
         raise EvidenceValidationError(f"{label} is outside its allowed range")
     return number
-
 
 def _integer(value: Any, label: str, *, minimum: int = 0) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
@@ -212,7 +208,7 @@ def _validate_artifacts(record: Any) -> Mapping:
 
 
 def _validate_bridge(record: Any, artifacts: Mapping) -> None:
-    fields = set("schema_version status created_utc source_msh poly_mesh contract commands toolchain".split())
+    fields = set("schema_version status created_utc source_msh case_inputs poly_mesh contract commands toolchain".split())
     bridge = _exact(record, fields, "bridge")
     if bridge["schema_version"] != 1 or bridge["status"] != "completed":
         raise EvidenceValidationError("bridge must be completed schema version 1")
@@ -225,6 +221,10 @@ def _validate_bridge(record: Any, artifacts: Mapping) -> None:
         raise EvidenceValidationError("bridge source metadata is invalid")
     if _digest(source["sha256"], "bridge source digest") != artifacts["source_msh"]["sha256"]:
         raise EvidenceValidationError("bridge source digest does not match artifacts")
+    inputs = _exact(bridge["case_inputs"], {"tree_sha256", "file_count", "total_bytes"}, "bridge inputs")
+    _digest(inputs["tree_sha256"], "bridge inputs digest")
+    for name in ("file_count", "total_bytes"):
+        _integer(inputs[name], f"bridge inputs {name}", minimum=1)
     if mesh["path"] != "constant/polyMesh" or mesh["tree_sha256"] != artifacts["poly_mesh"]["tree_sha256"]:
         raise EvidenceValidationError("bridge mesh digest does not match artifacts")
     _validate_bridge_contract(bridge["contract"])
