@@ -165,6 +165,10 @@ def test_dispatch_dry_run_builds_openfoam_ssh_command(tmp_path: Path) -> None:
     assert "gpu-claw" in argv
     remote_shell = argv[-1]
     assert "source /usr/lib/openfoam/openfoam2312/etc/bashrc" in remote_shell
+    source_offset = remote_shell.index("source /usr/lib/openfoam/openfoam2312/etc/bashrc")
+    errexit_offset = remote_shell.index("set -e")
+    assert source_offset < errexit_offset
+    assert "bashrc || exit $?; set -e;" in remote_shell
     assert 'cd -- "$HOME"/digitalmodel' in remote_shell
     assert "CFD_DISPATCH_RANKS=8" in remote_shell
     assert "scripts/setup/verify-cfd-box.sh --benchmark '~/cfd_work'" in remote_shell
