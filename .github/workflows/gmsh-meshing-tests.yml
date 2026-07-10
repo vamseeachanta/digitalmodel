@@ -8,7 +8,13 @@ on:
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "tests/scripts/test_cfd_python_install.py"
+      - "tests/scripts/test_dispatch_cfd_run.py"
+      - "tests/scripts/test_synthetic_tank_3d_smoke.py"
       - "scripts/cfd/run_synthetic_tank_3d_smoke.py"
+      - "scripts/setup/dispatch-cfd-run.py"
+      - "scripts/setup/provision-cfd-box.sh"
+      - "scripts/setup/verify-cfd-box.sh"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
@@ -19,7 +25,13 @@ on:
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "tests/scripts/test_cfd_python_install.py"
+      - "tests/scripts/test_dispatch_cfd_run.py"
+      - "tests/scripts/test_synthetic_tank_3d_smoke.py"
       - "scripts/cfd/run_synthetic_tank_3d_smoke.py"
+      - "scripts/setup/dispatch-cfd-run.py"
+      - "scripts/setup/provision-cfd-box.sh"
+      - "scripts/setup/verify-cfd-box.sh"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
@@ -60,14 +72,31 @@ jobs:
             tests/solvers/openfoam/test_gmsh_bridge.py \
             tests/solvers/openfoam/test_runner.py \
             tests/solvers/openfoam/test_runner_prebuilt.py \
-            tests/solvers/openfoam/validation/test_sloshing_3d.py
+            tests/solvers/openfoam/test_smoke.py \
+            tests/solvers/openfoam/validation/test_sloshing_3d.py \
+            tests/scripts/test_cfd_python_install.py \
+            tests/scripts/test_dispatch_cfd_run.py \
+            tests/scripts/test_synthetic_tank_3d_smoke.py
 
       - name: Lint bridge paths
         run: |
           uv run --frozen --extra cfd ruff check \
-            src/digitalmodel/solvers/gmsh_meshing \
-            src/digitalmodel/solvers/openfoam \
+            src/digitalmodel/solvers/gmsh_meshing/_msh2_contract.py \
+            src/digitalmodel/solvers/gmsh_meshing/_tank_fixture_gmsh.py \
+            src/digitalmodel/solvers/gmsh_meshing/tank_fixture.py \
+            src/digitalmodel/solvers/openfoam/gmsh_bridge.py \
+            src/digitalmodel/solvers/openfoam/poly_mesh_contract.py \
+            src/digitalmodel/solvers/openfoam/prebuilt_mesh.py \
+            src/digitalmodel/solvers/openfoam/runner.py \
+            src/digitalmodel/solvers/openfoam/smoke.py \
+            src/digitalmodel/solvers/openfoam/validation/sloshing_3d.py \
+            scripts/cfd/run_synthetic_tank_3d_smoke.py \
+            scripts/setup/dispatch-cfd-run.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \
             tests/solvers/openfoam/test_gmsh_bridge.py \
-            tests/solvers/openfoam/test_runner_prebuilt.py
+            tests/solvers/openfoam/test_runner_prebuilt.py \
+            tests/solvers/openfoam/test_smoke.py \
+            tests/scripts/test_cfd_python_install.py \
+            tests/scripts/test_dispatch_cfd_run.py \
+            tests/scripts/test_synthetic_tank_3d_smoke.py

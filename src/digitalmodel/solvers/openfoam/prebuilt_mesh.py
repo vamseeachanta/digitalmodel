@@ -179,18 +179,27 @@ def _attested_check_mesh_output(contract: dict[str, Any]) -> str:
 
 def _hash_protected_inputs(case: Path) -> str:
     entries: list[tuple[str, int, str]] = []
-    for directory in (case / "system", case / "constant"):
-        for candidate in directory.rglob("*"):
-            relative = candidate.relative_to(case).as_posix()
-            if candidate.is_symlink():
-                raise PrebuiltMeshError(f"symlink is forbidden in protected inputs: {relative}")
-            mode = candidate.stat().st_mode
-            if stat.S_ISDIR(mode):
-                continue
-            if not stat.S_ISREG(mode):
-                raise PrebuiltMeshError(f"protected input is not a regular file: {relative}")
-            content_sha = hashlib.sha256(candidate.read_bytes()).hexdigest()
-            entries.append((relative, candidate.stat().st_size, content_sha))
+    candidates = [
+        candidate
+        for directory in (case / "system", case / "constant")
+        for candidate in directory.rglob("*")
+    ]
+    candidates.extend(
+        candidate
+        for candidate in (case / "source.msh", case / "input.yml")
+        if candidate.exists() or candidate.is_symlink()
+    )
+    for candidate in candidates:
+        relative = candidate.relative_to(case).as_posix()
+        if candidate.is_symlink():
+            raise PrebuiltMeshError(f"symlink is forbidden in protected inputs: {relative}")
+        mode = candidate.stat().st_mode
+        if stat.S_ISDIR(mode):
+            continue
+        if not stat.S_ISREG(mode):
+            raise PrebuiltMeshError(f"protected input is not a regular file: {relative}")
+        content_sha = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        entries.append((relative, candidate.stat().st_size, content_sha))
     digest = hashlib.sha256()
     for relative, size, content_sha in sorted(entries):
         digest.update(relative.encode("utf-8"))

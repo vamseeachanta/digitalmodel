@@ -288,6 +288,7 @@ def build_ssh_command(
     command = _render_remote_command(
         remote_command, host=candidate.host.name, ranks=candidate.row.ranks
     )
+    execution_class = "dedicated" if candidate.host.dedicated else "shared-fallback"
     remote_shell = (
         "set -e; "
         'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"; '
@@ -295,6 +296,7 @@ def build_ssh_command(
         f"cd -- {_quote_remote_path(repo_dir)}; "
         f"export CFD_DISPATCH_HOST={shlex.quote(candidate.host.name)}; "
         f"export CFD_DISPATCH_RANKS={candidate.row.ranks}; "
+        f"export CFD_EXECUTION_CLASS={execution_class}; "
         f"export CFD_DISPATCH_S_PER_STEP={candidate.predicted_s_per_step}; "
         f"{command}"
     )

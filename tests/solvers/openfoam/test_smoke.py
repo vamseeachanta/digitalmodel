@@ -12,6 +12,7 @@ import pytest
 from digitalmodel.solvers.openfoam.smoke import (
     SmokeError,
     execute_smoke,
+    parse_points,
     plan_smoke,
     verify_rigid_rotation,
     write_reduced_evidence,
@@ -44,6 +45,17 @@ def _success_runner(rotated: str, *, solver_output: str = "Time = 0.30\nEnd\n"):
 
     run.calls = calls  # type: ignore[attr-defined]
     return run
+
+
+def test_points_parser_rejects_declared_count_mismatch(tmp_path: Path) -> None:
+    points = tmp_path / "points"
+    points.write_text(
+        "FoamFile { object points; }\n3\n(\n(0 0 0)\n(1 0 0)\n)\n",
+        encoding="ascii",
+    )
+
+    with pytest.raises(SmokeError, match="count"):
+        parse_points(points)
 
 
 def test_plan_requires_visible_cpus_and_dispatcher_selected_ranks() -> None:
@@ -139,6 +151,35 @@ def test_execute_verifies_final_time_and_nonzero_z_rotation(tmp_path: Path) -> N
     assert result.max_rotation_error <= 1e-6
 
 
+def test_execute_prefers_reconstructed_time_points_over_initial_mesh(
+    tmp_path: Path,
+) -> None:
+    initial = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
+    angle = 0.2
+    rotated = [(0.0, 0.0, 0.0), (math.cos(angle), math.sin(angle), 0.0)]
+    case = _case_with_points(tmp_path / "case", initial)
+
+    def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        if argv[0] == "reconstructParMesh":
+            points = Path(kwargs["cwd"]) / "0.30" / "polyMesh" / "points"
+            points.parent.mkdir(parents=True)
+            points.write_text(_points_text(rotated), encoding="ascii")
+        output = "Time = 0.30\nEnd\n" if argv[0] == "mpirun" else "End\n"
+        return subprocess.CompletedProcess(argv, 0, stdout=output, stderr="")
+
+    result = execute_smoke(
+        plan_smoke(2, 4, 2),
+        case,
+        end_time=0.30,
+        time_precision=2,
+        length=1.0,
+        rotation_radians=angle,
+        runner=run,
+    )
+
+    assert result.max_displacement > 1e-8
+
+
 def test_rotation_checker_rejects_zero_motion_and_wrong_axis() -> None:
     initial = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
     with pytest.raises(SmokeError, match="nonzero"):
@@ -168,7 +209,15 @@ def test_evidence_writer_is_versioned_and_atomic(tmp_path: Path) -> None:
     )
 
     output = tmp_path / "evidence.json"
-    write_reduced_evidence(output, result)
+    write_reduced_evidence(
+        output,
+        result,
+        bridge_manifest={"schema_version": 1, "status": "completed"},
+        artifacts={},
+        source_provenance={"clean": True},
+        execution_class="test",
+        execution_metrics={"load1": 0.5, "load_per_core": 0.125},
+    )
     assert output.read_text(encoding="utf-8").endswith("\n")
     assert '"schema_version": 1' in output.read_text(encoding="utf-8")
     assert not list(tmp_path.glob(".evidence.json.*.tmp"))
@@ -191,8 +240,24 @@ def test_evidence_writer_preserves_bridge_attestation(tmp_path: Path) -> None:
     write_reduced_evidence(
         output,
         result,
-        bridge_manifest={"schema_version": 1, "poly_mesh": {"tree_sha256": "abc"}},
+        bridge_manifest={
+            "schema_version": 1,
+            "status": "completed",
+            "poly_mesh": {"tree_sha256": "abc"},
+        },
+        artifacts={"input": {"path": "input.yml", "sha256": "def"}},
+        source_provenance={
+            "clean": True,
+            "commit": "a" * 40,
+            "tracked_sources_sha256": "b" * 64,
+        },
+        execution_class="shared-fallback",
+        execution_metrics={"load1": 0.5, "load_per_core": 0.125},
     )
 
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["bridge"]["poly_mesh"]["tree_sha256"] == "abc"
+    assert payload["artifacts"]["input"]["path"] == "input.yml"
+    assert payload["source_provenance"]["clean"] is True
+    assert payload["execution_class"] == "shared-fallback"
+    assert payload["execution_metrics"]["load_per_core"] == 0.125

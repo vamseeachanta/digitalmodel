@@ -52,6 +52,7 @@ def _make_attested_case(root: Path) -> tuple[Path, Path]:
         "FoamFile { object controlDict; }\napplication interFoam;\n",
         encoding="utf-8",
     )
+    (case / "source.msh").write_text("synthetic source\n", encoding="utf-8")
     _write_poly_mesh(case / "constant" / "polyMesh")
     tree = hash_tree(case / "constant" / "polyMesh")
     manifest = case / "constant" / "polyMesh.manifest.json"
@@ -90,7 +91,12 @@ def _make_attested_case(root: Path) -> tuple[Path, Path]:
     return case, manifest
 
 
-def _patch_execution(monkeypatch: pytest.MonkeyPatch, *, mutate_mesh: bool = False):
+def _patch_execution(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    mutate_mesh: bool = False,
+    mutate_source: bool = False,
+):
     calls: list[tuple[list[str], Path]] = []
     monkeypatch.setattr(
         "digitalmodel.solvers.openfoam.runner.shutil.which",
@@ -104,6 +110,8 @@ def _patch_execution(monkeypatch: pytest.MonkeyPatch, *, mutate_mesh: bool = Fal
             (cwd / "constant" / "polyMesh" / "points").write_text(
                 "mutated\n", encoding="utf-8"
             )
+        if mutate_source and argv[0] == "interFoam":
+            (cwd / "source.msh").write_text("mutated source\n", encoding="utf-8")
         return subprocess.CompletedProcess(argv, 0, stdout="End\n", stderr="")
 
     monkeypatch.setattr(
@@ -218,3 +226,18 @@ def test_existing_execution_lock_fails_before_snapshot(
     assert result.status is OpenFOAMRunStatus.FAILED
     assert "lock" in result.error_message.lower()
     assert calls == []
+
+
+def test_post_run_source_mesh_mutation_fails_attestation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case, manifest = _make_attested_case(tmp_path)
+    calls = _patch_execution(monkeypatch, mutate_source=True)
+
+    result = OpenFOAMRunner(OpenFOAMRunConfig(to_vtk=False)).run(
+        case, prebuilt_manifest=manifest
+    )
+
+    assert [argv for argv, _ in calls] == [["interFoam"]]
+    assert result.status is OpenFOAMRunStatus.FAILED
+    assert "protected" in result.error_message.lower()

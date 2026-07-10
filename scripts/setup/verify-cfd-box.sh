@@ -46,18 +46,19 @@ else
 fi
 (( FAIL )) && { echo "toolchain incomplete — fix before benchmarking."; exit 1; }
 
-echo "== smoke: tiny 3D interFoam, serial + 2-rank MPI =="
-# reuse the benchmark harness at a trivial size + window (fast machinery check)
-if $PY scripts/cfd/run_sloshing_3d_benchmark.py --work-dir "$WORK_DIR" \
-     --cpb 24 --end-time 0.02 --dt 0.001 --ranks 1 2 --label "$(hostname -s)-smoke" >/tmp/cfdsmoke.log 2>&1; then
-  if grep -q "np= 2.*completed" /tmp/cfdsmoke.log && grep -q "np= 1.*completed" /tmp/cfdsmoke.log; then
-    ok "serial + 2-rank (decomposePar + mpirun -parallel) both completed"
-    grep -E "np=[[:space:]]*[12]" /tmp/cfdsmoke.log | sed 's/^/    /'
-  else
-    bad "smoke run did not complete both ranks — see /tmp/cfdsmoke.log"; tail -15 /tmp/cfdsmoke.log
-  fi
+echo "== smoke: synthetic Gmsh bridge + 2-rank MPI machinery =="
+mkdir -p "$WORK_DIR"
+smoke_log="$WORK_DIR/verify-synthetic-smoke.log"
+if CFD_DISPATCH_RANKS=2 CFD_EXECUTION_CLASS=test \
+  uv run --frozen --extra cfd python scripts/cfd/run_synthetic_tank_3d_smoke.py \
+    --ranks 2 \
+    --work-dir "$WORK_DIR/verify-synthetic-smoke" \
+    --evidence "$WORK_DIR/verify-synthetic-smoke.json" \
+    --cpb 6 --end-time 0.02 --delta-t 0.001 >"$smoke_log" 2>&1; then
+  ok "Gmsh bridge + non-oversubscribed 2-rank smoke completed"
 else
-  bad "smoke run failed — see /tmp/cfdsmoke.log"; tail -20 /tmp/cfdsmoke.log
+  bad "synthetic smoke failed — see $smoke_log"
+  tail -20 "$smoke_log"
 fi
 (( FAIL )) && exit 1
 

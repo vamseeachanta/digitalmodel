@@ -281,4 +281,5 @@ def test_dispatch_exports_selected_rank_for_smoke_driver(tmp_path: Path) -> None
     )[-1]
 
     assert "CFD_DISPATCH_RANKS=8" in remote
+    assert "CFD_EXECUTION_CLASS=dedicated" in remote
     assert "run_synthetic_tank_3d_smoke.py --ranks 8" in remote
