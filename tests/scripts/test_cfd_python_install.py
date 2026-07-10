@@ -12,6 +12,8 @@ PYPROJECT = ROOT / "pyproject.toml"
 PROVISION = ROOT / "scripts/setup/provision-cfd-box.sh"
 VERIFY = ROOT / "scripts/setup/verify-cfd-box.sh"
 WORKFLOW = ROOT / ".github/workflows/gmsh-meshing-tests.yml"
+QUALITY_WORKFLOW = ROOT / ".github/workflows/quality-gates-by-domain.yml"
+QUALITY_GATES = ROOT / ".claude/quality-gates.yaml"
 
 OPENFOAM_VERSION = "2312.260127-2"
 OPENMPI_VERSION = "4.1.6-7ubuntu2"
@@ -166,3 +168,12 @@ def test_gmsh_workflow_pins_sibling_and_validation_tools() -> None:
         "python -m digitalmodel.solvers.openfoam.smoke_evidence "
         "docs/api/cfd/synthetic-l-tank-smoke.json" in workflow
     )
+
+
+def test_solver_quality_gate_installs_cfd_runtime() -> None:
+    workflow = _read(QUALITY_WORKFLOW)
+    gates = _read(QUALITY_GATES)
+
+    assert "libglu1-mesa" in workflow
+    assert "tests/solvers/gmsh_meshing/" in gates
+    assert "--extra cfd" in gates
