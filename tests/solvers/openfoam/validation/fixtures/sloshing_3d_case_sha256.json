@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "inputs": {
+    "cpb": 6,
+    "end_time": 0.3,
+    "delta_t": 0.001,
+    "mesh_mode": "blockMesh"
+  },
+  "files": {
+    "0/U": "673ba27ab652bc8d560ebe4b607ff15e1aac021b2f4803c3846079d04c7d74dd",
+    "0/alpha.water": "23e2c4c016eb2510ce03f44aaa1526d0f09952a05b370a3752dd9cdc89c4ce56",
+    "0/p_rgh": "dd90692b42a427f2ba955df38ed5a24b61e1507bac1557b84d734897f5a83d4f",
+    "constant/dynamicMeshDict": "03bc09131e187aa016e40031d36722dc66c5ee3ad5337be5f709a0bb60e4bbc6",
+    "constant/g": "816f979fc6a2872318bacf9d457fbd71ba77ef2aa6b805441b3ed60749b115a7",
+    "constant/transportProperties": "9f9e800f61a4339079fcd6d9cecdd763096351fd189a6dd0c0285f78a2c3ddb1",
+    "constant/turbulenceProperties": "83ccd08a7cab4204a51cfd89ff8054145ad0548dbc823e3f1058ecc31ceff53a",
+    "system/blockMeshDict": "73f1daeeaaadb08374f676071abcea15c07aeb23b2d50f9a186ef54c3c32415b",
+    "system/controlDict": "c410696629c9582c67a4d4bf4ca45b34fde21c9bfe7b0854d5cde034d80c17a0",
+    "system/fvSchemes": "d00259c4c1cf2cbd002b003ca27fe6d982655c59afd8d53de331cf78897920d9",
+    "system/fvSolution": "fcd249c351ace182da7802e39e23666c4d5d4a3923d16e1e453aac292ae4853d",
+    "system/setFieldsDict": "a695653ea36a1bd7480d666237f9f9c43c94427f32c4d6c375abbe20aa246cfa"
+  }
+}
