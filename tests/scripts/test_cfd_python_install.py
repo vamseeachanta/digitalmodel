@@ -36,6 +36,7 @@ def test_cfd_extra_is_linux_safe_and_gmsh_locked() -> None:
 def test_provisioner_pins_and_holds_solver_packages() -> None:
     script = _read(PROVISION)
 
+    assert "libglu1-mesa" in script
     assert f'OPENFOAM_PACKAGE_VERSION="{OPENFOAM_VERSION}"' in script
     assert f'OPENMPI_PACKAGE_VERSION="{OPENMPI_VERSION}"' in script
     assert '"openfoam2312-default=${OPENFOAM_PACKAGE_VERSION}"' in script

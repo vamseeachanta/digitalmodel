@@ -91,6 +91,7 @@ export DEBIAN_FRONTEND=noninteractive
 $SUDO apt-get update -qq
 $SUDO apt-get install -y -qq \
   build-essential git curl ca-certificates gnupg \
+  libglu1-mesa \
   rclone   # cloud data sync (inputs/outputs/reports) for the headless box
 
 log "installing exact OpenMPI packages…"

@@ -89,6 +89,9 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
+      - name: Install Gmsh runtime libraries
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+
       - name: Sync locked environment
         run: uv sync --frozen --extra cfd --extra test
 
