@@ -221,7 +221,9 @@ def _bridge_manifest() -> dict:
         "schema_version": 1,
         "status": "completed",
         "created_utc": "2026-07-10T12:00:00Z",
-        "source_msh": {"path": "source.msh", "sha256": "a" * 64, "format": "2.2"},
+        "source_msh": {
+            "path": "source.msh", "sha256": "a" * 64, "size": 3, "format": "2.2",
+        },
         "case_inputs": {
             "tree_sha256": "9" * 64, "file_count": 12, "total_bytes": 200,
         },
@@ -355,6 +357,12 @@ def test_evidence_preserves_bridge_case_input_attestation(tmp_path: Path) -> Non
     payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
 
     assert payload["bridge"]["case_inputs"] == _bridge_manifest()["case_inputs"]
+
+
+def test_evidence_binds_bridge_source_size_to_artifact(tmp_path: Path) -> None:
+    payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
+
+    assert payload["bridge"]["source_msh"]["size"] == payload["artifacts"]["source_msh"]["size"]
 
 
 def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) -> None:
