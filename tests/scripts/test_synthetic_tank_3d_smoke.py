@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/cfd/run_synthetic_tank_3d_smoke.py"
+OPENFOAM_VERSION = "2312.260127-2"
+OPENMPI_VERSION = "4.1.6-7ubuntu2"
 
 
 def load_script():
@@ -19,6 +22,22 @@ def load_script():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def mock_package_query(
+    monkeypatch: pytest.MonkeyPatch, script, versions: dict[str, str]
+) -> list[list[str]]:
+    calls: list[list[str]] = []
+
+    def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        calls.append(argv)
+        package = argv[-1]
+        return subprocess.CompletedProcess(
+            argv, 0, stdout=versions[package], stderr=""
+        )
+
+    monkeypatch.setattr(script.subprocess, "run", run)
+    return calls
 
 
 def test_cli_requires_dispatcher_rank_binding(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -46,11 +65,50 @@ def test_cli_uses_dispatcher_rank_when_explicit_rank_is_omitted(
     assert script.main(["--work-dir", "/tmp/synthetic-smoke"]) == 0
 
 
-def test_toolchain_uses_installed_gmsh_version(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_toolchain_attests_live_package_versions(monkeypatch: pytest.MonkeyPatch) -> None:
     script = load_script()
     monkeypatch.setitem(sys.modules, "gmsh", SimpleNamespace(__version__="4.15.1"))
+    calls = mock_package_query(
+        monkeypatch,
+        script,
+        {
+            "openfoam2312-default": OPENFOAM_VERSION,
+            "openmpi-bin": OPENMPI_VERSION,
+        },
+    )
 
-    assert script._toolchain().gmsh_version == "4.15.1"
+    toolchain = script._toolchain()
+
+    assert toolchain.gmsh_version == "4.15.1"
+    assert toolchain.openfoam_package == OPENFOAM_VERSION
+    assert toolchain.openmpi_package == OPENMPI_VERSION
+    assert calls == [
+        ["dpkg-query", "-W", "-f=${Version}", "openfoam2312-default"],
+        ["dpkg-query", "-W", "-f=${Version}", "openmpi-bin"],
+    ]
+
+
+@pytest.mark.parametrize(
+    ("package", "actual"),
+    [
+        ("openfoam2312-default", "2312.260127-1"),
+        ("openmpi-bin", "4.1.6-7ubuntu1"),
+    ],
+)
+def test_toolchain_rejects_package_version_drift(
+    monkeypatch: pytest.MonkeyPatch, package: str, actual: str
+) -> None:
+    script = load_script()
+    monkeypatch.setitem(sys.modules, "gmsh", SimpleNamespace(__version__="4.15.1"))
+    versions = {
+        "openfoam2312-default": OPENFOAM_VERSION,
+        "openmpi-bin": OPENMPI_VERSION,
+    }
+    versions[package] = actual
+    mock_package_query(monkeypatch, script, versions)
+
+    with pytest.raises(script.SmokeError, match=package):
+        script._toolchain()
 
 
 def test_prepare_case_uses_exact_converted_boundary_contract(
@@ -86,10 +144,9 @@ def test_prepare_case_uses_exact_converted_boundary_contract(
     assert (case / "input.yml").read_bytes() == input_yaml.read_bytes()
 
 
-def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    script = load_script()
+def patch_pipeline_fakes(
+    script, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> SimpleNamespace:
     case = tmp_path / "case"
     snapshot = tmp_path / "snapshot"
     snapshot.mkdir()
@@ -110,6 +167,7 @@ def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
     result = SimpleNamespace(status="completed")
     evidence_calls: list[dict] = []
     monkeypatch.setattr(script, "_prepare_case", lambda *_args: (spec, source, case))
+    monkeypatch.setattr(script, "_toolchain", lambda: SimpleNamespace())
     monkeypatch.setattr(script, "prepare_gmsh_poly_mesh", lambda *_a, **_k: bridge)
     monkeypatch.setattr(script, "prepare_prebuilt_execution", lambda *_a: execution)
     monkeypatch.setattr(script, "_prescribed_yaw_angle", lambda *_a: 0.2)
@@ -129,6 +187,16 @@ def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
             "execution_metrics": {"load1": 0.5, "load_per_core": 0.125},
         },
     )
+    return SimpleNamespace(
+        result=result, state=state, bridge=bridge, evidence_calls=evidence_calls
+    )
+
+
+def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = load_script()
+    fakes = patch_pipeline_fakes(script, tmp_path, monkeypatch)
 
     returned = script.run_pipeline(
         ranks=2,
@@ -144,6 +212,6 @@ def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
         execution_class="shared-fallback",
     )
 
-    assert returned is result
-    assert state == {"verified": 1, "released": 1}
-    assert evidence_calls[0]["bridge_manifest"] == bridge.manifest
+    assert returned is fakes.result
+    assert fakes.state == {"verified": 1, "released": 1}
+    assert fakes.evidence_calls[0]["bridge_manifest"] == fakes.bridge.manifest

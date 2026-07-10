@@ -257,6 +257,8 @@ def test_evidence_writer_preserves_bridge_attestation(tmp_path: Path) -> None:
     )
 
     payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["purpose"] == "methodology_bridge_validation_only"
+    assert payload["engineering_claim"] == "none"
     assert payload["bridge"]["poly_mesh"]["tree_sha256"] == "abc"
     assert payload["artifacts"]["input"]["path"] == "input.yml"
     assert payload["source_provenance"]["clean"] is True
