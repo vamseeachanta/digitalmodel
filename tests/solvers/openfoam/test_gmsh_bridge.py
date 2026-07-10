@@ -168,7 +168,7 @@ def test_conversion_runs_fixed_argv_promotes_mesh_and_writes_manifest_last(
 
     assert [argv for argv, _ in calls] == [
         ["gmshToFoam", "source.msh"],
-        ["changeDictionary", "-constant"],
+        ["changeDictionary", "-constant", "-subDict", "dictionaryReplacement"],
         ["checkMesh", "-allGeometry", "-allTopology"],
     ]
     assert all(kwargs["shell"] is False for _, kwargs in calls)

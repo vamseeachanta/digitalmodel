@@ -31,7 +31,7 @@ from .poly_mesh_contract import (
 MANIFEST_NAME = "polyMesh.manifest.json"
 COMMANDS = (
     ("gmshToFoam", "source.msh"),
-    ("changeDictionary", "-constant"),
+    ("changeDictionary", "-constant", "-subDict", "dictionaryReplacement"),
     ("checkMesh", "-allGeometry", "-allTopology"),
 )
 _SAFE_NAME_CHARACTERS = frozenset(
