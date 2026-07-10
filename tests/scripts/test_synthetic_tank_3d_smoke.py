@@ -76,11 +76,12 @@ def test_prepare_case_uses_exact_converted_boundary_contract(
     )
 
     _, source, case = script._prepare_case(
-        tmp_path / "work", input_yaml, 6, 0.30, 0.001
+        tmp_path / "work", input_yaml, 6, 0.30, 0.001, 8
     )
 
     writer_kwargs = calls["writer"][1]
     assert writer_kwargs["boundary_contract"].patch_names == ("walls", "atmosphere")
+    assert calls["writer"][0][1].decompose_ranks == 8
     assert source == case / "source.msh"
     assert (case / "input.yml").read_bytes() == input_yaml.read_bytes()
 

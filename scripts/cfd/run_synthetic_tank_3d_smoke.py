@@ -72,7 +72,9 @@ def run_pipeline(
     """Build, convert, snapshot, execute, and attest one synthetic smoke."""
     plan = plan_smoke(ranks, visible_cpus, selected_ranks)
     execution_metrics = _execution_metrics(visible_cpus)
-    spec, source, case = _prepare_case(work_dir, input_yaml, cpb, end_time, delta_t)
+    spec, source, case = _prepare_case(
+        work_dir, input_yaml, cpb, end_time, delta_t, ranks
+    )
     bridge = prepare_gmsh_poly_mesh(case, source, toolchain=_toolchain())
     execution = prepare_prebuilt_execution(case, bridge.manifest_path)
     try:
@@ -105,7 +107,12 @@ def run_pipeline(
 
 
 def _prepare_case(
-    work_dir: Path, input_yaml: Path, cpb: int, end_time: float, delta_t: float
+    work_dir: Path,
+    input_yaml: Path,
+    cpb: int,
+    end_time: float,
+    delta_t: float,
+    ranks: int,
 ) -> tuple[TankFixtureSpec, Path, Path]:
     work_dir.mkdir(parents=True, exist_ok=True)
     spec = load_tank_fixture_spec(input_yaml)
@@ -120,6 +127,7 @@ def _prepare_case(
             length=spec.tank.length,
             breadth=spec.tank.breadth,
             height=spec.tank.height,
+            decompose_ranks=ranks,
         ),
         boundary_contract=DEFAULT_BOUNDARY_CONTRACT,
     )

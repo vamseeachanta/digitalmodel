@@ -36,6 +36,7 @@ class Sloshing3DConfig:
     length_unit: str = "m"
     frame: str = FRAME
     mesh_mode: str = "blockMesh"
+    decompose_ranks: int | None = None
 
 
 def _validate(config: Sloshing3DConfig, contract: BoundaryContract) -> None:
@@ -47,6 +48,10 @@ def _validate(config: Sloshing3DConfig, contract: BoundaryContract) -> None:
         raise ValueError("mesh_mode must be 'blockMesh' or 'prebuilt'")
     if config.cpb <= 0 or config.end_time <= 0 or config.delta_t <= 0:
         raise ValueError("cpb, end_time, and delta_t must be positive")
+    if config.decompose_ranks is not None and (
+        type(config.decompose_ranks) is not int or config.decompose_ranks < 1
+    ):
+        raise ValueError("decompose_ranks must be a positive integer")
     if any(value <= 0 for value in (config.breadth, config.height, config.length)):
         raise ValueError("dimensions must be positive")
     if not 0 < config.fill < 1:
@@ -197,6 +202,10 @@ def _write_dictionaries(case: Path, config: Sloshing3DConfig, contract: Boundary
     (case / "system" / "fvSchemes").write_text(_H.format(cls="dictionary", obj="fvSchemes") + _FVSCHEMES)
     (case / "system" / "fvSolution").write_text(_H.format(cls="dictionary", obj="fvSolution") + _FVSOLUTION)
     (case / "system" / "setFieldsDict").write_text(_setfields(config))
+    if config.decompose_ranks is not None:
+        (case / "system" / "decomposeParDict").write_text(
+            _decompose(config.decompose_ranks)
+        )
     (case / "constant" / "transportProperties").write_text(_H.format(cls="dictionary", obj="transportProperties") + _TRANSPORT)
     (case / "constant" / "g").write_text(_H.format(cls="uniformDimensionedVectorField", obj="g") + "dimensions [0 1 -2 0 0 0 0];\nvalue (0 -9.81 0);\n")
     (case / "constant" / "turbulenceProperties").write_text(_H.format(cls="dictionary", obj="turbulenceProperties") + "simulationType laminar;\n")

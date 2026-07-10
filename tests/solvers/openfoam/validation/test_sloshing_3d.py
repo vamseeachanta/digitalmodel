@@ -55,9 +55,33 @@ def test_writer_rejects_non_si_frame(tmp_path: Path) -> None:
         write_sloshing_case(tmp_path / "case", config)
 
 
+@pytest.mark.parametrize("ranks", [0, True, 2.5])
+def test_writer_rejects_invalid_decompose_ranks(
+    tmp_path: Path, ranks: object
+) -> None:
+    config = Sloshing3DConfig(
+        cpb=2,
+        end_time=0.1,
+        delta_t=0.001,
+        decompose_ranks=ranks,
+    )
+
+    with pytest.raises(ValueError, match="decompose_ranks"):
+        write_sloshing_case(tmp_path / "case", config)
+
+
 def test_prebuilt_mode_does_not_write_blockmesh(tmp_path: Path) -> None:
-    config = Sloshing3DConfig(cpb=2, end_time=0.1, delta_t=0.001, mesh_mode="prebuilt")
+    config = Sloshing3DConfig(
+        cpb=2,
+        end_time=0.1,
+        delta_t=0.001,
+        mesh_mode="prebuilt",
+        decompose_ranks=8,
+    )
 
     write_sloshing_case(tmp_path / "case", config)
 
     assert not (tmp_path / "case" / "system" / "blockMeshDict").exists()
+    decompose = (tmp_path / "case" / "system" / "decomposeParDict").read_text()
+    assert "numberOfSubdomains 8;" in decompose
+    assert "method scotch;" in decompose
