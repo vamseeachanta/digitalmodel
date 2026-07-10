@@ -36,10 +36,10 @@ def _success_runner(rotated: str, *, solver_output: str = "Time = 0.30\nEnd\n"):
 
     def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess:
         calls.append((list(argv), dict(kwargs)))
-        if argv[0] == "reconstructParMesh":
-            Path(kwargs["cwd"]) .joinpath("constant/polyMesh/points").write_text(
-                rotated, encoding="ascii"
-            )
+        if argv[0] == "reconstructPar":
+            points = Path(kwargs["cwd"]) / "0.30" / "polyMesh" / "points"
+            points.parent.mkdir(parents=True)
+            points.write_text(rotated, encoding="ascii")
         output = solver_output if argv[0] == "mpirun" else "End\n"
         return subprocess.CompletedProcess(argv, 0, stdout=output, stderr="")
 
@@ -74,6 +74,7 @@ def test_plan_has_fixed_threshold_and_exact_post_bridge_sequence() -> None:
         ("decomposePar", "-force"),
         ("mpirun", "-np", "8", "interFoam", "-parallel"),
         ("reconstructParMesh", "-latestTime"),
+        ("reconstructPar", "-latestTime", "-no-fields", "-no-lagrangian"),
     )
     assert "--oversubscribe" not in plan.flat_argv
 
@@ -160,7 +161,7 @@ def test_execute_prefers_reconstructed_time_points_over_initial_mesh(
     case = _case_with_points(tmp_path / "case", initial)
 
     def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess:
-        if argv[0] == "reconstructParMesh":
+        if argv[0] == "reconstructPar":
             points = Path(kwargs["cwd"]) / "0.30" / "polyMesh" / "points"
             points.parent.mkdir(parents=True)
             points.write_text(_points_text(rotated), encoding="ascii")

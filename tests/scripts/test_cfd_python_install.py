@@ -76,6 +76,7 @@ def test_verifier_checks_exact_packages_clean_tree_and_gmsh() -> None:
     assert "import gmsh" in script
     assert "run_synthetic_tank_3d_smoke.py" in script
     assert "CFD_DISPATCH_RANKS=2" in script
+    assert "decomposePar reconstructParMesh reconstructPar mpirun" in script
 
 
 def test_shell_scripts_parse() -> None:

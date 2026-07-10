@@ -22,7 +22,7 @@ package_version() { dpkg-query -W -f='${Version}' "$1" 2>/dev/null || true; }
 FAIL=0
 
 echo "== toolchain =="
-for t in blockMesh interFoam decomposePar reconstructParMesh mpirun; do
+for t in blockMesh interFoam decomposePar reconstructParMesh reconstructPar mpirun; do
   if command -v "$t" >/dev/null 2>&1; then ok "$t ($(command -v "$t"))"; else bad "$t NOT on PATH — did you 'source .../etc/bashrc'?"; fi
 done
 [[ "$(package_version openfoam2312-default)" == "$OPENFOAM_PACKAGE_VERSION" ]] \

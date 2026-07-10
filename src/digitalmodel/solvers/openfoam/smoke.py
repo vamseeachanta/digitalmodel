@@ -46,6 +46,12 @@ class SmokePlan:
             ("decomposePar", "-force"),
             ("mpirun", "-np", str(self.ranks), "interFoam", "-parallel"),
             ("reconstructParMesh", "-latestTime"),
+            (
+                "reconstructPar",
+                "-latestTime",
+                "-no-fields",
+                "-no-lagrangian",
+            ),
         )
 
     @property
