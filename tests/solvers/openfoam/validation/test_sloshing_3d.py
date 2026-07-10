@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
-
-from scripts.cfd import run_sloshing_3d_benchmark as benchmark
 
 from digitalmodel.solvers.openfoam.poly_mesh_contract import BoundaryContract
 from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
@@ -18,6 +18,19 @@ from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sloshing_3d_case_sha256.json"
+BENCHMARK_SCRIPT = Path(__file__).resolve().parents[4] / "scripts/cfd/run_sloshing_3d_benchmark.py"
+
+
+def _load_benchmark():
+    spec = importlib.util.spec_from_file_location("run_sloshing_3d_benchmark", BENCHMARK_SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+benchmark = _load_benchmark()
 
 
 def _hashes(root: Path) -> dict[str, str]:
