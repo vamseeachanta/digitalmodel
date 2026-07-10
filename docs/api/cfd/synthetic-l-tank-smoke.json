@@ -1,12 +1,21 @@
 {
   "artifacts": {
+    "case_dictionaries": {
+      "file_count": 9,
+      "roots": [
+        "constant",
+        "system"
+      ],
+      "total_bytes": 3097,
+      "tree_sha256": "3b20bb1186205aef22b2e66fa198b37ac617800c71a36b351aebd647eaadf8eb"
+    },
     "initial_fields": {
       "file_count": 3,
       "path": "0",
-      "total_bytes": 8986,
-      "tree_sha256": "4e81f07c403b8acab6276bb80f6db4ed3ed28710784248d39e24e915c9604c12"
+      "total_bytes": 810,
+      "tree_sha256": "3f14ae9461ec1ff463da5ff41a475f8db726da14e10329583943d495bda183a4"
     },
-    "input": {
+    "input_yaml": {
       "path": "input.yml",
       "sha256": "2c2c33e7aa51ffffeca650d4a0747dd6d6253e5c2b025c4e26cef93738cb59c4",
       "size": 562
@@ -22,12 +31,6 @@
       "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679",
       "size": 175391
     },
-    "system": {
-      "file_count": 5,
-      "path": "system",
-      "total_bytes": 2066,
-      "tree_sha256": "95a91ea7044b14c3bb5763220d492792be2ae4f82ce2a76421eca8825d0937a2"
-    },
     "uv_lock": {
       "path": "uv.lock",
       "sha256": "d0406434f99e5549f31eebd0bcef44d8a16d6321a613c6f4874ba8560cd37c4c",
@@ -35,6 +38,11 @@
     }
   },
   "bridge": {
+    "case_inputs": {
+      "file_count": 14,
+      "total_bytes": 179860,
+      "tree_sha256": "9334b084fe50b0c0c3849d4ddeb998fe18dc499ee6df978e900dee8b310dd526"
+    },
     "commands": [
       {
         "argv": [
@@ -43,7 +51,7 @@
         ],
         "return_code": 0,
         "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout_sha256": "3207091a31d1dd960307adc61da1f3148c3565a787be6d7be65a476b1ce084c9"
+        "stdout_sha256": "16dfbbcabce39142a0cbeea843c3e8aa85530be39557667d8ea8e243987630cc"
       },
       {
         "argv": [
@@ -54,7 +62,7 @@
         ],
         "return_code": 0,
         "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout_sha256": "abba9ea619be91550aea2cb847ef7509a9912136f62a02b0a5a4693782c979c8"
+        "stdout_sha256": "e42d4a3d4519da2e6028232c0a5e621517766dd806c6d000d40a310a6a42e7a3"
       },
       {
         "argv": [
@@ -64,7 +72,7 @@
         ],
         "return_code": 0,
         "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout_sha256": "71fecd598f11efdd7ee07273d7ee9536b8b3e40cc8299df6c4b385ff14c15fa9"
+        "stdout_sha256": "c40ae30c27bdbe2b9b353b430e5c0d857fb019fe389e382cb3f7692bcbeb0c68"
       }
     ],
     "contract": {
@@ -81,7 +89,7 @@
         "walls"
       ]
     },
-    "created_utc": "2026-07-10T15:11:41.737779Z",
+    "created_utc": "2026-07-10T17:06:26.469230Z",
     "poly_mesh": {
       "file_count": 9,
       "path": "constant/polyMesh",
@@ -92,7 +100,8 @@
     "source_msh": {
       "format": "2.2",
       "path": "source.msh",
-      "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679"
+      "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679",
+      "size": 175391
     },
     "status": "completed",
     "toolchain": {
@@ -101,26 +110,64 @@
       "openmpi_package": "4.1.6-7ubuntu2"
     }
   },
-  "created_utc": "2026-07-10T15:11:47.374082Z",
+  "created_utc": "2026-07-10T17:06:44.463443Z",
+  "dependency_provenance": {
+    "assetutilities": {
+      "post_execution": {
+        "clean": true,
+        "commit": "993f1b5ddc90b56ecf531bedb1b84f5efe096700",
+        "tracked_sources_sha256": "9a85a10176b6881cded2d2738f6fa3b97c537f34cd02d538a459346d706c64f7"
+      },
+      "pre_execution": {
+        "clean": true,
+        "commit": "993f1b5ddc90b56ecf531bedb1b84f5efe096700",
+        "tracked_sources_sha256": "9a85a10176b6881cded2d2738f6fa3b97c537f34cd02d538a459346d706c64f7"
+      }
+    }
+  },
+  "dispatcher": {
+    "actual_load1": 4.26904296875,
+    "actual_load_per_core": 0.1334075927734375,
+    "load_threshold": 1.5,
+    "projected_load_per_core": 0.3921875,
+    "ranks": 8,
+    "selected_ranks": 8,
+    "visible_cpus": 32
+  },
+  "engineering_claim": "none",
   "execution_class": "shared-fallback",
-  "execution_metrics": {
-    "load1": 2.3837890625,
-    "load_per_core": 0.074493408203125
-  },
-  "final_time": 0.3,
-  "load_threshold": 1.5,
   "motion": {
+    "angle_radians": 0.06935166368629225,
+    "axis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "initial_points_sha256": "52db8e0639cd6d1c706a4c02b1d78e8bb97687fe399dd54133684099070f936d",
     "max_displacement": 0.06933777845758834,
-    "max_rotation_error": 5.01762568014169e-08
+    "max_rotation_error": 5.01762568014169e-08,
+    "origin": [
+      0.6,
+      0.0,
+      0.8
+    ],
+    "point_count": 923,
+    "reconstructed_points_sha256": "2136075e0b5085b0bba99010267e36b82db28081dc18f452aa3ff9d71ae99ecd",
+    "tolerance": 1.6e-06
   },
-  "ranks": 8,
+  "purpose": "methodology_bridge_validation_only",
   "schema_version": 1,
-  "seconds_per_step": 0.028186731764839754,
-  "selected_dispatcher_ranks": 8,
   "source_provenance": {
-    "clean": true,
-    "commit": "d2e5eb5638dae4454337adf82844f0226f03f765",
-    "tracked_sources_sha256": "6519e6ef6b4b0f07d7c0829bae235617547771b4b354926cd106a306842f2b1b"
+    "post_execution": {
+      "clean": true,
+      "commit": "c5b38e5e2a6862f246aa26b4a3586cf348da3e13",
+      "tracked_sources_sha256": "1b0b642c1cbbaa355bbebc3f76855da24ceb00c5d8846f8bc6097d72e85e6445"
+    },
+    "pre_execution": {
+      "clean": true,
+      "commit": "c5b38e5e2a6862f246aa26b4a3586cf348da3e13",
+      "tracked_sources_sha256": "1b0b642c1cbbaa355bbebc3f76855da24ceb00c5d8846f8bc6097d72e85e6445"
+    }
   },
   "stages": [
     {
@@ -128,11 +175,11 @@
         "setFields"
       ],
       "log_path": "log.smoke-01-setFields",
-      "log_sha256": "44548130e730c0af59ae18d82b79cbffa5f2d130bed6cae46033e1541e769ee7",
+      "log_sha256": "8df102b9a9a8192724a11a0d3e5a4721d2e2db9007cd68cd17f12941effe2bdd",
       "name": "setFields",
       "return_code": 0,
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "stdout_sha256": "44548130e730c0af59ae18d82b79cbffa5f2d130bed6cae46033e1541e769ee7"
+      "stdout_sha256": "8df102b9a9a8192724a11a0d3e5a4721d2e2db9007cd68cd17f12941effe2bdd"
     },
     {
       "argv": [
@@ -140,11 +187,11 @@
         "-force"
       ],
       "log_path": "log.smoke-02-decomposePar",
-      "log_sha256": "be583bfc27fb803a3b74f441e1569f2302a04c84ff5f8222ce13914339eabd1c",
+      "log_sha256": "0ed9880a057345a4870ca5779269a944590968b994b4ec7304a4ef80a48d7605",
       "name": "decomposePar",
       "return_code": 0,
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "stdout_sha256": "be583bfc27fb803a3b74f441e1569f2302a04c84ff5f8222ce13914339eabd1c"
+      "stdout_sha256": "0ed9880a057345a4870ca5779269a944590968b994b4ec7304a4ef80a48d7605"
     },
     {
       "argv": [
@@ -155,11 +202,11 @@
         "-parallel"
       ],
       "log_path": "log.smoke-03-mpirun",
-      "log_sha256": "9036a24552aadb7692962f9fee071373863db99c6835f52928f9f420b749aa35",
+      "log_sha256": "61173e6e22bf969028187f707655f30dfe43f7fe76a4c75015e97c43e68ca9b5",
       "name": "mpirun",
       "return_code": 0,
       "stderr_sha256": "9d4876ddd8fae04428e16e356ce55b5561ffd2c03ae91aaee82a86d3ca46d794",
-      "stdout_sha256": "2e9ac7e68251b34f52183cc9fdc426dfe04e72da27d5611f12de75a93233c26a"
+      "stdout_sha256": "56f62714ef71216cb879e59a45b65a091e6245b36e4c31a0e7a8f84a7f0a92c5"
     },
     {
       "argv": [
@@ -167,11 +214,11 @@
         "-latestTime"
       ],
       "log_path": "log.smoke-04-reconstructParMesh",
-      "log_sha256": "d196443869763c4dffabbb716fe850e7fe53b02febc7804ac7015032617a31ce",
+      "log_sha256": "865a440db175988f3b289c4e5abf6994db5754561575a9f1307a5e06e6641e3f",
       "name": "reconstructParMesh",
       "return_code": 0,
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "stdout_sha256": "d196443869763c4dffabbb716fe850e7fe53b02febc7804ac7015032617a31ce"
+      "stdout_sha256": "865a440db175988f3b289c4e5abf6994db5754561575a9f1307a5e06e6641e3f"
     },
     {
       "argv": [
@@ -181,15 +228,20 @@
         "-no-lagrangian"
       ],
       "log_path": "log.smoke-05-reconstructPar",
-      "log_sha256": "088f64da20ad9a52dd99d106233eb44281b51c71760e50f1b8b5208b86733670",
+      "log_sha256": "f7b51eb3e55d045655b17e159cb35ae2cc55483e7f94cfdb32779c747860fcb0",
       "name": "reconstructPar",
       "return_code": 0,
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "stdout_sha256": "088f64da20ad9a52dd99d106233eb44281b51c71760e50f1b8b5208b86733670"
+      "stdout_sha256": "f7b51eb3e55d045655b17e159cb35ae2cc55483e7f94cfdb32779c747860fcb0"
     }
   ],
   "status": "completed",
-  "step_count": 81,
-  "visible_cpus": 32,
-  "wall_seconds": 2.28312527295202
+  "timing": {
+    "expected_end_time": 0.3,
+    "observed_end_time": 0.3,
+    "seconds_per_step": 0.12949387669379328,
+    "step_count": 81,
+    "tolerance": 1e-08,
+    "wall_seconds": 10.489004012197256
+  }
 }
