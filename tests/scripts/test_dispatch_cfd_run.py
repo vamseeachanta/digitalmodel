@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/setup/dispatch-cfd-run.py"
 
@@ -286,4 +288,29 @@ def test_dispatch_exports_selected_rank_for_smoke_driver(tmp_path: Path) -> None
 
     assert "CFD_DISPATCH_RANKS=8" in remote
     assert "CFD_EXECUTION_CLASS=dedicated" in remote
+    assert "CFD_DISPATCH_PROJECTED_LOAD_PER_CORE=1.0625" in remote
     assert "run_synthetic_tank_3d_smoke.py --ranks 8" in remote
+
+
+@pytest.mark.parametrize("threshold", [0.0, 1.49, 1.51, float("nan")])
+def test_dispatch_api_rejects_any_nonfixed_load_threshold(threshold: float) -> None:
+    dispatcher = load_dispatcher()
+    profile = dispatcher.BenchmarkProfile(
+        "test", Path("benchmark.json"), 100, (dispatcher.BenchmarkRow(2, 0.1),)
+    )
+
+    with pytest.raises(ValueError, match="fixed at 1.5"):
+        dispatcher.evaluate_host(
+            dispatcher.HostConfig("test", "test", profile.manifest),
+            dispatcher.HostProbe("test", True, "test", 4, 0.1, "ok"),
+            profile,
+            requested_ranks=2,
+            max_load_per_core=threshold,
+        )
+
+
+def test_dispatch_cli_rejects_nonfixed_load_threshold() -> None:
+    dispatcher = load_dispatcher()
+
+    with pytest.raises(SystemExit):
+        dispatcher.build_parser().parse_args(["--max-load-per-core", "0"])

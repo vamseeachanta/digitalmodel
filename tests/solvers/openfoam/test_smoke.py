@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -194,12 +195,12 @@ def test_rotation_checker_rejects_zero_motion_and_wrong_axis() -> None:
         )
 
 
-def test_evidence_writer_is_versioned_and_atomic(tmp_path: Path) -> None:
+def _completed_result(tmp_path: Path):
     initial = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
     angle = 0.2
     rotated = [(0.0, 0.0, 0.0), (math.cos(angle), math.sin(angle), 0.0)]
     case = _case_with_points(tmp_path / "case", initial)
-    result = execute_smoke(
+    return execute_smoke(
         plan_smoke(2, 4, 2),
         case,
         end_time=0.30,
@@ -209,58 +210,182 @@ def test_evidence_writer_is_versioned_and_atomic(tmp_path: Path) -> None:
         runner=_success_runner(_points_text(rotated)),
     )
 
-    output = tmp_path / "evidence.json"
-    write_reduced_evidence(
-        output,
-        result,
-        bridge_manifest={"schema_version": 1, "status": "completed"},
-        artifacts={},
-        source_provenance={"clean": True},
-        execution_class="test",
-        execution_metrics={"load1": 0.5, "load_per_core": 0.125},
+
+def _bridge_manifest() -> dict:
+    command_hashes = {
+        "return_code": 0,
+        "stdout_sha256": "c" * 64,
+        "stderr_sha256": "d" * 64,
+    }
+    return {
+        "schema_version": 1,
+        "status": "completed",
+        "created_utc": "2026-07-10T12:00:00Z",
+        "source_msh": {"path": "source.msh", "sha256": "a" * 64, "format": "2.2"},
+        "poly_mesh": {
+            "path": "constant/polyMesh",
+            "tree_sha256": "b" * 64,
+            "file_count": 9,
+            "total_bytes": 100,
+        },
+        "contract": {
+            "patches": ["walls", "atmosphere"],
+            "wall_patches": ["walls"],
+            "atmosphere_patch": "atmosphere",
+            "fluid_zone": "fluid",
+            "cells": 10,
+            "faces": 20,
+            "internal_faces": 5,
+        },
+        "commands": [
+            {"argv": ["gmshToFoam", "source.msh"], **command_hashes},
+            {
+                "argv": ["changeDictionary", "-constant", "-subDict", "dictionaryReplacement"],
+                **command_hashes,
+            },
+            {"argv": ["checkMesh", "-allGeometry", "-allTopology"], **command_hashes},
+        ],
+        "toolchain": {
+            "gmsh": "4.15.1",
+            "openfoam_package": "2312.260127-2",
+            "openmpi_package": "4.1.6-7ubuntu2",
+        },
+    }
+
+
+def _artifacts() -> dict:
+    return {
+        "uv_lock": {"path": "uv.lock", "size": 1, "sha256": "1" * 64},
+        "input_yaml": {"path": "input.yml", "size": 2, "sha256": "2" * 64},
+        "source_msh": {"path": "source.msh", "size": 3, "sha256": "a" * 64},
+        "initial_fields": {
+            "path": "0", "file_count": 3, "total_bytes": 4, "tree_sha256": "3" * 64,
+        },
+        "case_dictionaries": {
+            "roots": ["constant", "system"],
+            "file_count": 4,
+            "total_bytes": 5,
+            "tree_sha256": "4" * 64,
+        },
+        "poly_mesh": {
+            "path": "constant/polyMesh",
+            "file_count": 9,
+            "total_bytes": 100,
+            "tree_sha256": "b" * 64,
+        },
+    }
+
+
+def _provenance(commit: str, digest: str) -> dict:
+    return {"clean": True, "commit": commit, "tracked_sources_sha256": digest}
+
+
+def _evidence_kwargs() -> dict:
+    source = _provenance("e" * 40, "e" * 64)
+    dependency = _provenance(
+        "993f1b5ddc90b56ecf531bedb1b84f5efe096700", "f" * 64
     )
+    return {
+        "bridge_manifest": _bridge_manifest(),
+        "artifacts": _artifacts(),
+        "source_provenance": {
+            "pre_execution": source.copy(),
+            "post_execution": source.copy(),
+        },
+        "dependency_provenance": {
+            "assetutilities": {
+                "pre_execution": dependency.copy(),
+                "post_execution": dependency.copy(),
+            }
+        },
+        "execution_class": "test",
+        "dispatcher": {
+            "ranks": 2,
+            "selected_ranks": 2,
+            "visible_cpus": 4,
+            "load_threshold": 1.5,
+            "projected_load_per_core": 0.625,
+            "actual_load1": 0.5,
+            "actual_load_per_core": 0.125,
+        },
+    }
+
+
+def _write_valid_evidence(tmp_path: Path) -> Path:
+    output = tmp_path / "evidence.json"
+    write_reduced_evidence(output, _completed_result(tmp_path), **_evidence_kwargs())
+    return output
+
+
+def test_execute_records_timing_and_point_digest_evidence(tmp_path: Path) -> None:
+    result = _completed_result(tmp_path)
+
+    assert result.expected_end_time == pytest.approx(0.30)
+    assert result.time_tolerance == pytest.approx(0.01)
+    assert result.motion.axis == (0.0, 0.0, 1.0)
+    assert result.motion.angle_radians == pytest.approx(0.2)
+    assert result.motion.point_count == 2
+    assert len(result.motion.initial_points_sha256) == 64
+    assert len(result.motion.reconstructed_points_sha256) == 64
+
+
+def test_evidence_writer_is_closed_self_validating_and_atomic(tmp_path: Path) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        ARTIFACT_KEYS,
+        TOP_LEVEL_FIELDS,
+        validate_evidence,
+    )
+
+    output = _write_valid_evidence(tmp_path)
+    payload = json.loads(output.read_text(encoding="utf-8"))
+
+    assert set(payload) == TOP_LEVEL_FIELDS
+    assert set(payload["artifacts"]) == ARTIFACT_KEYS
+    assert payload["purpose"] == "methodology_bridge_validation_only"
+    assert payload["engineering_claim"] == "none"
+    assert validate_evidence(payload) is payload
     assert output.read_text(encoding="utf-8").endswith("\n")
-    assert '"schema_version": 1' in output.read_text(encoding="utf-8")
     assert not list(tmp_path.glob(".evidence.json.*.tmp"))
 
 
-def test_evidence_writer_preserves_bridge_attestation(tmp_path: Path) -> None:
-    initial = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
-    angle = 0.2
-    rotated = [(0.0, 0.0, 0.0), (math.cos(angle), math.sin(angle), 0.0)]
-    result = execute_smoke(
-        plan_smoke(2, 4, 2),
-        _case_with_points(tmp_path / "case", initial),
-        end_time=0.30,
-        time_precision=2,
-        length=1.0,
-        rotation_radians=angle,
-        runner=_success_runner(_points_text(rotated)),
-    )
-    output = tmp_path / "evidence.json"
-    write_reduced_evidence(
-        output,
-        result,
-        bridge_manifest={
-            "schema_version": 1,
-            "status": "completed",
-            "poly_mesh": {"tree_sha256": "abc"},
-        },
-        artifacts={"input": {"path": "input.yml", "sha256": "def"}},
-        source_provenance={
-            "clean": True,
-            "commit": "a" * 40,
-            "tracked_sources_sha256": "b" * 64,
-        },
-        execution_class="shared-fallback",
-        execution_metrics={"load1": 0.5, "load_per_core": 0.125},
+def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_evidence,
     )
 
-    payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["purpose"] == "methodology_bridge_validation_only"
-    assert payload["engineering_claim"] == "none"
-    assert payload["bridge"]["poly_mesh"]["tree_sha256"] == "abc"
-    assert payload["artifacts"]["input"]["path"] == "input.yml"
-    assert payload["source_provenance"]["clean"] is True
-    assert payload["execution_class"] == "shared-fallback"
-    assert payload["execution_metrics"]["load_per_core"] == 0.125
+    payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
+    payload["unexpected"] = True
+    with pytest.raises(EvidenceValidationError, match="top-level"):
+        validate_evidence(payload)
+    del payload["unexpected"]
+    del payload["artifacts"]["case_dictionaries"]
+    with pytest.raises(EvidenceValidationError, match="artifact keys"):
+        validate_evidence(payload)
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["/srv/private/case", "10.20.30.40", "gpu-claw", "user@example.com"],
+)
+def test_evidence_privacy_validator_rejects_sensitive_strings(value: str) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_privacy,
+    )
+
+    with pytest.raises(EvidenceValidationError, match="privacy"):
+        validate_privacy({"value": value})
+
+
+def test_evidence_cli_validates_schema_and_privacy(tmp_path: Path) -> None:
+    output = _write_valid_evidence(tmp_path)
+    process = subprocess.run(
+        [sys.executable, "-m", "digitalmodel.solvers.openfoam.smoke_evidence", str(output)],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert process.returncode == 0, process.stderr
+    assert "valid smoke evidence" in process.stdout
