@@ -81,6 +81,16 @@ def test_provisioner_pins_assetutilities_sibling_before_uv_sync() -> None:
     assert script.rindex(dependency_gate) < script.index("uv sync --frozen")
 
 
+def test_repository_detection_accepts_linked_git_worktrees() -> None:
+    provision = _read(PROVISION)
+    verify = _read(VERIFY)
+
+    assert 'git -C "$repo" rev-parse --is-inside-work-tree' in provision
+    assert 'git -C "$ASSETUTILITIES_DIR" rev-parse --is-inside-work-tree' in verify
+    assert '[[ -d "$repo/.git" ]]' not in provision
+    assert '[[ -d "$ASSETUTILITIES_DIR/.git" ]]' not in verify
+
+
 def test_verifier_checks_exact_packages_clean_tree_and_gmsh() -> None:
     script = _read(VERIFY)
 
